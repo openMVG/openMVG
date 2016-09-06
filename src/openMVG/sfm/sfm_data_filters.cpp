@@ -286,7 +286,7 @@ bool IsTracksOneCC
   return parent_id.size()==1;
 }
 
-/// Keep the largest connected component of tracks from the sfm_data structure
+/// Keep the largest view connected component of tracks from the sfm_data structure
 void KeepLargestViewCCTracks
 (
   SfM_Data & sfm_data
@@ -372,6 +372,109 @@ void KeepLargestViewCCTracks
         if (!obs.empty())
         {
           if (uf_tree.Find(view_renumbering.at(itObs->first)) != parent_id_largest_cc)
+          {
+            itLandmarks = landmarks.erase(itLandmarks);
+          }
+          else
+          {
+            ++itLandmarks;
+          }
+        }
+      }
+    }
+  }
+}
+
+/// Keep the largest pose connected component of tracks from the sfm_data structure
+void KeepLargestPoseCCTracks
+(
+  SfM_Data & sfm_data
+)
+{
+  // Compute the Connected Component from the tracks
+
+  // Build a table to have contiguous pose index in [0,n]
+  // (Use only the view index used in the observations)
+  Hash_Map<IndexT, IndexT> pose_renumbering;
+  {
+    IndexT cpt = 0;
+    const Landmarks & landmarks = sfm_data.structure;
+    for (Landmarks::const_iterator itLandmarks = landmarks.begin();
+      itLandmarks != landmarks.end(); ++itLandmarks)
+    {
+      const Observations & obs = itLandmarks->second.obs;
+      for (Observations::const_iterator itObs = obs.begin();
+        itObs != obs.end(); ++itObs)
+      {
+        // Get the corresponding view in order to get its pose ID
+        const View * v = sfm_data.GetViews().at(itObs->first).get();
+        if (pose_renumbering.count(v->id_pose) == 0)
+        {
+          pose_renumbering[v->id_pose] = cpt++;
+        }
+      }
+    }
+  }
+
+  UnionFind uf_tree;
+  uf_tree.InitSets(pose_renumbering.size());
+
+  // Link track observations in connected component
+  Landmarks & landmarks = sfm_data.structure;
+  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
+    itLandmarks != landmarks.end(); ++itLandmarks)
+  {
+    const Observations & obs = itLandmarks->second.obs;
+    std::set<IndexT> id_to_link;
+    for (Observations::const_iterator itObs = obs.begin();
+      itObs != obs.end(); ++itObs)
+    {
+      const View * v = sfm_data.GetViews().at(itObs->first).get();
+      id_to_link.insert(pose_renumbering.at(v->id_pose));
+    }
+    std::set<IndexT>::const_iterator iterI = id_to_link.begin();
+    std::set<IndexT>::const_iterator iterJ = id_to_link.begin();
+    std::advance(iterJ,1);
+    while (iterJ != id_to_link.end())
+    {
+      // Link I => J
+      uf_tree.Union(*iterI, *iterJ);
+      ++iterJ;
+    }
+  }
+
+  // Count the number of CC
+  const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
+  if (parent_id.size()>1)
+  {
+    // There is many CC, look the largest one
+    // (if many CC have the same size, export the first that have been seen)
+    std::pair<IndexT, unsigned int> max_cc( UndefinedIndexT, std::numeric_limits<unsigned int>::min());
+    {
+      for (const unsigned int parent_id_it : parent_id)
+      {
+        if (uf_tree.m_cc_size[parent_id_it] > max_cc.second) // Update the component parent id and size
+        {
+          max_cc = std::make_pair(parent_id_it, uf_tree.m_cc_size[parent_id_it]);
+        }
+      }
+    }
+    // Delete track ids that are not contained in the largest CC
+    if (max_cc.first != UndefinedIndexT)
+    {
+      const unsigned int parent_id_largest_cc = max_cc.first;
+      Landmarks::iterator itLandmarks = landmarks.begin();
+      while (itLandmarks != landmarks.end())
+      {
+        // Since we built a view 'track' graph thanks to the UF tree,
+        //  checking the CC of each track is equivalent to check the CC of any observation of it.
+        // So we check only the first
+        const Observations & obs = itLandmarks->second.obs;
+        Observations::const_iterator itObs = obs.begin();
+        if (!obs.empty())
+        {
+          const View * v = sfm_data.GetViews().at(itObs->first).get();
+          if (uf_tree.Find(pose_renumbering.at(v->id_pose)) != parent_id_largest_cc)
           {
             itLandmarks = landmarks.erase(itLandmarks);
           }

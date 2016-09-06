@@ -217,6 +217,16 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const = 0;
 
   /**
+  * @brief Return if the intrinsic define a subpose
+  */
+  virtual bool use_subpose() const { return false; }
+
+  /**
+  * @brief As no subpose exist by default, return an Identity transform
+  */
+  virtual geometry::Pose3 get_subpose() const { return geometry::Pose3(Mat3::Identity(), Vec3::Zero()); }
+
+  /**
   * @brief Serialization out
   * @param ar Archive
   */

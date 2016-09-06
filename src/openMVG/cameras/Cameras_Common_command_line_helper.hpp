@@ -51,6 +51,10 @@ StringTo_Intrinsic_Parameter_Type
     {
       intrinsics_opt = intrinsics_opt | cameras::Intrinsic_Parameter_Type::ADJUST_DISTORTION;
     }
+    else if (item == "ADJUST_SUBPOSE")
+    {
+      intrinsics_opt = intrinsics_opt | cameras::Intrinsic_Parameter_Type::ADJUST_SUBPOSE;
+    }
     else if (item == "ADJUST_ALL")
     {
       intrinsics_opt = cameras::Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH

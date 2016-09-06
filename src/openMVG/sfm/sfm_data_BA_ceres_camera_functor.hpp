@@ -674,6 +674,133 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
   const double * m_pos_2dpoint; // The 2D observation
 };
 
+/**
+ * @brief Ceres functor to use a Pinhole_Intrinsic_Subpose (pinhole camera with a subpose) and a 3D point.
+ *
+ *  Data parameter blocks are the following <2,9,6,3>
+ *  - 2 => dimension of the residuals,
+ *  - 9 => the intrinsic data block [focal, principal point x, principal point y, subpose[R;t]],
+ *  - 6 => the camera extrinsic data block (camera orientation and position) [R;t],
+ *         - rotation(angle axis), and translation [rX,rY,rZ,tx,ty,tz].
+ *  - 3 => a 3D point data block.
+ *
+ */
+struct ResidualErrorFunctor_Pinhole_Intrinsic_Subpose
+{
+  ResidualErrorFunctor_Pinhole_Intrinsic_Subpose(const double* const pos_2dpoint)
+  :m_pos_2dpoint(pos_2dpoint)
+  {
+  }
+
+  // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
+  enum {
+    OFFSET_FOCAL_LENGTH = 0,
+    OFFSET_PRINCIPAL_POINT_X = 1,
+    OFFSET_PRINCIPAL_POINT_Y = 2,
+    OFFSET_SUBPOSE_ROTATION = 3,
+    OFFSET_SUBPOSE_TRANSLATION = 6
+  };
+
+  /**
+  * @param[in] cam_intrinsics: Camera intrinsics ( focal, principal point [x,y], subpose [R;t] )
+  * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
+  *   - 3 for rotation (angle axis), 3 for translation
+  * @param[in] pos_3dpoint
+  * @param[out] out_residuals
+  */
+  template <typename T>
+  bool operator()(
+    const T* const cam_intrinsics,
+    const T* const cam_extrinsics,
+    const T* const pos_3dpoint,
+    T* out_residuals) const
+  {
+    //--
+    // Apply external parameters (Pose)
+    // Pose is obtained from pose combinaison: globalPose = subpose * pose = P_s * P
+    // R_s R X + R_s t + t_s
+    //--
+
+    const T * cam_pose_R = cam_extrinsics;
+    const T * cam_pose_t = &cam_extrinsics[3];
+
+    const T * cam_subpose_R = &cam_intrinsics[OFFSET_SUBPOSE_ROTATION];
+    const T * cam_subpose_t = &cam_intrinsics[OFFSET_SUBPOSE_TRANSLATION];
+
+    T pos_rig[3];
+    T pos_proj[3];
+    T rig_trans[3];
+
+    //--
+    // Apply rotations:
+    // R_s R X
+    ceres::AngleAxisRotatePoint(cam_pose_R, pos_3dpoint, pos_rig);
+    ceres::AngleAxisRotatePoint(cam_subpose_R, pos_rig, pos_proj);
+    //--
+
+    //--
+    // Apply translations:
+    // R_s t + t_s
+    ceres::AngleAxisRotatePoint(cam_subpose_R, cam_pose_t, rig_trans);
+    pos_proj[0] += cam_subpose_t[0] + rig_trans[0];
+    pos_proj[1] += cam_subpose_t[1] + rig_trans[1];
+    pos_proj[2] += cam_subpose_t[2] + rig_trans[2];
+    //--
+
+    // Transform the point from homogeneous to euclidean
+    const T x_u = pos_proj[0] / pos_proj[2];
+    const T y_u = pos_proj[1] / pos_proj[2];
+
+    //--
+    // Apply intrinsic parameters
+    //--
+
+    const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+    const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+    const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+
+    // Apply focal length and principal point to get the final image coordinates
+    const T projected_x = principal_point_x + focal * x_u;
+    const T projected_y = principal_point_y + focal * y_u;
+
+    // Compute and return the error is the difference between the predicted
+    //  and observed position
+    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
+    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+
+    return true;
+  }
+
+  static int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+    if (weight == 0.0)
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <ResidualErrorFunctor_Pinhole_Intrinsic_Subpose, 2, 9, 6, 3>(
+            new ResidualErrorFunctor_Pinhole_Intrinsic_Subpose(observation.data())));
+    }
+    else
+    {
+      return
+        (new ceres::AutoDiffCostFunction
+          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Subpose>, 2, 9, 6, 3>
+          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Subpose>
+            (new ResidualErrorFunctor_Pinhole_Intrinsic_Subpose(observation.data()), weight)));
+    }
+  }
+
+  const double * m_pos_2dpoint; // The 2D observation
+};
+
 } // namespace sfm
 } // namespace openMVG
 

@@ -86,8 +86,14 @@ bool IsTracksOneCC
   const SfM_Data & sfm_data
 );
 
-/// Keep the largest connected component of tracks from the sfm_data structure
+/// Keep the largest view connected component of tracks from the sfm_data structure
 void KeepLargestViewCCTracks
+(
+  SfM_Data & sfm_data
+);
+
+/// Keep the largest pose connected component of tracks from the sfm_data structure
+void KeepLargestPoseCCTracks
 (
   SfM_Data & sfm_data
 );

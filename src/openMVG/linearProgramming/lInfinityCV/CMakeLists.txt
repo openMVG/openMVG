@@ -60,3 +60,6 @@ UNIT_TEST(openMVG_lInftyCV tijsAndXis "${LOCAL_LIBS}")
 # Linfinity Translation and Structure with noise handling
 UNIT_TEST(openMVG_lInftyCV tijsAndXis_outlier "${LOCAL_LIBS}")
 
+# Linfinity Translation and Structure for non central cameras
+UNIT_TEST(openMVG_lInftyCV tijsAndXis_FromXi_Ri_non_central_cameras "${LOCAL_LIBS}")
+

@@ -43,6 +43,10 @@ ceres::CostFunction * IntrinsicsToCostFunction
     break;
     case PINHOLE_CAMERA_FISHEYE:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
+    break;
+    case PINHOLE_CAMERA_SUBPOSE:
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Subpose::Create(observation, weight);
+    break;
     default:
       return nullptr;
   }

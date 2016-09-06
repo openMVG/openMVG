@@ -15,6 +15,8 @@
 #include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 
+#include "openMVG/cameras/Camera_Pinhole_Subpose.hpp"
+
 namespace openMVG
 {
 /**
