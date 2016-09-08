@@ -1112,7 +1112,13 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
             const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
             if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(I)))
             {
-              landmark.obs[I] = Observation(xI, track.at(I));
+
+#ifdef OPENMVG_USE_OPENMP
+#pragma omp critical
+#endif
+              {
+                landmark.obs[I] = Observation(xI, track.at(I));
+              }
             }
           }
         }
@@ -1189,7 +1195,13 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
                 const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
                 if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
                 {
-                  landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+
+#ifdef OPENMVG_USE_OPENMP
+#pragma omp critical
+#endif
+                  {
+                    landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+                  }
                 }
               }
             }
