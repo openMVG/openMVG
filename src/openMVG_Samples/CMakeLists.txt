@@ -16,3 +16,5 @@ ADD_SUBDIRECTORY(features_affine_demo)
 ADD_SUBDIRECTORY(features_kvld_filter)
 ADD_SUBDIRECTORY(features_siftPutativeMatches)
 ADD_SUBDIRECTORY(features_image_matching)
+
+ADD_SUBDIRECTORY(image_spherical_to_pinholes)
