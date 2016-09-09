@@ -7,7 +7,7 @@
 namespace openMVG
 {
 
-// A pinhole camera with it's associated rotation
+// A pinhole camera with its associated rotation
 // Used to sample the spherical image
 struct PinholeCamera_R
 {
