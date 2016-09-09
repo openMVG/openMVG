@@ -1096,8 +1096,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 		// If the track was already reconstructed
 		if (sfm_data_.structure.count(trackId) != 0)
 		{
-		  // 3D point triangulated before, only add image observation if needed
-		  {
+			// 3D point triangulated before, only add image observation if needed
 			Landmark & landmark = sfm_data_.structure[trackId];
 			if (landmark.obs.count(I) == 0)
 			{
@@ -1107,7 +1106,6 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 					landmark.obs[I] = Observation(xI, track.at(I));
 				}
 			}
-		  }
 		}
 		else
 		{
@@ -1122,10 +1120,12 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 				if(J!=I && valid_views.count(J) != 0 )
 				{
 					// If successfuly triangulated add the observation from J view
-					if (sfm_data_.structure.count(trackId) != 0){
+					if (sfm_data_.structure.count(trackId) != 0)
+					{
 						new_track_observations_valid_views.insert(J); 
 					}
-					else{
+					else
+					{
 						const View * view_J = sfm_data_.GetViews().at(J).get();
 						const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
 						const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
@@ -1159,7 +1159,8 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 							landmark.obs[I] = Observation(xI, track.at(I));
 							landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
 						} // 3D point is valid
-						else{
+						else
+						{
 							// We mark the view to add the observations once the point is triangulated
 							new_track_observations_valid_views.insert(J);  
 						}
@@ -1168,10 +1169,12 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 			}// Go through all the views
 		  
 			// If successfuly triangulated add the observation from J view
-			if (sfm_data_.structure.count(trackId) != 0 && !new_track_observations_valid_views.empty()){
+			if (sfm_data_.structure.count(trackId) != 0 && !new_track_observations_valid_views.empty())
+			{
 				Landmark & landmark = sfm_data_.structure[trackId];
 				// Go through the views that were valid but before the first triangulation
-				for(const IndexT &J: new_track_observations_valid_views){
+				for(const IndexT &J: new_track_observations_valid_views)
+				{
 					const View * view_J = sfm_data_.GetViews().at(J).get();
 					const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
 					const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
