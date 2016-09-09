@@ -1077,7 +1077,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   // List tracks that share content with this view and add observations and new 3D track if required.
   {
 	// Get information of new view
-    const size_t I =(IndexT)viewIndex;
+    const IndexT I = viewIndex;
     const View * view_I = sfm_data_.GetViews().at(I).get();
     const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
     const Pose3 pose_I = sfm_data_.GetPoseOrDie(view_I);
@@ -1085,13 +1085,13 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
     // Vector of all already reconstructed views
     const std::set<IndexT> valid_views = Get_Valid_Views(sfm_data_);
 
-    // Go through each track in the new view and either add observations or new 3D points
-    for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommon)
+	// Go through each track in the new view and either add observations or new 3D points
+	for (const std::pair< size_t, tracks::submapTrack >& trackIt : map_tracksCommon)
 	{
-      const size_t trackId = trackIt.first;
-      const tracks::submapTrack & track = trackIt.second;
-	  // Position of the point in view I
-      const Vec2 xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+		const size_t trackId = trackIt.first;
+		const tracks::submapTrack & track = trackIt.second;
+		// Position of the point in view I
+		const Vec2 xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
 
 		// If the track was already reconstructed
 		if (sfm_data_.structure.count(trackId) != 0)
@@ -1101,11 +1101,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 			Landmark & landmark = sfm_data_.structure[trackId];
 			if (landmark.obs.count(I) == 0)
 			{
-			  const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
-			  if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(I)))
-			  {
-				landmark.obs[I] = Observation(xI, track.at(I));
-			  }
+				const Vec2 residual = cam_I->residual(pose_I, landmark.X, xI);
+				if (pose_I.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(I)))
+				{
+					landmark.obs[I] = Observation(xI, track.at(I));
+				}
 			}
 		  }
 		}
@@ -1121,21 +1121,16 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
 				// If view is valid try triangulation
 				if(J!=I && valid_views.count(J) != 0 )
 				{
-					const View * view_J = sfm_data_.GetViews().at(J).get();
-					const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-					const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-					const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-
 					// If successfuly triangulated add the observation from J view
 					if (sfm_data_.structure.count(trackId) != 0){
-						Landmark & landmark = sfm_data_.structure[trackId];
-						const Vec2 residual = cam_J->residual(pose_J, landmark.X, xJ);
-						if (pose_J.depth(landmark.X) > 0 && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
-						{
-							landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-						}
+						new_track_observations_valid_views.insert(J); 
 					}
 					else{
+						const View * view_J = sfm_data_.GetViews().at(J).get();
+						const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+						const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+						const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+
 						// Try to triangulate a 3D point from J view	
 						// A new 3D point must be added
 						// Triangulate it
