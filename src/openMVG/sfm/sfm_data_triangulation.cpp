@@ -218,7 +218,7 @@ const
   const IndexT nbIter = obs.size(); // TODO: automatic computation of the number of iterations?
 
   // - Ransac variables
-  Vec3 best_model;
+  Vec3 best_model = Vec3::Zero();
   std::deque<IndexT> best_inlier_set;
   double best_error = std::numeric_limits<double>::max();
 
