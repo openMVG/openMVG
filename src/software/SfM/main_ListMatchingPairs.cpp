@@ -94,7 +94,7 @@ int main(int argc, char **argv)
   int i_mode(PAIR_MODE_EXHAUSTIVE);
 
   cmd.add( make_option('i', s_SfM_Data_filename, "input_file") );
-  cmd.add( make_option('o', s_out_file, "out_file") );
+  cmd.add( make_option('o', s_out_file, "output_file") );
   cmd.add( make_option('n', i_neighbor_count, "neighbor_count") );
   cmd.add( make_switch('G', "gps_mode"));
   cmd.add( make_switch('V', "video_mode"));
@@ -106,13 +106,13 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-o|--out_file] the output pairlist file (i.e ./pair_list.txt)\n"
+    << "[-o|--output_file] the output pairlist file (i.e ./pair_list.txt)\n"
     << "optional:\n"
     << "Matching pair modes [E/V/G]:\n"
     << "\t[-E|--exhaustive_mode] exhaustive mode (default mode)\n"
     << "\t[-V|--video_mode] link views that belongs to contiguous poses ids\n"
     << "\t[-G|--gps_mode] use the pose center priors to link neighbor views\n"
-    << "Note: options V & G are linked the following parameter:"
+    << "Note: options V & G are linked the following parameter:\n"
     << "\t [-n|--neighbor_count] number of maximum neighbor\n"
     << std::endl;
 
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     << " You called : " << "\n"
     << argv[0] << "\n"
     << "--input_file " << s_SfM_Data_filename << "\n"
-    << "--out_file " << s_out_file << "\n"
+    << "--output_file " << s_out_file << "\n"
     << "Optional parameters:" << "\n"
     << "--exhaustive_mode " << (cmd.used('E') ? "ON" : "OFF") << "\n"
     << "--video_mode " <<  (cmd.used('V') ? "ON" : "OFF") << "\n"
@@ -301,7 +301,10 @@ int main(int argc, char **argv)
 
   // d. Export the view graph to a file and a SVG adjacency list
 
-  AdjacencyMatrixToSVG(sfm_data.GetViews().size(), view_pair, "list.svg");
+  AdjacencyMatrixToSVG(sfm_data.GetViews().size(), view_pair, 
+    stlplus::create_filespec(
+      stlplus::folder_part(s_out_file), 
+      stlplus::filename_part(s_out_file), "svg"));
 
   if (savePairs(s_out_file, view_pair))
   {

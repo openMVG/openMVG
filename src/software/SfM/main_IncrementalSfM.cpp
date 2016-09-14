@@ -78,7 +78,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
-  cmd.add( make_option('p', b_use_motion_priors, "prior_usage") );
+  cmd.add( make_switch('P', "prior_usage") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -88,6 +88,7 @@ int main(int argc, char **argv)
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--outdir] path where the output data will be stored\n"
+    << "\n[Optional]\n"
     << "[-a|--initialPairA] filename of the first image (without path)\n"
     << "[-b|--initialPairB] filename of the second image (without path)\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
-      << "[-p|--prior_usage] Use motion priors (i.e GPS positions) (default: false)\n"
+      << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -194,6 +195,7 @@ int main(int argc, char **argv)
   // Configure reconstruction parameters
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
+  b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
 
   // Handle Initial pair parameter
