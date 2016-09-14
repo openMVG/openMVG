@@ -129,7 +129,7 @@ void key(GLFWwindow* window, int k, int scancode, int action, int mod)
     break;
   case GLFW_KEY_RIGHT:
     ++current_cam;
-    if (current_cam >= vec_cameras.size())  {
+    if (current_cam >= static_cast<int>(vec_cameras.size()))  {
       current_cam = 0;
     }
     break;
@@ -238,7 +238,7 @@ static void draw(void)
 
     glDisable(GL_CULL_FACE);
 
-    for (size_t i_cam=0; i_cam < vec_cameras.size(); ++i_cam)
+    for (int i_cam=0; i_cam < static_cast<int>(vec_cameras.size()); ++i_cam)
     {
       const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
@@ -279,10 +279,10 @@ static void draw(void)
         // use principal point to adjust image center
         const Vec2 pp = camPinhole->principal_point();
 
-        Vec3 c1(    -pp[0]/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
-        Vec3 c2((-pp[0]+w)/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
-        Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
-        Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
+        const Vec3 c1(    -pp[0]/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+        const Vec3 c2((-pp[0]+w)/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+        const Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
+        const Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
 
         // 2. Draw thumbnail
         if (i_cam == current_cam)

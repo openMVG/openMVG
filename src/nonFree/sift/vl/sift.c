@@ -701,7 +701,7 @@ Gaussian window size is set to have standard deviation
  **/
 
 VL_INLINE double
-fast_expn (VlSiftFilt * filter, double x)
+fast_expn (VlSiftFilt const * filter, double x)
 {
   double a,b,r ;
   int i ;
