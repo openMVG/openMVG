@@ -12,6 +12,7 @@
 #include "openMVG/geometry/half_space_intersection.hpp"
 
 #include <fstream>
+#include <iomanip>
 
 namespace openMVG {
 namespace sfm {
@@ -133,12 +134,14 @@ bool Frustum_Filter::export_Ply(const std::string & filename) const
     }
   }
 
+  of << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
   of << "ply" << '\n'
     << "format ascii 1.0" << '\n'
     << "element vertex " << vertex_count << '\n'
-    << "property float x" << '\n'
-    << "property float y" << '\n'
-    << "property float z" << '\n'
+    << "property double x" << '\n'
+    << "property double y" << '\n'
+    << "property double z" << '\n'
     << "element face " << face_count << '\n'
     << "property list uchar int vertex_index" << '\n'
     << "end_header" << '\n';
