@@ -45,7 +45,7 @@ TEST(Translation_knownRotation_Kernel, Multiview) {
 
     // Check that the fitted model is compatible with the data
     // Here the distance to the epipolar line is used
-    for (size_t i = 0; i < x0.cols(); ++i) {
+    for (Mat::Index i = 0; i < x0.cols(); ++i) {
       EXPECT_NEAR(0.0, kernel.Error(i, vec_t[0]), 1e-8);
     }
 

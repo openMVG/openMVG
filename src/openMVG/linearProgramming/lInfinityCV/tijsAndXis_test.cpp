@@ -48,7 +48,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
     for (size_t i=0; i<d._n;++i)
     {
       const size_t camIndex = i;
-      for (size_t j=0; j < d._x[0].cols(); ++j)
+      for (Mat2X::Index j=0; j < d._x[0].cols(); ++j)
       {
         megaMat(0,cpt) = d._x[camIndex].col(j)(0);
         megaMat(1,cpt) = d._x[camIndex].col(j)(1);
@@ -95,13 +95,13 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
     // Compute residuals L2 from estimated parameter values :
     Vec2 xk, xsum(0.0,0.0);
     for (size_t i = 0; i < d2._n; ++i) {
-      for(size_t k = 0; k < d._x[0].cols(); ++k)
+      for(Mat2X::Index k = 0; k < d._x[0].cols(); ++k)
       {
         xk = Project(d2.P(i), Vec3(d2._X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));
       }
     }
-    double dResidual2D = (xsum.array().sqrt().sum());
+    const double dResidual2D = (xsum.array().sqrt().sum());
 
     // Check that 2D re-projection and 3D point are near to GT.
     EXPECT_NEAR(0.0, dResidual2D, 1e-4);
@@ -148,7 +148,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
     std::vector<double> vec_solution((nViews + nbPoints)*3);
 
     std::vector<Mat3> vec_KR(d._R);
-    for(int i=0;i < nViews; ++i)
+    for (size_t i=0;i < nViews; ++i)
       vec_KR[i] = d._K[0] * d._R[i];
 
     OSI_CLP_SolverWrapper wrapperOSICLPSolver(vec_solution.size());
@@ -161,7 +161,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
       1.0,
       0.0))
     );
-    
+
     // Move computed value to dataset for residual estimation.
     {
       //-- Fill the ti

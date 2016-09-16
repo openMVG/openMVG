@@ -90,7 +90,7 @@ void Extract_MSER
     std::vector< MSERRegion > regs;
     MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY ) ;
     extr4.Extract( image4 , regs ) ;
-    for( int i = 0 ; i < regs.size() ; ++i )
+    for( size_t i = 0 ; i < regs.size() ; ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );
@@ -105,7 +105,7 @@ void Extract_MSER
     std::vector< MSERRegion > regs;
     MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY ) ;
     extr8.Extract( img , regs ) ;
-    for( int i = 0 ; i < regs.size() ; ++i )
+    for( size_t i = 0 ; i < regs.size() ; ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );

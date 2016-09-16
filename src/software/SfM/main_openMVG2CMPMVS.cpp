@@ -78,7 +78,7 @@ bool exportToCMPMVSFormat(
     }
 
     // Export (calibrated) views as undistorted images
-    std::pair<int,int> w_h_image_size;
+    std::pair<unsigned int, unsigned int> w_h_image_size;
     Image<RGBColor> image, image_ud;
     for(Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)

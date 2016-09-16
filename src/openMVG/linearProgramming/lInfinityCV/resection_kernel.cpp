@@ -22,7 +22,7 @@ using namespace std;
 void translate(const Mat3X & X, const Vec3 & vecTranslation,
                Mat3X * XPoints) {
   XPoints->resize(X.rows(), X.cols());
-  for (size_t i=0; i<X.cols(); ++i)  {
+  for (Mat3X::Index i=0; i<X.cols(); ++i)  {
     XPoints->col(i) = X.col(i) + vecTranslation;
   }
 }
@@ -34,7 +34,7 @@ void l1SixPointResectionSolver::Solve(const Mat &pt2D, const Mat &pt3d, vector<M
   assert(pt2D.cols() == pt3d.cols());
 
   //-- Translate 3D points in order to have X0 = (0,0,0,1).
-  Vec3 vecTranslation = - pt3d.col(0);
+  const Vec3 vecTranslation = - pt3d.col(0);
   Mat4 translationMatrix = Mat4::Identity();
   translationMatrix.block<3,1>(0,3) = vecTranslation;
 

@@ -91,14 +91,16 @@ public:
 	template< typename T >
 	VLD( const ImageScale& series, T const& P1, T const& P2 );
 //=========================================class functions==============================================//
-	inline double get_orientation()const
-	{
-		float dy = end_point[ 1 ] - begin_point[ 1 ];
-		float	dx = end_point[ 0 ] - begin_point[ 0 ];
+  inline double get_orientation()const
+  {
+		const float dy = end_point[ 1 ] - begin_point[ 1 ];
+		const float	dx = end_point[ 0 ] - begin_point[ 0 ];
 		float angle;
-		anglefrom( dx, dy, angle );
-		return angle;
-	}
+		if (anglefrom( dx, dy, angle ))
+			return angle;
+		else
+			return 0.0;
+  }
 	inline double difference( const  VLD& vld2 )const
 	{
 		double diff[ 2 ];

@@ -538,7 +538,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   #pragma omp parallel for schedule(dynamic)
 #endif
   // Compute the relative pose from pairwise point matches:
-  for (int i = 0; i < poseWiseMatches.size(); ++i)
+  for (int i = 0; i < static_cast<int>(poseWiseMatches.size()); ++i)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical
@@ -627,7 +627,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         const Mat34 P1 = cam_I->get_projective_equivalent(Pose_I);
         const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
         Landmarks & landmarks = tiny_scene.structure;
-        for (size_t k = 0; k < x1.cols(); ++k) {
+        for (Mat::Index k = 0; k < x1.cols(); ++k)
+        {
           const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
           const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
@@ -673,27 +674,11 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         using namespace openMVG::rotation_averaging;
           vec_relatives_R.emplace_back(
             relative_pose_pair.first, relative_pose_pair.second,
-            relativePose_info.relativePose.rotation(), relativePose_info.vec_inliers.size());
+            relativePose_info.relativePose.rotation(),
+            1.f);
       }
     }
   } // for all relative pose
-
-  // Re-weight rotation in [0,1]
-  if (vec_relatives_R.size() > 1)
-  {
-    std::vector<double> vec_count;
-    vec_count.reserve(vec_relatives_R.size());
-    for(const auto & relative_rotation_info : vec_relatives_R)
-    {
-      vec_count.push_back(relative_rotation_info.weight);
-    }
-    std::partial_sort(vec_count.begin(), vec_count.begin() + vec_count.size() / 2.0, vec_count.end());
-    const float thTrustPair = vec_count[vec_count.size() / 2.0];
-    for(auto & relative_rotation_info : vec_relatives_R)
-    {
-      relative_rotation_info.weight = std::min(relative_rotation_info.weight, 1.f);
-    }
-  }
 
   // Log input graph to the HTML report
   if (!sLogging_file_.empty() && !sOut_directory_.empty())

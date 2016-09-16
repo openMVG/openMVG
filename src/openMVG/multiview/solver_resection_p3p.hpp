@@ -46,7 +46,11 @@ namespace euclidean_resection {
 
 typedef Eigen::Matrix<double, 5, 1> Vec5;
 
-inline void solveQuartic( const Vec5 & factors, Vec4 & realRoots)
+inline void solveQuartic
+(
+  const Vec5 & factors,
+  Vec4 & realRoots
+)
 {
   double A = factors[0];
   double B = factors[1];
@@ -111,7 +115,12 @@ inline void solveQuartic( const Vec5 & factors, Vec4 & realRoots)
  *                    false if world points aligned
  */
 
-inline bool compute_P3P_Poses( const Mat3 & featureVectors, const Mat3 & worldPoints, Mat & solutions )
+inline bool compute_P3P_Poses
+(
+  const Mat3 & featureVectors,
+  const Mat3 & worldPoints,
+  Mat & solutions
+)
 {
   solutions = Mat(3, 4*4);
 
@@ -291,7 +300,12 @@ struct P3PSolver {
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 4};
   // Solve the problem of camera pose.
-  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34> *models)
+  static void Solve
+  (
+    const Mat &pt2D,
+    const Mat &pt3D,
+    std::vector<Mat34> *models
+  )
   {
     Mat3 R;
     Vec3 t;
@@ -319,7 +333,13 @@ struct P3PSolver {
   }
 
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
-  static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D) {
+  static double Error
+  (
+    const Mat34 & P,
+    const Vec2 & pt2D,
+    const Vec3 & pt3D
+  )
+  {
     return (pt2D - Project(P, pt3D)).norm();
   }
 };
@@ -329,19 +349,29 @@ class P3P_ResectionKernel_K {
   typedef Mat34 Model;
   enum { MINIMUM_SAMPLES = 3 };
 
-  P3P_ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X, const Mat3 &K = Mat3::Identity())
-    :x_image_(x_camera), X_(X), K_(K)
+  P3P_ResectionKernel_K
+  (
+    const Mat2X &x_camera,
+    const Mat3X &X,
+    const Mat3 &K = Mat3::Identity()
+  )
+  :x_image_(x_camera), X_(X), K_(K)
   {
     assert(x_camera.cols() == X.cols());
     // Conversion from image coordinates to normalized camera coordinates
     Mat3X x_image_h;
     EuclideanToHomogeneous(x_image_, &x_image_h);
     x_camera_ = K_.inverse() * x_image_h;
-    for(size_t i = 0; i < x_camera_.cols(); ++i)
+    for(Mat2X::Index i = 0; i < x_camera_.cols(); ++i)
       x_camera_.col(i).normalize();
   }
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit
+  (
+    const std::vector<size_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
     const Mat3 pt2D_3x3 ( ExtractColumns(x_camera_, samples) );
     const Mat3 pt3D_3x3 ( ExtractColumns(X_, samples) );
     Mat solutions(3, 4*4);
@@ -359,20 +389,26 @@ class P3P_ResectionKernel_K {
     }
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error
+  (
+    size_t sample,
+    const Model &model
+  ) const
+  {
     const Vec3 X = X_.col(sample);
     const Mat2X error = Project(model, X) - x_image_.col(sample);
     return error.col(0).norm();
   }
 
-  size_t NumSamples() const {
+  size_t NumSamples() const
+  {
     return static_cast<size_t>(x_camera_.cols());
   }
 
  private:
-  Mat2X x_image_; // camera coordinates
-  Mat3X x_camera_; // camera coordinates (normalized)
-  Mat3X X_;        // 3D points
+  Mat2X x_image_;   // camera coordinates
+  Mat3X x_camera_;  // camera coordinates (normalized)
+  Mat3X X_;         // 3D points
   Mat3 K_;
 };
 

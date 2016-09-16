@@ -341,7 +341,7 @@ int ReadPngStream(FILE *file,
   ptr->resize((*h)*(*w)*(*depth));
 
   // set the individual row-pointers to point at the correct offsets
-  for (int i = 0; i < hPNG; i++)
+  for (png_uint_32 i = 0; i < hPNG; i++)
     ppbRowPointers[i] = &((*ptr)[0]) + i * ulRowBytes;
 
   // now we can go ahead and just read the whole image
@@ -549,7 +549,7 @@ int WritePnmStream(FILE * file,
   fprintf(file, "%d %d %d\n", w, h, 255);
 
   // Write pixels.
-  const int res = fwrite( &array[0], 1, static_cast<int>(array.size()), file);
+  const size_t res = fwrite( &array[0], 1, static_cast<int>(array.size()), file);
   if (res != array.size()) {
     return 0;
   }
@@ -617,7 +617,7 @@ int WriteTiff(const char * filename,
   TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
   TIFFSetField(tiff, TIFFTAG_COMPRESSION,COMPRESSION_NONE);
   TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, 16);
-  for (uint32 y=0; y < h ; ++y) {
+  for (uint32 y=0; y < static_cast<uint32>(h) ; ++y) {
     if (TIFFWriteScanline(tiff,(tdata_t)(((uint8*)(&ptr[0]))+depth*w*y),y)<0) {
       TIFFClose(tiff);
       return 0;

@@ -418,7 +418,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic)
     #endif
-    for (int k = 0; k < vec_edges.size(); ++k)
+    for (int k = 0; k < static_cast<int>(vec_edges.size()); ++k)
     {
       const myEdge & edge = vec_edges[k];
       #ifdef OPENMVG_USE_OPENMP

@@ -44,8 +44,8 @@ void KeepOnlyReferencedElement(
     iter = map_relatives.begin();
     iter != map_relatives.end(); ++iter)
   {
-    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
-        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    if (set_remainingIds.count(iter->first.first) &&
+        set_remainingIds.count(iter->first.second))
     {
       map_relatives_infered.insert(*iter);
     }
@@ -65,8 +65,8 @@ void KeepOnlyReferencedElement(
     iter = relative_info.begin();
     iter != relative_info.end(); ++iter)
   {
-    if (set_remainingIds.find(iter->i) != set_remainingIds.end() &&
-        set_remainingIds.find(iter->j) != set_remainingIds.end())
+    if (set_remainingIds.count(iter->i) &&
+        set_remainingIds.count(iter->j))
     {
       relatives_infered.push_back(*iter);
     }
@@ -85,8 +85,8 @@ void KeepOnlyReferencedElement(
   for (openMVG::matching::PairWiseMatches::const_iterator iter = map_matches.begin();
     iter != map_matches.end(); ++iter)
   {
-    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
-        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    if (set_remainingIds.count(iter->first.first) &&
+        set_remainingIds.count(iter->first.second))
     {
       map_matches_E_infered.insert(*iter);
     }
@@ -105,7 +105,7 @@ void KeepOnlyReferencedElement(
   for (std::map<IndexT,Mat3>::const_iterator iter = map_Mat3.begin();
     iter != map_Mat3.end(); ++iter)
   {
-    if (set_remainingIds.find(iter->first) != set_remainingIds.end())
+    if (set_remainingIds.count(iter->first))
     {
       map_infered.insert(*iter);
     }
@@ -124,8 +124,8 @@ void KeepOnlyReferencedElement(
   for (RelativeInfo_Vec::const_iterator iter = relativeInfo_vec.begin();
     iter != relativeInfo_vec.end(); ++iter)
   {
-    if (set_remainingIds.find(iter->first.first) != set_remainingIds.end() &&
-        set_remainingIds.find(iter->first.second) != set_remainingIds.end())
+    if (set_remainingIds.count(iter->first.first) &&
+        set_remainingIds.count(iter->first.second))
     {
       map_infered.push_back(*iter);
     }
@@ -146,8 +146,8 @@ void KeepOnlyReferencedElement(
     RelativeInfo_Vec group;
     for (const relativeInfo & rel : iter)
     {
-      if (set_remainingIds.find(rel.first.first) != set_remainingIds.end() &&
-          set_remainingIds.find(rel.first.second) != set_remainingIds.end())
+      if (set_remainingIds.count(rel.first.first) &&
+          set_remainingIds.count(rel.first.second))
       {
         group.push_back(rel);
       }

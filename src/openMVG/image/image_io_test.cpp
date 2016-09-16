@@ -226,7 +226,7 @@ TEST(ImageHeader, AllFormats) {
 
   const std::vector<std::string> ext_Type = {"jpg", "png", "tif", "png", "pgm"};
   const int image_border_size = 10;
-  for (int i=0; i < ext_Type.size(); ++i)
+  for (size_t i=0; i < ext_Type.size(); ++i)
   {
     std::ostringstream os;
     os << "img" << "." << ext_Type[i];

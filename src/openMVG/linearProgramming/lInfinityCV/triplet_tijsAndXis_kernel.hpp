@@ -75,7 +75,7 @@ struct translations_Triplet_Solver {
     Mat4X megaMat(4, n_obs*3);
     {
       size_t cpt = 0;
-      for (size_t i = 0; i  < n_obs; ++i)
+      for (int i = 0; i  < n_obs; ++i)
       {
         megaMat.col(cpt++) << pt0.col(i)(0), pt0.col(i)(1), (double)i, 0.0;
         megaMat.col(cpt++) << pt1.col(i)(0), pt1.col(i)(1), (double)i, 1.0;

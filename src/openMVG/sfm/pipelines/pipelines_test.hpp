@@ -23,10 +23,10 @@ struct Synthetic_Features_Provider : public Features_Provider
   {
     std::default_random_engine generator;
     // For each view
-    for (int j = 0; j < synthetic_data._n; ++j)
+    for (size_t j = 0; j < synthetic_data._n; ++j)
     {
       // For each new point visibility
-      for (int i = 0; i < synthetic_data._x[j].cols(); ++i)
+      for (Mat2X::Index i = 0; i < synthetic_data._x[j].cols(); ++i)
       {
         const Vec2 pt = synthetic_data._x[j].col(i);
         feats_per_view[j].push_back(
@@ -41,15 +41,17 @@ struct Synthetic_Features_Provider : public Features_Provider
 //  - for contiguous triplets store the corresponding observations indexes
 struct Synthetic_Matches_Provider : public Matches_Provider
 {
-  virtual bool load(
-    const NViewDataSet & synthetic_data)
+  virtual bool load
+  (
+    const NViewDataSet & synthetic_data
+  )
   {
     // For each view
-    for (int j = 0; j < synthetic_data._n; ++j)
+    for (IndexT j = 0; j < synthetic_data._n; ++j)
     {
-      for (int jj = j+1; jj < j+3 ; ++jj)
+      for (IndexT jj = j+1; jj < j+3 ; ++jj)
       {
-        for (int idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
+        for (Mat2X::Index idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
         {
           pairWise_matches_[Pair(j,(jj)%synthetic_data._n)].push_back(IndMatch(idx,idx));
         }

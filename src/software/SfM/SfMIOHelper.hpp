@@ -40,7 +40,7 @@ struct IntrinsicCameraInfo
   bool m_bKnownIntrinsic; // true if 11 or 6, else false
   std::string m_sCameraMaker, m_sCameraModel;
 
-  IntrinsicCameraInfo(): m_w(0), m_h(0), m_K(Mat3::Zero()), m_k1(0), m_k2(0), m_k3(0), m_bKnownIntrinsic(false), m_sCameraModel(""), m_sCameraMaker("")
+  IntrinsicCameraInfo(): m_w(0), m_h(0), m_K(Mat3::Zero()), m_k1(0), m_k2(0), m_k3(0), m_bKnownIntrinsic(false), m_sCameraMaker(""), m_sCameraModel("")
   {  }
 
   /// Functor used to tell if two IntrinsicCameraInfo share the same optical properties
@@ -189,9 +189,12 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
 }
 
 //-- Load an image list file but only return camera image names
-static bool loadImageList( std::vector<std::string> & vec_camImageName,
-                           const std::string & sListFileName,
-                           bool bVerbose = true )
+inline bool loadImageList
+(
+  std::vector<std::string> & vec_camImageName,
+  const std::string & sListFileName,
+  bool bVerbose = true
+)
 {
   vec_camImageName.clear();
   std::vector<openMVG::SfMIO::CameraInfo> vec_camImageIntrinsicInfo;

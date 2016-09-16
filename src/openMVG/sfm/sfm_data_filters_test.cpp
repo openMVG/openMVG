@@ -18,10 +18,10 @@ using namespace openMVG::sfm;
 void init_scene
 (
   SfM_Data &sfm_data,
-  const int viewsCount
+  const IndexT viewsCount
 )
 {
-  for(IndexT i = 0; i < viewsCount; ++i)
+  for (IndexT i = 0; i < viewsCount; ++i)
   {
     // Add views
     std::ostringstream os;

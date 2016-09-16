@@ -65,7 +65,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
     Mat megaMat(4, d._n*d._x[0].cols());
     {
       int cpt = 0;
-      for (int i=0; i<d._n;++i)
+      for (size_t i=0; i<d._n;++i)
       {
         const int camIndex = i;
         for (int j=0; j<d._x[0].cols(); ++j)
@@ -112,7 +112,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
     std::cout << std::endl << "Residual : " << std::endl;
     Vec2 xk;
     double xsum = 0.0;
-    for (int i = 0; i < d2._n; ++i) {
+    for (size_t i = 0; i < d2._n; ++i) {
         std::cout << "\nCamera : " << i << " \t:";
         for(int k = 0; k < d._x[0].cols(); ++k)
         {

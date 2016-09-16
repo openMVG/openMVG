@@ -60,7 +60,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
 
   const std::vector<std::string> ext_Type = {"json", "bin", "xml"};
 
-  for (int i=0; i < ext_Type.size(); ++i)
+  for (size_t i=0; i < ext_Type.size(); ++i)
   {
     std::ostringstream os;
     os << "SAVE_LOAD" << "." << ext_Type[i];

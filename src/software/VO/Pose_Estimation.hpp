@@ -61,8 +61,7 @@ struct Pose_Estimator
       false); // configure as point to point error model.
 
     Mat3 H;
-    std::pair<double, double> ACRansacOut = ACRANSAC(kernel, vec_inliers, 1024, &H,
-      std::numeric_limits<double>::infinity(),
+    ACRANSAC(kernel, vec_inliers, 1024, &H, std::numeric_limits<double>::infinity(),
       true);
 
     // Check the homography support some point to be considered as valid
@@ -93,8 +92,7 @@ struct Pose_Estimator
     Mat3 pE;
     double precision = std::numeric_limits<double>::infinity();
     // Robustly estimation of the Essential matrix and it's precision
-    std::pair<double, double> acRansacOut = ACRANSAC(kernel, vec_inliers,
-      ACRANSAC_ITER, &pE, precision, false);
+    ACRANSAC(kernel, vec_inliers, ACRANSAC_ITER, &pE, precision, false);
 
     return vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES;
   }
@@ -118,8 +116,7 @@ struct Pose_Estimator
     const double dPrecision = std::numeric_limits<double>::infinity();
 
     // Robustly estimation of the Projection matrix and it's precision
-    const std::pair<double, double> ACRansacOut = ACRANSAC(kernel, vec_inliers,
-      ACRANSAC_ITER, &P, dPrecision, true);
+    ACRANSAC(kernel, vec_inliers, ACRANSAC_ITER, &P, dPrecision, true);
 
     // Test if the found model is valid
     return vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES;

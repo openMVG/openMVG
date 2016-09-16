@@ -106,12 +106,12 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   if (bRelative_Translation_PerTriplet)
   {
     std::vector< graph::Triplet > vec_triplets;
-    for (IndexT i = 0; i < iNviews; ++i)
+    for (int i = 0; i < iNviews; ++i)
     {
       const IndexT iPlus1 = modifiedMod(i+1,iNviews);
       const IndexT iPlus2 = modifiedMod(i+2,iNviews);
       //-- sort the triplet index to have a monotonic ascending series of value
-      IndexT triplet[3] = {i, iPlus1, iPlus2};
+      IndexT triplet[3] = {IndexT(i), iPlus1, iPlus2};
       std::sort(&triplet[0], &triplet[3]);
       vec_triplets.emplace_back(triplet[0],triplet[1],triplet[2]);
     }
@@ -130,11 +130,11 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   else
   {
     //-- Setup initial pairs that will be considered (link each camera to the two next)
-    for (size_t i = 0; i < iNviews; ++i)
+    for (int i = 0; i < iNviews; ++i)
     {
-      for (size_t j=i; j<=i+2; ++j)
+      for (int j=i; j<=i+2; ++j)
       {
-        const size_t jj = modifiedMod(j,iNviews);
+        const int jj = modifiedMod(j,iNviews);
         if (i != jj)
         {
           const Pair_Vec pairs = {Pair(i,jj)};

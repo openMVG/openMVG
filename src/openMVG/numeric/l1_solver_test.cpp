@@ -57,7 +57,7 @@ TEST(L1Solver_L1Magic, Decoding)
 
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution(0, observation.size()-1);
-  for (int i = 0; i < T; ++i) {
+  for (unsigned int i = 0; i < T; ++i) {
     observation(distribution(generator)) = pertubations(i);
   }
 
@@ -96,7 +96,7 @@ TEST(L1Solver_ADMM, Decoding)
 
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution(0, observation.size()-1);
-  for (int i = 0; i < T; ++i) {
+  for (unsigned int i = 0; i < T; ++i) {
     observation(distribution(generator)) = pertubations(i);
   }
 

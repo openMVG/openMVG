@@ -61,7 +61,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @brief Get width of the image
   * @return width of the image
   */
-  const unsigned int w() const
+  unsigned int w() const
   {
     return w_;
   }
@@ -70,7 +70,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @brief Get height of the image
   * @return height of the image
   */
-  const unsigned int h() const
+  unsigned int h() const
   {
     return h_;
   }
@@ -239,7 +239,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
-  * @brief Generate an unique Hash from the camera parameters (used for grouping)
+  * @brief Generate a unique Hash from the camera parameters (used for grouping)
   * @return Hash value
   */
   virtual std::size_t hashValue() const
@@ -269,7 +269,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
 *
 * @return Angle (in degree) between the two rays
 */
-static double AngleBetweenRay(
+inline double AngleBetweenRay(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,

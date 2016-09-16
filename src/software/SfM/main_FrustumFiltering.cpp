@@ -26,7 +26,6 @@ Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
     itL != sfm_data.GetLandmarks().end(); ++itL)
   {
     const Landmark & landmark = itL->second;
-    const Vec3 & X = landmark.X;
     for (Observations::const_iterator iterI = landmark.obs.begin();
       iterI != landmark.obs.end(); ++iterI)
     {

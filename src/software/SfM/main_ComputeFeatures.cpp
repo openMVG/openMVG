@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
     #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
 #endif
-    for(int i = 0; i < sfm_data.views.size(); ++i)
+    for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);

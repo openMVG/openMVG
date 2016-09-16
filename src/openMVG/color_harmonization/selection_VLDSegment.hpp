@@ -24,11 +24,11 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
                                const vector< features::SIOPointFeature >& vec_featsL,
                                const vector< features::SIOPointFeature >& vec_featsR):
            commonDataByPair( sLeftImage, sRightImage ),
-           _vec_PutativeMatches( vec_PutativeMatches ),
-           _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR )
+           _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ),
+           _vec_PutativeMatches( vec_PutativeMatches )
   {}
 
-  ~commonDataByPair_VLDSegment() override = default ; 
+  ~commonDataByPair_VLDSegment() override = default ;
 
   /**
    * Put masks to white, images are conserved

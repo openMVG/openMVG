@@ -95,6 +95,7 @@ SET(EASYEXIF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_p
 ADD_SUBDIRECTORY(easyexif)
 
 # Fast corner detector
+SET(FAST_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/fast)
 ADD_SUBDIRECTORY(fast)
 
 ##

@@ -28,11 +28,11 @@ static void planarToSpherical(
   Mat & sphericalCoords)     // Output spherical coordinates (on the unit sphere)
 {
   sphericalCoords.resize(3, planarCoords.cols());
-  for (size_t iCol = 0; iCol < planarCoords.cols(); ++iCol)
+  for (Mat::Index iCol = 0; iCol < planarCoords.cols(); ++iCol)
   {
     const Vec2 & xy = planarCoords.col(iCol);
-    double uval = xy(0) / (double)width;
-    double vval = xy(1) / (double)height;
+    const double uval = xy(0) / (double)width;
+    const double vval = xy(1) / (double)height;
 
     sphericalCoords.col(iCol) =
       (Vec3 (sin(vval*M_PI)*cos(M_PI*(2.0*uval+0.5)),

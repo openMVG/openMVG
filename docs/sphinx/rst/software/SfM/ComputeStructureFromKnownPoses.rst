@@ -55,7 +55,12 @@ Arguments description:
   - **[-f|--match_file]**
 
     - path to a matches file (pairs of the match files will be listed and used)
-    
+
+  - **[-p|--pair_file]**
+
+    - path to a pairs file (only those pairs will be considered to compute the structure)
+      The pair file is a list of view indexes, one pair on each line
+
   - **[-b|--bundle_adjustment]**
 
     - perform a bundle adjustment on the scene (OFF by default)

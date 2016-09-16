@@ -19,7 +19,9 @@ namespace openMVG{
 namespace plyHelper{
 
 /// Export 3D point vector to PLY format
-inline bool exportToPly
+inline
+bool
+exportToPly
 (
   const std::vector<Vec3> & vec_points,
   const std::string & sFileName
@@ -82,7 +84,7 @@ inline bool exportToPly
   outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
 
   for (size_t i=0; i < vec_points.size(); ++i)  {
-    if (vec_coloredPoints == NULL)
+    if (vec_coloredPoints == nullptr)
       outfile
         << vec_points[i](0) << ' '
         << vec_points[i](1) << ' '

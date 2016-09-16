@@ -32,11 +32,14 @@ namespace geometry
  *
  * \note Need at least 3 points
  */
-static bool FindRTS( const Mat &x1,
-                     const Mat &x2,
-                     double * S,
-                     Vec3 * t,
-                     Mat3 * R )
+inline bool FindRTS
+(
+  const Mat &x1,
+  const Mat &x2,
+  double * S,
+  Vec3 * t,
+  Mat3 * R
+)
 {
   if ( x1.cols() < 3 || x2.cols() < 3 )
   {
@@ -209,11 +212,14 @@ struct lm_RRefine_functor : Functor<double>
  *
  * \return none
  */
-static void Refine_RTS( const Mat &x1,
-                        const Mat &x2,
-                        double * S,
-                        Vec3 * t,
-                        Mat3 * R )
+inline void Refine_RTS
+(
+  const Mat &x1,
+  const Mat &x2,
+  double * S,
+  Vec3 * t,
+  Mat3 * R
+)
 {
   {
     lm_SRTRefine_functor functor( 7, 3 * x1.cols(), x1, x2, *S, *R, *t );
@@ -226,12 +232,12 @@ static void Refine_RTS( const Mat &x1,
 
     lm.minimize( xlm );
 
-    Vec3 transAdd = xlm.block<3, 1>( 0, 0 );
-    Vec3 rot = xlm.block<3, 1>( 3, 0 );
-    double SAdd = xlm( 6 );
+    const Vec3 transAdd = xlm.block<3, 1>( 0, 0 );
+    const Vec3 rot = xlm.block<3, 1>( 3, 0 );
+    const double SAdd = xlm( 6 );
 
     //Build the rotation matrix
-    Mat3 Rcor =
+    const Mat3 Rcor =
       ( Eigen::AngleAxis<double>( rot( 0 ), Vec3::UnitX() )
         * Eigen::AngleAxis<double>( rot( 1 ), Vec3::UnitY() )
         * Eigen::AngleAxis<double>( rot( 2 ), Vec3::UnitZ() ) ).toRotationMatrix();
@@ -253,10 +259,10 @@ static void Refine_RTS( const Mat &x1,
 
     lm.minimize( xlm );
 
-    Vec3 rot = xlm.block<3, 1>( 0, 0 );
+    const Vec3 rot = xlm.block<3, 1>( 0, 0 );
 
     //Build the rotation matrix
-    Mat3 Rcor =
+    const Mat3 Rcor =
       ( Eigen::AngleAxis<double>( rot( 0 ), Vec3::UnitX() )
         * Eigen::AngleAxis<double>( rot( 1 ), Vec3::UnitY() )
         * Eigen::AngleAxis<double>( rot( 2 ), Vec3::UnitZ() ) ).toRotationMatrix();

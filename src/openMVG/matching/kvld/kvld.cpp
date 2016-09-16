@@ -232,12 +232,12 @@ float KVLD( const Image< float >& I1,
     dist1 = openMVG::Matf::Zero( F1.size(), F1.size() );
     dist2 = openMVG::Matf::Zero( F2.size(), F2.size() );
 
-    for( int a1 = 0; a1 < F1.size(); ++a1 )
-      for( int a2 = a1; a2 < F1.size(); ++a2 )
+    for( size_t a1 = 0; a1 < F1.size(); ++a1 )
+      for( size_t a2 = a1; a2 < F1.size(); ++a2 )
         dist1( a1, a2 ) = dist1( a2, a1 ) = point_distance( F1[ a1 ], F1[ a2 ] );
 
-    for( int b1 = 0; b1 < F2.size(); ++b1 )
-      for( int b2 = b1; b2 < F2.size(); ++b2 )
+    for( size_t b1 = 0; b1 < F2.size(); ++b1 )
+      for( size_t b2 = b1; b2 < F2.size(); ++b2 )
         dist2( b1, b2 ) = dist2( b2, b1 ) = point_distance( F2[ b1 ], F2[ b2 ] );
   }
 
@@ -257,16 +257,16 @@ float KVLD( const Image< float >& I1,
     fill( scoretable.begin(), scoretable.end(), 0.0 );
     fill( result.begin(), result.end(), 0 );
     //========substep 1: search foreach match its neighbors and verify if they are gvld-consistent ============//
-    for( int it1 = 0; it1 < size - 1; it1++ )
+    for( size_t it1 = 0; it1 < size - 1; it1++ )
     {
       if( valide[ it1 ] )
       {
         size_t a1 = matches[ it1 ].first, b1 = matches[ it1 ].second;
 
-        for( int it2 = it1 + 1; it2 < size; it2++ )
+        for( size_t it2 = it1 + 1; it2 < size; it2++ )
           if(valide[ it2 ])
           {
-            size_t a2 = matches[ it2 ].first, b2 = matches[ it2 ].second;
+            const size_t a2 = matches[ it2 ].first, b2 = matches[ it2 ].second;
 
             bool bOk = false;
             if( bPrecomputedDist )
@@ -312,7 +312,7 @@ float KVLD( const Image< float >& I1,
     }
 
     //========substep 2: remove false matches by K gvld-consistency criteria ============//
-    for( int it = 0; it < size; it++ )
+    for( size_t it = 0; it < size; it++ )
     {
       if( valide[ it ] && result[ it ] < kvldParameters.K )
       {
@@ -322,12 +322,12 @@ float KVLD( const Image< float >& I1,
     }
     //========substep 3: remove multiple matches to a same point by keeping the one with the best average gvld-consistency score ============//
     if( uniqueMatch )
-      for( int it1 = 0; it1 < size - 1; it1++ )
+      for( size_t it1 = 0; it1 < size - 1; it1++ )
         if( valide[ it1 ]) {
           size_t a1 = matches[ it1 ].first;
           size_t b1 = matches[ it1 ].second;
 
-          for( int it2 = it1 + 1; it2 < size; it2++ )
+          for( size_t it2 = it1 + 1; it2 < size; it2++ )
             if( valide[ it2 ] )
             {
               size_t a2 = matches[ it2 ].first;
@@ -370,21 +370,21 @@ float KVLD( const Image< float >& I1,
     //========substep 4: ifgeometric verification is set, re-score matches by geometric-consistency, and remove poorly scored ones ============================//
     if( uniqueMatch && kvldParameters.geometry )
     {
-      for( int i = 0; i < size; i++ )
+      for( size_t i = 0; i < size; i++ )
         scoretable[ i ]=0;
 
       vector< bool > switching;
-      for( int i = 0; i < size; i++ )
+      for( size_t i = 0; i < size; i++ )
         switching.push_back( false );
 
-      for( int it1 = 0; it1 < size; it1++ )
+      for( size_t it1 = 0; it1 < size; it1++ )
       {
         if( valide[ it1 ] )
         {
           size_t a1 = matches[ it1 ].first, b1 = matches[ it1 ].second;
           float index = 0.0f;
           int good_index = 0;
-          for( int it2 = 0; it2 < size; it2++ )
+          for( size_t it2 = 0; it2 < size; it2++ )
           {
             if( it1 != it2 && valide[ it2 ] )
             {
@@ -416,13 +416,13 @@ float KVLD( const Image< float >& I1,
           }
         }
       }
-      for( int it1 = 0; it1 < size; it1++ )
+      for( size_t it1 = 0; it1 < size; it1++ )
         if( switching[ it1 ] )
           valide[ it1 ] = false;
     }
   }
   //=============== generating output list ===================//
-  for( int it = 0; it < size; it++ )
+  for( size_t it = 0; it < size; it++ )
     if( valide[ it ] )
     {
       matchesFiltered.push_back( matches[ it ] );

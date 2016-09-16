@@ -1024,14 +1024,12 @@ vl_constructor ()
 void
 vl_destructor ()
 {
-  VlState * state ;
 #if defined(DEBUG)
   printf("VLFeat DEBUG: destructor begins.\n") ;
 #endif
 
-  state = vl_get_state() ;
-
 #if ! defined(VL_DISABLE_THREADS)
+  VlState * state = vl_get_state() ;
 #if defined(DEBUG)
   printf("VLFeat DEBUG: destroying a thread specific state instance.\n") ;
 #endif

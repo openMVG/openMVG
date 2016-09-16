@@ -49,7 +49,7 @@ public:
 
   const image::Image<RGBColor>& image(size_t i) const { return vec_image_[i]; }
   const Mat3& H(size_t i) const { return vec_H_[i]; }
-  const size_t size() const { return vec_image_.size(); }
+  size_t size() const { return vec_image_.size(); }
 
 private:
   /// Load the images of a directory
@@ -63,7 +63,7 @@ private:
       return false;
     sort(vec_image_basename.begin(), vec_image_basename.end());
     vec_image_.resize(vec_image_basename.size());
-    for (int i = 0; i < vec_image_basename.size(); ++i)
+    for (size_t i = 0; i < vec_image_basename.size(); ++i)
     {
       const std::string path = stlplus::create_filespec(folderPath_, vec_image_basename[i]);
       image::Image<RGBColor> imageRGB;
@@ -144,7 +144,6 @@ void PointsToMat(
   MatT & m1)
 {
   typedef typename FeaturesT::value_type ValueT; // Container type
-  typedef typename MatT::Scalar Scalar; // Output matrix type
 
   m0.resize(2, matches.size());
   m1.resize(2, matches.size());
