@@ -182,7 +182,7 @@ int main(int argc, char **argv)
         // INLIERS only
         {
           std::vector<float> vec_fitting_errors;
-          for (size_t i = 0; i < X_SfM.cols(); ++i)
+          for (Mat::Index i = 0; i < X_SfM.cols(); ++i)
           {
             if (geometry::kernel::Similarity3ErrorSquaredMetric::Error(sim, X_SfM.col(i), X_GPS.col(i)) < lmeds_median)
               vec_fitting_errors.push_back((X_GPS.col(i) - sim(X_SfM.col(i))).norm());
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
         double S;
         if (!openMVG::geometry::FindRTS(X_SfM, X_GPS, &S, &t, &R))
         {
-          std:cerr << "Failed to comute the registration" << std::endl;
+          std::cerr << "Failed to comute the registration" << std::endl;
           return EXIT_FAILURE;
         }
 

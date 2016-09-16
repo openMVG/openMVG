@@ -88,7 +88,6 @@ Vec3 lla_to_utm
   const double n_9  = n_8 * n;
   const double n_10 = n_9 * n;
 
-  const int lat_zone = 2 + floor((lat + 80) / 8);
   const int lon_zone = 1 + floor((lon + 180) / 6);
 
   const double lon_0 = D2R(3 + 6 * (lon_zone - 1) - 180);
