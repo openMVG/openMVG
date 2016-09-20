@@ -24,7 +24,7 @@ Arguments description:
 **Optional parameters:**
 
   - **[-q|--query_image]** The query image to locate
-  - **[-r|--residual_error] upper bound of the residual error tolerance
+  - **[-r|--residual_error]** upper bound of the residual error tolerance
 .. code-block:: c++
 
   // Example
