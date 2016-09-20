@@ -40,15 +40,14 @@ int main(int argc, char **argv)
   std::string sMatchesDir;
   std::string sOutDir = "";
   std::string sQueryDir;
-  bool bSingleIntrinsics = false;
   double dMaxResidualError = std::numeric_limits<double>::infinity();
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
   cmd.add( make_option('o', sOutDir, "out_dir") );
   cmd.add( make_option('q', sQueryDir, "query_image_dir"));
-  cmd.add( make_option('s', bSingleIntrinsics, "single_intrinsics"));
   cmd.add( make_option('r', dMaxResidualError, "residual_error"));
+  cmd.add( make_switch('s', "single_intrinsics"));
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -61,8 +60,8 @@ int main(int argc, char **argv)
     << "[-q|--query_image_dir] path to the directory containing the images that must be localized (can also contain the images from the initial reconstruction)\n"
     << "(optional)\n"
     << "[-r|--residual_error] upper bound of the residual error tolerance\n"
-    << "[-s|--single_intrinsics] (default: false) when switched on, the program will check if the input sfm_data contains a single intrinsics and, if so, take\
-    this value as input for the intrinsics of the query images.\n"
+    << "[-s|--single_intrinsics] (switch) when switched on, the program will check if the input sfm_data contains a single intrinsics and, if so, take\
+    this value as input for the intrinsics of the query images. (OFF by default)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -148,7 +147,7 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
- if (bSingleIntrinsics && sfm_data.GetIntrinsics().size() != 1)
+ if (cmd.used('s') && sfm_data.GetIntrinsics().size() != 1)
   {
     std::cout << "More than one intrinsics to compare to in input scene => Consider intrinsics as unkown." << std::endl;
   }
@@ -170,7 +169,7 @@ int main(int argc, char **argv)
   // Since we have copied interesting data, release some memory
   regions_provider.reset();
 
-  // list images from sfm_data in vector
+  // list images from sfm_data in a vector
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
   std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views[n].get()->s_Img_path);} );
@@ -183,16 +182,14 @@ int main(int argc, char **argv)
   std::vector<std::string> vec_image_new;
   std::set_difference(vec_image.begin(),vec_image.end(),vec_image_original.begin(),vec_image_original.end(),std::back_inserter(vec_image_new));
 
-  // copy sfm_data
-  SfM_Data sfm_data_out = sfm_data;
-  
   // references
-  Views & views = sfm_data_out.views;
-  Poses & poses = sfm_data_out.poses;
-  Intrinsics & intrinsics = sfm_data_out.intrinsics;
-
-  // first intrinsics of the input sfm_data file, to be used if we inforce single intrinsics
+  Views & views = sfm_data.views;
+  Poses & poses = sfm_data.poses;
+  Intrinsics & intrinsics = sfm_data.intrinsics;
+  
+  // first intrinsics of the input sfm_data file, will be used if we inforce single intrinsics
   cameras::Pinhole_Intrinsic_Radial_K3 * ptrPinhole = dynamic_cast<cameras::Pinhole_Intrinsic_Radial_K3*>(sfm_data.GetIntrinsics().at(0).get());
+  int num_initial_intrinsics = sfm_data.GetIntrinsics().size(); 
 
   for ( std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
     iter_image != vec_image_new.end();
@@ -226,7 +223,7 @@ int main(int argc, char **argv)
     }
 
     std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic(nullptr);
-    if (bSingleIntrinsics && sfm_data.GetIntrinsics().size() == 1)
+    if (cmd.used('s') && num_initial_intrinsics == 1)
     {
       optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>(
         imageGray.Width(), imageGray.Height(),
@@ -288,15 +285,16 @@ int main(int argc, char **argv)
       
       // Add the computed pose to the sfm_container
       poses[v.id_pose] = pose;
-    }
 
+    }
+    
     // Add the view to the sfm_container
     views[v.id_view] = std::make_shared<View>(v);
   }
 
-  GroupSharedIntrinsics(sfm_data_out);
+  GroupSharedIntrinsics(sfm_data);
   
-  std::cout << " Total poses successfuly computed : " << vec_found_poses.size() << "/" << vec_image_new.size() << endl;
+  std::cout << " Total poses found : " << vec_found_poses.size() << "/" << vec_image_new.size() << endl;
 
   // Export the found camera position in a ply.
   const std::string out_file_name = stlplus::create_filespec(sOutDir, "found_pose_centers", "ply");
@@ -324,7 +322,7 @@ int main(int argc, char **argv)
 
   // Export found camera poses along with original camera poses in a new sfm_data file
   if (!Save(
-    sfm_data_out,
+    sfm_data,
     stlplus::create_filespec( sOutDir, "sfm_data_expanded.json" ).c_str(),
     ESfM_Data(ALL)))
   {
@@ -332,7 +330,7 @@ int main(int argc, char **argv)
   }
   // export also as ply
   if (!Save(
-    sfm_data_out,
+    sfm_data,
     stlplus::create_filespec( sOutDir, "sfm_data_expanded.ply" ).c_str(),
     ESfM_Data(ALL)))
   {
