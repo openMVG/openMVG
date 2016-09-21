@@ -123,22 +123,38 @@ bool exportToMVE2Format(
         if (cam->have_disto())
         {
           // Undistort and save the image
-          ReadImage(srcImage.c_str(), &image);
+          if (!ReadImage(srcImage.c_str(), &image))
+          {
+            std::cerr
+              << "Unable to read the input image as a RGB image:\n"
+              << srcImage << std::endl;
+            return EXIT_FAILURE;
+          }
           UndistortImage(image, cam, image_ud, BLACK);
-          WriteImage(dstImage.c_str(), image_ud);
+          if (!WriteImage(dstImage.c_str(), image_ud))
+          {
+            std::cerr
+              << "Unable to write the output image as a RGB image:\n"
+              << dstImage << std::endl;
+            return EXIT_FAILURE;
+          }
         }
         else // (no distortion)
         {
           // If extensions match, copy the PNG image
           if (stlplus::extension_part(srcImage) == "PNG" ||
-            stlplus::extension_part(srcImage) == "png")
+              stlplus::extension_part(srcImage) == "png")
           {
             stlplus::file_copy(srcImage, dstImage);
           }
           else
           {
-            ReadImage( srcImage.c_str(), &image);
-            WriteImage( dstImage.c_str(), image);
+            if (!ReadImage( srcImage.c_str(), &image) ||
+                !WriteImage( dstImage.c_str(), image))
+            {
+              std::cerr << "Unable to read and write the image" << std::endl;
+              return EXIT_FAILURE;
+            }
           }
         }
 
@@ -210,22 +226,22 @@ bool exportToMVE2Format(
     // The following method is adapted from Simon Fuhrmann's MVE project:
     // https://github.com/simonfuhrmann/mve/blob/e3db7bc60ce93fe51702ba77ef480e151f927c23/libs/mve/bundle_io.cc
 
-    for (Landmarks::const_iterator iterLandmarks = landmarks.begin(); iterLandmarks != landmarks.end(); ++iterLandmarks)
+    for (const auto & landmarks_it : landmarks)
     {
-      const Vec3 exportPoint = iterLandmarks->second.X;
+      const Vec3 exportPoint = landmarks_it.second.X;
       out << exportPoint.x() << " " << exportPoint.y() << " " << exportPoint.z() << "\n";
       out << 250 << " " << 100 << " " << 150 << "\n";  // Write arbitrary RGB color, see above note
 
       // Tally set of feature observations
-      const Observations & obs = iterLandmarks->second.obs;
+      const Observations & obs = landmarks_it.second.obs;
       const size_t featureCount = std::distance(obs.begin(), obs.end());
       out << featureCount;
 
-      for (Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs)
+      for (const auto & obs_it : obs)
       {
-          const IndexT viewId = itObs->first;
-          const IndexT featId = itObs->second.id_feat;
-          out << " " << viewId << " " << featId << " 0";
+        const IndexT viewId = obs_it.first;
+        const IndexT featId = obs_it.second.id_feat;
+        out << " " << viewId << " " << featId << " 0";
       }
       out << "\n";
     }
