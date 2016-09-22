@@ -9,6 +9,7 @@
 #include <openMVG/features/features.hpp>
 #include <nonFree/sift/SIFT_describer.hpp>
 #include <openMVG/image/image.hpp>
+#include <software/SfM/SfMPlyHelper.hpp>
 
 #include <openMVG/system/timer.hpp>
 #include "openMVG/stl/stl.hpp"
@@ -55,13 +56,17 @@ int main(int argc, char **argv)
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-m|--match_dir] path to the directory containing the matches corresponding to the provided SfM_Data scene\n"
+    << "[-m|--match_dir] path to the directory containing the matches\n"
+    << "  corresponding to the provided SfM_Data scene\n"
     << "[-o|--out_dir] path where the output data will be stored\n"
-    << "[-q|--query_image_dir] path to the directory containing the images that must be localized (can also contain the images from the initial reconstruction)\n"
+    << "[-q|--query_image_dir] path to the directory containing the images that must be localized\n"
+    << "  (can also contain the images from the initial reconstruction)\n"
+    << "\n"
     << "(optional)\n"
     << "[-r|--residual_error] upper bound of the residual error tolerance\n"
-    << "[-s|--single_intrinsics] (switch) when switched on, the program will check if the input sfm_data contains a single intrinsics and, if so, take\
-    this value as input for the intrinsics of the query images. (OFF by default)\n"
+    << "[-s|--single_intrinsics] (switch) when switched on, the program will check if the input sfm_data\n"
+    << "  contains a single intrinsics and, if so, take this value as intrinsics for the query images.\n"
+    << "  (OFF by default)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -99,7 +104,6 @@ int main(int argc, char **argv)
   }
 
   // Init the feature extractor that have been used for the reconstruction
-  using namespace openMVG::features;
   std::unique_ptr<Image_describer> image_describer;
   if (stlplus::is_file(sImage_describer))
   {
@@ -149,7 +153,8 @@ int main(int argc, char **argv)
 
  if (cmd.used('s') && sfm_data.GetIntrinsics().size() != 1)
   {
-    std::cout << "More than one intrinsics to compare to in input scene => Consider intrinsics as unkown." << std::endl;
+    std::cout << "More than one intrinsics to compare to in input scene "
+              << " => Consider intrinsics as unkown." << std::endl;
   }
 
   //-- Localization
@@ -157,7 +162,7 @@ int main(int argc, char **argv)
   // - Go along the sfm_data view
   // - extract the regions of the view
   // - try to locate the images
-  // -
+  // - add the images to the sfm_data scene
 
   std::vector<Vec3> vec_found_poses;
 
@@ -172,7 +177,7 @@ int main(int argc, char **argv)
   // list images from sfm_data in a vector
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
-  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views[n].get()->s_Img_path);} );
+  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n).get()->s_Img_path);} );
   
   // list images in query directory
   std::vector<std::string> vec_image = stlplus::folder_files(sQueryDir);
@@ -189,7 +194,7 @@ int main(int argc, char **argv)
   
   // first intrinsics of the input sfm_data file, will be used if we inforce single intrinsics
   cameras::Pinhole_Intrinsic_Radial_K3 * ptrPinhole = dynamic_cast<cameras::Pinhole_Intrinsic_Radial_K3*>(sfm_data.GetIntrinsics().at(0).get());
-  int num_initial_intrinsics = sfm_data.GetIntrinsics().size(); 
+  const int num_initial_intrinsics = sfm_data.GetIntrinsics().size(); 
 
   for ( std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
     iter_image != vec_image_new.end();
@@ -199,7 +204,7 @@ int main(int argc, char **argv)
     std::unique_ptr<Regions> query_regions(regions_type->EmptyClone());
     image::Image<unsigned char> imageGray;
     {
-      string sView_filename = stlplus::create_filespec(sQueryDir,*iter_image);
+      const std::string sView_filename = stlplus::create_filespec(sQueryDir,*iter_image);
       if (!image::ReadImage(sView_filename.c_str(), &imageGray))
       {
         std::cerr << "Cannot open the input provided image : " << *iter_image << std::endl;
@@ -271,12 +276,15 @@ int main(int argc, char **argv)
           focal, principal_point(0), principal_point(1));
 
       }
-      sfm::SfM_Localizer::RefinePose
+      if (!sfm::SfM_Localizer::RefinePose
       (
         optional_intrinsic.get(),
         pose, matching_data,
         true, b_new_intrinsic
-      );
+      ))
+      {
+        std::cerr << "Refining pose for image " << *iter_image << " failed." << std::endl;
+      }
 
       vec_found_poses.push_back(pose.center());
 
@@ -298,29 +306,9 @@ int main(int argc, char **argv)
 
   // Export the found camera position in a ply.
   const std::string out_file_name = stlplus::create_filespec(sOutDir, "found_pose_centers", "ply");
-  {
-    std::ofstream outfile;
-    outfile.open(out_file_name.c_str(), std::ios_base::out);
-    if (outfile.is_open()) {
-      outfile << "ply"
-       << "\n" << "format ascii 1.0"
-       << "\n" << "element vertex " << vec_found_poses.size()
-       << "\n" << "property float x"
-       << "\n" << "property float y"
-       << "\n" << "property float z"
-       << "\n" << "property uchar red"
-       << "\n" << "property uchar green"
-       << "\n" << "property uchar blue"
-       << "\n" << "end_header" << "\n";
+  plyHelper::exportToPly(vec_found_poses, out_file_name);
 
-      for (const Vec3 & pose_center: vec_found_poses) {
-        outfile << pose_center.transpose() << " " << "255 0 0" << "\n";
-      }
-      outfile.close();
-    }
-  }
-
-  // Export found camera poses along with original camera poses in a new sfm_data file
+  // Export found camera poses along with original reconstruction in a new sfm_data file
   if (!Save(
     sfm_data,
     stlplus::create_filespec( sOutDir, "sfm_data_expanded.json" ).c_str(),
@@ -337,5 +325,5 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
