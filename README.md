@@ -101,3 +101,28 @@ or cite it as:
     howpublished = "\url{https://github.com/openMVG/openMVG}",
   }
 ```
+
+as well as (for LATCH):
+
+```
+@inproceedings{Parkeretal2016CLATCH,
+  title={The {CUDA} {LATCH} Binary Descriptor: Because Sometimes Faster Means Better},
+  author={Christopher Parker and Matthew Daiter and Kareem Omar and Gil Levi and Tal Hassner},
+  booktitle={European Conference on Computer Vision (ECCV) workshops},
+  year={2016},
+  url = {http://www.openu.ac.il/home/hassner/projects/LATCH}
+}
+```
+
+and
+
+```
+@inproceedings{LeviHassner2016LATCH,
+  title={{LATCH:} Learned Arrangements of Three Patch Codes},
+  author={Gil Levi and Tal Hassner},
+  booktitle={Winter Conference on Applications of Computer Vision ({WACV})},
+  year={2016},
+  organization={IEEE},
+  url = {http://www.openu.ac.il/home/hassner/projects/LATCH}
+}
+```
