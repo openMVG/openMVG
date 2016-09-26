@@ -22,6 +22,17 @@ using namespace openMVG::sfm;
 
 #include <cstdlib>
 
+// Naive function for finding the biggest common root dir from two paths
+std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2)
+{
+  int i = 0;
+  for (; i != min(dir1.size(), dir2.size()); i++)
+  {
+    if (dir1[i] != dir2[i]) break;
+  }
+  return dir1.substr(0,i);
+}
+
 // ----------------------------------------------------
 // Multiple Images localization from an existing reconstruction
 // ----------------------------------------------------
@@ -193,7 +204,26 @@ int main(int argc, char **argv)
 
   // find difference between two list of images
   std::vector<std::string> vec_image_new;
-  std::set_difference(vec_image.begin(),vec_image.end(),vec_image_original.begin(),vec_image_original.end(),std::back_inserter(vec_image_new));
+  std::set_difference(vec_image.begin(), vec_image.end(),
+      vec_image_original.begin(),vec_image_original.end(),
+      std::back_inserter(vec_image_new));
+
+  // find common root directory between images in vec_image_original and vec_images_new
+  const std::string common_root_dir = FindCommonRootDir(sfm_data.s_root_path, sQueryDir);
+
+  // check if sfm_data's root dir differs from the common root dir.
+  if (sfm_data.s_root_path != common_root_dir)
+  {
+    // in that case we have to change all the image paths from the original
+    // reconstruction
+    for (auto & view : sfm_data.GetViews())
+    {
+      view.second.get()->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path), 
+          view.second.get()->s_Img_path);
+    }
+    // change root path to common root path
+    sfm_data.s_root_path = common_root_dir;
+  }
 
   // references
   Views & views = sfm_data.views;
