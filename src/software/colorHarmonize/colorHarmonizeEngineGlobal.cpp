@@ -58,12 +58,12 @@ ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   const string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
-  _sSfM_Data_Path(sSfM_Data_Filename),
-  _sMatchesPath(sMatchesPath),
-  _sOutDirectory(sOutDirectory),
   _selectionMethod( selectionMethod ),
   _imgRef( imgRef ),
-  _sMatchesFile(sMatchesFile)
+  _sMatchesFile(sMatchesFile),
+  _sSfM_Data_Path(sSfM_Data_Filename),
+  _sMatchesPath(sMatchesPath),
+  _sOutDirectory(sOutDirectory)
 {
   if( !stlplus::folder_exists( sOutDirectory ) )
   {
@@ -146,7 +146,11 @@ bool ColorHarmonizationEngineGlobal::Process()
       {
         cout << "id: " << i << "\t" << _vec_fileNames[ i ] << endl;
       }
-    }while( !( cin >> _imgRef ) || _imgRef < 0 || _imgRef >= _vec_fileNames.size() );
+    }
+    while (
+      !( cin >> _imgRef )
+      || _imgRef < 0
+      || _imgRef >= static_cast<int>(_vec_fileNames.size()) );
   }
 
   //Choose selection method

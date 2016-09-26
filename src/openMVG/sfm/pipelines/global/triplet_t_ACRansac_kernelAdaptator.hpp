@@ -39,20 +39,20 @@ public:
     const double ThresholdUpperBound
   )
   : x1_(x1), x2_(x2), x3_(x3),
-    vec_KR_(vec_KRi),
     Kinv_(K.inverse()),
     K_(K),
     logalpha0_(log10(M_PI)),
-    ThresholdUpperBound_(ThresholdUpperBound)
+    ThresholdUpperBound_(ThresholdUpperBound),
+    vec_KR_(vec_KRi)
   {
     // Normalize points by inverse(K)
     ApplyTransformationToPoints(x1_, Kinv_, &x1n_);
     ApplyTransformationToPoints(x2_, Kinv_, &x2n_);
     ApplyTransformationToPoints(x3_, Kinv_, &x3n_);
 
-    vec_KR_[0] = Kinv_ * vec_KR_[0];
-    vec_KR_[1] = Kinv_ * vec_KR_[1];
-    vec_KR_[2] = Kinv_ * vec_KR_[2];
+    vec_KR_[0] *= Kinv_;
+    vec_KR_[1] *= Kinv_;
+    vec_KR_[2] *= Kinv_;
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };

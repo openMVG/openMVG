@@ -138,9 +138,7 @@ int main(int argc, char ** argv)
 
       //Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      std::set<size_t> set_imageIndex;
-      set_imageIndex.insert(I);
-      set_imageIndex.insert(J);
+      const std::set<size_t> set_imageIndex = {I,J};
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
       if (!map_tracksCommon.empty())
