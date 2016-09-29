@@ -59,7 +59,8 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
 
 std::pair<bool, Vec3> checkGPS
 (
-  const std::string & filename
+  const std::string & filename,
+  const int & GPS_to_XYZ_method
 )
 {
   std::pair<bool, Vec3> val(false, Vec3::Zero());
@@ -77,7 +78,18 @@ std::pair<bool, Vec3> checkGPS
       {
         // Add ECEF XYZ position to the GPS position array
         val.first = true;
-        val.second = lla_to_ecef( latitude, longitude, altitude );
+        switch(GPS_to_XYZ_method)
+        {
+          case 0:
+            val.second = lla_to_ecef( latitude, longitude, altitude );
+            break;
+          case 1:
+            val.second = lla_to_utm( latitude, longitude, altitude );
+            break;
+          default:
+            val.second = lla_to_ecef( latitude, longitude, altitude );
+            break;
+        }
       }
     }
   }
@@ -101,6 +113,8 @@ int main(int argc, char **argv)
 
   bool b_Group_camera_model = true;
 
+  int i_GPS_XYZ_method = 0;
+
   double focal_pixels = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
@@ -111,6 +125,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
+  cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -133,6 +148,9 @@ int main(int argc, char **argv)
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << "\n"
       << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
+      << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
+      << "\t 0: ECEF (default)\n"
+      << "\t 1: UTM\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -332,7 +350,7 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename);
+    std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename,i_GPS_XYZ_method);
     if (gps_info.first && cmd.used('P'))
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
