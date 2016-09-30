@@ -50,15 +50,25 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sMatchesDir;
   std::string sOutDir = "";
+  std::string sMatchesOutDir;
   std::string sQueryDir;
   double dMaxResidualError = std::numeric_limits<double>::infinity();
+
+#ifdef OPENMVG_USE_OPENMP
+  int iNumThreads = 0;
+#endif
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
   cmd.add( make_option('o', sOutDir, "out_dir") );
+  cmd.add( make_option('u', sMatchesOutDir, "match_out_dir") );
   cmd.add( make_option('q', sQueryDir, "query_image_dir"));
   cmd.add( make_option('r', dMaxResidualError, "residual_error"));
   cmd.add( make_switch('s', "single_intrinsics"));
+#ifdef OPENMVG_USE_OPENMP
+  cmd.add( make_option('n', iNumThreads, "numThreads") );
+#endif
+  
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -69,6 +79,8 @@ int main(int argc, char **argv)
     << "[-m|--match_dir] path to the directory containing the matches\n"
     << "  corresponding to the provided SfM_Data scene\n"
     << "[-o|--out_dir] path where the output data will be stored\n"
+    << "[-u|--match_out_dir] path to the directory where new matches will be stored\n"
+    << "  (if empty the initial matching directory will be used)\n"
     << "[-q|--query_image_dir] path to an image OR to the directory containing the images that must be localized\n"
     << "  (the directory can also contain the images from the initial reconstruction)\n"
     << "\n"
@@ -77,6 +89,9 @@ int main(int argc, char **argv)
     << "[-s|--single_intrinsics] (switch) when switched on, the program will check if the input sfm_data\n"
     << "  contains a single intrinsics and, if so, take this value as intrinsics for the query images.\n"
     << "  (OFF by default)\n"
+#ifdef OPENMVG_USE_OPENMP
+    << "[-n|--numThreads] number of thread(s)\n"
+#endif
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -89,6 +104,11 @@ int main(int argc, char **argv)
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
+  }
+
+  if (sMatchesOutDir.empty())
+  {
+    sMatchesOutDir = sMatchesDir;
   }
 
   if (sfm_data.GetPoses().empty() || sfm_data.GetLandmarks().empty())
@@ -235,10 +255,19 @@ int main(int argc, char **argv)
   const int num_initial_intrinsics = sfm_data.GetIntrinsics().size(); 
 
   int total_num_images = 0;
-  for ( std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
-    iter_image != vec_image_new.end();
-    ++iter_image)
+  
+#ifdef OPENMVG_USE_OPENMP
+    const unsigned int nb_max_thread = omp_get_max_threads();
+    omp_set_num_threads(iNumThreads);
+    #pragma omp parallel for schedule(dynamic)
+#endif
+  for (int i = 0; i < static_cast<int>(vec_image_new.size()); ++i)
   {
+#ifdef OPENMVG_USE_OPENMP
+    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
+#endif
+    std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
+    std::advance(iter_image, i);
 
     // Test if the image format is supported:
     if (openMVG::image::GetFormat((*iter_image).c_str()) == openMVG::image::Unknown)
@@ -246,8 +275,7 @@ int main(int argc, char **argv)
       std::cerr << *iter_image << " : unknown image file format." << std::endl;
       continue;
     }
-
-    total_num_images++;
+    
     std::cout << "SfM::localization => try with image: " << *iter_image << std::endl;
     std::unique_ptr<Regions> query_regions(regions_type->EmptyClone());
     image::Image<unsigned char> imageGray;
@@ -261,8 +289,8 @@ int main(int argc, char **argv)
       }
 
       const std::string
-        sFeat = stlplus::create_filespec(sMatchesDir, stlplus::basename_part(sView_filename.c_str()), "feat"),
-        sDesc = stlplus::create_filespec(sMatchesDir, stlplus::basename_part(sView_filename.c_str()), "desc");
+        sFeat = stlplus::create_filespec(sMatchesOutDir, stlplus::basename_part(sView_filename.c_str()), "feat"),
+        sDesc = stlplus::create_filespec(sMatchesOutDir, stlplus::basename_part(sView_filename.c_str()), "desc");
 
       // Compute features and descriptors and save them if they don't exist yet
       if (!stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
@@ -337,17 +365,29 @@ int main(int argc, char **argv)
       }
 
       vec_found_poses.push_back(pose.center());
-
+      
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp critical
+#endif
+{
       // Add the computed intrinsic to the sfm_container
       intrinsics[v.id_intrinsic] = optional_intrinsic;
       
       // Add the computed pose to the sfm_container
       poses[v.id_pose] = pose;
-
+}
     }
+    
+    
+#ifdef OPENMVG_USE_OPENMP
+    #pragma omp critical
+#endif
+{
+    total_num_images++;
     
     // Add the view to the sfm_container
     views[v.id_view] = std::make_shared<View>(v);
+}
   }
 
   GroupSharedIntrinsics(sfm_data);
