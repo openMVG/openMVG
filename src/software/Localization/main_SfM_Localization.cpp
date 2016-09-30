@@ -269,6 +269,7 @@ int main(int argc, char **argv)
     std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
     std::advance(iter_image, i);
 
+
     // Test if the image format is supported:
     if (openMVG::image::GetFormat((*iter_image).c_str()) == openMVG::image::Unknown)
     {
@@ -318,8 +319,7 @@ int main(int argc, char **argv)
     sfm::Image_Localizer_Match_Data matching_data;
     matching_data.error_max = dMaxResidualError;
 
-    // Build the view corresponding to the image
-    View v(*iter_image, views.size(), views.size(), views.size(), imageGray.Width(), imageGray.Height());
+    bool bSuccessfulLocalization;
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
@@ -330,8 +330,7 @@ int main(int argc, char **argv)
       &matching_data))
     {
       std::cerr << "Cannot locate the image " << *iter_image << std::endl;
-      v.id_intrinsic = UndefinedIndexT;
-      v.id_pose = UndefinedIndexT;
+      bSuccessfulLocalization = false;
     }
     else
     {
@@ -363,31 +362,40 @@ int main(int argc, char **argv)
       {
         std::cerr << "Refining pose for image " << *iter_image << " failed." << std::endl;
       }
-
-      vec_found_poses.push_back(pose.center());
       
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
-{
-      // Add the computed intrinsic to the sfm_container
-      intrinsics[v.id_intrinsic] = optional_intrinsic;
+      bSuccessfulLocalization = true;
       
-      // Add the computed pose to the sfm_container
-      poses[v.id_pose] = pose;
-}
     }
-    
-    
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical
 #endif
 {
     total_num_images++;
     
-    // Add the view to the sfm_container
+    View v(*iter_image, views.size(), views.size(), views.size(), imageGray.Width(), imageGray.Height());
+    if(bSuccessfulLocalization)
+    {
+      vec_found_poses.push_back(pose.center());
+      // Build the view corresponding to the image
+
+      // Add the computed intrinsic to the sfm_container
+      intrinsics[v.id_intrinsic] = optional_intrinsic;
+     std::cout<<"VI: "<<v.id_intrinsic<<"\n";   
+      // Add the computed pose to the sfm_container
+      poses[v.id_pose] = pose;
+      std::cout<<"PI: "<<v.id_pose<<"\n";
+      
+      std::cout<<"V: "<<v.id_view<<"\n";
+      // Add the view to the sfm_container
+    }
+    else
+    {
+      v.id_intrinsic = UndefinedIndexT;
+      v.id_pose = UndefinedIndexT;  
+    }
     views[v.id_view] = std::make_shared<View>(v);
 }
+
   }
 
   GroupSharedIntrinsics(sfm_data);
