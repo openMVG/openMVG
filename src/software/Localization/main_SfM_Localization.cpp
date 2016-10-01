@@ -53,6 +53,8 @@ int main(int argc, char **argv)
   std::string sMatchesOutDir;
   std::string sQueryDir;
   double dMaxResidualError = std::numeric_limits<double>::infinity();
+  bool bUseSingleIntrinsics = false;
+  bool bExportStructure = false;
 
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
@@ -65,6 +67,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('q', sQueryDir, "query_image_dir"));
   cmd.add( make_option('r', dMaxResidualError, "residual_error"));
   cmd.add( make_switch('s', "single_intrinsics"));
+  cmd.add( make_switch('e', "export_structure"));
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
@@ -118,6 +121,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  bUseSingleIntrinsics = cmd.used('s');
+  bExportStructure = cmd.used('e');
   // ---------------
   // Initialization
   // ---------------
@@ -182,7 +187,7 @@ int main(int argc, char **argv)
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
- if (cmd.used('s') && sfm_data.GetIntrinsics().size() != 1)
+ if (bUseSingleIntrinsics && sfm_data.GetIntrinsics().size() != 1)
   {
     std::cout << "More than one intrinsics to compare to in input scene "
               << " => Consider intrinsics as unkown." << std::endl;
@@ -257,15 +262,12 @@ int main(int argc, char **argv)
   int total_num_images = 0;
   
 #ifdef OPENMVG_USE_OPENMP
-    const unsigned int nb_max_thread = omp_get_max_threads();
-    omp_set_num_threads(iNumThreads);
+  const unsigned int nb_max_thread = (iNumThreads == 0) ? 0 : omp_get_max_threads();
+    omp_set_num_threads(nb_max_thread);
     #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < static_cast<int>(vec_image_new.size()); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
-#endif
     std::vector<std::string>::const_iterator iter_image = vec_image_new.begin();
     std::advance(iter_image, i);
 
@@ -307,7 +309,7 @@ int main(int argc, char **argv)
     }
 
     std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic(nullptr);
-    if (cmd.used('s') && num_initial_intrinsics == 1)
+    if (bUseSingleIntrinsics && num_initial_intrinsics == 1)
     {
       optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>(
         imageGray.Width(), imageGray.Height(),
@@ -319,7 +321,7 @@ int main(int argc, char **argv)
     sfm::Image_Localizer_Match_Data matching_data;
     matching_data.error_max = dMaxResidualError;
 
-    bool bSuccessfulLocalization;
+    bool bSuccessfulLocalization = false;
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
@@ -380,22 +382,18 @@ int main(int argc, char **argv)
 
       // Add the computed intrinsic to the sfm_container
       intrinsics[v.id_intrinsic] = optional_intrinsic;
-     std::cout<<"VI: "<<v.id_intrinsic<<"\n";   
       // Add the computed pose to the sfm_container
       poses[v.id_pose] = pose;
-      std::cout<<"PI: "<<v.id_pose<<"\n";
       
-      std::cout<<"V: "<<v.id_view<<"\n";
-      // Add the view to the sfm_container
     }
     else
     {
       v.id_intrinsic = UndefinedIndexT;
       v.id_pose = UndefinedIndexT;  
     }
+    // Add the view to the sfm_container
     views[v.id_view] = std::make_shared<View>(v);
 }
-
   }
 
   GroupSharedIntrinsics(sfm_data);
@@ -407,10 +405,19 @@ int main(int argc, char **argv)
   plyHelper::exportToPly(vec_found_poses, out_file_name);
 
   // Export found camera poses along with original reconstruction in a new sfm_data file
+  ESfM_Data flag_save;
+  if(bExportStructure)
+  {
+    flag_save = ESfM_Data(ALL);
+  }
+  else
+  {
+    flag_save = ESfM_Data(VIEWS|INTRINSICS);
+  } 
   if (!Save(
     sfm_data,
     stlplus::create_filespec( sOutDir, "sfm_data_expanded.json" ).c_str(),
-    ESfM_Data(ALL)))
+    flag_save))
   {
     return EXIT_FAILURE;
   }
