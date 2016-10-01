@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     << "  contains a single intrinsics and, if so, take this value as intrinsics for the query images.\n"
     << "  (OFF by default)\n"
     << "[-e|--export_structure] (switch) when switched on, the program will also export structure to output sfm_data.\n"
-    << "  if OFF only VIEWS and INTRINSICS are exported (OFF by default)\n"
+    << "  if OFF only VIEWS, INTRINSICS and EXTRINSICS are exported (OFF by default)\n"
 #ifdef OPENMVG_USE_OPENMP
     << "[-n|--numThreads] number of thread(s)\n"
 #endif
@@ -414,7 +414,7 @@ int main(int argc, char **argv)
   }
   else
   {
-    flag_save = ESfM_Data(VIEWS|INTRINSICS);
+    flag_save = ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS);
   } 
   if (!Save(
     sfm_data,
