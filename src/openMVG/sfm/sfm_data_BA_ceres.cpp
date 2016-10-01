@@ -27,13 +27,13 @@ using namespace openMVG::geometry;
 // Ceres CostFunctor used for SfM pose center to GPS pose center minimization
 struct PoseCenterConstraintCostFunction
 {
-  double weight_;
+  Vec3 weight_;
   Vec3 pose_center_constraint_;
 
   PoseCenterConstraintCostFunction
   (
     const Vec3 & center,
-    const double weight
+    const Vec3 & weight
   ): weight_(weight), pose_center_constraint_(center)
   {
   }
@@ -59,9 +59,9 @@ struct PoseCenterConstraintCostFunction
     pose_center[2] *= T(-1);
 
 
-    residuals[0] = T(weight_) * (pose_center[0] - T(pose_center_constraint_[0]));
-    residuals[1] = T(weight_) * (pose_center[1] - T(pose_center_constraint_[1]));
-    residuals[2] = T(weight_) * (pose_center[2] - T(pose_center_constraint_[2]));
+    residuals[0] = T(weight_[0]) * (pose_center[0] - T(pose_center_constraint_[0]));
+    residuals[1] = T(weight_[1]) * (pose_center[1] - T(pose_center_constraint_[1]));
+    residuals[2] = T(weight_[2]) * (pose_center[2] - T(pose_center_constraint_[2]));
     return true;
   }
 };

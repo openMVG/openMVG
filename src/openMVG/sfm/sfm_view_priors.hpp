@@ -46,7 +46,7 @@ struct ViewPriors : public View
   void SetPoseCenterPrior
   (
     const Vec3 & center,
-    const double weight
+    const Vec3 & weight
   )
   {
     b_use_pose_center_  = true;
@@ -77,7 +77,8 @@ struct ViewPriors : public View
     if (b_use_pose_center_)
     {
       ar( cereal::make_nvp( "use_pose_center_prior", b_use_pose_center_ ) );
-      ar( cereal::make_nvp( "center_weight", center_weight_ ) );
+      const std::vector<double> vec_weights = { center_weight_( 0 ), center_weight_( 1 ), center_weight_( 2 ) };
+      ar( cereal::make_nvp( "center_weight", vec_weights ) );
       const std::vector<double> vec = { pose_center_( 0 ), pose_center_( 1 ), pose_center_( 2 ) };
       ar( cereal::make_nvp( "center", vec ) );
     }
@@ -112,8 +113,9 @@ struct ViewPriors : public View
     try
     {
       ar( cereal::make_nvp( "use_pose_center_prior", b_use_pose_center_ ) );
-      ar( cereal::make_nvp( "center_weight", center_weight_ ) );
       std::vector<double> vec( 3 );
+      ar( cereal::make_nvp( "center_weight", vec ) );
+      center_weight_ = Eigen::Map<const Vec3>( &vec[0] );
       ar( cereal::make_nvp( "center", vec ) );
       pose_center_ = Eigen::Map<const Vec3>( &vec[0] );
     }
@@ -146,7 +148,7 @@ struct ViewPriors : public View
 
   // Pose center prior
   bool b_use_pose_center_ = false; // Tell if the pose prior must be used
-  double center_weight_ = 1.0;
+  Vec3 center_weight_ = Vec3(1.0,1.0,1.0);
   Vec3 pose_center_;
 
   // Pose rotation prior
