@@ -92,6 +92,8 @@ int main(int argc, char **argv)
     << "[-s|--single_intrinsics] (switch) when switched on, the program will check if the input sfm_data\n"
     << "  contains a single intrinsics and, if so, take this value as intrinsics for the query images.\n"
     << "  (OFF by default)\n"
+    << "[-e|--export_structure] (switch) when switched on, the program will also export structure to output sfm_data.\n"
+    << "  if OFF only VIEWS and INTRINSICS are exported (OFF by default)\n"
 #ifdef OPENMVG_USE_OPENMP
     << "[-n|--numThreads] number of thread(s)\n"
 #endif
