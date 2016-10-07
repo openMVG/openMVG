@@ -3,13 +3,16 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/stl/stl.hpp"
-
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/geometry/frustum.hpp"
 
 #include "config.h"
 
 using namespace openMVG;
 using namespace openMVG::sfm;
+using namespace openMVG::geometry ;
 using namespace openMVG::image;
+using namespace openMVG::cameras ;
 
 
 /// Find the color of the SfM_Data Landmarks/structure
@@ -153,7 +156,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
   std::vector<Vec3> vec_3dPoints, vec_tracksColor ;
   ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor) ;
 
-  // 3d points 
+  // Model points 
   file << "modelPos=[" << std::endl ; 
   for( size_t id_point = 0 ; id_point < vec_3dPoints.size() ; ++id_point )
   {
@@ -165,6 +168,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
   }
   file << "];" << std::endl ; 
 
+  // Model color 
   file << "modelCol=[" << std::endl ; 
   for( size_t id_point = 0 ; id_point < vec_tracksColor.size() ;  ++id_point )
   {
@@ -176,9 +180,134 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
   }
   file << "];" << std::endl ; 
 
+  // Camera positions  
+  file << "cameraPos=[" << std::endl ;
+  for( auto it = sfm_data.GetViews().begin() ; it != sfm_data.GetViews().end() ; )
+  {
+    const View * view = sfm_data.GetViews().at(it->first).get() ;
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      {
+        ++it ;
+        continue;
+      }
+    // get it's intrinsic (if available)
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+      {
+        ++it ; 
+        continue;
+      }
+
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+
+    // Force a pinhole ? (TODO : need to work with another type of camera)
+    const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
+    if (cam == NULL)
+    {
+      ++it ;
+      continue;
+    }
+
+    // Build frustum 
+    const Frustum f( cam->w() , cam->h() , cam->K() , pose.rotation() , pose.center() , 0.5 ) ;
+    
+    const Vec3 pos = f.cones[0] ;
+    file << "[" << pos[0] << "," << pos[1] << "," << pos[2] << "]" ;
+
+    if( ++it != sfm_data.GetViews().end() )
+    {
+      file << "," ;
+    }
+  }
+
+  file << "];" << std::endl ; 
+
+  // Camera image planes 
+  file << "cameraImagePlanes=[" << std::endl ; 
+  for( auto it = sfm_data.GetViews().begin() ; it != sfm_data.GetViews().end() ; )
+  {
+    const View * view = sfm_data.GetViews().at(it->first).get() ;
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      {
+        ++it ;
+        continue;
+      }
+    // get it's intrinsic (if available)
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+      {
+        ++it ; 
+        continue;
+      }
+
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+
+    // Force a pinhole ? (TODO : need to work with another type of camera)
+    const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
+    if (cam == NULL)
+    {
+      ++it ;
+      continue;
+    }
+
+    // Build frustum 
+    const Frustum f( cam->w() , cam->h() , cam->K() , pose.rotation() , pose.center() , 0.33 ) ;
+    
+    const Vec3 & p1 = f.cones[1] ;
+    const Vec3 & p2 = f.cones[2] ;
+    const Vec3 & p3 = f.cones[3] ;
+    const Vec3 & p4 = f.cones[4] ;
+
+    file << "[" ; 
+    file << p1[0] << "," << p1[1] << "," << p1[2] << "," ;
+    file << p2[0] << "," << p2[1] << "," << p2[2] << "," ;
+    file << p3[0] << "," << p3[1] << "," << p3[2] << "," ;
+    file << p4[0] << "," << p4[1] << "," << p4[2] << "]" ;
+
+    if( ++it != sfm_data.GetViews().end() )
+    {
+      file << "," ;
+    }
+  }
+  file << "];" << std::endl ;
+
+
   file.close() ; 
   
   return true ; 
+}
+
+bool CopyFile( const std::string & inputFolder , const std::string & inputName , 
+               const std::string & outputFolder , 
+               const std::string & outputSubFolder , const std::string & outputName )
+{
+  std::string outputFilename ;
+  if( outputSubFolder.length() > 0 )
+  {
+    outputFilename = stlplus::create_filespec( stlplus::folder_append_separator( outputFolder ) + outputSubFolder , outputName ) ;
+  }
+  else 
+  {
+    outputFilename = stlplus::create_filespec( outputFolder , outputName ) ; 
+  }
+
+  const std::string inputFilename = stlplus::create_filespec( 
+    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + inputFolder , inputName ) ;
+  if( ! stlplus::file_copy( inputFilename , outputFilename ) )
+  {
+    std::cerr << "Error copying " << inputName << " file" << std::endl ; 
+    return false ; 
+  }
+  return true ; 
+}
+
+/**
+* Stupid template trick to get the size of a static c array 
+*/
+template < typename T , int N>
+int StaticArraySize( T (&)[N] )
+{
+  return N ; 
 }
 
 /**
@@ -229,166 +358,46 @@ bool ExportToWebGL( const std::string & sSfM_Data_Filename , const std::string &
   }
 
 
-  // 1 - Export scene specific data  
+  // 1 - Export scene specific data    
   const std::string modelFilename = stlplus::create_filespec( 
     stlplus::folder_append_separator( sOutDir ) + "model" , "model.js" ) ;
     std::cerr << "Modelfilename:" << modelFilename << std::endl ; 
   ExportSceneData( sfm_data , modelFilename ) ; 
 
+  const std::string files_to_copy[] =
+  {
+    "common" , "index.html" , sOutDir , "" , "index.html" , // 1
+    "common" , "style.css" , sOutDir , "style" , "style.css" , // 2
+    "common" , "main.js" , sOutDir , "common" , "main.js" , // 3
+    "common" , "quaternion.js" , sOutDir , "common" , "quaternion.js" , // 4
+    "common" , "dual_quaternion.js" , sOutDir , "common" , "dual_quaternion.js" , // 5
+    "common" , "common.js" , sOutDir , "common" , "common.js" , // 6
+    "common" , "matrix4.js" , sOutDir , "common" , "matrix4.js" , // 7 
+    "common" , "matrix3.js" , sOutDir , "common" , "matrix3.js" , // 8
+    "common" , "plane.js" , sOutDir , "common" , "plane.js" , // 9 
+    "common" , "camera.js" , sOutDir , "common" , "camera.js" , // 10
+    "common" , "shader.js" , sOutDir , "common" , "shader.js" , // 11 
+    "common" , "trackball.js" , sOutDir , "common" , "trackball.js" , // 12
+    "common" , "render_context.js" , sOutDir , "common" , "render_context.js" , // 13 
+    "common" , "vector.js" , sOutDir , "common" , "vector.js" , // 14
+    "common" , "point_cloud.js" , sOutDir , "common" , "point_cloud.js" , // 15
+    "common" , "camera_gizmo.js" , sOutDir , "common" , "camera_gizmo.js" // 16
+  } ;
 
-  // 2 - Copy common files 
-  // - index 
-  const std::string outputIndexFilename = stlplus::create_filespec( sOutDir , "index.html" ) ; 
-  const std::string inputIndexFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "index.html" ) ;
-  if( ! stlplus::file_copy( inputIndexFilename , outputIndexFilename ) )
+  // Copy the js files 
+  for( int id_file = 0 ; id_file < StaticArraySize( files_to_copy ) / 5 ; ++id_file )
   {
-    std::cerr << "Error copying index.html file" << std::endl ; 
-    return false ; 
-  }
+    const std::string & input_folder = files_to_copy[ 5 * id_file ] ;
+    const std::string & input_name   = files_to_copy[ 5 * id_file + 1 ] ;
+    const std::string & output_folder = files_to_copy[ 5 * id_file + 2 ] ;
+    const std::string & output_subfolder = files_to_copy[ 5 * id_file + 3 ] ;
+    const std::string & output_name = files_to_copy[ 5 * id_file + 4 ] ;
 
-  // - style 
-  const std::string outputStyleFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "style" , "style.css" ) ;
-  const std::string inputStyleFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "style.css" ) ;
-  if( ! stlplus::file_copy( inputStyleFilename , outputStyleFilename ) )
-  {
-    std::cerr << "Error copying style/style.css file" << std::endl ; 
-    return false ; 
+    if( ! CopyFile( input_folder , input_name , output_folder , output_subfolder , output_name ) )
+    {
+      return false ; 
+    }
   }
-
-  // - main  
-  const std::string outputMainFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "main.js" ) ;
-  const std::string inputMainFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "main.js" ) ;
-  if( ! stlplus::file_copy( inputMainFilaname , outputMainFilename ) )
-  {
-    std::cerr << "Error copying common/main.js file" << std::endl ; 
-    return false ; 
-  }
-  // - quaternion 
-  const std::string outputQuaternionFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "quaternion.js" ) ;
-  const std::string inputQuaternionFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "quaternion.js" ) ;
-  if( ! stlplus::file_copy( inputQuaternionFilaname , outputQuaternionFilename ) )
-  {
-    std::cerr << "Error copying common/quaternion.js file" << std::endl ; 
-    return false ; 
-  }
-  // - dual quaternion 
-  const std::string outputDualQuaternionFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "dual_quaternion.js" ) ;
-  const std::string inputDualQuaternionFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "dual_quaternion.js" ) ;
-  if( ! stlplus::file_copy( inputDualQuaternionFilaname , outputDualQuaternionFilename ) )
-  {
-    std::cerr << "Error copying common/dual_quaternion.js file" << std::endl ; 
-    return false ; 
-  }
-  // - common  
-  const std::string outputCommonFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "common.js" ) ;
-  const std::string inputCommonFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "common.js" ) ;
-  if( ! stlplus::file_copy( inputCommonFilaname , outputCommonFilename ) )
-  {
-    std::cerr << "Error copying common/common.js file" << std::endl ; 
-    return false ; 
-  }
-  // - matrix3 
-  const std::string outputMatrix3Filename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "matrix3.js" ) ;
-  const std::string inputMatrix3Filaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "matrix3.js" ) ;
-  if( ! stlplus::file_copy( inputMatrix3Filaname , outputMatrix3Filename ) )
-  {
-    std::cerr << "Error copying common/matrix3.js file" << std::endl ; 
-    return false ; 
-  }
-  // - matrix4 
-  const std::string outputMatrix4Filename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "matrix4.js" ) ;
-  const std::string inputMatrix4Filaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "matrix4.js" ) ;
-  if( ! stlplus::file_copy( inputMatrix4Filaname , outputMatrix4Filename ) )
-  {
-    std::cerr << "Error copying common/matrix4.js file" << std::endl ; 
-    return false ; 
-  }
-  // - plane 
-  const std::string outputPlaneFilename = stlplus::create_filespec( 
-  stlplus::folder_append_separator( sOutDir ) + "common" , "plane.js" ) ;
-  const std::string inputPlaneFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "plane.js" ) ;
-  if( ! stlplus::file_copy( inputPlaneFilaname , outputPlaneFilename ) )
-  {
-    std::cerr << "Error copying common/plane.js file" << std::endl ; 
-    return false ; 
-  }
-  // - camera 
-  const std::string outputCameraFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "camera.js" ) ;
-  const std::string inputCameraFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "camera.js" ) ;
-  if( ! stlplus::file_copy( inputCameraFilaname , outputCameraFilename ) )
-  {
-    std::cerr << "Error copying common/camera.js file" << std::endl ; 
-    return false ; 
-  }
-  // - shader 
-  const std::string outputShaderFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "shader.js" ) ;
-  const std::string inputShaderFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "shader.js" ) ;
-  if( ! stlplus::file_copy( inputShaderFilaname , outputShaderFilename ) )
-  {
-    std::cerr << "Error copying common/shader.js file" << std::endl ; 
-    return false ; 
-  }
-  // - trackball 
-  const std::string outputTrackballFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "trackball.js" ) ;
-  const std::string inputTrackballFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "trackball.js" ) ;
-  if( ! stlplus::file_copy( inputTrackballFilaname , outputTrackballFilename ) )
-  {
-    std::cerr << "Error copying common/trackball.js file" << std::endl ; 
-    return false ; 
-  }
-  // - render_context 
-  const std::string outputRenderContextFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "render_context.js" ) ;
-  const std::string inputRenderContextFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "render_context.js" ) ;
-  if( ! stlplus::file_copy( inputRenderContextFilaname , outputRenderContextFilename ) )
-  {
-    std::cerr << "Error copying common/render_context.js file" << std::endl ; 
-    return false ; 
-  }
-  // - vector 
-  const std::string outputVectorFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "vector.js" ) ;
-  const std::string inputVectorFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "vector.js" ) ;
-  if( ! stlplus::file_copy( inputVectorFilaname , outputVectorFilename ) )
-  {
-    std::cerr << "Error copying common/vector.js file" << std::endl ; 
-    return false ; 
-  }
-  // - point_cloud
-  const std::string outputPointCloudFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( sOutDir ) + "common" , "point_cloud.js" ) ;
-  const std::string inputPointCloudFilaname = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + "common" , "point_cloud.js" ) ;
-  if( ! stlplus::file_copy( inputPointCloudFilaname , outputPointCloudFilename ) )
-  {
-    std::cerr << "Error copying common/point_cloud.js file" << std::endl ; 
-    return false ; 
-  }
-  
 
   return true ; 
 }

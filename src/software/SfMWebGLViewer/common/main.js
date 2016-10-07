@@ -26,6 +26,9 @@ var camera ;
 var pointcloud ; 
 var optionEnablePointCloudBtn ;
 
+// The gizmos 
+var cameraGizmos ;  
+
 var optionResetBtn ;
 
 var mouseEnterPosition = {} ;
@@ -55,6 +58,12 @@ function init()
 
   camera = new PerspectiveCamera( camPos , camDst , camUp , 75.0 , 0.01 , 1000.0 , 640 , 480 ) ;  
 
+  cameraGizmos = new Array( cameraPos.length ) ;
+  for( var i = 0 ; i < cameraPos.length ; ++i )
+  {
+    cameraGizmos[ i ] = new CameraGizmo( cameraPos[i] , cameraImagePlanes[i] , undefined , renderContext ) ;
+  }
+
   /* Center scene on the pcloud */
   var bs = ComputeBoundingSphere( modelPos ) ;
   camera.FitBoundingSphere( bs , bs[3] ) ; 
@@ -81,6 +90,10 @@ function toggleEnableCameras()
     optionEnableCameraBtn.className = optionEnableCameraBtn.className.replace( 'active' , '' ) ;
     optionEnableCameraBtn.classList ? optionEnableCameraBtn.classList.add('inactive') : optionEnableCameraBtn.className += ' inactive';
     
+    for( var i = 0 ; i < cameraGizmos.length ; ++i )
+    {
+      cameraGizmos[ i ].setVisible( false ) ; 
+    }
     cameraEnabled = false ; 
   }
   else 
@@ -88,6 +101,10 @@ function toggleEnableCameras()
     optionEnableCameraBtn.className = optionEnableCameraBtn.className.replace( 'inactive' , '' ) ;
     optionEnableCameraBtn.classList ? optionEnableCameraBtn.classList.add('active') : optionEnableCameraBtn.className += ' active';
 
+    for( var i = 0 ; i < cameraGizmos.length ; ++i )
+    {
+      cameraGizmos[ i ].setVisible( true ) ; 
+    }
     cameraEnabled = true ; 
   }
   update();
@@ -188,6 +205,10 @@ function onMouseMove( e )
       var d = Vector.sub( p_new , p_old ) ; 
 
       pointcloud.translate( d ) ; 
+      for( var i = 0 ; i < cameraGizmos.length ; ++i )
+      {
+        cameraGizmos[ i ].translate( d ) ; 
+      }  
     }
     else 
     {
@@ -226,6 +247,10 @@ function onMouseMove( e )
 
         // Update point cloud 
         pointcloud.rotate( q , camera.m_dir ) ; 
+        for( var i = 0 ; i < cameraGizmos.length ; ++i )
+        {
+          cameraGizmos[ i ].rotate( q , camera.m_dir ) ; 
+        }
       }
       
       // Rotate 
@@ -298,6 +323,10 @@ function draw()
   pointcloud.draw( renderContext ) ; 
 
   // Draw the cameras 
+  for( var i = 0 ; i < cameraGizmos.length ; ++i )
+  {
+    cameraGizmos[ i ].draw( renderContext ) ; 
+  }
 }
 
 /* Reset the view on the default orientation */
@@ -305,6 +334,10 @@ function resetView()
 {
   trackball.reset() ;
   pointcloud.reset() ;
+  for( var i = 0 ; i < cameraGizmos.length ; ++i )
+  {
+    cameraGizmos[ i ].reset() ; 
+  }
 
   var camPos = Vector.create( 0 , 0 , -10 ) ;
   var camDst = Vector.create( 0.0 , 0.0 , 0.0 ) ; 
