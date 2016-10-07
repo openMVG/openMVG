@@ -110,18 +110,37 @@ Quaternion.prototype.setW = function( aW )
  * Conversion from 3x3 rotation matrix 
  * @note Rotation matrix is a 9 scalar vector 
  */
-Quaternion.prototype.setFromMatrix = function( aMatrix )
+Quaternion.prototype.setFromMatrix3 = function( aMatrix )
 {
   /**
    * 0 1 2 
    * 3 4 5
    * 6 7 8
    */
-  this.m_w = Math.sqrt( 1.0 + aMatrix( 0 ) + aMatrix( 4 ) + aMatrix( 8 ) ) / 2.0 ; 
+  this.m_w = Math.sqrt( 1.0 + aMatrix[ 0 ] + aMatrix[ 4 ] + aMatrix[ 8 ] ) / 2.0 ; 
   var fourW = 4.0 * this.m_w ;
-  this.m_x = ( aMatrix( 7 ) - aMatrix( 5 ) ) / fourW ;
-  this.m_y = ( aMatrix( 2 ) - aMatrix( 6 ) ) / fourW ;
-  this.m_z = ( aMatrix( 3 ) - aMatrix( 1 ) ) / fourW ;
+  this.m_x = ( aMatrix[ 7 ] - aMatrix[ 5 ] ) / fourW ;
+  this.m_y = ( aMatrix[ 2 ] - aMatrix[ 6 ] ) / fourW ;
+  this.m_z = ( aMatrix[ 3 ] - aMatrix[ 1 ] ) / fourW ;
+}
+
+/**
+ * Conversion from 3x3 rotation matrix 
+ * @note Rotation matrix is a 9 scalar vector 
+ */
+Quaternion.prototype.setFromMatrix4 = function( aMatrix )
+{
+  /**
+   * 0   1  2  3
+   * 4   5  6  7
+   * 8   9 10 11
+   * 12 13 14 15
+   */
+  this.m_w = Math.sqrt( 1.0 + aMatrix[ 0 ] + aMatrix[ 5 ] + aMatrix[ 10 ] ) / 2.0 ; 
+  var fourW = 4.0 * this.m_w ;
+  this.m_x = ( aMatrix[ 9 ] - aMatrix[ 6 ] ) / fourW ;
+  this.m_y = ( aMatrix[ 2 ] - aMatrix[ 8 ] ) / fourW ;
+  this.m_z = ( aMatrix[ 4 ] - aMatrix[ 1 ] ) / fourW ;
 }
 
 /**

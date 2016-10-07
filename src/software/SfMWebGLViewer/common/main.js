@@ -30,6 +30,7 @@ var optionEnablePointCloudBtn ;
 var cameraGizmos ;  
 
 var optionResetBtn ;
+var cameraScaleSlider ; 
 
 var mouseEnterPosition = {} ;
 var mouseLastPosition = {} ; 
@@ -45,6 +46,7 @@ function init()
   optionEnablePointCloudBtn = document.getElementById("divShowPCloud");
   optionEnableTrackballBtn = document.getElementById("divShowTrackball");
   optionResetBtn = document.getElementById( "divResetButton" ) ;
+  cameraScaleSlider = document.getElementById( "cameraScaleSlider" ) ;
 
   cameraEnabled = true ; 
   pcloudEnabled = true ; 
@@ -263,6 +265,16 @@ function onMouseMove( e )
   }
 }
 
+function onSliderChange()
+{
+  var scaleValue = cameraScaleSlider.value ; 
+  for( var i = 0 ; i < cameraGizmos.length ; ++i )
+  {
+    cameraGizmos[i].setScale( scaleValue ) ; 
+  }
+  update() ; 
+}
+
 // Setup event listener 
 function setEventListeners()
 {
@@ -275,6 +287,10 @@ function setEventListeners()
   canvas.addEventListener( "mousedown" , onMouseDown ) ;
   canvas.addEventListener( "mousemove" , onMouseMove ) ;
   canvas.addEventListener( "mouseup" , onMouseUp ) ;
+
+  cameraScaleSlider.addEventListener( "change" , onSliderChange ) ; 
+  cameraScaleSlider.addEventListener( "input" , onSliderChange ) ; 
+  
 
   // Window resizing 
   window.addEventListener( 'resize' , resizeGLCanvas ) ; 

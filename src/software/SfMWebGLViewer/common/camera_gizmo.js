@@ -7,6 +7,7 @@ CameraGizmo = function( aPosition , anImagePlane , anImage , aRenderContext )
   this.m_image       = anImage ; 
   this.m_nb_vert     = 16 ; 
   this.m_orient = new DualQuaternion() ; 
+  this.m_scale = 1.0 ; 
 
   this.initGLData( aRenderContext ) ; 
 }
@@ -45,6 +46,19 @@ CameraGizmo.prototype.translate = function( aVector )
   dqv.setFromTranslationVector( aVector ) ; 
 
   this.m_orient = dqv.mul( this.m_orient ) ; 
+}
+
+/* Reset to it's initial position */
+CameraGizmo.prototype.reset = function()
+{
+  this.m_orient = new DualQuaternion() ; 
+  this.m_scale = 1.0 ;   
+}
+
+/* Set scaling factor */
+CameraGizmo.prototype.setScale = function( aScaleValue )
+{
+  this.m_scale = aScaleValue ; 
 }
 
 /* Draw the gizmo */
@@ -118,7 +132,15 @@ CameraGizmo.prototype.draw = function( aRenderContext )
 
     shad.enable() ; 
     // Set common matrices 
-    var mvp = Matrix4.mul( Matrix4.transpose(this.m_orient.toMatrix()) , Matrix4.mul( aRenderContext.getCurrentViewMatrix() , aRenderContext.getCurrentProjectionMatrix() ) ) ;
+    var dqv = new DualQuaternion() ;
+    dqv.setFromTranslationVector( Vector.negate( this.m_position ) ) ; 
+    var scale = Matrix4.createUniformScale( this.m_scale ) ;
+    var dqvinv = new DualQuaternion() ;
+    dqvinv.setFromTranslationVector( this.m_position ) ; 
+
+
+    var model_mat = Matrix4.transpose( Matrix4.mul( this.m_orient.toMatrix() , Matrix4.mul( dqvinv.toMatrix() , Matrix4.mul( scale , dqv.toMatrix() ) ) ) ) ;
+    var mvp = Matrix4.mul( model_mat , Matrix4.mul( aRenderContext.getCurrentViewMatrix() , aRenderContext.getCurrentProjectionMatrix() ) ) ;
   shad.setModelViewProjectionMatrix( mvp ) ;
 ;
     shad.setModelViewProjectionMatrix( mvp ) ; 
