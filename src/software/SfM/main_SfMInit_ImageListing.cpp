@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
   std::string sPriorWeights;
-  std::pair<bool, Vec3> prior_w_info(false, Vec3::Zero());
+  std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
 
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
   }
 
   // Check if prior weights are given
-  if(cmd.used('P') && !sPriorWeights.empty())
+  if (cmd.used('P') && !sPriorWeights.empty())
   {
     prior_w_info = checkPriorWeightsString(sPriorWeights);
   }
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
       v.b_use_pose_center_ = true;
       v.pose_center_ = gps_info.second;
       // prior weights
-      if(prior_w_info.first == true)
+      if (prior_w_info.first == true)
       {
         v.center_weight_ = prior_w_info.second;
       }
