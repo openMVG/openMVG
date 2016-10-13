@@ -10,5 +10,8 @@
 *.pyc
 *.db
 build*
+GPATH
+GRTAGS
+GTAGS
 *.out
 docs/openmvg.pdf

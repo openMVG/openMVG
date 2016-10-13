@@ -116,7 +116,7 @@ void GPU_Matcher_Regions_AllInMemory::Match(
 				for (int j = 0; j < static_cast<int>(indexToCompare.size()); j++)
 				{
 					const size_t J = indexToCompare[j];
-				 
+
 					IndMatches vec_putatives_matches;
 					for (size_t k = 0; k < matchedPoints[j].size(); k++) {
 						vec_putatives_matches.push_back(IndMatch(matchedPoints[j][k].queryIdx, matchedPoints[j][k].trainIdx));
