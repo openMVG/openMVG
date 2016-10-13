@@ -20,8 +20,6 @@ GPUBruteForceL2Matcher<featureType, featureLength>::GPUBruteForceL2Matcher(const
 
 template <typename featureType, unsigned int featureLength>
 void GPUBruteForceL2Matcher<featureType, featureLength>::match(featureType* descriptors1, featureType* descriptors2, int h_numKP1, int h_numKP2) {
-	const int largerKPNum = h_numKP1 >= h_numKP2 ? h_numKP1 : h_numKP2;
-
 	// Because hash_code is silly but works
 	int typeMat; 
 	if (typeid(featureType).hash_code() == typeid(float).hash_code())
