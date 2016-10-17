@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
-  cmd.add(make_option('W', sPriorWeights, "prior_weigths"));
+  cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -237,6 +237,10 @@ int main(int argc, char **argv)
   if (cmd.used('P') && !sPriorWeights.empty())
   {
     prior_w_info = checkPriorWeightsString(sPriorWeights);
+  }
+  else if (cmd.used('P'))
+  {
+    prior_w_info.first = true;
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -371,7 +375,7 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename);
+    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename);
     if (gps_info.first && cmd.used('P'))
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
