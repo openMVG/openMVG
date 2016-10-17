@@ -16,4 +16,3 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfM_Localization
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SfM_Localization PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_SfM_Localization DESTINATION bin/)
-
