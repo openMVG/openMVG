@@ -106,6 +106,10 @@ Scene initialization
 
     - Setup a XYZ position prior for each view that have valid EXIF GPS data.
 
+  - **[-w]**
+
+    - Allow to customize the pose prior weight in each XYZ dimention i.e. default is equivalent to "1.0;1.0;1.0"
+
 Force pose prior usage
 ~~~~~~~~~~~~~~~~~~~~~~
 
