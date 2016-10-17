@@ -3026,6 +3026,7 @@ Samsung Digimax 220 SE;5.33
 Samsung Digimax 35 MP3;4.8
 Samsung Digimax 210 SE;5.33
 Samsung-SGH-I537;3
+GT-I9500;4.69
 Sanyo VPC E1500TP;6.08
 Sanyo VPC S1414;6.08
 Sanyo VPC T1495;6.08
