@@ -70,6 +70,8 @@ Shader.prototype.getStandardLocations = function(  )
 
   // Standard uniforms values 
   this.m_unif_mvp_mat    = this.m_gl.getUniformLocation( this.m_pgm , "uModelViewProjMat" ) ;
+  this.m_unif_mv_mat     = this.m_gl.getUniformLocation( this.m_pgm , "uModelViewMat" ) ; 
+  this.m_unif_proj_mat   = this.m_gl.getUniformLocation( this.m_pgm , "uProjMat" ) ; 
   this.m_unif_normal_mat = this.m_gl.getUniformLocation( this.m_pgm , "uNormalMat" ) ;
   
   this.m_unif_camera_pos = this.m_gl.getUniformLocation( this.m_pgm , "uCamPos" ) ; 
@@ -127,13 +129,25 @@ Shader.prototype.getLightPositionUniform = function()
 /* Indicate if the shader contains camera position uniform */
 Shader.prototype.hasCameraPositionUniform = function()
 {
-  return this.m_unif_camera_pos != -1 ; 
+  return this.m_unif_camera_pos != undefined ; 
 }
 
 /* Get location of camera position uniform */
 Shader.prototype.getCameraPositionUniform = function()
 {
   return this.m_unif_camera_pos ;
+}
+
+/**
+ * @brief Set Camera position uniform 
+ * @param aPosition The position to pass to the shader (array of 3 floats)
+ */
+Shader.prototype.setCameraPosition = function( aPosition )
+{
+  if( this.m_unif_camera_pos != undefined )
+  {
+    this.m_gl.uniform3f( this.m_unif_camera_pos , aPosition[0] , aPosition[1] , aPosition[2] ) ;
+  }
 }
 
 /* Get a location by it's name */
@@ -148,6 +162,42 @@ Shader.prototype.setModelViewProjectionMatrix = function( aMatrix )
   this.m_gl.uniformMatrix4fv( this.m_unif_mvp_mat , false , aMatrix ) ; 
 }
 
+/**
+ * @brief Set the model view matrix 
+ * @param aMatrix The new model view matrix 
+ * @note this function assume there's a model view matrix uniform and no validity test is made
+ */
+Shader.prototype.setModelViewMatrix = function( aMatrix )
+{
+  this.m_gl.uniformMatrix4fv( this.m_unif_mv_mat , false , aMatrix ) ; 
+}
+
+/**
+ * @brief Set the normal matrix to the shader 
+ * @param aMatrix the new normal matrix 
+ * @note this function assume there's a normal matrix uniform and no validity test is made
+ */
+Shader.prototype.setNormalMatrix = function( aMatrix )
+{
+  this.m_gl.uniformMatrix4fv( this.m_unif_normal_mat , false , aMatrix ) ;
+}
+
+/**
+ * @brief Set the projection matrix to the shader  
+ * @param aMatrix the new projection matrix 
+ */
+Shader.prototype.setProjectionMatrix = function( aMatrix )
+{
+  this.m_gl.uniformMatrix4fv( this.m_unif_proj_mat , false , aMatrix ) ; 
+}
+
+/**
+ * @brief Pass a float value to the shader 
+ * @param aName Name of the uniform 
+ * @param aValue Value to pass 
+ * @note a test is made to validate if the uniform is present in the shader
+ * @note If the uniform is not present, the function do nothing. 
+ */
 Shader.prototype.setFloatUniform = function( aName , aValue )
 {
   var loc = this.m_gl.getUniformLocation( this.m_pgm , aName ) ;
@@ -155,9 +205,20 @@ Shader.prototype.setFloatUniform = function( aName , aValue )
   {
     this.m_gl.uniform1f( loc , aValue ) ; 
   }
-  else 
-  {
-    console.log( "location : " + loc ) ; 
-  }
 }
 
+/**
+ * @brief Pass a bool value to the shader 
+ * @param aName Name of the uniform 
+ * @param aValue Value to pass 
+ * @note a test is made to validate if the uniform is present in the shader
+ * @note If the uniform is not present, the function do nothing. 
+ */
+Shader.prototype.setBoolUniform = function( aName , aValue )
+{
+  var loc = this.m_gl.getUniformLocation( this.m_pgm , aName ) ;
+  if( loc != null )
+  {
+    this.m_gl.uniform1i( loc , aValue ? 1 : 0 ) ; 
+  }
+}

@@ -63,10 +63,15 @@
     </script>
     <!-- Point shader -->
     <script id="point_v_shad" type="x-shader/x-vertex">
+    uniform mat4 uModelViewMat ; 
     uniform mat4 uModelViewProjMat ; 
+    uniform mat4 uProjMat ;
+    uniform mat4 uNormalMat ; 
 
     uniform vec3 uCamPos ; 
     uniform float uPointSize ; 
+    
+    uniform bool uUseBackfaceCulling ; 
 
     attribute vec3 inNor ;
     attribute vec3 inPos ;
@@ -77,11 +82,23 @@
     void main( )
     {
       /* Backface culling */
-      //      if( dot( inNor , normalize( uCamPos - inPos ) ) > 0.0 )
+      if( uUseBackfaceCulling )
+      {
+        vec4 v = uModelViewMat * vec4( inPos , 1.0 ) ; 
+        vec4 n = uNormalMat * vec4( inNor , 1.0 ) ; 
+
+        if( dot( normalize( v.xyz ) , normalize( n.xyz ) ) > 0.0 )
+        {
+          gl_Position = uProjMat * v ; 
+          gl_PointSize = uPointSize ; 
+          vColor = vec4( inCol , 1.0 ) ;
+        }
+      }
+      else 
       {
         gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
-        gl_PointSize = uPointSize ; 
-        vColor = vec4( inCol , 1.0 ) ;
+        gl_PointSize = uPointSize ;
+        vColor = vec4( inCol , 1.0 ) ; 
       }
     }
     </script>
@@ -121,6 +138,8 @@
         <div class="button active" id="divShowTrackball">Show trackball</div>
 
         <div class="button active" id="divResetButton">Reset View</div>
+
+        <div class="button active" id="divBackFaceCullingButton">Backface Culling</div>
         
         
       </div>

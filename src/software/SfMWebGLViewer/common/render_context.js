@@ -8,9 +8,12 @@
 RenderContext = function( canvas )
 {
   this.m_canvas = canvas ; 
+  this.m_current_cam = undefined ; 
 
   this.initGLContext() ;
   this.initShaders() ; 
+
+  this.m_backface_culling_active = true ; 
 }
 
 /* Initialize the webgl context */
@@ -100,4 +103,52 @@ RenderContext.prototype.getCurrentViewMatrix = function( )
 RenderContext.prototype.getCurrentProjectionMatrix = function()
 {
   return this.m_proj_mat ; 
+}
+
+/**
+ * @brief Set current camera 
+ * @param aCam a new camera 
+ */
+RenderContext.prototype.setCurrentCamera = function( aCam )
+{
+  this.m_current_cam = aCam ; 
+}
+
+/**
+ * @brief Get current camera 
+ * @return Current camera 
+ */
+RenderContext.prototype.getCurrentCamera = function()
+{
+  return this.m_current_cam ; 
+}
+
+
+/**
+ * Indicate if backface culling is active 
+ * @retval true if backface culling is active 
+ * @retval false if not active 
+ */
+RenderContext.prototype.isBackfaceCullingActive = function()
+{
+  return this.m_backface_culling_active == true ;
+}
+
+/**
+ * @brief Get current state of the backface culling algorithm 
+ * @retval true If BC is active 
+ * @retval false If BC is inactive 
+ */
+RenderContext.prototype.backfaceCullingState = function()
+{
+  return this.m_backface_culling_active ;
+}
+
+/**
+ * @brief Set backface culling state
+ * @param aValue new state of the backface culling algorithm 
+ */
+RenderContext.prototype.setBackFaceCulling = function( aValue )
+{
+  this.m_backface_culling_active = aValue ; 
 }

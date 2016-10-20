@@ -65,8 +65,21 @@ PointCloud.prototype.draw = function( aRenderContext )
 
     gl.bindBuffer( gl.ARRAY_BUFFER , this.m_vbo ) ; 
 
-    var mvp = Matrix4.mul( Matrix4.transpose(this.m_orient.toMatrix()) , Matrix4.mul( aRenderContext.getCurrentViewMatrix() , aRenderContext.getCurrentProjectionMatrix() ) ) ;
-  shad.setModelViewProjectionMatrix( mvp ) ;
+    // Set MV, MVP, N, P matrices 
+    var mv  = Matrix4.mul( Matrix4.transpose(this.m_orient.toMatrix()) , aRenderContext.getCurrentViewMatrix() );
+    var mvp = Matrix4.mul( mv , aRenderContext.getCurrentProjectionMatrix() ) ;
+    var normalMat = Matrix4.transpose( Matrix4.inverse( mv ) ) ;
+    shad.setModelViewMatrix( mv ) ; 
+    shad.setModelViewProjectionMatrix( mvp ) ;
+    shad.setProjectionMatrix( aRenderContext.getCurrentProjectionMatrix() ) ;
+    shad.setNormalMatrix( normalMat ) ;
+
+    // Handle backface culling option 
+    var bcactive = aRenderContext.backfaceCullingState() ; 
+    shad.setBoolUniform( "uUseBackfaceCulling" , bcactive ) ; 
+
+    // Point size 
+    shad.setFloatUniform( "uPointSize" , this.m_point_size ) ;
 
     var posLoc = shad.getPositionAttributeLocation() ;
     if( shad.hasNormalAttribute() )
@@ -76,8 +89,11 @@ PointCloud.prototype.draw = function( aRenderContext )
       gl.vertexAttribPointer( norLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 * 4 ) ) ;
     }
     var colLoc = shad.getColorAttributeLocation() ;
-
-    shad.setFloatUniform( "uPointSize" , this.m_point_size ) ; 
+    
+    // Camera position (in world frame)
+    var cam = aRenderContext.getCurrentCamera() ; 
+    var pos = cam.getPosition() ; 
+    shad.setCameraPosition( pos ) ; 
 
     gl.enableVertexAttribArray( posLoc ) ;
     gl.enableVertexAttribArray( colLoc ) ;

@@ -26,6 +26,7 @@ var camera ;
 var pointcloud ; 
 var optionEnablePointCloudBtn ;
 var pointSizeSlider ; 
+var optionBackFaceCullingBtn ; 
 
 // The gizmos 
 var cameraGizmos ;  
@@ -43,10 +44,14 @@ function init()
   divCanvas = document.getElementById("divViewer");
   canvas = document.getElementById("viewerCanvas");
 
+  // Btn
   optionEnableCameraBtn = document.getElementById("divShowCam");
   optionEnablePointCloudBtn = document.getElementById("divShowPCloud");
   optionEnableTrackballBtn = document.getElementById("divShowTrackball");
   optionResetBtn = document.getElementById( "divResetButton" ) ;
+  optionBackFaceCullingBtn = document.getElementById( "divBackFaceCullingButton" ) ; 
+
+  // Sliders 
   cameraScaleSlider = document.getElementById( "cameraScaleSlider" ) ;
   pointSizeSlider = document.getElementById( "pointSizeSlider" ) ; 
   
@@ -79,7 +84,7 @@ function init()
 
   setEventListeners();
 
-  pointcloud = new PointCloud( modelPos , undefined , modelCol , renderContext ) ; 
+  pointcloud = new PointCloud( modelPos , modelNor , modelCol , renderContext ) ; 
 
   // Set scene for the first time 
   update() ; 
@@ -152,6 +157,25 @@ function toggleEnableTrackball()
     trackball.setVisible( true ) ; 
   }
   update(); 
+}
+
+function toggleBackfaceCulling()
+{
+  if( renderContext.isBackfaceCullingActive() )
+  {
+    RemoveClass( optionBackFaceCullingBtn , 'active' ) ;
+    AddClass( optionBackFaceCullingBtn , 'inactive' ) ;
+    
+    renderContext.setBackFaceCulling( false ) ; 
+  }
+  else 
+  {
+    RemoveClass( optionBackFaceCullingBtn , 'inactive' ) ;
+    AddClass( optionBackFaceCullingBtn , 'active' ) ; 
+
+    renderContext.setBackFaceCulling( true ) ; 
+  }
+  update() ; 
 }
 
 // Handle mouse click 
@@ -292,14 +316,16 @@ function setEventListeners()
   optionEnablePointCloudBtn.addEventListener( "click" , toggleEnablePointCloud ) ; 
   optionEnableTrackballBtn.addEventListener( "click" , toggleEnableTrackball ) ; 
   optionResetBtn.addEventListener( "click" , resetView ) ; 
+  optionBackFaceCullingBtn.addEventListener( "click" , toggleBackfaceCulling ) ; 
 
+  // Canvas GL Window
   canvas.addEventListener( "mousedown" , onMouseDown ) ;
   canvas.addEventListener( "mousemove" , onMouseMove ) ;
   canvas.addEventListener( "mouseup" , onMouseUp ) ;
 
+  // Sliders 
   cameraScaleSlider.addEventListener( "change" , onSliderChange ) ; 
   cameraScaleSlider.addEventListener( "input" , onSliderChange ) ; 
-
   pointSizeSlider.addEventListener( "change" , onPointSizeSliderChange ) ;
   pointSizeSlider.addEventListener( "input" , onPointSizeSliderChange ) ; 
   
@@ -331,6 +357,9 @@ function update()
   // Update internal matrices 
   renderContext.setCurrentViewMatrix( camera.GetLookAtMatrix() );
   renderContext.setCurrentProjectionMatrix( camera.GetProjectionMatrix() ) ;
+  
+  // Set current camera 
+  renderContext.setCurrentCamera( camera ) ; 
 
   // Finally draw the scene 
   draw() ; 

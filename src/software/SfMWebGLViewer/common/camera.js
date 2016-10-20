@@ -160,3 +160,8 @@ PerspectiveCamera.prototype.zoom = function( aFactor )
 
   this.m_pos = new_pos ; 
 }
+
+PerspectiveCamera.prototype.getPosition = function()
+{
+  return this.m_pos ; 
+}

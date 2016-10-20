@@ -14,6 +14,66 @@ using namespace openMVG::geometry ;
 using namespace openMVG::image;
 using namespace openMVG::cameras ;
 
+/**
+* @brief Compute normal using the mean of the direction for each points 
+* @param sfm_data Input scene data 
+* @param vec_nor A vector of normal for each point (in same order as ColorizeTrack output)
+*/
+void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
+{
+  vec_nor.resize( sfm_data.GetLandmarks().size() ) ;
+
+  IndexT cpt = 0;
+  for (Landmarks::const_iterator it = sfm_data.GetLandmarks().begin();
+      it != sfm_data.GetLandmarks().end(); ++it, ++cpt)
+    {
+      // Set it's normal to 0,0,0
+      vec_nor[ cpt ] = Vec3(0,0,0) ; 
+
+      const Landmark & landmark = it->second;
+      const Observations & obs = landmark.obs;
+      // Sum all rays from all observations 
+      int nb_valid = 0 ; 
+      for (Observations::const_iterator itOb = obs.begin() ; itOb != obs.end() ; ++itOb )
+        {
+          const IndexT viewId = itOb->first;
+        
+          // Compute ray of this obs 
+          const Observation & ob = itOb->second ; 
+          const Vec2 & pos = ob.x ; 
+
+          const View * view = sfm_data.GetViews().at(viewId).get() ;
+          if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+          {
+            continue;
+          }
+          // get it's intrinsic (if available)
+          Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+          if (!isPinhole(iterIntrinsic->second.get()->getType()))
+          {
+            continue;
+          }
+
+          const Pose3 pose = sfm_data.GetPoseOrDie(view);
+
+          // Force a pinhole ? (TODO : need to work with another type of camera)
+          const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
+
+          // Compute vector from camera center to the point 
+          const Vec3 C = pose.center() ;
+          const Mat3 Kinv = cam->K().inverse();
+          const Mat3 Rt = pose.rotation().transpose();
+          
+          // TODO : good for educational but really inefficient ! (+C-C)
+          const Vec3 dst = Rt * ( ( Kinv * Vec3( pos.x() , pos.y() , 1.0 ) ) ) + C;
+          const Vec3 n = ( dst - C ).normalized() ; 
+          nb_valid ++ ; 
+          vec_nor[ cpt ] += n ; 
+        }
+        // Mean and normalize
+        vec_nor[ cpt ] = vec_nor[ cpt ].normalized(); 
+    }
+}
 
 /// Find the color of the SfM_Data Landmarks/structure
 bool ColorizeTracks(
@@ -153,8 +213,9 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
     return false ; 
   }
 
-  std::vector<Vec3> vec_3dPoints, vec_tracksColor ;
+  std::vector<Vec3> vec_3dPoints, vec_tracksColor , vec_normals ;
   ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor) ;
+  ComputeNormals(sfm_data,vec_normals);
 
   // Model points 
   file << "modelPos=[" << std::endl ; 
@@ -162,6 +223,18 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
   {
     file << vec_3dPoints[id_point](0) << " , " << vec_3dPoints[id_point](1) << " , " << vec_3dPoints[id_point](2) ;
     if( id_point +1 != vec_3dPoints.size() )
+    {
+      file << " , " ;
+    }
+  }
+  file << "];" << std::endl ; 
+
+  // Model normal 
+  file << "modelNor=[" << std::endl ; 
+  for( size_t id_nor = 0 ; id_nor < vec_normals.size() ; ++id_nor ) 
+  {
+    file << vec_normals[ id_nor ](0) << " , " << vec_normals[ id_nor ](1) << " , " << vec_normals[ id_nor ](2) ;
+    if( id_nor + 1 != vec_normals.size() )
     {
       file << " , " ;
     }
