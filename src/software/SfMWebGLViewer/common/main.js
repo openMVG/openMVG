@@ -25,6 +25,7 @@ var camera ;
 // The pointcloud
 var pointcloud ; 
 var optionEnablePointCloudBtn ;
+var pointSizeSlider ; 
 
 // The gizmos 
 var cameraGizmos ;  
@@ -47,7 +48,8 @@ function init()
   optionEnableTrackballBtn = document.getElementById("divShowTrackball");
   optionResetBtn = document.getElementById( "divResetButton" ) ;
   cameraScaleSlider = document.getElementById( "cameraScaleSlider" ) ;
-
+  pointSizeSlider = document.getElementById( "pointSizeSlider" ) ; 
+  
   cameraEnabled = true ; 
   pcloudEnabled = true ; 
 
@@ -275,6 +277,13 @@ function onSliderChange()
   update() ; 
 }
 
+function onPointSizeSliderChange()
+{
+  var pointSizeValue = pointSizeSlider.value ; 
+  pointcloud.setPointSize( pointSizeValue ) ; 
+  update() ; 
+}
+
 // Setup event listener 
 function setEventListeners()
 {
@@ -290,6 +299,9 @@ function setEventListeners()
 
   cameraScaleSlider.addEventListener( "change" , onSliderChange ) ; 
   cameraScaleSlider.addEventListener( "input" , onSliderChange ) ; 
+
+  pointSizeSlider.addEventListener( "change" , onPointSizeSliderChange ) ;
+  pointSizeSlider.addEventListener( "input" , onPointSizeSliderChange ) ; 
   
 
   // Window resizing 

@@ -66,6 +66,7 @@
     uniform mat4 uModelViewProjMat ; 
 
     uniform vec3 uCamPos ; 
+    uniform float uPointSize ; 
 
     attribute vec3 inNor ;
     attribute vec3 inPos ;
@@ -79,6 +80,7 @@
       //      if( dot( inNor , normalize( uCamPos - inPos ) ) > 0.0 )
       {
         gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
+        gl_PointSize = uPointSize ; 
         vColor = vec4( inCol , 1.0 ) ;
       }
     }
@@ -89,6 +91,9 @@
 
     void main( )
     {
+      vec2 pt = gl_PointCoord - vec2(0.5);
+      if(pt.x*pt.x+pt.y*pt.y > 0.25)
+        discard;
       gl_FragColor = vColor ;
     }
     </script>
@@ -105,9 +110,14 @@
         <div class="button active" id="divShowCam">Show cameras</div>
         <div>
           <p>Camera scale</p>
-        <input id="cameraScaleSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
+          <input id="cameraScaleSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
         </div>
         <div class="button active" id="divShowPCloud">Show point cloud</div>
+        <div>
+          <p>Point size</p>
+          <input id="pointSizeSlider" type="range" min="0.1" , max="20" step="0.1" value="1" />
+        </div>
+
         <div class="button active" id="divShowTrackball">Show trackball</div>
 
         <div class="button active" id="divResetButton">Reset View</div>

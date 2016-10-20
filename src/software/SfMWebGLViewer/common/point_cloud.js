@@ -4,6 +4,7 @@ PointCloud = function( aPointPosition , aPointNormal , aPointColor , aRenderCont
   this.initGLData( aPointPosition , aPointNormal , aPointColor , aRenderContext ) ;
   this.m_orient = new DualQuaternion() ; 
   this.m_show   = true ; 
+  this.m_point_size = 1.0 ; 
 }
 
 /* Create vbo */
@@ -76,6 +77,8 @@ PointCloud.prototype.draw = function( aRenderContext )
     }
     var colLoc = shad.getColorAttributeLocation() ;
 
+    shad.setFloatUniform( "uPointSize" , this.m_point_size ) ; 
+
     gl.enableVertexAttribArray( posLoc ) ;
     gl.enableVertexAttribArray( colLoc ) ;
 
@@ -84,6 +87,11 @@ PointCloud.prototype.draw = function( aRenderContext )
 
     gl.drawArrays( gl.POINTS , 0 , this.m_nb_point ) ; 
   }
+}
+
+PointCloud.prototype.setPointSize = function( aSizeValue )
+{
+  this.m_point_size = aSizeValue ; 
 }
 
 /* Rotate a point cloud */

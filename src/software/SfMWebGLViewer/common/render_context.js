@@ -30,6 +30,7 @@ RenderContext.prototype.initGLContext = function( )
     alert( "Error Initialization of the gl context" ) ; 
   }
   this.setClearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ; 
+  this.m_gl.enable(this.m_gl.DEPTH_TEST);
 }
 
 /* Initialize the shaders */

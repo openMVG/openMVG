@@ -148,4 +148,16 @@ Shader.prototype.setModelViewProjectionMatrix = function( aMatrix )
   this.m_gl.uniformMatrix4fv( this.m_unif_mvp_mat , false , aMatrix ) ; 
 }
 
+Shader.prototype.setFloatUniform = function( aName , aValue )
+{
+  var loc = this.m_gl.getUniformLocation( this.m_pgm , aName ) ;
+  if( loc != null )
+  {
+    this.m_gl.uniform1f( loc , aValue ) ; 
+  }
+  else 
+  {
+    console.log( "location : " + loc ) ; 
+  }
+}
 
