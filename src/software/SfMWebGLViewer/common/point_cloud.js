@@ -65,6 +65,7 @@ PointCloud.prototype.draw = function( aRenderContext )
 
     gl.bindBuffer( gl.ARRAY_BUFFER , this.m_vbo ) ; 
 
+    // 1 - Uniform attributes 
     // Set MV, MVP, N, P matrices 
     var mv  = Matrix4.mul( Matrix4.transpose(this.m_orient.toMatrix()) , aRenderContext.getCurrentViewMatrix() );
     var mvp = Matrix4.mul( mv , aRenderContext.getCurrentProjectionMatrix() ) ;
@@ -78,9 +79,26 @@ PointCloud.prototype.draw = function( aRenderContext )
     var bcactive = aRenderContext.backfaceCullingState() ; 
     shad.setBoolUniform( "uUseBackfaceCulling" , bcactive ) ; 
 
+    // Dynamic point size option 
+    shad.setBoolUniform( "uUsePerspectiveSizeCorrection" , aRenderContext.isViewDependentPointSizeActive() ) ;
+
     // Point size 
     shad.setFloatUniform( "uPointSize" , this.m_point_size ) ;
 
+    // Camera position (in world frame)
+    var cam = aRenderContext.getCurrentCamera() ; 
+    var pos = cam.getPosition() ; 
+    shad.setCameraPosition( pos ) ; 
+
+    // Screen size 
+    var ssize = aRenderContext.getScreenSize() ;
+    shad.setIntegerArrayUniform( "uScreenSize" , ssize ) ; 
+
+    // Fov 
+    var fov = aRenderContext.getCurrentCamera().m_fov ; 
+    shad.setFloatUniform( "uFov" , DegToRad(fov) ) ; 
+
+    // 2 - Attributes data 
     var posLoc = shad.getPositionAttributeLocation() ;
     if( shad.hasNormalAttribute() )
     {
@@ -89,11 +107,6 @@ PointCloud.prototype.draw = function( aRenderContext )
       gl.vertexAttribPointer( norLoc , 3 , gl.FLOAT , false , ( ( 3 + 3 + 3 ) * 4 ) , ( 3 * 4 ) ) ;
     }
     var colLoc = shad.getColorAttributeLocation() ;
-    
-    // Camera position (in world frame)
-    var cam = aRenderContext.getCurrentCamera() ; 
-    var pos = cam.getPosition() ; 
-    shad.setCameraPosition( pos ) ; 
 
     gl.enableVertexAttribArray( posLoc ) ;
     gl.enableVertexAttribArray( colLoc ) ;
@@ -150,4 +163,5 @@ PointCloud.prototype.isVisible = function( )
 PointCloud.prototype.reset = function()
 {
   this.m_orient = new DualQuaternion() ; 
+  this.m_point_size = 1.0 ;
 }

@@ -26,6 +26,7 @@ var camera ;
 var pointcloud ; 
 var optionEnablePointCloudBtn ;
 var pointSizeSlider ; 
+var optionViewDependentPointSizeBtn ; 
 var optionBackFaceCullingBtn ; 
 
 // The gizmos 
@@ -50,6 +51,7 @@ function init()
   optionEnableTrackballBtn = document.getElementById("divShowTrackball");
   optionResetBtn = document.getElementById( "divResetButton" ) ;
   optionBackFaceCullingBtn = document.getElementById( "divBackFaceCullingButton" ) ; 
+  optionViewDependentPointSizeBtn = document.getElementById( "divViewDependendPointSizeBtn" ) ; 
 
   // Sliders 
   cameraScaleSlider = document.getElementById( "cameraScaleSlider" ) ;
@@ -174,6 +176,25 @@ function toggleBackfaceCulling()
     AddClass( optionBackFaceCullingBtn , 'active' ) ; 
 
     renderContext.setBackFaceCulling( true ) ; 
+  }
+  update() ; 
+}
+
+function toggleViewDependentPointSize()
+{
+  if( renderContext.isViewDependentPointSizeActive() )
+  {
+    RemoveClass( optionViewDependentPointSizeBtn , 'active' ) ;
+    AddClass( optionViewDependentPointSizeBtn , 'inactive' ) ; 
+    
+    renderContext.setViewDependentPointSize( false ) ; 
+  }
+  else 
+  {
+    RemoveClass( optionViewDependentPointSizeBtn , 'inactive' ) ;
+    AddClass( optionViewDependentPointSizeBtn , 'active' ) ;
+
+    renderContext.setViewDependentPointSize( true ) ; 
   }
   update() ; 
 }
@@ -317,6 +338,7 @@ function setEventListeners()
   optionEnableTrackballBtn.addEventListener( "click" , toggleEnableTrackball ) ; 
   optionResetBtn.addEventListener( "click" , resetView ) ; 
   optionBackFaceCullingBtn.addEventListener( "click" , toggleBackfaceCulling ) ; 
+  divViewDependendPointSizeBtn.addEventListener( "click" , toggleViewDependentPointSize ) ; 
 
   // Canvas GL Window
   canvas.addEventListener( "mousedown" , onMouseDown ) ;
@@ -410,8 +432,20 @@ function resetView()
   var arad = DegToRad( camera.m_fov ) ; 
   var new_rad = d * Math.sin( arad * 0.5 ) ; 
   trackball.setRadius( bs[3] * 0.8 ) ; 
+  
+  // Default values for interface
+  pointSizeSlider.value = 1.0 ; 
+  cameraScaleSlider.value = 1.0 ; 
 
+  RemoveClass( optionBackFaceCullingBtn , 'inactive' ) ;
+  RemoveClass( optionBackFaceCullingBtn , 'active' ) ;
+  AddClass( optionBackFaceCullingBtn , 'active' ) ; 
+  renderContext.setBackFaceCulling( true ) ; 
+
+  RemoveClass( optionViewDependentPointSizeBtn , 'inactive' ) ;
+  RemoveClass( optionViewDependentPointSizeBtn , 'active' ) ;
+  AddClass( optionViewDependentPointSizeBtn , 'active' ) ; 
+  renderContext.setViewDependentPointSize( true ) ; 
 
   update() ;
-  resizeGLCanvas() ;
 }

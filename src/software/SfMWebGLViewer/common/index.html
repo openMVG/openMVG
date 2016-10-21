@@ -70,8 +70,11 @@
 
     uniform vec3 uCamPos ; 
     uniform float uPointSize ; // Radius of the splat
-    
+    uniform float uFov ; // The current fov 
+    uniform int uScreenSize[2] ; // (width,height)
+
     uniform bool uUseBackfaceCulling ; 
+    uniform bool uUsePerspectiveSizeCorrection ; 
 
     attribute vec3 inNor ;
     attribute vec3 inPos ;
@@ -82,26 +85,33 @@
 
     void main( )
     {
+      /* Normal and position in eye space */
        vec4 n = uNormalMat * vec4( inNor , 1.0 ) ; 
+       vec4 v = uModelViewMat * vec4( inPos , 1.0 ) ; 
+
+      if( uUsePerspectiveSizeCorrection )
+      {
+        gl_PointSize = ( (uPointSize) * 2.0 / (- v.z) ) ;
+      }
+      else 
+      {
+        gl_PointSize = uPointSize * 2.0 ;
+      }
+
+      vColor = vec4( inCol , 1.0 ) ;
+      vNormal = n.xyz ; 
+
       /* Backface culling */
       if( uUseBackfaceCulling )
       {
-        vec4 v = uModelViewMat * vec4( inPos , 1.0 ) ; 
-
         if( dot( normalize( v.xyz ) , normalize( n.xyz ) ) > 0.0 )
         {
           gl_Position = uProjMat * v ; 
-          gl_PointSize = uPointSize * 2.0 / - v.z ; 
-          vColor = vec4( inCol , 1.0 ) ;
-          vNormal = n.xyz ; 
         }
       }
       else 
       {
-        gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
-        gl_PointSize = uPointSize * 2.0 ;
-        vColor = vec4( inCol , 1.0 ) ; 
-        vNormal = n.xyz ; 
+        gl_Position = uProjMat * v ;
       }
     }
     </script>
@@ -129,39 +139,52 @@
     <h1 id="title">openMVG WebGL viewer</h1>
 
     <div id="container">
+
       <div id="divOptions">
-        <div class="divHeader">Options</div>
-
-        <div class="button active" id="divShowCam">Show cameras</div>
-        <div>
-          <p>Camera scale</p>
-          <input id="cameraScaleSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
-        </div>
-        <div class="button active" id="divShowPCloud">Show point cloud</div>
-        <div>
-          <p>Point size</p>
-          <input id="pointSizeSlider" type="range" min="0.1" , max="20" step="0.1" value="1" />
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>General Options</p></div>
+          <div class="button active" id="divShowCam">Show cameras</div>
+          <div class="button active" id="divShowPCloud">Show point cloud</div>
+          <div class="button active" id="divShowTrackball">Show trackball</div>
+          <div class="button active" id="divResetButton">Reset View</div>
+          <div class="divOptionFooter"></div>
         </div>
 
-        <div class="button active" id="divShowTrackball">Show trackball</div>
-
-        <div class="button active" id="divResetButton">Reset View</div>
-
-        <div class="button active" id="divBackFaceCullingButton">Backface Culling</div>
-        
-        
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>Camera Options</p></div>
+          <div>
+            <label for="cameraScaleSlider">Scale</label>
+            <div class="enclosingRangeDiv">
+              <input id="cameraScaleSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="divOptionFooter"></div>
+        </div>
+      
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>Point cloud Options</p></div>
+          <div>
+            <label for="pointSizeSlider">Size</label>
+            <div class="enclosingRangeDiv">
+              <input id="pointSizeSlider" type="range" min="0.1" max="20" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="button active" id="divViewDependendPointSizeBtn">View dependent size</div>
+          <div class="button active" id="divBackFaceCullingButton">Backface Culling</div>
+          <div class="divOptionFooter"></div>       
+        </div>
       </div>
+
       <div id="divViewer">
         <canvas id="viewerCanvas" width="0" height="0"> </canvas>
       </div>
+      
       <div id="divHelp">
         Help
         <div class="center"> Drag : Rotate </div>
         <div class="center"> Shift + Drag (Up/Down) : Zoom </div>
         <div class="center"> Alt + Drag : Pan </div>
       </div>
-    <div id="container">
-
-
+    </div>
   </body>
 </html>

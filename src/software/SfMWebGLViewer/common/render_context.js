@@ -14,6 +14,7 @@ RenderContext = function( canvas )
   this.initShaders() ; 
 
   this.m_backface_culling_active = true ; 
+  this.m_view_dependent_point_size_active = true ; 
 }
 
 /* Initialize the webgl context */
@@ -131,7 +132,7 @@ RenderContext.prototype.getCurrentCamera = function()
  */
 RenderContext.prototype.isBackfaceCullingActive = function()
 {
-  return this.m_backface_culling_active == true ;
+  return this.m_backface_culling_active ;
 }
 
 /**
@@ -151,4 +152,25 @@ RenderContext.prototype.backfaceCullingState = function()
 RenderContext.prototype.setBackFaceCulling = function( aValue )
 {
   this.m_backface_culling_active = aValue ; 
+}
+
+/**
+ * @brief get an array of two elements 
+ */
+RenderContext.prototype.getScreenSize = function( aValue )
+{
+  var res = new Common.INT_ARRAY_TYPE(2) ;
+  res[0] = this.m_current_cam.m_width ;
+  res[1] = this.m_current_cam.m_height ; 
+  return res ; 
+}
+
+RenderContext.prototype.isViewDependentPointSizeActive = function( aValue )
+{
+  return this.m_view_dependent_point_size_active ; 
+}
+
+RenderContext.prototype.setViewDependentPointSize = function( aValue )
+{
+  this.m_view_dependent_point_size_active = aValue ; 
 }

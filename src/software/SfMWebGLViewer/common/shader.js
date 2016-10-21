@@ -222,3 +222,19 @@ Shader.prototype.setBoolUniform = function( aName , aValue )
     this.m_gl.uniform1i( loc , aValue ? 1 : 0 ) ; 
   }
 }
+
+/**
+ * @brief Pass an integer array to a uniform 
+ * @param aName Name of the uniform 
+ * @param aValue Value to pass 
+ * @note a test is made to validate if the uniform is present in the shader
+ * @note If the uniform is not present, the function do nothing. 
+ */
+Shader.prototype.setIntegerArrayUniform = function( aName , aValue )
+{
+  var loc = this.m_gl.getUniformLocation( this.m_pgm , aName ) ;
+  if( loc != null )
+  {
+    this.m_gl.uniform1iv( loc , aValue ) ;
+  }
+}

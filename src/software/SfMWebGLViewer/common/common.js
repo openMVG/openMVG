@@ -11,6 +11,7 @@ var Common = {}
 
 // The standard type used to create a floating point array 
 Common.ARRAY_TYPE =  (typeof Float32Array !== 'undefined') ? Float32Array : Array ;
+Common.INT_ARRAY_TYPE = (typeof Int32Array !== 'undefined' ) ? Int32Array : Array ;
 
 /** 
  * Convert an angle from degree to radian 
