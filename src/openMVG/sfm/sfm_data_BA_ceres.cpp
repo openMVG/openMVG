@@ -542,7 +542,8 @@ bool Bundle_Adjustment_Ceres::Adjust
         const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
         if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
         {
-          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
+          const Pose3 & sfm_pose = sfm_data.GetPoses().at(prior->id_pose);
+          X_SfM.push_back( sfm_pose.inverse()(prior->pose_sensor_transform_.center()) );
           X_GPS.push_back( prior->pose_center_ );
         }
       }
