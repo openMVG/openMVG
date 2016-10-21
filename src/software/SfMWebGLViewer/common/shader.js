@@ -44,7 +44,7 @@ Shader.prototype.initShader = function( aVertexShaderContent , aFragmentShaderCo
   var ok = this.m_gl.getProgramParameter( this.m_pgm , this.m_gl.LINK_STATUS ) ;
   if( ! ok )
   {
-    throw "pgm failed to link" + gl.getProgramInfoLog( this.m_pgm ) ;
+    console.log( "pgm failed to link" + this.m_gl.getProgramInfoLog( this.m_pgm ) ) ;
   }
 }
 

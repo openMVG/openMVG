@@ -17,9 +17,28 @@ RenderContext = function( canvas )
   this.m_view_dependent_point_size_active = true ; 
 }
 
+// Add your prefix here.
+var browserPrefixes = [
+  "",
+  "MOZ_",
+  "OP_",
+  "WEBKIT_"
+];
+
+var getExtensionWithKnownPrefixes = function(gl, name) {
+  for (var ii = 0; ii < browserPrefixes.length; ++ii) {
+    var prefixedName = browserPrefixes[ii] + name;
+    var ext = gl.getExtension(prefixedName);
+    if (ext) {
+      return ext;
+    }
+  }
+};
+
 /* Initialize the webgl context */
 RenderContext.prototype.initGLContext = function( )
 {
+  console.log("coucou"); 
   try
   {
     this.m_gl = this.m_canvas.getContext( "webgl") || this.m_canvas.getContext( "experimental-webgl" ) ;
@@ -33,6 +52,8 @@ RenderContext.prototype.initGLContext = function( )
   {
     alert( "Error Initialization of the gl context" ) ; 
   }
+  var ext = getExtensionWithKnownPrefixes( this.m_gl , "EXT_frag_depth" ) ; 
+
   this.setClearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ; 
   this.m_gl.enable(this.m_gl.DEPTH_TEST);
 }
