@@ -72,6 +72,7 @@
     uniform float uPointSize ; // Radius of the splat
     uniform float uFov ; // The current fov 
     uniform int uScreenSize[2] ; // (width,height)
+    uniform float uProjFactor ; // Precomputation of : float( uScreenSize[1] ) / ( 2.0 * tan( uFov / 2.0 ) ) ; 
 
     uniform bool uUseBackfaceCulling ; 
     uniform bool uUsePerspectiveSizeCorrection ; 
@@ -80,7 +81,7 @@
     attribute vec3 inPos ;
     attribute vec3 inCol ;
 
-    varying vec3 vPos ; 
+    varying vec4 vPos ; 
     varying vec4 vColor ;
     varying vec3 vNormal ; 
     varying float vRadius ; 
@@ -89,18 +90,16 @@
     {
       /* Normal and position in eye space */
        vec4 n = uNormalMat * vec4( inNor , 1.0 ) ; 
-       vec4 v = uModelViewMat * vec4( inPos , 1.0 ) ; 
-       vPos = v.xyz ; 
-
+       vPos = uModelViewMat * vec4( inPos , 1.0 ) ; 
+       
        /* Compute projection depth value */
        /* @see High-Quality Point-Based Rendering Using Fast Single-Pass Interpolation */
-       float projFactor = 1.0 / tan( uFov / 2.0 ) ; 
-       projFactor = projFactor / - v.z ; 
-       projFactor = projFactor * float( uScreenSize[1] ) / 2.0 ; 
+       //float projFactor = float( uScreenSize[1] ) / ( 2.0 * tan( uFov / 2.0 ) ) ; 
+       float projFactor = uProjFactor / - vPos.z ; 
 
       if( uUsePerspectiveSizeCorrection )
       {
-        gl_PointSize = ( (uPointSize) * 2.0 / (- v.z) ) ;
+        gl_PointSize = ( (uPointSize) * 2.0 / (- vPos.z) ) ;
       }
       else 
       {
@@ -113,14 +112,14 @@
       /* Backface culling */
       if( uUseBackfaceCulling )
       {
-        if( dot( normalize( v.xyz ) , normalize( n.xyz ) ) > 0.0 )
+        if( dot( normalize( vPos.xyz ) , normalize( n.xyz ) ) > 0.0 )
         {
-          gl_Position = uProjMat * v ; 
+          gl_Position = uProjMat * vPos ; 
         }
       }
       else 
       {
-        gl_Position = uProjMat * v ;
+        gl_Position = uProjMat * vPos ;
       }
 
       vRadius = gl_PointSize / projFactor ; 
@@ -130,7 +129,7 @@
     #extension GL_EXT_frag_depth : enable
     precision highp float;
 
-    varying vec3 vPos ; 
+    varying vec4 vPos ; 
     varying vec4 vColor ;
     varying vec3 vNormal ;
     varying float vRadius ; 
@@ -143,16 +142,17 @@
       vec3 n = normalize( vNormal ) ; 
 
       /* Compute paraboloid weight */
-      float w = 1.0 - ( pt.x * pt.x + pt.y * pt.y ) ; 
+      float w1 = dot( pt , pt ) ; // pt.x * pt.x + pt.y * pt.y ;
+      float w = 1.0 - ( w1 ) ; 
       /* Update depth */
-      vec4 pos = vec4( vPos , 1.0 ) ;
+      vec4 pos = vPos ;
       pos.z += w * vRadius ; 
       pos = uProjMat * pos ; 
-      pos = pos / pos.w ; 
+      pos /= pos.w ; 
 
       float dz = n.x / n.z * pt.x - n.y / n.z * pt.y ; 
 
-      if( pt.x * pt.x + pt.y * pt.y + dz * dz > 1.0 )
+      if( w1 + dz * dz > 1.0 )
         discard;
       gl_FragColor = vColor ;
       gl_FragDepthEXT = ( pos.z + 1.0 ) / 2.0 ;  

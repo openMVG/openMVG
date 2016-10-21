@@ -96,7 +96,12 @@ PointCloud.prototype.draw = function( aRenderContext )
 
     // Fov 
     var fov = aRenderContext.getCurrentCamera().m_fov ; 
-    shad.setFloatUniform( "uFov" , DegToRad(fov) ) ; 
+    var fovr = DegToRad( fov ) ; 
+    shad.setFloatUniform( "uFov" , fovr ) ; 
+
+    // Projection factor 
+    var projFactor = ssize[1] / ( 2.0 * Math.tan( fovr / 2.0 ) ) ; // float( uScreenSize[1] ) / ( 2.0 * tan( uFov / 2.0 ) ) ; 
+    shad.setFloatUniform( "uProjFactor" , projFactor ) ; 
 
     // 2 - Attributes data 
     var posLoc = shad.getPositionAttributeLocation() ;
