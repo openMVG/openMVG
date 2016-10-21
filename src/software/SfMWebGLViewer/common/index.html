@@ -69,7 +69,7 @@
     uniform mat4 uNormalMat ; 
 
     uniform vec3 uCamPos ; 
-    uniform float uPointSize ; 
+    uniform float uPointSize ; // Radius of the splat
     
     uniform bool uUseBackfaceCulling ; 
 
@@ -77,39 +77,47 @@
     attribute vec3 inPos ;
     attribute vec3 inCol ;
 
-    varying vec4 vColor;
+    varying vec4 vColor ;
+    varying vec3 vNormal ; 
 
     void main( )
     {
+       vec4 n = uNormalMat * vec4( inNor , 1.0 ) ; 
       /* Backface culling */
       if( uUseBackfaceCulling )
       {
         vec4 v = uModelViewMat * vec4( inPos , 1.0 ) ; 
-        vec4 n = uNormalMat * vec4( inNor , 1.0 ) ; 
 
         if( dot( normalize( v.xyz ) , normalize( n.xyz ) ) > 0.0 )
         {
           gl_Position = uProjMat * v ; 
-          gl_PointSize = uPointSize ; 
+          gl_PointSize = uPointSize * 2.0 / - v.z ; 
           vColor = vec4( inCol , 1.0 ) ;
+          vNormal = n.xyz ; 
         }
       }
       else 
       {
         gl_Position = uModelViewProjMat * vec4( inPos , 1.0 ) ;
-        gl_PointSize = uPointSize ;
+        gl_PointSize = uPointSize * 2.0 ;
         vColor = vec4( inCol , 1.0 ) ; 
+        vNormal = n.xyz ; 
       }
     }
     </script>
     <script id="point_f_shad" type="x-shader/x-fragment">
     precision mediump float;
     varying vec4 vColor ;
+    varying vec3 vNormal ;
 
     void main( )
     {
-      vec2 pt = gl_PointCoord - vec2(0.5);
-      if(pt.x*pt.x+pt.y*pt.y > 0.25)
+      vec2 pt = ( gl_PointCoord - vec2(0.5) ) * 2.0 ;
+      vec3 n = normalize( vNormal ) ; 
+
+      float dz = n.x / n.z * pt.x - n.y / n.z * pt.y ; 
+
+      if( pt.x * pt.x + pt.y * pt.y + dz * dz > 1.0 )
         discard;
       gl_FragColor = vColor ;
     }
