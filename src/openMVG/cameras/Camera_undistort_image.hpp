@@ -9,7 +9,7 @@
 #define OPENMVG_CAMERA_UNDISTORT_IMAGE_HPP
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/cameras.hpp"
 
 
 namespace openMVG

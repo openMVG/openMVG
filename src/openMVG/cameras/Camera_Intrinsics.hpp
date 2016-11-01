@@ -13,8 +13,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/stl/hash.hpp"
 
-#include <cereal/cereal.hpp> // Serialization
-
+#include <cereal/types/polymorphic.hpp>
 
 namespace openMVG
 {
@@ -36,7 +35,7 @@ struct Clonable
 struct IntrinsicBase : public Clonable<IntrinsicBase>
 {
   /// Width of image
-  unsigned int w_ ;
+  unsigned int w_;
   /// Height of image
   unsigned int h_;
 

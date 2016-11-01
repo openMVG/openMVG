@@ -141,10 +141,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
-      params.push_back( params_[1] );
-      params.push_back( params_[2] );
-      params.push_back( params_[3] );
+      params.insert(params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -229,7 +226,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     template <class Archive>
     void save( Archive & ar ) const
     {
-      Pinhole_Intrinsic::save( ar );
+      ar(cereal::base_class<Pinhole_Intrinsic>(this));
       ar( cereal::make_nvp( "fisheye", params_ ) );
     }
 
@@ -240,7 +237,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      Pinhole_Intrinsic::load( ar );
+      ar(cereal::base_class<Pinhole_Intrinsic>(this));
       ar( cereal::make_nvp( "fisheye", params_ ) );
     }
 

@@ -15,7 +15,7 @@
 namespace openMVG {
 
 namespace cameras{
-class IntrinsicBase;
+struct IntrinsicBase;
 }
 
 namespace sfm {
