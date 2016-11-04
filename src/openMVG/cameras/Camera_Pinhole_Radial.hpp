@@ -246,7 +246,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     template <class Archive>
     void save( Archive & ar ) const
     {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
+      Pinhole_Intrinsic::save( ar );
       ar( cereal::make_nvp( "disto_k1", params_ ) );
     }
 
@@ -257,7 +257,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
+      Pinhole_Intrinsic::load(ar);
       ar( cereal::make_nvp( "disto_k1", params_ ) );
     }
 
@@ -467,7 +467,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     template <class Archive>
     void save( Archive & ar ) const
     {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
+      Pinhole_Intrinsic::save(ar);
       ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
 
@@ -478,7 +478,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
+      Pinhole_Intrinsic::load(ar);
       ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
 

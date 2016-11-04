@@ -275,7 +275,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     template <class Archive>
     void save( Archive & ar ) const
     {
-      ar(cereal::base_class<IntrinsicBase>(this));
+      IntrinsicBase::save(ar);
       ar( cereal::make_nvp( "focal_length", K_( 0, 0 ) ) );
       const std::vector<double> pp = {K_( 0, 2 ), K_( 1, 2 )};
       ar( cereal::make_nvp( "principal_point", pp ) );
@@ -289,7 +289,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     template <class Archive>
     void load( Archive & ar )
     {
-      ar(cereal::base_class<IntrinsicBase>(this));
+      IntrinsicBase::load(ar);
       double focal_length;
       ar( cereal::make_nvp( "focal_length", focal_length ) );
       std::vector<double> pp( 2 );
@@ -312,6 +312,6 @@ class Pinhole_Intrinsic : public IntrinsicBase
 
 #include <cereal/types/polymorphic.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic, "pinhole");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic);
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_HPP
-
