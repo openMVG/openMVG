@@ -32,7 +32,8 @@ class Matcher_Regions_AllInMemory : public Matcher
     const sfm::SfM_Data & sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
-    matching::PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+    matching::PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
+    C_Progress& progress
   )const override ;
 
   private:

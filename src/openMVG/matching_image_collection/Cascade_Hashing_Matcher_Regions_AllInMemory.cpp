@@ -11,7 +11,6 @@
 #include "openMVG/matching/matching_filters.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -36,10 +35,11 @@ void Match
   const sfm::Regions_Provider & regions_provider,
   const Pair_Set & pairs,
   float fDistRatio,
-  PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
+  C_Progress& my_progress_bar
 )
 {
-  C_Progress_display my_progress_bar( pairs.size() );
+  my_progress_bar.restart(pairs.size(), "\n- Matching -\n");
 
   // Collect used view indexes
   std::set<IndexT> used_index;
@@ -123,6 +123,8 @@ void Match
   for (Map_vectorT::const_iterator iter = map_Pairs.begin();
     iter != map_Pairs.end(); ++iter)
   {
+    if (my_progress_bar.hasBeenCanceled())
+      break;
     const IndexT I = iter->first;
     const std::vector<IndexT> & indexToCompare = iter->second;
 
@@ -144,6 +146,8 @@ void Match
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
+        if (my_progress_bar.hasBeenCanceled())
+            continue;
       size_t J = indexToCompare[j];
       const features::Regions &regionsJ = *regions_provider.regions_per_view.at(J).get();
 
@@ -222,7 +226,8 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
+  C_Progress& progress
 )const
 {
 #ifdef OPENMVG_USE_OPENMP
@@ -244,7 +249,8 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,
-      map_PutativesMatches);
+      map_PutativesMatches,
+      progress);
   }
   else
   if(regions.Type_id() == typeid(float).name())
@@ -254,7 +260,8 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,
-      map_PutativesMatches);
+      map_PutativesMatches,
+      progress);
   }
   else
   {

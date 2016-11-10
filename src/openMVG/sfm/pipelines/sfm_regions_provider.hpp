@@ -30,10 +30,10 @@ struct Regions_Provider
   virtual bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
-    std::unique_ptr<features::Regions>& region_type)
+    std::unique_ptr<features::Regions>& region_type,
+    C_Progress& my_progress_bar = C_Progress::dummy())
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- Regions Loading -\n");
+    my_progress_bar.restart( sfm_data.GetViews().size(), "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
     bool bContinue = true;
 #ifdef OPENMVG_USE_OPENMP
@@ -42,6 +42,12 @@ struct Regions_Provider
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end() && bContinue; ++iter)
     {
+      if (my_progress_bar.hasBeenCanceled()) 
+      {
+          bContinue = false;
+          continue;
+      }
+
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
 #endif
