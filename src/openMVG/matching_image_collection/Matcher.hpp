@@ -12,6 +12,7 @@
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "third_party/progress/progress.hpp"
 
 #include <string>
 #include <vector>
@@ -33,7 +34,8 @@ class Matcher
     const sfm::SfM_Data & sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
-    matching::PairWiseMatches & map_putatives_matches // the output pairwise photometric corresponding points
+    matching::PairWiseMatches & map_putatives_matches, // the output pairwise photometric corresponding points
+    C_Progress& progress = C_Progress()
     )const = 0;
 };
 

@@ -47,7 +47,7 @@ class C_Progress
     /** @brief Initializer of the C_Progress class
      * @param expected_count The number of step of the process
      **/
-    virtual void           restart ( unsigned long ulExpected_count )
+    virtual void           restart ( unsigned long ulExpected_count, const std::string& msg=std::string())
     //  Effects: display appropriate scale
     //  Postconditions: count()==0, expected_count()==expected_count
     {
@@ -57,6 +57,10 @@ class C_Progress
       if ( !_expected_count ) _expected_count = 1;  // prevent divide by zero
     } // restart
 
+    /** @brief Indicator if the current operation should be aborted.
+     * @return Return true if the process has been canceled by the user.
+     **/
+    virtual bool hasBeenCanceled()const { return false; }
     /**
      * @brief Post-Increment operator
      * @param increment the number of step that we want to increment the internal step counter
@@ -152,45 +156,46 @@ class C_Progress
 class C_Progress_display : public C_Progress
 {
   public:
+      C_Progress_display()
+          : m_os(std::cout), m_msg("\n") 
+      {
+      }
     /** @brief Standard constructor
       * @param expected_count The number of step of the process
       * @param os the stream that will be used for display
-      * @param s1 the starting string
-      * @param s2 String used before the |--| sequence
-      * @param s3 String used after the  |--| sequence
+      * @param msg the status string
       **/
     explicit C_Progress_display ( unsigned long ulExpected_count,
                                      std::ostream & os = std::cout,
-                                     const std::string & s1 = "\n", //leading strings
-                                     const std::string & s2 = "",
-                                     const std::string & s3 = "" )
+                                     const std::string & msg = "\n")
     // os is hint; implementation may ignore, particularly in embedded systems
-    : m_os ( os ), m_s1 ( s1 ), m_s2 ( s2 ), m_s3 ( s3 )  { restart ( ulExpected_count ); }
+    : m_os ( os ), m_msg (msg){ restart ( ulExpected_count, msg); }
 
     /** @brief Initializer of the C_Progress_display class
      * @param expected_count The number of step of the process
+     * @param msg the status string
      **/
-    void restart ( unsigned long ulExpected_count )
+    void restart ( unsigned long ulExpected_count, const std::string& msg=std::string()) override
     //  Effects: display appropriate scale
     //  Postconditions: count()==0, expected_count()==expected_count
     {
-      C_Progress::restart ( ulExpected_count ); //-- Initialize the base class
-
-      m_os << m_s1 << "0%   10   20   30   40   50   60   70   80   90   100%\n"
-      << m_s2 << "|----|----|----|----|----|----|----|----|----|----|"
-      << std::endl  // endl implies flush, which ensures display
-      << m_s3;
+      C_Progress::restart ( ulExpected_count,  msg); //-- Initialize the base class
+      if (!msg.empty())
+          m_msg = msg;
+      m_os << m_msg << "0%   10   20   30   40   50   60   70   80   90   100%\n"
+      <<  "|----|----|----|----|----|----|----|----|----|----|"
+      << std::endl;  // endl implies flush, which ensures display
     } // restart
 
   private:
     /// Internal reference over the stream used to display the progress bar
     std::ostream &     m_os;  // may not be present in all imps
-    /// String used to formatting display // string is more general, safer than const char *, and efficiency or size are not issues
-    const std::string  m_s1, m_s2, m_s3;
+    /// String used to formatting display
+    std::string  m_msg;
 
     /** @brief Function that check if we have to append an * in the progress bar function
     **/
-    void inc_tic()
+    void inc_tic() override
     {
       // use of floating point ensures that both large and small counts
       // work correctly.  static_cast<>() is also used several places

@@ -40,7 +40,8 @@ struct ImageCollectionGeometricFilter
     const GeometryFunctor & functor,
     const PairWiseMatches & putative_matches,
     const bool b_guided_matching = false,
-    const double d_distance_ratio = 0.6
+    const double d_distance_ratio = 0.6,
+    C_Progress& progress_bar = C_Progress()
   );
 
   const PairWiseMatches & Get_geometric_matches() const {return _map_GeometricMatches;}
@@ -57,10 +58,11 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
   const GeometryFunctor & functor,
   const PairWiseMatches & putative_matches,
   const bool b_guided_matching,
-  const double d_distance_ratio
+  const double d_distance_ratio,
+  C_Progress& my_progress_bar
 )
 {
-  C_Progress_display my_progress_bar( putative_matches.size() );
+  my_progress_bar.restart( putative_matches.size(), "\n- Geometric filtering -\n" );
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
