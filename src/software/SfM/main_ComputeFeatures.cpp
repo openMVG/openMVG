@@ -233,8 +233,15 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray, globalMask, imageMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if(stlplus::file_exists(sGlobalMask_filename))
-      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+    if (stlplus::file_exists(sGlobalMask_filename))
+    {
+      if (ReadImage(sGlobalMask_filename.c_str(), &globalMask))
+      {
+        std::cout
+          << "Feature extraction will use a GLOBAL MASK:\n"
+          << sGlobalMask_filename << std::endl;
+      }
+    }
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
