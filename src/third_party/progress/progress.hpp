@@ -75,6 +75,14 @@ class C_Progress
       return _count;
     }
 
+    /** @brief A dummy progress reporter. Does nothing.
+     **/
+    static C_Progress& dummy()
+    {
+        static C_Progress null;
+        return null;
+    }
+    
     /**
      * @brief Allow to know if the actual pourcentage is the modulus. Used to know when we must display the pourcentage of a progress counter.
      * @param modulus The modulus we want to check.

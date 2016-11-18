@@ -35,7 +35,7 @@ class Matcher
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
     matching::PairWiseMatches & map_putatives_matches, // the output pairwise photometric corresponding points
-    C_Progress& progress = C_Progress()
+    C_Progress& progress = C_Progress::dummy()
     )const = 0;
 };
 

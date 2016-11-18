@@ -41,7 +41,7 @@ struct ImageCollectionGeometricFilter
     const PairWiseMatches & putative_matches,
     const bool b_guided_matching = false,
     const double d_distance_ratio = 0.6,
-    C_Progress& progress_bar = C_Progress()
+    C_Progress& progress_bar = C_Progress::dummy()
   );
 
   const PairWiseMatches & Get_geometric_matches() const {return _map_GeometricMatches;}

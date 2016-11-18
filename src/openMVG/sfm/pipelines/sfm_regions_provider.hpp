@@ -31,7 +31,7 @@ struct Regions_Provider
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type,
-    C_Progress& my_progress_bar = C_Progress())
+    C_Progress& my_progress_bar = C_Progress::dummy())
   {
     my_progress_bar.restart( sfm_data.GetViews().size(), "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
