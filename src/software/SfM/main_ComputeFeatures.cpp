@@ -230,7 +230,7 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray, globalMask, imageMask;
+    Image<unsigned char> imageGray, globalMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
     if (stlplus::file_exists(sGlobalMask_filename))
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0)
 #endif
     for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
@@ -279,14 +279,15 @@ int main(int argc, char **argv)
           stlplus::create_filespec(sfm_data.s_root_path,
             stlplus::basename_part(sView_filename) + "_mask", "png");
 
-        if(stlplus::file_exists(sImageMask_filename))
+        Image<unsigned char> imageMask;
+        if (stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
         // The mask point to the globalMask, if a valid one exists for the current image
-        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
+        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
           mask = &globalMask;
         // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files
