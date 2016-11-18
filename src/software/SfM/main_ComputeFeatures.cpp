@@ -282,14 +282,10 @@ int main(int argc, char **argv)
         if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
-        Image<unsigned char> imageGray;
-        if (ReadImage(sView_filename.c_str(), &imageGray))
-        {
-          // Compute features and descriptors and export them to files
-          std::unique_ptr<Regions> regions;
-          image_describer->Describe(imageGray, regions, mask);
-          image_describer->Save(regions.get(), sFeat, sDesc);
-        }
+        // Compute features and descriptors and export them to files
+        std::unique_ptr<Regions> regions;
+        image_describer->Describe(imageGray, regions, mask);
+        image_describer->Save(regions.get(), sFeat, sDesc);
       }
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
