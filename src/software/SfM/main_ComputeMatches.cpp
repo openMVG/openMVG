@@ -332,7 +332,7 @@ int main(int argc, char **argv)
           if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
           {
               return EXIT_FAILURE;
-          };
+          }
           break;
       }
       // Photometric matching of putative pairs

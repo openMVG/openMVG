@@ -52,7 +52,12 @@ using namespace std;
 struct EightPointRelativePoseSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *pvec_E)
+  static void Solve
+  (
+      const Mat &x1,
+      const Mat &x2,
+      std::vector<Mat3> *pvec_E
+  )
   {
     assert(3 == x1.rows());
     assert(8 <= x1.cols());
@@ -71,8 +76,8 @@ struct EightPointRelativePoseSolver {
     if (x1.cols() > 8) {
       Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU | Eigen::ComputeFullV);
       Vec3 d = USV.singularValues();
-      double a = d[0];
-      double b = d[1];
+      const double a = d[0];
+      const double b = d[1];
       d << (a+b)/2., (a+b)/2., 0.0;
       E = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
     }
@@ -81,8 +86,15 @@ struct EightPointRelativePoseSolver {
   }
 
   template<typename TMatX, typename TMatA>
-  static inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
-    for (int i = 0; i < x1.cols(); ++i) {
+  static inline void EncodeEpipolarEquation
+  (
+      const TMatX &x1,
+      const TMatX &x2,
+      TMatA *A
+  )
+  {
+    for (int i = 0; i < x1.cols(); ++i)
+    {
       (*A)(i, 0) = x2(0, i) * x1(0, i);  // 0 represents x coords,
       (*A)(i, 1) = x2(0, i) * x1(1, i);  // 1 represents y coords,
       (*A)(i, 2) = x2(0, i) * x1(2, i);  // 2 represents z coords.
@@ -97,8 +109,15 @@ struct EightPointRelativePoseSolver {
 };
 
 // Return the angular error between [0; PI/2]
-struct AngularError {
-  static double Error(const Mat3 &model, const Vec3 &x1, const Vec3 &x2) {
+struct AngularError
+{
+  static double Error
+  (
+    const Mat3 &model,
+    const Vec3 &x1,
+    const Vec3 &x2
+  )
+  {
     const Vec3 Em1 = (model * x1).normalized();
     double angleVal = (x2.transpose() * Em1);
     angleVal /= (x2.norm() * Em1.norm());
@@ -114,7 +133,8 @@ public:
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
 
-  void Fit(const vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const vector<size_t> &samples, std::vector<Model> *models) const
+  {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
 
@@ -129,7 +149,8 @@ public:
   size_t NumSamples() const {return x1_.cols();}
 
   /// Return the angular error (between 0 and PI/2)
-  double Error(size_t sample, const Model &model) const {
+  double Error(size_t sample, const Model &model) const
+  {
     return AngularError::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
@@ -140,11 +161,18 @@ public:
 // Solve:
 // [cross(x0,P0) X = 0]
 // [cross(x1,P1) X = 0]
-void TriangulateDLT(const Mat34 &P1, const Vec3 &x1,
-                    const Mat34 &P2, const Vec3 &x2,
-                    Vec4 *X_homogeneous) {
+void TriangulateDLT
+(
+    const Mat34 &P1,
+    const Vec3 &x1,
+    const Mat34 &P2,
+    const Vec3 &x2,
+    Vec4 *X_homogeneous
+  )
+  {
   Mat design(6,4);
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i)
+  {
     design(0,i) = -x1[2] * P1(1,i) + x1[1] * P1(2,i);
     design(1,i) =  x1[2] * P1(0,i) - x1[0] * P1(2,i);
     design(2,i) = -x1[1] * P1(0,i) + x1[0] * P1(1,i);
@@ -156,9 +184,15 @@ void TriangulateDLT(const Mat34 &P1, const Vec3 &x1,
   Nullspace(&design, X_homogeneous);
 }
 
-void TriangulateDLT(const Mat34 &P1, const Vec3 &x1,
-                    const Mat34 &P2, const Vec3 &x2,
-                    Vec3 *X_euclidean) {
+void TriangulateDLT
+(
+    const Mat34 &P1,
+    const Vec3 &x1,
+    const Mat34 &P2,
+    const Vec3 &x2,
+    Vec3 *X_euclidean
+)
+{
   Vec4 X_homogeneous;
   TriangulateDLT(P1, x1, P2, x2, &X_homogeneous);
   HomogeneousToEuclidean(X_homogeneous, X_euclidean);
