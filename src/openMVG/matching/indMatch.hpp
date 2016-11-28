@@ -69,10 +69,32 @@ inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
 }
 
 typedef std::vector<matching::IndMatch> IndMatches;
+
+/// Pairwise matches (indexed matches for a pair <I,J>)
+/// The interface used to store corresponding point indexes per images pairs
+class PairWiseMatchesContainer
+{
+public:
+  virtual ~PairWiseMatchesContainer() {}
+  virtual void insert(std::pair<Pair, IndMatches>&& pairWiseMatches) = 0;
+};
+
 //--
 /// Pairwise matches (indexed matches for a pair <I,J>)
-/// The structure used to store corresponding point indexes per images pairs
-typedef std::map< Pair, IndMatches > PairWiseMatches;
+/// A structure used to store corresponding point indexes per images pairs
+struct PairWiseMatches : public PairWiseMatchesContainer, public std::map< Pair, IndMatches >
+{
+  void insert(std::pair<Pair, IndMatches> && pairWiseMatches)override
+  {
+      std::map< Pair, IndMatches >::insert(std::forward<std::pair<Pair, IndMatches>>(pairWiseMatches));
+  }
+
+  // Serialization
+  template <class Archive>
+  void serialize( Archive & ar )  {
+    ar(static_cast<std::map< Pair, IndMatches >&>(*this));
+  }
+};
 
 inline Pair_Set getPairs(const PairWiseMatches & matches)
 {
@@ -85,4 +107,9 @@ inline Pair_Set getPairs(const PairWiseMatches & matches)
 }  // namespace matching
 }  // namespace openMVG
 
+namespace cereal
+{
+    // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
+    template <class Archive> struct specialize<Archive, openMVG::matching::PairWiseMatches, cereal::specialization::member_serialize> {};
+}
 #endif // OPENMVG_MATCHING_IND_MATCH_H
