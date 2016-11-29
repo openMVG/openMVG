@@ -116,15 +116,18 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = max_reprojection_error_;
 
+      std::shared_ptr<features::Regions> regionsL = regions_provider->get(it->first);
+      std::shared_ptr<features::Regions> regionsR = regions_provider->get(it->second);
+
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
         <Mat3, openMVG::fundamental::kernel::EpipolarDistanceError>
         (
           F_lr,
           iterIntrinsicL->second.get(),
-          *regions_provider->regions_per_view.at(it->first),
+          *regionsL.get(),
           iterIntrinsicR->second.get(),
-          *regions_provider->regions_per_view.at(it->second),
+          *regionsR.get(),
           Square(thresholdF), Square(0.8),
           vec_corresponding_indexes
         );
@@ -137,9 +140,9 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
           F_lr,
           epipole2,
           iterIntrinsicL->second.get(),
-          *regions_provider->regions_per_view.at(it->first),
+          *regionsL.get(),
           iterIntrinsicR->second.get(),
-          *regions_provider->regions_per_view.at(it->second),
+          *regionsR.get(),
           iterIntrinsicR->second->w(), iterIntrinsicR->second->h(),
           Square(thresholdF), Square(0.8),
           vec_corresponding_indexes
@@ -210,6 +213,11 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
+        std::map<IndexT, std::shared_ptr<openMVG::features::Regions> > regions;
+        regions[I] = regions_provider->get(I);
+        regions[J] = regions_provider->get(J);
+        regions[K] = regions_provider->get(K);
+
         // Triangulate the tracks
         for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
           iterTracks != map_tracksCommon.end(); ++iterTracks)
@@ -222,7 +230,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
-            const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+            const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
             trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
           }
           trianObj.compute();
@@ -279,7 +287,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
     {
       const size_t imaIndex = it->first;
       const size_t featIndex = it->second;
-      const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+      std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
+      const Vec2 pt = regions->GetRegionPosition(featIndex);
       obs[imaIndex] = Observation(pt, featIndex);
     }
   }

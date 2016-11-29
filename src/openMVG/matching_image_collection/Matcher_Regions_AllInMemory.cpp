@@ -56,15 +56,15 @@ void Matcher_Regions_AllInMemory::Match(
     const size_t I = iter->first;
     const std::vector<size_t> & indexToCompare = iter->second;
 
-    const features::Regions & regionsI = *regions_provider->regions_per_view.at(I).get();
-    if (regionsI.RegionCount() == 0)
+    std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
+    if (regionsI.get()->RegionCount() == 0)
     {
       my_progress_bar += indexToCompare.size();
       continue;
     }
 
     // Initialize the matching interface
-    matching::Matcher_Regions_Database matcher(eMatcherType_, regionsI);
+    matching::Matcher_Regions_Database matcher(eMatcherType_, *regionsI.get());
 
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic) if(b_multithreaded_pair_search)
@@ -73,9 +73,9 @@ void Matcher_Regions_AllInMemory::Match(
     {
       const size_t J = indexToCompare[j];
 
-      const features::Regions &regionsJ = *regions_provider->regions_per_view.at(J).get();
-      if (regionsJ.RegionCount() == 0
-          || regionsI.Type_id() != regionsJ.Type_id())
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
+      if (regionsJ.get()->RegionCount() == 0
+          || regionsI.get()->Type_id() != regionsJ.get()->Type_id())
       {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
@@ -85,7 +85,7 @@ void Matcher_Regions_AllInMemory::Match(
       }
 
       IndMatches vec_putatives_matches;
-      matcher.Match(f_dist_ratio_, regionsJ, vec_putatives_matches);
+      matcher.Match(f_dist_ratio_, *regionsJ.get(), vec_putatives_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
