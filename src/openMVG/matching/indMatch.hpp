@@ -88,6 +88,12 @@ struct PairWiseMatches : public PairWiseMatchesContainer, public std::map< Pair,
   {
       std::map< Pair, IndMatches >::insert(std::forward<std::pair<Pair, IndMatches>>(pairWiseMatches));
   }
+
+  // Serialization
+  template <class Archive>
+  void serialize( Archive & ar )  {
+    ar(static_cast<std::map< Pair, IndMatches >&>(*this));
+  }
 };
 
 inline Pair_Set getPairs(const PairWiseMatches & matches)
