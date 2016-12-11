@@ -347,7 +347,7 @@ IFEntry parseIFEntry_temp(const unsigned char *buf, const unsigned offs,
       }
       // and cut zero byte at the end, since we don't want that in the
       // std::string
-      if (result.val_string()[result.val_string().length() - 1] == '\0') {
+      if (!result.val_string().empty())  {
         result.val_string().resize(result.val_string().length() - 1);
       }
       break;
