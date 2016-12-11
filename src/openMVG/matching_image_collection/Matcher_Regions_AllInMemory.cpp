@@ -31,7 +31,7 @@ void Matcher_Regions_AllInMemory::Match(
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatches & map_PutativesMatches)const // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches)const // the pairwise photometric corresponding points
 {
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
