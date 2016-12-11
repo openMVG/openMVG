@@ -24,10 +24,7 @@ namespace matching {
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
-  IndMatch(IndexT i = 0, IndexT j = 0)  {
-    i_ = i;
-    j_ = j;
-  }
+  IndMatch(IndexT i = 0, IndexT j = 0) : i_(i), j_(j)  {}
 
   friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
     return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
@@ -37,8 +34,8 @@ struct IndMatch
     return !(m1 == m2);
   }
 
-  // Lexicographical ordering of matches. Used to remove duplicates.
-  friend bool operator<(const IndMatch& m1, const IndMatch& m2) {
+  // Lexicographical ordering of matches. Used to remove duplicates
+  friend bool operator<(const IndMatch& m1, const IndMatch& m2)  {
     return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
   }
 
@@ -46,7 +43,7 @@ struct IndMatch
   static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
 
     const size_t sizeBefore = vec_match.size();
-    std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
+    const std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
     vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
     return sizeBefore != vec_match.size();
   }
@@ -82,11 +79,14 @@ public:
 //--
 /// Pairwise matches (indexed matches for a pair <I,J>)
 /// A structure used to store corresponding point indexes per images pairs
-struct PairWiseMatches : public PairWiseMatchesContainer, public std::map< Pair, IndMatches >
+struct PairWiseMatches :
+  public PairWiseMatchesContainer,
+  public std::map< Pair, IndMatches >
 {
   void insert(std::pair<Pair, IndMatches> && pairWiseMatches)override
   {
-      std::map< Pair, IndMatches >::insert(std::forward<std::pair<Pair, IndMatches>>(pairWiseMatches));
+    std::map< Pair, IndMatches >::insert(
+      std::forward<std::pair<Pair, IndMatches>>(pairWiseMatches));
   }
 
   // Serialization
@@ -99,7 +99,7 @@ struct PairWiseMatches : public PairWiseMatchesContainer, public std::map< Pair,
 inline Pair_Set getPairs(const PairWiseMatches & matches)
 {
   Pair_Set pairs;
-  for( const auto & cur_pair : matches ) 
+  for ( const auto & cur_pair : matches )
     pairs.insert(cur_pair.first);
   return pairs;
 }
@@ -109,7 +109,12 @@ inline Pair_Set getPairs(const PairWiseMatches & matches)
 
 namespace cereal
 {
-    // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
-    template <class Archive> struct specialize<Archive, openMVG::matching::PairWiseMatches, cereal::specialization::member_serialize> {};
+  // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
+  template <class Archive>
+  struct specialize<
+    Archive,
+    openMVG::matching::PairWiseMatches,
+    cereal::specialization::member_serialize>
+  {};
 }
 #endif // OPENMVG_MATCHING_IND_MATCH_H
