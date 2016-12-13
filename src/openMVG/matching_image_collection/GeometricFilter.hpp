@@ -69,6 +69,8 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
 #endif
   for (int i = 0; i < (int)putative_matches.size(); ++i)
   {
+    if (my_progress_bar.hasBeenCanceled())
+        continue;
     auto iter = putative_matches.begin();
     advance(iter,i);
 
