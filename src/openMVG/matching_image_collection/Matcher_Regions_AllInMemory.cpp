@@ -30,7 +30,7 @@ void Matcher_Regions_AllInMemory::Match(
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatches & map_PutativesMatches,
+  PairWiseMatchesContainer & map_PutativesMatches,
   C_Progress& my_progress_bar)const
 {
 #ifdef OPENMVG_USE_OPENMP

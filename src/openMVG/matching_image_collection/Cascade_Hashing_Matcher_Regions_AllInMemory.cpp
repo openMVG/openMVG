@@ -35,7 +35,7 @@ void Match
   const sfm::Regions_Provider & regions_provider,
   const Pair_Set & pairs,
   float fDistRatio,
-  PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
   C_Progress& my_progress_bar
 )
 {
@@ -226,7 +226,7 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatches & map_PutativesMatches, // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
   C_Progress& progress
 )const
 {
