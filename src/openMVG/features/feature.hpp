@@ -51,7 +51,7 @@ protected:
   Vec2f coords_;  // (x, y).
 };
 
-typedef std::vector<PointFeature> PointFeatures;
+using PointFeatures = std::vector<PointFeature>;
 
 //with overloaded operators:
 inline std::ostream& operator<<(std::ostream& out, const PointFeature& obj)
@@ -267,7 +267,7 @@ void PointsToMat(
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  typedef typename FeaturesT::value_type ValueT; // Container type
+  using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
   for( typename FeaturesT::const_iterator iter = vec_feats.begin();

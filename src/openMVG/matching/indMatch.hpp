@@ -65,7 +65,7 @@ inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
   return in >> obj.i_ >> obj.j_;
 }
 
-typedef std::vector<matching::IndMatch> IndMatches;
+using IndMatches = std::vector<matching::IndMatch>;
 
 /// Pairwise matches (indexed matches for a pair <I,J>)
 /// The interface used to store corresponding point indexes per images pairs

@@ -20,10 +20,10 @@ namespace halfPlane
 {
 
 /// Define the Half_plane equation (abcd coefficients)
-typedef Eigen::Hyperplane<double, 3> Half_plane;
+using Half_plane = Eigen::Hyperplane<double, 3>;
 
 /// Define a collection of Half_plane
-typedef std::vector<Half_plane> Half_planes;
+using Half_planes = std::vector<Half_plane>;
 
 
 /**

@@ -8,6 +8,7 @@
 
 #include "third_party/fast/fast.h"
 #include "openMVG/image/image_container.hpp"
+#include <type_traits>
 
 //
 // Bibliography
@@ -51,8 +52,8 @@ public:
     std::vector<PointFeature> & regions
   )
   {
-    typedef xy* (*FastDetectorCall)(
-      const unsigned char *, int, int, int, int, int *);
+    using FastDetectorCall =
+      xy* (*) (const unsigned char *, int, int, int, int, int *);
 
     FastDetectorCall detector = nullptr;
     if (size_ ==  9) detector =  fast9_detect_nonmax;
@@ -81,4 +82,3 @@ public:
 
 } // features
 } // namespace openMVG
-

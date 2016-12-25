@@ -12,8 +12,8 @@
 #include <bitset>
 
 #ifdef _MSC_VER
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
+using uint32_t unsigned __int32;
+using uint64_t unsigned __int64;
 #include <intrin.h>
 #else
 #include <stdint.h>
@@ -44,8 +44,8 @@ namespace matching {
 template<typename TBitset>
 struct HammingBitSet
 {
-  typedef TBitset ElementType;
-  typedef size_t ResultType;
+  using ElementType = TBitset;
+  using ResultType = size_t;
 
   // Returns the Hamming Distance between two binary descriptors
   template <typename Iterator1, typename Iterator2>
@@ -70,8 +70,8 @@ static const unsigned char pop_count_LUT[256] =
 template<typename T>
 struct Hamming
 {
-  typedef T ElementType;
-  typedef unsigned int ResultType;
+  using ElementType = T;
+  using ResultType = unsigned int;
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */

@@ -21,11 +21,11 @@ template < typename Scalar, typename Metric >
 class ArrayMatcher
 {
   public:
-  typedef Scalar ScalarT;
-  typedef typename Metric::ResultType DistanceType;
-  typedef Metric MetricT;
+  using ScalarT = Scalar;
+  using DistanceType = typename Metric::ResultType;
+  using MetricT = Metric;
 
-  ArrayMatcher() = default ; 
+  ArrayMatcher() = default ;
   virtual ~ArrayMatcher() = default ;
 
   /**

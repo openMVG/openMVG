@@ -83,18 +83,18 @@ class Scalar_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region type
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Region descriptor
-  typedef Descriptor<T, L> DescriptorT;
+  using DescriptorT = Descriptor<T, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple regions description
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT >;
 
   //-- Class functions
   //--
@@ -197,18 +197,18 @@ class Binary_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Description of a region
-  typedef Descriptor<unsigned char, L> DescriptorT;
+  using DescriptorT = Descriptor<unsigned char, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple region descriptions
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT >;
 
   //-- Class functions
   //--

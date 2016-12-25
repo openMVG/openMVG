@@ -52,13 +52,13 @@ namespace tracks  {
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef std::map<uint32_t,uint32_t> submapTrack;
+using submapTrack = std::map<uint32_t,uint32_t>;
 // A track is a collection of {trackId, submapTrack}
-typedef std::map< size_t, submapTrack > STLMAPTracks;
+using STLMAPTracks = std::map< size_t, submapTrack >;
 
 struct TracksBuilder
 {
-  typedef std::pair<uint32_t, uint32_t>indexedFeaturePair;
+  using indexedFeaturePair = std::pair<uint32_t, uint32_t>;
 
   flat_pair_map<indexedFeaturePair, uint32_t> map_node_to_index;
   UnionFind uf_tree;
@@ -68,7 +68,7 @@ struct TracksBuilder
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
-    typedef std::set<indexedFeaturePair> SetIndexedPair;
+    using SetIndexedPair = std::set<indexedFeaturePair>;
     SetIndexedPair allFeatures;
     // For each couple of images list the used features
     for ( const auto & iter : map_pair_wise_matches )

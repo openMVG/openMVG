@@ -40,8 +40,11 @@ struct l1SixPointResectionSolver {
 };
 
 //-- Usable solver for the l1 6pt Resection Estimation
-typedef two_view::kernel::Kernel<l1SixPointResectionSolver,
-  l1SixPointResectionSolver, Mat34>  l1PoseResectionKernel;
+using l1PoseResectionKernel =
+  two_view::kernel::Kernel<
+    l1SixPointResectionSolver,
+    l1SixPointResectionSolver,
+    Mat34>;
 
 }  // namespace kernel
 }  // namespace lInfinityCV

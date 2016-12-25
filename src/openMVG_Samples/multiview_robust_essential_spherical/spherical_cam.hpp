@@ -128,7 +128,7 @@ struct AngularError
 class EssentialKernel_spherical
 {
 public:
-  typedef Mat3 Model;
+  using Model = Mat3;
   enum { MINIMUM_SAMPLES = EightPointRelativePoseSolver::MINIMUM_SAMPLES };
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}

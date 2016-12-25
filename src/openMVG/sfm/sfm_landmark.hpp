@@ -44,7 +44,7 @@ struct Observation
   }
 };
 /// Observations are indexed by their View_id
-typedef Hash_Map<IndexT, Observation> Observations;
+using Observations = Hash_Map<IndexT, Observation>;
 
 /// Define a landmark (a 3D point, with it's 2d observations)
 struct Landmark

@@ -10,8 +10,8 @@
 #ifdef OPENMVG_USE_CXX11
 #include <mutex>
 using namespace std;
-typedef std::mutex mutexT;
-typedef std::lock_guard<mutexT> lock_guardT;
+using mutexT = std::mutex;
+using lock_guardT = std::lock_guard<mutexT>;
 #else // OPENMVG_USE_CXX11
 #include "third_party/tinythread/fast_mutex.h"
 #include "third_party/tinythread/tinythread.h"

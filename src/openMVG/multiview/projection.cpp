@@ -132,7 +132,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
 Mat3 F_from_P(const Mat34 & P1, const Mat34 & P2)
 {
 	Mat3 F12;
-		
+
 	typedef Eigen::Matrix<double, 2, 4> Mat24;
 	Mat24 X1 = P1.block<2, 4>(1, 0);
 	Mat24 X2;  X2 << P1.row(2), P1.row(0);
@@ -276,4 +276,3 @@ double RootMeanSquareError(const Mat2X &x_image,
 }
 
 } // namespace openMVG
-

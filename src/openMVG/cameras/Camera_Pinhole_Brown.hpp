@@ -25,7 +25,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Brown_T2 class_type;
+  using class_type = Pinhole_Intrinsic_Brown_T2;
 
   protected:
 

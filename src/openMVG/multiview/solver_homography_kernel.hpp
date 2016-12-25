@@ -65,15 +65,18 @@ struct AsymmetricError {
 };
 
 // Kernel that works on original data point
-typedef two_view::kernel::Kernel<FourPointSolver, AsymmetricError, Mat3>
-  UnnormalizedKernel;
+using UnnormalizedKernel =
+  two_view::kernel::Kernel<
+    FourPointSolver,
+    AsymmetricError,
+    Mat3>;
 
 // By default use the normalized version for increased robustness.
-typedef two_view::kernel::Kernel<
+using Kernel =
+  two_view::kernel::Kernel<
     two_view::kernel::NormalizedSolver<FourPointSolver, UnnormalizerI>,
     AsymmetricError,
-    Mat3>
-  Kernel;
+    Mat3>;
 
 }  // namespace kernel
 }  // namespace homography

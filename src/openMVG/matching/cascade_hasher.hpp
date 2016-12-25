@@ -81,7 +81,7 @@ struct HashedDescriptions{
   // The hash information.
   std::vector<HashedDescription> hashed_desc;
 
-  typedef std::vector<int> Bucket;
+  using Bucket = std::vector<int>;
   // buckets[bucket_group][bucket_id] = bucket (container of description ids).
   std::vector<std::vector<Bucket> > buckets;
 };
@@ -267,7 +267,7 @@ public:
     const int NN = 2
   ) const
   {
-    typedef L2_Vectorized<typename MatrixT::Scalar> MetricT;
+    using MetricT = L2_Vectorized<typename MatrixT::Scalar>;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;
@@ -292,7 +292,7 @@ public:
     // feature for matching (i.e., prevents duplicates).
     std::vector<bool> used_descriptor(hashed_descriptions2.hashed_desc.size());
 
-    typedef matching::Hamming<stl::dynamic_bitset::BlockType> HammingMetricType;
+    using HammingMetricType = matching::Hamming<stl::dynamic_bitset::BlockType>;
     static const HammingMetricType metricH = {};
     for (int i = 0; i < hashed_descriptions1.hashed_desc.size(); ++i)
     {
@@ -386,4 +386,3 @@ public:
 
 }  // namespace matching
 }  // namespace openMVG
-

@@ -59,12 +59,12 @@ struct GeometricFilter_HMatrix_AC
     //--
 
     // Define the AContrario adapted Homography matrix solver
-    typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::homography::kernel::FourPointSolver,
+        openMVG::homography::kernel::AsymmetricError,
+        UnnormalizerI,
+        Mat3>;
 
     KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
@@ -184,7 +184,5 @@ struct GeometricFilter_HMatrix_AC
   double m_dPrecision_robust;
 };
 
-} //namespace matching_image_collection 
+} //namespace matching_image_collection
 } // namespace openMVG
-
-

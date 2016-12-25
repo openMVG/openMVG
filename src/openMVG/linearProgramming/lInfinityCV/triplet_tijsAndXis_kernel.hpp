@@ -30,7 +30,13 @@ namespace kernel {
 struct TrifocalTensorModel {
   Mat34 P1, P2, P3;
 
-  static double Error(const TrifocalTensorModel & t, const Vec2 & pt1, const Vec2 & pt2, const Vec2 & pt3)
+  static double Error
+  (
+    const TrifocalTensorModel & t,
+    const Vec2 & pt1,
+    const Vec2 & pt2,
+    const Vec2 & pt3
+  )
   {
     // Triangulate
     Triangulation triangulationObj;
@@ -62,10 +68,15 @@ struct translations_Triplet_Solver {
   enum { MAX_MODELS = 1 };
 
   /// Solve the computation of the "tensor".
-  static void Solve(
-    const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, std::vector<TrifocalTensorModel> *P,
-    const double ThresholdUpperBound)
+  static void Solve
+  (
+    const Mat &pt0,
+    const Mat & pt1,
+    const Mat & pt2,
+    const std::vector<Mat3> & vec_KR,
+    std::vector<TrifocalTensorModel> *P,
+    const double ThresholdUpperBound
+  )
   {
     const int n_obs = pt0.cols();
     if (n_obs < MINIMUM_SAMPLES)
@@ -117,13 +128,16 @@ struct translations_Triplet_Solver {
   }
 
   // Compute the residual of reprojections
-  static double Error(
+  static double Error
+  (
     const TrifocalTensorModel & Tensor,
-    const Vec2 & pt0, const Vec2 & pt1, const Vec2 & pt2)
+    const Vec2 & pt0,
+    const Vec2 & pt1,
+    const Vec2 & pt2
+  )
   {
     return TrifocalTensorModel::Error(Tensor, pt0, pt1, pt2);
   }
 };
 
 } // namespace openMVG
-

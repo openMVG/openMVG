@@ -38,8 +38,6 @@ namespace openMVG {
 namespace essential {
 namespace kernel {
 
-using namespace std;
-
 /**
  * Eight-point algorithm for solving for the essential matrix from normalized
  * image coordinates of point correspondences.
@@ -49,7 +47,7 @@ using namespace std;
 struct EightPointRelativePoseSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E);
 };
 
 /**
@@ -60,7 +58,7 @@ struct EightPointRelativePoseSolver {
 struct FivePointSolver {
   enum { MINIMUM_SAMPLES = 5 };
   enum { MAX_MODELS = 10 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E);
 };
 
 //-- Generic Solver for the 5pt Essential Matrix Estimation.
@@ -78,7 +76,7 @@ public:
                   const Mat3 &K1, const Mat3 &K2):
   two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
                                                          K1_(K1), K2_(K2) {}
-  void Fit(const vector<size_t> &samples, vector<ModelArg> *models) const {
+  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg> *models) const {
     const Mat x1 = ExtractColumns(this->x1_, samples);
     const Mat x2 = ExtractColumns(this->x2_, samples);
 

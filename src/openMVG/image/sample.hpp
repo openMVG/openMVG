@@ -311,8 +311,8 @@ struct SamplerSpline64
 template< typename T>
 struct RealPixel
 {
-  typedef T base_type ;
-  typedef double real_type ;
+  using base_type = T;
+  using real_type = double;
 
   /**
   * @brief Cast pixel value to real
@@ -341,8 +341,8 @@ struct RealPixel
 template<>
 struct RealPixel<unsigned char>
 {
-  typedef unsigned char base_type ;
-  typedef double real_type ;
+  using base_type = unsigned char;
+  using real_type = double;
 
   /**
   * @brief Cast pixel value to real
@@ -377,8 +377,8 @@ struct RealPixel<unsigned char>
 template<>
 struct RealPixel<float>
 {
-  typedef float base_type ;
-  typedef double real_type ;
+  using base_type = float;
+  using real_type = double;
 
   /**
   * @brief Convert pixel value to real_type
@@ -408,8 +408,8 @@ struct RealPixel<float>
 template< typename T >
 struct RealPixel< Rgb<T> >
 {
-  typedef Rgb<T> base_type ;
-  typedef Rgb<double> real_type ;
+  using base_type = Rgb<T>;
+  using real_type = Rgb<double>;
 
   /**
   * @brief Convert pixel value to real_type
@@ -441,8 +441,8 @@ struct RealPixel< Rgb<T> >
 template< typename T>
 struct RealPixel< Rgba<T> >
 {
-  typedef Rgba<T> base_type ;
-  typedef Rgba<double> real_type ;
+  using base_type = Rgba<T>;
+  using real_type = Rgba<double>;
 
   /**
   * @brief Convert pixel value to real_type

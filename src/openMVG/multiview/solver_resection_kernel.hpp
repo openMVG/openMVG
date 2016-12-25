@@ -89,8 +89,11 @@ public:
 };
 
 //-- Usable solver for the 6pt Resection estimation
-typedef two_view::kernel::Kernel<SixPointResectionSolver,
-  SixPointResectionSolver, Mat34>  PoseResectionKernel;
+using PoseResectionKernel =
+  two_view::kernel::Kernel<
+    SixPointResectionSolver, // Model estimator
+    SixPointResectionSolver, // Error metric
+    Mat34>;
 
 }  // namespace kernel
 }  // namespace resection

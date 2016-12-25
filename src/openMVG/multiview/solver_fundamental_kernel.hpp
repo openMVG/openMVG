@@ -132,29 +132,26 @@ struct EpipolarDistanceError {
     return Square(F_x.dot(y)) /  F_x.head<2>().squaredNorm();
   }
 };
-typedef EpipolarDistanceError SimpleError;
 
 //-- Kernel solver for the 8pt Fundamental Matrix Estimation
-typedef two_view::kernel::Kernel<SevenPointSolver, SampsonError, Mat3>
-  SevenPointKernel;
+using SevenPointKernel = two_view::kernel::Kernel<SevenPointSolver, SampsonError, Mat3>;
 
 //-- Kernel solver for the 8pt Fundamental Matrix Estimation
-typedef two_view::kernel::Kernel<EightPointSolver, SampsonError, Mat3>
-  EightPointKernel;
+using EightPointKernel = two_view::kernel::Kernel<EightPointSolver, SampsonError, Mat3>;
 
 //-- Normalized 7pt kernel -> conditioning from HZ (Algo 11.1) pag 282
-typedef two_view::kernel::Kernel<
-  two_view::kernel::NormalizedSolver<SevenPointSolver, UnnormalizerT>,
-  SampsonError,
-  Mat3>
-  NormalizedSevenPointKernel;
+using NormalizedSevenPointKernel =
+  two_view::kernel::Kernel<
+    two_view::kernel::NormalizedSolver<SevenPointSolver, UnnormalizerT>,
+    SampsonError,
+    Mat3>;
 
 //-- Normalized 8pt kernel -> conditioning from HZ (Algo 11.1) pag 282
-typedef two_view::kernel::Kernel<
-  two_view::kernel::NormalizedSolver<EightPointSolver, UnnormalizerT>,
-  SampsonError,
-  Mat3>
-  NormalizedEightPointKernel;
+using NormalizedEightPointKernel =
+  two_view::kernel::Kernel<
+    two_view::kernel::NormalizedSolver<EightPointSolver, UnnormalizerT>,
+    SampsonError,
+    Mat3>;
 
 }  // namespace kernel
 }  // namespace fundamental

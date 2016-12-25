@@ -62,7 +62,7 @@ struct pointToLineError {
 
 // Embed the basic solver to fit from sampled point set
 struct LineKernel {
-  typedef Vec2 Model;  // line parametrization: a, b;
+  using Model =  Vec2;  // line parametrization: a, b;
   enum { MINIMUM_SAMPLES = 2 };
 
   LineKernel(const Mat2X &xs) : xs_(xs) {}
