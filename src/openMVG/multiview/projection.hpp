@@ -128,14 +128,7 @@ void HomogeneousToEuclidean( const Vec4 &H, Vec3 *X );
 void EuclideanToHomogeneous( const Mat &X, Mat *H );
 
 /**
-* @brief Change euclidean coordinates to homogeneous
-* @param x Input 2d point
-* @return homogeneous 3d point
-*/
-Vec3 EuclideanToHomogeneous( const Vec2 &x );
-
-/**
-* @brief Change hoogeneous to euclidean
+* @brief Change homogeneous to euclidean
 * @param H Input homogeneous Points
 * @param[out] Output euclidean points
 */

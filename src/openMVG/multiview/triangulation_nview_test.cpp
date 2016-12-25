@@ -54,9 +54,8 @@ TEST(Triangulate_NView, FiveViews) {
 
     // Check reprojection error. Should be nearly zero.
     for (int j = 0; j < nviews; ++j) {
-      Vec3 x_reprojected = Ps[j]*X;
-      x_reprojected /= x_reprojected(2);
-      const double error = (x_reprojected.head(2) - xs.col(j)).norm();
+      const Vec3 x_reprojected = Ps[j]*X;
+      const double error = (x_reprojected.hnormalized() - xs.col(j)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }
@@ -84,9 +83,8 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
 
     // Check reprojection error. Should be nearly zero.
     for (int j = 0; j < nviews; ++j) {
-      Vec3 x_reprojected = Ps[j]*X;
-      x_reprojected /= x_reprojected(2);
-      const double error = (x_reprojected.head<2>() - xs.col(j)).norm();
+      const Vec3 x_reprojected = Ps[j]*X;
+      const double error = (x_reprojected.hnormalized() - xs.col(j)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }
@@ -107,9 +105,8 @@ TEST(Triangulate_NViewIterative, FiveViews) {
     // Check reprojection error. Should be nearly zero.
     EXPECT_NEAR(triangulationObj.error(X), 0.0, 1e-9);
     for (int j = 0; j < nviews; ++j) {
-      Vec3 x_reprojected = d.P(j) * Vec4(X(0), X(1), X(2), 1.0);
-      x_reprojected /= x_reprojected(2);
-      const double error = (x_reprojected.head<2>() - d._x[j].col(i)).norm();
+      const Vec3 x_reprojected = d.P(j) * X.homogeneous();
+      const double error = (x_reprojected.hnormalized() - d._x[j].col(i)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }

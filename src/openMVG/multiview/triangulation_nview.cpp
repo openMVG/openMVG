@@ -77,8 +77,7 @@ namespace openMVG {
     {
       const Mat34& PMat = views[i].first;
       const Vec2 & xy = views[i].second;
-      const Vec2 p = Project(PMat, X);
-      squared_reproj_error += (xy-p).norm();
+      squared_reproj_error += (xy - Project(PMat, X)).norm();
     }
     return squared_reproj_error;
   }
@@ -92,7 +91,7 @@ namespace openMVG {
     // Iterative weighted linear least squares
     Mat3 AtA;
     Vec3 Atb, X;
-    std::vector<double> weights(nviews,double(1.0));
+    Vec weights = Vec::Constant(nviews,1.0);
     for (int it=0;it<iter;++it)
     {
       AtA.fill(0.0);
@@ -103,7 +102,7 @@ namespace openMVG {
         const Vec2 & p = views[i].second;
         const double w = weights[i];
 
-        Vec3 v1,v2;
+        Vec3 v1, v2;
         for (int j=0;j<3;j++)
         {
           v1[j] = w * ( PMat(0,j) - p(0) * PMat(2,j) );
@@ -128,17 +127,16 @@ namespace openMVG {
       // Compute reprojection error, min and max depth, and update weights
       zmin = std::numeric_limits<double>::max();
       zmax = - std::numeric_limits<double>::max();
-      err = 0;
+      err = 0.0;
       for (int i=0;i<nviews;++i)
       {
         const Mat34& PMat = views[i].first;
         const Vec2 & p = views[i].second;
-        const Vec3 xProj = PMat * Vec4(X(0), X(1), X(2), 1.0);
+        const Vec3 xProj = PMat * X.homogeneous();
         const double z = xProj(2);
-        const Vec2 x = xProj.head<2>() / z;
-        if (z<zmin) zmin = z;
-        if (z>zmax) zmax = z;
-        err += (p-x).norm();
+        if (z < zmin) zmin = z;
+        else if (z > zmax) zmax = z;
+        err += (p - xProj.hnormalized()).norm(); // residual error
         weights[i] = 1.0 / z;
       }
     }
@@ -147,4 +145,3 @@ namespace openMVG {
 
 
 }  // namespace openMVG
-

@@ -34,8 +34,7 @@ struct l1SixPointResectionSolver {
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
   static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D)
   {
-    Vec2 x = Project(P, pt3D);
-    return (x-pt2D).norm();
+    return ( Project(P, pt3D) - pt2D ).norm();
   }
 };
 

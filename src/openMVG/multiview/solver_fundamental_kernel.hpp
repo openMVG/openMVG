@@ -98,38 +98,33 @@ inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
 
 /// Compute SampsonError related to the Fundamental matrix and 2 correspondences
 struct SampsonError {
-  static double Error(const Mat3 &F, const Vec2 &x1, const Vec2 &x2) {
-    Vec3 x(x1(0), x1(1), 1.0);
-    Vec3 y(x2(0), x2(1), 1.0);
+  static double Error(const Mat3 &F, const Vec2 &x, const Vec2 &y) {
     // See page 287 equation (11.9) of HZ.
-    Vec3 F_x = F * x;
-    Vec3 Ft_y = F.transpose() * y;
-    return Square(y.dot(F_x)) / (  F_x.head<2>().squaredNorm()
+    const Vec3 F_x = F * x.homogeneous();
+    const Vec3 Ft_y = F.transpose() * y.homogeneous();
+    return Square(y.homogeneous().dot(F_x)) / (  F_x.head<2>().squaredNorm()
                                 + Ft_y.head<2>().squaredNorm());
   }
 };
 
 struct SymmetricEpipolarDistanceError {
-  static double Error(const Mat3 &F, const Vec2 &x1, const Vec2 &x2) {
-    Vec3 x(x1(0), x1(1), 1.0);
-    Vec3 y(x2(0), x2(1), 1.0);
+  static double Error(const Mat3 &F, const Vec2 &x, const Vec2 &y) {
     // See page 288 equation (11.10) of HZ.
-    Vec3 F_x = F * x;
-    Vec3 Ft_y = F.transpose() * y;
-    return Square(y.dot(F_x)) * ( 1.0 / F_x.head<2>().squaredNorm()
-                                + 1.0 / Ft_y.head<2>().squaredNorm())
+    const Vec3 F_x = F * x.homogeneous();
+    const Vec3 Ft_y = F.transpose() * y.homogeneous();
+    return Square(y.homogeneous().dot(F_x)) *
+      ( 1.0 / F_x.head<2>().squaredNorm()
+        + 1.0 / Ft_y.head<2>().squaredNorm())
       / 4.0;  // The divide by 4 is to make this match the Sampson distance.
   }
 };
 
 struct EpipolarDistanceError {
-  static double Error(const Mat3 &F, const Vec2 &x1, const Vec2 &x2) {
+  static double Error(const Mat3 &F, const Vec2 &x, const Vec2 &y) {
     // Transfer error in image 2
     // See page 287 equation (11.9) of HZ.
-    Vec3 x(x1(0), x1(1), 1.0);
-    Vec3 y(x2(0), x2(1), 1.0);
-    Vec3 F_x = F * x;
-    return Square(F_x.dot(y)) /  F_x.head<2>().squaredNorm();
+    const Vec3 F_x = F * x.homogeneous();
+    return Square(F_x.dot(y.homogeneous())) /  F_x.head<2>().squaredNorm();
   }
 };
 
