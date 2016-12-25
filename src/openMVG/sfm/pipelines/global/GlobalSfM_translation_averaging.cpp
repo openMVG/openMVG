@@ -488,7 +488,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           {
             // Since new translation edges have been computed, mark their corresponding edges as estimated
             #ifdef OPENMVG_USE_OPENMP
-            #pragma omp critical
+              #pragma omp critical
             #endif
             {
               m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
@@ -536,21 +536,21 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               initial_estimates[thread_id].emplace_back(triplet_relative_motion);
 
               #ifdef OPENMVG_USE_OPENMP
-                 #pragma omp critical
+                #pragma omp critical
               #endif
               {
                 // Add inliers as valid pairwise matches
                 for (const size_t inlier_it : vec_inliers)
                 {
-                  if (pose_triplet_tracks.count(inlier_it)==0)
-                    continue;
-                  const openMVG::tracks::submapTrack & subTrack = pose_triplet_tracks.at(inlier_it);
+                  tracks::STLMAPTracks::const_iterator it_tracks = pose_triplet_tracks.begin();
+                  std::advance(it_tracks, inlier_it);
+                  const tracks::submapTrack & track = it_tracks->second;
 
                   // create pairwise matches from the inlier track
-                  tracks::submapTrack::const_iterator iter_I = subTrack.begin();
-                  tracks::submapTrack::const_iterator iter_J = subTrack.begin();
+                  tracks::submapTrack::const_iterator iter_I = track.begin();
+                  tracks::submapTrack::const_iterator iter_J = track.begin();
                   std::advance(iter_J, 1);
-                  while (iter_J != subTrack.end())
+                  while (iter_J != track.end())
                   { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
                     newpairMatches[std::make_pair(iter_I->first, iter_J->first)]
                      .emplace_back(iter_I->second, iter_J->second);
@@ -638,9 +638,9 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   size_t cpt = 0;
   for (const auto & tracks_it : tracks)
   {
-    const tracks::submapTrack & subTrack = tracks_it.second;
+    const tracks::submapTrack & track = tracks_it.second;
     size_t index = 0;
-    for (const auto & track_it : subTrack)
+    for (const auto & track_it : track)
     {
       const size_t idx_view = track_it.first;
       const View * view = sfm_data.views.at(idx_view).get();
@@ -728,11 +728,12 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
   // Fill sfm_data with the inliers tracks. Feed image observations: no 3D yet.
   Landmarks & structure = tiny_scene.structure;
-  for (size_t idx=0; idx < vec_inliers.size(); ++idx)
+  for (const auto & inlier_it : vec_inliers)
   {
-    const size_t trackId = vec_inliers[idx];
-    const tracks::submapTrack & track = tracks.at(trackId);
-    Observations & obs = structure[idx].obs;
+    tracks::STLMAPTracks::const_iterator it_tracks = tracks.begin();
+    std::advance(it_tracks, inlier_it);
+    const tracks::submapTrack & track = it_tracks->second;
+    Observations & obs = structure[inlier_it].obs;
     for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
     {
       // get view Id and feat ID
@@ -743,8 +744,8 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       const View * view = sfm_data.GetViews().at(viewIndex).get();
 
       // get feature
-      const features::PointFeature & pt = features_provider->feats_per_view.at(viewIndex)[featIndex];
-      obs[viewIndex] = Observation(pt, featIndex);
+      const features::PointFeature & pt = features_provider->getFeatures(viewIndex)[featIndex];
+      obs[viewIndex] = Observation(pt.coords().cast<double>(), featIndex);
     }
   }
 
