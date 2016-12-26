@@ -41,12 +41,12 @@ void ApplySimilarity
       {
           prior->pose_center_ = sim(prior->pose_center_);
       }
-
-      // Transform the control points
-      for (auto & iterControlPoint : sfm_data.control_points)
-      {
-        iterControlPoint.second.X = sim(iterControlPoint.second.X);
-      }
+    }
+    
+    // Transform the control points
+    for (auto & iterControlPoint : sfm_data.control_points)
+    {
+      iterControlPoint.second.X = sim(iterControlPoint.second.X);
     }
   }
 }

@@ -30,12 +30,19 @@ struct PoseCenterConstraintCostFunction
   Vec3 weight_;
   Vec3 pose_center_constraint_;
 
+  // Lever arm: (Transformation from view to pose's center and rotation sensor)
+  Vec3 pose_sensor_translation_;
+  Vec3 pose_sensor_rotation_;
+
   PoseCenterConstraintCostFunction
   (
     const Vec3 & center,
-    const Vec3 & weight
+    const Vec3 & weight,
+    const Pose3 & pose_sensor_transform = Pose3()
   ): weight_(weight), pose_center_constraint_(center)
   {
+      pose_sensor_translation_ = pose_sensor_transform.translation();
+      ceres::RotationMatrixToAngleAxis((const double*)pose_sensor_transform.rotation().data(), pose_sensor_rotation_.data());
   }
 
   template <typename T> bool
@@ -46,22 +53,51 @@ struct PoseCenterConstraintCostFunction
   )
   const
   {
-    // Compute camera center C = - R.transpose() * t;
     const T * cam_R = &cam_extrinsics[0];
     const T * cam_t = &cam_extrinsics[3];
-    const T cam_R_transpose[3] = {-cam_extrinsics[0], -cam_extrinsics[1], -cam_extrinsics[2]};
+    const T cam_R_transpose[3] = {-cam_R[0], -cam_R[1], -cam_R[2]};
 
-    T pose_center[3];
-    // Rotate the point according the camera rotation
-    ceres::AngleAxisRotatePoint(cam_R_transpose, cam_t, pose_center);
-    pose_center[0] *= T(-1);
-    pose_center[1] *= T(-1);
-    pose_center[2] *= T(-1);
+    const T sensor_R[3] = { T(pose_sensor_rotation_(0)), T(pose_sensor_rotation_(1)), T(pose_sensor_rotation_(2)) };
+    const T sensor_t[3] = { T(pose_sensor_translation_(0)), T(pose_sensor_translation_(1)), T(pose_sensor_translation_(2)) };
+    const T sensor_R_transpose[3] = {-sensor_R[0], -sensor_R[1], -sensor_R[2]};
 
 
-    residuals[0] = T(weight_[0]) * (pose_center[0] - T(pose_center_constraint_[0]));
-    residuals[1] = T(weight_[1]) * (pose_center[1] - T(pose_center_constraint_[1]));
-    residuals[2] = T(weight_[2]) * (pose_center[2] - T(pose_center_constraint_[2]));
+    // Here is a brief summary of what should happen below:
+    // Calculate sensor's position in world coordinate using camera extrinsics and use that value for residual
+    // ---------------
+    // step 1) C_sensor_in_camera_space = inv(R_sensor) * ([0 0 0] - t_sensor)
+    // step 2) C_sensor_in_world_space  = inv(R_camera) * (C_sensor_in_camera_space - t_camera)
+    // step 3) residual = weight * (C_sensor_in_world_space - pose_center_constraint)
+
+
+    // For validation I'll derive steps 1 and 2 in reverse. (the above is actually reverse and this is forward)
+    // C_sensor_in_camera_space = R_camera * C_sensor_in_world_space + t_camera
+    // [0 0 0] = R_sensor * C_sensor_in_camera_space + t_sensor
+
+
+    T C_sensor_in_camera_space[3];
+    T C_sensor_in_world_space[3];
+
+    // pt = -sensor_t
+    T pt[3] = { -sensor_t[0], -sensor_t[1], -sensor_t[2] }; // temporary storage
+
+    // step 1
+    // this is constant and should be computed in constructor
+    ceres::AngleAxisRotatePoint(sensor_R_transpose, pt, C_sensor_in_camera_space);
+
+    // pt = C_sensor_in_camera_space - t_camera
+    pt[0] = C_sensor_in_camera_space[0] - cam_t[0];
+    pt[1] = C_sensor_in_camera_space[1] - cam_t[1];
+    pt[2] = C_sensor_in_camera_space[2] - cam_t[2];
+
+    // step 2
+    ceres::AngleAxisRotatePoint(cam_R_transpose, pt, C_sensor_in_world_space);
+
+    // step 3
+    residuals[0] = T(weight_[0]) * (C_sensor_in_world_space[0] - T(pose_center_constraint_[0]));
+    residuals[1] = T(weight_[1]) * (C_sensor_in_world_space[1] - T(pose_center_constraint_[1]));
+    residuals[2] = T(weight_[2]) * (C_sensor_in_world_space[2] - T(pose_center_constraint_[2]));
+
     return true;
   }
 };
@@ -405,7 +441,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         // Add the cost functor (distance from Pose prior to the SfM_Data Pose center)
         ceres::CostFunction * cost_function =
           new ceres::AutoDiffCostFunction<PoseCenterConstraintCostFunction, 3, 6>(
-            new PoseCenterConstraintCostFunction(prior->pose_center_, prior->center_weight_));
+            new PoseCenterConstraintCostFunction(prior->pose_center_, prior->center_weight_, prior->pose_sensor_transform_));
 
         problem.AddResidualBlock(cost_function, new ceres::HuberLoss(Square(pose_center_robust_fitting_error)), &map_poses[prior->id_view][0]);
       }
@@ -504,7 +540,8 @@ bool Bundle_Adjustment_Ceres::Adjust
         const sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(view_it.second.get());
         if (prior != nullptr && prior->b_use_pose_center_ && sfm_data.IsPoseAndIntrinsicDefined(prior))
         {
-          X_SfM.push_back( sfm_data.GetPoses().at(prior->id_pose).center() );
+          const Pose3 & sfm_pose = sfm_data.GetPoses().at(prior->id_pose);
+          X_SfM.push_back( sfm_pose.inverse()(prior->pose_sensor_transform_.center()) );
           X_GPS.push_back( prior->pose_center_ );
         }
       }
