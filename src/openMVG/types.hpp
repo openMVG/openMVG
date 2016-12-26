@@ -49,19 +49,19 @@ namespace openMVG
 {
 
 /// Portable type used to store an index
-typedef uint32_t IndexT;
+using IndexT = uint32_t;
 
 /// Portable value used to save an undefined index value
 static const IndexT UndefinedIndexT = std::numeric_limits<IndexT>::max();
 
 /// Standard Pair of IndexT
-typedef std::pair<IndexT, IndexT> Pair;
+using Pair = std::pair<IndexT, IndexT>;
 
 /// Set of Pair
-typedef std::set<Pair> Pair_Set;
+using Pair_Set = std::set<Pair>;
 
 /// Vector of Pair
-typedef std::vector<Pair> Pair_Vec;
+using Pair_Vec = std::vector<Pair>;
 
 #if defined OPENMVG_STD_UNORDERED_MAP
 
@@ -71,7 +71,7 @@ typedef std::vector<Pair> Pair_Vec;
 * @tparam V type of the values
 */
 template<typename Key, typename Value>
-struct Hash_Map : std::unordered_map<Key, Value> {};
+using Hash_Map = std::unordered_map<Key, Value>;
 
 #else
 
@@ -81,8 +81,8 @@ struct Hash_Map : std::unordered_map<Key, Value> {};
 * @tparam V type of the values
 */
 template<typename K, typename V>
-struct Hash_Map : std::map<K, V, std::less<K>,
-  Eigen::aligned_allocator<std::pair<const K, V> > > {};
+using Hash_Map = std::map<K, V, std::less<K>,
+  Eigen::aligned_allocator<std::pair<const K, V> > >;
 
 #endif // OPENMVG_STD_UNORDERED_MAP
 

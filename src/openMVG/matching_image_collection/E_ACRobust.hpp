@@ -81,11 +81,11 @@ struct GeometricFilter_EMatrix_AC
     //--
 
     // Define the AContrario adapted Essential matrix solver
-    typedef ACKernelAdaptorEssential<
+    using KernelType =
+      ACKernelAdaptorEssential<
         openMVG::essential::kernel::FivePointKernel,
         openMVG::fundamental::kernel::EpipolarDistanceError,
-        Mat3>
-        KernelType;
+        Mat3>;
 
     const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
     const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
@@ -180,4 +180,3 @@ struct GeometricFilter_EMatrix_AC
 
 } //namespace matching_image_collection
 }  // namespace openMVG
-

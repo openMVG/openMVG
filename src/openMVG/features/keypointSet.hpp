@@ -18,15 +18,15 @@ namespace features {
 /// Association storage of associated feature and descriptor for a given image.
 /// Load, save, R/W accessor operation.
 ///
-/// typedef vector<SIOPointFeature> featsT;
-/// typedef vector<Descriptor<uchar,128> > descsT;
+/// using vector<SIOPointFeature> featsT;
+/// using vector<Descriptor<uchar,128> > descsT;
 /// KeypointSet< featsT, descsT > kpSet;
 template<typename FeaturesT, typename DescriptorsT>
 class KeypointSet {
 public:
   // Alias to stored Feature and Descriptor type
-  typedef typename FeaturesT::value_type FeatureT;
-  typedef typename DescriptorsT::value_type DescriptorT;
+  using FeatureT = typename FeaturesT::value_type;
+  using DescriptorT = typename DescriptorsT::value_type;
 
   /// Read from files the feats and their corresponding descriptors.
   bool loadFromFile(

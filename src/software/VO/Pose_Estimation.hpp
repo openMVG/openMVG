@@ -47,19 +47,19 @@ struct Pose_Estimator
   )
   {
     //-- Homography robust estimation
-    std::vector<size_t> vec_inliers;
-    typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::homography::kernel::FourPointSolver,
+        openMVG::homography::kernel::AsymmetricError,
+        UnnormalizerI,
+        Mat3>;
 
     KernelType kernel(
       x1, w, h,
       x2, w, h,
       false); // configure as point to point error model.
 
+    std::vector<size_t> vec_inliers;
     Mat3 H;
     ACRANSAC(kernel, vec_inliers, 1024, &H, std::numeric_limits<double>::infinity(),
       true);
@@ -77,13 +77,13 @@ struct Pose_Estimator
   )
   {
     // Use the 5 point solver to estimate E
-    typedef openMVG::essential::kernel::FivePointKernel SolverType;
+    using SolverType = openMVG::essential::kernel::FivePointKernel;
     // Define the AContrario adaptor
-    typedef ACKernelAdaptorEssential<
-      SolverType,
-      openMVG::fundamental::kernel::EpipolarDistanceError,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptorEssential<
+        SolverType,
+        openMVG::fundamental::kernel::EpipolarDistanceError,
+        Mat3>;
 
     KernelType kernel(x1, size_ima.first, size_ima.second,
       x2, size_ima.first, size_ima.second, K, K);
@@ -104,10 +104,11 @@ struct Pose_Estimator
     const Mat & pt3D
   )
   {
-    typedef openMVG::euclidean_resection::P3PSolver SolverType;
-
-    typedef ACKernelAdaptorResection_K<
-      SolverType, ResectionSquaredResidualError, Mat34>  KernelType;
+    using KernelType =
+      ACKernelAdaptorResection_K<
+        openMVG::euclidean_resection::P3PSolver,
+        ResectionSquaredResidualError,
+        Mat34>;
 
     KernelType kernel(pt2D, pt3D, K);
 
@@ -119,7 +120,7 @@ struct Pose_Estimator
     ACRANSAC(kernel, vec_inliers, ACRANSAC_ITER, &P, dPrecision, true);
 
     // Test if the found model is valid
-    return vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES;
+    return vec_inliers.size() > 2.5 * openMVG::euclidean_resection::P3PSolver::MINIMUM_SAMPLES;
   }
 };
 

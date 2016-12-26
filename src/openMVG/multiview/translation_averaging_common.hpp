@@ -16,16 +16,16 @@
 namespace openMVG {
 
 /// Relative information [Rij|tij] for a pair
-typedef std::pair< Pair, std::pair<Mat3,Vec3> > relativeInfo;
+using relativeInfo = std::pair< Pair, std::pair<Mat3,Vec3> >;
 
-typedef std::vector< relativeInfo > RelativeInfo_Vec;
-typedef std::map< Pair, std::pair<Mat3, Vec3> > RelativeInfo_Map;
+using RelativeInfo_Vec = std::vector< relativeInfo >;
+using RelativeInfo_Map = std::map< Pair, std::pair<Mat3, Vec3> >;
 
 // List the pairs used by the relative motions
 inline Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
 {
   Pair_Set pair_set;
-  for( const auto & rel : vec_relative ) 
+  for( const auto & rel : vec_relative )
   {
     pair_set.insert(Pair(rel.first.first, rel.first.second));
   }
@@ -50,7 +50,7 @@ inline Pair_Set getPairs(const std::vector<RelativeInfo_Vec> & vec_relative)
 inline std::set<IndexT> getIndexT(const RelativeInfo_Vec & vec_relative)
 {
   std::set<IndexT> indexT_set;
-  for ( const auto & rel : vec_relative ) 
+  for ( const auto & rel : vec_relative )
   {
     indexT_set.insert(rel.first.first);
     indexT_set.insert(rel.first.second);

@@ -69,9 +69,9 @@ template<typename SolverArg,
 class Kernel {
  public:
   Kernel(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg  ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -80,8 +80,9 @@ class Kernel {
 
   /// Extract required sample and fit model(s) to the sample
   void Fit(const vector<size_t> &samples, vector<Model> *models) const {
-    Mat x1 = ExtractColumns(x1_, samples),
-        x2 = ExtractColumns(x2_, samples);
+    const Mat
+      x1 = ExtractColumns(x1_, samples),
+      x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
   /// Return the error associated to the model and sample^nth point

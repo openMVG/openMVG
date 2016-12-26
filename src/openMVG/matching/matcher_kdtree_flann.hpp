@@ -25,7 +25,7 @@ template < typename Scalar = float, typename  Metric = flann::L2<Scalar> >
 class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 {
   public:
-  typedef typename Metric::ResultType DistanceType;
+  using DistanceType = typename Metric::ResultType;
 
   ArrayMatcher_Kdtree_Flann() = default ;
 

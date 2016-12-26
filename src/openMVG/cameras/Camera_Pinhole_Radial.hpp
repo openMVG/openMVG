@@ -77,7 +77,7 @@ double bisection_Radius_Solve(
  */
 class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Radial_K1 class_type;
+  using class_type = Pinhole_Intrinsic_Radial_K1;
 
   protected:
     /// center of distortion is applied by the Intrinsics class
@@ -292,7 +292,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 */
 class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Radial_K3 class_type;
+  using class_type = Pinhole_Intrinsic_Radial_K3;
 
   protected:
     // center of distortion is applied by the Intrinsics class
@@ -519,4 +519,3 @@ CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "p
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K3);
 
 #endif // #ifndef OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
-

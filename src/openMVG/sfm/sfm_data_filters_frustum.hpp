@@ -19,12 +19,16 @@ struct SfM_Data;
 class Frustum_Filter
 {
 public:
-  typedef Hash_Map<IndexT, geometry::Frustum> FrustumsT;
-  typedef Hash_Map<IndexT, std::pair<double, double> > NearFarPlanesT;
+  using FrustumsT = Hash_Map<IndexT, geometry::Frustum>;
+  using NearFarPlanesT = Hash_Map<IndexT, std::pair<double, double> >;
 
   // Constructor
-  Frustum_Filter(const SfM_Data & sfm_data,
-    const double zNear = -1., const double zFar = -1.);
+  Frustum_Filter
+  (
+    const SfM_Data & sfm_data,
+    const double zNear = -1.,
+    const double zFar = -1.
+  );
 
   // Init a frustum for each valid views of the SfM scene
   void initFrustum(const SfM_Data & sfm_data);
@@ -38,8 +42,12 @@ public:
 private:
 
   /// Init near and far plane depth from SfM_Data structure or defined value
-  void init_z_near_z_far_depth(const SfM_Data & sfm_data,
-    const double zNear = -1., const double zFar = -1.);
+  void init_z_near_z_far_depth
+  (
+    const SfM_Data & sfm_data,
+    const double zNear = -1.,
+    const double zFar = -1.
+  );
 
   //--
   // Data

@@ -19,9 +19,9 @@ namespace openMVG  {
 template<typename T1, typename T2>
 class flat_pair_map
 {
-  typedef std::pair<T1, T2> P;
+  using P = std::pair<T1, T2>;
 public:
-  typedef typename std::vector< P >::iterator iterator;
+  using iterator = typename std::vector< P >::iterator;
 
   typename std::vector< P >::iterator find(const T1 & val)  {
     return std::lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst);

@@ -243,14 +243,14 @@ int main(int, char**)
             cb_RANSAC_inlierPourcent.push_back(vec_inliersRansac.size()/float(vec_matches.size()));
             //Draw warp
             Vec2 x0(0,0), x1(imgA.cols, 0), x2(imgA.cols, imgA.rows), x3(0, imgA.rows);
-            Vec3 x00 = Hransac * Vec3(x0(0), x0(1), 1);
-            Vec3 x11 = Hransac * Vec3(x1(0), x1(1), 1);
-            Vec3 x22 = Hransac * Vec3(x2(0), x2(1), 1);
-            Vec3 x33 = Hransac * Vec3(x3(0), x3(1), 1);
-            x0 = x00.head<2>() / x00(2);
-            x1 = x11.head<2>() / x11(2);
-            x2 = x22.head<2>() / x22(2);
-            x3 = x33.head<2>() / x33(2);
+            Vec3 x00 = Hransac * x0.homogeneous();
+            Vec3 x11 = Hransac * x1.homogeneous();
+            Vec3 x22 = Hransac * x2.homogeneous();
+            Vec3 x33 = Hransac * x3.homogeneous();
+            x0 = x00.hnormalized();
+            x1 = x11.hnormalized();
+            x2 = x22.hnormalized();
+            x3 = x33.hnormalized();
 
             line(sidebyside, Point(x0(0)+imgA.cols, x0(1)), Point(x1(0)+imgA.cols, x1(1)), RColor, Lthickness);
             line(sidebyside, Point(x1(0)+imgA.cols, x1(1)), Point(x2(0)+imgA.cols, x2(1)), RColor, Lthickness);

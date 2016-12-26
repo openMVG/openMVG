@@ -31,7 +31,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic : public IntrinsicBase
 {
-  typedef Pinhole_Intrinsic class_type;
+  using class_type = Pinhole_Intrinsic;
 
   protected:
 

@@ -23,7 +23,7 @@ namespace rotation_averaging  {
 namespace l1  {
 
 // D E F I N E S ///////////////////////////////////////////////////
-typedef std::vector<openMVG::Mat3> Matrix3x3Arr;
+using Matrix3x3Arr = std::vector<openMVG::Mat3>;
 
 /**
  * @brief Compute an initial estimation of global rotation (chain rotations along a MST).

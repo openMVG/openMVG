@@ -88,11 +88,11 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     const Vec3 X = pose( pt3D ); // apply pose
     if ( this->have_disto() ) // apply disto & intrinsics
     {
-      return this->cam2ima( this->add_disto( X.head<2>() / X( 2 ) ) );
+      return this->cam2ima( this->add_disto( X.hnormalized() ) );
     }
     else // apply intrinsics
     {
-      return this->cam2ima( X.head<2>() / X( 2 ) );
+      return this->cam2ima( X.hnormalized() );
     }
   }
 
@@ -290,4 +290,3 @@ inline double AngleBetweenRay(
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERA_INTRINSICS_H
-

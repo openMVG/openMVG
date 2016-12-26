@@ -57,23 +57,24 @@ struct FourPointSolver {
 
 // Should be distributed as Chi-squared with k = 2.
 struct AsymmetricError {
-  static double Error(const Mat &H, const Vec2 &x1, const Vec2 &x2) {
-    Vec3 x2h_est = H * EuclideanToHomogeneous(x1);
-    Vec2 x2_est = x2h_est.head<2>() / x2h_est[2];
-    return (x2 - x2_est).squaredNorm();
+  static double Error(const Mat &H, const Vec2 &x, const Vec2 &y) {
+    return (y - Vec3( H * x.homogeneous()).hnormalized() ).squaredNorm();
   }
 };
 
 // Kernel that works on original data point
-typedef two_view::kernel::Kernel<FourPointSolver, AsymmetricError, Mat3>
-  UnnormalizedKernel;
+using UnnormalizedKernel =
+  two_view::kernel::Kernel<
+    FourPointSolver,
+    AsymmetricError,
+    Mat3>;
 
 // By default use the normalized version for increased robustness.
-typedef two_view::kernel::Kernel<
+using Kernel =
+  two_view::kernel::Kernel<
     two_view::kernel::NormalizedSolver<FourPointSolver, UnnormalizerI>,
     AsymmetricError,
-    Mat3>
-  Kernel;
+    Mat3>;
 
 }  // namespace kernel
 }  // namespace homography

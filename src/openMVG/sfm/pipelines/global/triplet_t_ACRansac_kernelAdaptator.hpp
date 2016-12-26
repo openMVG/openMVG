@@ -26,8 +26,8 @@ template <typename SolverArg,
 class TranslationTripletKernel_ACRansac
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
   TranslationTripletKernel_ACRansac
   (

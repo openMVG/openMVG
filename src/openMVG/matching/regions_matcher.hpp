@@ -100,8 +100,8 @@ private:
   const features::Regions* regions_;
   bool b_squared_metric_; // Store if the metric is squared or not
 public:
-  typedef typename ArrayMatcherT::ScalarT Scalar;
-  typedef typename ArrayMatcherT::DistanceType DistanceType;
+  using Scalar = typename ArrayMatcherT::ScalarT;
+  using DistanceType = typename ArrayMatcherT::DistanceType;
 
   RegionsMatcherT() :regions_(nullptr), b_squared_metric_(false) {}
 

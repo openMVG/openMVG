@@ -71,101 +71,101 @@ namespace openMVG
 using Eigen::Map;
 
 /// Trait used for double type
-typedef Eigen::NumTraits<double> EigenDoubleTraits;
+using EigenDoubleTraits = Eigen::NumTraits<double>;
 
 /// 3d vector using double internal format
-typedef Eigen::Vector3d Vec3;
+using Vec3 = Eigen::Vector3d;
 
 /// 2d vector using int internal format
-typedef Eigen::Vector2i Vec2i;
+using Vec2i = Eigen::Vector2i;
 
 /// 2d vector using float internal format
-typedef Eigen::Vector2f Vec2f;
+using Vec2f = Eigen::Vector2f;
 
 /// 3d vector using float internal format
-typedef Eigen::Vector3f Vec3f;
+using Vec3f =Eigen::Vector3f;
 
 /// 9d vector using double internal format
-typedef Eigen::Matrix<double, 9, 1> Vec9;
+using Vec9 = Eigen::Matrix<double, 9, 1>;
 
 /// Quaternion type
-typedef Eigen::Quaternion<double> Quaternion;
+using Quaternion = Eigen::Quaternion<double>;
 
 /// 3x3 matrix using double internal format
-typedef Eigen::Matrix<double, 3, 3> Mat3;
+using Mat3 = Eigen::Matrix<double, 3, 3>;
 
 #if defined(ENV32BIT)
 
   /// 3x4 matrix using double internal format
-  typedef Eigen::Matrix<double, 3, 4, Eigen::DontAlign> Mat34;
+  using Mat34 = Eigen::Matrix<double, 3, 4, Eigen::DontAlign>;
 
   /// 2d vector using double internal format
-  typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vec2;
+  using Vec2 = Eigen::Matrix<double, 2, 1, Eigen::DontAlign>;
 
   /// 4d vector using double internal format
-  typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vec4;
+  using Vec4 = Eigen::Matrix<double, 4, 1, Eigen::DontAlign>;
 
   /// 6d vector using double internal format
-  typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vec6;
+  using Vec6 = Eigen::Matrix<double, 6, 1, Eigen::DontAlign>;
 #else // 64 bits compiler
 
   /// 3x4 matrix using double internal format
-  typedef Eigen::Matrix<double, 3, 4> Mat34;
+  using Mat34 = Eigen::Matrix<double, 3, 4>;
 
   /// 2d vector using double internal format
-  typedef Eigen::Vector2d Vec2;
+  using Vec2 = Eigen::Vector2d;
 
   /// 4d vector using double internal format
-  typedef Eigen::Vector4d Vec4;
+  using Vec4 = Eigen::Vector4d;
 
   /// 6d vector using double internal format
-  typedef Eigen::Matrix<double, 6, 1> Vec6;
+  using Vec6 = Eigen::Matrix<double, 6, 1>;
 #endif
 
 
 /// 4x4 matrix using double internal format
-typedef Eigen::Matrix<double, 4, 4> Mat4;
+using Mat4 = Eigen::Matrix<double, 4, 4>;
 
 /// generic matrix using unsigned int internal format
-typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;
+using Matu = Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic>;
 
 /// 3x3 matrix using double internal format with RowMajor storage
-typedef Eigen::Matrix<double, 3, 3, Eigen::RowMajor> RMat3;
+using RMat3 = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
 
 //-- General purpose Matrix and Vector
 /// Unconstrained matrix using double internal format
-typedef Eigen::MatrixXd Mat;
+using Mat = Eigen::MatrixXd;
 
 /// Unconstrained vector using double internal format
-typedef Eigen::VectorXd Vec;
+using Vec = Eigen::VectorXd;
 
 /// Unconstrained vector using unsigned int internal format
-typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> Vecu;
+using Vecu = Eigen::Matrix<unsigned int, Eigen::Dynamic, 1>;
 
 /// Unconstrained matrix using float internal format
-typedef Eigen::MatrixXf Matf;
+using Matf = Eigen::MatrixXf;
 
 /// Unconstrained vector using float internal format
-typedef Eigen::VectorXf Vecf;
+using Vecf = Eigen::VectorXf;
 
 /// 2xN matrix using double internal format
-typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
+using Mat2X = Eigen::Matrix<double, 2, Eigen::Dynamic>;
 
 /// 3xN matrix using double internal format
-typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
+using Mat3X = Eigen::Matrix<double, 3, Eigen::Dynamic>;
 
 /// 4xN matrix using double internal format
-typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
+using Mat4X = Eigen::Matrix<double, 4, Eigen::Dynamic>;
 
 /// 9xN matrix using double internal format
-typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
+using MatX9 = Eigen::Matrix<double, Eigen::Dynamic, 9>;
 
 //-- Sparse Matrix (Column major, and row major)
 /// Sparse unconstrained matrix using double internal format
-typedef Eigen::SparseMatrix<double> sMat;
+using sMat = Eigen::SparseMatrix<double>;
 
 /// Sparse unconstrained matrix using double internal format and Row Major storage
-typedef Eigen::SparseMatrix<double, Eigen::RowMajor> sRMat;
+using sRMat = Eigen::SparseMatrix<double, Eigen::RowMajor>;
 
 //--------------
 //-- Function --

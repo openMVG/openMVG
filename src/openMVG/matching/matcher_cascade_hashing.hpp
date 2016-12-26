@@ -32,9 +32,9 @@ template < typename Scalar = float, typename Metric = L2_Simple<Scalar> >
 class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
 {
   public:
-  typedef typename Metric::ResultType DistanceType;
+  using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcherCascadeHashing() = default ; 
+  ArrayMatcherCascadeHashing() = default ;
   virtual ~ArrayMatcherCascadeHashing() {
     memMapping.reset();
   }
@@ -131,7 +131,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
   };
 
 private:
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
+  using BaseMat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   /// Use a memory mapping in order to avoid memory re-allocation
   std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
   CascadeHasher cascade_hasher_;
@@ -141,4 +141,3 @@ private:
 
 }  // namespace matching
 }  // namespace openMVG
-

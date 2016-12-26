@@ -317,8 +317,8 @@ void GuidedMatching_Fundamental_Fast(
   //--
   //-- Store point in the corresponding epipolar line bucket
   //--
-  typedef std::vector<IndexT> Bucket_vec;
-	typedef std::vector<Bucket_vec> Buckets_vec;
+  using Bucket_vec = std::vector<IndexT>;
+	using Buckets_vec = std::vector<Bucket_vec>;
 	const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);

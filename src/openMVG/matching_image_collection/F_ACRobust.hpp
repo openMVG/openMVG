@@ -60,13 +60,13 @@ struct GeometricFilter_FMatrix_AC
     //--
 
     // Define the AContrario adapted Fundamental matrix solver
-    typedef ACKernelAdaptor<
-      openMVG::fundamental::kernel::SevenPointSolver,
-      openMVG::fundamental::kernel::SimpleError,
-      //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::fundamental::kernel::SevenPointSolver,
+        openMVG::fundamental::kernel::EpipolarDistanceError,
+        //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
+        UnnormalizerT,
+        Mat3>;
 
     const KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
@@ -146,4 +146,3 @@ struct GeometricFilter_FMatrix_AC
 
 } //namespace matching_image_collection
 } // namespace openMVG
-

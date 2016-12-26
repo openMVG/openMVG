@@ -186,8 +186,8 @@ TEST(o2, Evaluation) {
 ///
 #define EXPECT_ESSENTIAL_MATRIX_PROPERTIES(E, expectedPrecision) { \
   EXPECT_NEAR(0, E.determinant(), expectedPrecision); \
-  Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E; \
-  Mat3 zero3x3 = Mat3::Zero(); \
+  const Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E; \
+  const Mat3 zero3x3 = Mat3::Zero(); \
   EXPECT_MATRIX_NEAR(zero3x3, O, expectedPrecision);\
 }
 
