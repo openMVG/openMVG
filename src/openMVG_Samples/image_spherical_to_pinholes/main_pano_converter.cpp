@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   //   -- Save resulting images to disk
   //-----------------
 
-  typedef CsphericalMapping CGeomFunctor;
+  using CGeomFunctor = CsphericalMapping;
 
   //-- Generate N cameras along the X axis
   std::vector< openMVG::PinholeCamera_R > vec_cam;
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
         for (int i = 0; i < wIma; ++i)
         {
           const Vec3 ray = cam_it.getRay(i, j);
-			    const Vec2 x = CGeomFunctor::Get2DPoint(ray, wPano, hPano);
+          const Vec2 x = CGeomFunctor::Get2DPoint(ray, wPano, hPano);
           imaOut(j,i) = sampler(imageSource, x(1), x(0));
         }
       }
