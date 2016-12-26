@@ -119,14 +119,17 @@ struct GeometricFilter_FMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       // Check the features correspondences that agree in the geometric and photometric domain
       geometry_aware::GuidedMatching
         <Mat3,
         openMVG::fundamental::kernel::EpipolarDistanceError>(
         //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
         m_F,
-        cam_I, *regions_provider->regions_per_view.at(iIndex),
-        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        cam_I, *regionsI,
+        cam_J, *regionsJ,
         Square(m_dPrecision_robust), Square(dDistanceRatio),
         matches);
     }
@@ -142,5 +145,5 @@ struct GeometricFilter_FMatrix_AC
 };
 
 } //namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG
 

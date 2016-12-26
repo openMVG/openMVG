@@ -141,11 +141,14 @@ struct GeometricFilter_HMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       if (dDistanceRatio < 0)
       {
         // Filtering based only on region positions
-        const features::PointFeatures pointsFeaturesI = regions_provider->regions_per_view.at(iIndex)->GetRegionsPositions();
-        const features::PointFeatures pointsFeaturesJ = regions_provider->regions_per_view.at(jIndex)->GetRegionsPositions();
+        const features::PointFeatures pointsFeaturesI = regionsI->GetRegionsPositions();
+        const features::PointFeatures pointsFeaturesJ = regionsJ->GetRegionsPositions();
         Mat xI, xJ;
         PointsToMat(cam_I, pointsFeaturesI, xI);
         PointsToMat(cam_J, pointsFeaturesJ, xJ);
@@ -167,8 +170,8 @@ struct GeometricFilter_HMatrix_AC
         geometry_aware::GuidedMatching
           <Mat3, openMVG::homography::kernel::AsymmetricError>(
           m_H,
-          cam_I, *regions_provider->regions_per_view.at(iIndex),
-          cam_J, *regions_provider->regions_per_view.at(jIndex),
+          cam_I, *regionsI,
+          cam_J, *regionsJ,
           Square(m_dPrecision_robust), Square(dDistanceRatio),
           matches);
       }
@@ -184,7 +187,7 @@ struct GeometricFilter_HMatrix_AC
   double m_dPrecision_robust;
 };
 
-} //namespace matching_image_collection 
+} //namespace matching_image_collection
 } // namespace openMVG
 
 

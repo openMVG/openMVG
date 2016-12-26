@@ -23,8 +23,65 @@ namespace sfm {
 /// Allow to load and return the regions related to a view
 struct Regions_Provider
 {
-  /// Regions per ViewId of the considered SfM_Data container
-  Hash_Map<IndexT, std::unique_ptr<features::Regions> > regions_per_view;
+public:
+
+  virtual ~Regions_Provider() = default;
+
+  std::string Type_id()
+  {
+    if (region_type_)
+      return region_type_->Type_id();
+    else
+    {
+      return std::string("initialized regions type");
+    }
+  }
+
+  bool IsScalar()
+  {
+    if (region_type_)
+      return region_type_->IsScalar();
+    else
+    {
+      std::cerr << "Invalid region type" << std::endl;
+      return false;
+    }
+  }
+
+  bool IsBinary()
+  {
+    if (region_type_)
+      return region_type_->IsBinary();
+    else
+    {
+      std::cerr << "Invalid region type" << std::endl;
+      return false;
+    }
+  }
+
+  const openMVG::features::Regions* getRegionsType() const
+  {
+    if (region_type_)
+      return &(*region_type_);
+    else
+      return nullptr;
+  }
+
+  virtual std::shared_ptr<features::Regions> get(const IndexT x) const
+  {
+    auto it = cache_.find(x);
+    std::shared_ptr<features::Regions> ret;
+
+    if(it == end(cache_))
+    {
+      // Invalid ressource
+    }
+    else
+    {
+      ret = it->second;
+    }
+    return ret;
+  }
 
   // Load Regions related to a provided SfM_Data View container
   virtual bool load(
@@ -32,6 +89,8 @@ struct Regions_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type)
   {
+    region_type_.reset(region_type->EmptyClone());
+
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
@@ -64,7 +123,7 @@ struct Regions_Provider
         #pragma omp critical
 #endif
         {
-          regions_per_view[iter->second.get()->id_view] = std::move(regions_ptr);
+          cache_[iter->second.get()->id_view] = std::move(regions_ptr);
           ++my_progress_bar;
         }
       }
@@ -72,6 +131,10 @@ struct Regions_Provider
     return bContinue;
   }
 
+protected:
+  /// Regions per ViewId of the considered SfM_Data container
+  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions> > cache_;
+  std::unique_ptr<openMVG::features::Regions> region_type_;
 }; // Regions_Provider
 
 } // namespace sfm
