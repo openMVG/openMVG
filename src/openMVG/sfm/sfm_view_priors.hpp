@@ -58,7 +58,8 @@ struct ViewPriors : public View
     pose_center_        = center;
   }
 
-  void SetPoseSensorTransform(
+  void SetPoseSensorTransform
+  (
     const Pose3 & sensor_relative_pose
   )
   {
@@ -174,16 +175,16 @@ struct ViewPriors : public View
   // Pose center prior
   bool b_use_pose_center_ = false; // Tell if the pose prior must be used
   Vec3 center_weight_ = Vec3(1.0,1.0,1.0);
-  Vec3 pose_center_;
+  Vec3 pose_center_ = Vec3::Zero();
 
   // Pose rotation prior
   bool b_use_pose_rotation_ = false; // Tell if the rotation prior must be used
   double rotation_weight_ = 1.0;
-  Mat3 pose_rotation_;
+  Mat3 pose_rotation_ = Mat3::Identity();
 
   // Pose prior sensor transformation
   // Transformation from view to pose's center and rotation sensor (lever arm)
-  Pose3 pose_sensor_transform_;
+  Pose3 pose_sensor_transform_ = Pose3(Mat3::Identity(), Vec3::Zero());
 };
 
 } // namespace sfm

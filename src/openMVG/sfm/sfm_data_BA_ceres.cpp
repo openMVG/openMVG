@@ -30,6 +30,7 @@ struct PoseCenterConstraintCostFunction
   Vec3 weight_;
   Vec3 pose_center_constraint_;
 
+  // Lever arm: (Transformation from view to pose's center and rotation sensor)
   Vec3 pose_sensor_translation_;
   Vec3 pose_sensor_rotation_;
 
@@ -76,15 +77,12 @@ struct PoseCenterConstraintCostFunction
 
     T C_sensor_in_camera_space[3];
     T C_sensor_in_world_space[3];
-    T pt[3]; // used as temporary storage
 
     // pt = -sensor_t
-    pt[0] = -sensor_t[0];
-    pt[1] = -sensor_t[1];
-    pt[2] = -sensor_t[2];
+    T pt[3] = { -sensor_t[0], -sensor_t[1], -sensor_t[2] }; // temporary storage
 
     // step 1
-    // this is constant and should be computed in contructor
+    // this is constant and should be computed in constructor
     ceres::AngleAxisRotatePoint(sensor_R_transpose, pt, C_sensor_in_camera_space);
 
     // pt = C_sensor_in_camera_space - t_camera
