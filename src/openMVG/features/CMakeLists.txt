@@ -28,4 +28,4 @@ UNIT_TEST(openMVG features "openMVG_features;stlplus")
 
 add_subdirectory(mser)
 add_subdirectory(tbmr)
-
+add_subdirectory(sift)
