@@ -21,6 +21,9 @@ Arguments description:
 
   - **[-o|--out_dir]** path to save the found camera position
 
+  - **[-u|--match_out_dir]** path to the directory where new matches will be stored.
+    If empty matches are stored in match_dir directory.
+  
   - **[-q|--query_image_dir]** path to an image OR to the directory containing the images that must be localized 
     (the directory can also contain the images from the initial reconstruction)
 
@@ -30,6 +33,9 @@ Arguments description:
   - **[-s|--single_intrinsics]** (switch) when switched on, the program will check if the input sfm_data 
     contains a single intrinsics and, if so, take this value as intrinsics for the query images.
     (OFF by default)
+  - **[-e|--export_structure]** (switch) when switched on, the program will also export structure to output sfm_data while OFF will only export VIEWS, INTRINSICS and EXTRINSICS.
+    (OFF by default)
+  - **[-n|--numThreads]** number of thread(s)
 
 .. code-block:: c++
 
