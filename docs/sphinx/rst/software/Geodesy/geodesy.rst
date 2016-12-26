@@ -138,7 +138,7 @@ Launched on the dataset Swiss Quarry `Geotagged multispectral images <http://chu
       -P \
       -d sensor_width_camera_database.txt \
       -i /media/pierre/SenseFly/Quarry/geotagged-images/ \
-      -o /media/pierre/SenseFly/Quarry/quary_output/ \
+      -o /media/pierre/SenseFly/Quarry/quary_output/
 
     thread_count=8
     openMVG_main_ComputeFeatures \
