@@ -5,3 +5,4 @@ TARGET_LINK_LIBRARIES(openMVG_sample_pano_converter
   openMVG_image
   stlplus)
 
+SET_PROPERTY(TARGET openMVG_sample_pano_converter PROPERTY FOLDER OpenMVG/Samples)

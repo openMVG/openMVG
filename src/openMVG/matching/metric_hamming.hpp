@@ -12,8 +12,6 @@
 #include <bitset>
 
 #ifdef _MSC_VER
-using uint32_t unsigned __int32;
-using uint64_t unsigned __int64;
 #include <intrin.h>
 #else
 #include <stdint.h>
