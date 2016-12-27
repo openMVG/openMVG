@@ -8,10 +8,14 @@
 #define OPENMVG_SFM_VIEW_HPP
 
 #include "openMVG/types.hpp"
-
+#include "openMVG/numeric/numeric.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include <cereal/cereal.hpp> // Serialization
+
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
 
 namespace openMVG {
 namespace sfm {
@@ -42,14 +46,34 @@ struct View
     id_pose(pose_id), ui_width(width), ui_height(height)
     {}
 
-  // Serialization
+  virtual ~View() = default;
+
+  /**
+  * Serialization out
+  * @param ar Archive
+  */
   template <class Archive>
-  void serialize( Archive & ar )
+  void save( Archive & ar ) const
+  {
+    ar(cereal::make_nvp("local_path", stlplus::folder_part(s_Img_path)),
+       cereal::make_nvp("filename", stlplus::filename_part(s_Img_path)),
+       cereal::make_nvp("width", ui_width),
+       cereal::make_nvp("height", ui_height),
+       cereal::make_nvp("id_view", id_view),
+       cereal::make_nvp("id_intrinsic", id_intrinsic),
+       cereal::make_nvp("id_pose", id_pose));
+  }
+
+  /**
+  * @brief Serialization in
+  * @param ar Archive
+  */
+  template <class Archive>
+  void load( Archive & ar )
   {
     //Define a view with two string (base_path & basename)
-    std::string local_path = stlplus::folder_append_separator(
-      stlplus::folder_part(s_Img_path));
-    std::string filename = stlplus::filename_part(s_Img_path);
+    std::string local_path = s_Img_path;
+    std::string filename = s_Img_path;
 
     ar(cereal::make_nvp("local_path", local_path),
        cereal::make_nvp("filename", filename),

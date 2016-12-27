@@ -74,7 +74,7 @@ template <typename Kernel>
       const double median = *itMedian;
 
       // Store best solution
-      if(median < dBestMedian)
+      if (median < dBestMedian)
       {
         dBestMedian = median;
         if (model) (*model) = models[k];
@@ -97,7 +97,7 @@ template <typename Kernel>
   };
 
   // Evaluate the outlier threshold
-  if(outlierThreshold)
+  if (outlierThreshold)
   {
     const double sigma = ICDF[int((1.-outlierRatio)*20.)] *
       (1. + 5. / double(total_samples - min_samples));

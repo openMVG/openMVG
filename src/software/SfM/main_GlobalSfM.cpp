@@ -42,6 +42,7 @@ int main(int argc, char **argv)
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
+  bool b_use_motion_priors = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_switch('P', "prior_usage") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -79,6 +81,7 @@ int main(int argc, char **argv)
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+    << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -168,6 +171,8 @@ int main(int argc, char **argv)
 
   // Configure reconstruction parameters
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
+  b_use_motion_priors = cmd.used('P');
+  sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
 
   // Configure motion averaging method
   sfmEngine.SetRotationAveragingMethod(

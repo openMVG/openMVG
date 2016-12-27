@@ -17,6 +17,7 @@ openMVG provide a collection of tiny libraries that allow to solve computer visi
   matching/matching.rst
   tracks/tracks.rst
   geometry/geometry.rst
+  geodesy/geodesy.rst
 
 
 **Structure from Motion core**
@@ -27,7 +28,7 @@ openMVG provide a collection of tiny libraries that allow to solve computer visi
   sfm/sfm.rst
 
 
-Todo:
+Todo (complete documentation):
 
 * **system** - Provide access to accurate timer function.
 

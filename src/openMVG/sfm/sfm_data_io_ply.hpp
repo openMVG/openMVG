@@ -36,23 +36,36 @@ inline bool Save_PLY(
   {
     // Count how many views having valid poses:
     IndexT view_with_pose_count = 0;
+    IndexT view_with_pose_prior_count = 0;
     if (b_extrinsics)
     {
       for (const auto & view : sfm_data.GetViews())
       {
         view_with_pose_count += sfm_data.IsPoseAndIntrinsicDefined(view.second.get());
       }
+
+      for (const auto & view : sfm_data.GetViews())
+      {
+        if (const sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+        {
+            view_with_pose_prior_count += prior->b_use_pose_center_;
+        }
+      }
     }
+
+    stream << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
     stream << "ply"
       << '\n' << "format ascii 1.0"
       << '\n' << "element vertex "
         // Vertex count: (#landmark + #GCP + #view_with_valid_pose)
         << (  (b_structure ? sfm_data.GetLandmarks().size() : 0)
             + (b_control_points ? sfm_data.GetControl_Points().size() : 0)
-            + view_with_pose_count)
-      << '\n' << "property float x"
-      << '\n' << "property float y"
-      << '\n' << "property float z"
+            + view_with_pose_count
+            + view_with_pose_prior_count)
+      << '\n' << "property double x"
+      << '\n' << "property double y"
+      << '\n' << "property double z"
       << '\n' << "property uchar red"
       << '\n' << "property uchar green"
       << '\n' << "property uchar blue"
@@ -62,14 +75,27 @@ inline bool Save_PLY(
       {
         for (const auto & view : sfm_data.GetViews())
         {
+          // Export pose as Green points
           if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
             stream
               << pose.center()(0) << ' '
               << pose.center()(1) << ' '
-              << pose.center()(2)
-              << " 0 255 0\n";
+              << pose.center()(2) << ' '
+              << "0 255 0\n";
+          }
+
+          // Export pose priors as Blue points
+          if (const sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+          {
+            if (prior->b_use_pose_center_) {
+              stream
+                << prior->pose_center_(0) << ' '
+                << prior->pose_center_(1) << ' '
+                << prior->pose_center_(2) << ' '
+                << "0 0 255\n";
+            }
           }
         }
       }
@@ -83,22 +109,22 @@ inline bool Save_PLY(
           stream
             << iterLandmarks.second.X(0) << ' '
             << iterLandmarks.second.X(1) << ' '
-            << iterLandmarks.second.X(2)
-            << " 255 255 255\n";
+            << iterLandmarks.second.X(2) << ' '
+            << "255 255 255\n";
         }
       }
 
       if (b_control_points)
       {
-        // Export GCP as Yellow points
+        // Export GCP as Red points
         const Landmarks & landmarks = sfm_data.GetControl_Points();
         for ( const auto & iterGCP : landmarks )
         {
           stream
             << iterGCP.second.X(0) << ' '
             << iterGCP.second.X(1) << ' '
-            << iterGCP.second.X(2)
-            << " 255 255 0\n";
+            << iterGCP.second.X(2) << ' '
+            << "255 0 0\n";
         }
       }
 

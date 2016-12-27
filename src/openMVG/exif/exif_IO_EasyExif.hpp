@@ -11,6 +11,7 @@
 #include "third_party/easyexif/exif.h"
 
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -227,7 +228,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSLatitude(double * latitude) const override
     {
-      if (exifInfo_.GeoLocation.Latitude != 0.0)
+      if (exifInfo_.GeoLocation.Latitude != std::numeric_limits<double>::infinity())
       {
         (*latitude) = exifInfo_.GeoLocation.Latitude;
         return true;
@@ -241,7 +242,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSLongitude(double * longitude) const override
     {
-      if (exifInfo_.GeoLocation.Longitude != 0.0)
+      if (exifInfo_.GeoLocation.Longitude != std::numeric_limits<double>::infinity())
       {
         (*longitude) = exifInfo_.GeoLocation.Longitude;
         return true;
@@ -255,7 +256,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSAltitude(double * altitude) const  override
     {
-      if (exifInfo_.GeoLocation.Altitude != 0.0)
+      if (exifInfo_.GeoLocation.Altitude != std::numeric_limits<double>::infinity())
       {
         (*altitude) = exifInfo_.GeoLocation.Altitude;
         return true;

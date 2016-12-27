@@ -406,7 +406,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       Optimize_Options(
         Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
         Extrinsic_Parameter_Type::ADJUST_TRANSLATION, // Rotations are held as constant
-        Structure_Parameter_Type::ADJUST_ALL)
+        Structure_Parameter_Type::ADJUST_ALL,
+        Control_Point_Parameter(),
+        this->b_use_motion_prior_)
     );
   if (b_BA_Status)
   {
@@ -424,7 +426,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -442,7 +446,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           ReconstructionEngine::intrinsic_refinement_options_,
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -489,7 +495,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   const Optimize_Options ba_refine_options(
     ReconstructionEngine::intrinsic_refinement_options_,
     Extrinsic_Parameter_Type::ADJUST_ALL,  // adjust camera motion
-    Structure_Parameter_Type::ADJUST_ALL); // adjust scene structure
+    Structure_Parameter_Type::ADJUST_ALL,  // adjust scene structure
+    Control_Point_Parameter(),
+    this->b_use_motion_prior_);
 
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   if (b_BA_Status && !sLogging_file_.empty())

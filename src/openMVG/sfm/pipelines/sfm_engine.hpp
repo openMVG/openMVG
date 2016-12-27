@@ -48,6 +48,14 @@ public:
     intrinsic_refinement_options_ = rhs;
   }
 
+  void Set_Use_Motion_Prior
+  (
+    bool rhs
+  )
+  {
+    b_use_motion_prior_ = rhs;
+  }
+
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
@@ -62,6 +70,7 @@ protected:
   //-- Reconstruction parameters
   //-----
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
+  bool b_use_motion_prior_;
 };
 
 } // namespace sfm
