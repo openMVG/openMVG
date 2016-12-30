@@ -1,12 +1,12 @@
 
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-ADD_EXECUTABLE(openMVG_sample_features_siftPutative siftmatch.cpp)
-TARGET_LINK_LIBRARIES(openMVG_sample_features_siftPutative
+add_executable(openMVG_sample_features_siftPutative siftmatch.cpp)
+target_link_libraries(openMVG_sample_features_siftPutative
   openMVG_image
   openMVG_features
   openMVG_matching
   vlsift
   stlplus)
 
-SET_PROPERTY(TARGET openMVG_sample_features_siftPutative PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET openMVG_sample_features_siftPutative PROPERTY FOLDER OpenMVG/Samples)

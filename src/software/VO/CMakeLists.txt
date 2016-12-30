@@ -1,5 +1,5 @@
 
-IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
+if (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
   #
   # OpenGL
@@ -39,11 +39,11 @@ IF (OpenMVG_BUILD_OPENGL_EXAMPLES)
     ${OpenMVG_LIBRARIES}
   )
 
-  IF(OpenMVG_USE_OPENCV)
+  if(OpenMVG_USE_OPENCV)
     target_link_libraries(openMVG_main_VO
         ${OpenCV_LIBS})
-  ENDIF(OpenMVG_USE_OPENCV)
+  endif(OpenMVG_USE_OPENCV)
 
-  SET_PROPERTY(TARGET openMVG_main_VO PROPERTY FOLDER OpenMVG/software)
+  set_property(TARGET openMVG_main_VO PROPERTY FOLDER OpenMVG/software)
 
-ENDIF()
+endif()

@@ -1,8 +1,8 @@
 
-ADD_EXECUTABLE(openMVG_sample_pano_converter main_pano_converter.cpp)
-TARGET_LINK_LIBRARIES(openMVG_sample_pano_converter
+add_executable(openMVG_sample_pano_converter main_pano_converter.cpp)
+target_link_libraries(openMVG_sample_pano_converter
   openMVG_numeric
   openMVG_image
   stlplus)
 
-SET_PROPERTY(TARGET openMVG_sample_pano_converter PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET openMVG_sample_pano_converter PROPERTY FOLDER OpenMVG/Samples)

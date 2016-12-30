@@ -1,9 +1,9 @@
 
-ADD_DEFINITIONS(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-ADD_EXECUTABLE(openMVG_sample_geodesy_show_exif_gps_position show_exif_gps_position_demo.cpp)
-TARGET_LINK_LIBRARIES(openMVG_sample_geodesy_show_exif_gps_position
+add_executable(openMVG_sample_geodesy_show_exif_gps_position show_exif_gps_position_demo.cpp)
+target_link_libraries(openMVG_sample_geodesy_show_exif_gps_position
   easyexif
   stlplus)
 
-SET_PROPERTY(TARGET openMVG_sample_geodesy_show_exif_gps_position PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET openMVG_sample_geodesy_show_exif_gps_position PROPERTY FOLDER OpenMVG/Samples)

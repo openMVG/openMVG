@@ -1,11 +1,11 @@
 
-ADD_EXECUTABLE(openMVG_main_geodesy_registration_to_gps_position registration_to_exif_gps_position.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_geodesy_registration_to_gps_position
+add_executable(openMVG_main_geodesy_registration_to_gps_position registration_to_exif_gps_position.cpp)
+target_link_libraries(openMVG_main_geodesy_registration_to_gps_position
   openMVG_system
   openMVG_features
-  openMVG_sfm  
+  openMVG_sfm
   easyexif
   stlplus)
 
-SET_PROPERTY(TARGET openMVG_main_geodesy_registration_to_gps_position PROPERTY FOLDER OpenMVG/software)
-INSTALL(TARGETS openMVG_main_geodesy_registration_to_gps_position DESTINATION bin/)
+set_property(TARGET openMVG_main_geodesy_registration_to_gps_position PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_geodesy_registration_to_gps_position DESTINATION bin/)
