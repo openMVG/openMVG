@@ -274,7 +274,6 @@ ENDIF()
 FIND_PACKAGE(Flann QUIET)
 IF(NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
   SET(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
-  SET(FLANN_LIBRARY flann_cpp_s)
 ENDIF()
 
 # ==============================================================================
