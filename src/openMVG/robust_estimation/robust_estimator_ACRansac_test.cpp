@@ -26,8 +26,8 @@ template <typename SolverArg,
 class ACRANSACOneViewKernel
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
   ACRANSACOneViewKernel(const Mat &x1, int w1, int h1)
     : x1_(x1), N1_(Mat3::Identity()), logalpha0_(0.0)

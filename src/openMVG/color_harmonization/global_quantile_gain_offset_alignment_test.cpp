@@ -68,9 +68,9 @@ TEST(ColorHarmonisation, Simple_offset) {
   std::vector<size_t> vec_indexToFix(1,0);
 
 #ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = MOSEK_SolveWrapper;
 #else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = OSI_CLP_SolverWrapper;
 #endif
   // Red channel
   {
@@ -132,9 +132,9 @@ TEST(ColorHarmonisation, Offset_gain) {
   std::vector<size_t> vec_indexToFix(1,0);
 
 #ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = MOSEK_SolveWrapper;
 #else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = OSI_CLP_SolverWrapper;
 #endif
   // Red channel
   {

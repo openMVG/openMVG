@@ -48,7 +48,7 @@ TEST(connectedComponents, TwoCC_Parsing) {
   lemon::ListGraph::Node a2 = graph.addNode(), b2 = graph.addNode();
   graph.addEdge(a2,b2);
 
-  typedef ListGraph::NodeMap<size_t> IndexMap;
+  using IndexMap = ListGraph::NodeMap<size_t>;
   IndexMap connectedNodeMap(graph);
   const int connectedComponentCount =  lemon::connectedComponents(graph, connectedNodeMap);
   EXPECT_EQ(2, connectedComponentCount);

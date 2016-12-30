@@ -43,7 +43,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   Vec9 f1, f2;
   if (x1.cols() == 7) {
     // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
-    typedef Eigen::Matrix<double, 9, 9> Mat9;
+    using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
@@ -102,7 +102,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
 
   Vec9 f;
   if (x1.cols() == 8) {
-    typedef Eigen::Matrix<double, 9, 9> Mat9;
+    using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);

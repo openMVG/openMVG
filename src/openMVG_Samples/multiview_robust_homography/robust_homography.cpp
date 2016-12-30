@@ -127,12 +127,12 @@ int main() {
 
     //-- Homography robust estimation
     std::vector<size_t> vec_inliers;
-    typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::homography::kernel::FourPointSolver,
+        openMVG::homography::kernel::AsymmetricError,
+        UnnormalizerI,
+        Mat3>;
 
     KernelType kernel(
       xL, imageL.Width(), imageL.Height(),

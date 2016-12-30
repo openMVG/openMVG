@@ -175,7 +175,7 @@ void FivePointsRelativePose(const Mat2X &x1,
   const Eigen::Matrix<double, 10, 20> E_constraints = FivePointsPolynomialConstraints(E_basis);
 
   // Step 3: Gauss-Jordan Elimination (done thanks to a LU decomposition).
-  typedef Eigen::Matrix<double, 10, 10> Mat10;
+  using Mat10 = Eigen::Matrix<double, 10, 10>;
   Eigen::FullPivLU<Mat10> c_lu(E_constraints.block<10, 10>(0, 0));
   const Mat10 M = c_lu.solve(E_constraints.block<10, 10>(0, 10));
 

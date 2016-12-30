@@ -15,7 +15,7 @@ using namespace openMVG::graph;
 
 TEST(TripletFinder, test_no_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   // a_b_c
   Graph ga;
@@ -31,7 +31,7 @@ TEST(TripletFinder, test_no_triplet) {
 
 TEST(TripletFinder, test_one_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -78,7 +78,7 @@ TEST(TripletFinder, test_one_triplet) {
 
 TEST(TripletFinder, test_two_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -155,7 +155,7 @@ TEST(TripletFinder, test_two_triplet) {
 
 TEST(TripletFinder, test_three_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -243,7 +243,7 @@ TEST(TripletFinder, test_three_triplet) {
 
 TEST(TripletFinder, test_for_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
  {
     //
     // a__b

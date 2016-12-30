@@ -28,8 +28,8 @@ struct RelativeRotation
   {}
 };
 
-typedef std::vector<RelativeRotation> RelativeRotations;
-typedef std::map<Pair, RelativeRotation> RelativeRotations_map;
+using RelativeRotations = std::vector<RelativeRotation>;
+using RelativeRotations_map = std::map<Pair, RelativeRotation>;
 
 /// List the pairs used by the relative rotations
 inline Pair_Set getPairs(const RelativeRotations & relRots)

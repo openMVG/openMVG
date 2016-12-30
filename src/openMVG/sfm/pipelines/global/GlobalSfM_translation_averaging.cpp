@@ -364,7 +364,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     // An estimated triplets of translation mark three edges as estimated.
 
     //-- Alias (list triplet ids used per edges)
-    typedef Pair myEdge; // An edge between two pose id
+    using myEdge = Pair; // An edge between two pose id
     Hash_Map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
@@ -674,10 +674,11 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   using namespace openMVG::trifocal;
   using namespace openMVG::trifocal::kernel;
 
-  typedef TranslationTripletKernel_ACRansac<
-    translations_Triplet_Solver,
-    translations_Triplet_Solver,
-    TrifocalTensorModel> KernelType;
+  using KernelType = 
+    TranslationTripletKernel_ACRansac<
+      translations_Triplet_Solver,
+      translations_Triplet_Solver,
+      TrifocalTensorModel>;
   const double ThresholdUpperBound = 1.0e-2; // upper bound of the pixel residual (normalized coordinates)
   KernelType kernel(x1, x2, x3, vec_global_R_Triplet, Mat3::Identity(), ThresholdUpperBound);
 

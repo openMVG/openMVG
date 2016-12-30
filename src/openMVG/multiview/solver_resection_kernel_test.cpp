@@ -190,11 +190,10 @@ TEST(EuclideanResection, Points6AllRandomInput) {
 
 
   {
-    typedef openMVG::euclidean_resection::kernel::ResectionKernel_K Kernel;
+    using Kernel = openMVG::euclidean_resection::kernel::ResectionKernel_K;
     Kernel kernel(x_image.block(0, 0, 2, 6), X_world, KK);
 
-    size_t samples_[6]={0,1,2,3,4,5};
-    vector<size_t> samples(samples_,samples_+6);
+    const vector<size_t> samples = { 0,1,2,3,4,5 };
     vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
 

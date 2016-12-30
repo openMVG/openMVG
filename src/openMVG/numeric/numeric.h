@@ -402,7 +402,7 @@ Mat3 LookAt2( const Vec3 &eyePosition3D,
 template<typename Derived1, typename Derived2>
 struct hstack_return
 {
-  typedef typename Derived1::Scalar Scalar;
+  using Scalar =typename Derived1::Scalar;
   enum
   {
     RowsAtCompileTime = Derived1::RowsAtCompileTime,
@@ -411,12 +411,14 @@ struct hstack_return
     MaxRowsAtCompileTime = Derived1::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = SUM_OR_DYNAMIC( Derived1::MaxColsAtCompileTime, Derived2::MaxColsAtCompileTime )
   };
-  typedef Eigen::Matrix<Scalar,
-          RowsAtCompileTime,
-          ColsAtCompileTime,
-          Options,
-          MaxRowsAtCompileTime,
-          MaxColsAtCompileTime> type;
+  using type =
+    Eigen::Matrix<
+      Scalar,
+      RowsAtCompileTime,
+      ColsAtCompileTime,
+      Options,
+      MaxRowsAtCompileTime,
+      MaxColsAtCompileTime>;
 };
 
 template<typename Derived1, typename Derived2>
@@ -433,7 +435,7 @@ HStack ( const Eigen::MatrixBase<Derived1>& lhs, const Eigen::MatrixBase<Derived
 template<typename Derived1, typename Derived2>
 struct vstack_return
 {
-  typedef typename Derived1::Scalar Scalar;
+  using Scalar =  typename Derived1::Scalar;
   enum
   {
     RowsAtCompileTime = SUM_OR_DYNAMIC( Derived1::RowsAtCompileTime, Derived2::RowsAtCompileTime ),
@@ -442,12 +444,14 @@ struct vstack_return
     MaxRowsAtCompileTime = SUM_OR_DYNAMIC( Derived1::MaxRowsAtCompileTime, Derived2::MaxRowsAtCompileTime ),
     MaxColsAtCompileTime = Derived1::MaxColsAtCompileTime
   };
-  typedef Eigen::Matrix<Scalar,
-          RowsAtCompileTime,
-          ColsAtCompileTime,
-          Options,
-          MaxRowsAtCompileTime,
-          MaxColsAtCompileTime> type;
+  using type = 
+    Eigen::Matrix<
+      Scalar,
+      RowsAtCompileTime,
+      ColsAtCompileTime,
+      Options,
+      MaxRowsAtCompileTime,
+      MaxColsAtCompileTime>;
 };
 
 template<typename Derived1, typename Derived2>
