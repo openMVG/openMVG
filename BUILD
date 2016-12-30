@@ -7,7 +7,7 @@ Build instructions
 ------------------
 
 Required tools:
-* Cmake 
+* Cmake
 * Git
 * c/c++ compiler (gcc or visual studio or clang)
 
@@ -115,14 +115,14 @@ If you want enable unit tests and examples to the build:
  $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
  $ xcodebuild -configuration Release
 
- 
+
 --------------------
 Using openCV sample
 --------------------
 
  Add -DOpenMVG_USE_OPENCV=ON to your cmake command line and set OpenCV_DIR variable to your openCV build directory
 => i.e.: -DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON
- 
+
 ------------------------------------------------------------
 Using OpenMVG as a third party library dependency in cmake
 -------------------------------------------------------------
@@ -139,10 +139,10 @@ Perform "make" and "make install"
 
 Once the library has been installed, go to your project that want use OpenMVG as an external library and add:
 
-FIND_PACKAGE(OpenMVG REQUIRED)
-INCLUDE_DIRECTORIES(${OPENMVG_INCLUDE_DIRS})
-ADD_EXECUTABLE(main main.cpp)
-TARGET_LINK_LIBRARIES(main ${OPENMVG_LIBRARIES})
+find_package(OpenMVG REQUIRED)
+include_directories(${OPENMVG_INCLUDE_DIRS})
+add_executable(main main.cpp)
+target_link_libraries(main ${OPENMVG_LIBRARIES})
 
 Specify to CMAKE where OpenMVG have been installed by using the cmake OpenMVG_DIR variable that must point to:
 -DOpenMVG_DIR:STRING="YourInstallPath"/share/openMVG/cmake
