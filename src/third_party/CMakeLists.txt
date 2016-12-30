@@ -107,7 +107,7 @@ IF (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   ADD_SUBDIRECTORY(eigen)
 ENDIF()
 
-LIST(APPEND directories cmdLine histogram htmlDoc progress tinythread vectorGraphics)
+LIST(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
 FOREACH(inDirectory ${directories}) 
 INSTALL(
   DIRECTORY ./${inDirectory}
