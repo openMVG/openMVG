@@ -25,10 +25,8 @@
 //--
 
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/multiview/rotation_averaging_l2.hpp"
 
 #endif //OPENMVG_MULTIVIEW_ROTATION_AVERAGING_H_
-

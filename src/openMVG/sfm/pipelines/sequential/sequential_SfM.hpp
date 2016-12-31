@@ -8,8 +8,6 @@
 #pragma once
 
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
@@ -17,6 +15,9 @@
 
 namespace openMVG {
 namespace sfm {
+
+struct Features_Provider;
+struct Matches_Provider;
 
 /// Sequential SfM Pipeline Reconstruction Engine.
 class SequentialSfMReconstructionEngine : public ReconstructionEngine
@@ -108,4 +109,3 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
-

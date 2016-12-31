@@ -170,7 +170,7 @@ public:
     assert(j < regions->RegionCount());
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
-    static matching::L2_Vectorized<T> metric;
+    matching::L2_Vectorized<T> metric;
     return metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
   }
 
@@ -284,7 +284,7 @@ public:
     assert(j < regions->RegionCount());
 
     const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
-    static matching::Hamming<unsigned char> metric;
+    matching::Hamming<unsigned char> metric;
     const typename matching::Hamming<unsigned char>::ResultType descDist =
       metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
     return descDist * descDist;

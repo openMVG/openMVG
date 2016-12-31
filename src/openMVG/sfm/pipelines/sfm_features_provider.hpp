@@ -25,6 +25,8 @@ struct Features_Provider
   /// PointFeature array per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
+  virtual ~Features_Provider() = default;
+
   virtual bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,

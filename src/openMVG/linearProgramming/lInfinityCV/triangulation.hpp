@@ -7,8 +7,6 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <utility>
 #include <vector>
 

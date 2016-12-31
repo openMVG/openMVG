@@ -7,8 +7,6 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONCAT_H_
 #define OPENMVG_IMAGE_IMAGE_CONCAT_H_
 
-#include "openMVG/image/image_container.hpp"
-
 namespace openMVG
 {
 namespace image

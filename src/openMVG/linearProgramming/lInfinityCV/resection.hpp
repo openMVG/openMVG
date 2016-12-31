@@ -7,8 +7,6 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_
 #define OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <fstream>
 #include <utility>
 #include <vector>

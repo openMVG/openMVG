@@ -9,7 +9,7 @@
 namespace openMVG{
 namespace matching{
 
-enum EMatcherType
+enum EMatcherType : unsigned char
 {
   BRUTE_FORCE_L2,
   ANN_L2,

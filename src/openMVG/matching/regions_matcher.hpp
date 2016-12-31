@@ -35,7 +35,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  ~RegionsMatcher() = default ;
+  virtual ~RegionsMatcher() = default ;
 
   /**
    * @brief Initialize the retrieval database

@@ -6,6 +6,7 @@
 
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
 
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
@@ -315,4 +316,3 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
 
 } // namespace sfm
 } // namespace openMVG
-

@@ -8,7 +8,6 @@
 #define OPENMVG_SFM_LANDMARK_HPP
 
 #include "openMVG/types.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include <cereal/cereal.hpp> // Serialization
 
@@ -70,6 +69,9 @@ struct Landmark
     ar(cereal::make_nvp("observations", obs));
   }
 };
+
+/// Define a collection of landmarks are indexed by their TrackId
+using Landmarks = Hash_Map<IndexT, Landmark>;
 
 } // namespace sfm
 } // namespace openMVG

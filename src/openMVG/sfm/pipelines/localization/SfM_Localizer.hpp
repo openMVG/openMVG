@@ -8,11 +8,26 @@
 #pragma once
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
+
+namespace features {
+  struct Regions;
+}
+
+namespace geometry {
+  struct Pose3;
+}
+
+namespace cameras {
+  struct IntrinsicBase;
+}
+
 namespace sfm {
+
+struct SfM_Data;
+struct Regions_Provider;
 
 struct Image_Localizer_Match_Data
 {
@@ -39,8 +54,8 @@ public:
   */
   virtual bool Init
   (
-    const SfM_Data & sfm_data,
-    const Regions_Provider & region_provider
+    const sfm::SfM_Data & sfm_data,
+    const sfm::Regions_Provider & region_provider
   ) = 0;
 
   /**

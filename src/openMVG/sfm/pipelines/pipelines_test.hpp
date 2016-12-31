@@ -158,4 +158,3 @@ SfM_Data getInputScene
 
   return sfm_data;
 }
-

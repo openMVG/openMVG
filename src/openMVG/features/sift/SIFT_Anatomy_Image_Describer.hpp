@@ -167,7 +167,7 @@ public:
       std::vector<Keypoint> keypoints;
       keypoints.reserve(5000);
       Octave octave;
-      while( octave_gen.NextOctave( octave ) )
+      while ( octave_gen.NextOctave( octave ) )
       {
         std::vector< Keypoint > keys;
         // Find Keypoints
@@ -225,5 +225,3 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Anatomy_Image_describer, "SIFT_Anatomy_Image_describer");
-
-

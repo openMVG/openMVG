@@ -7,12 +7,12 @@
 #pragma once
 
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/sfm/sfm_view.hpp"
 #include <cereal/types/polymorphic.hpp>
 
 namespace openMVG {
 namespace sfm {
+
+struct View;
 
 using namespace openMVG::geometry;
 

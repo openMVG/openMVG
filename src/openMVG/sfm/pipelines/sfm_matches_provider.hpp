@@ -10,7 +10,8 @@
 
 #include <openMVG/types.hpp>
 #include "openMVG/matching/indMatch.hpp"
-#include <openMVG/matching/indMatch_utils.hpp>
+#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -19,6 +20,8 @@ namespace sfm {
 struct Matches_Provider
 {
   matching::PairWiseMatches pairWise_matches_;
+
+  virtual ~Matches_Provider() = default;
 
   // Load matches from the provided matches file
   virtual bool load(const SfM_Data & sfm_data, const std::string & matchesfile)

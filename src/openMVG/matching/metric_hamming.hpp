@@ -57,8 +57,8 @@ struct HammingBitSet
 // Lookup table to count the number of common 1 bits on unsigned char values
 static const unsigned char pop_count_LUT[256] =
 {
-#   define B2(n) n,     n+1,     n+1,     n+2
-#   define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
+#   define B2_POPC(n) n,     n+1,     n+1,     n+2
+#   define B4(n) B2_POPC(n), B2_POPC(n+1), B2_POPC(n+1), B2_POPC(n+2)
 #   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
     B6(0), B6(1), B6(1), B6(2)
 };

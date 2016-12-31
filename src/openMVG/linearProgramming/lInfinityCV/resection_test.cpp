@@ -25,12 +25,14 @@ using namespace openMVG;
 using namespace linearProgramming;
 using namespace lInfinityCV;
 
-void translate(const Mat3X & X, const Vec3 & vecTranslation,
-  Mat3X * XPoints)  {
-    XPoints->resize(X.rows(), X.cols());
-    for (size_t i=0; i<(size_t)X.cols(); ++i) {
-      XPoints->col(i) = X.col(i) + vecTranslation;
-    }
+inline void translate
+(
+  const Mat3X & X,
+  const Vec3 & vecTranslation,
+  Mat3X * XPoints
+)
+{
+  (*XPoints) = X.colwise() + vecTranslation;
 }
 
 TEST(Resection_L_Infinity, OSICLP) {
