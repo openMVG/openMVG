@@ -8,11 +8,13 @@
 #ifndef OPENMVG_FEATURES_REGIONS_HPP
 #define OPENMVG_FEATURES_REGIONS_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "cereal/types/vector.hpp"
+#include "openMVG/numeric/numeric.h"
+
+#include <cereal/types/vector.hpp>
+
 #include <string>
 #include <typeinfo>
 

@@ -25,8 +25,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
-#define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
+#define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -87,4 +87,4 @@ struct LineKernel {
 } // namespace robust
 } // namespace openMVG
 
-#endif // OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
+#endif // OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP

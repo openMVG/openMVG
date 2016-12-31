@@ -64,7 +64,7 @@ class Timer
     double start_;
 #ifdef _WIN32
     double frequency_;
-#endif
+#endif // _WIN32
 #endif // HAVE_CXX11_CHRONO
 };
 

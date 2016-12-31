@@ -7,9 +7,9 @@
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/multiview/rotation_averaging.hpp"
+#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/stl/stlMap.hpp"
 
 #include "third_party/histogram/histogram.hpp"

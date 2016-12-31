@@ -5,16 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/tracks/tracks.hpp"
+
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
-#include "openMVG/tracks/tracks.hpp"
-#include "openMVG/matching/indMatch.hpp"
+#include <vector>
+#include <utility>
+
 using namespace openMVG::tracks;
 using namespace openMVG::matching;
 
-#include <vector>
-#include <utility>
 
 TEST(Tracks, Simple) {
 

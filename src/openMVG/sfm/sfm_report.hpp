@@ -4,14 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_REPORT_HPP
-#define OPENMVG_SFM_REPORT_HPP
+#ifndef OPENMVG_SFM_SFM_REPORT_HPP
+#define OPENMVG_SFM_SFM_REPORT_HPP
 
 #include "openMVG/sfm/sfm_data.hpp"
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/histogram/histogram.hpp"
+#include "third_party/htmlDoc/htmlDoc.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
@@ -173,4 +173,4 @@ inline bool Generate_SfM_Report
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_REPORT_HPP
+#endif // OPENMVG_SFM_SFM_REPORT_HPP

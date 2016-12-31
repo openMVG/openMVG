@@ -8,6 +8,10 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/tracks/tracks.hpp"
+
 namespace openMVG{
 namespace sfm{
 
@@ -17,16 +21,6 @@ enum ETranslationAveragingMethod
   TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL = 2,
   TRANSLATION_AVERAGING_SOFTL1 = 3
 };
-
-} // namespace sfm
-} // namespace openMVG
-
-#include "openMVG/multiview/translation_averaging_common.hpp"
-#include "openMVG/tracks/tracks.hpp"
-#include "openMVG/graph/graph.hpp"
-
-namespace openMVG{
-namespace sfm{
 
 struct SfM_Data;
 struct Matches_Provider;

@@ -4,13 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
+#include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
-#include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
-
+#include "openMVG/image/image.hpp"
 #include "openMVG/system/timer.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 

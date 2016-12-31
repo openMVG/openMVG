@@ -4,16 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef MIMATTE_LINEAR_PROGRAMMING_INTERFACE_MOSEK_H_
-#define MIMATTE_LINEAR_PROGRAMMING_INTERFACE_MOSEK_H_
+#ifndef OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_MOSEK_HPP
+#define OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_MOSEK_HPP
 
 #ifdef OPENMVG_HAVE_MOSEK
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/numeric/numeric.h"
 extern "C"{
 #include "mosek.h"
 }
+
 #include <vector>
 
 namespace openMVG   {
@@ -47,7 +48,6 @@ private :
 } // namespace linearProgramming
 } // namespace openMVG
 
-
-#endif // MIMATTE_LINEAR_PROGRAMMING_INTERFACE_MOSEK_H_
-
 #endif // OPENMVG_HAVE_MOSEK
+
+#endif // OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_MOSEK_HPP

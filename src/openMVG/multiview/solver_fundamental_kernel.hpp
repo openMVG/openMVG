@@ -26,18 +26,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_H_
-#define OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
 
-#include <vector>
 #include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/numeric/numeric.h"
+
+#include <vector>
 
 namespace openMVG {
 namespace fundamental {
 namespace kernel {
 
-using namespace std;
 
 /**
  * Seven-point algorithm for solving for the fundamental matrix from point
@@ -52,13 +52,13 @@ using namespace std;
 struct SevenPointSolver {
   enum { MINIMUM_SAMPLES = 7 };
   enum { MAX_MODELS = 3 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
 };
 
 struct EightPointSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs);
 };
 
 /**
@@ -152,4 +152,4 @@ using NormalizedEightPointKernel =
 }  // namespace fundamental
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP

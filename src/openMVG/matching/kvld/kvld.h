@@ -1,5 +1,5 @@
-#ifndef KVLD_H
-#define KVLD_H
+#ifndef OPENMVG_MATCHING_KVLD_H
+#define OPENMVG_MATCHING_KVLD_H
 /** @Main KVLD algorithm implementation
  ** @Containing scale image pyramid, VLD structure and KVLD algorithm
  ** @author Zhe Liu
@@ -185,4 +185,4 @@ float KVLD(const openMVG::image::Image< float >& I1,
   std::vector< bool >& valide,
   KvldParameters& kvldParameters );
 
-#endif //KVLD_H
+#endif // OPENMVG_MATCHING_KVLD_H

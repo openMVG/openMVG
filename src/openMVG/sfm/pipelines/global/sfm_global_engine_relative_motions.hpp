@@ -12,6 +12,7 @@
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 namespace openMVG{

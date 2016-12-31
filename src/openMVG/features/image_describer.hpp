@@ -8,10 +8,12 @@
 #ifndef OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/features/regions.hpp"
-#include <memory>
+#include "openMVG/numeric/numeric.h"
+
 #include <cereal/cereal.hpp> // Serialization
+
+#include <memory>
 
 namespace openMVG {
 

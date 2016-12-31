@@ -6,9 +6,9 @@
 
 #include "openMVG/image/image.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <iostream>
-#include <cmath>
 
 extern "C" {
   #include "png.h"

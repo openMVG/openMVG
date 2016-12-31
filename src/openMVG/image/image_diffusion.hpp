@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
-#define OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP
+#define OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP
 
 #ifdef _MSC_VER
   #pragma warning(once:4244)
@@ -356,4 +356,4 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
 }  // namespace image
 }  // namespace openMVG
 
-#endif //  OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
+#endif //  OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP

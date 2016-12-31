@@ -4,12 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
-#define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
+#ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
+#define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
 #include <cereal/cereal.hpp>
+
+#include <algorithm>
 #include <iostream>
 #include <numeric>
+
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"
@@ -29,7 +32,7 @@ inline void siftDescToUChar(
 {
   if (brootSift)  {
     // rootsift = sqrt( sift / sum(sift) );
-    const float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = std::accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = static_cast<unsigned char>(512.f*sqrt(descr[k]/sum));
   }
@@ -235,4 +238,4 @@ private:
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::SIFT_Image_describer)
 
-#endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
+#endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP

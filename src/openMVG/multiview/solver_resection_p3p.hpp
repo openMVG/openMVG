@@ -32,14 +32,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_H_
-#define OPENMVG_MULTIVIEW_RESECTION_P3P_H_
+#ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
+#define OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/numeric/numeric.h"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 namespace openMVG {
 namespace euclidean_resection {
@@ -415,4 +415,4 @@ class P3P_ResectionKernel_K {
 }  // namespace euclidean_resection
 }  // namespace openMVG
 
-#endif // OPENMVG_MULTIVIEW_RESECTION_P3P_H_
+#endif // OPENMVG_MULTIVIEW_RESECTION_P3P_HPP

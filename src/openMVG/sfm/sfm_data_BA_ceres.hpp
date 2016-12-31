@@ -4,13 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_BA_CERES_HPP
-#define OPENMVG_SFM_DATA_BA_CERES_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
+#define OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
 
-#include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "ceres/types.h"
-#include "ceres/cost_function.h"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+
+#include <ceres/types.h>
+#include <ceres/cost_function.h>
 
 namespace openMVG {
 
@@ -65,4 +66,4 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_BA_CERES_HPP
+#endif // OPENMVG_SFM_SFM_DATA_BA_CERES_HPP

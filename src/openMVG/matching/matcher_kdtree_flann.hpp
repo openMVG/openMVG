@@ -4,11 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_ARRAYMATCHER_KDTREE_FLANN_H_
-#define OPENMVG_MATCHING_ARRAYMATCHER_KDTREE_FLANN_H_
+#ifndef OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
+#define OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
 
 #include "openMVG/matching/matching_interface.hpp"
-#include "flann/flann.hpp"
+
+#include <flann/flann.hpp>
+
 #include <memory>
 
 namespace openMVG {
@@ -169,4 +171,4 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 } // namespace matching
 } // namespace openMVG
 
-#endif // OPENMVG_MATCHING_ARRAYMATCHER_KDTREE_FLANN_H_
+#endif // OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP

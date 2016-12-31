@@ -5,13 +5,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
 #include <iostream>
 #include <vector>
+
+using namespace openMVG::graph;
 
 TEST(TripletFinder, test_no_triplet) {
 

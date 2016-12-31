@@ -7,6 +7,7 @@
 #ifdef OPENMVG_HAVE_MOSEK
 
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
+
 #include <iostream>
 
 namespace openMVG {

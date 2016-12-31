@@ -5,7 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching/matcher_type.hpp"
@@ -45,3 +46,5 @@ class Matcher_Regions_AllInMemory : public Matcher
 
 } // namespace matching_image_collection
 } // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP

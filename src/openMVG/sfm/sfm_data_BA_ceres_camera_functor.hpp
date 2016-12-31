@@ -4,12 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
-#define OPENMVG_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
+#define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
 #include "openMVG/cameras/cameras.hpp"
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 //--
 //- Define ceres Cost_functor for each OpenMVG camera model
@@ -677,4 +678,4 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
+#endif // OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP

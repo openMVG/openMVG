@@ -5,12 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_COLORHARMONIZATION_MATCHESPOINTS_H
-#define OPENMVG_COLORHARMONIZATION_MATCHESPOINTS_H
+#ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP
+#define OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
-#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/features/features.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 #include <vector>
 
@@ -70,4 +70,4 @@ private:
 }  // namespace color_harmonization
 }  // namespace openMVG
 
-#endif  // OPENMVG_COLORHARMONIZATION_MATCHESPOINTS_H
+#endif  // OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP

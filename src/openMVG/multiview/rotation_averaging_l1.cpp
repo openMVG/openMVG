@@ -7,35 +7,37 @@
 
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/numeric/l1_solver_admm.hpp"
-#include <Eigen/SparseCholesky>
-#include <Eigen/Cholesky>
 
 #ifdef HAVE_BOOST
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/foreach.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/min.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/max.hpp>
-#include <boost/foreach.hpp>
 using namespace boost;
 #else
-#include "lemon/list_graph.h"
-#include "lemon/kruskal.h"
 #include "lemon/adaptors.h"
 #include "lemon/dfs.h"
+#include "lemon/kruskal.h"
+#include "lemon/list_graph.h"
 #include "lemon/path.h"
 using namespace lemon;
 #endif
 
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
+#include <Eigen/Cholesky>
+#include <Eigen/SparseCholesky>
+
+#include <cstdint>
 #include <map>
 #include <queue>
-#include <stdint.h>
+
 
 namespace openMVG   {
 namespace rotation_averaging  {

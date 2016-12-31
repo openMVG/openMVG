@@ -4,6 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef OPENMVG_MATCHING_CASCADE_HASHER_HPP
+#define OPENMVG_MATCHING_CASCADE_HASHER_HPP
+
 //------------------
 //-- Bibliography --
 //------------------
@@ -55,15 +58,15 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#pragma once
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/matching/metric.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/metric.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/dynamic_bitset.hpp"
+
+#include <cmath>
 #include <iostream>
 #include <random>
-#include <cmath>
 
 namespace openMVG {
 namespace matching {
@@ -386,3 +389,5 @@ public:
 
 }  // namespace matching
 }  // namespace openMVG
+
+#endif // OPENMVG_MATCHING_CASCADE_HASHER_HPP

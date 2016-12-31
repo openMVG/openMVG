@@ -4,12 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
-#define OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
+#ifndef OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
+#define OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
+
 #include <memory>
 #include <iostream>
 
@@ -174,4 +175,4 @@ private:
 }  // namespace matching
 }  // namespace openMVG
 
-#endif  // OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
+#endif  // OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP

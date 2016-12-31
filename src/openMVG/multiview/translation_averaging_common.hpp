@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
-#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
+#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
+#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
 
-#include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/types.hpp"
 
 #include <utility>
 #include <vector>
@@ -76,4 +76,4 @@ inline std::set<IndexT> getIndexT(const std::vector<RelativeInfo_Vec> & vec_rela
 
 } // namespace openMVG
 
-#endif //OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
+#endif // OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP

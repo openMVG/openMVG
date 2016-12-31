@@ -4,10 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
-#define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
+#ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
+#define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+
 #include <iostream>
 #include <iterator>
 #include <vector>
@@ -78,4 +79,4 @@ bool BisectionLP(
 } // namespace openMVG
 
 
-#endif // OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
+#endif // OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP

@@ -6,10 +6,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
+
 #include "openMVG/cameras/cameras.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG {
 namespace sfm {

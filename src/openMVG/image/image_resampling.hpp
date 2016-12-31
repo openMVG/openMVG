@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
-#define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
+#define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
 
 #include "openMVG/image/sample.hpp"
 
@@ -121,4 +121,4 @@ void GenericRessample( const Image & src ,
 } // namespace image
 } // namespace openMVG
 
-#endif
+#endif // OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
