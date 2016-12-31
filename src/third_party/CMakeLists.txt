@@ -60,7 +60,7 @@ if (NOT TIFF_FOUND)
   set(OpenMVG_USE_INTERNAL_TIFF ON PARENT_SCOPE)
   set(TIFF_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/tiff)
   add_subdirectory(tiff)
-  list(APPEND TIFF_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/tiff ${CMAKE_CURRENT_BINARY_DIR}/tiff)  
+  list(APPEND TIFF_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/tiff ${CMAKE_CURRENT_BINARY_DIR}/tiff)
   set(TIFF_INCLUDE_DIR ${TIFF_INCLUDE_DIRECTORIES})
   set(TIFF_LIBRARIES tiff)
   set(TIFF_LIBRARIES ${TIFF_LIBRARIES} PARENT_SCOPE)
@@ -104,10 +104,10 @@ if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   #Configure Eigen install
   set(EIGEN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
   add_subdirectory(eigen)
-ENDIF()
+endif()
 
-list(APPEND directories cmdLine histogram htmlDoc progress tinythread vectorGraphics)
-foreach(inDirectory ${directories}) 
+list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
+foreach(inDirectory ${directories})
 install(
   DIRECTORY ./${inDirectory}
   DESTINATION include/openMVG/third_party/
