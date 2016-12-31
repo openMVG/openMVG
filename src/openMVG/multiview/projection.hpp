@@ -25,8 +25,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_PROJECTION_H_
-#define OPENMVG_MULTIVIEW_PROJECTION_H_
+#ifndef OPENMVG_MULTIVIEW_PROJECTION_HPP
+#define OPENMVG_MULTIVIEW_PROJECTION_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -199,4 +199,4 @@ double RootMeanSquareError( const Mat2X &x_image,
 
 } // namespace openMVG
 
-#endif //OPENMVG_MULTIVIEW_PROJECTION_H_
+#endif // OPENMVG_MULTIVIEW_PROJECTION_HPP

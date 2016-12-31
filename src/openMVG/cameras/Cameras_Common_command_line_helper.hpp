@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
-#define OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 
 namespace openMVG
 {
@@ -69,4 +69,4 @@ StringTo_Intrinsic_Parameter_Type
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#endif // OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP

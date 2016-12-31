@@ -26,9 +26,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <vector>
 #include "openMVG/multiview/solver_homography_kernel.hpp"
+
 #include "testing/testing.h"
+
+#include <vector>
 
 using namespace std;
 using namespace openMVG;

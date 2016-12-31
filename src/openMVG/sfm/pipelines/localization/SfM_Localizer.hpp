@@ -5,7 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
+#define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
@@ -14,15 +15,15 @@ namespace openMVG {
 
 namespace features {
   struct Regions;
-}
+} // namespace features 
 
 namespace geometry {
   struct Pose3;
-}
+} // namespace geometry 
 
 namespace cameras {
   struct IntrinsicBase;
-}
+} // namespace cameras 
 
 namespace sfm {
 
@@ -117,3 +118,5 @@ public:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP

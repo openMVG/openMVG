@@ -5,9 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data_transform.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/geometry/Similarity3.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
 
 namespace openMVG {
 namespace sfm {

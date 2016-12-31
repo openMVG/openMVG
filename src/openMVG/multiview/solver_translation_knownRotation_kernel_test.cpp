@@ -5,10 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/solver_translation_knownRotation_kernel.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
+
 #include "testing/testing.h"
+
 #include <vector>
 
 using namespace openMVG;

@@ -29,12 +29,12 @@
 //  tracksBuilder.ExportToSTL(map_tracks); // Build tracks with STL compliant type
 //
 
-#ifndef OPENMVG_TRACKS_H_
-#define OPENMVG_TRACKS_H_
+#ifndef OPENMVG_TRACKS_TRACKS_HPP
+#define OPENMVG_TRACKS_TRACKS_HPP
 
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/tracks/union_find.hpp"
 #include "openMVG/tracks/flat_pair_map.hpp"
+#include "openMVG/tracks/union_find.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -376,4 +376,4 @@ struct TracksUtilsMap
 } // namespace tracks
 } // namespace openMVG
 
-#endif // OPENMVG_TRACKS_H_
+#endif // OPENMVG_TRACKS_TRACKS_HPP

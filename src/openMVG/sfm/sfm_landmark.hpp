@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_LANDMARK_HPP
-#define OPENMVG_SFM_LANDMARK_HPP
+#ifndef OPENMVG_SFM_SFM_LANDMARK_HPP
+#define OPENMVG_SFM_SFM_LANDMARK_HPP
 
 #include "openMVG/types.hpp"
 
@@ -76,4 +76,4 @@ using Landmarks = Hash_Map<IndexT, Landmark>;
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_LANDMARK_HPP
+#endif // OPENMVG_SFM_SFM_LANDMARK_HPP

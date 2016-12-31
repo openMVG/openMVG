@@ -12,8 +12,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef STL_MAP_ADDITION_H
-#define STL_MAP_ADDITION_H
+#ifndef OPENMVG_STL_MAP_ADDITION_HPP
+#define OPENMVG_STL_MAP_ADDITION_HPP
 
 // ---------------------------
 // Usage example :
@@ -58,5 +58,5 @@ struct RetrieveValue
 
 } // namespace stl
 
-#endif // STL_MAP_ADDITION_H
+#endif // OPENMVG_STL_MAP_ADDITION_HPP
 

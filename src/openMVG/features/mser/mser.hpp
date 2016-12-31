@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef _MSER_HPP_
-#define _MSER_HPP_
+#ifndef OPENMVG_FEATURES_MSER_MSER_HPP
+#define OPENMVG_FEATURES_MSER_MSER_HPP
 
-#include "openMVG/image/image_container.hpp"
 #include "openMVG/features/mser/mser_region.hpp"
+#include "openMVG/image/image_container.hpp"
 
 /**
 * @note Implementation based of the D. Nister method : "Linear Time Maximally Stable Extremal Regions" [1]
@@ -99,8 +99,8 @@ namespace openMVG
         double m_min_diversity ; // Stability distance between two region in the same hierarchy
         int m_connectivity ;
       } ;
-    }
-  }
-}
+    } // namespace MSER 
+  } // namespace features 
+} // namespace openMVG 
 
-#endif
+#endif // OPENMVG_FEATURES_MSER_MSER_HPP

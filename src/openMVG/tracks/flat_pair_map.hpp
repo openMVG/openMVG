@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FLAT_PAIR_MAP_HPP_
-#define OPENMVG_FLAT_PAIR_MAP_HPP_
+#ifndef OPENMVG_FLAT_PAIR_MAP_HPP
+#define OPENMVG_FLAT_PAIR_MAP_HPP
 
 #include <algorithm>
 #include <utility>
@@ -54,4 +54,4 @@ private:
 
 } // namespace openMVG
 
-#endif // OPENMVG_FLAT_PAIR_MAP_HPP_
+#endif // OPENMVG_FLAT_PAIR_MAP_HPP

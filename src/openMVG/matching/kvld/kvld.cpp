@@ -12,10 +12,14 @@ the terms of the BSD license ( see the COPYING file).
 */
 
 #include "kvld.h"
+
 #include "algorithm.h"
+
+#include "openMVG/image/image.hpp"
+
 #include <functional>
 #include <numeric>
-#include <openMVG/image/image.hpp>
+
 
 using namespace std;
 using namespace openMVG;

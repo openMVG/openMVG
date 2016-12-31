@@ -4,9 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_SFM_VIEW_PRIOS_HPP
+#define OPENMVG_SFM_SFM_VIEW_PRIOS_HPP
 
 #include "openMVG/geometry/pose3.hpp"
+
 #include <cereal/types/polymorphic.hpp>
 
 namespace openMVG {
@@ -192,3 +194,5 @@ struct ViewPriors : public View
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::sfm::ViewPriors, "view_priors" );
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::sfm::View, openMVG::sfm::ViewPriors);
+
+#endif // OPENMVG_SFM_SFM_VIEW_PRIOS_HPP

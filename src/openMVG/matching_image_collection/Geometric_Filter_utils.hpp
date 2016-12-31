@@ -5,7 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
@@ -15,7 +16,7 @@ namespace openMVG {
 namespace sfm {
   struct Regions_Provider;
   struct Features_Provider;
-}
+} // namespace sfm 
 
 namespace matching_image_collection {
 
@@ -146,3 +147,5 @@ void MatchesPairToMat
 
 } //namespace matching_image_collection
 } // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP

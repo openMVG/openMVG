@@ -4,14 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_TRIPLET_FINDER_H
-#define OPENMVG_GRAPH_TRIPLET_FINDER_H
+#ifndef OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
+#define OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 
-#include "openMVG/types.hpp"
 #include "openMVG/graph/graph.hpp"
+#include "openMVG/types.hpp"
 
 #include "lemon/list_graph.h"
-using namespace lemon;
 
 #include <algorithm>
 #include <vector>
@@ -142,12 +141,12 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
   BoolEdgeMap map_edge( g, false ); // Visited edge map
 
   // For each nodes
-  for ( NodeIterator itNode( g ); itNode != INVALID; ++itNode )
+  for ( NodeIterator itNode( g ); itNode != lemon::INVALID; ++itNode )
   {
 
     // For each edges (list the not visited outgoing edges)
     std::vector<OutArcIt> vec_edges;
-    for ( OutArcIt e( g, itNode ); e != INVALID; ++e )
+    for ( OutArcIt e( g, itNode ); e != lemon::INVALID; ++e )
     {
       if ( !map_edge[e] ) // If not visited
       {
@@ -163,7 +162,7 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
       {
         // Check if the extremity is linked
         typename GraphT::Arc cycleEdge = findArc( g, g.target( itPrev ), g.target( vec_edges[i] ) );
-        if ( cycleEdge != INVALID && !map_edge[cycleEdge] )
+        if ( cycleEdge != lemon::INVALID && !map_edge[cycleEdge] )
         {
           // Elementary cycle found (make value follow a monotonic ascending serie)
           int triplet[3] =
@@ -217,4 +216,4 @@ static std::vector< graph::Triplet > tripletListing
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_TRIPLET_FINDER_H
+#endif // OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP

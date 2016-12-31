@@ -25,10 +25,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/essential.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 

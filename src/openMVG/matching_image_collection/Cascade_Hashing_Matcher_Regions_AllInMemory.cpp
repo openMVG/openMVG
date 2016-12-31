@@ -5,10 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matching_filters.hpp"
+#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

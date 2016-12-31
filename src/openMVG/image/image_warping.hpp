@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_HOMOGRAPHY_WARP
-#define OPENMVG_IMAGE_HOMOGRAPHY_WARP
+#ifndef OPENMVG_IMAGE_IMAGE_WARPING_HPP
+#define OPENMVG_IMAGE_IMAGE_WARPING_HPP
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/image/sample.hpp"
@@ -64,7 +64,7 @@ void Warp( const Image &im, const Mat3 & H, Image &out )
     }
 }
 
-}; // namespace image
-}; // namespace openMVG
+} // namespace image
+} // namespace openMVG
 
-#endif // OPENMVG_IMAGE_HOMOGRAPHY_WARP
+#endif // OPENMVG_IMAGE_IMAGE_WARPING_HPP

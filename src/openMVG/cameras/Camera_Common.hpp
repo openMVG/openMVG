@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERAS_COMMON_HPP
-#define OPENMVG_CAMERAS_COMMON_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_COMMON_HPP
+#define OPENMVG_CAMERAS_CAMERA_COMMON_HPP
 
 #include <type_traits>
 
@@ -110,4 +110,4 @@ operator&(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERAS_COMMON_HPP
+#endif // OPENMVG_CAMERAS_CAMERA_COMMON_HPP

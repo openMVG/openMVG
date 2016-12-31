@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
  
-#pragma once
+#ifndef OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_HPP
+#define OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_HPP
 
 namespace openMVG{
 namespace features{
@@ -33,3 +34,5 @@ struct Keypoint
 } // namespace sift
 } // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_HPP

@@ -5,15 +5,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_REGIONS_PROVIDER_CACHE_HPP
-#define OPENMVG_SFM_REGIONS_PROVIDER_CACHE_HPP
+#ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_CACHE_HPP
+#define OPENMVG_SFM_SFM_REGIONS_PROVIDER_CACHE_HPP
 
-#include <openMVG/sfm/pipelines/sfm_regions_provider.hpp>
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
-#include <chrono>
-#include <thread>
-#include <mutex>
 #include <atomic>
+#include <chrono>
+#include <mutex>
+#include <thread>
 
 namespace openMVG {
 namespace sfm {
@@ -130,4 +130,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_REGIONS_PROVIDER_CACHE_HPP
+#endif // OPENMVG_SFM_SFM_REGIONS_PROVIDER_CACHE_HPP

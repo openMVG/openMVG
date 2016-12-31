@@ -4,12 +4,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_CONNECTED_COMPONENT_H_
-#define OPENMVG_GRAPH_CONNECTED_COMPONENT_H_
+#ifndef OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP 
+#define OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP
 
-#include <openMVG/types.hpp>
-#include <openMVG/graph/graph.hpp>
-#include <openMVG/tracks/union_find.hpp>
+#include "openMVG/graph/graph_builder.hpp"
+#include "openMVG/tracks/union_find.hpp"
+#include "openMVG/types.hpp"
+
+#include <lemon/connectivity.h>
+#include <lemon/list_graph.h>
+
 #include <set>
 
 namespace openMVG
@@ -209,4 +213,4 @@ std::set<IndexT> KeepLargestCC_Nodes
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_CONNECTED_COMPONENT_H_
+#endif // OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP

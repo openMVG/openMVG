@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
-#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
+#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
+#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
 
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 
@@ -87,4 +87,4 @@ unsigned int FilterRelativeRotations(
 } // namespace rotation_averaging
 } // namespace openMVG
 
-#endif // OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
+#endif // OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP

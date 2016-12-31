@@ -5,16 +5,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/features.hpp"
-using namespace openMVG;
-using namespace openMVG::features;
+
 
 #include "testing/testing.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <vector>
+
+using namespace openMVG;
+using namespace openMVG::features;
 using namespace std;
+
 using std::string;
 
 // Define a feature and a container of features

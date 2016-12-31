@@ -4,10 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
+#define OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
 
-#include "third_party/fast/fast.h"
 #include "openMVG/image/image_container.hpp"
+#include "third_party/fast/fast.h"
+
 #include <type_traits>
 
 //
@@ -80,5 +82,7 @@ public:
   }
 };
 
-} // features
+} // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP

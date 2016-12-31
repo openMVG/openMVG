@@ -4,16 +4,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef MIMATTE_LINEAR_PROGRAMMING_INTERFACE_OSICLP_H_
-#define MIMATTE_LINEAR_PROGRAMMING_INTERFACE_OSICLP_H_
+#ifndef OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
+#define OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
+
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "OsiClpSolverInterface.hpp"
 #ifdef OPENMVG_HAVE_MOSEK
 #include "OsiMskSolverInterface.hpp"
 #endif
-
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 #include "CoinPackedMatrix.hpp"
 #include "CoinPackedVector.hpp"
@@ -304,5 +304,5 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::getSolution(std::vector<double> & est
 } // namespace openMVG
 
 
-#endif // MIMATTE_LINEAR_PROGRAMMING_INTERFACE_OSICLP_H_
+#endif // OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
 

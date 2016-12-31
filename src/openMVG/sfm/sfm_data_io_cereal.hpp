@@ -6,22 +6,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#ifndef OPENMVG_SFM_DATA_IO_CEREAL_HPP
-#define OPENMVG_SFM_DATA_IO_CEREAL_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_IO_CEREAL_HPP
+#define OPENMVG_SFM_SFM_DATA_IO_CEREAL_HPP
 
 #include "openMVG/sfm/sfm_data_io.hpp"
 
+#include <cereal/archives/json.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
-
 #include <cereal/types/map.hpp>
+#include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
 
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 
 namespace openMVG {
 namespace sfm {
@@ -176,4 +175,4 @@ bool Save_Cereal(
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_IO_CEREAL_HPP
+#endif // OPENMVG_SFM_SFM_DATA_IO_CEREAL_HPP

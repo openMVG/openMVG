@@ -36,7 +36,8 @@ The implementation is based on
         http://www.ipol.im/pub/algo/rd_anatomy_sift/
 */
 
-#pragma once
+#ifndef OPENMVG_FEATURES_SIFT_SIFT_DESCRIPTOR_EXTRACTOR_HPP
+#define OPENMVG_FEATURES_SIFT_SIFT_DESCRIPTOR_EXTRACTOR_HPP
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
@@ -533,3 +534,5 @@ protected:
 } // namespace sift
 } // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_SIFT_SIFT_DESCRIPTOR_EXTRACTOR_HPP

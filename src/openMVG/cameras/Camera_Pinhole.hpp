@@ -5,13 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_HPP
-#define OPENMVG_CAMERA_PINHOLE_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
 
@@ -314,4 +314,4 @@ class Pinhole_Intrinsic : public IntrinsicBase
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic, "pinhole");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic);
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP

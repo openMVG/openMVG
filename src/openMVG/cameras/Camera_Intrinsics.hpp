@@ -5,12 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_INTRINSICS_H
-#define OPENMVG_CAMERA_INTRINSICS_H
+#ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
+#define OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
 
 #include <cereal/types/polymorphic.hpp>
@@ -289,4 +289,4 @@ inline double AngleBetweenRay(
 } // namespace cameras
 } // namespace openMVG
 
-#endif // #ifndef OPENMVG_CAMERA_INTRINSICS_H
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP

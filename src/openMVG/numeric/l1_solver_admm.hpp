@@ -5,21 +5,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
-#define OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
+#ifndef OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP
+#define OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP
 
 #include <Eigen/Core>
 #ifdef EIGEN_MPL2_ONLY
 #include <Eigen/SparseLU>
 #else
-#include <Eigen/SparseCholesky>
 #include <Eigen/Cholesky>
+#include <Eigen/SparseCholesky>
 #endif
 
 
 #include <algorithm>
-#include <string>
 #include <iostream>
+#include <string>
 
 namespace openMVG {
 
@@ -218,4 +218,4 @@ class L1Solver {
 
 }  // namespace openMVG
 
-#endif  // OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
+#endif  // OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP

@@ -5,16 +5,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IND_MATCH_H
-#define OPENMVG_MATCHING_IND_MATCH_H
+#ifndef OPENMVG_MATCHING_IND_MATCH_HPP
+#define OPENMVG_MATCHING_IND_MATCH_HPP
 
 #include "openMVG/types.hpp"
 
 #include <cereal/cereal.hpp> // Serialization
 
 #include <iostream>
-#include <set>
 #include <map>
+#include <set>
 #include <vector>
 
 namespace openMVG {
@@ -116,5 +116,6 @@ namespace cereal
     openMVG::matching::PairWiseMatches,
     cereal::specialization::member_serialize>
   {};
-}
-#endif // OPENMVG_MATCHING_IND_MATCH_H
+} // namespace cereal 
+
+#endif // OPENMVG_MATCHING_IND_MATCH_HPP

@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
+#define OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
 
 #include "openMVG/matching/indMatch.hpp"
 
@@ -60,3 +61,5 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP

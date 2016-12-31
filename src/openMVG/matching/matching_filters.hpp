@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_MATCHINGFILTERS_H
-#define OPENMVG_MATCHING_MATCHINGFILTERS_H
+#ifndef OPENMVG_MATCHING_MATCHING_FILTERS_HPP
+#define OPENMVG_MATCHING_MATCHING_FILTERS_HPP
 
 #include "openMVG/matching/indMatch.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -207,4 +208,4 @@ inline void Filter( int NN,
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_MATCHINGFILTERS_H
+#endif // OPENMVG_MATCHING_MATCHING_FILTERS_HPP

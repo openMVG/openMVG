@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
@@ -112,4 +113,6 @@ inline bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
   return bOk;
 }
 
-}; // namespace openMVG
+} // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP

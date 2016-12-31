@@ -3,6 +3,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#ifndef OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_EXTRACTOR_HPP
+#define OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_EXTRACTOR_HPP
+
 
 /*
 
@@ -35,8 +38,6 @@ The implementation is based on
         Image Processing Online, 2013.
         http://www.ipol.im/pub/algo/rd_anatomy_sift/
 */
-
-#pragma once
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
@@ -432,3 +433,5 @@ protected:
 } // namespace sift
 } // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_EXTRACTOR_HPP

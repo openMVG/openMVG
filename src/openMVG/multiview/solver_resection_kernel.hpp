@@ -26,12 +26,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
-#define OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 
-#include <vector>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+
+#include <vector>
 
 namespace openMVG {
 namespace resection {
@@ -211,4 +212,4 @@ class ResectionKernel_K {
 }  // namespace euclidean_resection
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
