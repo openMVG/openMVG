@@ -125,12 +125,12 @@ int main() {
 
     //-- Fundamental robust estimation
     std::vector<size_t> vec_inliers;
-    typedef ACKernelAdaptor<
-      openMVG::fundamental::kernel::SevenPointSolver,
-      openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
+    using KernelType = 
+      ACKernelAdaptor<
+        openMVG::fundamental::kernel::SevenPointSolver,
+        openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
+        UnnormalizerT,
+        Mat3>;
 
     KernelType kernel(
       xL, imageL.Width(), imageL.Height(),

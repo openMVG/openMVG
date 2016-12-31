@@ -144,7 +144,7 @@ void PointsToMat(
   MatT & m0,
   MatT & m1)
 {
-  typedef typename FeaturesT::value_type ValueT; // Container type
+  using ValueT = typename FeaturesT::value_type; // Container type
 
   m0.resize(2, matches.size());
   m1.resize(2, matches.size());

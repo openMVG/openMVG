@@ -22,10 +22,10 @@ template <typename T>
 class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
 {
     /// Full internal type
-    typedef Eigen::Matrix<T, 3, 1, 0, 3, 1> Base;
+    using Base = Eigen::Matrix<T, 3, 1, 0, 3, 1>;
 
     /// Color component type
-    typedef T TBase;
+    using TBase = T;
   public:
 
     //------------------------------
@@ -191,10 +191,10 @@ template <typename T>
 class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
 {
     /// Full internal type
-    typedef Eigen::Matrix<T, 4, 1, 0, 4, 1> Base;
+    using Base = Eigen::Matrix<T, 4, 1, 0, 4, 1>;
 
     /// Color component type
-    typedef T TBase;
+    using TBase = T;
 
   public:
 

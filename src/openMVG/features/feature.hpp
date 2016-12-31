@@ -146,19 +146,23 @@ class AffinePointFeature : public PointFeature {
   friend std::istream& operator>>(std::istream& in, AffinePointFeature& obj);
 
 public:
-  virtual ~AffinePointFeature() {};
+  virtual ~AffinePointFeature() = default;
 
-  AffinePointFeature(float x = 0.0f, float y = 0.0f,
-    float a = 0.0f, float b = 0.0f, float c = 0.0f)
-    : PointFeature(x, y)
-    , a_(a), b_(b), c_(c)
+  AffinePointFeature
+  (
+    float x = 0.0f,
+    float y = 0.0f,
+    float a = 0.0f,
+    float b = 0.0f,
+    float c = 0.0f
+  ) : PointFeature(x, y), a_(a), b_(b), c_(c)
   {
-    l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
-    l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
-    l1_ = 1.0 / std::sqrt(l1_);
-    l2_ = 1.0 / std::sqrt(l2_);
+    l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
+    l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
+    l1_ = 1.f / std::sqrt(l1_);
+    l2_ = 1.f / std::sqrt(l2_);
 
-    phi_ = 0.0;
+    phi_ = 0.f;
     if (b == 0)
     {
       if (a > c)

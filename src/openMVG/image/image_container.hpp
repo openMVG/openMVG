@@ -25,10 +25,10 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
   public:
 
     /// Pixel data type
-    typedef T Tpixel;
+    using Tpixel = T;
 
     /// Full internal type
-    typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Base;
+    using Base = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 
     /**

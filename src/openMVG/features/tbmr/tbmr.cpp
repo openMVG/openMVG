@@ -213,9 +213,9 @@ namespace tbmr
     for (int i = S.size()-1; i >= 0; --i)
     {
       const unsigned int p = S[i];
-      if(parent[p] == p || ima[p] != ima[parent[p]]) {
+      if (parent[p] == p || ima[p] != ima[parent[p]]) {
         vecNodes[numNodes++] = p;
-        if(imaAttribute[p].area >= minimumSize)
+        if (imaAttribute[p].area >= minimumSize)
           ++numSons[parent[p]];
       }
     }
@@ -235,9 +235,8 @@ namespace tbmr
     unsigned int numTbmrs = 0;
 
     std::vector<unsigned int> vecTbmrs(numNodes);
-    for (int i = 0; i < vecNodes.size(); ++i)
+    for (const unsigned p : vecNodes)
     {
-      const unsigned int  p = vecNodes[i];
       if (numSons[p] == 1 && !isSeen[p] && imaAttribute[p].area <= maxArea)
       {
         unsigned int num_ancestors = 0;

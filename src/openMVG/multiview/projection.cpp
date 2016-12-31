@@ -133,7 +133,7 @@ Mat3 F_from_P(const Mat34 & P1, const Mat34 & P2)
 {
   Mat3 F12;
 
-  typedef Eigen::Matrix<double, 2, 4> Mat24;
+  using Mat24 = Eigen::Matrix<double, 2, 4>;
   Mat24 X1 = P1.block<2, 4>(1, 0);
   Mat24 X2;  X2 << P1.row(2), P1.row(0);
   Mat24 X3 = P1.block<2, 4>(0, 0);

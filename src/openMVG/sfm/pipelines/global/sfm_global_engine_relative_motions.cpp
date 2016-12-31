@@ -519,7 +519,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Build the Relative pose graph from matches:
   //
   /// pairwise view relation between poseIds
-  typedef std::map< Pair, Pair_Set > PoseWiseMatches;
+  using PoseWiseMatches = std::map< Pair, Pair_Set >;
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;

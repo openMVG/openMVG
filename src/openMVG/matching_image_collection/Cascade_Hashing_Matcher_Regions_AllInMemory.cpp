@@ -45,7 +45,7 @@ void Match
   // Collect used view indexes
   std::set<IndexT> used_index;
   // Sort pairs according the first index to minimize later memory swapping
-  typedef std::map<IndexT, std::vector<IndexT> > Map_vectorT;
+  using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
   for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
   {
@@ -54,7 +54,7 @@ void Match
     used_index.insert(iter->second);
   }
 
-  typedef Eigen::Matrix<ScalarT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
+  using BaseMat = Eigen::Matrix<ScalarT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
   // Init the cascade hasher
   CascadeHasher cascade_hasher;
@@ -162,7 +162,7 @@ void Match
       Eigen::Map<BaseMat> mat_J( (ScalarT*)tabJ, regionsJ.get()->RegionCount(), dimension);
 
       IndMatches pvec_indices;
-      typedef typename Accumulator<ScalarT>::Type ResultType;
+      using ResultType = typename Accumulator<ScalarT>::Type;
       std::vector<ResultType> pvec_distances;
       pvec_distances.reserve(regionsJ.get()->RegionCount() * 2);
       pvec_indices.reserve(regionsJ.get()->RegionCount() * 2);

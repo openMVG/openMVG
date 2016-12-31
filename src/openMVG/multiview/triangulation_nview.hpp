@@ -53,17 +53,20 @@ namespace openMVG {
   {
     public:
 
-    size_t size() const {	return views.size();}
+    size_t size() const;
 
-    void clear()  { views.clear();}
+    void clear();
 
-    void add(const Mat34& projMatrix, const Vec2 & p) {
-      views.emplace_back( projMatrix, p );
-    }
+    void add
+    (
+      const Mat34& projMatrix,
+      const Vec2 & p
+    );
 
     // Return squared L2 sum of error
     double error(const Vec3 &X) const;
 
+    // Compute the corresponding 3D point
     Vec3 compute(int iter = 3) const;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

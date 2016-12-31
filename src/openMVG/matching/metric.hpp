@@ -19,8 +19,8 @@ namespace matching {
 template<class T>
 struct L2_Simple
 {
-  typedef T ElementType;
-  typedef typename Accumulator<T>::Type ResultType;
+  using ElementType = T;
+  using ResultType = typename Accumulator<T>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -39,8 +39,8 @@ struct L2_Simple
 template<class T>
 struct L2_Vectorized
 {
-  typedef T ElementType;
-  typedef typename Accumulator<T>::Type ResultType;
+  using ElementType = T;
+  using ResultType = typename Accumulator<T>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -121,8 +121,8 @@ namespace optim_ss2{
 template<>
 struct L2_Vectorized<float>
 {
-  typedef float ElementType;
-  typedef Accumulator<float>::Type ResultType;
+  using ElementType = float;
+  using ResultType = Accumulator<float>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const

@@ -48,8 +48,8 @@ using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
 using namespace openMVG::sfm;
 
-typedef features::SIOPointFeature FeatureT;
-typedef vector< FeatureT > featsT;
+using FeatureT = features::SIOPointFeature;
+using featsT = std::vector< FeatureT >;
 
 ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   const string & sSfM_Data_Filename,
@@ -337,9 +337,9 @@ bool ColorHarmonizationEngineGlobal::Process()
   openMVG::system::Timer timer;
 
   #ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = MOSEK_SolveWrapper;
   #else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
+  using SOLVER_LP_T = OSI_CLP_SolverWrapper;
   #endif
   // Red channel
   {
@@ -401,7 +401,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     iterSet != set_indeximage.end(); ++iterSet, ++my_progress_bar)
   {
     const size_t imaNum = *iterSet;
-    typedef Eigen::Matrix<double, 256, 1> Vec256;
+    using Vec256 = Eigen::Matrix<double, 256, 1>;
     std::vector< Vec256 > vec_map_lut(3);
 
     const size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);

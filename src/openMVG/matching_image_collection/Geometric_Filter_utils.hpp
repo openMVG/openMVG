@@ -43,7 +43,7 @@ void MatchesPointsToMat
   const size_t n = putativeMatches.size();
   x_I.resize(2, n);
   x_J.resize(2, n);
-  typedef typename MatT::Scalar Scalar; // Output matrix type
+  using Scalar = typename MatT::Scalar; // Output matrix type
 
   for (size_t i=0; i < putativeMatches.size(); ++i)  {
     const features::PointFeature & pt_I = feature_I[putativeMatches[i].i_];
