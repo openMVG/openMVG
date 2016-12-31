@@ -148,12 +148,12 @@ int main() {
       std::vector<size_t> vec_inliers;
 
       // Define the AContrario angular error adaptor
-      typedef openMVG::robust::ACKernelAdaptor_AngularRadianError<
+      using KernelType = 
+        openMVG::robust::ACKernelAdaptor_AngularRadianError<
           // Use the 8 point solver in order to estimate E
           openMVG::spherical_cam::EightPointRelativePoseSolver,
           openMVG::spherical_cam::AngularError,
-          Mat3>
-          KernelType;
+          Mat3>;
 
       KernelType kernel(xL_spherical, xR_spherical);
 

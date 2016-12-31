@@ -59,7 +59,7 @@ TEST(LM, MimimaSearchViaLM) {
     x.rows(),  // cardinal of computed residual
     x, y // Data that allow to compute the residual
   );
-  typedef Eigen::NumericalDiff<lm_Refine_functor> NumDiffT;
+  using NumDiffT = Eigen::NumericalDiff<lm_Refine_functor>;
   NumDiffT numDiff(functor);
 
   Eigen::LevenbergMarquardt<NumDiffT > lm(numDiff);

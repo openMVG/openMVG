@@ -36,7 +36,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
+    using KernelType = lInfinityCV::kernel::l1PoseResectionKernel;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
@@ -90,7 +90,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
+    using KernelType = lInfinityCV::kernel::l1PoseResectionKernel;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);

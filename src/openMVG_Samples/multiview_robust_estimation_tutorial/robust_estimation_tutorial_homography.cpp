@@ -173,7 +173,7 @@ int main() {
       << "----------------------------------\n";
 
     // Define the Homography Kernel
-    typedef homography::kernel::UnnormalizedKernel KernelType;
+    using KernelType = homography::kernel::UnnormalizedKernel;
     KernelType kernel(xL, xR);
 
     // The Model type
@@ -206,7 +206,7 @@ int main() {
       << "----------------------------------\n";
 
      // Define the Homography Kernel
-    typedef homography::kernel::UnnormalizedKernel KernelType;
+    using KernelType = homography::kernel::UnnormalizedKernel;
     KernelType kernel(xL, xR);
 
     // The Model type
@@ -241,7 +241,7 @@ int main() {
       << "----------------------------------\n";
 
     // Define the Homography Kernel
-    typedef homography::kernel::UnnormalizedKernel KernelType;
+    using KernelType = homography::kernel::UnnormalizedKernel;
     KernelType kernel(xL, xR);
 
     // The Model type
@@ -279,12 +279,12 @@ int main() {
       << "----------------------------------\n";
 
     // Define the AContrario Kernel adaptor for the Homography Model
-    typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::homography::kernel::FourPointSolver,
+        openMVG::homography::kernel::AsymmetricError,
+        UnnormalizerI,
+        Mat3>;
 
     KernelType kernel(
       xL, imageL.Width(), imageL.Height(),
@@ -349,7 +349,7 @@ void display_info
     svgStream.drawCircle(L.x(), L.y(), 5, svgStyle().stroke("yellow", 2.0));
     svgStream.drawCircle(R.x()+imageL.Width(), R.y(), 5,svgStyle().stroke("yellow", 2.0));
     // residual computation
-    typedef homography::kernel::UnnormalizedKernel KernelType;
+    using KernelType = homography::kernel::UnnormalizedKernel;
     vec_residuals[i] = std::sqrt(
         KernelType::ErrorT::Error(H,
           L.coords().cast<double>(),

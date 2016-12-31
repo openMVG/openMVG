@@ -40,7 +40,7 @@ void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , cons
     out.resize( width , height ) ;
   }
 
-  typedef typename Image::Tpixel Real;
+  using Real = typename Image::Tpixel;
   out.array() = ( static_cast<Real>( 1.f ) + ( Lx.array().square() + Ly.array().square() ) / ( k * k ) ).inverse();
 }
 
@@ -57,7 +57,7 @@ template< typename Image >
 void ImageFEDCentral( const Image & src , const Image & diff , const typename Image::Tpixel half_t , Image & out ,
                       const int row_start , const int row_end )
 {
-  typedef typename Image::Tpixel Real ;
+  using Real = typename Image::Tpixel;
   const int width = src.Width() ;
   Real n_diff[4] ;
   Real n_src[4] ;
@@ -128,7 +128,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 template< typename Image >
 void ImageFED( const Image & src , const Image & diff , const typename Image::Tpixel t , Image & out )
 {
-  typedef typename Image::Tpixel Real ;
+  using Real = typename Image::Tpixel;
   const int width = src.Width() ;
   const int height = src.Height() ;
   const Real half_t = t * static_cast<Real>( 0.5 ) ;

@@ -117,13 +117,13 @@ void SixPointResectionSolver::Solve(
 
   const size_t n = pt2D.cols();
 
-  typedef Eigen::Matrix<double, 12, 1> Vec12;
+  using Vec12 = Eigen::Matrix<double, 12, 1>;
   Vec12 p;
   double ratio = -1.0;
   if (n==6) {
     // In the case of minimal configuration we use fixed sized matrix to let
     //  Eigen and the compiler doing the maximum of optimization.
-    typedef Eigen::Matrix<double, 12, 12> Mat12;
+    using Mat12 = Eigen::Matrix<double, 12, 12>;
     Mat12 A = Mat12::Zero(12, 12);
     BuildActionMatrix(A, pt2D, XPoints);
     ratio = NullspaceRatio(&A, &p);

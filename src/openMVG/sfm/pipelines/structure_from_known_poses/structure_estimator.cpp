@@ -43,7 +43,7 @@ void PointsToMat(
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  typedef typename MatT::Scalar Scalar; // Output matrix type
+  using Scalar = typename MatT::Scalar; // Output matrix type
 
   Mat::Index i = 0;
   for (PointFeatures::const_iterator iter = vec_feats.begin();
@@ -173,7 +173,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   // Triangulate triplet tracks
   //  - keep valid one
 
-  typedef std::vector< graph::Triplet > Triplets;
+  using Triplets = std::vector< graph::Triplet >;
   const Triplets triplets = graph::tripletListing(pairs);
 
   C_Progress_display my_progress_bar( triplets.size(), std::cout,

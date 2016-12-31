@@ -43,7 +43,7 @@ void Matcher_Regions_AllInMemory::Match(
   C_Progress_display my_progress_bar( pairs.size() );
 
   // Sort pairs according the first index to minimize the MatcherT build operations
-  typedef std::map<size_t, std::vector<size_t> > Map_vectorT;
+  using Map_vectorT = std::map<size_t, std::vector<size_t> >;
   Map_vectorT map_Pairs;
   for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
   {

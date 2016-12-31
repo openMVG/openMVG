@@ -48,7 +48,7 @@ namespace openMVG {
       *X = X_and_alphas.head(4);
   }
 
-  typedef Eigen::Matrix<double, 2, 3> Mat23;
+  using Mat23 = Eigen::Matrix<double, 2, 3>;
   inline Mat23 SkewMatMinimal(const Vec2 &x) {
     Mat23 skew;
     skew <<
@@ -68,6 +68,25 @@ namespace openMVG {
         design.block<2, 4>(2*i, 0) = SkewMatMinimal(x.col(i)) * Ps[i];
       }
       Nullspace(&design, X);
+  }
+
+  void Triangulation::add
+  (
+    const Mat34& projMatrix,
+    const Vec2 & p
+  )
+  {
+    views.emplace_back( projMatrix, p );
+  }
+
+  size_t Triangulation::size() const
+  {
+    return views.size();
+  }
+
+  void Triangulation::clear()
+  {
+    views.clear();
   }
 
   double Triangulation::error(const Vec3 &X) const

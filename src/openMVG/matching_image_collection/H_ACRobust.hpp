@@ -106,7 +106,7 @@ struct GeometricFilter_HMatrix_AC
     MatT & m)
   {
     m.resize(2, vec_feats.size());
-    typedef typename MatT::Scalar Scalar; // Output matrix type
+    using Scalar = typename MatT::Scalar; // Output matrix type
 
     size_t i = 0;
     for( features::PointFeatures::const_iterator iter = vec_feats.begin();
