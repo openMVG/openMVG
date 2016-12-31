@@ -15,20 +15,22 @@
 // - Perform the test for all the plausible intrinsic camera models
 //-----------------
 
+#include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
-using namespace openMVG::sfm;
 
 #include "testing/testing.h"
-#include "../cameras/Camera_Common.hpp"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <random>
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
+
 
 double RMSE(const SfM_Data & sfm_data);
 

@@ -5,11 +5,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "testing/testing.h"
-#include "openMVG/numeric/numeric.h"
+
 #include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
+#include "openMVG/matching/matcher_kdtree_flann.hpp"
+
+#include "openMVG/numeric/numeric.h"
+
+
+#include "testing/testing.h"
+
 #include <iostream>
 using namespace std;
 

@@ -6,15 +6,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
-#include "third_party/htmlDoc/htmlDoc.hpp"
 
+#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
-#include "openMVG/system/timer.hpp"
 #include "openMVG/stl/stl.hpp"
-#include "openMVG/multiview/essential.hpp"
+#include "openMVG/system/timer.hpp"
 
+#include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
 
 #ifdef _MSC_VER

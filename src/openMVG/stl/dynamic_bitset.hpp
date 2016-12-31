@@ -12,10 +12,12 @@
 //
 // -----------------------------------------------------------
 
-#pragma once
+#ifndef OPENMVG_STL_DYNAMIC_BITSET_HPP
+#define OPENMVG_STL_DYNAMIC_BITSET_HPP
 
-#include <limits>
 #include <cassert>
+#include <cstddef>
+#include <limits>
 #include <vector>
 
 namespace stl
@@ -109,3 +111,5 @@ namespace stl
     size_t m_num_bits;
   };
 } // namespace stl
+
+#endif // OPENMVG_STL_DYNAMIC_BITSET_HPP

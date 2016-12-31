@@ -26,12 +26,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
-#define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP
 
-#include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/multiview/two_view_kernel.hpp"
+
 #include <vector>
 
 namespace openMVG {
@@ -134,4 +135,4 @@ using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
 }  // namespace essential
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP

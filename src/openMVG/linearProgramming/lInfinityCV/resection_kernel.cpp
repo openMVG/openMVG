@@ -4,10 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/bisectionLP.hpp"
-
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 
@@ -18,6 +17,7 @@ namespace lInfinityCV {
 namespace kernel {
 
 using namespace std;
+using namespace linearProgramming ; 
 
 inline void translate
 (

@@ -1,9 +1,11 @@
-
 // Copyright (c) 2013, 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#ifndef OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
+#define OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
+
 
 //------------------
 //-- Bibliography --
@@ -14,10 +16,10 @@
 //- Conference: CVMP.
 
 //-- Linear programming
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #include "openMVG/linearProgramming/bisectionLP.hpp"
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 
 namespace openMVG {
 namespace lInfinity {
@@ -253,5 +255,7 @@ struct ConstraintBuilder_GainOffset
 };
 
 
-}; // namespace lInfinity
-}; // namespace openMVG
+} // namespace lInfinity
+} // namespace openMVG
+
+#endif // OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP

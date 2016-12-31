@@ -26,8 +26,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/solver_fundamental_kernel.hpp"
+
 #include "testing/testing.h"
 
 using namespace openMVG;

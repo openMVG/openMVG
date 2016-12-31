@@ -7,8 +7,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
-#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
+#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
 
 //-------------------
 // Generic implementation of ACRANSAC
@@ -485,4 +485,4 @@ std::pair<double, double> ACRANSAC
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP

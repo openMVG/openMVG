@@ -4,15 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_HPP
-#define OPENMVG_SFM_DATA_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_HPP
+#define OPENMVG_SFM_SFM_DATA_HPP
 
-#include "openMVG/types.hpp"
+#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
 #include "openMVG/sfm/sfm_view_priors.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
-#include "openMVG/geometry/pose3.hpp"
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -71,4 +71,4 @@ struct SfM_Data
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_HPP
+#endif // OPENMVG_SFM_SFM_DATA_HPP

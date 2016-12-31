@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
+#define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
 
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -71,3 +72,5 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP

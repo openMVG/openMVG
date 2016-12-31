@@ -4,17 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "CppUnitLite/TestHarness.h"
-#include "openMVG/multiview/rotation_averaging.hpp"
 #include "openMVG/multiview/essential.hpp"
-#include "testing/testing.h"
-
+#include "openMVG/multiview/rotation_averaging.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 
-#include <iostream>
+#include "CppUnitLite/TestHarness.h"
+#include "testing/testing.h"
+
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <iterator>
+#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::rotation_averaging;
@@ -61,13 +61,13 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   using namespace std;
 
   //--
-  // Setup 3 camera that have a relative orientation of 120°
+  // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
+  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120 degree
 
   std::vector<RelativeRotation > vec_relativeRotEstimate;
   vec_relativeRotEstimate.push_back( RelativeRotation(0,1, R01));
@@ -162,13 +162,13 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   using namespace std;
 
   //--
-  // Setup 3 camera that have a relative orientation of 120°
+  // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
+  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120 degree
 
   // Setup the relative motions (relative rotations)
   RelativeRotations vec_relativeRotEstimate;

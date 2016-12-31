@@ -9,6 +9,7 @@
 #define OPENMVG_FEATURES_FEATURE_HPP
 
 #include "openMVG/numeric/numeric.h"
+
 #include <iostream>
 #include <iterator>
 #include <fstream>

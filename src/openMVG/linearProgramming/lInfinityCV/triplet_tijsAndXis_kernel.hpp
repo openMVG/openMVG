@@ -5,21 +5,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
 
-#include "openMVG/numeric/numeric.h"
 
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/numeric/numeric.h"
 
 // Linear programming solver(s)
+#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #ifdef OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #endif
-
-#include "openMVG/linearProgramming/bisectionLP.hpp"
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
 namespace openMVG {
@@ -141,3 +141,5 @@ struct translations_Triplet_Solver {
 };
 
 } // namespace openMVG
+
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP

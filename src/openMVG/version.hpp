@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_VERSION_H_
-#define OPENMVG_VERSION_H_
+#ifndef OPENMVG_VERSION_HPP
+#define OPENMVG_VERSION_HPP
 
 #define OPENMVG_VERSION_MAJOR 1
 #define OPENMVG_VERSION_MINOR 1
@@ -20,4 +20,4 @@
   OPENMVG_TO_STRING(OPENMVG_VERSION_MINOR) "." \
   OPENMVG_TO_STRING(OPENMVG_VERSION_REVISION)
 
-#endif  // OPENMVG_VERSION_H_
+#endif  // OPENMVG_VERSION_HPP

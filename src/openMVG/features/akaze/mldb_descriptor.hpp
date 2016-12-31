@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_H
-#define OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_H
+#ifndef OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_HPP
+#define OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_HPP
 
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
@@ -221,4 +221,4 @@ namespace features {
 } // namespace features
 } // namespace openMVG
 
-#endif
+#endif // OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_HPP

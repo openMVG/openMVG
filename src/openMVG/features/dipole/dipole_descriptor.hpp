@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
-#define OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
+#ifndef OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
+#define OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_container.hpp"
@@ -221,4 +221,4 @@ namespace features
 } // namespace features
 } // namespace openMVG
 
-#endif // OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
+#endif // OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP

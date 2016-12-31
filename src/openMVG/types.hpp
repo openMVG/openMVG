@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_TYPES_H_
-#define OPENMVG_TYPES_H_
+#ifndef OPENMVG_TYPES_HPP
+#define OPENMVG_TYPES_HPP
 
 #include <Eigen/Core>
 
@@ -17,9 +17,10 @@
 
 #ifdef __clang__
 
-#include <utility>
 #include "openMVG/stl/hash.hpp"
+
 #include <unordered_map>
+#include <utility>
 
 #define OPENMVG_STD_UNORDERED_MAP 1
 
@@ -88,4 +89,4 @@ using Hash_Map = std::map<K, V, std::less<K>,
 
 } // namespace openMVG
 
-#endif  // OPENMVG_TYPES_H_
+#endif  // OPENMVG_TYPES_HPP

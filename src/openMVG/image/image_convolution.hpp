@@ -4,11 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
-#define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
+#define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
 
-#include "openMVG/numeric/accumulator_trait.hpp"
 #include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_convolution_base.hpp"
+#include "openMVG/numeric/accumulator_trait.hpp"
 
 #include <cassert>
 #include <vector>
@@ -290,4 +291,4 @@ void ImageSeparableConvolution( const Image<float> & img ,
 } // namespace image
 } // namespace openMVG
 
-#endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
+#endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP

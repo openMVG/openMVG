@@ -38,13 +38,13 @@
 #include <Eigen/LU>
 #include <Eigen/QR>
 #include <Eigen/SparseCore>
-#include <Eigen/SVD>
 #include <Eigen/StdVector>
+#include <Eigen/SVD>
 
 #include <cmath>
+#include <iostream>
 #include <numeric>
 #include <string>
-#include <iostream>
 #include <vector>
 
 namespace openMVG

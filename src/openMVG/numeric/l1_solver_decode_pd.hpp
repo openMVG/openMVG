@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_H_
-#define OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_H_
+#ifndef OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_HPP
+#define OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_HPP
 
 #include <Eigen/Dense>
 
@@ -176,5 +176,5 @@ inline bool TRobustRegressionL1PD(
 
 }  // namespace openMVG
 
-#endif  // OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_H_
+#endif  // OPENMVG_NUMERIC_L1_SOLVER_DECODE_PD_HPP
 

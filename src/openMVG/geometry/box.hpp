@@ -4,10 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_BOX_HPP_
-#define OPENMVG_GEOMETRY_BOX_HPP_
+#ifndef OPENMVG_GEOMETRY_BOX_HPP
+#define OPENMVG_GEOMETRY_BOX_HPP
 
 #include "openMVG/geometry/half_space_intersection.hpp"
+
 #include <fstream>
 
 namespace openMVG
@@ -156,4 +157,4 @@ struct Box : public HalfPlaneObject
 } // namespace geometry
 } // namespace openMVG
 
-#endif // OPENMVG_GEOMETRY_BOX_HPP_
+#endif // OPENMVG_GEOMETRY_BOX_HPP

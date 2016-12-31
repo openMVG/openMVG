@@ -5,24 +5,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP
 
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
+#include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 
 namespace openMVG {
 
 namespace sfm {
   struct Regions_Provider;
-}
+} // namespace sfm 
 
 namespace matching_image_collection {
 
@@ -150,3 +150,5 @@ struct GeometricFilter_FMatrix_AC
 
 } //namespace matching_image_collection
 } // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP

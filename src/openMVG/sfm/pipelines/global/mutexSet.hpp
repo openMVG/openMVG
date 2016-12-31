@@ -5,10 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP
+#define OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP
 
 #include <mutex>
-using namespace std;
+#include <set>
+
 using mutexT = std::mutex;
 using lock_guardT = std::lock_guard<mutexT>;
 
@@ -42,3 +44,5 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP

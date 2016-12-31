@@ -5,12 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_METRIC_H
-#define OPENMVG_MATCHING_METRIC_H
+#ifndef OPENMVG_MATCHING_METRIC_HPP
+#define OPENMVG_MATCHING_METRIC_HPP
 
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+
+#ifdef OPENMVG_USE_SSE
+#include <xmmintrin.h>
+#endif
+
 #include <cstddef>
+#include <iostream>
 
 namespace openMVG {
 namespace matching {
@@ -73,8 +79,6 @@ struct L2_Vectorized
 
 namespace optim_ss2{
 
-#include <xmmintrin.h>
-
   /// Union to switch between SSE and float array
   union sseRegisterHelper
   {
@@ -136,4 +140,4 @@ struct L2_Vectorized<float>
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_H
+#endif // OPENMVG_MATCHING_METRIC_HPP

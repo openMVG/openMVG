@@ -27,7 +27,9 @@
 
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+
 #include <iostream>
+
 namespace openMVG {
 
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {

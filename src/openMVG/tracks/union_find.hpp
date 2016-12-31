@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
-#define OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
+#ifndef OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP
+#define OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP
 
-#include <vector>
 #include <numeric>
+#include <vector>
 
 namespace openMVG  {
 
@@ -104,4 +104,4 @@ struct UnionFind
 
 } // namespace openMVG
 
-#endif // OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
+#endif // OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP

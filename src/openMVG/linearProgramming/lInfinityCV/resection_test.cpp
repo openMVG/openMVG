@@ -4,21 +4,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
-#include <vector>
 
-#include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/multiview/projection.hpp"
-#include "CppUnitLite/TestHarness.h"
-#include "testing/testing.h"
-
+#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #ifdef OPENMVG_HAVE_MOSEK
 #include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #endif // OPENMVG_HAVE_MOSEK
-#include "openMVG/linearProgramming/bisectionLP.hpp"
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
+#include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
+
+
+#include "CppUnitLite/TestHarness.h"
+#include "testing/testing.h"
+
+#include <iostream>
+#include <vector>
+
 
 using namespace openMVG;
 

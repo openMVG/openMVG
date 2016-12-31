@@ -5,10 +5,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "testing/testing.h"
 #include "openMVG/matching/metric.hpp"
+
+#include "testing/testing.h"
+
 #include <iostream>
 #include <string>
+
 using namespace std;
 
 using namespace openMVG;

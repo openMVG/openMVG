@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef _OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_
-#define _OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_
+#ifndef OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP
+#define OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP
 
 /// Accumulator trait to perform safe summation over a specified type
 namespace openMVG {
@@ -29,4 +29,4 @@ struct Accumulator<bool>  { typedef unsigned int Type; };
 
 } // namespace openMVG
 
-#endif //_OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP_
+#endif //OPENMVG_NUMERIC_ACCUMULATOR_TRAIT_HPP

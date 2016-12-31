@@ -6,21 +6,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/cameras/cameras.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
-
+#include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 

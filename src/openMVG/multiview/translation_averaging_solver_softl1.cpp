@@ -10,8 +10,8 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
 
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 #include <vector>
 

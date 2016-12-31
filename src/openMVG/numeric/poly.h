@@ -24,11 +24,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_POLY_H_
-#define OPENMVG_NUMERIC_POLY_H_
+#ifndef OPENMVG_NUMERIC_POLY_H
+#define OPENMVG_NUMERIC_POLY_H
 
 #include <cmath>
-#include <stdio.h>
 
 namespace openMVG
 {
@@ -154,4 +153,4 @@ int SolveCubicPolynomial( const Real *coeffs, Real *solutions )
                                solutions + 2 );
 }
 }  // namespace openMVG
-#endif  // OPENMVG_NUMERIC_POLY_H_
+#endif  // OPENMVG_NUMERIC_POLY_H

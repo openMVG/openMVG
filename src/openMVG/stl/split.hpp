@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef SPLIT_HPP
-#define SPLIT_HPP
+#ifndef OPENMVG_STL_SPLIT_HPP
+#define OPENMVG_STL_SPLIT_HPP
 
 #include <sstream>
 #include <string>
@@ -35,4 +35,4 @@ inline bool split
   return ( rhs.find(delim) != std::string::npos );
 }
 } // namespace stl
-#endif // SPLIT_HPP
+#endif // OPENMVG_STL_SPLIT_HPP

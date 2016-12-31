@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_H_
-#define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
+#define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
+
 #include <limits>
 #include <vector>
 
@@ -80,4 +81,4 @@ typename Kernel::Model MaxConsensus(const Kernel &kernel,
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_H_
+#endif // OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP

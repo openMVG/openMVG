@@ -4,18 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-#include "openMVG/geometry/frustum.hpp"
 #include "openMVG/geometry/box.hpp"
-
-#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/geometry/frustum.hpp"
+#include "openMVG/geometry/half_space_intersection.hpp"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
-#include <iostream>
-#include <fstream>
+
 #include <Eigen/Geometry>
+
+#include <fstream>
+#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::geometry;

@@ -5,13 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_H
-#define OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_H
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
+#ifndef OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
+#define OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
 
 #include "openMVG/matching/indMatch.hpp"
+
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+
 
 namespace openMVG  {
 namespace matching {
@@ -27,7 +27,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG
   if ( !map_Matches.empty())
   {
     const float scaleFactor = 5.0f;
-    svgDrawer svgStream((NbImages+3)*5, (NbImages+3)*5);
+    svg::svgDrawer svgStream((NbImages+3)*5, (NbImages+3)*5);
     // Go along all possible pair
     for (size_t I = 0; I < NbImages; ++I) {
       for (size_t J = 0; J < NbImages; ++J) {
@@ -39,7 +39,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG
           std::ostringstream os;
           os << "(" << J << "," << I << " " << iterSearch->second.size() <<")";
           svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
-            svgStyle().fill("blue").noStroke());
+            svg::svgStyle().fill("blue").noStroke());
         } // HINT : THINK ABOUT OPACITY [0.4 -> 1.0] TO EXPRESS MATCH COUNT
       }
     }
@@ -51,14 +51,14 @@ void PairWiseMatchingToAdjacencyMatrixSVG
       (NbImages)*scaleFactor - scaleFactor, scaleFactor, osNbImages.str(), "black");
     svgStream.drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
       (NbImages+1)*scaleFactor, (NbImages)*scaleFactor - 2*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svg::svgStyle().stroke("black", 1.0));
 
     svgStream.drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
     svgStream.drawText((NbImages)*scaleFactor - scaleFactor,
       (NbImages+1)*scaleFactor, scaleFactor, osNbImages.str(), "black");
     svgStream.drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svg::svgStyle().stroke("black", 1.0));
 
     std::ofstream svgFileStream( sOutName.c_str());
     svgFileStream << svgStream.closeSvgFile().str();
@@ -68,4 +68,4 @@ void PairWiseMatchingToAdjacencyMatrixSVG
 } // namespace matching
 } // namespace openMVG
 
-#endif // OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_H
+#endif // OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP

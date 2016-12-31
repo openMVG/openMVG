@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FEATURES_AKAZE_H
-#define OPENMVG_FEATURES_AKAZE_H
+#ifndef OPENMVG_FEATURES_AKAZE_HPP
+#define OPENMVG_FEATURES_AKAZE_HPP
 
 #ifdef _MSC_VER
 #pragma warning(once:4244)
@@ -33,11 +33,10 @@
 //------
 
 #include "openMVG/image/image.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/numeric/math_trait.hpp"
-
-#include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/numeric/math_trait.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <cereal/cereal.hpp>
 
@@ -167,4 +166,4 @@ public:
 } // namespace features
 } // namespace openMVG
 
-#endif //OPENMVG_FEATURES_AKAZE_H
+#endif // OPENMVG_FEATURES_AKAZE_HPP

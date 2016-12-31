@@ -4,10 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_LM_H_
-#define OPENMVG_NUMERIC_LM_H_
+#ifndef OPENMVG_NUMERIC_LM_HPP
+#define OPENMVG_NUMERIC_LM_HPP
 
 #include "openMVG/numeric/numeric.h"
+
 // Levenberg Marquardt Non Linear Optimization
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
@@ -83,4 +84,4 @@ struct Functor
 
 }; // namespace openMVG
 
-#endif // OPENMVG_NUMERIC_LM_H_
+#endif // OPENMVG_NUMERIC_LM_HPP

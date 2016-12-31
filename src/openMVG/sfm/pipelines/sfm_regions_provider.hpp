@@ -5,13 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_REGIONS_PROVIDER_HPP
-#define OPENMVG_SFM_REGIONS_PROVIDER_HPP
+#ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
+#define OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
 
-#include <openMVG/types.hpp>
-#include <openMVG/sfm/sfm_data.hpp>
-#include <openMVG/features/regions.hpp>
-#include <openMVG/features/image_describer.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
+
 #include "third_party/progress/progress.hpp"
 
 #include <memory>
@@ -140,4 +141,4 @@ protected:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_REGIONS_PROVIDER_HPP
+#endif // OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP

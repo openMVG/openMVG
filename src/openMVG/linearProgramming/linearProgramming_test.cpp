@@ -5,13 +5,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#include "testing/testing.h"
+
+#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
-
-#include "testing/testing.h"
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 
 
 using namespace openMVG;

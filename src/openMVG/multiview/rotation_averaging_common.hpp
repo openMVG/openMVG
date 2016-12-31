@@ -5,13 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_H_
-#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_H_
+#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_HPP
+#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_HPP
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
-#include <vector>
+
 #include <map>
+#include <vector>
 
 namespace openMVG   {
 namespace rotation_averaging  {
@@ -52,5 +53,5 @@ inline RelativeRotations_map getMap(const RelativeRotations & relRots)
 } // namespace rotation_averaging
 } // namespace openMVG
 
-#endif //OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_H_
+#endif //OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_HPP
 

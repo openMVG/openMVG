@@ -5,12 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
-#define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
+#ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
+#define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
+
+#include "openMVG/features/features.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 #include <iostream>
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/features/features.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -168,4 +169,4 @@ private :
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
+#endif // OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP

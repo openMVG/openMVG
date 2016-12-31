@@ -5,16 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_METRIC_HAMMING_H
-#define OPENMVG_MATCHING_METRIC_HAMMING_H
+#ifndef OPENMVG_MATCHING_METRIC_HAMMING_HPP
+#define OPENMVG_MATCHING_METRIC_HAMMING_HPP
 
 #include "openMVG/matching/metric.hpp"
+
 #include <bitset>
 
 #ifdef _MSC_VER
 #include <intrin.h>
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
 
 #ifdef __ARM_NEON__
@@ -163,4 +164,4 @@ struct Hamming
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_HAMMING_H
+#endif // OPENMVG_MATCHING_METRIC_HAMMING_HPP

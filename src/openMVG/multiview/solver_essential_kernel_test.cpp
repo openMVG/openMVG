@@ -27,11 +27,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/essential.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
-#include "testing/testing.h"
-
+#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+
+#include "testing/testing.h"
 
 using namespace openMVG;
 

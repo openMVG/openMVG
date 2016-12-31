@@ -5,7 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
+
 
 #include "openMVG/types.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
@@ -184,3 +186,5 @@ struct GeometricFilter_EMatrix_AC
 
 } //namespace matching_image_collection
 }  // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
