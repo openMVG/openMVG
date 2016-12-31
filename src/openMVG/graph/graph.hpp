@@ -7,7 +7,6 @@
 #ifndef OPENMVG_GRAPH_H_
 #define OPENMVG_GRAPH_H_
 
-#include "openMVG/types.hpp"
 #include "lemon/list_graph.h"
 #include <lemon/connectivity.h>
 

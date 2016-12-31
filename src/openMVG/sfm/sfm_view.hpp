@@ -8,7 +8,6 @@
 #define OPENMVG_SFM_VIEW_HPP
 
 #include "openMVG/types.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -86,6 +85,9 @@ struct View
     s_Img_path = stlplus::create_filespec(local_path, filename);
   }
 };
+
+/// Define a collection of View
+using Views = Hash_Map<IndexT, std::shared_ptr<View> >;
 
 } // namespace sfm
 } // namespace openMVG

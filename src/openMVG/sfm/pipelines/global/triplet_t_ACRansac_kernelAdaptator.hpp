@@ -11,9 +11,6 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/conditioning.hpp"
 
-#include "openMVG/linearProgramming/linearProgramming.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-
 namespace openMVG{
 namespace sfm{
 

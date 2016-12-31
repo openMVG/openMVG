@@ -7,7 +7,6 @@
 #ifndef OPENMVG_GEOMETRY_SIMILARITY3_H_
 #define OPENMVG_GEOMETRY_SIMILARITY3_H_
 
-#include "openMVG/types.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 namespace openMVG

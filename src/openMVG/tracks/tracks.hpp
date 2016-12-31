@@ -78,7 +78,7 @@ struct TracksBuilder
       const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
-      for( const auto & cur_filtered_match : vec_FilteredMatches )
+      for ( const auto & cur_filtered_match : vec_FilteredMatches )
       {
         allFeatures.emplace(I,cur_filtered_match.i_);
         allFeatures.emplace(J,cur_filtered_match.j_);

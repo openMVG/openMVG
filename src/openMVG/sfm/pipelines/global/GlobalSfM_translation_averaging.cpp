@@ -11,6 +11,8 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/global/mutexSet.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
@@ -22,6 +24,7 @@
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/sfm/pipelines/global/triplet_t_ACRansac_kernelAdaptator.hpp"
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/progress/progress.hpp"
@@ -37,9 +40,9 @@ using namespace openMVG::geometry;
 bool GlobalSfM_Translation_AveragingSolver::Run
 (
   ETranslationAveragingMethod eTranslationAveragingMethod,
-  SfM_Data & sfm_data,
-  const Features_Provider * features_provider,
-  const Matches_Provider * matches_provider,
+  openMVG::sfm::SfM_Data & sfm_data,
+  const openMVG::sfm::Features_Provider * features_provider,
+  const openMVG::sfm::Matches_Provider * matches_provider,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   matching::PairWiseMatches & tripletWise_matches
 )
@@ -72,7 +75,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
 
 bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
   ETranslationAveragingMethod eTranslationAveragingMethod,
-  SfM_Data & sfm_data,
+  sfm::SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR)
 {
   //-------------------
@@ -290,9 +293,9 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
 
 void GlobalSfM_Translation_AveragingSolver::Compute_translations
 (
-  const SfM_Data & sfm_data,
-  const Features_Provider * features_provider,
-  const Matches_Provider * matches_provider,
+  const sfm::SfM_Data & sfm_data,
+  const sfm::Features_Provider * features_provider,
+  const sfm::Matches_Provider * matches_provider,
   const Hash_Map<IndexT, Mat3> & map_globalR,
   matching::PairWiseMatches &tripletWise_matches
 )
@@ -316,10 +319,10 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations
 // edge coverage algorithm. Its complexity is sub-linear in term of edges count.
 void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCoverage
 (
-  const SfM_Data & sfm_data,
+  const sfm::SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
-  const Features_Provider * features_provider,
-  const Matches_Provider * matches_provider,
+  const sfm::Features_Provider * features_provider,
+  const sfm::Matches_Provider * matches_provider,
   std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
   matching::PairWiseMatches & newpairMatches
 )
@@ -588,10 +591,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 // Robust estimation and refinement of a triplet of translations
 bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 (
-  const SfM_Data & sfm_data,
+  const sfm::SfM_Data & sfm_data,
   const Hash_Map<IndexT, Mat3> & map_globalR,
-  const Features_Provider * features_provider,
-  const Matches_Provider * matches_provider,
+  const sfm::Features_Provider * features_provider,
+  const sfm::Matches_Provider * matches_provider,
   const graph::Triplet & poses_id,
   std::vector<Vec3> & vec_tis,
   double & dPrecision, // UpperBound of the precision found by the AContrario estimator
@@ -800,4 +803,3 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
 } // namespace sfm
 } // namespace openMVG
-

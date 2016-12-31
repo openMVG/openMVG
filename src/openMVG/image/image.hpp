@@ -39,6 +39,12 @@ namespace openMVG
   namespace image
   {
 
+    template class Image<unsigned char>;
+    template class Image<float>;
+    template class Image<double>;
+    template class Image<RGBColor>;
+    template class Image<RGBAColor>;
+
   }
 }
 

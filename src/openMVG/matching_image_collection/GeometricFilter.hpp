@@ -8,7 +8,6 @@
 #pragma once
 
 #include "openMVG/features/feature.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -18,6 +17,10 @@
 #include <map>
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+}
 namespace matching_image_collection {
 
 using namespace openMVG::matching;
@@ -105,6 +108,4 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
 }
 
 } // namespace matching_image_collection
-} // namespace openMVG 
-
-
+} // namespace openMVG

@@ -72,11 +72,14 @@ struct Optimize_Options
 class Bundle_Adjustment
 {
   public:
+
+  virtual ~Bundle_Adjustment() = default;
+
   // Perform a Bundle Adjustment on the SfM scene (refinement only asked parameters)
   virtual bool Adjust
   (
     // the SfM scene to refine
-    SfM_Data & sfm_data,
+    sfm::SfM_Data & sfm_data,
     // tell which parameter needs to be adjusted
     const Optimize_Options options
   ) = 0;

@@ -9,11 +9,14 @@
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+  struct Features_Provider;
+}
+
 namespace matching_image_collection {
 
 /**

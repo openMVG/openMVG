@@ -28,8 +28,6 @@
 #ifndef OPENMVG_MULTIVIEW_ESSENTIAL_H_
 #define OPENMVG_MULTIVIEW_ESSENTIAL_H_
 
-#include <vector>
-
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG

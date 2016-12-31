@@ -6,6 +6,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
 #include "openMVG/multiview/solver_resection_kernel.hpp"

@@ -9,10 +9,12 @@
 #ifndef OPENMVG_SFM_DATA_IO_HPP
 #define OPENMVG_SFM_DATA_IO_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
+#include <string>
 
 namespace openMVG {
 namespace sfm {
+
+struct SfM_Data;
 
 enum ESfM_Data
 {

@@ -8,6 +8,7 @@
 
 #include "openMVG/sfm/sfm_data_io.hpp"
 
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stlMap.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -113,5 +114,3 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
 
 } // namespace sfm
 } // namespace openMVG
-
-

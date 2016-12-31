@@ -7,16 +7,18 @@
 
 #pragma once
 
-#include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching_image_collection/Pair_Builder.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 #include <string>
 #include <vector>
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+  struct SfM_Data;
+}
+
 namespace matching_image_collection {
 
 /// Implementation of an Image Collection Matcher
@@ -34,8 +36,8 @@ class Matcher
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
     matching::PairWiseMatchesContainer & map_putatives_matches // the output pairwise photometric corresponding points
-    )const = 0;
+    ) const = 0;
 };
 
 } // namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG

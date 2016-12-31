@@ -7,9 +7,7 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
 #define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/translation_averaging_common.hpp"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <fstream>
 #include <utility>
 #include <vector>
@@ -227,4 +225,3 @@ struct Tifromtij_ConstraintBuilder
 } // namespace openMVG
 
 #endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
-

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
+#include "openMVG/matching/matcher_type.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -43,4 +44,4 @@ class Matcher_Regions_AllInMemory : public Matcher
 };
 
 } // namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG

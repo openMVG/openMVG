@@ -7,7 +7,6 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
 #define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/accumulator_trait.hpp"
 #include "openMVG/image/image_container.hpp"
 

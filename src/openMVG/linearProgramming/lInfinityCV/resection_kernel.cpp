@@ -19,12 +19,14 @@ namespace kernel {
 
 using namespace std;
 
-void translate(const Mat3X & X, const Vec3 & vecTranslation,
-               Mat3X * XPoints) {
-  XPoints->resize(X.rows(), X.cols());
-  for (Mat3X::Index i=0; i<X.cols(); ++i)  {
-    XPoints->col(i) = X.col(i) + vecTranslation;
-  }
+inline void translate
+(
+  const Mat3X & X,
+  const Vec3 & vecTranslation,
+  Mat3X * XPoints
+)
+{
+  (*XPoints) = X.colwise() + vecTranslation;
 }
 
 void l1SixPointResectionSolver::Solve(const Mat &pt2D, const Mat &pt3d, vector<Mat34> *Ps) {

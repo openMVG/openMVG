@@ -8,7 +8,6 @@
 #define OPENMVG_IMAGE_IMAGE_CONVERTER_HPP
 
 #include "openMVG/image/image_container.hpp"
-#include "openMVG/image/pixel_types.hpp"
 
 namespace openMVG
 {

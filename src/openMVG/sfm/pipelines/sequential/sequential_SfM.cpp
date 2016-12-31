@@ -7,6 +7,8 @@
 
 
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
@@ -1229,4 +1231,3 @@ bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size
 
 } // namespace sfm
 } // namespace openMVG
-

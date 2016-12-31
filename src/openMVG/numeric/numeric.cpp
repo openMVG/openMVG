@@ -26,9 +26,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/numeric/numeric.h"
-#include <iostream>
 #include <fstream>
-#include <string>
 
 namespace openMVG {
 
@@ -120,7 +118,7 @@ void MeanAndVarianceAlongRows(const Mat &A,
   const double m = static_cast<double>(A.cols());
   (*mean_pointer) = Vec::Zero(n);
   (*variance_pointer) = Vec::Zero(n);
-  
+
   for (Mat::Index i = 0; i < n; ++i) {
     (*mean_pointer)(i) += A.row(i).array().sum();
     (*variance_pointer)(i) += (A.row(i).array() * A.row(i).array()).array().sum();
@@ -153,4 +151,3 @@ bool exportMatToTextFile(const Mat & mat, const std::string & filename,
 }
 
 }  // namespace openMVG
-

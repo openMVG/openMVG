@@ -7,7 +7,6 @@
 #ifndef OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
 #define OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"

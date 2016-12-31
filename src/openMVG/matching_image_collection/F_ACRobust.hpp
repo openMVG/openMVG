@@ -15,11 +15,15 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+}
+
 namespace matching_image_collection {
 
 //-- A contrario fundamental matrix estimation template functor used for filter pair of putative correspondences

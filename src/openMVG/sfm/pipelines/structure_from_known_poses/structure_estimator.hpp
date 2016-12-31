@@ -6,11 +6,13 @@
 
 #pragma once
 
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace sfm {
+
+struct Regions_Provider;
+struct SfM_Data;
 
 class SfM_Data_Structure_Estimation_From_Known_Poses
 {
@@ -58,4 +60,3 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
-

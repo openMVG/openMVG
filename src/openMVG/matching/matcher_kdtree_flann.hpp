@@ -31,8 +31,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   virtual ~ArrayMatcher_Kdtree_Flann()
   {
-    _datasetM.reset();
-    _index.reset();
+    datasetM_.reset();
+    index_.reset();
   }
 
   /**
@@ -54,15 +54,15 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   {
     if (nbRows > 0)
     {
-      _dimension = dimension;
+      dimension_ = dimension;
       //-- Build Flann Matrix container (map to already allocated memory)
-      _datasetM.reset(
+      datasetM_.reset(
           new flann::Matrix<Scalar>((Scalar*)dataset, nbRows, dimension));
 
       //-- Build FLANN index
-      _index.reset(
-          new flann::Index<Metric> (*_datasetM, flann::KDTreeIndexParams(4)));
-      _index->buildIndex();
+      index_.reset(
+          new flann::Index<Metric> (*datasetM_, flann::KDTreeIndexParams(4)));
+      index_->buildIndex();
 
       return true;
     }
@@ -86,15 +86,15 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     DistanceType * distance
   ) override
   {
-    if (_index.get() != nullptr)  {
+    if (index_.get() != nullptr)  {
       int * indicePTR = indice;
       DistanceType * distancePTR = distance;
-      flann::Matrix<Scalar> queries((Scalar*)query, 1, _dimension);
+      flann::Matrix<Scalar> queries((Scalar*)query, 1, dimension_);
 
       flann::Matrix<int> indices(indicePTR, 1, 1);
       flann::Matrix<DistanceType> dists(distancePTR, 1, 1);
       // do a knn search, using 128 checks
-      return (_index->knnSearch(queries, indices, dists, 1, flann::SearchParams(128)) > 0);
+      return (index_->knnSearch(queries, indices, dists, 1, flann::SearchParams(128)) > 0);
     }
     else  {
       return false;
@@ -121,7 +121,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     size_t NN
   ) override
   {
-    if (_index.get() != nullptr && NN <= _datasetM->rows)  {
+    if (index_.get() != nullptr && NN <= datasetM_->rows)  {
       std::vector<DistanceType> vec_distances(nbQuery * NN);
       DistanceType * distancePTR = &(vec_distances[0]);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
@@ -129,13 +129,13 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       std::vector<int> vec_indices(nbQuery * NN, -1);
       flann::Matrix<int> indices(&(vec_indices[0]), nbQuery, NN);
 
-      flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, _dimension);
+      flann::Matrix<Scalar> queries((Scalar*)query, nbQuery, dimension_);
       // do a knn search, using 128 checks
       flann::SearchParams params(128);
 #ifdef OPENMVG_USE_OPENMP
       params.cores = omp_get_max_threads();
 #endif
-      if (_index->knnSearch(queries, indices, dists, NN, params)>0)
+      if (index_->knnSearch(queries, indices, dists, NN, params)>0)
       {
         // Save the resulting found indices
         pvec_indices->reserve(nbQuery * NN);
@@ -161,9 +161,9 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   private :
 
-  std::unique_ptr< flann::Matrix<Scalar> > _datasetM;
-  std::unique_ptr< flann::Index<Metric> > _index;
-  std::size_t _dimension;
+  std::unique_ptr< flann::Matrix<Scalar> > datasetM_;
+  std::unique_ptr< flann::Index<Metric> > index_;
+  std::size_t dimension_;
 };
 
 } // namespace matching
