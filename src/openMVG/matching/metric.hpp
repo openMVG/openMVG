@@ -11,6 +11,9 @@
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
 
+#ifdef OPENMVG_USE_SSE
+#include <xmmintrin.h>
+#endif
 
 #include <cstddef>
 #include <iostream>
@@ -75,8 +78,6 @@ struct L2_Vectorized
 #ifdef OPENMVG_USE_SSE
 
 namespace optim_ss2{
-
-#include <xmmintrin.h>
 
   /// Union to switch between SSE and float array
   union sseRegisterHelper

@@ -16,6 +16,7 @@
 #define OPENMVG_STL_DYNAMIC_BITSET_HPP
 
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <vector>
 
