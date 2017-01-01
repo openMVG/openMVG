@@ -22,6 +22,7 @@ option(OpenMVG_BUILD_TESTS "Build OpenMVG tests" OFF)
 option(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
 option(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
+option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 # ==============================================================================
@@ -435,7 +436,9 @@ if (OpenMVG_BUILD_EXAMPLES)
 endif (OpenMVG_BUILD_EXAMPLES)
 
 # Complete software(s) build on openMVG libraries
-add_subdirectory(software)
+if (OpenMVG_BUILD_SOFTWARES)
+  add_subdirectory(software)
+endif (OpenMVG_BUILD_SOFTWARES)
 
 # Included for research purpose only
 add_subdirectory(nonFree)

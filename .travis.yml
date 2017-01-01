@@ -53,13 +53,15 @@ before_script:
   - mkdir $OPENMVG_BUILD
   - cd $OPENMVG_BUILD
   # Classic release build
-  # - SCHUR_SPECIALIZATIONS set to OFF to speed up build time (ceres)
+  #  - Compile only OpenMVG core libraries for unit testing
+  #  - SCHUR_SPECIALIZATIONS set to OFF to speed up build time (ceres)
   - >
     cmake \
       -DCMAKE_CXX_COMPILER=$COMPILER \
       -DCMAKE_BUILD_TYPE=release \
       -DOpenMVG_BUILD_TESTS=ON \
       -DOpenMVG_BUILD_EXAMPLES=ON \
+      -DOpenMVG_BUILD_SOFTWARES=OFF \
       -DSCHUR_SPECIALIZATIONS=OFF \
       . $OPENMVG_SOURCE
 
