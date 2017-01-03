@@ -42,8 +42,7 @@ struct ViewPriors : public View
       height
     ),
     b_use_pose_center_(false),
-    b_use_pose_rotation_(false),
-    pose_sensor_transform_(Pose3())
+    b_use_pose_rotation_(false)
   {
   }
 
@@ -58,14 +57,6 @@ struct ViewPriors : public View
     b_use_pose_center_  = true;
     center_weight_      = weight;
     pose_center_        = center;
-  }
-
-  void SetPoseSensorTransform
-  (
-    const Pose3 & sensor_relative_pose
-  )
-  {
-    pose_sensor_transform_ = sensor_relative_pose;
   }
 
   void SetPoseRotationPrior
@@ -96,9 +87,6 @@ struct ViewPriors : public View
       const std::vector<double> vec = { pose_center_( 0 ), pose_center_( 1 ), pose_center_( 2 ) };
       ar( cereal::make_nvp( "center", vec ) );
     }
-
-    // Pose prior sensor transformation
-    ar( cereal::make_nvp( "pose_sensor_transform", pose_sensor_transform_ ) );
 
     // Pose rotation prior
     /*
@@ -142,17 +130,6 @@ struct ViewPriors : public View
       b_use_pose_center_ = false;
     }
 
-    // Pose prior sensor transformation
-    try
-    {
-      ar( cereal::make_nvp( "pose_sensor_transform", pose_sensor_transform_ ) );
-    }
-    catch( cereal::Exception e )
-    {
-      // if it fails just use a default settings
-      pose_sensor_transform_ = Pose3();
-    }
-
     // Pose rotation prior
     /*
     try
@@ -183,10 +160,6 @@ struct ViewPriors : public View
   bool b_use_pose_rotation_ = false; // Tell if the rotation prior must be used
   double rotation_weight_ = 1.0;
   Mat3 pose_rotation_ = Mat3::Identity();
-
-  // Pose prior sensor transformation
-  // Transformation from view to pose's center and rotation sensor (lever arm)
-  Pose3 pose_sensor_transform_ = Pose3(Mat3::Identity(), Vec3::Zero());
 };
 
 } // namespace sfm
