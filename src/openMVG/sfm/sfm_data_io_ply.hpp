@@ -11,6 +11,7 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 
 #include <fstream>
+#include <iomanip>
 
 namespace openMVG {
 namespace sfm {
