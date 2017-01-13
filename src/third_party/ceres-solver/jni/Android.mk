@@ -146,9 +146,11 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/dynamic_compressed_row_sparse_matrix.cc \
                    $(CERES_SRC_PATH)/evaluator.cc \
                    $(CERES_SRC_PATH)/file.cc \
+                   $(CERES_SRC_PATH)/gradient_checker.cc \
                    $(CERES_SRC_PATH)/gradient_checking_cost_function.cc \
                    $(CERES_SRC_PATH)/gradient_problem.cc \
                    $(CERES_SRC_PATH)/gradient_problem_solver.cc \
+                   $(CERES_SRC_PATH)/is_close.cc \
                    $(CERES_SRC_PATH)/implicit_schur_complement.cc \
                    $(CERES_SRC_PATH)/iterative_schur_complement_solver.cc \
                    $(CERES_SRC_PATH)/lapack.cc \
@@ -190,6 +192,7 @@ LOCAL_SRC_FILES := $(CERES_SRC_PATH)/array_utils.cc \
                    $(CERES_SRC_PATH)/triplet_sparse_matrix.cc \
                    $(CERES_SRC_PATH)/trust_region_minimizer.cc \
                    $(CERES_SRC_PATH)/trust_region_preprocessor.cc \
+                   $(CERES_SRC_PATH)/trust_region_step_evaluator.cc \
                    $(CERES_SRC_PATH)/trust_region_strategy.cc \
                    $(CERES_SRC_PATH)/types.cc \
                    $(CERES_SRC_PATH)/visibility_based_preconditioner.cc \

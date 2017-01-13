@@ -232,14 +232,13 @@ class CERES_EXPORT MessageLogger {
     time_t rawtime;
     time (&rawtime);
 
-    struct tm* timeinfo;
+    struct tm timeinfo;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
     // On Windows, use secure localtime_s not localtime.
-    struct tm windows_timeinfo;
-    timeinfo = &windows_timeinfo;
-    localtime_s(timeinfo, &rawtime);
+    localtime_s(&timeinfo, &rawtime);
 #else
-    timeinfo = localtime(&rawtime);
+    // On non-Windows systems, use threadsafe localtime_r not localtime.
+    localtime_r(&rawtime, &timeinfo);
 #endif
 
     std::set<google::LogSink*>::iterator iter;
@@ -247,7 +246,7 @@ class CERES_EXPORT MessageLogger {
     for (iter = google::log_sinks_global.begin();
          iter != google::log_sinks_global.end(); ++iter) {
       (*iter)->send(severity, file_.c_str(), filename_only_.c_str(), line_,
-                    timeinfo, stream_.str().c_str(), stream_.str().size());
+                    &timeinfo, stream_.str().c_str(), stream_.str().size());
     }
   }
 

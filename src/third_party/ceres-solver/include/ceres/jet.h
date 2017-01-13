@@ -164,6 +164,7 @@
 
 #include "Eigen/Core"
 #include "ceres/fpclassify.h"
+#include "ceres/internal/port.h"
 
 namespace ceres {
 
@@ -228,20 +229,51 @@ struct Jet {
 
   // The infinitesimal part.
   //
-  // Note the Eigen::DontAlign bit is needed here because this object
-  // gets allocated on the stack and as part of other arrays and
-  // structs. Forcing the right alignment there is the source of much
-  // pain and suffering. Even if that works, passing Jets around to
-  // functions by value has problems because the C++ ABI does not
-  // guarantee alignment for function arguments.
-  //
-  // Setting the DontAlign bit prevents Eigen from using SSE for the
-  // various operations on Jets. This is a small performance penalty
-  // since the AutoDiff code will still expose much of the code as
-  // statically sized loops to the compiler. But given the subtle
-  // issues that arise due to alignment, especially when dealing with
-  // multiple platforms, it seems to be a trade off worth making.
+  // We allocate Jets on the stack and other places they might not be aligned
+  // to X(=16 [SSE], 32 [AVX] etc)-byte boundaries, which would prevent the safe
+  // use of vectorisation.  If we have C++11, we can specify the alignment.
+  // However, the standard gives wide lattitude as to what alignments are valid,
+  // and it might be that the maximum supported alignment *guaranteed* to be
+  // supported is < 16, in which case we do not specify an alignment, as this
+  // implies the host is not a modern x86 machine.  If using < C++11, we cannot
+  // specify alignment.
+#ifndef CERES_USE_CXX11
+  // Without >= C++11, we cannot specify the alignment so fall back to safe,
+  // unvectorised version.
   Eigen::Matrix<T, N, 1, Eigen::DontAlign> v;
+#else
+  // Enable vectorisation iff the maximum supported scalar alignment is >=
+  // 16 bytes, as this is the minimum required by Eigen for any vectorisation.
+  //
+  // NOTE: It might be the case that we could get >= 16-byte alignment even if
+  //       kMaxAlignBytes < 16.  However we can't guarantee that this
+  //       would happen (and it should not for any modern x86 machine) and if it
+  //       didn't, we could get misaligned Jets.
+  static constexpr int kAlignOrNot =
+      16 <= ::ceres::port_constants::kMaxAlignBytes
+            ? Eigen::AutoAlign : Eigen::DontAlign;
+#if defined(EIGEN_MAX_ALIGN_BYTES)
+  // Eigen >= 3.3 supports AVX & FMA instructions that require 32-byte alignment
+  // (greater for AVX512).  Rather than duplicating the detection logic, use
+  // Eigen's macro for the alignment size.
+  //
+  // NOTE: EIGEN_MAX_ALIGN_BYTES can be > 16 (e.g. 32 for AVX), even though
+  //       kMaxAlignBytes will max out at 16.  We are therefore relying on
+  //       Eigen's detection logic to ensure that this does not result in
+  //       misaligned Jets.
+#define CERES_JET_ALIGN_BYTES EIGEN_MAX_ALIGN_BYTES
+#else
+  // Eigen < 3.3 only supported 16-byte alignment.
+#define CERES_JET_ALIGN_BYTES 16
+#endif
+  // Default to the native alignment if 16-byte alignment is not guaranteed to
+  // be supported.  We cannot use alignof(T) as if we do, GCC 4.8 complains that
+  // the alignment 'is not an integer constant', although Clang accepts it.
+  static constexpr size_t kAlignment = kAlignOrNot == Eigen::AutoAlign
+            ? CERES_JET_ALIGN_BYTES : alignof(double);
+#undef CERES_JET_ALIGN_BYTES
+  alignas(kAlignment) Eigen::Matrix<T, N, 1, kAlignOrNot> v;
+#endif
 };
 
 // Unary +
@@ -342,7 +374,7 @@ Jet<T, N> operator/(T s, const Jet<T, N>& g) {
 // Binary / with a scalar: x / s
 template<typename T, int N> inline
 Jet<T, N> operator/(const Jet<T, N>& f, T s) {
-  const T s_inverse = 1.0 / s;
+  const T s_inverse = T(1.0) / s;
   return Jet<T, N>(f.a * s_inverse, f.v * s_inverse);
 }
 
@@ -388,6 +420,8 @@ inline double atan    (double x) { return std::atan(x);     }
 inline double sinh    (double x) { return std::sinh(x);     }
 inline double cosh    (double x) { return std::cosh(x);     }
 inline double tanh    (double x) { return std::tanh(x);     }
+inline double floor   (double x) { return std::floor(x);    }
+inline double ceil    (double x) { return std::ceil(x);     }
 inline double pow  (double x, double y) { return std::pow(x, y);   }
 inline double atan2(double y, double x) { return std::atan2(y, x); }
 
@@ -480,6 +514,82 @@ Jet<T, N> tanh(const Jet<T, N>& f) {
   const T tanh_a = tanh(f.a);
   const T tmp = T(1.0) - tanh_a * tanh_a;
   return Jet<T, N>(tanh_a, tmp * f.v);
+}
+
+// The floor function should be used with extreme care as this operation will
+// result in a zero derivative which provides no information to the solver.
+//
+// floor(a + h) ~= floor(a) + 0
+template <typename T, int N> inline
+Jet<T, N> floor(const Jet<T, N>& f) {
+  return Jet<T, N>(floor(f.a));
+}
+
+// The ceil function should be used with extreme care as this operation will
+// result in a zero derivative which provides no information to the solver.
+//
+// ceil(a + h) ~= ceil(a) + 0
+template <typename T, int N> inline
+Jet<T, N> ceil(const Jet<T, N>& f) {
+  return Jet<T, N>(ceil(f.a));
+}
+
+// Bessel functions of the first kind with integer order equal to 0, 1, n.
+//
+// Microsoft has deprecated the j[0,1,n]() POSIX Bessel functions in favour of
+// _j[0,1,n]().  Where available on MSVC, use _j[0,1,n]() to avoid deprecated
+// function errors in client code (the specific warning is suppressed when
+// Ceres itself is built).
+inline double BesselJ0(double x) {
+#if defined(_MSC_VER) && defined(_j0)
+  return _j0(x);
+#else
+  return j0(x);
+#endif
+}
+inline double BesselJ1(double x) {
+#if defined(_MSC_VER) && defined(_j1)
+  return _j1(x);
+#else
+  return j1(x);
+#endif
+}
+inline double BesselJn(int n, double x) {
+#if defined(_MSC_VER) && defined(_jn)
+  return _jn(n, x);
+#else
+  return jn(n, x);
+#endif
+}
+
+// For the formulae of the derivatives of the Bessel functions see the book:
+// Olver, Lozier, Boisvert, Clark, NIST Handbook of Mathematical Functions,
+// Cambridge University Press 2010.
+//
+// Formulae are also available at http://dlmf.nist.gov
+
+// See formula http://dlmf.nist.gov/10.6#E3
+// j0(a + h) ~= j0(a) - j1(a) h
+template <typename T, int N> inline
+Jet<T, N> BesselJ0(const Jet<T, N>& f) {
+  return Jet<T, N>(BesselJ0(f.a),
+                   -BesselJ1(f.a) * f.v);
+}
+
+// See formula http://dlmf.nist.gov/10.6#E1
+// j1(a + h) ~= j1(a) + 0.5 ( j0(a) - j2(a) ) h
+template <typename T, int N> inline
+Jet<T, N> BesselJ1(const Jet<T, N>& f) {
+  return Jet<T, N>(BesselJ1(f.a),
+                   T(0.5) * (BesselJ0(f.a) - BesselJn(2, f.a)) * f.v);
+}
+
+// See formula http://dlmf.nist.gov/10.6#E1
+// j_n(a + h) ~= j_n(a) + 0.5 ( j_{n-1}(a) - j_{n+1}(a) ) h
+template <typename T, int N> inline
+Jet<T, N> BesselJn(int n, const Jet<T, N>& f) {
+  return Jet<T, N>(BesselJn(n, f.a),
+                   T(0.5) * (BesselJn(n - 1, f.a) - BesselJn(n + 1, f.a)) * f.v);
 }
 
 // Jet Classification. It is not clear what the appropriate semantics are for
@@ -708,7 +818,15 @@ template<typename T, int N> inline       Jet<T, N>  ei_pow (const Jet<T, N>& x, 
 // strange compile errors.
 template <typename T, int N>
 inline std::ostream &operator<<(std::ostream &s, const Jet<T, N>& z) {
-  return s << "[" << z.a << " ; " << z.v.transpose() << "]";
+  s << "[" << z.a << " ; ";
+  for (int i = 0; i < N; ++i) {
+    s << z.v[i];
+    if (i != N - 1) {
+      s << ", ";
+    }
+  }
+  s << "]";
+  return s;
 }
 
 }  // namespace ceres
@@ -722,6 +840,7 @@ struct NumTraits<ceres::Jet<T, N> > {
   typedef ceres::Jet<T, N> Real;
   typedef ceres::Jet<T, N> NonInteger;
   typedef ceres::Jet<T, N> Nested;
+  typedef ceres::Jet<T, N> Literal;
 
   static typename ceres::Jet<T, N> dummy_precision() {
     return ceres::Jet<T, N>(1e-12);
@@ -741,6 +860,21 @@ struct NumTraits<ceres::Jet<T, N> > {
     MulCost = 3,
     HasFloatingPoint = 1,
     RequireInitialization = 1
+  };
+
+  template<bool Vectorized>
+  struct Div {
+    enum {
+#if defined(EIGEN_VECTORIZE_AVX)
+      AVX = true,
+#else
+      AVX = false,
+#endif
+
+      // Assuming that for Jets, division is as expensive as
+      // multiplication.
+      Cost = 3
+    };
   };
 };
 

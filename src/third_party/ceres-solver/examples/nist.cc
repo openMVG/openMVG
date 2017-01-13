@@ -510,7 +510,7 @@ int RegressionDriver(const string& filename,
     }
 
     const int kMinNumMatchingDigits = 4;
-    if (log_relative_error >= kMinNumMatchingDigits) {
+    if (log_relative_error > kMinNumMatchingDigits) {
       ++num_success;
     }
 
@@ -560,9 +560,9 @@ void SetMinimizerOptions(ceres::Solver::Options* options) {
       FLAGS_max_line_search_restarts;
   options->use_approximate_eigenvalue_bfgs_scaling =
       FLAGS_approximate_eigenvalue_bfgs_scaling;
-  options->function_tolerance = 1e-18;
-  options->gradient_tolerance = 1e-18;
-  options->parameter_tolerance = 1e-18;
+  options->function_tolerance = std::numeric_limits<double>::epsilon();
+  options->gradient_tolerance = std::numeric_limits<double>::epsilon();
+  options->parameter_tolerance = std::numeric_limits<double>::epsilon();
 }
 
 void SolveNISTProblems() {

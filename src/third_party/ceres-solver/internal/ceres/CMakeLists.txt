@@ -63,10 +63,12 @@ set(CERES_INTERNAL_SRC
     dynamic_compressed_row_sparse_matrix.cc
     evaluator.cc
     file.cc
+    gradient_checker.cc
     gradient_checking_cost_function.cc
     gradient_problem.cc
     gradient_problem_solver.cc
     implicit_schur_complement.cc
+    is_close.cc
     iterative_schur_complement_solver.cc
     levenberg_marquardt_strategy.cc
     lapack.cc
@@ -108,25 +110,13 @@ set(CERES_INTERNAL_SRC
     triplet_sparse_matrix.cc
     trust_region_preprocessor.cc
     trust_region_minimizer.cc
+    trust_region_step_evaluator.cc
     trust_region_strategy.cc
     types.cc
     visibility.cc
     visibility_based_preconditioner.cc
     wall_time.cc
 )
-
-# Heuristic for determining LIB_SUFFIX. FHS recommends that 64-bit systems
-# install native libraries to lib64 rather than lib. Most distros seem to
-# follow this convention with a couple notable exceptions (Debian-based and
-# Arch-based distros) which we try to detect here.
-if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND
-    NOT DEFINED LIB_SUFFIX AND
-    NOT CMAKE_CROSSCOMPILING AND
-    CMAKE_SIZEOF_VOID_P EQUAL "8" AND
-    NOT EXISTS "/etc/debian_version" AND
-    NOT EXISTS "/etc/arch-release")
-  set(LIB_SUFFIX "64")
-endif ()
 
 # Also depend on the header files so that they appear in IDEs.
 file(GLOB CERES_INTERNAL_HDRS *.h)
@@ -142,6 +132,14 @@ endif (SCHUR_SPECIALIZATIONS)
 # Build the list of dependencies for Ceres based on the current configuration.
 if (NOT MINIGLOG AND GLOG_FOUND)
   list(APPEND CERES_LIBRARY_PUBLIC_DEPENDENCIES ${GLOG_LIBRARIES})
+  if (GFLAGS_FOUND)
+    # If glog & gflags are both found, we assume that glog was built with
+    # gflags, as it is awkward to perform a try_compile() to verify this
+    # when gflags is an imported target (as it is in newer versions).
+    # As glog #includes gflags/gflags.h in glog/logging.h if compiled with
+    # gflags, it is thus a public dependency for Ceres in this case.
+    list(APPEND CERES_LIBRARY_PUBLIC_DEPENDENCIES ${GFLAGS_LIBRARIES})
+  endif()
 endif (NOT MINIGLOG AND GLOG_FOUND)
 
 if (SUITESPARSE AND SUITESPARSE_FOUND)
@@ -162,10 +160,13 @@ if (BLAS_FOUND AND LAPACK_FOUND)
 endif (BLAS_FOUND AND LAPACK_FOUND)
 
 if (OPENMP_FOUND)
-  if (NOT MSVC)
+  # OpenMP support in Clang requires a non-GNU OpenMP library.
+  if (CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES gomp)
+  endif()
+  if (NOT MSVC)
     list(APPEND CERES_LIBRARY_PRIVATE_DEPENDENCIES ${CMAKE_THREAD_LIBS_INIT})
-  endif (NOT MSVC)
+  endif()
 endif (OPENMP_FOUND)
 
 set(CERES_LIBRARY_SOURCE
@@ -254,11 +255,6 @@ INSTALL(TARGETS ceres
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
 
 if (BUILD_TESTING AND GFLAGS)
-  # The CERES_GFLAGS_NAMESPACE compile definition is NOT stored in
-  # CERES_COMPILE_OPTIONS (and thus config.h) as Ceres itself does not
-  # require gflags, only the tests and examples do.
-  add_definitions(-DCERES_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
-
   add_library(gtest gmock_gtest_all.cc gmock_main.cc)
   if (BUILD_SHARED_LIBS)
     # Define gtest-specific shared library flags for compilation.
@@ -326,6 +322,7 @@ if (BUILD_TESTING AND GFLAGS)
   ceres_test(graph)
   ceres_test(graph_algorithms)
   ceres_test(householder_vector)
+  ceres_test(is_close)
   ceres_test(implicit_schur_complement)
   ceres_test(iterative_schur_complement_solver)
   ceres_test(jet)
