@@ -628,15 +628,15 @@ ArpackGeneralizedSelfAdjointEigenSolver<MatrixType, MatrixSolver, BisSPD>&
       m_info = Success;
     }
 
-    delete select;
+    delete[] select;
   }
 
-  delete v;
-  delete iparam;
-  delete ipntr;
-  delete workd;
-  delete workl;
-  delete resid;
+  delete[] v;
+  delete[] iparam;
+  delete[] ipntr;
+  delete[] workd;
+  delete[] workl;
+  delete[] resid;
 
   m_isInitialized = true;
 
