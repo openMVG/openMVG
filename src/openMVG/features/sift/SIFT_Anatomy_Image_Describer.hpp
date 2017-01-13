@@ -228,5 +228,6 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Anatomy_Image_describer, "SIFT_Anatomy_Image_describer");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::SIFT_Anatomy_Image_describer)
 
 #endif // OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
