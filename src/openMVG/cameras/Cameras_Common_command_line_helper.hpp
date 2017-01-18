@@ -60,6 +60,8 @@ StringTo_Intrinsic_Parameter_Type
     else
     {
       std::cerr << "WARNING: Unknow KEY: " << item << std::endl;
+      intrinsics_opt = static_cast<cameras::Intrinsic_Parameter_Type>(0);
+      break;
     }
   }
 

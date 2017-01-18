@@ -125,6 +125,11 @@ int main(int argc, char **argv)
 
   const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
     cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
+  if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
+  {
+    std::cerr << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option" << std::endl;
+    return EXIT_FAILURE;
+  }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
