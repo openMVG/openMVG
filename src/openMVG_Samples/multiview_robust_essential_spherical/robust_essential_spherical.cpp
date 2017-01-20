@@ -12,6 +12,7 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
@@ -200,21 +201,21 @@ int main() {
           //-- For each inlier:
           //   - triangulate
           //   - check chierality
-          for (size_t k = 0; k < vec_inliers.size(); ++k)
+          for (const auto & inlier_it : vec_inliers)
           {
-            const Vec3 & x1_ = xL_spherical.col(vec_inliers[k]);
-            const Vec3 & x2_ = xR_spherical.col(vec_inliers[k]);
+            const Vec3 & x1_ = xL_spherical.col(inlier_it);
+            const Vec3 & x2_ = xR_spherical.col(inlier_it);
 
             //Triangulate
             Vec3 X;
-            openMVG::spherical_cam::TriangulateDLT(P1, x1_, P2, x2_, &X);
+            TriangulateDLT(P1, x1_, P2, x2_, &X);
 
             //Check positivity of the depth (sign of the dot product)
             const Vec3 Mc = R2 * X + t2;
             if (x2_.dot(Mc) > 0 && x1_.dot(X) > 0)
             {
               ++f[kk];
-              vec_newInliers[kk].push_back(vec_inliers[k]);
+              vec_newInliers[kk].push_back(inlier_it);
               vec_3D[kk].push_back(X);
             }
           }
@@ -243,4 +244,3 @@ int main() {
   }
   return EXIT_SUCCESS;
 }
-

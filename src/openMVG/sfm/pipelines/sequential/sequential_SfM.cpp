@@ -435,7 +435,9 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             for (const size_t inlier_idx : relativePose_info.vec_inliers)
             {
               Vec3 X;
-              TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
+              TriangulateDLT(
+                PI, xI.col(inlier_idx).homogeneous(),
+                PJ, xJ.col(inlier_idx).homogeneous(), &X);
 
               openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
               std::advance(iterT, inlier_idx);
@@ -579,7 +581,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       const Vec2 x2_ = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
-      TriangulateDLT(P1, x1_, P2, x2_, &X);
+      TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
       Observations obs;
       obs[view_I->id_view] = Observation(x1_, i);
       obs[view_J->id_view] = Observation(x2_, j);
@@ -1123,7 +1125,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
               const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
               const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
               Vec3 X = Vec3::Zero();
-              TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X);
+              TriangulateDLT(P_I, xI_ud.homogeneous(), P_J, xJ_ud.homogeneous(), &X);
               // Check triangulation result
               const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
               const Vec2 residual_I = cam_I->residual(pose_I, X, xI);

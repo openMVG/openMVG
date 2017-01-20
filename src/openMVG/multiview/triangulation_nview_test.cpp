@@ -46,9 +46,9 @@ TEST(Triangulate_NView, FiveViews) {
 
   for (int i = 0; i < npoints; ++i) {
     // Collect the image of point i in each frame.
-    Mat2X xs(2, nviews);
+    Mat3X xs(3, nviews);
     for (int j = 0; j < nviews; ++j) {
-      xs.col(j) = d._x[j].col(i);
+      xs.col(j) = d._x[j].col(i).homogeneous();
     }
     Vec4 X;
     TriangulateNView(xs, Ps, &X);
@@ -56,7 +56,7 @@ TEST(Triangulate_NView, FiveViews) {
     // Check reprojection error. Should be nearly zero.
     for (int j = 0; j < nviews; ++j) {
       const Vec3 x_reprojected = Ps[j]*X;
-      const double error = (x_reprojected.hnormalized() - xs.col(j)).norm();
+      const double error = (x_reprojected.hnormalized() - xs.col(j).hnormalized()).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }
@@ -75,9 +75,9 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
 
   for (int i = 0; i < npoints; ++i) {
     // Collect the image of point i in each frame.
-    Mat2X xs(2, nviews);
+    Mat3X xs(3, nviews);
     for (int j = 0; j < nviews; ++j) {
-      xs.col(j) = d._x[j].col(i);
+      xs.col(j) = d._x[j].col(i).homogeneous();
     }
     Vec4 X;
     TriangulateNViewAlgebraic(xs, Ps, &X);
@@ -85,7 +85,7 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
     // Check reprojection error. Should be nearly zero.
     for (int j = 0; j < nviews; ++j) {
       const Vec3 x_reprojected = Ps[j]*X;
-      const double error = (x_reprojected.hnormalized() - xs.col(j)).norm();
+      const double error = (x_reprojected.hnormalized() - xs.col(j).hnormalized()).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }

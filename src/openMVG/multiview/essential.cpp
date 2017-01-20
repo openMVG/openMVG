@@ -127,7 +127,7 @@ int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
     const Vec3 &t2 = ts[i];
     P_From_KRt(K2, R2, t2, &P2);
     Vec3 X;
-    TriangulateDLT(P1, x1, P2, x2, &X);
+    TriangulateDLT(P1, x1.homogeneous(), P2, x2.homogeneous(), &X);
     // Test if point is front to the two cameras (positive depth)
     if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0) {
       return i;

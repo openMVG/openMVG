@@ -204,7 +204,9 @@ int main() {
       const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
       // Point triangulation
       Vec3 X;
-      TriangulateDLT(P1, LL.coords().cast<double>(), P2, RR.coords().cast<double>(), &X);
+      TriangulateDLT(
+        P1, LL.coords().cast<double>().homogeneous(),
+        P2, RR.coords().cast<double>().homogeneous(), &X);
       // Reject point that is behind the camera
       if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
         continue;

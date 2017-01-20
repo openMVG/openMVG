@@ -158,46 +158,6 @@ public:
   const Mat & x1_, & x2_;
 };
 
-// Solve:
-// [cross(x0,P0) X = 0]
-// [cross(x1,P1) X = 0]
-void TriangulateDLT
-(
-    const Mat34 &P1,
-    const Vec3 &x1,
-    const Mat34 &P2,
-    const Vec3 &x2,
-    Vec4 *X_homogeneous
-  )
-  {
-  Mat design(6,4);
-  for (int i = 0; i < 4; ++i)
-  {
-    design(0,i) = -x1[2] * P1(1,i) + x1[1] * P1(2,i);
-    design(1,i) =  x1[2] * P1(0,i) - x1[0] * P1(2,i);
-    design(2,i) = -x1[1] * P1(0,i) + x1[0] * P1(1,i);
-
-    design(3,i) = -x2[2] * P2(1,i) + x2[1] * P2(2,i);
-    design(4,i) =  x2[2] * P2(0,i) - x2[0] * P2(2,i);
-    design(5,i) = -x2[1] * P2(0,i) + x2[0] * P2(1,i);
-  }
-  Nullspace(&design, X_homogeneous);
-}
-
-void TriangulateDLT
-(
-    const Mat34 &P1,
-    const Vec3 &x1,
-    const Mat34 &P2,
-    const Vec3 &x2,
-    Vec3 *X_euclidean
-)
-{
-  Vec4 X_homogeneous;
-  TriangulateDLT(P1, x1, P2, x2, &X_homogeneous);
-  HomogeneousToEuclidean(X_homogeneous, X_euclidean);
-}
-
 } // namespace spherical_cam
 } // namespace openMVG
 

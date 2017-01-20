@@ -20,15 +20,33 @@ namespace sfm {
 * @brief Estimate the best possible Rotation/Translation from E.
 *  Four are possible, keep the one with most of the point in front.
 *
-* @param[in] K1 camera 1 intrinsics
-* @param[in] K2 camera 2 intrinsics
-* @param[in] x1 camera 1 image points
-* @param[in] x2 camera 2 image points
+* @param[in] x1 bearing vectors corresponding to image observation in image 1
+* @param[in] x2 bearing vectors corresponding to image observation in image 2
 * @param[in] E essential matrix
-* @param[in] vec_inliers inliers indices
+* @param[in] vec_inliers selection of x1, x2 columns that are used
 * @param[out] R estimated rotation
 * @param[out] t estimated translation
+* @param[out] vec_selected_points return the index of vec_inliers that are
+*    in front of the cameras
+* @param[out] vec_points return the 3D point corresponding to
+*    vec_selected_points indexes
+* @param[in] positive_depth_solution_ratio Pourcentage ratio threshold used
+*    to discard if there is two good solution that have many points in front
+*    of the cameras
 */
+bool estimate_Rt_fromE
+(
+  const Mat3X & x1,
+  const Mat3X & x2,
+  const Mat3 & E,
+  const std::vector<size_t> & vec_inliers,
+  Mat3 * R = nullptr,
+  Vec3 * t = nullptr,
+  std::vector<size_t> * vec_selected_points = nullptr,
+  std::vector<Vec3> * vec_points = nullptr,
+  const double positive_depth_solution_ratio = 0.7
+);
+
 bool estimate_Rt_fromE
 (
   const Mat3 & K1, const Mat3 & K2,

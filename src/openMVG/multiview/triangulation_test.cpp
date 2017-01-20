@@ -37,15 +37,14 @@ using namespace std;
 
 TEST(Triangulation, TriangulateDLT) {
 
-  NViewDataSet d = NRealisticCamerasRing(2, 12);
+  const NViewDataSet d = NRealisticCamerasRing(2, 12);
 
   for (int i = 0; i < d._X.cols(); ++i) {
-    Vec2 x1, x2;
-    x1 = d._x[0].col(i);
-    x2 = d._x[1].col(i);
-    Vec3 X_estimated, X_gt;
-    X_gt = d._X.col(i);
-    TriangulateDLT(d.P(0), x1, d.P(1), x2, &X_estimated);
+    const Vec3 X_gt = d._X.col(i);
+    Vec3 X_estimated;
+    const Vec2 x1 = d._x[0].col(i);
+    const Vec2 x2 = d._x[1].col(i);
+    TriangulateDLT(d.P(0), x1.homogeneous(), d.P(1), x2.homogeneous(), &X_estimated);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }
@@ -53,4 +52,3 @@ TEST(Triangulation, TriangulateDLT) {
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

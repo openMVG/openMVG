@@ -632,7 +632,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
           const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
-          TriangulateDLT(P1, x1_, P2, x2_, &X);
+          TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
           Observations obs;
           obs[view_I->id_view] = Observation(x1_, matches[k].i_);
           obs[view_J->id_view] = Observation(x2_, matches[k].j_);
@@ -725,4 +725,3 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
 } // namespace sfm
 } // namespace openMVG
-
