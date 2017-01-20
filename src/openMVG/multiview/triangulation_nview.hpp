@@ -68,7 +68,7 @@ namespace openMVG {
       mutable double zmin; // min depth, mutable since modified in compute(...) const;
       mutable double zmax; // max depth, mutable since modified in compute(...) const;
       mutable double err;  // re-projection error, mutable since modified in compute(...) const;
-      std::vector< std::pair<Mat34, Vec2> > views; // Proj matrix and associated image point
+      std::vector< std::pair<Mat34, Vec2>, Eigen::aligned_allocator<std::pair<Mat34, Vec2>> > views; // Proj matrix and associated image point
   };
 
 }  // namespace openMVG

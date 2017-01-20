@@ -26,6 +26,10 @@ using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature,64>;
 } // namespace features
 } // namespace openMVG
 
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::SIFT_Regions)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Float_Regions)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Liop_Regions)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Binary_Regions)
 //--
 // Register region type for serialization
 //--

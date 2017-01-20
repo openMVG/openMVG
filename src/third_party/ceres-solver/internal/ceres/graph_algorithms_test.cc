@@ -90,7 +90,7 @@ TEST(IndependentSetOrdering, Star) {
   //    4-0-2
   //      |
   //      3
-  // 1, 2, 3, 4 should be in the indepdendent set.
+  // 1, 2, 3, 4 should be in the independent set.
   vector<int> ordering;
   int independent_set_size = IndependentSetOrdering(graph, &ordering);
   EXPECT_EQ(independent_set_size, 4);

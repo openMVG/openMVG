@@ -1439,7 +1439,7 @@ class TestResultAccessor {
 #if GTEST_CAN_STREAM_RESULTS_
 
 // Streams test results to the given port on the given host machine.
-class StreamingListener : public EmptyTestEventListener {
+class GTEST_API_ StreamingListener : public EmptyTestEventListener {
  public:
   // Abstract base class for writing strings to a socket.
   class AbstractSocketWriter {
@@ -2749,41 +2749,41 @@ std::vector<std::string> SplitEscapedString(const std::string& str) {
 // and their values, as strings.  For example, for ASSERT_EQ(foo, bar)
 // where foo is 5 and bar is 6, we have:
 //
-//   expected_expression: "foo"
-//   actual_expression:   "bar"
-//   expected_value:      "5"
-//   actual_value:        "6"
+//   lhs_expression: "foo"
+//   rhs_expression: "bar"
+//   lhs_value:      "5"
+//   rhs_value:      "6"
 //
 // The ignoring_case parameter is true iff the assertion is a
-// *_STRCASEEQ*.  When it's true, the string " (ignoring case)" will
+// *_STRCASEEQ*.  When it's true, the string "Ignoring case" will
 // be inserted into the message.
-AssertionResult EqFailure(const char* expected_expression,
-                          const char* actual_expression,
-                          const std::string& expected_value,
-                          const std::string& actual_value,
+AssertionResult EqFailure(const char* lhs_expression,
+                          const char* rhs_expression,
+                          const std::string& lhs_value,
+                          const std::string& rhs_value,
                           bool ignoring_case) {
   Message msg;
-  msg << "Value of: " << actual_expression;
-  if (actual_value != actual_expression) {
-    msg << "\n  Actual: " << actual_value;
+  msg << "      Expected: " << lhs_expression;
+  if (lhs_value != lhs_expression) {
+    msg << "\n      Which is: " << lhs_value;
+  }
+  msg << "\nTo be equal to: " << rhs_expression;
+  if (rhs_value != rhs_expression) {
+    msg << "\n      Which is: " << rhs_value;
   }
 
-  msg << "\nExpected: " << expected_expression;
   if (ignoring_case) {
-    msg << " (ignoring case)";
-  }
-  if (expected_value != expected_expression) {
-    msg << "\nWhich is: " << expected_value;
+    msg << "\nIgnoring case";
   }
 
-  if (!expected_value.empty() && !actual_value.empty()) {
-    const std::vector<std::string> expected_lines =
-        SplitEscapedString(expected_value);
-    const std::vector<std::string> actual_lines =
-        SplitEscapedString(actual_value);
-    if (expected_lines.size() > 1 || actual_lines.size() > 1) {
+  if (!lhs_value.empty() && !rhs_value.empty()) {
+    const std::vector<std::string> lhs_lines =
+        SplitEscapedString(lhs_value);
+    const std::vector<std::string> rhs_lines =
+        SplitEscapedString(rhs_value);
+    if (lhs_lines.size() > 1 || rhs_lines.size() > 1) {
       msg << "\nWith diff:\n"
-          << edit_distance::CreateUnifiedDiff(expected_lines, actual_lines);
+          << edit_distance::CreateUnifiedDiff(lhs_lines, rhs_lines);
     }
   }
 
@@ -2882,18 +2882,18 @@ namespace internal {
 
 // The helper function for {ASSERT|EXPECT}_EQ with int or enum
 // arguments.
-AssertionResult CmpHelperEQ(const char* expected_expression,
-                            const char* actual_expression,
-                            BiggestInt expected,
-                            BiggestInt actual) {
-  if (expected == actual) {
+AssertionResult CmpHelperEQ(const char* lhs_expression,
+                            const char* rhs_expression,
+                            BiggestInt lhs,
+                            BiggestInt rhs) {
+  if (lhs == rhs) {
     return AssertionSuccess();
   }
 
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   FormatForComparisonFailureMessage(expected, actual),
-                   FormatForComparisonFailureMessage(actual, expected),
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   FormatForComparisonFailureMessage(lhs, rhs),
+                   FormatForComparisonFailureMessage(rhs, lhs),
                    false);
 }
 
@@ -2932,34 +2932,34 @@ GTEST_IMPL_CMP_HELPER_(GT, > )
 #undef GTEST_IMPL_CMP_HELPER_
 
 // The helper function for {ASSERT|EXPECT}_STREQ.
-AssertionResult CmpHelperSTREQ(const char* expected_expression,
-                               const char* actual_expression,
-                               const char* expected,
-                               const char* actual) {
-  if (String::CStringEquals(expected, actual)) {
+AssertionResult CmpHelperSTREQ(const char* lhs_expression,
+                               const char* rhs_expression,
+                               const char* lhs,
+                               const char* rhs) {
+  if (String::CStringEquals(lhs, rhs)) {
     return AssertionSuccess();
   }
 
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   PrintToString(expected),
-                   PrintToString(actual),
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   PrintToString(lhs),
+                   PrintToString(rhs),
                    false);
 }
 
 // The helper function for {ASSERT|EXPECT}_STRCASEEQ.
-AssertionResult CmpHelperSTRCASEEQ(const char* expected_expression,
-                                   const char* actual_expression,
-                                   const char* expected,
-                                   const char* actual) {
-  if (String::CaseInsensitiveCStringEquals(expected, actual)) {
+AssertionResult CmpHelperSTRCASEEQ(const char* lhs_expression,
+                                   const char* rhs_expression,
+                                   const char* lhs,
+                                   const char* rhs) {
+  if (String::CaseInsensitiveCStringEquals(lhs, rhs)) {
     return AssertionSuccess();
   }
 
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   PrintToString(expected),
-                   PrintToString(actual),
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   PrintToString(lhs),
+                   PrintToString(rhs),
                    true);
 }
 
@@ -3314,18 +3314,18 @@ bool String::WideCStringEquals(const wchar_t * lhs, const wchar_t * rhs) {
 }
 
 // Helper function for *_STREQ on wide strings.
-AssertionResult CmpHelperSTREQ(const char* expected_expression,
-                               const char* actual_expression,
-                               const wchar_t* expected,
-                               const wchar_t* actual) {
-  if (String::WideCStringEquals(expected, actual)) {
+AssertionResult CmpHelperSTREQ(const char* lhs_expression,
+                               const char* rhs_expression,
+                               const wchar_t* lhs,
+                               const wchar_t* rhs) {
+  if (String::WideCStringEquals(lhs, rhs)) {
     return AssertionSuccess();
   }
 
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   PrintToString(expected),
-                   PrintToString(actual),
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   PrintToString(lhs),
+                   PrintToString(rhs),
                    false);
 }
 
@@ -4378,6 +4378,8 @@ bool ShouldUseColor(bool stdout_is_tty) {
         String::CStringEquals(term, "xterm-256color") ||
         String::CStringEquals(term, "screen") ||
         String::CStringEquals(term, "screen-256color") ||
+        String::CStringEquals(term, "tmux") ||
+        String::CStringEquals(term, "tmux-256color") ||
         String::CStringEquals(term, "rxvt-unicode") ||
         String::CStringEquals(term, "rxvt-unicode-256color") ||
         String::CStringEquals(term, "linux") ||
@@ -8610,6 +8612,11 @@ void FilePath::Normalize() {
 # include <sys/procfs.h>
 #endif  // GTEST_OS_QNX
 
+#if GTEST_OS_AIX
+# include <procinfo.h>
+# include <sys/types.h>
+#endif  // GTEST_OS_AIX
+
 
 // Indicates that this translation unit is part of Google Test's
 // implementation.  It must come before gtest-internal-inl.h is
@@ -8688,6 +8695,19 @@ size_t GetThreadCount() {
   close(fd);
   if (status == EOK) {
     return static_cast<size_t>(process_info.num_threads);
+  } else {
+    return 0;
+  }
+}
+
+#elif GTEST_OS_AIX
+
+size_t GetThreadCount() {
+  struct procentry64 entry;
+  pid_t pid = getpid();
+  int status = getprocs64(&entry, sizeof(entry), NULL, 0, &pid, 1);
+  if (status == 1) {
+    return entry.pi_thcount;
   } else {
     return 0;
   }
@@ -9755,13 +9775,33 @@ Int32 Int32FromGTestEnv(const char* flag, Int32 default_value) {
 
 // Reads and returns the string environment variable corresponding to
 // the given flag; if it's not set, returns default_value.
-const char* StringFromGTestEnv(const char* flag, const char* default_value) {
+std::string StringFromGTestEnv(const char* flag, const char* default_value) {
 #if defined(GTEST_GET_STRING_FROM_ENV_)
   return GTEST_GET_STRING_FROM_ENV_(flag, default_value);
 #endif  // defined(GTEST_GET_STRING_FROM_ENV_)
   const std::string env_var = FlagToEnvVar(flag);
-  const char* const value = posix::GetEnv(env_var.c_str());
-  return value == NULL ? default_value : value;
+  const char* value = posix::GetEnv(env_var.c_str());
+  if (value != NULL) {
+    return value;
+  }
+
+  // As a special case for the 'output' flag, if GTEST_OUTPUT is not
+  // set, we look for XML_OUTPUT_FILE, which is set by the Bazel build
+  // system.  The value of XML_OUTPUT_FILE is a filename without the
+  // "xml:" prefix of GTEST_OUTPUT.
+  //
+  // The net priority order after flag processing is thus:
+  //   --gtest_output command line flag
+  //   GTEST_OUTPUT environment variable
+  //   XML_OUTPUT_FILE environment variable
+  //   'default_value'
+  if (strcmp(flag, "output") == 0) {
+    value = posix::GetEnv("XML_OUTPUT_FILE");
+    if (value != NULL) {
+      return std::string("xml:") + value;
+    }
+  }
+  return default_value;
 }
 
 }  // namespace internal
@@ -11479,8 +11519,8 @@ void ReportUninterestingCall(CallReaction reaction, const string& msg) {
           "\nNOTE: You can safely ignore the above warning unless this "
           "call should not happen.  Do not suppress it by blindly adding "
           "an EXPECT_CALL() if you don't mean to enforce the call.  "
-          "See http://code.google.com/p/googlemock/wiki/CookBook#"
-          "Knowing_When_to_Expect for details.\n",
+          "See https://github.com/google/googletest/blob/master/googlemock/docs/CookBook.md#"
+          "knowing-when-to-expect for details.\n",
           stack_frames_to_skip);
       break;
     default:  // FAIL

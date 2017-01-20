@@ -28,6 +28,9 @@ namespace kernel {
 
 /// A trifocal tensor seen as 3 projective cameras
 struct TrifocalTensorModel {
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   Mat34 P1, P2, P3;
 
   static double Error
@@ -57,6 +60,8 @@ struct TrifocalTensorModel {
 }  // namespace kernel
 }  // namespace trifocal
 }  // namespace openMVG
+
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::trifocal::kernel::TrifocalTensorModel)
 
 namespace openMVG{
 

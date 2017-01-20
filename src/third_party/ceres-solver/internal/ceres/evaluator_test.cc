@@ -252,7 +252,7 @@ TEST_P(EvaluatorTest, SingleResidualProblemWithPermutedParameters) {
   // the jacobian evaluation, but requires explicit handling in the evaluators.
   // At one point the compressed row evaluator had a bug that went undetected
   // for a long time, since by chance most users added parameters to the problem
-  // in the same order that they occured as parameters to a cost function.
+  // in the same order that they occurred as parameters to a cost function.
   problem.AddResidualBlock(new ParameterIgnoringCostFunction<1, 3, 4, 3, 2>,
                            NULL,
                            z, y, x);

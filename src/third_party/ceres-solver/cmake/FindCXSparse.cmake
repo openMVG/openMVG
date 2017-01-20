@@ -100,7 +100,14 @@ macro(CXSPARSE_REPORT_NOT_FOUND REASON_MSG)
     # but continues configuration and allows generation.
     message("-- Failed to find CXSparse - " ${REASON_MSG} ${ARGN})
   endif ()
+  return()
 endmacro(CXSPARSE_REPORT_NOT_FOUND)
+
+# Protect against any alternative find_package scripts for this library having
+# been called previously (in a client project) which set CXSPARSE_FOUND, but not
+# the other variables we require / set here which could cause the search logic
+# here to fail.
+unset(CXSPARSE_FOUND)
 
 # Handle possible presence of lib prefix for libraries on MSVC, see
 # also CXSPARSE_RESET_FIND_LIBRARY_PREFIX().

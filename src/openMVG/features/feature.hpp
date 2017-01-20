@@ -75,6 +75,10 @@ class SIOPointFeature : public PointFeature {
   friend std::istream& operator>>(std::istream& in, SIOPointFeature& obj);
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  ~SIOPointFeature() = default;
+
   SIOPointFeature(float x=0.0f, float y=0.0f,
                   float scale=0.0f, float orient=0.0f)
     : PointFeature(x,y)
@@ -147,6 +151,8 @@ class AffinePointFeature : public PointFeature {
   friend std::istream& operator>>(std::istream& in, AffinePointFeature& obj);
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   virtual ~AffinePointFeature() = default;
 
   AffinePointFeature

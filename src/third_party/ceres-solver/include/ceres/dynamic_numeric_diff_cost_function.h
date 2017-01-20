@@ -30,7 +30,23 @@
 //         sameeragarwal@google.com (Sameer Agarwal)
 //         thadh@gmail.com (Thad Hughes)
 //         tbennun@gmail.com (Tal Ben-Nun)
-//
+
+#ifndef CERES_PUBLIC_DYNAMIC_NUMERIC_DIFF_COST_FUNCTION_H_
+#define CERES_PUBLIC_DYNAMIC_NUMERIC_DIFF_COST_FUNCTION_H_
+
+#include <cmath>
+#include <numeric>
+#include <vector>
+
+#include "ceres/dynamic_cost_function.h"
+#include "ceres/internal/scoped_ptr.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/numeric_diff.h"
+#include "ceres/numeric_diff_options.h"
+#include "glog/logging.h"
+
+namespace ceres {
+
 // This numeric diff implementation differs from the one found in
 // numeric_diff_cost_function.h by supporting numericdiff on cost
 // functions with variable numbers of parameters with variable
@@ -56,25 +72,8 @@
 //   cost_function.AddParameterBlock(5);
 //   cost_function.AddParameterBlock(10);
 //   cost_function.SetNumResiduals(21);
-
-#ifndef CERES_PUBLIC_DYNAMIC_NUMERIC_DIFF_COST_FUNCTION_H_
-#define CERES_PUBLIC_DYNAMIC_NUMERIC_DIFF_COST_FUNCTION_H_
-
-#include <cmath>
-#include <numeric>
-#include <vector>
-
-#include "ceres/cost_function.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/numeric_diff.h"
-#include "ceres/numeric_diff_options.h"
-#include "glog/logging.h"
-
-namespace ceres {
-
 template <typename CostFunctor, NumericDiffMethodType method = CENTRAL>
-class DynamicNumericDiffCostFunction : public CostFunction {
+class DynamicNumericDiffCostFunction : public DynamicCostFunction {
  public:
   explicit DynamicNumericDiffCostFunction(
       const CostFunctor* functor,
@@ -85,34 +84,10 @@ class DynamicNumericDiffCostFunction : public CostFunction {
         options_(options) {
   }
 
-  // Deprecated. New users should avoid using this constructor. Instead, use the
-  // constructor with NumericDiffOptions.
-  DynamicNumericDiffCostFunction(
-      const CostFunctor* functor,
-      Ownership ownership,
-      double relative_step_size)
-      : functor_(functor),
-        ownership_(ownership),
-        options_() {
-    LOG(WARNING) << "This constructor is deprecated and will be removed in "
-                    "a future version. Please use the NumericDiffOptions "
-                    "constructor instead.";
-
-    options_.relative_step_size = relative_step_size;
-  }
-
   virtual ~DynamicNumericDiffCostFunction() {
     if (ownership_ != TAKE_OWNERSHIP) {
       functor_.release();
     }
-  }
-
-  void AddParameterBlock(int size) {
-    mutable_parameter_block_sizes()->push_back(size);
-  }
-
-  void SetNumResiduals(int num_residuals) {
-    set_num_residuals(num_residuals);
   }
 
   virtual bool Evaluate(double const* const* parameters,
@@ -138,19 +113,19 @@ class DynamicNumericDiffCostFunction : public CostFunction {
     std::vector<double> parameters_copy(parameters_size);
     std::vector<double*> parameters_references_copy(block_sizes.size());
     parameters_references_copy[0] = &parameters_copy[0];
-    for (int block = 1; block < block_sizes.size(); ++block) {
+    for (size_t block = 1; block < block_sizes.size(); ++block) {
       parameters_references_copy[block] = parameters_references_copy[block - 1]
           + block_sizes[block - 1];
     }
 
     // Copy the parameters into the local temp space.
-    for (int block = 0; block < block_sizes.size(); ++block) {
+    for (size_t block = 0; block < block_sizes.size(); ++block) {
       memcpy(parameters_references_copy[block],
              parameters[block],
              block_sizes[block] * sizeof(*parameters[block]));
     }
 
-    for (int block = 0; block < block_sizes.size(); ++block) {
+    for (size_t block = 0; block < block_sizes.size(); ++block) {
       if (jacobians[block] != NULL &&
           !NumericDiff<CostFunctor, method, DYNAMIC,
                        DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC, DYNAMIC,

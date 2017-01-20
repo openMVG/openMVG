@@ -523,6 +523,41 @@ TEST(Problem, SetParameterBlockVariableWithUnknownPtrDies) {
                             "Parameter block not found:");
 }
 
+TEST(Problem, IsParameterBlockConstant) {
+  double x1[3];
+  double x2[3];
+
+  Problem problem;
+  problem.AddParameterBlock(x1, 3);
+  problem.AddParameterBlock(x2, 3);
+
+  EXPECT_FALSE(problem.IsParameterBlockConstant(x1));
+  EXPECT_FALSE(problem.IsParameterBlockConstant(x2));
+
+  problem.SetParameterBlockConstant(x1);
+  EXPECT_TRUE(problem.IsParameterBlockConstant(x1));
+  EXPECT_FALSE(problem.IsParameterBlockConstant(x2));
+
+  problem.SetParameterBlockConstant(x2);
+  EXPECT_TRUE(problem.IsParameterBlockConstant(x1));
+  EXPECT_TRUE(problem.IsParameterBlockConstant(x2));
+
+  problem.SetParameterBlockVariable(x1);
+  EXPECT_FALSE(problem.IsParameterBlockConstant(x1));
+  EXPECT_TRUE(problem.IsParameterBlockConstant(x2));
+}
+
+TEST(Problem, IsParameterBlockConstantWithUnknownPtrDies) {
+  double x[3];
+  double y[2];
+
+  Problem problem;
+  problem.AddParameterBlock(x, 3);
+
+  EXPECT_DEATH_IF_SUPPORTED(problem.IsParameterBlockConstant(y),
+                            "Parameter block not found:");
+}
+
 TEST(Problem, SetLocalParameterizationWithUnknownPtrDies) {
   double x[3];
   double y[2];

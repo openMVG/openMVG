@@ -49,7 +49,7 @@
   #define EIGEN_USE_LAPACKE
 #endif
 
-#if defined(EIGEN_USE_BLAS) || defined(EIGEN_USE_LAPACKE) || defined(EIGEN_USE_MKL_VML)
+#if defined(EIGEN_USE_MKL_VML)
   #define EIGEN_USE_MKL
 #endif
 
@@ -64,7 +64,6 @@
 #   ifndef EIGEN_USE_MKL
     /*If the MKL version is too old, undef everything*/
 #       undef   EIGEN_USE_MKL_ALL
-#       undef   EIGEN_USE_BLAS
 #       undef   EIGEN_USE_LAPACKE
 #       undef   EIGEN_USE_MKL_VML
 #       undef   EIGEN_USE_LAPACKE_STRICT
@@ -73,7 +72,7 @@
 #endif
 
 #if defined EIGEN_USE_MKL
-#include <mkl_lapacke.h>
+
 #define EIGEN_MKL_VML_THRESHOLD 128
 
 /* MKL_DOMAIN_BLAS, etc are defined only in 10.3 update 7 */
@@ -107,52 +106,23 @@
 #else
 #define EIGEN_MKL_DOMAIN_PARDISO MKL_PARDISO
 #endif
+#endif
 
 namespace Eigen {
 
 typedef std::complex<double> dcomplex;
 typedef std::complex<float>  scomplex;
 
-namespace internal {
-
-template<typename MKLType, typename EigenType>
-static inline void assign_scalar_eig2mkl(MKLType& mklScalar, const EigenType& eigenScalar) {
-  mklScalar=eigenScalar;
-}
-
-template<typename MKLType, typename EigenType>
-static inline void assign_conj_scalar_eig2mkl(MKLType& mklScalar, const EigenType& eigenScalar) {
-  mklScalar=eigenScalar;
-}
-
-template <>
-inline void assign_scalar_eig2mkl<MKL_Complex16,dcomplex>(MKL_Complex16& mklScalar, const dcomplex& eigenScalar) {
-  mklScalar.real=eigenScalar.real();
-  mklScalar.imag=eigenScalar.imag();
-}
-
-template <>
-inline void assign_scalar_eig2mkl<MKL_Complex8,scomplex>(MKL_Complex8& mklScalar, const scomplex& eigenScalar) {
-  mklScalar.real=eigenScalar.real();
-  mklScalar.imag=eigenScalar.imag();
-}
-
-template <>
-inline void assign_conj_scalar_eig2mkl<MKL_Complex16,dcomplex>(MKL_Complex16& mklScalar, const dcomplex& eigenScalar) {
-  mklScalar.real=eigenScalar.real();
-  mklScalar.imag=-eigenScalar.imag();
-}
-
-template <>
-inline void assign_conj_scalar_eig2mkl<MKL_Complex8,scomplex>(MKL_Complex8& mklScalar, const scomplex& eigenScalar) {
-  mklScalar.real=eigenScalar.real();
-  mklScalar.imag=-eigenScalar.imag();
-}
-
-} // end namespace internal
+#if defined(EIGEN_USE_MKL)
+typedef MKL_INT BlasIndex;
+#else
+typedef int BlasIndex;
+#endif
 
 } // end namespace Eigen
 
+#if defined(EIGEN_USE_BLAS)
+#include "../../misc/blas.h"
 #endif
 
 #endif // EIGEN_MKL_SUPPORT_H

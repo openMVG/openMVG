@@ -185,7 +185,7 @@ TEST(AutoDiff, ProjectiveCameraModel) {
                                                             fd_x, fd_J)));
 
   for (int i = 0; i < 2; ++i) {
-    ASSERT_EQ(fd_x[i], b_x[i]);
+    ASSERT_NEAR(fd_x[i], b_x[i], tol);
   }
 
   // Use automatic differentiation to compute the Jacobian.

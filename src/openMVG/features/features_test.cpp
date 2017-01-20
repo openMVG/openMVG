@@ -27,6 +27,7 @@ using Feats_T = std::vector<Feature_T>;
 // Define a descriptor and a container of descriptors
 static const int DESC_LENGTH = 128;
 using Desc_T = Descriptor<float, DESC_LENGTH>;
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Desc_T)
 using Descs_T = std::vector<Desc_T>;
 
 //--
