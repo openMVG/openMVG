@@ -23,8 +23,8 @@ namespace openMVG
 namespace cameras
 {
 
-} // namespace cameras 
-} // namespace openMVG 
+} // namespace cameras
+} // namespace openMVG
 
 
 #endif // OPENMVG_CAMERAS_CAMERAS_HPP

@@ -677,7 +677,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   using namespace openMVG::trifocal;
   using namespace openMVG::trifocal::kernel;
 
-  using KernelType =
+  using KernelType = 
     TranslationTripletKernel_ACRansac<
       translations_Triplet_Solver,
       translations_Triplet_Solver,

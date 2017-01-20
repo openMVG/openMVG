@@ -12,6 +12,7 @@
 #include "openMVG/matching/indMatch.hpp"
 
 #include <iostream>
+#include <fstream>
 
 namespace openMVG {
 namespace matching {

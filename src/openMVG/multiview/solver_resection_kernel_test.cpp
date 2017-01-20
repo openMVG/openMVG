@@ -51,8 +51,7 @@ TEST(Resection_Kernel, Multiview) {
     Mat X = d._X;
     openMVG::resection::kernel::PoseResectionKernel kernel(x, X);
 
-    size_t samples_[6]={0,1,2,3,4,5};
-    vector<size_t> samples(samples_,samples_+6);
+    const vector<size_t> samples = {0,1,2,3,4,5};
     vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
     for (Mat::Index i = 0; i < x.cols(); ++i) {
