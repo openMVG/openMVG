@@ -47,7 +47,6 @@
 
 namespace openMVG
 {
-using namespace std;
 
 /**
  * @brief Computes the relative pose of two calibrated cameras from 5 correspondences.
@@ -57,7 +56,7 @@ using namespace std;
  * \param E  A list of at most 10 candidate essential matrix solutions.
  */
 void FivePointsRelativePose( const Mat2X &x1, const Mat2X &x2,
-                             vector<Mat3> *E );
+                             std::vector<Mat3> *E );
 
 /**
 * @brief Compute the nullspace of the linear constraints given by the matches.

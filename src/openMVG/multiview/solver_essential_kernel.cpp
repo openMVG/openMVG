@@ -37,9 +37,7 @@ namespace openMVG {
 namespace essential {
 namespace kernel {
 
-using namespace std;
-
-void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Es) {
+void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Es) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -65,7 +63,7 @@ void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, vector<Ma
   Es->push_back(E);
 }
 
-void FivePointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E) {
+void FivePointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E) {
   assert(2 == x1.rows());
   assert(5 <= x1.cols());
   assert(x1.rows() == x2.rows());

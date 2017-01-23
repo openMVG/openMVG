@@ -137,7 +137,7 @@ inline double angle_difference( const double angle1, const double angle2 )
 	return std::min( angle, 2 * PI_ - angle );
 }
 
-inline void max( double* list,double& weight, int size, int& index, int& second_index )
+inline void max( double* list, double& weight, int size, int& index, int& second_index )
 {
 	index = 0;
 	second_index = -1;

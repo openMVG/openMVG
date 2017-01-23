@@ -58,7 +58,7 @@ void BuildActionMatrix(Matrix & L, const Mat &x, const Mat &y)  {
   }
 }
 
-void FourPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
+void FourPointSolver::Solve(const Mat &x, const Mat &y, std::vector<Mat3> *Hs) {
   assert(2 == x.rows());
   assert(4 <= x.cols());
   assert(x.rows() == y.rows());

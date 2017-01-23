@@ -41,8 +41,6 @@ static void planarToSpherical(
   }
 }
 
-using namespace std;
-
 /**
  * Eight-point algorithm for solving for the essential matrix from normalized
  * image coordinates of point correspondences.
@@ -133,7 +131,7 @@ public:
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
 
-  void Fit(const vector<size_t> &samples, std::vector<Model> *models) const
+  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const
   {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);

@@ -39,7 +39,7 @@ TEST(Triangulate_NView, FiveViews) {
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Collect P matrices together.
-  vector<Mat34> Ps(nviews);
+  std::vector<Mat34> Ps(nviews);
   for (int j = 0; j < nviews; ++j) {
     Ps[j] = d.P(j);
   }
@@ -68,7 +68,7 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
   const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
 
   // Collect P matrices together.
-  vector<Mat34> Ps(nviews);
+  std::vector<Mat34> Ps(nviews);
   for (int j = 0; j < nviews; ++j) {
     Ps[j] = d.P(j);
   }

@@ -51,8 +51,8 @@ TEST(Resection_Kernel, Multiview) {
     Mat X = d._X;
     openMVG::resection::kernel::PoseResectionKernel kernel(x, X);
 
-    const vector<size_t> samples = {0,1,2,3,4,5};
-    vector<Mat34> Ps;
+    const std::vector<size_t> samples = {0,1,2,3,4,5};
+    std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
     for (Mat::Index i = 0; i < x.cols(); ++i) {
       EXPECT_NEAR(0.0, kernel.Error(i, Ps[0]), 1e-8);
@@ -79,13 +79,12 @@ TEST(P3P_Kneip_CVPR11, Multiview) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    Mat x = d._x[nResectionCameraIndex];
-    Mat X = d._X;
+    const Mat x = d._x[nResectionCameraIndex];
+    const Mat X = d._X;
     openMVG::euclidean_resection::P3P_ResectionKernel_K kernel(x, X, d._K[0]);
 
-    size_t samples_[3]={0,1,2};
-    vector<size_t> samples(samples_, samples_+3);
-    vector<Mat34> Ps;
+    const std::vector<size_t> samples = {0,1,2};
+    std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
 
     bool bFound = false;
@@ -194,8 +193,8 @@ TEST(EuclideanResection, Points6AllRandomInput) {
     using Kernel = openMVG::euclidean_resection::kernel::ResectionKernel_K;
     Kernel kernel(x_image.block(0, 0, 2, 6), X_world, KK);
 
-    const vector<size_t> samples = { 0,1,2,3,4,5 };
-    vector<Mat34> Ps;
+    const std::vector<size_t> samples = { 0,1,2,3,4,5 };
+    std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
 
     CHECK_EQUAL(1, Ps.size());

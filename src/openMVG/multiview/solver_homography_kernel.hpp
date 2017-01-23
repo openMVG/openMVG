@@ -37,8 +37,6 @@ namespace openMVG {
 namespace homography {
 namespace kernel {
 
-using namespace std;
-
 struct FourPointSolver {
   enum { MINIMUM_SAMPLES = 4 };
   enum { MAX_MODELS = 1 };
@@ -52,7 +50,7 @@ struct FourPointSolver {
    *
    * The estimated homography should approximately hold the condition y = H x.
    */
-  static void Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs);
+  static void Solve(const Mat &x, const Mat &y, std::vector<Mat3> *Hs);
 };
 
 // Should be distributed as Chi-squared with k = 2.

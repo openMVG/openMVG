@@ -169,7 +169,7 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
 
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
-                            vector<Mat3> *Es) {
+                            std::vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
   const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);
 

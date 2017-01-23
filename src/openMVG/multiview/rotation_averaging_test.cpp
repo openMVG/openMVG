@@ -291,7 +291,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index1], d._t[index1], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index0, index1, Rrel, 1));
-      vec_unique.push_back(make_pair(index0, index1));
+      vec_unique.emplace_back(index0, index1);
     }
 
     if ( std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index1, index2)) == vec_unique.end()
@@ -299,7 +299,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index1], d._t[index1], d._R[index2], d._t[index2], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index1, index2, Rrel, 1));
-      vec_unique.push_back(make_pair(index1, index2));
+      vec_unique.emplace_back(index1, index2);
     }
 
     if ( std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index0, index2)) == vec_unique.end()
@@ -307,7 +307,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index2], d._t[index2], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index0, index2, Rrel, 1));
-      vec_unique.push_back(make_pair(index0, index2));
+      vec_unique.emplace_back(index0, index2);
     }
   }
 
@@ -330,7 +330,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   EXPECT_TRUE(bTest);
 
   std::cout << "Inliers: " << std::endl;
-  std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
+  std::copy(vec_inliers.begin(), vec_inliers.end(), std::ostream_iterator<bool>(std::cout, " "));
   std::cout << std::endl;
 
   // Check inlier list
