@@ -27,7 +27,8 @@ public:
   (
     const SfM_Data & sfm_data,
     const double zNear = -1.,
-    const double zFar = -1.
+    const double zFar = -1.,
+    const NearFarPlanesT & z_near_z_far = NearFarPlanesT()
   );
 
   // Init a frustum for each valid views of the SfM scene
