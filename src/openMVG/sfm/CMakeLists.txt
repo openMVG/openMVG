@@ -31,13 +31,12 @@ set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} 
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io
-  "openMVG_features;openMVG_sfm;openMVG_system;stlplus")
+  "openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_BA
-  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus")
+  "openMVG_multiview_test_data;openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_utils
-  "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus")
+"openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_filters
-  "openMVG_features;openMVG_multiview;openMVG_system;openMVG_sfm;stlplus")
+  "openMVG_features;openMVG_sfm")
 
 add_subdirectory(pipelines)
-

@@ -19,16 +19,18 @@
 
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
 #include "openMVG/sfm/sfm.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
-using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
+
 
 TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingL1) {
 

@@ -4,12 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_HALF_SPACE_HPP_
-#define OPENMVG_GEOMETRY_HALF_SPACE_HPP_
+#ifndef OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
+#define OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
 
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION( Eigen::Hyperplane<double, 3> )
 
 namespace openMVG
@@ -20,10 +22,10 @@ namespace halfPlane
 {
 
 /// Define the Half_plane equation (abcd coefficients)
-typedef Eigen::Hyperplane<double, 3> Half_plane;
+using Half_plane = Eigen::Hyperplane<double, 3>;
 
 /// Define a collection of Half_plane
-typedef std::vector<Half_plane> Half_planes;
+using Half_planes = std::vector<Half_plane>;
 
 
 /**
@@ -150,4 +152,4 @@ struct HalfPlaneObject
 } // namespace geometry
 } // namespace openMVG
 
-#endif // OPENMVG_GEOMETRY_HALF_SPACE_HPP_
+#endif // OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP

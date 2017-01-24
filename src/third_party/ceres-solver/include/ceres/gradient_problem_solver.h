@@ -74,6 +74,7 @@ class CERES_EXPORT GradientProblemSolver {
       max_solver_time_in_seconds = 1e9;
       function_tolerance = 1e-6;
       gradient_tolerance = 1e-10;
+      parameter_tolerance = 1e-8;
       logging_type = PER_MINIMIZER_ITERATION;
       minimizer_progress_to_stdout = false;
     }
@@ -235,6 +236,12 @@ class CERES_EXPORT GradientProblemSolver {
     //
     // This value should typically be 1e-4 * function_tolerance.
     double gradient_tolerance;
+
+    // Minimizer terminates when
+    //
+    //   |step|_2 <= parameter_tolerance * ( |x|_2 +  parameter_tolerance)
+    //
+    double parameter_tolerance;
 
     // Logging options ---------------------------------------------------------
 

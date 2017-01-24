@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_H_
-#define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_H_
+#ifndef OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
+#define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP 
 
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
@@ -92,4 +92,4 @@ typedef two_view::kernel::Kernel
 } // namespace geometry
 } // namespace openMVG
 
-#endif  // OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_H_
+#endif  // OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP

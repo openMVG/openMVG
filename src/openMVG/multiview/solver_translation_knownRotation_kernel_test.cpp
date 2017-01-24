@@ -5,10 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/solver_translation_knownRotation_kernel.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
+
 #include "testing/testing.h"
+
 #include <vector>
 
 using namespace openMVG;
@@ -36,9 +38,8 @@ TEST(Translation_knownRotation_Kernel, Multiview) {
 
     openMVG::translation::kernel::TranslationFromKnowRotationKernel kernel(x0, xCam, R_GT);
 
-    size_t samples_[2]={0,1};
-    vector<size_t> samples(samples_,samples_+2);
-    vector<Vec3> vec_t;
+    const std::vector<size_t> samples = {0,1};
+    std::vector<Vec3> vec_t;
     kernel.Fit(samples, &vec_t);
 
     CHECK_EQUAL(1, vec_t.size());

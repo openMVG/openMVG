@@ -16,4 +16,7 @@ add_subdirectory(features_affine_demo)
 add_subdirectory(features_kvld_filter)
 add_subdirectory(features_siftPutativeMatches)
 add_subdirectory(features_image_matching)
+
 add_subdirectory(geodesy_show_exif_gps_position)
+add_subdirectory(image_spherical_to_pinholes)
+

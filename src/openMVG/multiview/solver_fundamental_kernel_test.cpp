@@ -26,8 +26,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/solver_fundamental_kernel.hpp"
+
 #include "testing/testing.h"
 
 using namespace openMVG;
@@ -105,7 +106,7 @@ TEST(SevenPointTest, EasyCase) {
         0, 1, 2, 0, 1, 2, 0;
   x2 << 0, 0, 0, 1, 1, 1, 2,
         1, 2, 3, 1, 2, 3, 1;
-  typedef fundamental::kernel::SevenPointKernel Kernel;
+  using Kernel = fundamental::kernel::SevenPointKernel;
   EXPECT_TRUE(ExpectKernelProperties<Kernel>(x1, x2));
 }
 
@@ -115,7 +116,7 @@ TEST(SevenPointTest_Normalized, EasyCase) {
     0, 1, 2, 0, 1, 2, 0;
   x2 << 0, 0, 0, 1, 1, 1, 2,
     1, 2, 3, 1, 2, 3, 1;
-  typedef fundamental::kernel::NormalizedSevenPointKernel Kernel;
+  using Kernel = fundamental::kernel::NormalizedSevenPointKernel;
   EXPECT_TRUE(ExpectKernelProperties<Kernel>(x1, x2));
 }
 
@@ -125,7 +126,7 @@ TEST(EightPointTest, EasyCase) {
         0, 1, 2, 0, 1, 2, 0, 1;
   x2 << 0, 0, 0, 1, 1, 1, 2, 2,
         1, 2, 3, 1, 2, 3, 1, 2;
-  typedef fundamental::kernel::EightPointKernel Kernel;
+  using Kernel = fundamental::kernel::EightPointKernel;
   EXPECT_TRUE(ExpectKernelProperties<Kernel>(x1, x2));
 }
 
@@ -135,7 +136,7 @@ TEST(EightPointTest_Normalized, EasyCase) {
     0, 1, 2, 0, 1, 2, 0, 1;
   x2 << 0, 0, 0, 1, 1, 1, 2, 2,
     1, 2, 3, 1, 2, 3, 1, 2;
-  typedef fundamental::kernel::NormalizedEightPointKernel Kernel;
+  using Kernel = fundamental::kernel::NormalizedEightPointKernel;
   EXPECT_TRUE(ExpectKernelProperties<Kernel>(x1, x2));
 }
 

@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matching_filters.hpp"
+#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
@@ -36,7 +37,7 @@ void Match
   const sfm::Regions_Provider & regions_provider,
   const Pair_Set & pairs,
   float fDistRatio,
-  PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches // the pairwise photometric corresponding points
 )
 {
   C_Progress_display my_progress_bar( pairs.size() );
@@ -44,7 +45,7 @@ void Match
   // Collect used view indexes
   std::set<IndexT> used_index;
   // Sort pairs according the first index to minimize later memory swapping
-  typedef std::map<IndexT, std::vector<IndexT> > Map_vectorT;
+  using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
   for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
   {
@@ -53,15 +54,15 @@ void Match
     used_index.insert(iter->second);
   }
 
-  typedef Eigen::Matrix<ScalarT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
+  using BaseMat = Eigen::Matrix<ScalarT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
   // Init the cascade hasher
   CascadeHasher cascade_hasher;
   if (!used_index.empty())
   {
     const IndexT I = *used_index.begin();
-    const features::Regions &regionsI = *regions_provider.regions_per_view.at(I).get();
-    const size_t dimension = regionsI.DescriptorLength();
+    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const size_t dimension = regionsI.get()->DescriptorLength();
     cascade_hasher.Init(dimension);
   }
 
@@ -76,18 +77,18 @@ void Match
       std::set<IndexT>::const_iterator iter = used_index.begin();
       std::advance(iter, i);
       const IndexT I = *iter;
-      const features::Regions &regionsI = *regions_provider.regions_per_view.at(I).get();
+      std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
       const ScalarT * tabI =
-        reinterpret_cast<const ScalarT*>(regionsI.DescriptorRawData());
-      const size_t dimension = regionsI.DescriptorLength();
+        reinterpret_cast<const ScalarT*>(regionsI.get()->DescriptorRawData());
+      const size_t dimension = regionsI.get()->DescriptorLength();
       if (i==0)
       {
         matForZeroMean.resize(used_index.size(), dimension);
         matForZeroMean.fill(0.0f);
       }
-      if (regionsI.RegionCount() > 0)
+      if (regionsI.get()->RegionCount() > 0)
       {
-        Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
+        Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.get()->RegionCount(), dimension);
         matForZeroMean.row(i) = CascadeHasher::GetZeroMeanDescriptor(mat_I);
       }
     }
@@ -103,12 +104,12 @@ void Match
     std::set<IndexT>::const_iterator iter = used_index.begin();
     std::advance(iter, i);
     const IndexT I = *iter;
-    const features::Regions &regionsI = *regions_provider.regions_per_view.at(I).get();
+    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
     const ScalarT * tabI =
-      reinterpret_cast<const ScalarT*>(regionsI.DescriptorRawData());
-    const size_t dimension = regionsI.DescriptorLength();
+      reinterpret_cast<const ScalarT*>(regionsI.get()->DescriptorRawData());
+    const size_t dimension = regionsI.get()->DescriptorLength();
 
-    Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
+    Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.get()->RegionCount(), dimension);
     HashedDescriptions hashed_description = cascade_hasher.CreateHashedDescriptions(mat_I,
       zero_mean_descriptor);
 #ifdef OPENMVG_USE_OPENMP
@@ -126,18 +127,18 @@ void Match
     const IndexT I = iter->first;
     const std::vector<IndexT> & indexToCompare = iter->second;
 
-    const features::Regions &regionsI = *regions_provider.regions_per_view.at(I).get();
-    if (regionsI.RegionCount() == 0)
+    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    if (regionsI.get()->RegionCount() == 0)
     {
       my_progress_bar += indexToCompare.size();
       continue;
     }
 
-    const std::vector<features::PointFeature> pointFeaturesI = regionsI.GetRegionsPositions();
+    const std::vector<features::PointFeature> pointFeaturesI = regionsI.get()->GetRegionsPositions();
     const ScalarT * tabI =
-      reinterpret_cast<const ScalarT*>(regionsI.DescriptorRawData());
-    const size_t dimension = regionsI.DescriptorLength();
-    Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.RegionCount(), dimension);
+      reinterpret_cast<const ScalarT*>(regionsI.get()->DescriptorRawData());
+    const size_t dimension = regionsI.get()->DescriptorLength();
+    Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI.get()->RegionCount(), dimension);
 
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic)
@@ -145,10 +146,9 @@ void Match
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
       size_t J = indexToCompare[j];
-      const features::Regions &regionsJ = *regions_provider.regions_per_view.at(J).get();
+      std::shared_ptr<features::Regions> regionsJ = regions_provider.get(J);
 
-      if (regions_provider.regions_per_view.count(J) == 0
-          || regionsI.Type_id() != regionsJ.Type_id())
+      if (regionsI.get()->Type_id() != regionsJ.get()->Type_id())
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
@@ -158,14 +158,14 @@ void Match
       }
 
       // Matrix representation of the query input data;
-      const ScalarT * tabJ = reinterpret_cast<const ScalarT*>(regionsJ.DescriptorRawData());
-      Eigen::Map<BaseMat> mat_J( (ScalarT*)tabJ, regionsJ.RegionCount(), dimension);
+      const ScalarT * tabJ = reinterpret_cast<const ScalarT*>(regionsJ.get()->DescriptorRawData());
+      Eigen::Map<BaseMat> mat_J( (ScalarT*)tabJ, regionsJ.get()->RegionCount(), dimension);
 
       IndMatches pvec_indices;
-      typedef typename Accumulator<ScalarT>::Type ResultType;
+      using ResultType = typename Accumulator<ScalarT>::Type;
       std::vector<ResultType> pvec_distances;
-      pvec_distances.reserve(regionsJ.RegionCount() * 2);
-      pvec_indices.reserve(regionsJ.RegionCount() * 2);
+      pvec_distances.reserve(regionsJ.get()->RegionCount() * 2);
+      pvec_indices.reserve(regionsJ.get()->RegionCount() * 2);
 
       // Match the query descriptors to the database
       cascade_hasher.Match_HashedDescriptions<BaseMat, ResultType>(
@@ -197,7 +197,7 @@ void Match
       matching::IndMatch::getDeduplicated(vec_putative_matches);
 
       // Remove matches that have the same (X,Y) coordinates
-      const std::vector<features::PointFeature> pointFeaturesJ = regionsJ.GetRegionsPositions();
+      const std::vector<features::PointFeature> pointFeaturesJ = regionsJ.get()->GetRegionsPositions();
       matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
         pointFeaturesI, pointFeaturesJ);
       matchDeduplicator.getDeduplicated(vec_putative_matches);
@@ -222,22 +222,19 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatches & map_PutativesMatches // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches // the pairwise photometric corresponding points
 )const
 {
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
-
-  if (regions_provider->regions_per_view.empty())
+  if (!regions_provider)
     return;
 
-  const features::Regions &regions = *regions_provider->regions_per_view.begin()->second.get();
-
-  if (regions.IsBinary())
+  if (regions_provider->IsBinary())
     return;
 
-  if(regions.Type_id() == typeid(unsigned char).name())
+  if(regions_provider->Type_id() == typeid(unsigned char).name())
   {
     impl::Match<unsigned char>(
       sfm_data,
@@ -247,7 +244,7 @@ void Cascade_Hashing_Matcher_Regions_AllInMemory::Match
       map_PutativesMatches);
   }
   else
-  if(regions.Type_id() == typeid(float).name())
+  if(regions_provider->Type_id() == typeid(float).name())
   {
     impl::Match<float>(
       sfm_data,

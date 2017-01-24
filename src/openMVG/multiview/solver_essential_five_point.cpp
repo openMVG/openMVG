@@ -27,7 +27,9 @@
 
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+
 #include <iostream>
+
 namespace openMVG {
 
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
@@ -167,7 +169,7 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
 
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
-                            vector<Mat3> *Es) {
+                            std::vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
   const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);
 
@@ -175,7 +177,7 @@ void FivePointsRelativePose(const Mat2X &x1,
   const Eigen::Matrix<double, 10, 20> E_constraints = FivePointsPolynomialConstraints(E_basis);
 
   // Step 3: Gauss-Jordan Elimination (done thanks to a LU decomposition).
-  typedef Eigen::Matrix<double, 10, 10> Mat10;
+  using Mat10 = Eigen::Matrix<double, 10, 10>;
   Eigen::FullPivLU<Mat10> c_lu(E_constraints.block<10, 10>(0, 0));
   const Mat10 M = c_lu.solve(E_constraints.block<10, 10>(0, 10));
 

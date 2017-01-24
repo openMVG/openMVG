@@ -2,6 +2,9 @@
 # http://travis-ci.org configuration file for openMVG
 #
 
+dist: trusty
+sudo: false
+
 language: cpp
 
 matrix:
@@ -24,8 +27,6 @@ matrix:
             - clang-3.7
       env: COMPILER=clang++-3.7
 
-sudo: false
-
 addons:
   apt:
     sources:
@@ -46,24 +47,26 @@ env:
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
 
 before_script:
+  # Display cmake version
+  - cmake --version
   # Create build folder
   - mkdir $OPENMVG_BUILD
   - cd $OPENMVG_BUILD
   # Classic release build
+  #  - Compile only OpenMVG core libraries for unit testing
+  #  - SCHUR_SPECIALIZATIONS set to OFF to speed up build time (ceres)
   - >
     cmake \
       -DCMAKE_CXX_COMPILER=$COMPILER \
       -DCMAKE_BUILD_TYPE=release \
       -DOpenMVG_BUILD_TESTS=ON \
-      -DOpenMVG_BUILD_EXAMPLES=ON \
+      -DOpenMVG_BUILD_EXAMPLES=OFF \
+      -DOpenMVG_BUILD_SOFTWARES=OFF \
+      -DSCHUR_SPECIALIZATIONS=OFF \
       . $OPENMVG_SOURCE
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
   - make -j 2
   - make test
-
-branches:
-  only:
-    - develop
 

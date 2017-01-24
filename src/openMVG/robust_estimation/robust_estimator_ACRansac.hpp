@@ -7,8 +7,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
-#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
+#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
 
 //-------------------
 // Generic implementation of ACRANSAC
@@ -215,7 +215,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
 
     // Compute NFA scoring from the cumulative histogram
 
-    typedef std::pair<double,double> nfa_thresholdT; // NFA and residual threshold
+    using nfa_thresholdT = std::pair<double,double>; // NFA and residual threshold
     nfa_thresholdT current_best_nfa(std::numeric_limits<double>::infinity(), 0.0);
     unsigned int cumulative_count = 0;
     const std::vector<size_t> & frequencies = histo.GetHist();
@@ -268,7 +268,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     }
 
     // Find best NFA and its index wrt square error threshold in m_sorted_residuals.
-    typedef std::pair<double,int> nfa_indexT;
+    using nfa_indexT = std::pair<double,int>;
     nfa_indexT current_best_nfa(std::numeric_limits<double>::infinity(), Kernel::MINIMUM_SAMPLES);
     const size_t n = m_kernel.NumSamples();
     for(size_t k=Kernel::MINIMUM_SAMPLES+1;
@@ -401,8 +401,8 @@ std::pair<double, double> ACRANSAC
         unsigned int nInlier = 0;
         for (size_t i = 0; i < nData; ++i)
         {
-         if (nfa_interface.residuals()[i] <= maxThreshold)
-          ++nInlier;
+          if (nfa_interface.residuals()[i] <= maxThreshold)
+            ++nInlier;
         }
         if (nInlier > 2.5 * sizeSample) // does the model is meaningful
           bACRansacMode = true;
@@ -485,4 +485,4 @@ std::pair<double, double> ACRANSAC
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP

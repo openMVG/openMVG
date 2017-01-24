@@ -5,7 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
+
 
 #include "openMVG/types.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
@@ -17,10 +19,14 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+}
+
 namespace matching_image_collection {
 
 //-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences
@@ -81,11 +87,11 @@ struct GeometricFilter_EMatrix_AC
     //--
 
     // Define the AContrario adapted Essential matrix solver
-    typedef ACKernelAdaptorEssential<
+    using KernelType =
+      ACKernelAdaptorEssential<
         openMVG::essential::kernel::FivePointKernel,
         openMVG::fundamental::kernel::EpipolarDistanceError,
-        Mat3>
-        KernelType;
+        Mat3>;
 
     const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
     const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
@@ -154,13 +160,16 @@ struct GeometricFilter_EMatrix_AC
       Mat3 F;
       FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       geometry_aware::GuidedMatching
         <Mat3,
         openMVG::fundamental::kernel::EpipolarDistanceError>(
         //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
         F,
-        cam_I, *regions_provider->regions_per_view.at(iIndex),
-        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        cam_I, *regionsI,
+        cam_J, *regionsJ,
         Square(m_dPrecision_robust), Square(dDistanceRatio),
         matches);
     }
@@ -178,3 +187,4 @@ struct GeometricFilter_EMatrix_AC
 } //namespace matching_image_collection
 }  // namespace openMVG
 
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP

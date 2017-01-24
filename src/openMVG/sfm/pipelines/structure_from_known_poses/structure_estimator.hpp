@@ -4,13 +4,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
+#define OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
 
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace sfm {
+
+struct Regions_Provider;
+struct SfM_Data;
 
 class SfM_Data_Structure_Estimation_From_Known_Poses
 {
@@ -59,3 +62,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
+#endif // OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP

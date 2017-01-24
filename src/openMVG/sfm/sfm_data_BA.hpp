@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_BA_HPP
-#define OPENMVG_SFM_DATA_BA_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_BA_HPP
+#define OPENMVG_SFM_SFM_DATA_BA_HPP
 
 #include "openMVG/cameras/Camera_Common.hpp"
 
@@ -72,11 +72,14 @@ struct Optimize_Options
 class Bundle_Adjustment
 {
   public:
+
+  virtual ~Bundle_Adjustment() = default;
+
   // Perform a Bundle Adjustment on the SfM scene (refinement only asked parameters)
   virtual bool Adjust
   (
     // the SfM scene to refine
-    SfM_Data & sfm_data,
+    sfm::SfM_Data & sfm_data,
     // tell which parameter needs to be adjusted
     const Optimize_Options options
   ) = 0;
@@ -87,4 +90,4 @@ class Bundle_Adjustment
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_BA_HPP
+#endif // OPENMVG_SFM_SFM_DATA_BA_HPP

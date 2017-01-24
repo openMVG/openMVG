@@ -131,35 +131,33 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
 
 Mat3 F_from_P(const Mat34 & P1, const Mat34 & P2)
 {
-	Mat3 F12;
-		
-	typedef Eigen::Matrix<double, 2, 4> Mat24;
-	Mat24 X1 = P1.block<2, 4>(1, 0);
-	Mat24 X2;  X2 << P1.row(2), P1.row(0);
-	Mat24 X3 = P1.block<2, 4>(0, 0);
-	Mat24 Y1 = P2.block<2, 4>(1, 0);
-	Mat24 Y2;  Y2 << P2.row(2), P2.row(0);
-	Mat24 Y3 = P2.block<2, 4>(0, 0);
+  Mat3 F12;
+
+  using Mat24 = Eigen::Matrix<double, 2, 4>;
+  Mat24 X1 = P1.block<2, 4>(1, 0);
+  Mat24 X2;  X2 << P1.row(2), P1.row(0);
+  Mat24 X3 = P1.block<2, 4>(0, 0);
+  Mat24 Y1 = P2.block<2, 4>(1, 0);
+  Mat24 Y2;  Y2 << P2.row(2), P2.row(0);
+  Mat24 Y3 = P2.block<2, 4>(0, 0);
 
 
-	Mat4 X1Y1, X2Y1, X3Y1, X1Y2, X2Y2, X3Y2, X1Y3, X2Y3, X3Y3;
-	X1Y1 << X1, Y1;  X2Y1 << X2, Y1;  X3Y1 << X3, Y1;
-	X1Y2 << X1, Y2;  X2Y2 << X2, Y2;  X3Y2 << X3, Y2;
-	X1Y3 << X1, Y3;  X2Y3 << X2, Y3;  X3Y3 << X3, Y3;
+  Mat4 X1Y1, X2Y1, X3Y1, X1Y2, X2Y2, X3Y2, X1Y3, X2Y3, X3Y3;
+  X1Y1 << X1, Y1;  X2Y1 << X2, Y1;  X3Y1 << X3, Y1;
+  X1Y2 << X1, Y2;  X2Y2 << X2, Y2;  X3Y2 << X3, Y2;
+  X1Y3 << X1, Y3;  X2Y3 << X2, Y3;  X3Y3 << X3, Y3;
 
 
-	F12 << X1Y1.determinant(), X2Y1.determinant(), X3Y1.determinant(),
-		X1Y2.determinant(), X2Y2.determinant(), X3Y2.determinant(),
-		X1Y3.determinant(), X2Y3.determinant(), X3Y3.determinant();
+  F12 <<
+    X1Y1.determinant(), X2Y1.determinant(), X3Y1.determinant(),
+    X1Y2.determinant(), X2Y2.determinant(), X3Y2.determinant(),
+    X1Y3.determinant(), X2Y3.determinant(), X3Y3.determinant();
 
-	return F12;
+  return F12;
 }
 
 Vec2 Project(const Mat34 &P, const Vec3 &X) {
-  Vec4 HX;
-  HX << X, 1.0;
-  Vec3 hx = P * HX;
-  return hx.head<2>() / hx(2);
+  return Vec3(P * X.homogeneous()).hnormalized();
 }
 
 void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
@@ -172,8 +170,8 @@ void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
 void Project(const Mat34 &P, const Mat4X &X, Mat2X *x) {
   x->resize(2, X.cols());
   for (Mat4X::Index c = 0; c < X.cols(); ++c) {
-    Vec3 hx = P * X.col(c);
-    x->col(c) = hx.head<2>() / hx(2);
+    const Vec3 hx = P * X.col(c);
+    x->col(c) = hx.hnormalized();
   }
 }
 
@@ -204,10 +202,6 @@ void EuclideanToHomogeneous(const Mat &X, Mat *H) {
 
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
   return (R*X)[2] + t[2];
-}
-
-Vec3 EuclideanToHomogeneous(const Vec2 &x) {
-  return Vec3(x(0), x(1), 1.0);
 }
 
 void HomogeneousToEuclidean(const Mat &H, Mat *X) {
@@ -276,4 +270,3 @@ double RootMeanSquareError(const Mat2X &x_image,
 }
 
 } // namespace openMVG
-

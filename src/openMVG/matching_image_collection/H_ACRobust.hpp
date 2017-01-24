@@ -5,20 +5,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include "openMVG/multiview/solver_homography_kernel.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
+#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+} // namespace sfm 
+
 namespace matching_image_collection {
 
 //-- A contrario homography matrix estimation template functor used for filter pair of putative correspondences
@@ -59,12 +63,12 @@ struct GeometricFilter_HMatrix_AC
     //--
 
     // Define the AContrario adapted Homography matrix solver
-    typedef ACKernelAdaptor<
-      openMVG::homography::kernel::FourPointSolver,
-      openMVG::homography::kernel::AsymmetricError,
-      UnnormalizerI,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::homography::kernel::FourPointSolver,
+        openMVG::homography::kernel::AsymmetricError,
+        UnnormalizerI,
+        Mat3>;
 
     KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
@@ -102,7 +106,7 @@ struct GeometricFilter_HMatrix_AC
     MatT & m)
   {
     m.resize(2, vec_feats.size());
-    typedef typename MatT::Scalar Scalar; // Output matrix type
+    using Scalar = typename MatT::Scalar; // Output matrix type
 
     size_t i = 0;
     for( features::PointFeatures::const_iterator iter = vec_feats.begin();
@@ -141,11 +145,14 @@ struct GeometricFilter_HMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       if (dDistanceRatio < 0)
       {
         // Filtering based only on region positions
-        const features::PointFeatures pointsFeaturesI = regions_provider->regions_per_view.at(iIndex)->GetRegionsPositions();
-        const features::PointFeatures pointsFeaturesJ = regions_provider->regions_per_view.at(jIndex)->GetRegionsPositions();
+        const features::PointFeatures pointsFeaturesI = regionsI->GetRegionsPositions();
+        const features::PointFeatures pointsFeaturesJ = regionsJ->GetRegionsPositions();
         Mat xI, xJ;
         PointsToMat(cam_I, pointsFeaturesI, xI);
         PointsToMat(cam_J, pointsFeaturesJ, xJ);
@@ -167,8 +174,8 @@ struct GeometricFilter_HMatrix_AC
         geometry_aware::GuidedMatching
           <Mat3, openMVG::homography::kernel::AsymmetricError>(
           m_H,
-          cam_I, *regions_provider->regions_per_view.at(iIndex),
-          cam_J, *regions_provider->regions_per_view.at(jIndex),
+          cam_I, *regionsI,
+          cam_J, *regionsJ,
           Square(m_dPrecision_robust), Square(dDistanceRatio),
           matches);
       }
@@ -184,7 +191,7 @@ struct GeometricFilter_HMatrix_AC
   double m_dPrecision_robust;
 };
 
-} //namespace matching_image_collection 
+} // namespace matching_image_collection
 } // namespace openMVG
 
-
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP 

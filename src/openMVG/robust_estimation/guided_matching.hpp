@@ -4,17 +4,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_H_
-#define OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
+#define OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/matching/indMatch.hpp"
-using namespace openMVG::matching;
-
-#include "openMVG/features/regions.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
+
 
 namespace openMVG{
 namespace geometry_aware{
@@ -31,7 +30,7 @@ void GuidedMatching(
   const Mat & xLeft,    // The left data points
   const Mat & xRight,   // The right data points
   double errorTh,       // Maximal authorized error threshold
-  IndMatches & vec_corresponding_index) // Ouput corresponding index
+  matching::IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   assert(xLeft.rows() == xRight.rows());
 
@@ -41,7 +40,7 @@ void GuidedMatching(
   for (size_t i = 0; i < xLeft.cols(); ++i) {
 
     double min = std::numeric_limits<double>::max();
-    IndMatch match;
+    matching::IndMatch match;
     for (size_t j = 0; j < xRight.cols(); ++j) {
       // Compute the geometric error: error to the model
       const double err = ErrorArg::Error(
@@ -50,7 +49,7 @@ void GuidedMatching(
       // if smaller error update corresponding index
       if (err < errorTh && err < min) {
         min = err;
-        match = IndMatch(i,j);
+        match = matching::IndMatch(i,j);
       }
     }
     if (min < errorTh)  {
@@ -60,7 +59,7 @@ void GuidedMatching(
   }
 
   // Remove duplicates (when multiple points at same position exist)
-  IndMatch::getDeduplicated(vec_corresponding_index);
+  matching::IndMatch::getDeduplicated(vec_corresponding_index);
 }
 
 // Struct to help filtering of correspondence according update of
@@ -125,7 +124,7 @@ void GuidedMatching(
   const std::vector<DescriptorT > & rDescriptors,
   double errorTh,       // Maximal authorized error threshold
   double distRatio,     // Maximal authorized distance ratio
-  IndMatches & vec_corresponding_index) // Ouput corresponding index
+  matching::IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   assert(xLeft.rows() == xRight.rows());
   assert(xLeft.cols() == lDescriptors.size());
@@ -155,12 +154,12 @@ void GuidedMatching(
     // Add correspondence only iff the distance ratio is valid
     if (dR.isValid(distRatio))  {
       // save the best corresponding index
-      vec_corresponding_index.push_back(IndMatch(i,dR.idx));
+      vec_corresponding_index.push_back(matching::IndMatch(i,dR.idx));
     }
   }
 
   // Remove duplicates (when multiple points at same position exist)
-  IndMatch::getDeduplicated(vec_corresponding_index);
+  matching::IndMatch::getDeduplicated(vec_corresponding_index);
 }
 
 /// Guided Matching (features + descriptors with distance ratio):
@@ -179,7 +178,7 @@ void GuidedMatching(
   const features::Regions & rRegions,  // regions (point features & corresponding descriptors)
   double errorTh,       // Maximal authorized error threshold
   double distRatio,     // Maximal authorized distance ratio
-  IndMatches & vec_corresponding_index) // Ouput corresponding index
+  matching::IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   // Looking for the corresponding points that have to satisfy:
   //   1. a geometric distance below the provided Threshold
@@ -214,12 +213,12 @@ void GuidedMatching(
     // Add correspondence only iff the distance ratio is valid
     if (dR.isValid(distRatio))  {
       // save the best corresponding index
-      vec_corresponding_index.push_back(IndMatch(i,dR.idx));
+      vec_corresponding_index.push_back(matching::IndMatch(i,dR.idx));
     }
   }
 
   // Remove duplicates (when multiple points at same position exist)
-  IndMatch::getDeduplicated(vec_corresponding_index);
+  matching::IndMatch::getDeduplicated(vec_corresponding_index);
 }
 
 /// Compute a bucket index from an epipolar point
@@ -295,7 +294,7 @@ void GuidedMatching_Fundamental_Fast(
   const int widthR, const int heightR,
   double errorTh,       // Maximal authorized error threshold (consider it's a square threshold)
   double distRatio,     // Maximal authorized distance ratio
-  IndMatches & vec_corresponding_index) // Ouput corresponding index
+  matching::IndMatches & vec_corresponding_index) // Ouput corresponding index
 {
   // Looking for the corresponding points that have to satisfy:
   //   1. a geometric distance below the provided Threshold
@@ -317,8 +316,8 @@ void GuidedMatching_Fundamental_Fast(
   //--
   //-- Store point in the corresponding epipolar line bucket
   //--
-  typedef std::vector<IndexT> Bucket_vec;
-	typedef std::vector<Bucket_vec> Buckets_vec;
+  using Bucket_vec = std::vector<IndexT>;
+	using Buckets_vec = std::vector<Bucket_vec>;
 	const int nb_buckets = 2*(widthR + heightR-2);
 
   Buckets_vec buckets(nb_buckets);
@@ -383,11 +382,12 @@ void GuidedMatching_Fundamental_Fast(
     if (dR[i].isValid(distRatio))
     {
       // save the best corresponding index
-      vec_corresponding_index.push_back(IndMatch(i, dR[i].idx));
+      vec_corresponding_index.push_back(matching::IndMatch(i, dR[i].idx));
     }
   }
 }
 
 } // namespace geometry_aware
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_H_
+
+#endif // OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP

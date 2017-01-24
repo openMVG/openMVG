@@ -5,13 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef OPENMVG_SFM_PIPELINES_TEST_HPP
+#define OPENMVG_SFM_PIPELINES_TEST_HPP
+
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
+
+#include <iostream>
+#include <random>
+
 using namespace openMVG;
 using namespace openMVG::sfm;
 
-#include <random>
-#include <iostream>
 
 // Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
 //  - for each view store the observations point as PointFeatures
@@ -159,3 +164,4 @@ SfM_Data getInputScene
   return sfm_data;
 }
 
+#endif // OPENMVG_SFM_PIPELINES_TEST_HPP

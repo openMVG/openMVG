@@ -42,19 +42,12 @@ namespace tbmr
     return v;
   }
 
-  template<typename I>
   std::vector<Vec2i>
   wrt_delta_index
   (
-    const image::Image<I> & ima
   )
   {
-    std::vector<Vec2i> vec;
-    vec.emplace_back(0,-1);
-    vec.emplace_back(0,1);
-    vec.emplace_back(-1,0);
-    vec.emplace_back(1,0);
-    return vec;
+    return std::vector<Vec2i>{ { 0,-1 }, {0,1}, {-1, 0}, {1,0} };
   }
 
   //for incremental computation of region information
@@ -139,7 +132,7 @@ namespace tbmr
     std::vector<attribute> imaAttribute(ima.Width() * ima.Height());
     image::Image<unsigned int> zpar(ima.Width(), ima.Height());
 
-    const std::vector<Vec2i> offsets = wrt_delta_index(ima);
+    const std::vector<Vec2i> offsets = wrt_delta_index();
 
     for (int i = S.size()-1; i >= 0; --i)
     {
@@ -220,9 +213,9 @@ namespace tbmr
     for (int i = S.size()-1; i >= 0; --i)
     {
       const unsigned int p = S[i];
-      if(parent[p] == p || ima[p] != ima[parent[p]]) {
+      if (parent[p] == p || ima[p] != ima[parent[p]]) {
         vecNodes[numNodes++] = p;
-        if(imaAttribute[p].area >= minimumSize)
+        if (imaAttribute[p].area >= minimumSize)
           ++numSons[parent[p]];
       }
     }
@@ -242,9 +235,8 @@ namespace tbmr
     unsigned int numTbmrs = 0;
 
     std::vector<unsigned int> vecTbmrs(numNodes);
-    for (int i = 0; i < vecNodes.size(); ++i)
+    for (const unsigned p : vecNodes)
     {
-      const unsigned int  p = vecNodes[i];
       if (numSons[p] == 1 && !isSeen[p] && imaAttribute[p].area <= maxArea)
       {
         unsigned int num_ancestors = 0;

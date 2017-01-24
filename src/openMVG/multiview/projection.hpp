@@ -25,8 +25,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_PROJECTION_H_
-#define OPENMVG_MULTIVIEW_PROJECTION_H_
+#ifndef OPENMVG_MULTIVIEW_PROJECTION_HPP
+#define OPENMVG_MULTIVIEW_PROJECTION_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -64,7 +64,7 @@ void KRt_From_P( const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp );
 Mat3 F_from_P( const Mat34 & P1, const Mat34 & P2 );
 
 /**
-* @brief Compute the depth of the X point. R*X[2]+t[2].
+* @brief Compute the depth of the X point. R*X[2]+t[2]
 * @param R Rotation matrix
 * @param t Translation vector
 * @param X 3d points
@@ -73,7 +73,7 @@ Mat3 F_from_P( const Mat34 & P1, const Mat34 & P2 );
 double Depth( const Mat3 &R, const Vec3 &t, const Vec3 &X );
 
 /**
-* @brief Compute P*[X|1.0]. Transformed from homogeneous to euclidean coordinates.
+* @brief Compute P*[X|1.0]. Transformed from homogeneous to euclidean coordinates
 * @param P Camera projection matrix
 * @param X Input 3d point
 * @return Projected point
@@ -81,7 +81,7 @@ double Depth( const Mat3 &R, const Vec3 &t, const Vec3 &X );
 Vec2 Project( const Mat34 &P, const Vec3 &X );
 
 /**
-* @brief Compute P*[X|1.0] for the X list of point (3D point).
+* @brief Compute P*[X|1.0] for the X list of point (3D point)
 * @param P Camera projection matrix
 * @param X Input 3d points
 * @param[out] x Projected points
@@ -89,7 +89,7 @@ Vec2 Project( const Mat34 &P, const Vec3 &X );
 void Project( const Mat34 &P, const Mat3X &X, Mat2X *x );
 
 /**
-* @brief Compute P*[X|1.0] for the X list of point (4D point).
+* @brief Compute P*[X|1.0] for the X list of point (4D point)
 * @param P Camera projection matrix
 * @param X Input 4d points
 * @param[out] x Projected points
@@ -97,7 +97,7 @@ void Project( const Mat34 &P, const Mat3X &X, Mat2X *x );
 void Project( const Mat34 &P, const Mat4X &X, Mat2X *x );
 
 /**
-* @brief Return P*[X|1.0] for the X list of point (3D point).
+* @brief Return P*[X|1.0] for the X list of point (3D point)
 * @param P Camera projection matrix
 * @param X Input 3d points
 * @return Projected points
@@ -105,7 +105,7 @@ void Project( const Mat34 &P, const Mat4X &X, Mat2X *x );
 Mat2X Project( const Mat34 &P, const Mat3X &X );
 
 /**
-* @brief Return P*[X|1.0] for the X list of point (4D point).
+* @brief Return P*[X|1.0] for the X list of point (4D point)
 * @param P Camera projection matrix
 * @param X Input 4d points
 * @return Projected points
@@ -114,28 +114,21 @@ Mat2X Project( const Mat34 &P, const Mat4X &X );
 
 
 /**
-* @brief Change homogeneous coordinates to euclidean.
+* @brief Change homogeneous coordinates to euclidean
 * @param H Input 4d point
 * @param[out] X Output 3d point
 */
 void HomogeneousToEuclidean( const Vec4 &H, Vec3 *X );
 
 /**
-* @brief Change euclidean coordinates to homogeneous.
+* @brief Change euclidean coordinates to homogeneous
 * @param X Input points
 * @param H Output points
 */
 void EuclideanToHomogeneous( const Mat &X, Mat *H );
 
 /**
-* @brief Change euclidean coordinates to homogeneous.
-* @param x Input 2d point
-* @return homogeneous 3d point
-*/
-Vec3 EuclideanToHomogeneous( const Vec2 &x );
-
-/**
-* @brief Change hoogeneous to euclidean
+* @brief Change homogeneous to euclidean
 * @param H Input homogeneous Points
 * @param[out] Output euclidean points
 */
@@ -206,4 +199,4 @@ double RootMeanSquareError( const Mat2X &x_image,
 
 } // namespace openMVG
 
-#endif //OPENMVG_MULTIVIEW_PROJECTION_H_
+#endif // OPENMVG_MULTIVIEW_PROJECTION_HPP

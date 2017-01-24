@@ -5,19 +5,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
+
+#include "testing/testing.h"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+
 #include <iterator>
 #include <random>
 
-#include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "testing/testing.h"
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
 
 using namespace openMVG;
 using namespace openMVG::robust;
 using namespace std;
+using namespace svg;
 
 /// ACRansac Kernel for line estimation
 template <typename SolverArg,
@@ -26,8 +28,8 @@ template <typename SolverArg,
 class ACRANSACOneViewKernel
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
   ACRANSACOneViewKernel(const Mat &x1, int w1, int h1)
     : x1_(x1), N1_(Mat3::Identity()), logalpha0_(0.0)

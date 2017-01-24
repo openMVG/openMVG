@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
@@ -13,9 +12,11 @@ using namespace openMVG::graph;
 #include <iostream>
 #include <vector>
 
+using namespace openMVG::graph;
+
 TEST(TripletFinder, test_no_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   // a_b_c
   Graph ga;
@@ -31,7 +32,7 @@ TEST(TripletFinder, test_no_triplet) {
 
 TEST(TripletFinder, test_one_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -78,7 +79,7 @@ TEST(TripletFinder, test_one_triplet) {
 
 TEST(TripletFinder, test_two_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -155,7 +156,7 @@ TEST(TripletFinder, test_two_triplet) {
 
 TEST(TripletFinder, test_three_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -243,7 +244,7 @@ TEST(TripletFinder, test_three_triplet) {
 
 TEST(TripletFinder, test_for_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
  {
     //
     // a__b

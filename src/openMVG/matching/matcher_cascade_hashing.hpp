@@ -4,14 +4,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_MATCHER_CASCADE_HASHING_HPP
+#define OPENMVG_MATCHING_MATCHER_CASCADE_HASHING_HPP
 
-#include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/cascade_hasher.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/matching_interface.hpp"
+
+#include <cmath>
 #include <memory>
 #include <random>
-#include <cmath>
 
 namespace openMVG {
 namespace matching {
@@ -32,9 +34,9 @@ template < typename Scalar = float, typename Metric = L2_Simple<Scalar> >
 class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
 {
   public:
-  typedef typename Metric::ResultType DistanceType;
+  using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcherCascadeHashing() = default ; 
+  ArrayMatcherCascadeHashing() = default ;
   virtual ~ArrayMatcherCascadeHashing() {
     memMapping.reset();
   }
@@ -131,7 +133,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
   };
 
 private:
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
+  using BaseMat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   /// Use a memory mapping in order to avoid memory re-allocation
   std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
   CascadeHasher cascade_hasher_;
@@ -142,3 +144,4 @@ private:
 }  // namespace matching
 }  // namespace openMVG
 
+#endif // OPENMVG_MATCHING_MATCHER_CASCADE_HASHING_HPP

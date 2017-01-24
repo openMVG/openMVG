@@ -4,13 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
-#define OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
+#ifndef OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
+#define OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
+
 #include <memory>
 #include <iostream>
 
@@ -22,7 +22,7 @@ template < typename Scalar = float, typename Metric = L2_Simple<Scalar> >
 class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
 {
   public:
-  typedef typename Metric::ResultType DistanceType;
+  using DistanceType = typename Metric::ResultType;
 
   ArrayMatcherBruteForce() = default ;
   virtual ~ArrayMatcherBruteForce()
@@ -77,7 +77,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       //matrix representation of the input data;
       Eigen::Map<BaseMat> mat_query((Scalar*)query, 1, (*memMapping).cols() );
       Metric metric;
-      vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
+      std::vector<DistanceType> vec_dist((*memMapping).rows(), 0.0);
       for (int i = 0; i < (*memMapping).rows(); ++i)
       {
         // Compute Distance Metric
@@ -86,10 +86,10 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       if (!vec_dist.empty())
       {
         // Find the minimum distance :
-        typename vector<DistanceType>::const_iterator min_iter =
-          min_element( vec_dist.begin(), vec_dist.end());
-        *indice =std::distance(
-          typename vector<DistanceType>::const_iterator(vec_dist.begin()),
+        typename std::vector<DistanceType>::const_iterator min_iter =
+          std::min_element( vec_dist.begin(), vec_dist.end());
+        *indice = std::distance(
+          typename std::vector<DistanceType>::const_iterator(vec_dist.begin()),
           min_iter);
         *distance = static_cast<DistanceType>(*min_iter);
       }
@@ -153,7 +153,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
       }
 
       // Find the N minimum distances:
-      const int maxMinFound = (int) min( size_t(NN), vec_distance.size());
+      const int maxMinFound = (int) std::min( size_t(NN), vec_distance.size());
       std::vector< stl::indexed_sort::sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
       stl::indexed_sort::sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
@@ -167,7 +167,7 @@ class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
   };
 
 private:
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> BaseMat;
+  using BaseMat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   /// Use a memory mapping in order to avoid memory re-allocation
   std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
 };
@@ -175,4 +175,4 @@ private:
 }  // namespace matching
 }  // namespace openMVG
 
-#endif  // OPENMVG_MATCHING_ARRAYMATCHER_BRUTE_FORCE_H
+#endif  // OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP

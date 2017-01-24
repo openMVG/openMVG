@@ -11,12 +11,13 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 // ========================================================================== //
 
-#include <openMVG/system/timer.hpp>
+#include "openMVG/system/timer.hpp"
+
 #ifdef _WIN32
 # include <windows.h>
 #else
 # include <sys/time.h>
-#endif
+#endif // _WIN32 
 
 namespace openMVG {
 namespace system {

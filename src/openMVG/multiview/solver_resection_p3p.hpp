@@ -32,19 +32,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_H_
-#define OPENMVG_MULTIVIEW_RESECTION_P3P_H_
+#ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
+#define OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/numeric/numeric.h"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 namespace openMVG {
 namespace euclidean_resection {
 
-typedef Eigen::Matrix<double, 5, 1> Vec5;
+using Vec5 = Eigen::Matrix<double, 5, 1>;
 
 inline void solveQuartic
 (
@@ -346,7 +346,7 @@ struct P3PSolver {
 
 class P3P_ResectionKernel_K {
  public:
-  typedef Mat34 Model;
+  using Model = Mat34;
   enum { MINIMUM_SAMPLES = 3 };
 
   P3P_ResectionKernel_K
@@ -355,7 +355,7 @@ class P3P_ResectionKernel_K {
     const Mat3X &X,
     const Mat3 &K = Mat3::Identity()
   )
-  :x_image_(x_camera), X_(X), K_(K)
+  : x_image_(x_camera), X_(X), K_(K)
   {
     assert(x_camera.cols() == X.cols());
     // Conversion from image coordinates to normalized camera coordinates
@@ -415,5 +415,4 @@ class P3P_ResectionKernel_K {
 }  // namespace euclidean_resection
 }  // namespace openMVG
 
-#endif // OPENMVG_MULTIVIEW_RESECTION_P3P_H_
-
+#endif // OPENMVG_MULTIVIEW_RESECTION_P3P_HPP

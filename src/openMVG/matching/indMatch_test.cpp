@@ -5,9 +5,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "testing/testing.h"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
+
+#include "testing/testing.h"
 
 using namespace openMVG;
 using namespace matching;

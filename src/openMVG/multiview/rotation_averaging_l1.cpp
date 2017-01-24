@@ -7,35 +7,37 @@
 
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/numeric/l1_solver_admm.hpp"
-#include <Eigen/SparseCholesky>
-#include <Eigen/Cholesky>
 
 #ifdef HAVE_BOOST
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/foreach.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/min.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/max.hpp>
-#include <boost/foreach.hpp>
 using namespace boost;
 #else
-#include "lemon/list_graph.h"
-#include "lemon/kruskal.h"
 #include "lemon/adaptors.h"
 #include "lemon/dfs.h"
+#include "lemon/kruskal.h"
+#include "lemon/list_graph.h"
 #include "lemon/path.h"
 using namespace lemon;
 #endif
 
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
+#include <Eigen/Cholesky>
+#include <Eigen/SparseCholesky>
+
+#include <cstdint>
 #include <map>
 #include <queue>
-#include <stdint.h>
+
 
 namespace openMVG   {
 namespace rotation_averaging  {
@@ -69,34 +71,34 @@ ComputeX84Threshold(const TYPE* const values, size_t size, TYPE mul=TYPE(5.2))
 
 /////////////////////////
 
-typedef openMVG::Mat3 Matrix3x3;
-typedef std::vector<size_t> IndexArr;
+using Matrix3x3 = openMVG::Mat3;
+using IndexArr = std::vector<size_t>;
 
 // find the shortest cycle for the given graph and starting vertex
 struct Node {
-  typedef IndexArr InternalType;
+  using InternalType = IndexArr;
   InternalType edges; // array of vertex indices
 };
-typedef std::vector<Node> NodeArr;
+using NodeArr = std::vector<Node>;
 
 struct Link {
   size_t ID; // node index
   size_t parentID;// parent link
   inline Link(size_t ID_=0, size_t parentID_=0) : ID(ID_), parentID(parentID_) {}
 };
-typedef std::queue<Link> LinkQue;
+using LinkQue = std::queue<Link>;
 
 #ifdef HAVE_BOOST
-typedef boost::property<boost::edge_weight_t, float> edge_property_t;
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, size_t, edge_property_t> graph_t;
-typedef graph_t::vertex_descriptor vertex_t;
-typedef graph_t::edge_descriptor edge_t;
-typedef boost::graph_traits<graph_t>::edge_iterator edge_iter;
+using edge_property_t = boost::property<boost::edge_weight_t, float>;
+using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, size_t, edge_property_t>;
+using vertex_t = graph_t::vertex_descriptor;
+using edge_t = graph_t::edge_descriptor;
+using edge_iter = boost::graph_traits<graph_t>::edge_iterator;
 #else
-typedef lemon::ListGraph graph_t;
-typedef graph_t::EdgeMap<double> map_EdgeMap;
+using graph_t = lemon::ListGraph;
+using map_EdgeMap = graph_t::EdgeMap<double>;
 #endif
-typedef std::map<std::pair<size_t,size_t>, Matrix3x3> MapEdgeIJ2R;
+using MapEdgeIJ2R = std::map<std::pair<size_t,size_t>, Matrix3x3>;
 
 // Look for the maximum spanning tree along the graph of relative rotations
 // since we look for the maximum spanning tree using a minimum spanning tree algorithm
@@ -134,13 +136,11 @@ size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEd
   }
 
   //B-- Create a node graph for each element of the set
-  typedef std::map<size_t, graph_t::Node> map_Size_t_Node;
+  using map_Size_t_Node = std::map<size_t, graph_t::Node>;
   map_Size_t_Node map_size_t_to_node;
-  for (std::set<size_t>::const_iterator iter = setNodes.begin();
-    iter != setNodes.end();
-    ++iter)
+  for (const auto & iter : setNodes)
   {
-    map_size_t_to_node[*iter] = g.addNode();
+    map_size_t_to_node[iter] = g.addNode();
   }
 
   //C-- Create a graph from RelRs with weighted edges
@@ -458,7 +458,7 @@ bool SolveIRLS
 
   // Since the sparsity pattern will not change with each linear solve
   //  compute it once to speed up the solution time.
-  typedef Eigen::SimplicialLDLT<sMat > Linear_Solver_T;
+  using Linear_Solver_T = Eigen::SimplicialLDLT<sMat >;
 
   Linear_Solver_T linear_solver;
   linear_solver.analyzePattern(A.transpose() * A);

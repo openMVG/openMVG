@@ -1,2 +1,1 @@
-ADD_SUBDIRECTORY(SfM)
-
+add_subdirectory(SfM)

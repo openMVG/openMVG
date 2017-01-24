@@ -24,6 +24,7 @@ using namespace openMVG::matching;
 using namespace svg;
 using namespace std;
 
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 
 // Class to load images and ground truth homography matrices
@@ -143,7 +144,7 @@ void PointsToMat(
   MatT & m0,
   MatT & m1)
 {
-  typedef typename FeaturesT::value_type ValueT; // Container type
+  using ValueT = typename FeaturesT::value_type; // Container type
 
   m0.resize(2, matches.size());
   m1.resize(2, matches.size());
@@ -216,7 +217,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   std::string sFeature_Preset = "NORMAL";
   bool bFeature_Repeatability = false;
-  bool bMatching_Repeatability = false;
+  bool bMatching_Repeatability = true;
   cmd.add( make_option('i', sDataset_Path, "input_dataset") );
   cmd.add( make_option('d', sImage_Describer_Method, "describer_method") );
   cmd.add( make_option('p', sFeature_Preset, "describer_preset") );
@@ -236,6 +237,7 @@ int main(int argc, char **argv)
       << "[-d|--describer_method]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+      << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors.\n"
       << "[-p|--describer_preset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -290,6 +292,11 @@ int main(int argc, char **argv)
       if (sImage_Describer_Method == "SIFT")
       {
         image_describer.reset(new SIFT_Image_describer);
+      }
+      else
+      if (sImage_Describer_Method == "SIFT_ANATOMY")
+      {
+        image_describer.reset(new SIFT_Anatomy_Image_describer);
       }
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")

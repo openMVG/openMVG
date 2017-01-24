@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_UNDISTORT_IMAGE_HPP
-#define OPENMVG_CAMERA_UNDISTORT_IMAGE_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
+#define OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
 
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/image/image.hpp"
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 
 namespace openMVG
@@ -61,5 +61,5 @@ void UndistortImage(
 } // namespace cameras
 } // namespace openMVG
 
-#endif // #ifndef OPENMVG_CAMERA_UNDISTORT_IMAGE_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
 

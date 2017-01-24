@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
@@ -20,8 +21,8 @@ namespace openMVG {
 inline Pair_Set exhaustivePairs(const size_t N)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < N; ++J)
+  for (IndexT I = 0; I < static_cast<IndexT>(N); ++I)
+    for (IndexT J = I+1; J < static_cast<IndexT>(N); ++J)
       pairs.insert(std::make_pair(I,J));
 
   return pairs;
@@ -32,8 +33,8 @@ inline Pair_Set exhaustivePairs(const size_t N)
 inline Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 {
   Pair_Set pairs;
-  for(size_t I = 0; I < N; ++I)
-    for(size_t J = I+1; J < I+1+overlapSize && J < N; ++J)
+  for (IndexT I = 0; I < static_cast<IndexT>(N); ++I)
+    for (IndexT J = I+1; J < I+1+overlapSize && J < static_cast<IndexT>(N); ++J)
       pairs.insert(std::make_pair(I,J));
   return pairs;
 }
@@ -54,11 +55,11 @@ inline bool loadPairs(
   }
   std::string sValue;
   std::vector<std::string> vec_str;
-  while(std::getline( in, sValue ) )
+  while (std::getline( in, sValue ) )
   {
     vec_str.clear();
     stl::split(sValue, ' ', vec_str);
-    const size_t str_size = vec_str.size();
+    const IndexT str_size (vec_str.size());
     if (str_size < 2)
     {
       std::cerr << "loadPairs: Invalid input file: \"" << sFileName << "\"." << std::endl;
@@ -66,20 +67,20 @@ inline bool loadPairs(
     }
     std::stringstream oss;
     oss.clear(); oss.str(vec_str[0]);
-    size_t I, J;
+    IndexT I, J;
     oss >> I;
-    for(size_t i=1; i<str_size ; ++i)
+    for (IndexT i=1; i<str_size ; ++i)
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
-      if( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
+      if ( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
       {
         std::cerr << "loadPairs: Invalid input file. Image out of range. "
                 << "I: " << I << " J:" << J << " N:" << N << std::endl
                 << "File: \"" << sFileName << "\"." << std::endl;
         return false;
       }
-      if( I == J )
+      if ( I == J )
       {
         std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
         return false;
@@ -112,4 +113,6 @@ inline bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
   return bOk;
 }
 
-}; // namespace openMVG
+} // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP

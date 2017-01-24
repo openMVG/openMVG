@@ -4,12 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_FRUSTUM_HPP_
-#define OPENMVG_GEOMETRY_FRUSTUM_HPP_
+#ifndef OPENMVG_GEOMETRY_FRUSTUM_HPP
+#define OPENMVG_GEOMETRY_FRUSTUM_HPP
 
 #include "openMVG/geometry/half_space_intersection.hpp"
-#include <iomanip>
+
 #include <fstream>
+#include <iomanip>
 
 namespace openMVG
 {
@@ -243,4 +244,4 @@ struct Frustum : public HalfPlaneObject
 } // namespace geometry
 } // namespace openMVG
 
-#endif // OPENMVG_GEOMETRY_FRUSTUM_HPP_
+#endif // OPENMVG_GEOMETRY_FRUSTUM_HPP

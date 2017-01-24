@@ -5,21 +5,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP
 
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
+#include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+} // namespace sfm 
+
 namespace matching_image_collection {
 
 //-- A contrario fundamental matrix estimation template functor used for filter pair of putative correspondences
@@ -60,13 +64,13 @@ struct GeometricFilter_FMatrix_AC
     //--
 
     // Define the AContrario adapted Fundamental matrix solver
-    typedef ACKernelAdaptor<
-      openMVG::fundamental::kernel::SevenPointSolver,
-      openMVG::fundamental::kernel::SimpleError,
-      //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
-      UnnormalizerT,
-      Mat3>
-      KernelType;
+    using KernelType =
+      ACKernelAdaptor<
+        openMVG::fundamental::kernel::SevenPointSolver,
+        openMVG::fundamental::kernel::EpipolarDistanceError,
+        //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
+        UnnormalizerT,
+        Mat3>;
 
     const KernelType kernel(
       xI, sfm_data->GetViews().at(iIndex)->ui_width, sfm_data->GetViews().at(iIndex)->ui_height,
@@ -119,14 +123,17 @@ struct GeometricFilter_FMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       // Check the features correspondences that agree in the geometric and photometric domain
       geometry_aware::GuidedMatching
         <Mat3,
         openMVG::fundamental::kernel::EpipolarDistanceError>(
         //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
         m_F,
-        cam_I, *regions_provider->regions_per_view.at(iIndex),
-        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        cam_I, *regionsI,
+        cam_J, *regionsJ,
         Square(m_dPrecision_robust), Square(dDistanceRatio),
         matches);
     }
@@ -142,5 +149,6 @@ struct GeometricFilter_FMatrix_AC
 };
 
 } //namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG
 
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_F_AC_ROBUST_HPP

@@ -72,15 +72,7 @@ target_link_libraries(robust_curve_fitting ceres)
 add_executable(simple_bundle_adjuster simple_bundle_adjuster.cc)
 target_link_libraries(simple_bundle_adjuster ceres)
 
-add_executable(sampled_function sampled_function.cc)
-target_link_libraries(sampled_function ceres)
-
 if (GFLAGS)
-  # The CERES_GFLAGS_NAMESPACE compile definition is NOT stored in
-  # CERES_COMPILE_OPTIONS (and thus config.h) as Ceres itself does not
-  # require gflags, only the tests and examples do.
-  add_definitions(-DCERES_GFLAGS_NAMESPACE=${GFLAGS_NAMESPACE})
-
   add_executable(powell powell.cc)
   target_link_libraries(powell ceres ${GFLAGS_LIBRARIES})
 
@@ -116,3 +108,6 @@ if (GFLAGS)
   target_link_libraries(robot_pose_mle ceres ${GFLAGS_LIBRARIES})
 
 endif (GFLAGS)
+
+add_subdirectory(sampled_function)
+add_subdirectory(slam)

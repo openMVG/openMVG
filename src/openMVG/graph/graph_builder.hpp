@@ -4,14 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_BUILDER_H_
-#define OPENMVG_GRAPH_BUILDER_H_
+#ifndef OPENMVG_GRAPH_GRAPH_BUILDER_HPP
+#define OPENMVG_GRAPH_GRAPH_BUILDER_HPP
 
 #include "openMVG/types.hpp"
-#include "lemon/list_graph.h"
 
-#include <memory>
+#include <lemon/list_graph.h>
+
 #include <map>
+#include <memory>
 #include <set>
 
 
@@ -105,4 +106,4 @@ struct indexedGraph
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_BUILDER__H_
+#endif // OPENMVG_GRAPH_GRAPH_BUILDER_HPP

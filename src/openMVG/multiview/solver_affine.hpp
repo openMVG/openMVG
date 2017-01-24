@@ -26,8 +26,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SOLVER_MULTIVIEW_AFFINE_H_
-#define OPENMVG_SOLVER_MULTIVIEW_AFFINE_H_
+#ifndef OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP
+#define OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -89,4 +89,4 @@ bool Affine3DFromCorrespondencesLinear(const Mat &x1,
                                          EigenDoubleTraits::dummy_precision());
 } // namespace openMVG
 
-#endif  // OPENMVG_SOLVER_MULTIVIEW_AFFINE_H_
+#endif  // OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP

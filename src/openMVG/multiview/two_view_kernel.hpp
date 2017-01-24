@@ -26,18 +26,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_H_
-#define OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 
-#include <vector>
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/numeric/numeric.h"
+
+#include <vector>
 
 namespace openMVG {
 namespace two_view {
 namespace kernel {
-
-using namespace std;
 
 // This is one example (targeted at solvers that operate on correspondences
 // between two views) that shows the "kernel" part of a robust fitting
@@ -58,7 +57,7 @@ using namespace std;
 //
 //   1. Kernel::MAX_MODELS
 //   2. Kernel::MINIMUM_SAMPLES
-//   3. Kernel::Fit(vector<size_t>, vector<Kernel::Model> *)
+//   3. Kernel::Fit(std::vector<size_t>, std::vector<Kernel::Model> *)
 //   4. Kernel::Error(size_t, Model) -> error
 //
 // The fit routine must not clear existing entries in the vector of models; it
@@ -69,9 +68,9 @@ template<typename SolverArg,
 class Kernel {
  public:
   Kernel(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg  ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -79,9 +78,10 @@ class Kernel {
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   /// Extract required sample and fit model(s) to the sample
-  void Fit(const vector<size_t> &samples, vector<Model> *models) const {
-    Mat x1 = ExtractColumns(x1_, samples),
-        x2 = ExtractColumns(x2_, samples);
+  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+    const Mat
+      x1 = ExtractColumns(x1_, samples),
+      x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
   /// Return the error associated to the model and sample^nth point
@@ -93,7 +93,7 @@ class Kernel {
     return x1_.cols();
   }
   /// Compute a model on sampled datum
-  static void Solve(const Mat &x1, const Mat &x2, vector<Model> *models) {
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Model> *models) {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, models);
   }
@@ -110,7 +110,7 @@ public:
   enum { MINIMUM_SAMPLES = SolverArg::MINIMUM_SAMPLES };
   enum { MAX_MODELS = SolverArg::MAX_MODELS };
 
-  static void Solve(const Mat &x1, const Mat &x2, vector<ModelArg> *models) {
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<ModelArg> *models) {
     assert(2 == x1.rows());
     assert(MINIMUM_SAMPLES <= x1.cols());
     assert(x1.rows() == x2.rows());
@@ -134,4 +134,4 @@ public:
 }  // namespace two_view
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP

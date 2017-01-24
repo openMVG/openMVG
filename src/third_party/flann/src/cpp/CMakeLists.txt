@@ -1,21 +1,21 @@
 #include_directories(${CMAKE_SOURCE_DIR}/include algorithms util nn .)
 
-add_definitions(-D_FLANN_VERSION=${FLANN_VERSION})
+#add_definitions(-D_FLANN_VERSION=${FLANN_VERSION})
 
-file(GLOB_RECURSE C_SOURCES flann.cpp)
-file(GLOB_RECURSE CPP_SOURCES flann_cpp.cpp)
-file(GLOB_RECURSE CU_SOURCES *.cu)
+#file(GLOB_RECURSE C_SOURCES flann.cpp)
+#file(GLOB_RECURSE CPP_SOURCES flann_cpp.cpp)
+#file(GLOB_RECURSE CU_SOURCES *.cu)
 
-add_library(flann_cpp_s STATIC ${CPP_SOURCES})
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-    set_target_properties(flann_cpp_s PROPERTIES COMPILE_FLAGS -fPIC)
-endif()
-SET_PROPERTY(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC FLANN_USE_CUDA)
+#add_library(flann_cpp_s STATIC ${CPP_SOURCES})
+#if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+#    set_target_properties(flann_cpp_s PROPERTIES COMPILE_FLAGS -fPIC)
+#endif()
+#SET_PROPERTY(TARGET flann_cpp_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC FLANN_USE_CUDA)
 
-INSTALL(
-  TARGETS flann_cpp_s
-  DESTINATION lib
-  EXPORT openMVG-targets)
+#INSTALL(
+#  TARGETS flann_cpp_s
+#  DESTINATION lib
+#  EXPORT openMVG-targets)
 
 INSTALL (
   DIRECTORY .

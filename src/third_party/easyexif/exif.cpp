@@ -2,7 +2,7 @@
   exif.cpp  -- A simple ISO C++ library to parse basic EXIF
                information from a JPEG file.
 
-  Copyright (c) 2010-2015 Mayank Lahiri
+  Copyright (c) 2010-2016 Mayank Lahiri
   mlahiri@gmail.com
   All rights reserved (BSD License).
 
@@ -348,7 +348,7 @@ IFEntry parseIFEntry_temp(const unsigned char *buf, const unsigned offs,
       }
       // and cut zero byte at the end, since we don't want that in the
       // std::string
-      if (result.val_string()[result.val_string().length() - 1] == '\0') {
+      if (!result.val_string().empty())  {
         result.val_string().resize(result.val_string().length() - 1);
       }
       break;
@@ -404,9 +404,9 @@ IFEntry parseIFEntry(const unsigned char *buf, const unsigned offs,
                      const bool alignIntel, const unsigned base,
                      const unsigned len) {
   if (alignIntel) {
-    return std::move(parseIFEntry_temp<true>(buf, offs, base, len));
+    return parseIFEntry_temp<true>(buf, offs, base, len);
   } else {
-    return std::move(parseIFEntry_temp<false>(buf, offs, base, len));
+    return parseIFEntry_temp<false>(buf, offs, base, len);
   }
 }
 }
@@ -474,7 +474,7 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
   switch (result.tag()) {
     case 0x102:
       // Bits per sample
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->BitsPerSample = result.val_short().front();
       break;
 
@@ -495,7 +495,7 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
 
     case 0x112:
       // Orientation of image
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->Orientation = result.val_short().front();
       break;
 
@@ -516,19 +516,19 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
 
     case 0x829a:
       // Exposure time in seconds
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->ExposureTime = result.val_rational().front();
       break;
 
     case 0x829d:
       // FNumber
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->FNumber = result.val_rational().front();
       break;
 
     case 0x8827:
       // ISO Speed Rating
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->ISOSpeedRatings = result.val_short().front();
       break;
 
@@ -546,19 +546,19 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
 
     case 0x9201:
       // Shutter speed value
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->ShutterSpeedValue = result.val_rational().front();
       break;
 
     case 0x9204:
       // Exposure bias value
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->ExposureBiasValue = result.val_rational().front();
       break;
 
     case 0x9206:
       // Subject distance
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->SubjectDistance = result.val_rational().front();
       break;
 
@@ -569,13 +569,13 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
 
     case 0x920a:
       // Focal length
-      if (result.format() == 5)
+      if (result.format() == 5 && !result.val_rational().empty())
         exif->FocalLength = result.val_rational().front();
       break;
 
     case 0x9207:
       // Metering mode
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->MeteringMode = result.val_short().front();
       break;
 
@@ -587,37 +587,35 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
 
     case 0xa002:
       // EXIF Image width
-      if (result.format() == 4)
+      if (result.format() == 4 && !result.val_long().empty())
         exif->ImageWidth = result.val_long().front();
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->ImageWidth = result.val_short().front();
       break;
 
     case 0xa003:
       // EXIF Image height
-      if (result.format() == 4)
+      if (result.format() == 4 && !result.val_long().empty())
         exif->ImageHeight = result.val_long().front();
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->ImageHeight = result.val_short().front();
       break;
 
     case 0xa20e:
       // EXIF Focal plane X-resolution
-      if (result.format() == 5) {
-        exif->LensInfo.FocalPlaneXResolution = result.val_rational()[0];
-      }
+      if (result.format() == 5 && !result.val_rational().empty())
+        exif->LensInfo.FocalPlaneXResolution = result.val_rational().front();
       break;
 
     case 0xa20f:
       // EXIF Focal plane Y-resolution
-      if (result.format() == 5) {
-        exif->LensInfo.FocalPlaneYResolution = result.val_rational()[0];
-      }
+      if (result.format() == 5 && !result.val_rational().empty())
+        exif->LensInfo.FocalPlaneYResolution = result.val_rational().front();
       break;
 
     case 0xa405:
       // Focal length in 35mm film
-      if (result.format() == 3)
+      if (result.format() == 3 && !result.val_short().empty())
         exif->FocalLengthIn35mm = result.val_short().front();
       break;
 
@@ -629,25 +627,28 @@ void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
     case 0xa432:
       // Focal length and FStop.
       if (result.format() == 5) {
-        exif->LensInfo.FocalLengthMin = result.val_rational()[0];
-        exif->LensInfo.FocalLengthMax = result.val_rational()[1];
-        exif->LensInfo.FStopMin = result.val_rational()[2];
-        exif->LensInfo.FStopMax = result.val_rational()[3];
+        const int sz = result.val_rational().size();
+        if (sz)
+          exif->LensInfo.FocalLengthMin = result.val_rational()[0];
+        if (sz > 1)
+          exif->LensInfo.FocalLengthMax = result.val_rational()[1];
+        if (sz > 2)
+          exif->LensInfo.FStopMin = result.val_rational()[2];
+        if (sz > 3)
+          exif->LensInfo.FStopMax = result.val_rational()[3];
       }
       break;
 
     case 0xa433:
       // Lens make.
-      if (result.format() == 2) {
+      if (result.format() == 2)
         exif->LensInfo.Make = result.val_string();
-      }
       break;
 
     case 0xa434:
       // Lens model.
-      if (result.format() == 2) {
+      if (result.format() == 2)
         exif->LensInfo.Model = result.val_string();
-      }
       break;
   }
 }
@@ -800,7 +801,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 4:
           // GPS longitude
-          if (format == 5 && length == 3) {
+          if ((format == 5 || format == 10) && length == 3) {
             this->GeoLocation.LonComponents.degrees = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
             this->GeoLocation.LonComponents.minutes = parse_value<Rational>(
@@ -826,7 +827,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 6:
           // GPS altitude
-          if (format == 5) {
+          if (format == 5 || format == 10) {
             this->GeoLocation.Altitude = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
             if (1 == this->GeoLocation.AltitudeRef) {
@@ -837,7 +838,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 11:
           // GPS degree of precision (DOP)
-          if (format == 5) {
+          if (format == 5 || format == 10) {
             this->GeoLocation.DOP = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
           }

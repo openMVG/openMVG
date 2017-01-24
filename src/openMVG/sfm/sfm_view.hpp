@@ -4,18 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_VIEW_HPP
-#define OPENMVG_SFM_VIEW_HPP
+#ifndef OPENMVG_SFM_SFM_VIEW_HPP
+#define OPENMVG_SFM_SFM_VIEW_HPP
 
 #include "openMVG/types.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
+#include <cereal/types/polymorphic.hpp>
 
 namespace openMVG {
 namespace sfm {
@@ -87,7 +86,10 @@ struct View
   }
 };
 
+/// Define a collection of View
+using Views = Hash_Map<IndexT, std::shared_ptr<View> >;
+
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_VIEW_HPP
+#endif // OPENMVG_SFM_SFM_VIEW_HPP

@@ -4,9 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_GEODESY_GEODESY_HPP
+#define OPENMVG_GEODESY_GEODESY_HPP
 
-#include <openMVG/numeric/numeric.h>
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG
 {
@@ -151,3 +152,5 @@ Vec3 ecef_to_lla
 } // namespace geodesy
 } // namespace openMVG
 
+
+#endif // OPENMVG_GEODESY_GEODESY_HPP

@@ -8,10 +8,11 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 
-#include <vector>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+
+#include <vector>
 
 //------------------
 //-- Bibliography --
@@ -27,7 +28,8 @@ namespace kernel {
 
 /**
  * Two-point translation estimation between two views from a known rotation
- * Implementation based on [1] => 3.2 Selection of the right solution. */
+ * Implementation based on [1] => 3.2 Selection of the right solution.
+ */
 template<typename EpipolarDistanceErrorFunctor>
 struct TwoPointTranslationSolver {
   enum { MINIMUM_SAMPLES = 2 };
@@ -60,7 +62,7 @@ struct TwoPointTranslationSolver {
 
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
   static double Error(const Mat3 &F, const Vec2 &x1, const Vec2 &x2){
-  return EpipolarDistanceErrorFunctor::Error(F, x1, x2);
+    return EpipolarDistanceErrorFunctor::Error(F, x1, x2);
   }
 };
 
@@ -73,10 +75,23 @@ class TranslationFromKnowRotation :
 {
 public:
   // 2D / 2D points [camera coordinates]
-  TranslationFromKnowRotation(const Mat &pt2DA, const Mat &pt2DB, const Mat3 & R) :
-    two_view::kernel::Kernel<SolverArg, ErrorArg, ModelArg>(pt2DA, pt2DB), _R(R){}
+  TranslationFromKnowRotation
+  (
+    const Mat &pt2DA,
+    const Mat &pt2DB,
+    const Mat3 & R
+  )
+  : two_view::kernel::Kernel<SolverArg, ErrorArg, ModelArg>(pt2DA, pt2DB),
+    _R(R)
+  {}
 
-  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg> *models) const {
+  void Fit
+  (
+    const std::vector<size_t> &samples,
+    std::vector<ModelArg> *models
+  )
+  const
+  {
     const Mat ptA = ExtractColumns(this->x1_, samples);
     const Mat ptB = ExtractColumns(this->x2_, samples);
 
@@ -87,7 +102,13 @@ public:
   }
 
   // Error: distance of the sample to the epipolar line
-  double Error(size_t sample, const ModelArg &model) const {
+  double Error
+  (
+    size_t sample,
+    const ModelArg &model
+  )
+  const
+  {
     Mat34 poseA, poseB;
     P_From_KRt(Mat3::Identity(), Mat3::Identity(), Vec3::Zero(), &poseA);
     P_From_KRt(Mat3::Identity(), _R, model, &poseB);
@@ -99,10 +120,11 @@ protected:
 };
 
 //-- Usable solver for the 2pt translation from known rotation estimation
-typedef TranslationFromKnowRotation<
-  TwoPointTranslationSolver<openMVG::fundamental::kernel::SampsonError>, // SolverFunctor
-  TwoPointTranslationSolver<openMVG::fundamental::kernel::SampsonError>, // ErrorFunctor
-  Vec3>  TranslationFromKnowRotationKernel;
+using TranslationFromKnowRotationKernel =
+  TranslationFromKnowRotation<
+    TwoPointTranslationSolver<openMVG::fundamental::kernel::SampsonError>, // SolverFunctor
+    TwoPointTranslationSolver<openMVG::fundamental::kernel::SampsonError>, // ErrorFunctor
+    Vec3>;
 
 }  // namespace kernel
 }  // namespace translation

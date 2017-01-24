@@ -4,6 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef OPENMVG_MATCHING_CASCADE_HASHER_HPP
+#define OPENMVG_MATCHING_CASCADE_HASHER_HPP
+
 //------------------
 //-- Bibliography --
 //------------------
@@ -55,15 +58,15 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#pragma once
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/matching/metric.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/metric.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/dynamic_bitset.hpp"
+
+#include <cmath>
 #include <iostream>
 #include <random>
-#include <cmath>
 
 namespace openMVG {
 namespace matching {
@@ -81,7 +84,7 @@ struct HashedDescriptions{
   // The hash information.
   std::vector<HashedDescription> hashed_desc;
 
-  typedef std::vector<int> Bucket;
+  using Bucket = std::vector<int>;
   // buckets[bucket_group][bucket_id] = bucket (container of description ids).
   std::vector<std::vector<Bucket> > buckets;
 };
@@ -267,7 +270,7 @@ public:
     const int NN = 2
   ) const
   {
-    typedef L2_Vectorized<typename MatrixT::Scalar> MetricT;
+    using MetricT = L2_Vectorized<typename MatrixT::Scalar>;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;
@@ -292,7 +295,7 @@ public:
     // feature for matching (i.e., prevents duplicates).
     std::vector<bool> used_descriptor(hashed_descriptions2.hashed_desc.size());
 
-    typedef matching::Hamming<stl::dynamic_bitset::BlockType> HammingMetricType;
+    using HammingMetricType = matching::Hamming<stl::dynamic_bitset::BlockType>;
     static const HammingMetricType metricH = {};
     for (int i = 0; i < hashed_descriptions1.hashed_desc.size(); ++i)
     {
@@ -387,3 +390,4 @@ public:
 }  // namespace matching
 }  // namespace openMVG
 
+#endif // OPENMVG_MATCHING_CASCADE_HASHER_HPP

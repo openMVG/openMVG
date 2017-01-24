@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef _OPENMVG_NUMERIC_MATH_TRAIT_HPP_
-#define _OPENMVG_NUMERIC_MATH_TRAIT_HPP_
+#ifndef OPENMVG_NUMERIC_MATH_TRAIT_HPP
+#define OPENMVG_NUMERIC_MATH_TRAIT_HPP
 
 #include <cmath>
 
@@ -50,6 +50,9 @@ namespace openMVG
 
     // Absolute value
     static inline T abs( const T val ) ;
+
+    // Pi value 
+    static inline T pi( void ) ;    
   } ;
 
 
@@ -168,6 +171,14 @@ namespace openMVG
   {
     return fabsf( val ) ;
   }
+  
+  // Pi value 
+  template<>
+  inline float MathTrait<float>::pi( void ) 
+  {
+      return 3.141592653589793238462643383279502884197169399375105820974944592307816406286f ;
+  }
+
 
 
   /**
@@ -280,6 +291,13 @@ namespace openMVG
   inline double MathTrait<double>::abs( const double val )
   {
     return fabs( val ) ;
+  }
+
+  // Pi value 
+  template<>
+  inline double MathTrait<double>::pi( void ) 
+  {
+    return 3.141592653589793238462643383279502884197169399375105820974944592307816406286 ;
   }
 
 
@@ -398,6 +416,14 @@ namespace openMVG
   {
     return fabsl( val ) ;
   }
+  
+  // Pi value 
+  template<>
+  inline long double MathTrait<long double>::pi( void ) 
+  {
+    return 3.141592653589793238462643383279502884197169399375105820974944592307816406286L ;
+  }
+
 } // namespace openMVG 
 
-#endif
+#endif // OPENMVG_NUMERIC_MATH_TRAIT_HPP

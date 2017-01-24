@@ -6,19 +6,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/cameras/cameras.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
-
+#include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -434,7 +435,9 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             for (const size_t inlier_idx : relativePose_info.vec_inliers)
             {
               Vec3 X;
-              TriangulateDLT(PI, xI.col(inlier_idx), PJ, xJ.col(inlier_idx), &X);
+              TriangulateDLT(
+                PI, xI.col(inlier_idx).homogeneous(),
+                PJ, xJ.col(inlier_idx).homogeneous(), &X);
 
               openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
               std::advance(iterT, inlier_idx);
@@ -529,8 +532,9 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   // c. Robust estimation of the relative pose
   RelativePose_Info relativePose_info;
 
-  const std::pair<size_t, size_t> imageSize_I(cam_I->w(), cam_I->h());
-  const std::pair<size_t, size_t> imageSize_J(cam_J->w(), cam_J->h());
+  const std::pair<size_t, size_t>
+    imageSize_I(cam_I->w(), cam_I->h()),
+    imageSize_J(cam_J->w(), cam_J->h());
 
   if (!robustRelativePose(
     cam_I->K(), cam_J->K(), xI, xJ, relativePose_info, imageSize_I, imageSize_J, 4096))
@@ -577,7 +581,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       const Vec2 x2_ = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
-      TriangulateDLT(P1, x1_, P2, x2_, &X);
+      TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
       Observations obs;
       obs[view_I->id_view] = Observation(x1_, i);
       obs[view_J->id_view] = Observation(x2_, j);
@@ -1121,7 +1125,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
               const Mat34 P_I = cam_I->get_projective_equivalent(pose_I);
               const Mat34 P_J = cam_J->get_projective_equivalent(pose_J);
               Vec3 X = Vec3::Zero();
-              TriangulateDLT(P_I, xI_ud, P_J, xJ_ud, &X);
+              TriangulateDLT(P_I, xI_ud.homogeneous(), P_J, xJ_ud.homogeneous(), &X);
               // Check triangulation result
               const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
               const Vec2 residual_I = cam_I->residual(pose_I, X, xI);
@@ -1229,4 +1233,3 @@ bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size
 
 } // namespace sfm
 } // namespace openMVG
-

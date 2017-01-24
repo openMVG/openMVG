@@ -6,8 +6,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
+
 #include "testing/testing.h"
+
 #include <vector>
+
 using namespace openMVG;
 using namespace openMVG::robust;
 

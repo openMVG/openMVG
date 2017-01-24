@@ -4,14 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
+#define OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/geometry/pose3.hpp"
+
 #include <cereal/types/polymorphic.hpp>
 
 namespace openMVG {
 namespace sfm {
+
+struct View;
+
+using namespace openMVG::geometry;
 
 /**
 * @brief Define a View that contains optional Pose priors (pose and/or rotation)
@@ -46,7 +51,7 @@ struct ViewPriors : public View
   void SetPoseCenterPrior
   (
     const Vec3 & center,
-    const double weight
+    const Vec3 & weight
   )
   {
     b_use_pose_center_  = true;
@@ -77,7 +82,8 @@ struct ViewPriors : public View
     if (b_use_pose_center_)
     {
       ar( cereal::make_nvp( "use_pose_center_prior", b_use_pose_center_ ) );
-      ar( cereal::make_nvp( "center_weight", center_weight_ ) );
+      const std::vector<double> vec_weights = { center_weight_( 0 ), center_weight_( 1 ), center_weight_( 2 ) };
+      ar( cereal::make_nvp( "center_weight", vec_weights ) );
       const std::vector<double> vec = { pose_center_( 0 ), pose_center_( 1 ), pose_center_( 2 ) };
       ar( cereal::make_nvp( "center", vec ) );
     }
@@ -112,8 +118,9 @@ struct ViewPriors : public View
     try
     {
       ar( cereal::make_nvp( "use_pose_center_prior", b_use_pose_center_ ) );
-      ar( cereal::make_nvp( "center_weight", center_weight_ ) );
       std::vector<double> vec( 3 );
+      ar( cereal::make_nvp( "center_weight", vec ) );
+      center_weight_ = Eigen::Map<const Vec3>( &vec[0] );
       ar( cereal::make_nvp( "center", vec ) );
       pose_center_ = Eigen::Map<const Vec3>( &vec[0] );
     }
@@ -146,13 +153,13 @@ struct ViewPriors : public View
 
   // Pose center prior
   bool b_use_pose_center_ = false; // Tell if the pose prior must be used
-  double center_weight_ = 1.0;
-  Vec3 pose_center_;
+  Vec3 center_weight_ = Vec3(1.0,1.0,1.0);
+  Vec3 pose_center_ = Vec3::Zero();
 
   // Pose rotation prior
   bool b_use_pose_rotation_ = false; // Tell if the rotation prior must be used
   double rotation_weight_ = 1.0;
-  Mat3 pose_rotation_;
+  Mat3 pose_rotation_ = Mat3::Identity();
 };
 
 } // namespace sfm
@@ -160,3 +167,5 @@ struct ViewPriors : public View
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::sfm::ViewPriors, "view_priors" );
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::sfm::View, openMVG::sfm::ViewPriors);
+
+#endif // OPENMVG_SFM_SFM_VIEW_PRIORS_HPP

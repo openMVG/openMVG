@@ -8,6 +8,10 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/tracks/tracks.hpp"
+
 namespace openMVG{
 namespace sfm{
 
@@ -18,18 +22,9 @@ enum ETranslationAveragingMethod
   TRANSLATION_AVERAGING_SOFTL1 = 3
 };
 
-} // namespace sfm
-} // namespace openMVG
-
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/multiview/translation_averaging_common.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/tracks/tracks.hpp"
-#include "openMVG/graph/graph.hpp"
-
-namespace openMVG{
-namespace sfm{
+struct SfM_Data;
+struct Matches_Provider;
+struct Features_Provider;
 
 class GlobalSfM_Translation_AveragingSolver
 {
@@ -39,9 +34,9 @@ public:
 
   bool Run(
     ETranslationAveragingMethod eTranslationAveragingMethod,
-    SfM_Data & sfm_data,
-    const Features_Provider * features_provider,
-    const Matches_Provider * matches_provider,
+    openMVG::sfm::SfM_Data & sfm_data,
+    const openMVG::sfm::Features_Provider * features_provider,
+    const openMVG::sfm::Matches_Provider * matches_provider,
     const Hash_Map<IndexT, Mat3> & map_globalR,
     matching::PairWiseMatches & tripletWise_matches
   );
@@ -49,13 +44,13 @@ public:
 private:
   bool Translation_averaging(
     ETranslationAveragingMethod eTranslationAveragingMethod,
-    SfM_Data & sfm_data,
+    sfm::SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR);
 
   void Compute_translations(
-    const SfM_Data & sfm_data,
-    const Features_Provider * features_provider,
-    const Matches_Provider * matches_provider,
+    const sfm::SfM_Data & sfm_data,
+    const sfm::Features_Provider * features_provider,
+    const sfm::Matches_Provider * matches_provider,
     const Hash_Map<IndexT, Mat3> & map_globalR,
     matching::PairWiseMatches &tripletWise_matches);
 
@@ -64,19 +59,19 @@ private:
   // Use an edge coverage algorithm to reduce the graph covering complexity
   // Complexity: sub-linear in term of edges count.
   void ComputePutativeTranslation_EdgesCoverage(
-    const SfM_Data & sfm_data,
+    const sfm::SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR,
-    const Features_Provider * features_provider,
-    const Matches_Provider * matches_provider,
+    const sfm::Features_Provider * features_provider,
+    const sfm::Matches_Provider * matches_provider,
     std::vector<RelativeInfo_Vec> & vec_triplet_relative_motion,
     matching::PairWiseMatches & newpairMatches);
 
   // Robust estimation and refinement of triplet of translations
   bool Estimate_T_triplet(
-    const SfM_Data & sfm_data,
+    const sfm::SfM_Data & sfm_data,
     const Hash_Map<IndexT, Mat3> & map_globalR,
-    const Features_Provider * features_provider,
-    const Matches_Provider * matches_provider,
+    const sfm::Features_Provider * features_provider,
+    const sfm::Matches_Provider * matches_provider,
     const graph::Triplet & poses_id,
     std::vector<Vec3> & vec_tis,
     double & dPrecision, // UpperBound of the precision found by the AContrario estimator

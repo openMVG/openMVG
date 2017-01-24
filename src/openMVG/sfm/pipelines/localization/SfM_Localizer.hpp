@@ -5,14 +5,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
+#define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
+
+namespace features {
+  struct Regions;
+} // namespace features 
+
+namespace geometry {
+  struct Pose3;
+} // namespace geometry 
+
+namespace cameras {
+  struct IntrinsicBase;
+} // namespace cameras 
+
 namespace sfm {
+
+struct SfM_Data;
+struct Regions_Provider;
 
 struct Image_Localizer_Match_Data
 {
@@ -39,8 +55,8 @@ public:
   */
   virtual bool Init
   (
-    const SfM_Data & sfm_data,
-    const Regions_Provider & region_provider
+    const sfm::SfM_Data & sfm_data,
+    const sfm::Regions_Provider & region_provider
   ) = 0;
 
   /**
@@ -102,3 +118,5 @@ public:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP

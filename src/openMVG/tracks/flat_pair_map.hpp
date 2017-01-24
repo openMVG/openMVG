@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FLAT_PAIR_MAP_HPP_
-#define OPENMVG_FLAT_PAIR_MAP_HPP_
+#ifndef OPENMVG_FLAT_PAIR_MAP_HPP
+#define OPENMVG_FLAT_PAIR_MAP_HPP
 
 #include <algorithm>
 #include <utility>
@@ -19,9 +19,9 @@ namespace openMVG  {
 template<typename T1, typename T2>
 class flat_pair_map
 {
-  typedef std::pair<T1, T2> P;
+  using P = std::pair<T1, T2>;
 public:
-  typedef typename std::vector< P >::iterator iterator;
+  using iterator = typename std::vector< P >::iterator;
 
   typename std::vector< P >::iterator find(const T1 & val)  {
     return std::lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst);
@@ -54,4 +54,4 @@ private:
 
 } // namespace openMVG
 
-#endif // OPENMVG_FLAT_PAIR_MAP_HPP_
+#endif // OPENMVG_FLAT_PAIR_MAP_HPP

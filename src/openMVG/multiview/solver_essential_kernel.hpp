@@ -26,19 +26,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
-#define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP
 
-#include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/multiview/two_view_kernel.hpp"
+
 #include <vector>
 
 namespace openMVG {
 namespace essential {
 namespace kernel {
-
-using namespace std;
 
 /**
  * Eight-point algorithm for solving for the essential matrix from normalized
@@ -49,7 +48,7 @@ using namespace std;
 struct EightPointRelativePoseSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E);
 };
 
 /**
@@ -60,7 +59,7 @@ struct EightPointRelativePoseSolver {
 struct FivePointSolver {
   enum { MINIMUM_SAMPLES = 5 };
   enum { MAX_MODELS = 10 };
-  static void Solve(const Mat &x1, const Mat &x2, vector<Mat3> *E);
+  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E);
 };
 
 //-- Generic Solver for the 5pt Essential Matrix Estimation.
@@ -74,11 +73,25 @@ class EssentialKernel :
    public two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>
 {
 public:
-  EssentialKernel(const Mat &x1, const Mat &x2,
-                  const Mat3 &K1, const Mat3 &K2):
-  two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
-                                                         K1_(K1), K2_(K2) {}
-  void Fit(const vector<size_t> &samples, vector<ModelArg> *models) const {
+  EssentialKernel
+  (
+    const Mat &x1,
+    const Mat &x2,
+    const Mat3 &K1,
+    const Mat3 &K2
+   ):
+    two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
+    K1_(K1),
+    K2_(K2)
+  {}
+
+  void Fit
+  (
+    const std::vector<size_t> &samples,
+    std::vector<ModelArg> *models
+  )
+  const
+  {
     const Mat x1 = ExtractColumns(this->x1_, samples);
     const Mat x2 = ExtractColumns(this->x2_, samples);
 
@@ -88,35 +101,38 @@ public:
     assert(x1.cols() == x2.cols());
 
     // Normalize the data (image coords to camera coords).
-    const Mat3 K1Inverse = K1_.inverse();
-    const Mat3 K2Inverse = K2_.inverse();
-    Mat x1_normalized, x2_normalized;
-    ApplyTransformationToPoints(x1, K1Inverse, &x1_normalized);
-    ApplyTransformationToPoints(x2, K2Inverse, &x2_normalized);
+    const Mat x1_normalized = (K1_.inverse() * x1.colwise().homogeneous()).colwise().hnormalized();
+    const Mat x2_normalized = (K2_.inverse() * x2.colwise().homogeneous()).colwise().hnormalized();
     SolverArg::Solve(x1_normalized, x2_normalized, models);
   }
 
-  double Error(size_t sample, const ModelArg &model) const {
+  double Error
+  (
+    size_t sample,
+    const ModelArg &model
+  )
+  const
+  {
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     return ErrorArg::Error(F, this->x1_.col(sample), this->x2_.col(sample));
   }
 protected:
-  Mat3 K1_, K2_; // The two camera calibrated camera matrix
+  Mat3 K1_, K2_; // The two calibrated camera matrices
 };
 
 //-- Solver kernel for the 8pt Essential Matrix Estimation
-typedef essential::kernel::EssentialKernel<EightPointRelativePoseSolver,
-  fundamental::kernel::SampsonError, Mat3>  EightPointKernel;
+using EightPointKernel = essential::kernel::EssentialKernel<EightPointRelativePoseSolver,
+  fundamental::kernel::SampsonError, Mat3>;
 
 
 //-- Solver kernel for the 5pt Essential Matrix Estimation
-typedef essential::kernel::EssentialKernel<FivePointSolver,
-  fundamental::kernel::SampsonError, Mat3>  FivePointKernel;
+using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
+  fundamental::kernel::SampsonError, Mat3>;
 
 
 }  // namespace kernel
 }  // namespace essential
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_KERNEL_HPP

@@ -5,12 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_METRIC_H
-#define OPENMVG_MATCHING_METRIC_H
+#ifndef OPENMVG_MATCHING_METRIC_HPP
+#define OPENMVG_MATCHING_METRIC_HPP
 
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+
+#ifdef OPENMVG_USE_SSE
+#include <xmmintrin.h>
+#endif
+
 #include <cstddef>
+#include <iostream>
 
 namespace openMVG {
 namespace matching {
@@ -19,8 +25,8 @@ namespace matching {
 template<class T>
 struct L2_Simple
 {
-  typedef T ElementType;
-  typedef typename Accumulator<T>::Type ResultType;
+  using ElementType = T;
+  using ResultType = typename Accumulator<T>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -39,8 +45,8 @@ struct L2_Simple
 template<class T>
 struct L2_Vectorized
 {
-  typedef T ElementType;
-  typedef typename Accumulator<T>::Type ResultType;
+  using ElementType = T;
+  using ResultType = typename Accumulator<T>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -72,8 +78,6 @@ struct L2_Vectorized
 #ifdef OPENMVG_USE_SSE
 
 namespace optim_ss2{
-
-#include <xmmintrin.h>
 
   /// Union to switch between SSE and float array
   union sseRegisterHelper
@@ -121,8 +125,8 @@ namespace optim_ss2{
 template<>
 struct L2_Vectorized<float>
 {
-  typedef float ElementType;
-  typedef Accumulator<float>::Type ResultType;
+  using ElementType = float;
+  using ResultType = Accumulator<float>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -136,4 +140,4 @@ struct L2_Vectorized<float>
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_H
+#endif // OPENMVG_MATCHING_METRIC_HPP

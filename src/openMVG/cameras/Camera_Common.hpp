@@ -4,8 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERAS_COMMON_HPP
-#define OPENMVG_CAMERAS_COMMON_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_COMMON_HPP
+#define OPENMVG_CAMERAS_CAMERA_COMMON_HPP
+
+#include <type_traits>
 
 namespace openMVG
 {
@@ -93,17 +95,19 @@ inline constexpr Intrinsic_Parameter_Type
 operator|(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
-    (static_cast<int>(x) | static_cast<int>(y));
+    (static_cast<typename std::underlying_type<Intrinsic_Parameter_Type>::type>(x) |
+     static_cast<typename std::underlying_type<Intrinsic_Parameter_Type>::type>(y));
 }
 
 inline constexpr Intrinsic_Parameter_Type
 operator&(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
-    (static_cast<int>(x) & static_cast<int>(y));
+    (static_cast<typename std::underlying_type<Intrinsic_Parameter_Type>::type>(x) &
+     static_cast<typename std::underlying_type<Intrinsic_Parameter_Type>::type>(y));
 }
 
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERAS_COMMON_HPP
+#endif // OPENMVG_CAMERAS_CAMERA_COMMON_HPP

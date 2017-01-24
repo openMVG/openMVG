@@ -15,10 +15,10 @@
 //- Authors: Zhenhua Wang, Bin Fan and Fuchao Wu
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
-#include <openMVG/features/liop/liop_descriptor.hpp>
+#include "openMVG/features/liop/liop_descriptor.hpp"
 
-#include <float.h>
 #include <algorithm>
+#include <cfloat>
 
 namespace openMVG {
 namespace features{

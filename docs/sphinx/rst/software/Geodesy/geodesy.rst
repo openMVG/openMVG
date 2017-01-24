@@ -106,6 +106,10 @@ Scene initialization
 
     - Setup a XYZ position prior for each view that have valid EXIF GPS data.
 
+  - **[-w]**
+
+    - Allow to customize the pose prior weight in each XYZ dimention i.e. default is equivalent to "1.0;1.0;1.0"
+
 Force pose prior usage
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -130,36 +134,36 @@ Launched on the dataset Swiss Quarry `Geotagged multispectral images <http://chu
 
     // Initialize the scene
     //  Pose prior for each view will be set thanks to the GPS data
-    openMVG_main_SfMInit_ImageListing
-      -P
-      -d sensor_width_camera_database.txt
-      -i /media/pierre/SenseFly/Quarry/geotagged-images/
+    openMVG_main_SfMInit_ImageListing \
+      -P \
+      -d sensor_width_camera_database.txt \
+      -i /media/pierre/SenseFly/Quarry/geotagged-images/ \
       -o /media/pierre/SenseFly/Quarry/quary_output/
 
     thread_count=8
-    openMVG_main_ComputeFeatures
-      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json
-      -o /media/pierre/SenseFly/Quarry/quary_output/matches
-      -n thread_count
+    openMVG_main_ComputeFeatures \
+      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json \
+      -o /media/pierre/SenseFly/Quarry/quary_output/matches \
+      -n $thread_count
 
     // Limit the number of pairs that will be used for matching
     // -> limit to pose neighborhood thanks to the pose center prior location
-    openMVG_main_ListMatchingPairs
-      -G
-      -n 8
-      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json
+    openMVG_main_ListMatchingPairs \
+      -G \
+      -n 8 \
+      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json \
       -o /media/pierre/SenseFly/Quarry/quary_output/matches/pair_list.txt
 
-    openMVG_main_ComputeMatches
-      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json
-      -l /media/pierre/SenseFly/Quarry/quary_output/matches/pair_list.txt
-      -g e
+    openMVG_main_ComputeMatches \
+      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json \
+      -l /media/pierre/SenseFly/Quarry/quary_output/matches/pair_list.txt \
+      -g e \
       -o /media/pierre/SenseFly/Quarry/quary_output/matches/
 
-    openMVG_main_GlobalSfM
-      -P
-      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json
-      -m /media/pierre/SenseFly/Quarry/quary_output/matches/
+    openMVG_main_GlobalSfM \
+      -P \
+      -i /media/pierre/SenseFly/Quarry/quary_output/sfm_data.json \
+      -m /media/pierre/SenseFly/Quarry/quary_output/matches/ \
       -o /media/pierre/SenseFly/Quarry/quary_output/global_reconstruction
 
 Here the final results:

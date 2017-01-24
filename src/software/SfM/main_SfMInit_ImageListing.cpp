@@ -60,7 +60,7 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
 std::pair<bool, Vec3> checkGPS
 (
   const std::string & filename,
-  const int & GPS_to_XYZ_method
+  const int & GPS_to_XYZ_method = 0
 )
 {
   std::pair<bool, Vec3> val(false, Vec3::Zero());
@@ -76,16 +76,14 @@ std::pair<bool, Vec3> checkGPS
            exifReader->GPSLongitude( &longitude ) &&
            exifReader->GPSAltitude( &altitude ) )
       {
-        // Add ECEF XYZ position to the GPS position array
+        // Add ECEF or UTM XYZ position to the GPS position array
         val.first = true;
         switch(GPS_to_XYZ_method)
         {
-          case 0:
-            val.second = lla_to_ecef( latitude, longitude, altitude );
-            break;
           case 1:
             val.second = lla_to_utm( latitude, longitude, altitude );
             break;
+          case 0:
           default:
             val.second = lla_to_ecef( latitude, longitude, altitude );
             break;
@@ -96,6 +94,35 @@ std::pair<bool, Vec3> checkGPS
   return val;
 }
 
+
+/// Check string of prior weights
+std::pair<bool, Vec3> checkPriorWeightsString
+(
+  const std::string &sWeights
+)
+{
+  std::pair<bool, Vec3> val(true, Vec3::Zero());
+  std::vector<std::string> vec_str;
+  stl::split(sWeights, ';', vec_str);
+  if (vec_str.size() != 3)
+  {
+    std::cerr << "\n Missing ';' character in prior weights" << std::endl;
+    val.first = false;
+  }
+  // Check that all weight values are valid numbers
+  for (size_t i = 0; i < vec_str.size(); ++i)
+  {
+    double readvalue = 0.0;
+    std::stringstream ss;
+    ss.str(vec_str[i]);
+    if (! (ss >> readvalue) )  {
+      std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
+      val.first = false;
+    }
+    val.second[i] = readvalue;
+  }
+  return val;
+}
 //
 // Create the description of an input image dataset for OpenMVG toolsuite
 // - Export a SfM_Data file with View & Intrinsic data
@@ -109,6 +136,9 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
+  std::string sPriorWeights;
+  std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
+  
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
@@ -125,6 +155,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
+  cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
 
   try {
@@ -148,6 +179,7 @@ int main(int argc, char **argv)
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << "\n"
       << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
+      << "[-W|--prior_weigths] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
       << "\t 1: UTM\n"
@@ -216,6 +248,16 @@ int main(int argc, char **argv)
        << ", please specify a valid file." << std::endl;
       return EXIT_FAILURE;
     }
+  }
+
+  // Check if prior weights are given
+  if (cmd.used('P') && !sPriorWeights.empty())
+  {
+    prior_w_info = checkPriorWeightsString(sPriorWeights);
+  }
+  else if (cmd.used('P'))
+  {
+    prior_w_info.first = true;
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -350,7 +392,7 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename,i_GPS_XYZ_method);
+    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename,i_GPS_XYZ_method);
     if (gps_info.first && cmd.used('P'))
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
@@ -370,6 +412,11 @@ int main(int argc, char **argv)
 
       v.b_use_pose_center_ = true;
       v.pose_center_ = gps_info.second;
+      // prior weights
+      if (prior_w_info.first == true)
+      {
+        v.center_weight_ = prior_w_info.second;
+      }
 
       // Add the view to the sfm_container
       views[v.id_view] = std::make_shared<ViewPriors>(v);

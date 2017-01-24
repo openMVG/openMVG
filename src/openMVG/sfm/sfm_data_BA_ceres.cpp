@@ -4,19 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/types.hpp"
-
+#include "openMVG/geometry/Similarity3_Kernel.hpp"
 //- Robust estimation - LMeds (since no threshold can be defined)
 #include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
-#include "openMVG/geometry/Similarity3_Kernel.hpp"
-
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#include "openMVG/types.hpp"
+
+
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 namespace openMVG {
 namespace sfm {
@@ -27,13 +27,13 @@ using namespace openMVG::geometry;
 // Ceres CostFunctor used for SfM pose center to GPS pose center minimization
 struct PoseCenterConstraintCostFunction
 {
-  double weight_;
+  Vec3 weight_;
   Vec3 pose_center_constraint_;
 
   PoseCenterConstraintCostFunction
   (
     const Vec3 & center,
-    const double weight
+    const Vec3 & weight
   ): weight_(weight), pose_center_constraint_(center)
   {
   }
@@ -46,10 +46,9 @@ struct PoseCenterConstraintCostFunction
   )
   const
   {
-    // Compute camera center C = - R.transpose() * t;
     const T * cam_R = &cam_extrinsics[0];
     const T * cam_t = &cam_extrinsics[3];
-    const T cam_R_transpose[3] = {-cam_extrinsics[0], -cam_extrinsics[1], -cam_extrinsics[2]};
+    const T cam_R_transpose[3] = {-cam_R[0], -cam_R[1], -cam_R[2]};
 
     T pose_center[3];
     // Rotate the point according the camera rotation
@@ -58,10 +57,10 @@ struct PoseCenterConstraintCostFunction
     pose_center[1] *= T(-1);
     pose_center[2] *= T(-1);
 
+    residuals[0] = T(weight_[0]) * (pose_center[0] - T(pose_center_constraint_[0]));
+    residuals[1] = T(weight_[1]) * (pose_center[1] - T(pose_center_constraint_[1]));
+    residuals[2] = T(weight_[2]) * (pose_center[2] - T(pose_center_constraint_[2]));
 
-    residuals[0] = T(weight_) * (pose_center[0] - T(pose_center_constraint_[0]));
-    residuals[1] = T(weight_) * (pose_center[1] - T(pose_center_constraint_[1]));
-    residuals[2] = T(weight_) * (pose_center[2] - T(pose_center_constraint_[2]));
     return true;
   }
 };
@@ -78,7 +77,7 @@ ceres::CostFunction * IntrinsicsToCostFunction
   switch(intrinsic->getType())
   {
     case PINHOLE_CAMERA:
-        return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
+      return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
      break;
     case PINHOLE_CAMERA_RADIAL1:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1::Create(observation, weight);

@@ -58,7 +58,7 @@ void BuildActionMatrix(Matrix & L, const Mat &x, const Mat &y)  {
   }
 }
 
-void FourPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
+void FourPointSolver::Solve(const Mat &x, const Mat &y, std::vector<Mat3> *Hs) {
   assert(2 == x.rows());
   assert(4 <= x.cols());
   assert(x.rows() == y.rows());
@@ -70,7 +70,7 @@ void FourPointSolver::Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs) {
   if (n == 4)  {
     // In the case of minimal configuration we use fixed sized matrix to let
     //  Eigen and the compiler doing the maximum of optimization.
-    typedef Eigen::Matrix<double, 16, 9> Mat16_9;
+    using Mat16_9 = Eigen::Matrix<double, 16, 9>;
     Mat16_9 L = Mat::Zero(16, 9);
     BuildActionMatrix(L, x, y);
     Nullspace(&L, &h);

@@ -6,13 +6,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#ifndef OPENMVG_SFM_DATA_IO_HPP
-#define OPENMVG_SFM_DATA_IO_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_IO_HPP
+#define OPENMVG_SFM_SFM_DATA_IO_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
+#include <string>
 
 namespace openMVG {
 namespace sfm {
+
+struct SfM_Data;
 
 enum ESfM_Data
 {
@@ -36,4 +38,4 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_IO_HPP
+#endif // OPENMVG_SFM_SFM_DATA_IO_HPP

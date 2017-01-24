@@ -39,6 +39,7 @@ int main(int argc, char **argv)
   std::string sPairFile;
   std::string sOutFile = "";
   double dMax_reprojection_error = 4.0;
+  unsigned int ui_max_cache_size = 0;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_switch('b', "bundle_adjustment"));
   cmd.add( make_option('r', dMax_reprojection_error, "residual_threshold"));
+  cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -63,6 +65,9 @@ int main(int argc, char **argv)
     << "[-p|--pair_file] path to a pairs file (only those pairs will be considered to compute the structure)\n"
     << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene (OFF by default)\n"
     << "[-r|--residual_threshold] maximal pixels reprojection error that will be considered for triangulations (4.0 by default)\n"
+    << "[-c|--cache_size]\n"
+    << "  Use a regions cache (only cache_size regions will be stored in memory)"
+    << "  If not used, all regions will be load in memory."
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -89,7 +94,17 @@ int main(int argc, char **argv)
   }
 
   // Prepare the Regions provider
-  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
+  std::shared_ptr<Regions_Provider> regions_provider;
+  if (ui_max_cache_size == 0)
+  {
+    // Default regions provider (load & store all regions in memory)
+    regions_provider = std::make_shared<Regions_Provider>();
+  }
+  else
+  {
+    // Cached regions provider (load & store regions on demand)
+    regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
+  }
   if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
     std::cerr << std::endl
       << "Invalid regions." << std::endl;

@@ -4,27 +4,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/multiview/translation_averaging_common.hpp"
+#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
+#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
-
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
+
 #include "testing/testing.h"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <fstream>
 #include <map>
-#include <vector>
 #include <numeric>
+#include <vector>
 
-using namespace openMVG;
-using namespace std;
+// rperrot : TODO : remove using from .h 
 
 int modifiedMod
 (
@@ -40,23 +36,23 @@ int modifiedMod
 //-- Export a series of camera positions to a SVG surface of specified squared size
 void visibleCamPosToSVGSurface
 (
-  const std::vector<Vec3> & vec_Ci,
+  const std::vector<openMVG::Vec3> & vec_Ci,
   const std::string & fileName
 )
 {
-  Mat points(3, vec_Ci.size());
+  openMVG::Mat points(3, vec_Ci.size());
   for(size_t i = 0; i  < vec_Ci.size(); ++i)
   {
     points.col(i) = vec_Ci[i];
   }
 
-  Vec mean, variance;
-  MeanAndVarianceAlongRows(points, &mean, &variance);
+  openMVG::Vec mean, variance;
+  openMVG::MeanAndVarianceAlongRows(points, &mean, &variance);
 
   const double xfactor = sqrt(2.0 / variance(0));
   const double yfactor = sqrt(2.0 / variance(2));
 
-  std::vector<Vec3> out = vec_Ci;
+  std::vector<openMVG::Vec3> out = vec_Ci;
   for(size_t i = 0; i  < vec_Ci.size(); ++i)
   {
     out[i](0) = ((out[i](0) * xfactor) + -xfactor * mean(0)) * 30 + 100;
@@ -66,11 +62,11 @@ void visibleCamPosToSVGSurface
   if (!fileName.empty())
   {
     const double size = 200;
-    svgDrawer svgSurface_GT(size,size);
+    svg::svgDrawer svgSurface_GT(size,size);
     for(size_t i = 0; i  < vec_Ci.size(); ++i)
     {
       svgSurface_GT.drawCircle(out[i](0), out[i](2),
-                               3,svgStyle().stroke("black",0.2).fill("red"));
+                               3,svg::svgStyle().stroke("black",0.2).fill("red"));
     }
     std::ostringstream osSvgGT;
     osSvgGT << fileName;
@@ -79,7 +75,7 @@ void visibleCamPosToSVGSurface
   }
 }
 
-NViewDataSet Setup_RelativeTranslations_AndNviewDataset
+openMVG::NViewDataSet Setup_RelativeTranslations_AndNviewDataset
 (
   std::vector<openMVG::RelativeInfo_Vec > & vec_relative_estimates,
   const int focal = 1000,
@@ -90,37 +86,37 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   const bool bRelative_Translation_PerTriplet = false
 )
 {
-  const NViewDataSet d =
+  const openMVG::NViewDataSet d =
     bCardiod ?
       NRealisticCamerasCardioid(
         iNviews, iNbPoints,
-        nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0))
+        openMVG::nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0))
       :NRealisticCamerasRing(
         iNviews, iNbPoints,
-        nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
+        openMVG::nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0));
 
   // Init the relative pair of motion depending of the asked configuration:
   // -2-view: bearing direction,
   // -3-view: triplet of bearing direction.
-  std::vector< Pair_Vec > motion_group;
+  std::vector< openMVG::Pair_Vec > motion_group;
   if (bRelative_Translation_PerTriplet)
   {
-    std::vector< graph::Triplet > vec_triplets;
+    std::vector< openMVG::graph::Triplet > vec_triplets;
     for (int i = 0; i < iNviews; ++i)
     {
-      const IndexT iPlus1 = modifiedMod(i+1,iNviews);
-      const IndexT iPlus2 = modifiedMod(i+2,iNviews);
+      const openMVG::IndexT iPlus1 = modifiedMod(i+1,iNviews);
+      const openMVG::IndexT iPlus2 = modifiedMod(i+2,iNviews);
       //-- sort the triplet index to have a monotonic ascending series of value
-      IndexT triplet[3] = {IndexT(i), iPlus1, iPlus2};
+      openMVG::IndexT triplet[3] = {openMVG::IndexT(i), iPlus1, iPlus2};
       std::sort(&triplet[0], &triplet[3]);
       vec_triplets.emplace_back(triplet[0],triplet[1],triplet[2]);
     }
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
-      const graph::Triplet & triplet = vec_triplets[i];
+      const openMVG::graph::Triplet & triplet = vec_triplets[i];
       const size_t I = triplet.i, J = triplet.j , K = triplet.k;
 
-      Pair_Vec pairs;
+      openMVG::Pair_Vec pairs;
       pairs.emplace_back(I,J);
       pairs.emplace_back(J,K);
       pairs.emplace_back(I,K);
@@ -137,7 +133,7 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
         const int jj = modifiedMod(j,iNviews);
         if (i != jj)
         {
-          const Pair_Vec pairs = {Pair(i,jj)};
+          const openMVG::Pair_Vec pairs = {openMVG::Pair(i,jj)};
           motion_group.push_back(pairs);
         }
       }
@@ -146,23 +142,23 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   // Compute all the required relative motions
   for (const auto & iterGroup : motion_group)
   {
-    RelativeInfo_Vec relative_motion;
-    for (const Pair & iter : iterGroup)
+    openMVG::RelativeInfo_Vec relative_motion;
+    for (const openMVG::Pair & iter : iterGroup)
     {
       const size_t I = iter.first;
       const size_t J = iter.second;
 
       //-- Build camera alias over GT translations and rotations:
-      const Mat3 & RI = d._R[I];
-      const Mat3 & RJ = d._R[J];
-      const Vec3 & ti = d._t[I];
-      const Vec3 & tj = d._t[J];
+      const openMVG::Mat3 & RI = d._R[I];
+      const openMVG::Mat3 & RJ = d._R[J];
+      const openMVG::Vec3 & ti = d._t[I];
+      const openMVG::Vec3 & tj = d._t[J];
 
       //-- Build relative motions (that feeds the Linear program formulation)
       {
-        Mat3 RijGt;
-        Vec3 tij;
-        RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
+        openMVG::Mat3 RijGt;
+        openMVG::Vec3 tij;
+        openMVG::RelativeCameraMotion(RI, ti, RJ, tj, &RijGt, &tij);
         relative_motion.emplace_back(std::make_pair(I, J), std::make_pair(RijGt, tij));
       }
     }
@@ -171,3 +167,4 @@ NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   return d;
 }
 
+#endif // OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP

@@ -27,11 +27,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/essential.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
-#include "testing/testing.h"
-
+#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+
+#include "testing/testing.h"
 
 using namespace openMVG;
 
@@ -49,14 +49,14 @@ TEST(EightPointsRelativePose, EightPointsRelativePose_Kernel_IdFocal) {
 
   //-- Setup a circular camera rig and assert that 8PT relative pose works.
   const int iNviews = 5;
-  NViewDataSet d = NRealisticCamerasRing(iNviews, 8,
+  const NViewDataSet d = NRealisticCamerasRing(iNviews, 8,
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
-  for(int i=0; i <iNviews; ++i)
+  for (int i=0; i <iNviews; ++i)
   {
-    vector<Mat3> Es; // Essential,
-    vector<Mat3> Rs;  // Rotation matrix.
-    vector<Vec3> ts;  // Translation matrix.
+    std::vector<Mat3> Es; // Essential,
+    std::vector<Mat3> Rs;  // Rotation matrix.
+    std::vector<Vec3> ts;  // Translation matrix.
     essential::kernel::EightPointRelativePoseSolver::Solve(d._x[i], d._x[(i+1)%iNviews], &Es);
 
     // Recover rotation and translation from E.
@@ -98,31 +98,29 @@ TEST(EightPointsRelativePose, EightPointsRelativePose_Kernel_IdFocal) {
 
 TEST(EightPointsRelativePose, EightPointsRelativePose_Kernel) {
 
-  typedef essential::kernel::EightPointKernel Kernel;
+  using Kernel = essential::kernel::EightPointKernel;
 
-  int focal = 1000;
-  int principal_Point = 500;
+  const int focal = 1000;
+  const int principal_Point = 500;
 
   //-- Setup a circular camera rig and assert that 8PT relative pose works.
   const int iNviews = 5;
-  NViewDataSet d = NRealisticCamerasRing(iNviews, Kernel::MINIMUM_SAMPLES,
+  const NViewDataSet d = NRealisticCamerasRing(iNviews, Kernel::MINIMUM_SAMPLES,
     nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0)); // Suppose a camera with Unit matrix as K
 
-  for(int i=0; i <iNviews; ++i)
+  for (int i=0; i <iNviews; ++i)
   {
-    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    vector<Vec3> ts;      // Translation matrix.
+    std::vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
+    std::vector<Vec3> ts;      // Translation matrix.
 
     // Direct value do not work.
     // As we use reference, it cannot convert Mat2X& to Mat&
-    Mat x0 = d._x[i];
-    Mat x1 = d._x[(i+1)%iNviews];
+    const Mat x0 = d._x[i];
+    const Mat x1 = d._x[(i+1)%iNviews];
 
     Kernel kernel(x0, x1, d._K[i], d._K[(i+1)%iNviews]);
-    vector<size_t> samples;
-    for (size_t k = 0; k < Kernel::MINIMUM_SAMPLES; ++k) {
-      samples.push_back(k);
-    }
+    std::vector<size_t> samples(Kernel::MINIMUM_SAMPLES);
+    std::iota(samples.begin(), samples.end(), 0);
     kernel.Fit(samples, &Es);
 
     // Recover rotation and translation from E.
@@ -169,52 +167,48 @@ TEST(FivePointKernelTest, KernelError) {
         0, -.5, .8,  0, .8;
   x2 << 0,    0,  0, .8, .8,
         .1, -.4, .9,  .1, .9; // Y Translated camera.
-  typedef essential::kernel::FivePointKernel Kernel;
+  using Kernel = essential::kernel::FivePointKernel;
   Kernel kernel(x1,x2, Mat3::Identity(), Mat3::Identity());
 
   bool bOk = true;
-  vector<size_t> samples;
-  for (Mat::Index i = 0; i < x1.cols(); ++i) {
-    samples.push_back(i);
-  }
-  vector<Mat3> Es;
+  std::vector<size_t> samples(x1.cols());
+  std::iota(samples.begin(), samples.end(), 0);
+  std::vector<Mat3> Es;
   kernel.Fit(samples, &Es);
 
   bOk &= (!Es.empty());
   for (size_t i = 0; i < Es.size(); ++i) {
-    for(Mat::Index j = 0; j < x1.cols(); ++j)
+    for (Mat::Index j = 0; j < x1.cols(); ++j)
       EXPECT_NEAR(0.0, kernel.Error(j,Es[i]), 1e-8);
   }
 }
 
 TEST(FivePointKernelTest, FivePointsRelativePose_Kernel) {
 
-  typedef essential::kernel::FivePointKernel Kernel;
+  using Kernel = essential::kernel::FivePointKernel;
 
-  int focal = 1000;
-  int principal_Point = 500;
+  const int focal = 1000;
+  const int principal_Point = 500;
 
   //-- Setup a circular camera rig and assert that 5PT relative pose works.
   const int iNviews = 8;
-  NViewDataSet d = NRealisticCamerasRing(iNviews, Kernel::MINIMUM_SAMPLES,
+  const NViewDataSet d = NRealisticCamerasRing(iNviews, Kernel::MINIMUM_SAMPLES,
     nViewDatasetConfigurator(focal,focal,principal_Point,principal_Point,5,0)); // Suppose a camera with Unit matrix as K
 
   size_t found = 0;
-  for(int i=1; i <iNviews; ++i)
+  for (int i=1; i <iNviews; ++i)
   {
-    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    vector<Vec3> ts;      // Translation matrix.
+    std::vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
+    std::vector<Vec3> ts;      // Translation matrix.
 
     // Direct value do not work.
     // As we use reference, it cannot convert Mat2X& to Mat&
-    Mat x0 = d._x[0];
-    Mat x1 = d._x[i];
+    const Mat x0 = d._x[0];
+    const Mat x1 = d._x[i];
 
     Kernel kernel(x0, x1, d._K[0], d._K[1]);
-    vector<size_t> samples;
-    for (size_t k = 0; k < Kernel::MINIMUM_SAMPLES; ++k) {
-      samples.push_back(k);
-    }
+    std::vector<size_t> samples(Kernel::MINIMUM_SAMPLES);
+    std::iota(samples.begin(), samples.end(), 0);
     kernel.Fit(samples, &Es);
 
     // Recover rotation and translation from E.

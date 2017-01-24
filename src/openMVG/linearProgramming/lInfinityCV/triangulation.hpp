@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
-#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+
 #include <utility>
 #include <vector>
 
@@ -124,4 +124,4 @@ struct Triangulation_L1_ConstraintBuilder
 } // namespace lInfinityCV
 } // namespace openMVG
 
-#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP

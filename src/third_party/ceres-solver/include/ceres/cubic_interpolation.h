@@ -69,8 +69,6 @@ void CubicHermiteSpline(const Eigen::Matrix<double, kDataDimension, 1>& p0,
                         const double x,
                         double* f,
                         double* dfdx) {
-  DCHECK_GE(x, 0.0);
-  DCHECK_LE(x, 1.0);
   typedef Eigen::Matrix<double, kDataDimension, 1> VType;
   const VType a = 0.5 * (-p0 + 3.0 * p1 - 3.0 * p2 + p3);
   const VType b = 0.5 * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3);

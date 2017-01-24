@@ -36,37 +36,76 @@
 namespace ceres {
 namespace internal {
 
-TEST(ParameterBlock, SetLocalParameterization) {
-  double x[3] = { 1.0, 2.0, 3.0 };
+TEST(ParameterBlock, SetLocalParameterizationDiesOnSizeMismatch) {
+  double x[3] = {1.0, 2.0, 3.0};
   ParameterBlock parameter_block(x, 3, -1);
-
-  // The indices to set constant within the parameter block (used later).
   std::vector<int> indices;
   indices.push_back(1);
-
-  // Can't set the parameterization if the sizes don't match.
   SubsetParameterization subset_wrong_size(4, indices);
   EXPECT_DEATH_IF_SUPPORTED(
       parameter_block.SetParameterization(&subset_wrong_size), "global");
+}
 
-  // Can't set parameterization to NULL from NULL.
-  EXPECT_DEATH_IF_SUPPORTED
-      (parameter_block.SetParameterization(NULL), "NULL");
-
-  // Now set the parameterization.
+TEST(ParameterBlock, SetLocalParameterizationWithSameExistingParameterization) {
+  double x[3] = {1.0, 2.0, 3.0};
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(1);
   SubsetParameterization subset(3, indices);
   parameter_block.SetParameterization(&subset);
-
-  // Re-setting the parameterization to the same value is supported.
   parameter_block.SetParameterization(&subset);
+}
 
-  // Can't set parameterization to NULL from another parameterization.
+TEST(ParameterBlock, SetLocalParameterizationDiesWhenResettingToNull) {
+  double x[3] = {1.0, 2.0, 3.0};
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(1);
+  SubsetParameterization subset(3, indices);
+  parameter_block.SetParameterization(&subset);
   EXPECT_DEATH_IF_SUPPORTED(parameter_block.SetParameterization(NULL), "NULL");
+}
 
-  // Can't set the parameterization more than once.
+TEST(ParameterBlock,
+     SetLocalParameterizationDiesWhenResettingToDifferentParameterization) {
+  double x[3] = {1.0, 2.0, 3.0};
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(1);
+  SubsetParameterization subset(3, indices);
+  parameter_block.SetParameterization(&subset);
   SubsetParameterization subset_different(3, indices);
-  EXPECT_DEATH_IF_SUPPORTED
-      (parameter_block.SetParameterization(&subset_different), "re-set");
+  EXPECT_DEATH_IF_SUPPORTED(
+      parameter_block.SetParameterization(&subset_different), "re-set");
+}
+
+TEST(ParameterBlock, SetLocalParameterizationDiesOnNullParameterization) {
+  double x[3] = {1.0, 2.0, 3.0};
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(1);
+  EXPECT_DEATH_IF_SUPPORTED(parameter_block.SetParameterization(NULL), "NULL");
+}
+
+TEST(ParameterBlock, SetParameterizationDiesOnZeroLocalSize) {
+  double x[3] = {1.0, 2.0, 3.0};
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(0);
+  indices.push_back(1);
+  indices.push_back(2);
+  SubsetParameterization subset(3, indices);
+  EXPECT_DEATH_IF_SUPPORTED(parameter_block.SetParameterization(&subset),
+                            "positive dimensional tangent");
+}
+
+TEST(ParameterBlock, SetLocalParameterizationAndNormalOperation) {
+  double x[3] = { 1.0, 2.0, 3.0 };
+  ParameterBlock parameter_block(x, 3, -1);
+  std::vector<int> indices;
+  indices.push_back(1);
+  SubsetParameterization subset(3, indices);
+  parameter_block.SetParameterization(&subset);
 
   // Ensure the local parameterization jacobian result is correctly computed.
   ConstMatrixRef local_parameterization_jacobian(

@@ -6,7 +6,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
+
 #include "testing/testing.h"
+
 #include <set>
 
 using namespace openMVG;

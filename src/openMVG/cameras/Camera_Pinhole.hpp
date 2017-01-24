@@ -5,13 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_HPP
-#define OPENMVG_CAMERA_PINHOLE_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
 
@@ -31,7 +31,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic : public IntrinsicBase
 {
-  typedef Pinhole_Intrinsic class_type;
+  using class_type = Pinhole_Intrinsic;
 
   protected:
 
@@ -201,8 +201,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     std::vector<double> getParams() const override
     {
-      const std::vector<double> params = {K_( 0, 0 ), K_( 0, 2 ), K_( 1, 2 )};
-      return params;
+      return  { K_(0, 0), K_(0, 2), K_(1, 2) };
     }
 
 
@@ -276,7 +275,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     template <class Archive>
     void save( Archive & ar ) const
     {
-      IntrinsicBase::save( ar );
+      IntrinsicBase::save(ar);
       ar( cereal::make_nvp( "focal_length", K_( 0, 0 ) ) );
       const std::vector<double> pp = {K_( 0, 2 ), K_( 1, 2 )};
       ar( cereal::make_nvp( "principal_point", pp ) );
@@ -290,7 +289,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     template <class Archive>
     void load( Archive & ar )
     {
-      IntrinsicBase::load( ar );
+      IntrinsicBase::load(ar);
       double focal_length;
       ar( cereal::make_nvp( "focal_length", focal_length ) );
       std::vector<double> pp( 2 );
@@ -312,10 +311,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
 } // namespace openMVG
 
 #include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic, "pinhole");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic);
 
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic, "pinhole" );
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic)
-
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_HPP
-
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP

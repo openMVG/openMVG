@@ -7,12 +7,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
-#define OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
 
@@ -26,7 +26,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Fisheye class_type;
+  using class_type = Pinhole_Intrinsic_Fisheye;
 
   protected:
 
@@ -141,10 +141,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
-      params.push_back( params_[1] );
-      params.push_back( params_[2] );
-      params.push_back( params_[3] );
+      params.insert(params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -229,7 +226,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     template <class Archive>
     void save( Archive & ar ) const
     {
-      Pinhole_Intrinsic::save( ar );
+      ar(cereal::base_class<Pinhole_Intrinsic>(this));
       ar( cereal::make_nvp( "fisheye", params_ ) );
     }
 
@@ -240,7 +237,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      Pinhole_Intrinsic::load( ar );
+      ar(cereal::base_class<Pinhole_Intrinsic>(this));
       ar( cereal::make_nvp( "fisheye", params_ ) );
     }
 
@@ -262,6 +259,6 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 #include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye" );
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Fisheye)
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Fisheye)
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP

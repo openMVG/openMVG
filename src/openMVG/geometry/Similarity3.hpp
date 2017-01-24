@@ -4,10 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_SIMILARITY3_H_
-#define OPENMVG_GEOMETRY_SIMILARITY3_H_
+#ifndef OPENMVG_GEOMETRY_SIMILARITY3_HPP
+#define OPENMVG_GEOMETRY_SIMILARITY3_HPP
 
-#include "openMVG/types.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
 namespace openMVG
@@ -83,4 +82,4 @@ struct Similarity3
 } // namespace geometry
 } // namespace openMVG
 
-#endif  // OPENMVG_GEOMETRY_SIMILARITY3_H_
+#endif  // OPENMVG_GEOMETRY_SIMILARITY3_HPP

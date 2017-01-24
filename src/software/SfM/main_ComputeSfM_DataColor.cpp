@@ -66,7 +66,7 @@ bool ColorizeTracks(
       {
         const size_t trackId = *iterT;
         const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
-        for( Observations::const_iterator iterObs = obs.begin();
+        for (Observations::const_iterator iterObs = obs.begin();
           iterObs != obs.end(); ++iterObs)
         {
           const size_t viewId = iterObs->first;

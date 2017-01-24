@@ -4,23 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_BA_CERES_HPP
-#define OPENMVG_SFM_DATA_BA_CERES_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
+#define OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
 
-#include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "ceres/types.h"
-#include "ceres/cost_function.h"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+
+#include <ceres/types.h>
+#include <ceres/cost_function.h>
 
 namespace openMVG {
 
 namespace cameras{
-class IntrinsicBase;
+struct IntrinsicBase;
 }
 
 namespace sfm {
-
-struct SfM_Data;
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
 /// Can be residual cost functor can be weighetd if desired (default 0.0 means no weight).
@@ -58,7 +57,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
   bool Adjust
   (
     // the SfM scene to refine
-    SfM_Data & sfm_data,
+    sfm::SfM_Data & sfm_data,
     // tell which parameter needs to be adjusted
     const Optimize_Options options
   ) override;
@@ -67,4 +66,4 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_BA_CERES_HPP
+#endif // OPENMVG_SFM_SFM_DATA_BA_CERES_HPP

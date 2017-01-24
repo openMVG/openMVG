@@ -5,7 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_REGION_MATCHER_HPP
+#define OPENMVG_MATCHING_REGION_MATCHER_HPP
 
 #include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
@@ -35,7 +36,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  ~RegionsMatcher() = default ;
+  virtual ~RegionsMatcher() = default ;
 
   /**
    * @brief Initialize the retrieval database
@@ -100,8 +101,8 @@ private:
   const features::Regions* regions_;
   bool b_squared_metric_; // Store if the metric is squared or not
 public:
-  typedef typename ArrayMatcherT::ScalarT Scalar;
-  typedef typename ArrayMatcherT::DistanceType DistanceType;
+  using Scalar = typename ArrayMatcherT::ScalarT;
+  using DistanceType = typename ArrayMatcherT::DistanceType;
 
   RegionsMatcherT() :regions_(nullptr), b_squared_metric_(false) {}
 
@@ -184,3 +185,5 @@ public:
 
 }  // namespace matching
 }  // namespace openMVG
+
+#endif // OPENMVG_MATCHING_REGION_MATCHER_HPP

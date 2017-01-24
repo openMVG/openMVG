@@ -29,12 +29,12 @@
 //  tracksBuilder.ExportToSTL(map_tracks); // Build tracks with STL compliant type
 //
 
-#ifndef OPENMVG_TRACKS_H_
-#define OPENMVG_TRACKS_H_
+#ifndef OPENMVG_TRACKS_TRACKS_HPP
+#define OPENMVG_TRACKS_TRACKS_HPP
 
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/tracks/union_find.hpp"
 #include "openMVG/tracks/flat_pair_map.hpp"
+#include "openMVG/tracks/union_find.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -52,13 +52,13 @@ namespace tracks  {
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
 //  The corresponding image points with their imageId and FeatureId.
-typedef std::map<uint32_t,uint32_t> submapTrack;
+using submapTrack = std::map<uint32_t,uint32_t>;
 // A track is a collection of {trackId, submapTrack}
-typedef std::map< size_t, submapTrack > STLMAPTracks;
+using STLMAPTracks = std::map< size_t, submapTrack >;
 
 struct TracksBuilder
 {
-  typedef std::pair<uint32_t, uint32_t>indexedFeaturePair;
+  using indexedFeaturePair = std::pair<uint32_t, uint32_t>;
 
   flat_pair_map<indexedFeaturePair, uint32_t> map_node_to_index;
   UnionFind uf_tree;
@@ -68,7 +68,7 @@ struct TracksBuilder
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
-    typedef std::set<indexedFeaturePair> SetIndexedPair;
+    using SetIndexedPair = std::set<indexedFeaturePair>;
     SetIndexedPair allFeatures;
     // For each couple of images list the used features
     for ( const auto & iter : map_pair_wise_matches )
@@ -78,7 +78,7 @@ struct TracksBuilder
       const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
-      for( const auto & cur_filtered_match : vec_FilteredMatches )
+      for ( const auto & cur_filtered_match : vec_FilteredMatches )
       {
         allFeatures.emplace(I,cur_filtered_match.i_);
         allFeatures.emplace(J,cur_filtered_match.j_);
@@ -376,4 +376,4 @@ struct TracksUtilsMap
 } // namespace tracks
 } // namespace openMVG
 
-#endif // OPENMVG_TRACKS_H_
+#endif // OPENMVG_TRACKS_TRACKS_HPP

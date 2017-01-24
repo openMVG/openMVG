@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_
-#define OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_HPP
 
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+
 #include <fstream>
 #include <utility>
 #include <vector>
@@ -27,7 +27,6 @@
 namespace openMVG   {
 namespace lInfinityCV  {
 
-using namespace linearProgramming;
 
 //-- Camera Resection
 //    - Estimation of [Ri|Ti] from xij and Xi
@@ -156,7 +155,7 @@ struct Resection_L1_ConstraintBuilder
 
   /// Setup constraints for the Resection problem,
   ///  in the LP_Constraints object.
-  bool Build(double gamma, LP_Constraints_Sparse & constraint)
+  bool Build(double gamma, linearProgramming::LP_Constraints_Sparse & constraint)
   {
     EncodeResection(pt_2d_, pt_3d_,
       gamma,
@@ -177,7 +176,7 @@ struct Resection_L1_ConstraintBuilder
     // Constraint sign are all LESS or equal (<=)
     constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
     fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
-      LP_Constraints::LP_LESS_OR_EQUAL);
+      linearProgramming::LP_Constraints::LP_LESS_OR_EQUAL);
 
     return true;
   }
@@ -189,4 +188,4 @@ struct Resection_L1_ConstraintBuilder
 } // namespace lInfinityCV
 } // namespace openMVG
 
-#endif // OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_H_
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_HPP

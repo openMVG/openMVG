@@ -28,7 +28,20 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 //         dgossow@google.com (David Gossow)
-//
+
+#ifndef CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
+#define CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
+
+#include <numeric>
+#include <vector>
+
+#include "ceres/dynamic_cost_function.h"
+#include "ceres/internal/fixed_array.h"
+#include "ceres/internal/port.h"
+#include "ceres/internal/scoped_ptr.h"
+
+namespace ceres {
+
 // DynamicCostFunctionToFunctor allows users to use CostFunction
 // objects in templated functors which are to be used for automatic
 // differentiation. It works similar to CostFunctionToFunctor, with the
@@ -87,20 +100,6 @@
 //  private:
 //   DynamicCostFunctionToFunctor intrinsic_projection_;
 // };
-
-#ifndef CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
-#define CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
-
-#include <numeric>
-#include <vector>
-
-#include "ceres/cost_function.h"
-#include "ceres/internal/fixed_array.h"
-#include "ceres/internal/port.h"
-#include "ceres/internal/scoped_ptr.h"
-
-namespace ceres {
-
 class DynamicCostFunctionToFunctor {
  public:
   // Takes ownership of cost_function.

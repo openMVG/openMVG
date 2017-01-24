@@ -4,16 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
-#define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/translation_averaging_common.hpp"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+
 #include <fstream>
+#include <set>
 #include <utility>
 #include <vector>
-#include <set>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -226,5 +225,4 @@ struct Tifromtij_ConstraintBuilder
 } // namespace lInfinityCV
 } // namespace openMVG
 
-#endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_H_
-
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_HPP

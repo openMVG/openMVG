@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_FILTERS_FRUSTUM_HPP
-#define OPENMVG_SFM_DATA_FILTERS_FRUSTUM_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP
+#define OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP
 
-#include "openMVG/types.hpp"
 #include "openMVG/geometry/frustum.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -19,12 +19,16 @@ struct SfM_Data;
 class Frustum_Filter
 {
 public:
-  typedef Hash_Map<IndexT, geometry::Frustum> FrustumsT;
-  typedef Hash_Map<IndexT, std::pair<double, double> > NearFarPlanesT;
+  using FrustumsT = Hash_Map<IndexT, geometry::Frustum>;
+  using NearFarPlanesT = Hash_Map<IndexT, std::pair<double, double> >;
 
   // Constructor
-  Frustum_Filter(const SfM_Data & sfm_data,
-    const double zNear = -1., const double zFar = -1.);
+  Frustum_Filter
+  (
+    const SfM_Data & sfm_data,
+    const double zNear = -1.,
+    const double zFar = -1.
+  );
 
   // Init a frustum for each valid views of the SfM scene
   void initFrustum(const SfM_Data & sfm_data);
@@ -38,8 +42,12 @@ public:
 private:
 
   /// Init near and far plane depth from SfM_Data structure or defined value
-  void init_z_near_z_far_depth(const SfM_Data & sfm_data,
-    const double zNear = -1., const double zFar = -1.);
+  void init_z_near_z_far_depth
+  (
+    const SfM_Data & sfm_data,
+    const double zNear = -1.,
+    const double zFar = -1.
+  );
 
   //--
   // Data
@@ -54,4 +62,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_FILTERS_FRUSTUM_HPP
+#endif // OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP

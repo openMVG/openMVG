@@ -8,11 +8,13 @@
 #ifndef OPENMVG_FEATURES_REGIONS_HPP
 #define OPENMVG_FEATURES_REGIONS_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "cereal/types/vector.hpp"
+#include "openMVG/numeric/numeric.h"
+
+#include <cereal/types/vector.hpp>
+
 #include <string>
 #include <typeinfo>
 
@@ -83,18 +85,18 @@ class Scalar_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region type
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Region descriptor
-  typedef Descriptor<T, L> DescriptorT;
+  using DescriptorT = Descriptor<T, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple regions description
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT >;
 
   //-- Class functions
   //--
@@ -170,7 +172,7 @@ public:
     assert(j < regions->RegionCount());
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
-    static matching::L2_Vectorized<T> metric;
+    matching::L2_Vectorized<T> metric;
     return metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
   }
 
@@ -197,18 +199,18 @@ class Binary_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Description of a region
-  typedef Descriptor<unsigned char, L> DescriptorT;
+  using DescriptorT = Descriptor<unsigned char, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple region descriptions
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT >;
 
   //-- Class functions
   //--
@@ -284,7 +286,7 @@ public:
     assert(j < regions->RegionCount());
 
     const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
-    static matching::Hamming<unsigned char> metric;
+    matching::Hamming<unsigned char> metric;
     const typename matching::Hamming<unsigned char>::ResultType descDist =
       metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
     return descDist * descDist;

@@ -15,20 +15,22 @@
 // - Perform the test for all the plausible intrinsic camera models
 //-----------------
 
+#include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
-using namespace openMVG::sfm;
 
 #include "testing/testing.h"
-#include "../cameras/Camera_Common.hpp"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <random>
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
+
 
 double RMSE(const SfM_Data & sfm_data);
 
@@ -189,13 +191,12 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_GCP)
   EXPECT_TRUE( dResidual_before > dResidual_after);
 
   //-- Check camera pose are to the right place (since GCP was used, the camera coordinates must be the same)
-  size_t cpt = 0;
   for (const auto & view_it : sfm_data.GetViews())
   {
-    const Pose3 pose = sfm_data.GetPoseOrDie(view_it.second.get());
-    const double position_residual = (d._C[cpt] - pose.center()).norm();
+    const View * view = view_it.second.get();
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+    const double position_residual = (d._C[view->id_pose] - pose.center()).norm();
     EXPECT_NEAR(0.0, position_residual, 1e-4);
-    ++cpt;
   }
 }
 
@@ -236,14 +237,13 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_PosePriors) {
 
     // Compute distance between SfM poses center and GPS Priors
     Mat residuals(3, sfm_data.GetViews().size());
-    size_t cpt = 0;
     for (const auto & view_it : sfm_data.GetViews())
     {
       const ViewPriors * view = dynamic_cast<ViewPriors*>(view_it.second.get());
-      residuals.col(cpt++) = (sfm_data.GetPoseOrDie(view).center() - view->pose_center_).transpose();
+      residuals.col(view->id_pose) = (sfm_data.GetPoseOrDie(view).center() - view->pose_center_).transpose();
     }
     // Check that the scene is not at the position of the POSE PRIORS center.
-    EXPECT_FALSE(residuals.colwise().norm().sum() < 1e-8);
+    EXPECT_FALSE( (residuals.colwise().norm().sum() < 1e-8) );
   }
 
   // Then activate BA with pose prior & check that the scene is at the right place
@@ -263,13 +263,12 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_PosePriors) {
     EXPECT_TRUE( dResidual_before > dResidual_after);
 
     // Compute distance between SfM poses center and GPS Priors
-    size_t cpt = 0;
     for (const auto & view_it : sfm_data.GetViews())
     {
-      const Pose3 pose = sfm_data.GetPoseOrDie(view_it.second.get());
-      const double position_residual = (d._C[cpt] - pose.center()).norm();
+      const ViewPriors * view = dynamic_cast<ViewPriors*>(view_it.second.get());
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const double position_residual = (d._C[view->id_pose] - pose.center()).norm();
       EXPECT_NEAR(0.0, position_residual, 1e-8);
-      ++cpt;
     }
   }
 }

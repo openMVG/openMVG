@@ -25,8 +25,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
-#define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
+#define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -62,7 +62,7 @@ struct pointToLineError {
 
 // Embed the basic solver to fit from sampled point set
 struct LineKernel {
-  typedef Vec2 Model;  // line parametrization: a, b;
+  using Model =  Vec2;  // line parametrization: a, b;
   enum { MINIMUM_SAMPLES = 2 };
 
   LineKernel(const Mat2X &xs) : xs_(xs) {}
@@ -87,4 +87,4 @@ struct LineKernel {
 } // namespace robust
 } // namespace openMVG
 
-#endif // OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_H_
+#endif // OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP

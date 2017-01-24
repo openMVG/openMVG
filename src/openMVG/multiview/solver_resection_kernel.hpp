@@ -26,12 +26,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
-#define OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
+#ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
+#define OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 
-#include <vector>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+
+#include <vector>
 
 namespace openMVG {
 namespace resection {
@@ -53,8 +54,7 @@ struct SixPointResectionSolver {
 
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
   static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D){
-    Vec2 x = Project(P, pt3D);
-    return (x-pt2D).norm();
+    return (pt2D - Project(P, pt3D)).norm();
   }
 };
 
@@ -70,9 +70,15 @@ public:
   ResectionKernel(const Mat &pt2D, const Mat &pt3D):
   two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(pt2D,pt3D){}
 
-  void Fit(const std::vector<size_t> &samples, std::vector<ModelArg> *models) const {
-    Mat pt2d = ExtractColumns(this->x1_, samples);
-    Mat pt3d = ExtractColumns(this->x2_, samples);
+  void Fit
+  (
+    const std::vector<size_t> &samples,
+    std::vector<ModelArg> *models
+  )
+  const
+  {
+    const Mat pt2d = ExtractColumns(this->x1_, samples);
+    const Mat pt3d = ExtractColumns(this->x2_, samples);
 
     assert(2 == pt2d.rows());
     assert(3 == pt3d.rows());
@@ -83,14 +89,23 @@ public:
   }
 
   // Error : re-projection error of the sample
-  double Error(size_t sample, const ModelArg &model) const {
+  double Error
+  (
+    size_t sample,
+    const ModelArg &model
+  )
+  const
+  {
     return ErrorArg::Error(model, this->x1_.col(sample), this->x2_.col(sample));
   }
 };
 
 //-- Usable solver for the 6pt Resection estimation
-typedef two_view::kernel::Kernel<SixPointResectionSolver,
-  SixPointResectionSolver, Mat34>  PoseResectionKernel;
+using PoseResectionKernel =
+  two_view::kernel::Kernel<
+    SixPointResectionSolver, // Model estimator
+    SixPointResectionSolver, // Error metric
+    Mat34>;
 
 }  // namespace kernel
 }  // namespace resection
@@ -146,7 +161,7 @@ struct EpnpSolver {
 
 class ResectionKernel_K {
  public:
-  typedef Mat34 Model;
+  using Model = Mat34;
   enum { MINIMUM_SAMPLES = 6 };
 
   ResectionKernel_K(const Mat2X &x_camera, const Mat3X &X) : x_camera_(x_camera), X_(X) {
@@ -164,8 +179,8 @@ class ResectionKernel_K {
   }
 
   void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
-    Mat2X x = ExtractColumns(x_camera_, samples);
-    Mat3X X = ExtractColumns(X_, samples);
+    const Mat2X x = ExtractColumns(x_camera_, samples);
+    const Mat3X X = ExtractColumns(X_, samples);
     Mat34 P;
     Mat3 R;
     Vec3 t;
@@ -177,8 +192,8 @@ class ResectionKernel_K {
   }
 
   double Error(size_t sample, const Model &model) const {
-    Mat3X X = X_.col(sample);
-    Mat2X error = Project(model, X) - x_image_.col(sample);
+    const Mat3X X = X_.col(sample);
+    const Mat2X error = Project(model, X) - x_image_.col(sample);
     return error.col(0).norm();
   }
 
@@ -197,4 +212,4 @@ class ResectionKernel_K {
 }  // namespace euclidean_resection
 }  // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_RESECTION_KERNEL_H_
+#endif  // OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
