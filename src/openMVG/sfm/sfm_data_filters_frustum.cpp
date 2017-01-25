@@ -69,7 +69,9 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
   }
 }
 
-Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
+Pair_Set Frustum_Filter::getFrustumIntersectionPairs(
+    const std::vector<HalfPlaneObject>& bounding_volume
+) const
 {
   Pair_Set pairs;
   // List active view Id
@@ -88,9 +90,16 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
 #endif
   for (int i = 0; i < (int)viewIds.size(); ++i)
   {
+    // Prepare vector of intersecting objects (within loop to keep it
+    // thread-safe)
+    std::vector<HalfPlaneObject> objects = bounding_volume;
+    objects.insert(objects.end(),
+                   { frustum_perView.at(viewIds[i]), HalfPlaneObject() });
+
     for (size_t j = i+1; j < viewIds.size(); ++j)
     {
-      if (frustum_perView.at(viewIds[i]).intersect(frustum_perView.at(viewIds[j])))
+      objects[bounding_volume.size() + 1] = frustum_perView.at(viewIds[j]);
+      if (intersect(objects))
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
