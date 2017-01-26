@@ -24,9 +24,8 @@ using namespace openMVG::geometry::halfPlane;
 // Constructor
 Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
   const double zNear, const double zFar, const NearFarPlanesT & z_near_z_far)
+  : z_near_z_far_perView(z_near_z_far)
 {
-  z_near_z_far_perView = z_near_z_far;
-
   //-- Init Z_Near & Z_Far for all valid views
   init_z_near_z_far_depth(sfm_data, zNear, zFar);
   const bool bComputed_Z = (zNear == -1. && zFar == -1.) && !sfm_data.structure.empty();
@@ -98,7 +97,7 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs(
 
     for (size_t j = i+1; j < viewIds.size(); ++j)
     {
-      objects[bounding_volume.size() + 1] = frustum_perView.at(viewIds[j]);
+      objects.back() = frustum_perView.at(viewIds[j]);
       if (intersect(objects))
       {
 #ifdef OPENMVG_USE_OPENMP

@@ -40,7 +40,7 @@ TEST(box_point, intersection)
 
 TEST(box_box, intersection)
 {
-  double r = 1.;
+  const double r = 1.;
 
   // Test with a set of intersecting boxes
   std::vector<HalfPlaneObject> boxes_ok;
