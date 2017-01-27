@@ -364,9 +364,17 @@ bool CopyFile( const std::string & inputFolder , const std::string & inputName ,
     outputFilename = stlplus::create_filespec( outputFolder , outputName ) ; 
   }
 
-  const std::string inputFilename = stlplus::create_filespec( 
-    stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_PATH ) + inputFolder , inputName ) ;
-  if( ! stlplus::file_copy( inputFilename , outputFilename ) )
+  const std::string inputFilename1 = stlplus::create_filespec( stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_SRC_PATH ) + inputFolder , inputName ) ;
+  const std::string inputFilename2 = stlplus::create_filespec( stlplus::folder_append_separator( OPENMVG_SFM_WEBGL_INSTALL_SHARED_PATH ) +  inputFolder , inputName ) ;
+
+  // Prefer Build path 
+  std::string usablePath = inputFilename1 ;
+  if( ! stlplus::file_exists( inputFilename1 ) )
+  {
+    usablePath = inputFilename2 ;
+  }
+  
+  if( ! stlplus::file_copy( usablePath , outputFilename ) )
   {
     std::cerr << "Error copying " << inputName << " file" << std::endl ; 
     return false ; 
