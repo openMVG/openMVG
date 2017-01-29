@@ -153,7 +153,7 @@ int main(int argc, char ** argv)
       dimImage_I = std::make_pair(view_I->ui_width, view_I->ui_height),
       dimImage_J = std::make_pair(view_J->ui_width, view_J->ui_height);
 
-    svgDrawer svgStream( dimImage_I.first + dimImage_J.first, max(dimImage_I.second, dimImage_J.second));
+    svgDrawer svgStream( dimImage_I.first + dimImage_J.first, std::max(dimImage_I.second, dimImage_J.second));
     svgStream.drawImage(sView_I,
       dimImage_I.first,
       dimImage_I.second);
@@ -161,7 +161,7 @@ int main(int argc, char ** argv)
       dimImage_J.first,
       dimImage_J.second, dimImage_I.first);
 
-    const vector<IndMatch> & vec_FilteredMatches = matches_provider->pairWise_matches_.at(*iter);
+    const std::vector<IndMatch> & vec_FilteredMatches = matches_provider->pairWise_matches_.at(*iter);
 
     if (!vec_FilteredMatches.empty()) {
 
@@ -195,7 +195,7 @@ int main(int argc, char ** argv)
     os << stlplus::folder_append_separator(sOutDir)
       << iter->first << "_" << iter->second
       << "_" << vec_FilteredMatches.size() << "_.svg";
-    ofstream svgFile( os.str().c_str() );
+    std::ofstream svgFile( os.str().c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }

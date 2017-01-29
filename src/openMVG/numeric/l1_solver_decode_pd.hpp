@@ -27,7 +27,7 @@ namespace openMVG {
 // the decoder can use (PA) to recover x exactly. When x, A, y have real-valued entries,
 // (PA) can be recast as an LP.
 //
-typedef double REAL;
+using REAL = double;
 
 template<typename MATRIX_TYPE>
 inline bool TRobustRegressionL1PD(
@@ -36,8 +36,8 @@ inline bool TRobustRegressionL1PD(
   Eigen::Matrix<REAL, Eigen::Dynamic, 1>& xp,
   REAL pdtol=1e-3, unsigned pdmaxiter=50)
 {
-  typedef Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
-  typedef Eigen::Matrix<REAL, Eigen::Dynamic, 1> Vector;
+  using Matrix = Eigen::Matrix<REAL, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  using Vector = Eigen::Matrix<REAL, Eigen::Dynamic, 1>;
   const unsigned M = (unsigned)y.size();
   const unsigned N = (unsigned)xp.size();
   assert(A.rows() == M && A.cols() == N);

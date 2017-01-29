@@ -48,9 +48,9 @@ private :
 };
 
 
-typedef OSI_X_SolverWrapper<OsiClpSolverInterface> OSI_CLP_SolverWrapper;
+using OSI_CLP_SolverWrapper = OSI_X_SolverWrapper<OsiClpSolverInterface>;
 #ifdef OPENMVG_HAVE_MOSEK
-typedef OSI_X_SolverWrapper<OsiMskSolverInterface> OSI_MOSEK_SolverWrapper;
+using OSI_MOSEK_SolverWrapper = OSI_X_SolverWrapper<OsiMskSolverInterface> ;
 #endif // OPENMVG_HAVE_MOSEK
 
 

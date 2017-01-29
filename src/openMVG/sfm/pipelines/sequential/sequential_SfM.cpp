@@ -380,8 +380,8 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
       const Pair current_pair = match_pair.first;
 
-      const size_t I = min(current_pair.first, current_pair.second);
-      const size_t J = max(current_pair.first, current_pair.second);
+      const size_t I = std::min(current_pair.first, current_pair.second);
+      const size_t J = std::max(current_pair.first, current_pair.second);
       if (valid_views.count(I) && valid_views.count(J))
       {
         const View * view_I = sfm_data_.GetViews().at(I).get();
@@ -483,8 +483,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 {
   // Compute robust Essential matrix for ImageId [I,J]
   // use min max to have I < J
-  const size_t I = min(current_pair.first, current_pair.second);
-  const size_t J = max(current_pair.first, current_pair.second);
+  const size_t I = std::min(current_pair.first, current_pair.second);
+  const size_t J = std::max(current_pair.first, current_pair.second);
 
   // a. Assert we have valid pinhole cameras
   const View * view_I = sfm_data_.GetViews().at(I).get();
@@ -651,7 +651,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     {
       using namespace htmlDocument;
       html_doc_stream_->pushInfo(htmlMarkup("h1","Essential Matrix."));
-      ostringstream os;
+      std::ostringstream os;
       os << std::endl
         << "-------------------------------" << "<br>"
         << "-- Robust Essential matrix: <"  << I << "," <<J << "> images: "
@@ -691,7 +691,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
       html_doc_stream_->pushInfo("<hr>");
 
-      ofstream htmlFileStream( string(stlplus::folder_append_separator(sOut_directory_) +
+      std::ofstream htmlFileStream( std::string(stlplus::folder_append_separator(sOut_directory_) +
         "Reconstruction_Report.html").c_str());
       htmlFileStream << html_doc_stream_->getDoc();
     }
@@ -818,7 +818,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
         #pragma omp critical
 #endif
         {
-          vec_putative.push_back( make_pair(viewId, vec_trackIdForResection.size()));
+          vec_putative.emplace_back(viewId, vec_trackIdForResection.size());
         }
       }
     }
@@ -954,7 +954,7 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
   if (!sLogging_file_.empty())
   {
     using namespace htmlDocument;
-    ostringstream os;
+    std::ostringstream os;
     os << "Resection of Image index: <" << viewIndex << "> image: "
       << view_I->s_Img_path <<"<br> \n";
     html_doc_stream_->pushInfo(htmlMarkup("h1",os.str()));

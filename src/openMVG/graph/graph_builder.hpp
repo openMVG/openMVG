@@ -29,10 +29,10 @@ namespace graph
 struct indexedGraph
 {
   /// Type of graph
-  typedef lemon::ListGraph GraphT;
+  using GraphT = lemon::ListGraph;
 
   /// Type of index of nodes
-  typedef GraphT::NodeMap<IndexT> map_NodeMapIndex;
+  using map_NodeMapIndex = GraphT::NodeMap<IndexT>;
 
   /// The graph
   GraphT g;

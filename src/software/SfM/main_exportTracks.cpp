@@ -143,7 +143,7 @@ int main(int argc, char ** argv)
 
       if (!map_tracksCommon.empty())
       {
-        svgDrawer svgStream( dimImage_I.first + dimImage_J.first, max(dimImage_I.second, dimImage_J.second));
+        svgDrawer svgStream( dimImage_I.first + dimImage_J.first, std::max(dimImage_I.second, dimImage_J.second));
         svgStream.drawImage(sView_I,
           dimImage_I.first,
           dimImage_I.second);
@@ -183,7 +183,7 @@ int main(int argc, char ** argv)
         os << stlplus::folder_append_separator(sOutDir)
            << I << "_" << J
            << "_" << map_tracksCommon.size() << "_.svg";
-        ofstream svgFile( os.str().c_str() );
+        std::ofstream svgFile( os.str().c_str() );
         svgFile << svgStream.closeSvgFile().str();
       }
     }

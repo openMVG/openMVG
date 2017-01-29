@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP 
+#ifndef OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP
 #define OPENMVG_GRAPH_CONNECTED_COMPONENT_HPP
 
 #include "openMVG/graph/graph_builder.hpp"
@@ -33,14 +33,14 @@ std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs
   const GraphT & g
 )
 {
-  typedef lemon::ListGraph::NodeMap<IndexT> IndexMap;
+  using IndexMap = lemon::ListGraph::NodeMap<IndexT>;
   IndexMap connectedNodeMap( g );
   lemon::connectedComponents( g, connectedNodeMap );
 
   std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs;
 
   // Create subgraphs' map
-  typedef lemon::ListGraph::NodeIt NodeIterator;
+  using NodeIterator = lemon::ListGraph::NodeIt;
   NodeIterator itNode( g );
   for ( typename IndexMap::MapIt it( connectedNodeMap );
         it != lemon::INVALID; ++it, ++itNode )
@@ -66,16 +66,16 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   // - keep the largest connected component.
 
   graph::indexedGraph putativeGraph(edges);
-  typedef indexedGraph::GraphT Graph;
+  using Graph = indexedGraph::GraphT;
 
   // Remove not bi-edge connected edges
-  typedef Graph::EdgeMap<bool> EdgeMapAlias;
+  using EdgeMapAlias = Graph::EdgeMap<bool>;
   EdgeMapAlias cutMap( putativeGraph.g );
 
   if ( lemon::biEdgeConnectedCutEdges( putativeGraph.g, cutMap ) > 0 )
   {
     // Some edges must be removed because they don't follow the biEdge condition.
-    typedef Graph::EdgeIt EdgeIterator;
+    using EdgeIterator = Graph::EdgeIt;
     EdgeIterator itEdge( putativeGraph.g );
     for ( EdgeMapAlias::MapIt it( cutMap ); it != lemon::INVALID; ++it, ++itEdge )
     {

@@ -32,7 +32,7 @@ StringTo_Intrinsic_Parameter_Type
     static_cast<cameras::Intrinsic_Parameter_Type>(0);
 
   // Look for the "STRING KEY" parameters and initialize them
-  for (const string & item : items)
+  for (const std::string & item : items)
   {
     // cameras::Intrinsic_Parameter_Type
     if (item == "NONE")

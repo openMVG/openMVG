@@ -95,7 +95,7 @@ void Matcher_Regions_AllInMemory::Match(
         ++my_progress_bar;
         if (!vec_putatives_matches.empty())
         {
-          map_PutativesMatches.insert( make_pair( make_pair(I,J), std::move(vec_putatives_matches) ));
+          map_PutativesMatches.insert( std::make_pair( std::make_pair(I,J), std::move(vec_putatives_matches) ));
         }
       }
     }
@@ -103,4 +103,4 @@ void Matcher_Regions_AllInMemory::Match(
 }
 
 } // namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG

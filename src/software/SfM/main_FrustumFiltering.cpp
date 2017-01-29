@@ -47,7 +47,7 @@ Pair_Set BuildPairsFromFrustumsIntersections(
   const SfM_Data & sfm_data,
   const double z_near = -1., // default near plane
   const double z_far = -1.,  // default far plane
-  const string & sOutDirectory = "") // output directory to save frustums as PLY
+  const std::string & sOutDirectory = "") // output directory to save frustums as PLY
 {
   const Frustum_Filter frustum_filter(sfm_data, z_near, z_far);
   if (!sOutDirectory.empty())

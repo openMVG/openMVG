@@ -129,13 +129,13 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
   //          Mark first edge as visited
 
   /// Type of graph iterator
-  typedef typename GraphT::OutArcIt OutArcIt;
+  using OutArcIt = typename GraphT::OutArcIt;
 
   /// Type of node iterator
-  typedef typename GraphT::NodeIt NodeIterator;
+  using NodeIterator = typename GraphT::NodeIt;
 
   /// Type for edge maps
-  typedef typename GraphT::template EdgeMap<bool> BoolEdgeMap;
+  using BoolEdgeMap = typename GraphT::template EdgeMap<bool>;
 
   /// List of visited edge map
   BoolEdgeMap map_edge( g, false ); // Visited edge map

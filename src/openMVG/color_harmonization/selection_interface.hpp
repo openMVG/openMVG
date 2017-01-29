@@ -17,8 +17,6 @@
 namespace openMVG {
 namespace color_harmonization {
 
-using namespace std;
-
 class commonDataByPair
 {
 public:

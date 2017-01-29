@@ -26,7 +26,7 @@ using namespace openMVG::sfm;
 std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2)
 {
   int i = 0;
-  for (; i != min(dir1.size(), dir2.size()); i++)
+  for (; i != std::min(dir1.size(), dir2.size()); i++)
   {
     if (dir1[i] != dir2[i]) break;
   }
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
-  
+
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -216,11 +216,11 @@ int main(int argc, char **argv)
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
   std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n).get()->s_Img_path);} );
-  
+
   // list images in query directory
   std::vector<std::string> vec_image;
 
-  if (stlplus::is_file(sQueryDir)) 
+  if (stlplus::is_file(sQueryDir))
   {
     vec_image.push_back(stlplus::filename_part(sQueryDir)); // single file
     sQueryDir = stlplus::folder_part(sQueryDir);
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
     // reconstruction
     for (auto & view : sfm_data.GetViews())
     {
-      view.second.get()->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path), 
+      view.second.get()->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path),
           view.second.get()->s_Img_path);
     }
     // change root path to common root path
@@ -256,13 +256,13 @@ int main(int argc, char **argv)
   Views & views = sfm_data.views;
   Poses & poses = sfm_data.poses;
   Intrinsics & intrinsics = sfm_data.intrinsics;
-  
+
   // first intrinsics of the input sfm_data file, will be used if we inforce single intrinsics
   cameras::Pinhole_Intrinsic_Radial_K3 * ptrPinhole = dynamic_cast<cameras::Pinhole_Intrinsic_Radial_K3*>(sfm_data.GetIntrinsics().at(0).get());
-  const int num_initial_intrinsics = sfm_data.GetIntrinsics().size(); 
+  const int num_initial_intrinsics = sfm_data.GetIntrinsics().size();
 
   int total_num_images = 0;
-  
+
 #ifdef OPENMVG_USE_OPENMP
   const unsigned int nb_max_thread = (iNumThreads == 0) ? 0 : omp_get_max_threads();
     omp_set_num_threads(nb_max_thread);
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
       std::cerr << *iter_image << " : unknown image file format." << std::endl;
       continue;
     }
-    
+
     std::cout << "SfM::localization => try with image: " << *iter_image << std::endl;
     std::unique_ptr<Regions> query_regions(regions_type->EmptyClone());
     image::Image<unsigned char> imageGray;
@@ -366,16 +366,16 @@ int main(int argc, char **argv)
       {
         std::cerr << "Refining pose for image " << *iter_image << " failed." << std::endl;
       }
-      
+
       bSuccessfulLocalization = true;
-      
+
     }
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical
 #endif
 {
     total_num_images++;
-    
+
     View v(*iter_image, views.size(), views.size(), views.size(), imageGray.Width(), imageGray.Height());
     if(bSuccessfulLocalization)
     {
@@ -386,12 +386,12 @@ int main(int argc, char **argv)
       intrinsics[v.id_intrinsic] = optional_intrinsic;
       // Add the computed pose to the sfm_container
       poses[v.id_pose] = pose;
-      
+
     }
     else
     {
       v.id_intrinsic = UndefinedIndexT;
-      v.id_pose = UndefinedIndexT;  
+      v.id_pose = UndefinedIndexT;
     }
     // Add the view to the sfm_container
     views[v.id_view] = std::make_shared<View>(v);
@@ -399,7 +399,7 @@ int main(int argc, char **argv)
   }
 
   GroupSharedIntrinsics(sfm_data);
-  
+
   std::cout << " Total poses found : " << vec_found_poses.size() << "/" << total_num_images << endl;
 
   // Export the found camera position in a ply.
@@ -415,7 +415,7 @@ int main(int argc, char **argv)
   else
   {
     flag_save = ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS);
-  } 
+  }
   if (!Save(
     sfm_data,
     stlplus::create_filespec( sOutDir, "sfm_data_expanded.json" ).c_str(),

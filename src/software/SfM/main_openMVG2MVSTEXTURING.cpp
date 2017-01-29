@@ -48,7 +48,7 @@ int main(int argc, char **argv)
             << "--outdir " << sOutDir << std::endl;
 
   bool bOneHaveDisto = false;
-  
+
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
@@ -67,16 +67,16 @@ int main(int argc, char **argv)
     const View * view = iter->second.get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
-    
+
     // Valid view, we can ask a pose & intrinsic data
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
     const IntrinsicBase * cam = iterIntrinsic->second.get();
-    
+
     if (!cameras::isPinhole(cam->getType()))
         continue;
     const Pinhole_Intrinsic * pinhole_cam = static_cast<const Pinhole_Intrinsic *>(cam);
-    
+
     // Extrinsic
     const Vec3 t = pose.translation();
     const Mat3 R = pose.rotation();
@@ -87,8 +87,8 @@ int main(int argc, char **argv)
     // Image size in px
     const int w = pinhole_cam->w();
     const int h = pinhole_cam->h();
-    
-    // We can now create the .cam file for the View in the output dir 
+
+    // We can now create the .cam file for the View in the output dir
     std::ofstream outfile( stlplus::create_filespec(
                 sOutDir, stlplus::basename_part(view->s_Img_path), "cam" ).c_str() );
     // See https://github.com/nmoehrle/mvs-texturing/blob/master/apps/texrecon/arguments.cpp
@@ -100,13 +100,13 @@ int main(int argc, char **argv)
         << R(2,0) << " " << R(2,1) << " " << R(2,2) << "\n"
         << f / largerDim << " 0 0 1 " << pp(0) / w << " " << pp(1) / h;
     outfile.close();
-    
+
     if(cam->have_disto())
       bOneHaveDisto = true;
   }
-  
-  const string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
-  const string sQuitMsg = std::string("Your SfM_Data file was succesfully converted!\n") + 
+
+  const std::string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
+  const std::string sQuitMsg = std::string("Your SfM_Data file was succesfully converted!\n") +
 	  "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
   std::cout << sQuitMsg << std::endl;
   return EXIT_SUCCESS;
