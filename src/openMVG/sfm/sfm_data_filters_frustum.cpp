@@ -22,8 +22,13 @@ using namespace openMVG::geometry;
 using namespace openMVG::geometry::halfPlane;
 
 // Constructor
-Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
-  const double zNear, const double zFar, const NearFarPlanesT & z_near_z_far)
+Frustum_Filter::Frustum_Filter
+(
+  const SfM_Data & sfm_data,
+  const double zNear,
+  const double zFar,
+  const NearFarPlanesT & z_near_z_far
+)
 {
   z_near_z_far_perView = z_near_z_far;
 
@@ -35,7 +40,10 @@ Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
 }
 
 // Init a frustum for each valid views of the SfM scene
-void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
+void Frustum_Filter::initFrustum
+(
+  const SfM_Data & sfm_data
+)
 {
   for (NearFarPlanesT::const_iterator it = z_near_z_far_perView.begin();
       it != z_near_z_far_perView.end(); ++it)
@@ -112,7 +120,11 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
 }
 
 // Export defined frustum in PLY file for viewing
-bool Frustum_Filter::export_Ply(const std::string & filename) const
+bool Frustum_Filter::export_Ply
+(
+  const std::string & filename
+)
+const
 {
   std::ofstream of(filename.c_str());
   if (!of.is_open())
@@ -188,8 +200,12 @@ bool Frustum_Filter::export_Ply(const std::string & filename) const
   return bOk;
 }
 
-void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
-  const double zNear, const double zFar)
+void Frustum_Filter::init_z_near_z_far_depth
+(
+  const SfM_Data & sfm_data,
+  const double zNear,
+  const double zFar
+)
 {
   // If z_near & z_far are -1 and structure if not empty,
   //  compute the values for each camera and the structure
