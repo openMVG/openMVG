@@ -148,6 +148,34 @@ struct HalfPlaneObject
   }
 };
 
+/**
+* @brief Test if multiple defined 'volume' intersect
+* @param hplanes A vector of HalfPlaneObject
+* @retval true If a non-empty intersection exists
+* @retval false If there's no intersection
+*/
+inline bool
+intersect
+(
+  const std::vector<HalfPlaneObject> & hplanes
+)
+{
+  // Compute the total number of half-planes
+  std::size_t s = 0;
+  std::for_each(hplanes.cbegin(), hplanes.cend(),
+                [&s](const HalfPlaneObject & hp) { s += hp.planes.size(); });
+
+  // Concatenate the half-planes and see if an intersection exists
+  std::vector<Half_plane> vec_planes;
+  vec_planes.reserve(s);
+  for (const HalfPlaneObject & hp : hplanes)
+  {
+    vec_planes.insert(vec_planes.end(), hp.planes.cbegin(), hp.planes.cend());
+  }
+
+  return halfPlane::isNotEmpty(vec_planes);
+}
+
 } // namespace halfPlane
 } // namespace geometry
 } // namespace openMVG

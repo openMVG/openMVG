@@ -9,6 +9,7 @@
 #define OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP
 
 #include "openMVG/geometry/frustum.hpp"
+#include "openMVG/geometry/half_space_intersection.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG {
@@ -34,8 +35,13 @@ public:
   // Init a frustum for each valid views of the SfM scene
   void initFrustum(const SfM_Data & sfm_data);
 
-  // Return intersecting View frustum pairs
-  Pair_Set getFrustumIntersectionPairs() const;
+  // Return intersecting View frustum pairs. An optional bounding volume
+  // defined as a vector of half-plane objects can also be provided to further
+  // limit the intersection area.
+  Pair_Set getFrustumIntersectionPairs(
+      const std::vector<HalfPlaneObject>& bounding_volume
+        = std::vector<HalfPlaneObject>()
+  ) const;
 
   // Export defined frustum in PLY file for viewing
   bool export_Ply(const std::string & filename) const;

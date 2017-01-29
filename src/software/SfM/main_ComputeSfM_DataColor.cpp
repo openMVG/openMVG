@@ -52,7 +52,7 @@ bool ColorizeTracks(
       std::inserter(remainingTrackToColor, remainingTrackToColor.begin()),
       stl::RetrieveKey());
 
-    while( !remainingTrackToColor.empty() )
+    while ( !remainingTrackToColor.empty() )
     {
       // Find the most representative image (for the remaining 3D points)
       //  a. Count the number of observation per view for each 3Dpoint Index
