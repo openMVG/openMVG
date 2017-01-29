@@ -14,3 +14,5 @@ find_package(Qt4 QUIET)
 if (QT_FOUND)
   add_subdirectory(ui)
 endif (QT_FOUND)
+
+ADD_SUBDIRECTORY( SfMWebGLViewer )
