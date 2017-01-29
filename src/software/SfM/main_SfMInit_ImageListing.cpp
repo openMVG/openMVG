@@ -59,7 +59,8 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
 
 std::pair<bool, Vec3> checkGPS
 (
-  const std::string & filename
+  const std::string & filename,
+  const int & GPS_to_XYZ_method = 0
 )
 {
   std::pair<bool, Vec3> val(false, Vec3::Zero());
@@ -75,9 +76,18 @@ std::pair<bool, Vec3> checkGPS
            exifReader->GPSLongitude( &longitude ) &&
            exifReader->GPSAltitude( &altitude ) )
       {
-        // Add ECEF XYZ position to the GPS position array
+        // Add ECEF or UTM XYZ position to the GPS position array
         val.first = true;
-        val.second = lla_to_ecef( latitude, longitude, altitude );
+        switch(GPS_to_XYZ_method)
+        {
+          case 1:
+            val.second = lla_to_utm( latitude, longitude, altitude );
+            break;
+          case 0:
+          default:
+            val.second = lla_to_ecef( latitude, longitude, altitude );
+            break;
+        }
       }
     }
   }
@@ -125,12 +135,15 @@ int main(int argc, char **argv)
     sfileDatabase = "",
     sOutputDir = "",
     sKmatrix;
+
   std::string sPriorWeights;
   std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
-
+  
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
+
+  int i_GPS_XYZ_method = 0;
 
   double focal_pixels = -1.0;
 
@@ -143,6 +156,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
+  cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -166,6 +180,9 @@ int main(int argc, char **argv)
       << "\n"
       << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
       << "[-W|--prior_weigths] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
+      << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
+      << "\t 0: ECEF (default)\n"
+      << "\t 1: UTM\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -375,7 +392,7 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename);
+    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename,i_GPS_XYZ_method);
     if (gps_info.first && cmd.used('P'))
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
