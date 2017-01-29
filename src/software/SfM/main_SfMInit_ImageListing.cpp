@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 
   std::string sPriorWeights;
   std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
-  
+
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename,i_GPS_XYZ_method);
+    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename, i_GPS_XYZ_method);
     if (gps_info.first && cmd.used('P'))
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
