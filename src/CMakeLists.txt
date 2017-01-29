@@ -161,11 +161,9 @@ endif()
 # ==============================================================================
 # IMAGE IO detection
 # ==============================================================================
-if (NOT APPLE)
-  find_package(JPEG QUIET)
-  find_package(PNG QUIET)
-  find_package(TIFF QUIET)
-endif (NOT APPLE)
+find_package(JPEG QUIET)
+find_package(PNG QUIET)
+find_package(TIFF QUIET)
 
 # Folders
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
