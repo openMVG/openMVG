@@ -11,7 +11,7 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <cereal/types/vector.hpp>
 
@@ -70,7 +70,10 @@ public:
   // A default metric is used according the descriptor type:
   // - Scalar: SquaredL2,
   // - Binary: SquaredHamming
-  virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
+  virtual double SquaredDescriptorDistance(
+    size_t i,
+    const Regions *,
+    size_t j) const = 0;
 
   /// Add the Inth region to another Region container
   virtual void CopyRegion(size_t i, Regions *) const = 0;
@@ -96,7 +99,7 @@ public:
   /// Container for multiple regions
   using FeatsT = std::vector<FeatureT>;
   /// Container for multiple regions description
-  using DescsT = std::vector<DescriptorT >;
+  using DescsT = std::vector<DescriptorT, Eigen::aligned_allocator<DescriptorT>>;
 
   //-- Class functions
   //--
@@ -143,12 +146,12 @@ public:
   size_t RegionCount() const override {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return vec_feats_; }
-  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
+  inline FeatsT & Features() { return vec_feats_; }
+  inline const FeatsT & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
+  inline DescsT & Descriptors() { return vec_descs_; }
+  inline const DescsT & Descriptors() const { return vec_descs_; }
 
   const void * DescriptorRawData() const override { return &vec_descs_[0];}
 
@@ -165,7 +168,13 @@ public:
   }
 
   // Return the L2 distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override
+  double SquaredDescriptorDistance
+  (
+    size_t i,
+    const Regions * regions,
+    size_t j
+  )
+  const override
   {
     assert(i < vec_descs_.size());
     assert(regions);
@@ -187,8 +196,8 @@ public:
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> vec_feats_;    // region features
-  std::vector<DescriptorT> vec_descs_; // region descriptions
+  FeatsT vec_feats_;    // region features
+  DescsT vec_descs_; // region descriptions
 };
 
 /// Binary_Regions represented as uchar based array
@@ -210,7 +219,7 @@ public:
   /// Container for multiple regions
   using FeatsT = std::vector<FeatureT>;
   /// Container for multiple region descriptions
-  using DescsT = std::vector<DescriptorT >;
+  using DescsT = std::vector<DescriptorT, Eigen::aligned_allocator<DescriptorT>>;
 
   //-- Class functions
   //--
@@ -257,12 +266,12 @@ public:
   size_t RegionCount() const override {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return vec_feats_; }
-  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
+  inline FeatsT & Features() { return vec_feats_; }
+  inline const FeatsT & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
+  inline DescsT & Descriptors() { return vec_descs_; }
+  inline const DescsT & Descriptors() const { return vec_descs_; }
 
   const void * DescriptorRawData() const override { return &vec_descs_[0];}
 
@@ -279,7 +288,13 @@ public:
   }
 
   // Return the squared Hamming distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override
+  double SquaredDescriptorDistance
+  (
+    size_t i,
+    const Regions * regions,
+    size_t j
+  )
+  const override
   {
     assert(i < vec_descs_.size());
     assert(regions);
@@ -303,8 +318,8 @@ public:
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> vec_feats_; // region features
-  std::vector<DescriptorT> vec_descs_; // region descriptions
+  FeatsT vec_feats_; // region features
+  DescsT vec_descs_; // region descriptions
 };
 
 } // namespace features
