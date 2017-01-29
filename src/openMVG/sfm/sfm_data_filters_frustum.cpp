@@ -29,9 +29,8 @@ Frustum_Filter::Frustum_Filter
   const double zFar,
   const NearFarPlanesT & z_near_z_far
 )
+: z_near_z_far_perView(z_near_z_far)
 {
-  z_near_z_far_perView = z_near_z_far;
-
   //-- Init Z_Near & Z_Far for all valid views
   init_z_near_z_far_depth(sfm_data, zNear, zFar);
   const bool bComputed_Z = (zNear == -1. && zFar == -1.) && !sfm_data.structure.empty();
@@ -77,7 +76,11 @@ void Frustum_Filter::initFrustum
   }
 }
 
-Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
+Pair_Set Frustum_Filter::getFrustumIntersectionPairs
+(
+  const std::vector<HalfPlaneObject>& bounding_volume
+)
+const
 {
   Pair_Set pairs;
   // List active view Id
@@ -96,9 +99,16 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
 #endif
   for (int i = 0; i < (int)viewIds.size(); ++i)
   {
+    // Prepare vector of intersecting objects (within loop to keep it
+    // thread-safe)
+    std::vector<HalfPlaneObject> objects = bounding_volume;
+    objects.insert(objects.end(),
+                   { frustum_perView.at(viewIds[i]), HalfPlaneObject() });
+
     for (size_t j = i+1; j < viewIds.size(); ++j)
     {
-      if (frustum_perView.at(viewIds[i]).intersect(frustum_perView.at(viewIds[j])))
+      objects.back() = frustum_perView.at(viewIds[j]);
+      if (intersect(objects))
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
