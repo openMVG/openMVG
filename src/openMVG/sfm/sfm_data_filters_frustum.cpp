@@ -23,8 +23,10 @@ using namespace openMVG::geometry::halfPlane;
 
 // Constructor
 Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
-  const double zNear, const double zFar)
+  const double zNear, const double zFar, const NearFarPlanesT & z_near_z_far)
 {
+  z_near_z_far_perView = z_near_z_far;
+
   //-- Init Z_Near & Z_Far for all valid views
   init_z_near_z_far_depth(sfm_data, zNear, zFar);
   const bool bComputed_Z = (zNear == -1. && zFar == -1.) && !sfm_data.structure.empty();
@@ -233,7 +235,8 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
       const View * view = it->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
-      z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
+      if (z_near_z_far_perView.find(view->id_view) == z_near_z_far_perView.end())
+        z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
     }
   }
 }
