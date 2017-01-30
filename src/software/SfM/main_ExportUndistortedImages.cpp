@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
 
   // Exit program
   if (bOk)
-    return( EXIT_SUCCESS );
-  else
-    return( EXIT_FAILURE );
+  {
+    return EXIT_SUCCESS;
+  }
+  return EXIT_FAILURE;
 }

@@ -65,7 +65,7 @@ void EncodeResection(const Mat2X & Pt2D,
     const Vec2 pt2d = Pt2D.col(p);
     const Vec3 pt3d = Pt3D.col(p);
 
-    // Compute and setup constraint :
+    // Compute and setup constraint:
 
     // Cheirality
     // R^3 X + t >0
@@ -145,12 +145,15 @@ void EncodeResection(const Mat2X & Pt2D,
 ///
 struct Resection_L1_ConstraintBuilder
 {
-  Resection_L1_ConstraintBuilder(
+  Resection_L1_ConstraintBuilder
+  (
     const Mat2X & Pt2D,
-    const Mat3X & Pt3D)
+    const Mat3X & Pt3D
+  )
+  : pt_2d_ (Pt2D),
+    pt_3d_ (Pt3D)
   {
-    pt_2d_ = Pt2D;
-    pt_3d_ = Pt3D;
+
   }
 
   /// Setup constraints for the Resection problem,
@@ -170,9 +173,7 @@ struct Resection_L1_ConstraintBuilder
     const int NParams = 4 * 2 + 3;
 
     constraint.nbParams_ = NParams;
-    constraint.vec_bounds_ = std::vector< std::pair<double,double> >(1);
-    fill(constraint.vec_bounds_.begin(),constraint.vec_bounds_.end(),
-      std::make_pair((double)-1e+30, (double)1e+30)); // lp_solve => getInfinite => DEF_INFINITE
+    constraint.vec_bounds_ = { std::make_pair((double)-1e+30, (double)1e+30) };
     // Constraint sign are all LESS or equal (<=)
     constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
     fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),

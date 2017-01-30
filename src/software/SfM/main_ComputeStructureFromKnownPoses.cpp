@@ -158,7 +158,6 @@ int main(int argc, char **argv)
     {
       std::cerr << "Cannot use --match_file and --pair_file at the same time" << std::endl;
     }
-    
   }
 
   openMVG::system::Timer timer;
@@ -223,7 +222,8 @@ int main(int argc, char **argv)
   }
 
   if (Save(sfm_data, sOutFile, ESfM_Data(ALL)))
+  {
     return EXIT_SUCCESS;
-  else
-    return EXIT_FAILURE;
+  }
+  return EXIT_FAILURE;
 }

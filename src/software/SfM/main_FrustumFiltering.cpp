@@ -94,8 +94,8 @@ int main(int argc, char **argv)
   }
 
   // Assert that we can create the output directory
-  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile) ))
-    if(!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
+  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile)) &&
+      !stlplus::folder_create( stlplus::folder_part(sOutFile)))
       return EXIT_FAILURE;
 
   // Load input SfM_Data scene
@@ -119,10 +119,6 @@ int main(int argc, char **argv)
   {
     return EXIT_SUCCESS;
   }
-  else
-  {
-    return EXIT_FAILURE;
-  }
 
-
+  return EXIT_FAILURE;
 }

@@ -156,7 +156,7 @@ bool L2RotationAveraging
   {
     return false;
   }
-  else
+  // else
   {
     // Sort abs(eigenvalues)
     std::vector<std::pair<double, Vec> > eigs(AtA.cols());
@@ -329,5 +329,3 @@ bool L2RotationAveraging_Refine
 } // namespace l2
 } // namespace rotation_averaging
 } // namespace openMVG
-
-

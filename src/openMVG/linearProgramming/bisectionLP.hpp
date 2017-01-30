@@ -41,14 +41,14 @@ bool BisectionLP(
   {
     ++k; // One more iteration
 
-    double gamma = (gammaLow + gammaUp) / 2.0;
+    const double gamma = (gammaLow + gammaUp) / 2.0;
 
     //-- Setup constraint and solver
     cstraintBuilder.Build(gamma, constraint);
-    solver.setup( constraint );
+    solver.setup(constraint);
     //--
     // Solving
-    bool bFeasible = solver.solve();
+    const bool bFeasible = solver.solve();
     //--
 
     if (bFeasible)

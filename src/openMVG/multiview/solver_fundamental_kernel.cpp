@@ -58,8 +58,8 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F)
     Nullspace2(&A, &f1, &f2);
   }
 
-  Mat3 F1 = Map<RMat3>(f1.data());
-  Mat3 F2 = Map<RMat3>(f2.data());
+  const Mat3 F1 = Map<RMat3>(f1.data());
+  const Mat3 F2 = Map<RMat3>(f2.data());
 
   // Then, use the condition det(F) = 0 to determine F. In other words, solve
   // det(F1 + a*F2) = 0 for a.
@@ -121,8 +121,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs
   if (x1.cols() > 8) {
     // Force fundamental matrix to have rank 2
     Eigen::JacobiSVD<Mat3> USV(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    Vec3 d = USV.singularValues();
-    d[2] = 0.0;
+    const Vec3 d((Vec3() << USV.singularValues().head<2>(), 0.0).finished());
     F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
   }
   Fs->push_back(F);

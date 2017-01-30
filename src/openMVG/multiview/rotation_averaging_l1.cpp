@@ -207,7 +207,7 @@ unsigned int FilterRelativeRotations(
   // mark outliers
   unsigned int nInliers = 0;
   for (size_t r=0; r<errors.size(); ++r) {
-    const bool bInlier = (errors[r] < threshold);
+    const bool bInlier = errors[r] < threshold;
     if (vec_inliers)
       (*vec_inliers)[r] = bInlier;
     if (bInlier)
@@ -564,4 +564,3 @@ bool RefineRotationsAvgL1IRLS(
 } // namespace l1
 } // namespace rotation_averaging
 } // namespace openMVG
-

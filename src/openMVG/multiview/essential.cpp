@@ -151,9 +151,8 @@ bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
     *R = Rs[solution];
     *t = ts[solution];
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 }  // namespace openMVG

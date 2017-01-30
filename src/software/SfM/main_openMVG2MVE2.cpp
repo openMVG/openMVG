@@ -286,9 +286,9 @@ int main(int argc, char *argv[])
   }
 
   if (exportToMVE2Format(sfm_data, stlplus::folder_append_separator(sOutDir) + "MVE"))
-    return( EXIT_SUCCESS );
+    return EXIT_SUCCESS;
   else
-    return( EXIT_FAILURE );
+    return EXIT_FAILURE;
 }
 
 /// Naive image bilinear resampling of an image for thumbnail generation

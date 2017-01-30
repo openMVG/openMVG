@@ -74,27 +74,23 @@ OSI_X_SolverWrapper<OsiMskSolverInterface>::OSI_X_SolverWrapper(int nbParams) : 
 template<typename SOLVERINTERFACE>
 OSI_X_SolverWrapper<SOLVERINTERFACE>::~OSI_X_SolverWrapper()
 {
-  // Memory cleaning.
-  if ( si != NULL )
-  {
-    delete si;
-    si = NULL;
-  }
+  delete si;
 }
 
 template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
   bool bOk = true;
-  if ( si == NULL )
+  if ( si == nullptr )
   {
     return false;
   }
   assert(nbParams_ == cstraints.nbParams_);
 
   const unsigned int NUMVAR = cstraints.constraint_mat_.cols();
-  std::vector<double> col_lb(NUMVAR);//the column lower bounds
-  std::vector<double> col_ub(NUMVAR);//the column upper bounds
+  std::vector<double>
+    col_lb(NUMVAR), // the column lower bounds
+    col_ub(NUMVAR); // the column upper bounds
 
   this->nbParams_ = NUMVAR;
 
@@ -106,8 +102,10 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
   const size_t nbLine = A.rows() +
     std::count(cstraints.vec_sign_.begin(), cstraints.vec_sign_.end(), LP_Constraints::LP_EQUAL);
 
-  std::vector<double> row_lb(nbLine);//the row lower bounds
-  std::vector<double> row_ub(nbLine);//the row upper bounds
+  // Define default lower and upper bound to [-inf, inf]
+  std::vector<double>
+    row_lb(nbLine, -si->getInfinity()), // the row lower bounds
+    row_ub(nbLine, si->getInfinity()); // the row upper bounds
 
   CoinPackedMatrix * matrix = new CoinPackedMatrix(false,0,0);
   matrix->setDimensions(0, NUMVAR);
@@ -116,32 +114,33 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
   size_t indexRow = 0;
   for (int i=0; i < A.rows(); ++i)
   {
-    Vec temp = A.row(i);
-
+    const Vec temp = A.row(i);
     CoinPackedVector row;
-    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL || cstraints.vec_sign_[i] == LP_Constraints::LP_LESS_OR_EQUAL )
+
+    if (cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL ||
+        cstraints.vec_sign_[i] == LP_Constraints::LP_LESS_OR_EQUAL)
     {
-      int coef = 1;
-      for ( int j = 0; j < A.cols() ; j++ )
+      const int coef = 1;
+      for ( int j = 0; j < A.cols() ; ++j )
       {
         row.insert(j, coef * temp.data()[j]);
       }
-      row_lb[indexRow] = -1.0 * si->getInfinity();
       row_ub[indexRow] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow(row);
-      indexRow++;
+      ++indexRow;
     }
-    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL || cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL )
+
+    if (cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL ||
+        cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL)
     {
-      int coef = -1;
-      for ( int j = 0; j < A.cols() ; j++ )
+      const int coef = -1;
+      for ( int j = 0; j < A.cols() ; ++j )
       {
-	      row.insert(j, coef * temp.data()[j]);
+        row.insert(j, coef * temp.data()[j]);
       }
-      row_lb[indexRow] = -1.0 * si->getInfinity();
       row_ub[indexRow] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow(row);
-      indexRow++;
+      ++indexRow;
     }
   }
 
@@ -149,13 +148,10 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints & cstraint
   if (cstraints.vec_bounds_.size() == 1)
   {
     // Setup the same bound for all the parameters
-    for (int i=0; i < this->nbParams_; ++i)
-    {
-      col_lb[i] = cstraints.vec_bounds_[0].first;
-      col_ub[i] = cstraints.vec_bounds_[0].second;
-    }
+    std::fill(col_lb.begin(), col_lb.end(), cstraints.vec_bounds_[0].first);
+    std::fill(col_ub.begin(), col_ub.end(), cstraints.vec_bounds_[0].second);
   }
-  else // each parameter have it's own bounds
+  else // each parameter have its own bounds
   {
     for (int i=0; i < this->nbParams_; ++i)
     {
@@ -175,15 +171,16 @@ template<typename SOLVERINTERFACE>
 bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
   bool bOk = true;
-  if ( si == NULL )
+  if ( si == nullptr )
   {
     return false;
   }
   assert(nbParams_ == cstraints.nbParams_);
 
   const int NUMVAR = cstraints.constraint_mat_.cols();
-  std::vector<double> col_lb(NUMVAR);//the column lower bounds
-  std::vector<double> col_ub(NUMVAR);//the column upper bounds
+  std::vector<double>
+    col_lb(NUMVAR), // the column lower bounds
+    col_ub(NUMVAR); // the column upper bounds
 
   this->nbParams_ = NUMVAR;
 
@@ -195,8 +192,10 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
   const size_t nbLine = A.rows() +
     std::count(cstraints.vec_sign_.begin(), cstraints.vec_sign_.end(), LP_Constraints::LP_EQUAL);
 
-  std::vector<double> row_lb(nbLine);//the row lower bounds
-  std::vector<double> row_ub(nbLine);//the row upper bounds
+  // Define default lower and upper bound to [-inf, inf]
+  std::vector<double>
+    row_lb(nbLine, -si->getInfinity()), // the row lower bounds
+    row_ub(nbLine, si->getInfinity()); // the row upper bounds
 
   CoinPackedMatrix * matrix = new CoinPackedMatrix(false,0,0);
   matrix->setDimensions(0, NUMVAR);
@@ -213,33 +212,32 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
       vec_value.push_back(it.value());
     }
 
-
-    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL || cstraints.vec_sign_[i] == LP_Constraints::LP_LESS_OR_EQUAL )
+    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL ||
+         cstraints.vec_sign_[i] == LP_Constraints::LP_LESS_OR_EQUAL )
     {
-      int coef = 1;
-      row_lb[rowindex] = -1.0 * si->getInfinity();
+      const int coef = 1;
       row_ub[rowindex] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow( vec_colno.size(),
                    &vec_colno[0],
                    &vec_value[0] );
-      rowindex++;
+      ++rowindex;
     }
 
-    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL || cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL )
+    if ( cstraints.vec_sign_[i] == LP_Constraints::LP_EQUAL ||
+         cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL )
     {
-      int coef = -1;
+      const int coef = -1;
       for ( std::vector<double>::iterator iter_val = vec_value.begin();
         iter_val != vec_value.end();
         iter_val++)
       {
         *iter_val *= coef;
       }
-      row_lb[rowindex] = -1.0 * si->getInfinity();
       row_ub[rowindex] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow( vec_colno.size(),
                    &vec_colno[0],
                    &vec_value[0] );
-      rowindex++;
+      ++rowindex;
     }
   }
 
@@ -247,11 +245,8 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::setup(const LP_Constraints_Sparse & c
   if (cstraints.vec_bounds_.size() == 1)
   {
     // Setup the same bound for all the parameters
-    for (int i=0; i < this->nbParams_; ++i)
-    {
-      col_lb[i] = cstraints.vec_bounds_[0].first;
-      col_ub[i] = cstraints.vec_bounds_[0].second;
-    }
+    std::fill(col_lb.begin(), col_lb.end(), cstraints.vec_bounds_[0].first);
+    std::fill(col_ub.begin(), col_ub.end(), cstraints.vec_bounds_[0].second);
   }
   else  // each parameter have it's own bounds
   {
@@ -305,4 +300,3 @@ bool OSI_X_SolverWrapper<SOLVERINTERFACE>::getSolution(std::vector<double> & est
 
 
 #endif // OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
-

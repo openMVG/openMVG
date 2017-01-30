@@ -86,10 +86,9 @@ int main(int argc, char **argv)
   {
     return EXIT_SUCCESS;
   }
-  else
-  {
-    std::cerr << std::endl
-      << "An error occured while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
-    return EXIT_FAILURE;
-  }
+
+  std::cerr
+    << std::endl
+    << "An error occured while trying to save \"" << sSfM_Data_Filename_Out << "\"." << std::endl;
+  return EXIT_FAILURE;
 }
