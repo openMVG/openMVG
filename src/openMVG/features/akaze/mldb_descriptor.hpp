@@ -10,7 +10,8 @@
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image.hpp"
-#include "openMVG/numeric/math_trait.hpp"
+
+#include <cmath>
 
 namespace openMVG {
 namespace features {
@@ -155,7 +156,7 @@ namespace features {
 
     // Sampling size according to the scale value
     const Real inv_octave_scale = static_cast<Real>( 1 ) / static_cast<Real>( 1 << id_octave ) ;
-    const Real sigma_scale = MathTrait<Real>::round( ipt.scale() * inv_octave_scale ) ;
+    const Real sigma_scale = std::round( ipt.scale() * inv_octave_scale ) ;
 
     // Get every samples inside 2pattern x 2pattern square region
     // Memory efficient (get samples then work in aligned)
@@ -165,8 +166,8 @@ namespace features {
       samples_Ly( 2 * pattern_size + 1 , 2 * pattern_size + 1 );
 
     // Compute cos and sin values for this point orientation
-    const Real c = MathTrait<Real>::cos( ipt.orientation() ) ;
-    const Real s = MathTrait<Real>::sin( ipt.orientation() ) ;
+    const Real c = std::cos( ipt.orientation() ) ;
+    const Real s = std::sin( ipt.orientation() ) ;
 
     const Real cur_x = ipt.x() * inv_octave_scale ;
     const Real cur_y = ipt.y() * inv_octave_scale ;
@@ -188,8 +189,8 @@ namespace features {
         const Real dy = cur_y + sigma_scale * delta_y ;
 
         // Compute new discrete position
-        const int y = MathTrait<Real>::round( dy ) ;
-        const int x = MathTrait<Real>::round( dx ) ;
+        const int y = std::round( dy ) ;
+        const int x = std::round( dx ) ;
 
         samples_Li( i + pattern_size , j + pattern_size ) = Li( y , x ) ;
         samples_Lx( i + pattern_size , j + pattern_size ) = Lx( y , x ) ;
@@ -206,7 +207,7 @@ namespace features {
     ComputeBinaryValues( sumLi , sumLx , sumLy , 2 , outIndex , desc ) ;
 
     // Grid 2 : 3x3 subdivision
-    subdiv_size = static_cast<int>( MathTrait<Real>::ceil( static_cast<Real>( 2 * pattern_size ) / static_cast<Real>( 3 ) ) ) ;
+    subdiv_size = static_cast<int>( std::ceil( static_cast<Real>( 2 * pattern_size ) / static_cast<Real>( 3 ) ) ) ;
     ComputeMeanValuesInSubdivisions( samples_Li , samples_Lx , samples_Ly , 3 , subdiv_size , pattern_size , c , s , sumLi , sumLx , sumLy ) ;
     ComputeBinaryValues( sumLi , sumLx , sumLy , 3 , outIndex , desc ) ;
 

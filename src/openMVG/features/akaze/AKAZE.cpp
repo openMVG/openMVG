@@ -6,6 +6,8 @@
 
 #include "openMVG/features/akaze/AKAZE.hpp"
 
+#include <cmath>
+
 namespace openMVG {
 namespace features {
 
@@ -110,7 +112,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
 {
   const float sigma_cur = Sigma( sigma0 , p , q , nbSlice );
   const float ratio = 1 << p; //pow(2,p);
-  const int sigma_scale = MathTrait<float>::round(sigma_cur * fderivative_factor / ratio);
+  const int sigma_scale = std::round(sigma_cur * fderivative_factor / ratio);
 
   Image<float> smoothed;
   if( p == 0 && q == 0 )
@@ -283,7 +285,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
       // Check that the point is under the image limits for the descriptor computation
       const float borderLimit =
-        MathTrait<float>::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
+        std::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
 
       for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
       for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
@@ -337,8 +339,8 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 bool AKAZE::Do_Subpixel_Refinement( AKAZEKeypoint & kpt, const Image<float> & Ldet) const
 {
   const unsigned int ratio = (1 << kpt.octave);
-  const int x = MathTrait<float>::round(kpt.x/ratio);
-  const int y = MathTrait<float>::round(kpt.y/ratio);
+  const int x = std::round(kpt.x/ratio);
+  const int y = std::round(kpt.y/ratio);
 
   // Compute the gradient
   const float Dx = 0.5f * (Ldet(y,x+1)  - Ldet(y,x-1));
@@ -419,7 +421,7 @@ void AKAZE::Compute_Main_Orientation(
 
   // Get the information from the keypoint
   const unsigned int ratio = (1 << kpt.octave);
-  const int s = MathTrait<float>::round(kpt.size/ratio);
+  const int s = std::round(kpt.size/ratio);
   const float xf = kpt.x/ratio;
   const float yf = kpt.y/ratio;
 
@@ -427,8 +429,8 @@ void AKAZE::Compute_Main_Orientation(
   for (int i = -6; i <= 6; ++i) {
     for (int j = -6; j <= 6; ++j) {
       if (i*i + j*j < 36) {
-        iy = MathTrait<float>::round(yf + j * s);
-        ix = MathTrait<float>::round(xf + i * s);
+        iy = std::round(yf + j * s);
+        ix = std::round(xf + i * s);
 
         const float gweight = gauss25[id[i+6]][id[j+6]];
         resX[idx] = gweight * Lx(iy, ix);
