@@ -35,7 +35,6 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/numeric/math_trait.hpp"
 #include "openMVG/numeric/numeric.h"
 
 #include <cereal/cereal.hpp>
