@@ -11,7 +11,8 @@ FIND_PACKAGE(OpenCV REQUIRED)
 
 ADD_DEFINITIONS(-std=c++11 -fPIC)
 
-link_directories(${cuda_library_dirs})
+INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+LINK_DIRECTORIES(${CUDA_LIBRARIES} ${CUDA_LIBRARY_DIRS})
 
 ADD_LIBRARY(deepDescriptorTHNets_static STATIC 
 	src/DeepClassifier.hpp 
