@@ -38,10 +38,10 @@ namespace geometry
         const Vec3 tra( tx , ty , tz ) ; 
 
         // 2 - compute distance between transformed and
-        const Vec3 delta = tra - m_ref ; 
-        residual[ 0 ] = delta[0] * delta[0] ;
-        residual[ 1 ] = delta[1] * delta[1] ;
-        residual[ 2 ] = delta[2] * delta[2] ;
+        const Vec3 delta = m_ref - tra ; 
+        residual[ 0 ] = delta[0] ;
+        residual[ 1 ] = delta[1] ;
+        residual[ 2 ] = delta[2] ;
 
         return true;
       }

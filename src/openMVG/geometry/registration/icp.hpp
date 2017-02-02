@@ -238,8 +238,6 @@ namespace geometry
         // Update final transformation and data point set
         final_tra = tmp * final_tra ;
 
-        std::cout << final_tra << std::endl ; 
-
         ++id_iteration;
       }
 

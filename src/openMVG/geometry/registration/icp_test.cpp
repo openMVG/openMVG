@@ -257,7 +257,7 @@ TEST( icp , icp_rot_translate )
   openMVG::Mat3 r ;
   r = Eigen::AngleAxis<double>( pi / 3.0 , openMVG::Vec3( 1 , 1 , 1 ).normalized() ) ;
 
-  const double tx = 10.0 ;
+  const double tx = 15.0 ;
   const double ty = 12.0 ;
   const double tz = 3.0 ; 
 
