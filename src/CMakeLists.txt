@@ -91,7 +91,8 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
 OptimizeForArchitecture()
-if (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
+
+if (SSE2_FOUND)
   if (MSVC AND NOT ${CMAKE_CL_64})
     add_definitions(/arch:SSE2)
   endif (MSVC AND NOT ${CMAKE_CL_64})
