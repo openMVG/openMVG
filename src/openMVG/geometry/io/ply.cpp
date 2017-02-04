@@ -166,6 +166,224 @@ namespace geometry
       return results;
     }
 
+    // List of valid element in the file
+    enum
+    {
+      // Points
+      PLY_PT_X,
+      PLY_PT_Y,
+      PLY_PT_Z,
+      // Normals
+      PLY_NOR_X,
+      PLY_NOR_Y,
+      PLY_NOR_Z,
+      // Color
+      PLY_COL_R,
+      PLY_COL_G,
+      PLY_COL_B,
+      // Undefined value
+      PLY_UNDEFINED
+    };
+
+    bool CheckCanonicalOrder( const std::vector<int> &element_order )
+    {
+      // Check PT_X PT_Y PT_Z
+      if ( element_order.size() == 3 )
+      {
+        return element_order[ 0 ] == PLY_PT_X &&
+               element_order[ 1 ] == PLY_PT_Y &&
+               element_order[ 2 ] == PLY_PT_Z;
+      }
+
+      // Check PT_X PT_Y PT_Z NOR_X NOR_Y NOR_Z or PT_X PT_Y PT_Z COL_R COL_G COL_B
+      if ( element_order.size() == 6 )
+      {
+        return ( ( element_order[ 0 ] == PLY_PT_X &&
+                   element_order[ 1 ] == PLY_PT_Y &&
+                   element_order[ 2 ] == PLY_PT_Z &&
+                   element_order[ 3 ] == PLY_NOR_X &&
+                   element_order[ 4 ] == PLY_NOR_Y &&
+                   element_order[ 5 ] == PLY_NOR_Z ) ||
+                 ( element_order[ 0 ] == PLY_PT_X &&
+                   element_order[ 1 ] == PLY_PT_Y &&
+                   element_order[ 2 ] == PLY_PT_Z &&
+                   element_order[ 3 ] == PLY_COL_R &&
+                   element_order[ 4 ] == PLY_COL_G &&
+                   element_order[ 5 ] == PLY_COL_B ) );
+      }
+
+      // All PT_X PT_Y PT_Z NOR_X NOR_Y NOR_Z COL_R COL_G COL_B
+      if ( element_order.size() == 9 )
+      {
+        return element_order[ 0 ] == PLY_PT_X &&
+               element_order[ 1 ] == PLY_PT_Y &&
+               element_order[ 2 ] == PLY_PT_Z &&
+               element_order[ 3 ] == PLY_NOR_X &&
+               element_order[ 4 ] == PLY_NOR_Y &&
+               element_order[ 5 ] == PLY_NOR_Z &&
+               element_order[ 6 ] == PLY_COL_R &&
+               element_order[ 7 ] == PLY_COL_G &&
+               element_order[ 8 ] == PLY_COL_B;
+      }
+
+      // all other configurations are invalid (not really but we do not support it)
+      return false;
+    }
+
+    /**
+    * @brief Check if elements have consistent size (ie: component of a vector have same size) and if size is valid 
+    * @param element_size Vector of size of each property 
+    * @retval true id everything is ok 
+    * @retval false if element are invalid 
+    */
+    bool CheckConsistentSize( const std::vector<int> &element_size )
+    {
+      if ( element_size.size() % 3 != 0 )
+      {
+        return false;
+      }
+
+      for ( int id_plate = 0; id_plate < element_size.size() / 3; ++id_plate )
+      {
+        const int s1 = element_size[ 3 * id_plate ];
+        const int s2 = element_size[ 3 * id_plate + 1 ];
+        const int s3 = element_size[ 3 * id_plate + 2 ];
+
+        if ( !( s1 == s2 && s2 == s3 ) )
+        {
+          return false;
+        }
+        if ( s1 <= 0 || s1 > 8 )
+        {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    /**
+    * @brief Indicate if a color is present in the list 
+    * @retval true if a color is present 
+    * @retval if no color element is present 
+    */
+    bool CheckHasColor( const std::vector<int> &element_order )
+    {
+      for ( size_t id_elt = 0; id_elt < element_order.size(); ++id_elt )
+      {
+        if ( element_order[ id_elt ] == PLY_COL_R ||
+             element_order[ id_elt ] == PLY_COL_G ||
+             element_order[ id_elt ] == PLY_COL_B )
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+    * @brief indicate if a sequence contain a normal information 
+    * @retval true if a normal is present 
+    * @retval if no normal element is present 
+    */
+    static inline bool CheckHasNormal( const std::vector<int> &element_order )
+    {
+      for ( size_t id_elt = 0; id_elt < element_order.size(); ++id_elt )
+      {
+        if ( element_order[ id_elt ] == PLY_NOR_X ||
+             element_order[ id_elt ] == PLY_NOR_Y ||
+             element_order[ id_elt ] == PLY_NOR_Z )
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+    * @brief Get byte size of each point component 
+    * @param element_order Semantic element  
+    * @param element_size Element size 
+    * @return size of each component (in byte)
+    * @note if nothing is present, return an empty vector 
+    * @note Assume consistency (ie: vectors elements are consecutives)
+    * @note Assume element_order and element_size at the same size
+    */
+    static inline std::vector<int> ExtractPointByteSize( const std::vector<int> &element_order,
+                                                         const std::vector<int> &element_size )
+    {
+      std::vector<int> res;
+
+      for ( int id_elt = 0; id_elt < element_order.size(); ++id_elt )
+      {
+        if ( element_order[ id_elt ] == PLY_PT_X )
+        {
+          res.push_back( element_size[ id_elt ] );
+          res.push_back( element_size[ id_elt + 1 ] );
+          res.push_back( element_size[ id_elt + 2 ] );
+          return res;
+        }
+      }
+
+      return res;
+    }
+
+    /**
+    * @brief Get byte size of each normal component 
+    * @param element_order Semantic element  
+    * @param element_size Element size 
+    * @return size of each component (in byte)
+    * @note if nothing is present, return an empty vector 
+    * @note Assume consistency (ie: vectors elements are consecutives)
+    * @note Assume element_order and element_size at the same size
+    */
+    static inline std::vector<int> ExtractNormalByteSize( const std::vector<int> &element_order,
+                                                          const std::vector<int> &element_size )
+    {
+      std::vector<int> res;
+
+      for ( int id_elt = 0; id_elt < element_order.size(); ++id_elt )
+      {
+        if ( element_order[ id_elt ] == PLY_NOR_X )
+        {
+          res.push_back( element_size[ id_elt ] );
+          res.push_back( element_size[ id_elt + 1 ] );
+          res.push_back( element_size[ id_elt + 2 ] );
+          return res;
+        }
+      }
+
+      return res;
+    }
+
+    /**
+    * @brief Get byte size of each color component 
+    * @param element_order Semantic element  
+    * @param element_size Element size 
+    * @return size of each component (in byte)
+    * @note if nothing is present, return an empty vector 
+    * @note Assume consistency (ie: vectors elements are consecutives)
+    * @note Assume element_order and element_size at the same size
+    */
+    static inline std::vector<int> ExtractColorByteSize( const std::vector<int> &element_order,
+                                                         const std::vector<int> &element_size )
+    {
+      std::vector<int> res;
+
+      for ( int id_elt = 0; id_elt < element_order.size(); ++id_elt )
+      {
+        if ( element_order[ id_elt ] == PLY_COL_R )
+        {
+          res.push_back( element_size[ id_elt ] );
+          res.push_back( element_size[ id_elt + 1 ] );
+          res.push_back( element_size[ id_elt + 2 ] );
+          return res;
+        }
+      }
+
+      return res;
+    }
+
     /**
     * @brief Load a ply file and gets is content points 
     * @param path Path of the file to load 
@@ -196,21 +414,20 @@ namespace geometry
         return false;
       }
 
-      int nb_coord_pts = 0;
-      int nb_coord_nor = 0;
-      int nb_coord_col = 0;
-
-      size_t property_pts_size = 0;
-      size_t property_nor_size = 0;
-      size_t property_col_size = 0;
-
       size_t nb_elt = 0;
 
       ply_endianness endianness = PLY_ASCII;
 
+      std::vector<int> element_order;
+      std::vector<int> element_size;
+
       while ( 1 )
       {
-        std::getline( file, line );
+        if ( !std::getline( file, line ) )
+        {
+          break;
+        }
+
         std::vector<std::string> tokens = tokenize( line );
         if ( tokens.size() == 0 )
         {
@@ -252,7 +469,11 @@ namespace geometry
           {
             if ( tokens[ 1 ] == "vertex" )
             {
-              Convert( tokens[ 2 ], nb_elt );
+              const bool ok = Convert( tokens[ 2 ], nb_elt );
+              if ( !ok )
+              {
+                return false;
+              }
             }
           }
           else
@@ -262,10 +483,10 @@ namespace geometry
         }
         else if ( tokens[ 0 ] == "property" )
         {
-          size_t current_size;
           if ( tokens.size() > 2 )
           {
             // read size
+            int current_size       = -1;
             const std::string type = tokens[ 1 ];
             if ( type == "uchar" || type == "char" )
             {
@@ -287,22 +508,45 @@ namespace geometry
             {
               current_size = 8;
             }
+            element_size.push_back( current_size );
+
             // read kind (x,y,z, nx,ny,nz, red, green, blue )
             const std::string item = tokens[ 2 ];
-            if ( item == "x" || item == "y" || item == "z" )
+            if ( item == "x" )
             {
-              property_pts_size = current_size;
-              ++nb_coord_pts;
+              element_order.push_back( PLY_PT_X );
             }
-            else if ( item == "nx" || item == "ny" || item == "nz" )
+            else if ( item == "y" )
             {
-              property_nor_size = current_size;
-              ++nb_coord_nor;
+              element_order.push_back( PLY_PT_Y );
             }
-            else if ( item == "red" || item == "green" || item == "blue" )
+            else if ( item == "z" )
             {
-              property_col_size = current_size;
-              ++nb_coord_col;
+              element_order.push_back( PLY_PT_Z );
+            }
+            else if ( item == "nx" )
+            {
+              element_order.push_back( PLY_NOR_X );
+            }
+            else if ( item == "ny" )
+            {
+              element_order.push_back( PLY_NOR_Y );
+            }
+            else if ( item == "nz" )
+            {
+              element_order.push_back( PLY_NOR_Z );
+            }
+            else if ( item == "red" )
+            {
+              element_order.push_back( PLY_COL_R );
+            }
+            else if ( item == "green" )
+            {
+              element_order.push_back( PLY_COL_G );
+            }
+            else if ( item == "blue" )
+            {
+              element_order.push_back( PLY_COL_B );
             }
           }
         }
@@ -312,47 +556,33 @@ namespace geometry
         }
       }
 
-      if ( nb_coord_pts != 3 )
+      // Check if we have a canonical ordering
+      if ( !CheckCanonicalOrder( element_order ) )
       {
-        std::cout << "nb_coord_pts != 3" << std::endl;
         return false;
       }
-      if ( !( nb_coord_nor == 0 || nb_coord_nor == 3 ) )
+      // Check if all elements in the same feature have same size
+      if ( !CheckConsistentSize( element_size ) )
       {
-        std::cout << "!( nb_coord_nor == 0 || nb_coord_nor == 3 )" << __LINE__ << std::endl;
-        return false;
-      }
-      if ( !( nb_coord_col == 0 || nb_coord_col == 3 ) )
-      {
-        std::cout << "!( nb_coord_col == 0 || nb_coord_col == 3 )" << __LINE__ << std::endl;
         return false;
       }
       if ( nb_elt == 0 )
       {
-        std::cout << "nb_elt == 0" << __LINE__ << std::endl;
         return false;
       }
-      if ( nb_coord_pts == 3 && property_pts_size == 0 )
-      {
-        std::cout << "nb_coord_pts == 3 && property_pts_size == 0" << __LINE__ << std::endl;
-        return false;
-      }
-      if ( nb_coord_col == 3 && property_col_size == 0 )
-      {
-        std::cout << "nb_coord_col == 3 && property_col_size == 0" << __LINE__ << std::endl;
-        return false;
-      }
-      if ( nb_coord_nor == 3 && property_nor_size == 0 )
-      {
-        std::cout << "nb_coord_nor == 3 && property_nor_size == 0" << __LINE__ << std::endl;
-        return false;
-      }
+
+      const bool has_color  = CheckHasColor( element_order );
+      const bool has_normal = CheckHasNormal( element_order );
+
+      const std::vector<int> pts_byte_size = ExtractPointByteSize( element_order, element_size );
+      const std::vector<int> nor_byte_size = ExtractNormalByteSize( element_order, element_size );
+      const std::vector<int> col_byte_size = ExtractColorByteSize( element_order, element_size );
 
       // resize points
       pts.resize( nb_elt );
       if ( nor )
       {
-        if ( nb_coord_nor == 3 )
+        if ( has_normal )
         {
           nor->resize( nb_elt );
         }
@@ -364,7 +594,7 @@ namespace geometry
 
       if ( col )
       {
-        if ( nb_coord_col == 3 )
+        if ( has_color )
         {
           col->resize( nb_elt );
         }
@@ -379,18 +609,31 @@ namespace geometry
       EndianAgnosticReader<PLY_BIG_ENDIAN> be_reader;
 
       // now read the points
+      bool ok = true;
       for ( size_t id_point = 0; id_point < nb_elt; ++id_point )
       {
         if ( endianness == PLY_ASCII )
         {
-          ascii_reader.Read( file, pts[ id_point ] );
-          if ( nor && nb_coord_nor > 0 )
+          ok = ascii_reader.Read( file, pts[ id_point ], pts_byte_size );
+          if ( !ok )
           {
-            ascii_reader.Read( file, ( *nor )[ id_point ] );
+            return false;
           }
-          if ( col && nb_coord_col > 0 )
+          if ( nor && has_normal )
           {
-            ascii_reader.Read( file, ( *col )[ id_point ] );
+            ok = ascii_reader.Read( file, ( *nor )[ id_point ], nor_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
+          }
+          if ( col && has_color )
+          {
+            ok = ascii_reader.Read( file, ( *col )[ id_point ], col_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
           }
           // Skip everything until
           std::string tmp;
@@ -398,26 +641,51 @@ namespace geometry
         }
         else if ( endianness == PLY_LITTLE_ENDIAN )
         {
-          le_reader.Read( file, pts[ id_point ] );
-          if ( nor && nb_coord_pts > 0 )
+          ok = le_reader.Read( file, pts[ id_point ], pts_byte_size );
+          if ( !ok )
           {
-            le_reader.Read( file, ( *nor )[ id_point ] );
+            return false;
           }
-          if ( col && nb_coord_col > 0 )
+
+          if ( nor && has_normal )
           {
-            le_reader.Read( file, ( *col )[ id_point ] );
+            ok = le_reader.Read( file, ( *nor )[ id_point ], nor_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
+          }
+          if ( col && has_color )
+          {
+            ok = le_reader.Read( file, ( *col )[ id_point ], col_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
           }
         }
         else if ( endianness == PLY_BIG_ENDIAN )
         {
-          be_reader.Read( file, pts[ id_point ] );
-          if ( nor && nb_coord_pts > 0 )
+          ok = be_reader.Read( file, pts[ id_point ], pts_byte_size );
+          if ( !ok )
           {
-            be_reader.Read( file, ( *nor )[ id_point ] );
+            return false;
           }
-          if ( col && nb_coord_col > 0 )
+          if ( nor && has_normal )
           {
-            be_reader.Read( file, ( *col )[ id_point ] );
+            ok = be_reader.Read( file, ( *nor )[ id_point ], nor_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
+          }
+          if ( col && has_color )
+          {
+            ok = be_reader.Read( file, ( *col )[ id_point ], col_byte_size );
+            if ( !ok )
+            {
+              return false;
+            }
           }
         }
       }

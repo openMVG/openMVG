@@ -216,11 +216,38 @@ namespace geometry
       ply_endianness m_system_endianness;
     };
 
+    /**
+    * @brief Convert a string value to a numeric value 
+    * @param str String in which a numer is present 
+    * @param[out] val Value to store 
+    * @retval true if conversion is ok 
+    * @retval false if conversion fails 
+    */
     template <typename T>
-    void Convert( const std::string &str, T &val )
+    bool Convert( const std::string &str, T &val )
     {
       std::stringstream sstr( str );
       sstr >> val;
+      return !sstr.fail();
+    }
+
+    // extract double value from raw binary array
+    void ExtractDoubleFromRawArray( const char *data, const size_t elt_size, double &x, double &y, double &z )
+    {
+      if ( elt_size == 4 )
+      {
+        float *fdata = reinterpret_cast<float *>( const_cast<char *>( data ) );
+        x            = fdata[ 0 ];
+        y            = fdata[ 1 ];
+        z            = fdata[ 2 ];
+      }
+      else if ( elt_size == 8 )
+      {
+        double *ddata = reinterpret_cast<double *>( const_cast<char *>( data ) );
+        x             = ddata[ 0 ];
+        y             = ddata[ 1 ];
+        z             = ddata[ 2 ];
+      }
     }
 
     /**
@@ -239,15 +266,21 @@ namespace geometry
         * @brief Read vector data in double format 
         * @param file Stream in which data is read 
         * @param[out] vec output vector 
+        * @param elt_byte_size Byte size of each component to read 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3 &vec );
+      bool Read( std::ifstream &file, Vec3 &vec, const std::vector<int> &elt_byte_size );
 
       /**
         * @brief Read vector data in unsigned char format 
         * @param file Stream in which data is read 
+        * @param elt_byte_size Byte size of each component to read 
         * @param[out] vec output vector 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3uc &vec );
+      bool Read( std::ifstream &file, Vec3uc &vec, const std::vector<int> &elt_byte_size );
 
     private:
       /// Current system
@@ -274,24 +307,44 @@ namespace geometry
         * @brief Read vector data in double format 
         * @param file Stream in which data is read 
         * @param[out] vec output vector 
+        * @param elt_byte_size Byte size of each component to read 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3 &vec )
+      bool Read( std::ifstream &file, Vec3 &vec, const std::vector<int> &elt_byte_size )
       {
         double x, y, z;
-        file >> x >> y >> z;
-        vec = Vec3( x, y, z );
+        if ( file >> x >> y >> z )
+        {
+          vec = Vec3( x, y, z );
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       }
 
       /**
         * @brief Read vector data in unsigned char format 
         * @param file Stream in which data is read 
+        * @param elt_byte_size Byte size of each component to read 
         * @param[out] vec output vector 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3uc &vec )
+      bool Read( std::ifstream &file, Vec3uc &vec, const std::vector<int> &elt_byte_size )
       {
         int a, b, c;
-        file >> a >> b >> c;
-        vec = Vec3uc( a, b, c );
+        if ( file >> a >> b >> c )
+        {
+          vec = Vec3uc( a, b, c );
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       }
 
     private:
@@ -319,11 +372,20 @@ namespace geometry
         * @brief Read vector data in double format 
         * @param file Stream in which data is read 
         * @param[out] vec output vector 
+        * @param elt_byte_size Byte size of each component to read 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3 &vec )
+      bool Read( std::ifstream &file, Vec3 &vec, const std::vector<int> &elt_byte_size )
       {
-        double data[ 3 ];
-        file.read( reinterpret_cast<char *>( data ), 3 * sizeof( double ) );
+        char raw[ 3 * 8 ];
+        file.read( reinterpret_cast<char *>( raw ), 3 * sizeof( double ) );
+        if ( !file )
+        {
+          return false;
+        }
+        double data[3] ; 
+        ExtractDoubleFromRawArray( raw, elt_byte_size[ 0 ], data[ 0 ], data[ 1 ], data[ 2 ] );
 
         if ( m_system_endianness != PLY_LITTLE_ENDIAN )
         {
@@ -332,18 +394,27 @@ namespace geometry
           data[ 2 ] = ByteSwap( data[ 2 ] );
         }
         vec = Vec3( data[ 0 ], data[ 1 ], data[ 2 ] );
+        return true;
       }
 
       /**
         * @brief Read vector data in unsigned char format 
         * @param file Stream in which data is read 
+        * @param elt_byte_size Byte size of each component to read 
         * @param[out] vec output vector 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3uc &vec )
+      bool Read( std::ifstream &file, Vec3uc &vec, const std::vector<int> &elt_byte_size )
       {
         unsigned char data[ 3 ];
         file.read( reinterpret_cast<char *>( data ), 3 * sizeof( unsigned char ) );
+        if ( !file )
+        {
+          return false;
+        }
         vec = Vec3uc( data[ 0 ], data[ 1 ], data[ 2 ] );
+        return true;
       }
 
     private:
@@ -371,11 +442,20 @@ namespace geometry
         * @brief Read vector data in double format 
         * @param file Stream in which data is read 
         * @param[out] vec output vector 
+        * @param elt_byte_size Byte size of each component to read 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3 &vec )
+      bool Read( std::ifstream &file, Vec3 &vec, const std::vector<int> &elt_byte_size )
       {
-        double data[ 3 ];
-        file.read( reinterpret_cast<char *>( data ), 3 * sizeof( double ) );
+        char raw[ 3 * 8 ];
+        file.read( reinterpret_cast<char *>( raw ), 3 * sizeof( double ) );
+        if ( !file )
+        {
+          return false;
+        }
+        double data[3] ; 
+        ExtractDoubleFromRawArray( raw, elt_byte_size[ 0 ], data[ 0 ], data[ 1 ], data[ 2 ] );
 
         if ( m_system_endianness != PLY_BIG_ENDIAN )
         {
@@ -384,18 +464,28 @@ namespace geometry
           data[ 2 ] = ByteSwap( data[ 2 ] );
         }
         vec = Vec3( data[ 0 ], data[ 1 ], data[ 2 ] );
+
+        return true;
       }
 
       /**
         * @brief Read vector data in unsigned char format 
         * @param file Stream in which data is read 
+        * @param elt_byte_size Byte size of each component to read 
         * @param[out] vec output vector 
+        * @retval true if read is ok 
+        * @retval false if read fails  
         */
-      void Read( std::ifstream &file, Vec3uc &vec )
+      bool Read( std::ifstream &file, Vec3uc &vec, const std::vector<int> &elt_byte_size )
       {
         unsigned char data[ 3 ];
         file.read( reinterpret_cast<char *>( data ), 3 * sizeof( unsigned char ) );
+        if ( !file )
+        {
+          return false;
+        }
         vec = Vec3uc( data[ 0 ], data[ 1 ], data[ 2 ] );
+        return true;
       }
 
     private:
