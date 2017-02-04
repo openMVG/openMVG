@@ -49,7 +49,7 @@ void ConcatV( const Image & imageA, const Image & imageB, Image & Out )
   // |imgA|
   // |imgB|
   int hh = imageA.Height() + imageB.Height();
-  Out.resize( max( imageA.Width(), imageB.Width() ), hh );
+  Out.resize( std::max( imageA.Width(), imageB.Width() ), hh );
 
   // Copy the first image
   // |imgA|
