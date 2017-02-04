@@ -70,6 +70,9 @@ namespace openMVG
   /// 3d vector using double internal format
   using Vec3 = Eigen::Vector3d;
 
+  /// 3d vector using unsigned char internal format 
+  using Vec3uc = Eigen::Matrix<unsigned char,3,1> ; 
+
   /// 2d vector using int internal format
   using Vec2i = Eigen::Vector2i;
 
@@ -118,6 +121,7 @@ namespace openMVG
 
   /// Unconstrained vector using unsigned int internal format
   using Vecu = Eigen::Matrix<unsigned int, Eigen::Dynamic, 1>;
+
 
   /// Unconstrained matrix using float internal format
   using Matf = Eigen::MatrixXf;
