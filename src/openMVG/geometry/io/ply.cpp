@@ -5,7 +5,9 @@
 #include <cctype>
 #include <fstream>
 #include <functional>
+#include <iterator>
 #include <locale>
+#include <string>
 
 namespace openMVG
 {
