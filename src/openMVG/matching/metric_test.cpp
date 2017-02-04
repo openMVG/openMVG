@@ -46,9 +46,10 @@ TEST(Metric, L2_Vectorized)
 
 TEST(Metric, HAMMING_BITSET)
 {
-  std::bitset<8> a(std::string("01010101"));
-  std::bitset<8> b(std::string("10101010"));
-  std::bitset<8> c(std::string("11010100"));
+  std::bitset<8>
+    a(std::string("01010101")),
+    b(std::string("10101010")),
+    c(std::string("11010100"));
 
   HammingBitSet<std::bitset<8> > metricHamming;
   EXPECT_EQ(8, metricHamming(&a,&b,1));
@@ -77,9 +78,9 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_64BITS)
 
   // ground truth hamming distances between bit array
   const double gtDist[] =
-  {0, 32, 32, 33, 32,
-   0, 32, 21, 32, 32,
-   0, 31, 33, 21, 31, 0};
+    {0, 32, 32, 33, 32,
+     0, 32, 21, 32, 32,
+     0, 31, 33, 21, 31, 0};
 
   HammingBitSet<std::bitset<8> > metricHammingBitSet;
   Hamming< unsigned char > metricHamming;
@@ -113,9 +114,9 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
 
   // ground truth hamming distances between bit array
   const double gtDist[] =
-  {0, 16, 16, 17, 16,
-  0, 16, 11, 16, 16,
-  0, 17, 17, 11, 17, 0};
+    {0, 16, 16, 17, 16,
+    0, 16, 11, 16, 16,
+    0, 17, 17, 11, 17, 0};
 
   HammingBitSet<std::bitset<8> > metricHammingBitSet;
   Hamming< unsigned char > metricHamming;

@@ -33,17 +33,13 @@ bool Matcher_Regions_Database::Match
   matching::IndMatches & matches // photometric corresponding points
 )const
 {
-  if (query_regions.RegionCount() == 0)
+  if (query_regions.RegionCount() == 0 || ! matching_interface_)
   {
     return false;
   }
 
-  if (matching_interface_)
-  {
-    matching_interface_->Match(dist_ratio, query_regions, matches);
-    return true;
-  }
-  return false;
+  matching_interface_->Match(dist_ratio, query_regions, matches);
+  return true;
 }
 
 Matcher_Regions_Database::Matcher_Regions_Database():
