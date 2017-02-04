@@ -119,7 +119,7 @@ struct AngularError
     const Vec3 Em1 = (model * x1).normalized();
     double angleVal = (x2.transpose() * Em1);
     angleVal /= (x2.norm() * Em1.norm());
-    return abs(asin(angleVal));
+    return std::abs(asin(angleVal));
   }
 };
 
