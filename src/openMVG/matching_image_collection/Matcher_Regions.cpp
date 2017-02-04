@@ -6,7 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
-#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
@@ -22,13 +22,13 @@ namespace matching_image_collection {
 using namespace openMVG::matching;
 using namespace openMVG::features;
 
-Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
+Matcher_Regions::Matcher_Regions(
   float distRatio, EMatcherType eMatcherType)
   :Matcher(), f_dist_ratio_(distRatio), eMatcherType_(eMatcherType)
 {
 }
 
-void Matcher_Regions_AllInMemory::Match(
+void Matcher_Regions::Match(
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,

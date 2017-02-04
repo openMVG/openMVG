@@ -5,11 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP
-#define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP
+#ifndef OPENMVG_MATCHING_CASCADE_HASHING_MATCHER_REGIONS_HPP
+#define OPENMVG_MATCHING_CASCADE_HASHING_MATCHER_REGIONS_HPP
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
-#include "openMVG/matching/matcher_type.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -18,14 +17,15 @@ namespace matching_image_collection {
 /// Compute putative matches between a collection of pictures
 /// Spurious correspondences are discarded by using the
 ///  a threshold over the distance ratio of the 2 nearest neighbours.
+/// Using a Cascade Hashing matching
+/// Cascade hashing tables are computed once and used for all the regions.
 ///
-class Matcher_Regions_AllInMemory : public Matcher
+class Cascade_Hashing_Matcher_Regions : public Matcher
 {
   public:
-  Matcher_Regions_AllInMemory
+  Cascade_Hashing_Matcher_Regions
   (
-    float dist_ratio,
-    matching::EMatcherType eMatcherType
+    float dist_ratio
   );
 
   /// Find corresponding points between some pair of view Ids
@@ -35,16 +35,14 @@ class Matcher_Regions_AllInMemory : public Matcher
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
     matching::PairWiseMatchesContainer & map_PutativesMatches // the pairwise photometric corresponding points
-  )const override ;
+  ) const override ;
 
   private:
   // Distance ratio used to discard spurious correspondence
   float f_dist_ratio_;
-  // Matcher Type
-  matching::EMatcherType eMatcherType_;
 };
 
 } // namespace matching_image_collection
 } // namespace openMVG
 
-#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_ALL_IN_MEMORY_HPP
+#endif // OPENMVG_MATCHING_CASCADE_HASHING_MATCHER_REGIONS_HPP
