@@ -125,7 +125,13 @@ if (CXX11_COMPILER)
   if (HAVE_CXX11_CHRONO)
     add_definitions(-DHAVE_CXX11_CHRONO)
   endif (HAVE_CXX11_CHRONO)
+else (CXX11_COMPILER)
+  message(FATAL_ERROR "A CXX11 compiler is required.")
 endif (CXX11_COMPILER)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ==============================================================================
 # OpenMP detection
