@@ -181,7 +181,7 @@ public:
     assert(j < regions->RegionCount());
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
-    matching::L2_Vectorized<T> metric;
+    matching::L2<T> metric;
     return metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
   }
 

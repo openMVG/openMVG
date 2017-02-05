@@ -20,8 +20,8 @@ namespace openMVG {
 namespace matching {
 
 // By default compute square(L2 distance).
-template < typename Scalar = float, typename Metric = L2_Simple<Scalar> >
-class ArrayMatcherBruteForce  : public ArrayMatcher<Scalar, Metric>
+template < typename Scalar = float, typename Metric = L2<Scalar> >
+class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
 {
   public:
   using DistanceType = typename Metric::ResultType;

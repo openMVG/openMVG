@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 project(openMVG C CXX)
 
@@ -91,6 +91,7 @@ endif()
 set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
+AutodetectHostArchitecture()
 OptimizeForArchitecture()
 if (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
   if (MSVC AND NOT ${CMAKE_CL_64})
@@ -98,6 +99,9 @@ if (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
   endif (MSVC AND NOT ${CMAKE_CL_64})
   add_definitions(-DOPENMVG_USE_SSE)
 endif ()
+if (AVX2_FOUND AND NOT MSVC)
+  add_definitions(-DOPENMVG_USE_AVX2)
+endif()
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   set(CMAKE_C_FLAGS_RELEASE "-O3")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")

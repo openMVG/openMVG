@@ -26,22 +26,13 @@ typename Metric::ResultType DistanceT()
   return metric(array1, array2, 8);
 }
 
-TEST(Metric, L2_Simple)
+TEST(Metric, L2)
 {
-  EXPECT_EQ(168, DistanceT<L2_Simple<unsigned char> >());
-  EXPECT_EQ(168, DistanceT<L2_Simple<short> >());
-  EXPECT_EQ(168, DistanceT<L2_Simple<int> >());
-  EXPECT_EQ(168, DistanceT<L2_Simple<float> >());
-  EXPECT_EQ(168, DistanceT<L2_Simple<double> >());
-}
-
-TEST(Metric, L2_Vectorized)
-{
-  EXPECT_EQ(168, DistanceT<L2_Vectorized<unsigned char> >());
-  EXPECT_EQ(168, DistanceT<L2_Vectorized<short> >());
-  EXPECT_EQ(168, DistanceT<L2_Vectorized<int> >());
-  EXPECT_EQ(168, DistanceT<L2_Vectorized<float> >());
-  EXPECT_EQ(168, DistanceT<L2_Vectorized<double> >());
+  EXPECT_EQ(168, DistanceT<L2<unsigned char> >());
+  EXPECT_EQ(168, DistanceT<L2<short> >());
+  EXPECT_EQ(168, DistanceT<L2<int> >());
+  EXPECT_EQ(168, DistanceT<L2<float> >());
+  EXPECT_EQ(168, DistanceT<L2<double> >());
 }
 
 TEST(Metric, HAMMING_BITSET)
