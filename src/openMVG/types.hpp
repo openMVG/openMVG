@@ -15,14 +15,12 @@
 #include <set>
 #include <vector>
 
-#ifdef __clang__
+#ifdef OPENMVG_STD_UNORDERED_MAP
 
 #include "openMVG/stl/hash.hpp"
 
 #include <unordered_map>
 #include <utility>
-
-#define OPENMVG_STD_UNORDERED_MAP 1
 
 namespace std {
   template<typename T1, typename T2>
@@ -41,7 +39,7 @@ namespace std {
   };
 }
 
-#endif // __clang__
+#endif // OPENMVG_STD_UNORDERED_MAP
 
 /**
 * @brief Main namespace of openMVG API
