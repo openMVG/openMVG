@@ -19,6 +19,7 @@
 #include "openMVG/features/mser/mser.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/features/regions_factory.hpp"
+#include "openMVG/features/svg_features.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
 
 #endif // OPENMVG_FEATURES_HPP

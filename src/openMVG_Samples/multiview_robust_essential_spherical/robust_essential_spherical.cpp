@@ -9,6 +9,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/multiview/conditioning.hpp"
@@ -20,6 +21,7 @@
 
 #include "software/SfM/SfMPlyHelper.hpp"
 
+#include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
@@ -33,18 +35,36 @@ using namespace openMVG::robust;
 using namespace svg;
 using namespace std;
 
-int main() {
+int main(int argc, char **argv) {
+
+  CmdLine cmd;
+
+  string jpg_filenameL, jpg_filenameR;
+
+  cmd.add( make_option('a', jpg_filenameL, "input_a") );
+  cmd.add( make_option('b', jpg_filenameR, "input_b") );
 
   std::cout << "Compute the relative pose between two spherical image."
    << "\nUse an Acontrario robust estimation based on angular errors." << std::endl;
 
-  const std::string sInputDir = std::string(THIS_SOURCE_DIR);
-  const string jpg_filenameL = sInputDir + "/SponzaLion000.jpg";
+  try
+  {
+    if (argc == 1)
+    {
+      const std::string sInputDir = std::string(THIS_SOURCE_DIR);
+      jpg_filenameL = sInputDir + "/SponzaLion000.jpg";
+      jpg_filenameR = sInputDir + "/SponzaLion001.jpg";
+    }
+    else
+    {
+      cmd.process(argc, argv);
+    }
+  } catch(const std::string& s) {
+
+  }
 
   Image<unsigned char> imageL;
   ReadImage(jpg_filenameL.c_str(), &imageL);
-
-  const string jpg_filenameR = sInputDir + "/SponzaLion001.jpg";
 
   Image<unsigned char> imageR;
   ReadImage(jpg_filenameR.c_str(), &imageR);
@@ -79,20 +99,16 @@ int main() {
 
   //- Draw features on the two image (side by side)
   {
-    Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
-
-    //-- Draw features :
-    for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature point = regionsL->Features()[i];
-      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
-    }
-    for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature point = regionsR->Features()[i];
-      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
-    }
-    string out_filename = "02_features.jpg";
-    WriteImage(out_filename.c_str(), concat);
+    Features2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      "02_features.svg"
+    );
   }
 
   std::vector<IndMatch> vec_PutativeMatches;
@@ -109,21 +125,19 @@ int main() {
     matchDeduplicator.getDeduplicated(vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
-    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
-      //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
-      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
-    }
-    string out_filename = "03_siftMatches.svg";
-    ofstream svgFile( out_filename.c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+    const bool bVertical = true;
+    Matches2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      vec_PutativeMatches,
+      "03_Matches.svg",
+      bVertical
+    );
   }
 
   // Essential geometry filtering of putative matches
@@ -149,7 +163,7 @@ int main() {
       std::vector<size_t> vec_inliers;
 
       // Define the AContrario angular error adaptor
-      using KernelType = 
+      using KernelType =
         openMVG::robust::ACKernelAdaptor_AngularRadianError<
           // Use the 8 point solver in order to estimate E
           openMVG::spherical_cam::EightPointRelativePoseSolver,
@@ -167,6 +181,21 @@ int main() {
 
       std::cout << "\n Angular threshold found: " << R2D(threshold) << "(Degree)"<<std::endl;
       std::cout << "\n #Putatives/#inliers : " << xL_spherical.cols() << "/" << vec_inliers.size() << "\n" << std::endl;
+
+      const bool bVertical = true;
+      InlierMatches2SVG
+      (
+        jpg_filenameL,
+        {imageL.Width(), imageL.Height()},
+        regionsL->GetRegionsPositions(),
+        jpg_filenameR,
+        {imageR.Width(), imageR.Height()},
+        regionsR->GetRegionsPositions(),
+        vec_PutativeMatches,
+        vec_inliers,
+        "04_inliers.svg",
+        bVertical
+      );
 
       if (vec_inliers.size() > 120)
       {
