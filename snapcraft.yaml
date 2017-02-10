@@ -120,3 +120,5 @@ parts:
     install: |
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp openMVG_build/Linux-*-RELEASE/openMVG_main_* $SNAPCRAFT_PART_INSTALL/bin/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/data
+      cp src/openMVG/exif/sensor_width_database/sensor_width_camera_database.txt $SNAPCRAFT_PART_INSTALL/data
