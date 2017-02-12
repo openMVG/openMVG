@@ -20,13 +20,13 @@ if (NOT MOSEK_FOUND)
   FILE(GLOB_RECURSE REMOVEFILESMOSEK *MOSEK*)
   list(REMOVE_ITEM linearProgramming_cpp ${REMOVEFILESMOSEK})
   list(REMOVE_ITEM linearProgramming_headers ${REMOVEFILESMOSEK})
-  
+
   set(openMVG_linearProgramming
     ${CLP_LIBRARIES}     # clp + solver wrapper
     ${COINUTILS_LIBRARY} # container tools
     ${OSI_LIBRARY}       # generic LP
   )
-  
+
 ELSE (NOT MOSEK_FOUND)
   # MOSEK_FOUND is true
   add_library(openMVG_linearProgrammingMSK ${linearProgramming_headers} ${linearProgramming_cpp})
@@ -45,4 +45,4 @@ ELSE (NOT MOSEK_FOUND)
 endif (NOT MOSEK_FOUND)
 UNIT_TEST(openMVG_linearProgramming linearProgramming "${openMVG_linearProgramming}")
 
-ADD_SUBDIRECTORY(lInfinityCV)
+add_subdirectory(lInfinityCV)
