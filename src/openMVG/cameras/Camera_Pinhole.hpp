@@ -65,13 +65,14 @@ class Pinhole_Intrinsic : public IntrinsicBase
     * @brief Constructor
     * @param w Width of the image plane
     * @param h Height of the image plane
-    * @param K Intrinsic Matrix (3x3)
+    * @param K Intrinsic Matrix (3x3) {f,0,ppx; 0,f,ppy; 0,0,1}
     */
     Pinhole_Intrinsic(
-      unsigned int w, unsigned int h,
-      const Mat3& K = Mat3::Zero(3, 3)) : IntrinsicBase( w, h )
+      unsigned int w,
+      unsigned int h,
+      const Mat3& K)
+      : IntrinsicBase( w, h ), K_(K)
     {
-      K_ = K;
       K_(0,0) = K_(1,1) = (K(0,0) + K(1,1)) / 2.0;
       Kinv_ = K_.inverse();
     }

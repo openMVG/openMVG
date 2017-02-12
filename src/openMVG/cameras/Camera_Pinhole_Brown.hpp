@@ -95,7 +95,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     */
     virtual Vec2 remove_disto( const Vec2 & p ) const override
     {
-      const double epsilon = 1e-8; //criteria to stop the iteration
+      const double epsilon = 1e-10; //criteria to stop the iteration
       Vec2 p_u = p;
 
       while( ( add_disto( p_u ) - p ).lpNorm<1>() > epsilon ) //manhattan distance between the two points

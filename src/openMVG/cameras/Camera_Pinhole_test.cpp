@@ -1,4 +1,5 @@
-// Copyright (c) 2015 Sida Li.
+
+// Copyright (c) 2017 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,14 +12,13 @@ using namespace openMVG::cameras;
 #include "testing/testing.h"
 #include "openMVG/cameras/Camera_Unit_Test.inl"
 
-TEST(Cameras_Brown, disto_undisto_T2) {
+TEST(Cameras_Radial, disto_undisto_K1) {
 
-  const Pinhole_Intrinsic_Brown_T2 cam(1000, 1000, 1000, 500, 500,
-    // K1, K2, K3, T1, T2
-    -0.054, 0.014, 0.006, 0.001, -0.001);
+  const Pinhole_Intrinsic cam(1000, 1000, 1000, 500, 500);
 
   Test_camera(cam);
 }
+
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
