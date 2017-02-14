@@ -76,6 +76,21 @@ elseif()
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
+# Macro used to add definitions, and automatically forward them to targets
+# imported with OpenMVGConfig.cmake.
+set(OpenMVG_DEFINITIONS "")
+MACRO(register_definitions DEF)
+  add_definitions(${DEF})
+  string(REPLACE "-D" "" STRIPPED_DEF ${DEF})
+  list(APPEND OpenMVG_DEFINITIONS ${STRIPPED_DEF})
+ENDMACRO()
+
+# For both regular Clang and AppleClang
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  message("clang detected: using std::unordered_map for Hash_Map")
+  register_definitions(-DOPENMVG_STD_UNORDERED_MAP)
+endif()
+
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -96,7 +111,7 @@ if (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
   if (MSVC AND NOT ${CMAKE_CL_64})
     add_definitions(/arch:SSE2)
   endif (MSVC AND NOT ${CMAKE_CL_64})
-  add_definitions(-DOPENMVG_USE_SSE)
+  register_definitions(-DOPENMVG_USE_SSE)
 endif ()
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   set(CMAKE_C_FLAGS_RELEASE "-O3")
@@ -110,7 +125,7 @@ include(CXX11)
 check_for_cxx11_compiler(CXX11_COMPILER)
 # If a C++11 compiler is available, then set the appropriate flags
 if (CXX11_COMPILER)
-  add_definitions(-DOPENMVG_USE_CXX11)
+  register_definitions(-DOPENMVG_USE_CXX11)
   enable_cxx11()
   include(CheckIncludeFileCXX)
   CHECK_INCLUDE_FILE_CXX(thread HAVE_CXX11_THREAD)
@@ -119,7 +134,7 @@ if (CXX11_COMPILER)
   endif (HAVE_CXX11_THREAD)
     CHECK_INCLUDE_FILE_CXX(chrono HAVE_CXX11_CHRONO)
   if (HAVE_CXX11_CHRONO)
-    add_definitions(-DHAVE_CXX11_CHRONO)
+    register_definitions(-DHAVE_CXX11_CHRONO)
   endif (HAVE_CXX11_CHRONO)
 endif (CXX11_COMPILER)
 
@@ -187,7 +202,7 @@ endif (OpenMVG_BUILD_OPENGL_EXAMPLES)
 #===============================================================================
 find_package(Mosek)
 if (MOSEK_FOUND)
-  add_definitions(-DOPENMVG_HAVE_MOSEK)
+  register_definitions(-DOPENMVG_HAVE_MOSEK)
   set(LP_INCLUDE_DIRS
     ${MOSEK_INCLUDE}
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/OsiMsk/
@@ -427,6 +442,8 @@ set(OpenMVG_LIBRARIES
 
 FOREACH(omvglib ${OpenMVG_LIBRARIES})
   set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+  set_property(TARGET ${omvglib} APPEND PROPERTY
+    INTERFACE_COMPILE_DEFINITIONS ${OpenMVG_DEFINITIONS})
 ENDFOREACH()
 
 # openMVG tutorial examples
@@ -614,6 +631,12 @@ if (OpenMVG_USE_INTERNAL_CERES)
     "${OpenMVG_INCLUDE_DIRS}"
   )
 endif (OpenMVG_USE_INTERNAL_CERES)
+
+# Build OpenMVG_CFLAGS variable for export
+set(OpenMVG_CFLAGS "")
+foreach(d ${OpenMVG_DEFINITIONS})
+  list(APPEND OpenMVG_CFLAGS "-D${d}")
+endforeach()
 
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # FIND_PACKAGE() automatically. We configure that file so that we can put any
