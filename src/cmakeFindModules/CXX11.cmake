@@ -6,7 +6,7 @@ endif ()
 macro(check_for_cxx11_compiler _VAR)
   message(STATUS "Checking for C++11 compiler")
   set(${_VAR})
-  if((MSVC AND (MSVC10 OR MSVC11 OR MSVC12 OR MSVC14)) OR
+  if((MSVC AND NOT MSVC_VERSION VERSION_LESS 1800) OR # checking the compiler is at least Visual Studio 2013 - MSVC++ 12
      (CMAKE_COMPILER_IS_GNUCXX AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.6) OR
      (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 3.1))
     set(${_VAR} 1)
