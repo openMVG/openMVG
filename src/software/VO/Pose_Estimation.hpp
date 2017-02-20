@@ -59,7 +59,7 @@ struct Pose_Estimator
       x2, w, h,
       false); // configure as point to point error model.
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat3 H;
     ACRANSAC(kernel, vec_inliers, 1024, &H, std::numeric_limits<double>::infinity(),
       true);
@@ -88,7 +88,7 @@ struct Pose_Estimator
     KernelType kernel(x1, size_ima.first, size_ima.second,
       x2, size_ima.first, size_ima.second, K, K);
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat3 pE;
     double precision = std::numeric_limits<double>::infinity();
     // Robustly estimation of the Essential matrix and it's precision
@@ -112,7 +112,7 @@ struct Pose_Estimator
 
     KernelType kernel(pt2D, pt3D, K);
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat34 P;
     const double dPrecision = std::numeric_limits<double>::infinity();
 

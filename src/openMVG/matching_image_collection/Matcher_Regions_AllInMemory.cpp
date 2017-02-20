@@ -43,7 +43,7 @@ void Matcher_Regions_AllInMemory::Match(
   C_Progress_display my_progress_bar( pairs.size() );
 
   // Sort pairs according the first index to minimize the MatcherT build operations
-  using Map_vectorT = std::map<size_t, std::vector<size_t> >;
+  using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
   for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
   {
@@ -54,8 +54,8 @@ void Matcher_Regions_AllInMemory::Match(
   for (Map_vectorT::const_iterator iter = map_Pairs.begin();
     iter != map_Pairs.end(); ++iter)
   {
-    const size_t I = iter->first;
-    const std::vector<size_t> & indexToCompare = iter->second;
+    const IndexT I = iter->first;
+    const auto & indexToCompare = iter->second;
 
     std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI.get()->RegionCount() == 0)
@@ -72,7 +72,7 @@ void Matcher_Regions_AllInMemory::Match(
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
-      const size_t J = indexToCompare[j];
+      const IndexT J = indexToCompare[j];
 
       std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
       if (regionsJ.get()->RegionCount() == 0

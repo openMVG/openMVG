@@ -28,8 +28,8 @@ TEST(MaxConsensusLineFitter, OutlierFree) {
 
   // Check the best model that fit the most of the data
   //  in a robust framework (Ransac).
-  std::vector<size_t> vec_inliers;
-  Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
+  std::vector<uint32_t> vec_inliers;
+  const Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   EXPECT_NEAR(2.0, model[1], 1e-9);
   EXPECT_NEAR(1.0, model[0], 1e-9);
   CHECK_EQUAL(5, vec_inliers.size());
@@ -45,8 +45,8 @@ TEST(MaxConsensusLineFitter, OneOutlier) {
 
   LineKernel kernel(xy);
 
-  std::vector<size_t> vec_inliers;
-  Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
+  std::vector<uint32_t> vec_inliers;
+  const Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   EXPECT_NEAR(2.0, model[1], 1e-9);
   EXPECT_NEAR(1.0, model[0], 1e-9);
   CHECK_EQUAL(5, vec_inliers.size());
@@ -61,7 +61,7 @@ TEST(MaxConsensusLineFitter, TooFewPoints) {
   xy << 1,
         3;   // y = 2x + 1 with x = 1
   LineKernel kernel(xy);
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(0, vec_inliers.size());
 }
@@ -80,15 +80,15 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   GTModel << -2.0, 6.3;
 
   //-- Build the point list according the given model
-  for(int i = 0; i < NbPoints; ++i)  {
+  for (int i = 0; i < NbPoints; ++i)  {
     xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
   }
 
   //-- Add some noise (for the asked percentage amount)
-  int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  std::vector<size_t> vec_samples; // Fit with unique random index
+  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  std::vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
-  for(size_t i = 0; i <vec_samples.size(); ++i)
+  for (uint32_t i = 0; i < vec_samples.size(); ++i)
   {
     const size_t randomIndex = vec_samples[i];
     //Additive random noise
@@ -97,8 +97,8 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   }
 
   LineKernel kernel(xy);
-  std::vector<size_t> vec_inliers;
-  Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
+  std::vector<uint32_t> vec_inliers;
+  const Vec2 model = RANSAC(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(NbPoints-nbPtToNoise, vec_inliers.size());
   EXPECT_NEAR(-2.0, model[0], 1e-9);
   EXPECT_NEAR( 6.3, model[1], 1e-9);

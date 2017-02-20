@@ -56,7 +56,7 @@ void display_info
   const PointFeatures & featsR,
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
-  const std::vector<size_t> & vec_inliers,
+  const std::vector<uint32_t> & vec_inliers,
   const std::string & sMethod
 );
 
@@ -179,7 +179,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     H =
       MaxConsensus
       (
@@ -212,7 +212,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     // Inlier count
     size_t inlier_count = 0;
     H =
@@ -254,7 +254,7 @@ int main() {
         &lmeds_threshold // Upper bound of the tolerated error for the inliers
       );
     // List the inliers
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     for (int i = 0; i < xL.cols(); ++i)
     {
       const double residual_error = std::sqrt(kernel.Error(i, H));
@@ -294,7 +294,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     // Call the Robust Estimator on the KERNEL
     const std::pair<double,double> ACRansacOut = // Return the precision & the associated NFA
       ACRANSAC(
@@ -327,7 +327,7 @@ void display_info
   const PointFeatures & featsR,
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
-  const std::vector<size_t> & vec_inliers,
+  const std::vector<uint32_t> & vec_inliers,
   const std::string & sMethod
 )
 {

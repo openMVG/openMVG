@@ -126,7 +126,7 @@ int main() {
     }
 
     //-- Fundamental robust estimation
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     using KernelType =
       ACKernelAdaptor<
         openMVG::fundamental::kernel::SevenPointSolver,

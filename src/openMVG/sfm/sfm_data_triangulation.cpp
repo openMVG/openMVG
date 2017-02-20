@@ -226,7 +226,7 @@ const
   // - Ransac loop
   for (IndexT i = 0; i < nbIter; ++i)
   {
-    std::vector<size_t> vec_samples;
+    std::vector<uint32_t> vec_samples;
     robust::UniformSample(min_sample_index, obs.size(), &vec_samples);
     const std::set<IndexT> samples(vec_samples.begin(), vec_samples.end());
 

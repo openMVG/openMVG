@@ -23,10 +23,8 @@ TEST(LineFitter, ItWorks) {
         3, 5, 7, 9, 11;
   std::vector<Vec2> models;
   LineKernel kernel(xy);
-  std::vector<size_t> samples;
-  for (Mat2X::Index i = 0; i < xy.cols(); ++i) {
-    samples.push_back(i);
-  }
+  std::vector<uint32_t> samples(xy.cols());
+  std::iota(samples.begin(), samples.end(), 0);
   kernel.Fit(samples, &models);
   CHECK_EQUAL(1, models.size());
   EXPECT_NEAR(2.0, models[0][1], 1e-9);

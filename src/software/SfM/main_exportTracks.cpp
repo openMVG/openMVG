@@ -113,18 +113,17 @@ int main(int argc, char ** argv)
   // ------------
   // For each pair, export the matches
   // ------------
-  const size_t viewCount = sfm_data.GetViews().size();
+  const uint32_t viewCount(sfm_data.GetViews().size());
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n viewCount: " << viewCount << std::endl;
   std::cout << "\n Export pairwise tracks" << std::endl;
   C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 
-  for (size_t I = 0; I < viewCount; ++I)
+  for (uint32_t I = 0; I < viewCount; ++I)
   {
-    for (size_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
+    for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
-
       const View * view_I = sfm_data.GetViews().at(I).get();
       const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
         view_I->s_Img_path);
@@ -138,7 +137,7 @@ int main(int argc, char ** argv)
 
       //Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      const std::set<size_t> set_imageIndex = {I,J};
+      const std::set<uint32_t> set_imageIndex = {I,J};
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
       if (!map_tracksCommon.empty())
@@ -154,10 +153,9 @@ int main(int argc, char ** argv)
         const PointFeatures & vec_feat_I = feats_provider->getFeatures(view_I->id_view);
         const PointFeatures & vec_feat_J = feats_provider->getFeatures(view_J->id_view);
         //-- Draw link between features :
-        for (tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-          iterT != map_tracksCommon.end(); ++ iterT)  {
+        for (const auto & iterT : map_tracksCommon)  {
 
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
+          tracks::submapTrack::const_iterator iter = iterT.second.begin();
           const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
           const PointFeature& imaB = vec_feat_J[ iter->second];
 
@@ -167,10 +165,9 @@ int main(int argc, char ** argv)
         }
 
         //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
-        for (tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-          iterT != map_tracksCommon.end(); ++ iterT)  {
+        for (const auto & iterT : map_tracksCommon)  {
 
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
+          tracks::submapTrack::const_iterator iter = iterT.second.begin();
           const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
           const PointFeature& imaB = vec_feat_J[ iter->second];
 

@@ -368,7 +368,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 
     //-- Alias (list triplet ids used per edges)
     using myEdge = Pair; // An edge between two pose id
-    Hash_Map<myEdge, std::vector<size_t> > map_tripletIds_perEdge;
+    Hash_Map<myEdge, std::vector<uint32_t>> map_tripletIds_perEdge;
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
       const graph::Triplet & triplet = vec_triplets[i];
@@ -390,8 +390,8 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         const myEdge edge(v1->id_pose,v2->id_pose);
         if (map_tripletIds_perEdge.count(edge) != 0)
         {
-          const std::vector<size_t> & edge_tripletIds = map_tripletIds_perEdge.at(edge);
-          for (const size_t triplet_id : edge_tripletIds)
+          const auto & edge_tripletIds = map_tripletIds_perEdge.at(edge);
+          for (const auto & triplet_id : edge_tripletIds)
           {
             if (map_tracksPerTriplets.count(triplet_id) == 0)
               map_tracksPerTriplets[triplet_id] = match_iterator.second.size();
@@ -402,7 +402,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       }
     }
     // Collect edges that are covered by the triplets
-    std::vector<myEdge > vec_edges;
+    std::vector<myEdge> vec_edges;
     std::transform(map_tripletIds_perEdge.begin(), map_tripletIds_perEdge.end(), std::back_inserter(vec_edges), stl::RetrieveKey());
 
     openMVG::sfm::MutexSet<myEdge> m_mutexSet;
@@ -436,23 +436,23 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         const auto & vec_possibleTripletIndexes = map_tripletIds_perEdge.at(edge);
 
         //-- Sort the triplets according their number of track
-        std::vector<size_t> vec_commonTracksPerTriplets;
-        for (const size_t triplet_index : vec_possibleTripletIndexes)
+        std::vector<uint32_t> vec_commonTracksPerTriplets;
+        for (const uint32_t triplet_index : vec_possibleTripletIndexes)
         {
           vec_commonTracksPerTriplets.push_back(map_tracksPerTriplets[triplet_index]);
         }
 
         using namespace stl::indexed_sort;
-        std::vector< sort_index_packet_descend < size_t, size_t> > packet_vec(vec_commonTracksPerTriplets.size());
+        std::vector<sort_index_packet_descend<uint32_t,uint32_t>> packet_vec(vec_commonTracksPerTriplets.size());
         sort_index_helper(packet_vec, &vec_commonTracksPerTriplets[0]);
 
-        std::vector<size_t> vec_triplet_ordered(vec_commonTracksPerTriplets.size(), 0);
+        std::vector<uint32_t> vec_triplet_ordered(vec_commonTracksPerTriplets.size(), 0);
         for (size_t i = 0; i < vec_commonTracksPerTriplets.size(); ++i) {
           vec_triplet_ordered[i] = vec_possibleTripletIndexes[packet_vec[i].index];
         }
 
         // Try to solve a triplet of translations for the given edge
-        for (const size_t triplet_index : vec_triplet_ordered)
+        for (const uint32_t triplet_index : vec_triplet_ordered)
         {
           const graph::Triplet & triplet = vec_triplets[triplet_index];
 
@@ -470,7 +470,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           double dPrecision = 4.0; // upper bound of the residual pixel reprojection error
 
           std::vector<Vec3> vec_tis(3);
-          std::vector<size_t> vec_inliers;
+          std::vector<uint32_t> vec_inliers;
           openMVG::tracks::STLMAPTracks pose_triplet_tracks;
 
           const std::string sOutDirectory = "./";
@@ -543,7 +543,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               #endif
               {
                 // Add inliers as valid pairwise matches
-                for (const size_t inlier_it : vec_inliers)
+                for (const uint32_t & inlier_it : vec_inliers)
                 {
                   tracks::STLMAPTracks::const_iterator it_tracks = pose_triplet_tracks.begin();
                   std::advance(it_tracks, inlier_it);
@@ -598,7 +598,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   const graph::Triplet & poses_id,
   std::vector<Vec3> & vec_tis,
   double & dPrecision, // UpperBound of the precision found by the AContrario estimator
-  std::vector<size_t> & vec_inliers,
+  std::vector<uint32_t> & vec_inliers,
   openMVG::tracks::STLMAPTracks & tracks,
   const std::string & sOutDirectory
 ) const
@@ -642,10 +642,10 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   for (const auto & tracks_it : tracks)
   {
     const tracks::submapTrack & track = tracks_it.second;
-    size_t index = 0;
+    uint32_t index = 0;
     for (const auto & track_it : track)
     {
-      const size_t idx_view = track_it.first;
+      const uint32_t idx_view = track_it.first;
       const View * view = sfm_data.views.at(idx_view).get();
       const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
       intrinsic_ids.insert(view->id_intrinsic);
@@ -677,7 +677,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   using namespace openMVG::trifocal;
   using namespace openMVG::trifocal::kernel;
 
-  using KernelType = 
+  using KernelType =
     TranslationTripletKernel_ACRansac<
       translations_Triplet_Solver,
       translations_Triplet_Solver,
@@ -732,7 +732,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
   // Fill sfm_data with the inliers tracks. Feed image observations: no 3D yet.
   Landmarks & structure = tiny_scene.structure;
-  for (const auto & inlier_it : vec_inliers)
+  for (const uint32_t & inlier_it : vec_inliers)
   {
     tracks::STLMAPTracks::const_iterator it_tracks = tracks.begin();
     std::advance(it_tracks, inlier_it);
@@ -741,8 +741,8 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
     for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
     {
       // get view Id and feat ID
-      const size_t viewIndex = it->first;
-      const size_t featIndex = it->second;
+      const uint32_t viewIndex = it->first;
+      const uint32_t featIndex = it->second;
 
       // initialize view and get intrinsics
       const View * view = sfm_data.GetViews().at(viewIndex).get();

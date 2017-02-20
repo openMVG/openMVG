@@ -131,7 +131,7 @@ public:
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const
   {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
@@ -147,7 +147,7 @@ public:
   size_t NumSamples() const {return x1_.cols();}
 
   /// Return the angular error (between 0 and PI/2)
-  double Error(size_t sample, const Model &model) const
+  double Error(uint32_t sample, const Model &model) const
   {
     return AngularError::Error(model, x1_.col(sample), x2_.col(sample));
   }

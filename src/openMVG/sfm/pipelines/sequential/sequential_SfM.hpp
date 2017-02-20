@@ -74,10 +74,10 @@ private:
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
   /// List the images that the greatest number of matches to the current 3D reconstruction.
-  bool FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes);
+  bool FindImagesWithPossibleResection(std::vector<uint32_t> & vec_possible_indexes);
 
   /// Add a single Image to the scene and triangulate new possible tracks.
-  bool Resection(const size_t imageIndex);
+  bool Resection(const uint32_t imageIndex);
 
   /// Bundle adjustment to refine Structure; Motion and Intrinsics
   bool BundleAdjustment();
@@ -105,7 +105,7 @@ private:
   openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
-  std::set<size_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
+  std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
 };
 
 } // namespace sfm
