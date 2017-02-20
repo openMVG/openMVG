@@ -618,7 +618,8 @@ endif (OpenMVG_USE_INTERNAL_CERES)
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # FIND_PACKAGE() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
-configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
+set(OPENMVG_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+configure_file("${OPENMVG_ROOT_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
