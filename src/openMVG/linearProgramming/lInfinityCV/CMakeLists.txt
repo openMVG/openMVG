@@ -23,8 +23,8 @@ install(TARGETS openMVG_lInftyComputerVision DESTINATION lib EXPORT openMVG-targ
 
 set(LOCAL_LIBS
   openMVG_lInftyComputerVision
-  openMVG_multiview
-  openMVG_multiview_test_data)
+  openMVG_multiview_test_data
+  openMVG_multiview)
 
 # Linfinity Triangulation
 UNIT_TEST(openMVG_lInftyCV triangulation "${LOCAL_LIBS}")
