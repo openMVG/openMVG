@@ -131,24 +131,12 @@ include(CXX11)
 check_for_cxx11_compiler(CXX11_COMPILER)
 # If a C++11 compiler is available, then set the appropriate flags
 if (CXX11_COMPILER)
-  register_definitions(-DOPENMVG_USE_CXX11)
-  enable_cxx11()
-  include(CheckIncludeFileCXX)
-  CHECK_INCLUDE_FILE_CXX(thread HAVE_CXX11_THREAD)
-  if (HAVE_CXX11_THREAD)
-    register_definitions(-DHAVE_CXX11_THREAD)
-  endif (HAVE_CXX11_THREAD)
-    CHECK_INCLUDE_FILE_CXX(chrono HAVE_CXX11_CHRONO)
-  if (HAVE_CXX11_CHRONO)
-    register_definitions(-DHAVE_CXX11_CHRONO)
-  endif (HAVE_CXX11_CHRONO)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 else (CXX11_COMPILER)
   message(FATAL_ERROR "A CXX11 compiler is required.")
 endif (CXX11_COMPILER)
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ==============================================================================
 # OpenMP detection
@@ -262,7 +250,7 @@ endif (EIGEN_FOUND)
 # Ceres
 # ==============================================================================
 # - internal by default (ceres-solver+cxsparse+miniglog),
-# - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
+# - external if CERES_DIR_HINTS and find_package return a valid Ceres setup
 # ==============================================================================
 find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 if (NOT Ceres_FOUND)
@@ -376,7 +364,7 @@ endif()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 if (OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  find_package( OpenCV )
   if (NOT OpenCV_FOUND)
     message(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
@@ -632,7 +620,7 @@ foreach(d ${OpenMVG_DEFINITIONS})
 endforeach()
 
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
-# FIND_PACKAGE() automatically. We configure that file so that we can put any
+# find_package() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
 configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)

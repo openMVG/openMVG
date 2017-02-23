@@ -31,5 +31,3 @@ macro(enable_cxx11)
     endif()
   endif()
 endmacro()
-
-
