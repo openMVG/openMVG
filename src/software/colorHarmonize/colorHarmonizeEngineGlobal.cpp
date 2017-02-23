@@ -336,14 +336,9 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   openMVG::system::Timer timer;
 
-  #ifdef OPENMVG_HAVE_MOSEK
-  using SOLVER_LP_T = MOSEK_SolveWrapper;
-  #else
-  using SOLVER_LP_T = OSI_CLP_SolverWrapper;
-  #endif
   // Red channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_r.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_r.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[0], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -354,7 +349,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Green channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_g.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_g.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[1], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -365,7 +360,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Blue channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_b.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_b.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[2], vec_indexToFix);
     LP_Constraints_Sparse constraint;

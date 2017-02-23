@@ -210,18 +210,6 @@ if (OpenMVG_BUILD_OPENGL_EXAMPLES)
   set_property(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 endif (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
-#- Mosek (linear programming interface)
-#===============================================================================
-find_package(Mosek)
-if (MOSEK_FOUND)
-  register_definitions(-DOPENMVG_HAVE_MOSEK)
-  set(LP_INCLUDE_DIRS
-    ${MOSEK_INCLUDE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/OsiMsk/
-  )
-  include_directories(${LP_INCLUDE_DIRS})
-endif (MOSEK_FOUND)
-
 #INSTALL RULES
 install(
   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/
