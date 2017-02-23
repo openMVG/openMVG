@@ -7,9 +7,6 @@
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_cascade_hashing.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
