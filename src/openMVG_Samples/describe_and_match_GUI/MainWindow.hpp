@@ -13,6 +13,7 @@
 
 #include "ImageView.hpp"
 
+#include <QAction>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -20,9 +21,9 @@
 #include <QGraphicsItem>
 #include <QGraphicsLineItem>
 #include <QGraphicsScene>
-//#include <QGraphicsView>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMenu>
 #include <QPixmap>
 #include <QPushButton>
 
@@ -70,7 +71,37 @@ public slots:
   */
   void onExportImage( void );
 
+  /**
+  * @brief Action to be executed when user request closing of image 1 
+  */
+  void onCloseImage1( void );
+
+  /**
+  * @brief Action to be executed when user request closing of image 2 
+  */
+  void onCloseImage2( void );
+
+  /**
+  * @brief Action to be executed when user request closing both images 
+  */
+  void onCloseAll( void );
+
+  /**
+  * @brief Action to be executed when user request to quit the application 
+  */
+  void onQuit( void );
+
+  /**
+  * @brief Action to be executed when user request clearing the computation 
+  */
+  void onClearComputation( void );
+
 private:
+  /**
+  * @brief Set elements enabled/disabled based on currently loaded elements 
+  */
+  void UpdateActivation( void );
+
   /**
   * @brief Build all interface widgets 
   */
@@ -97,6 +128,11 @@ private:
   void PopulateMatchingType();
 
   /**
+  * @brief remove previous computation (internal data)
+  */
+  void ClearFeaturesandMatch();
+
+  /**
   * @brief remove previous computation on the view (only view data, not internal ones)
   */
   void ClearFeaturesAndMatchItems();
@@ -104,7 +140,7 @@ private:
   /**
   * @brief Redraw match lines at correct position (ie:after image move)
   */
-  void MoveMatcheLines();
+  void MoveMatchLines();
 
   /**
   * @brief Get feature preset from interface
@@ -143,6 +179,7 @@ private:
   QPushButton *m_exportResult;
 
   QGraphicsScene *m_scn;
+  ImageView *m_view;
 
   std::string m_image1Path;
   QPixmap *m_pixmap1;
@@ -159,7 +196,20 @@ private:
   openMVG::matching::IndMatches m_matches;
   std::vector<QGraphicsLineItem *> m_lineMatch;
 
-  ImageView *m_view;
+  // menus items
+  QMenu *m_fileMenu;
+  QMenu *m_processingMenu;
+
+  QAction *m_fileOpenImage1;
+  QAction *m_fileOpenImage2;
+  QAction *m_fileCloseImage1;
+  QAction *m_fileCloseImage2;
+  QAction *m_fileCloseAll;
+  QAction *m_fileExportImage;
+  QAction *m_fileQuit;
+
+  QAction *m_processingComputeMatch;
+  QAction *m_processingClearMatch;
 };
 
 } // namespace features_pair_demo

@@ -12,11 +12,13 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 
+#include <QApplication>
 #include <QDir>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHboxLayout>
+#include <QMenuBar>
 #include <QProgressDialog>
 #include <QString>
 #include <QVboxLayout>
@@ -40,6 +42,8 @@ MainWindow::MainWindow()
   BuildInterface();
   BuildMenus();
   MakeConnections();
+
+  UpdateActivation();
 
   setWindowTitle( "Features pair demo" );
   resize( 1024, 768 );
@@ -69,7 +73,10 @@ void MainWindow::onOpenImage1( void )
 
     m_image1Path = file.toStdString();
 
+    ClearFeaturesandMatch();
     ClearFeaturesAndMatchItems();
+
+    UpdateActivation();
   }
 }
 
@@ -97,7 +104,10 @@ void MainWindow::onOpenImage2( void )
 
     m_image2Path = file.toStdString();
 
+    ClearFeaturesandMatch();
     ClearFeaturesAndMatchItems();
+
+    UpdateActivation();
   }
 }
 
@@ -106,12 +116,15 @@ void MainWindow::onOpenImage2( void )
   */
 void MainWindow::onComputeMatching( void )
 {
-
   if ( !( m_image1Path.size() > 0 && m_image2Path.size() > 0 ) )
   {
     // TODO : add a message box to tell that we want two image before processing
     return;
   }
+
+  // 0 clear previously computed values
+  ClearFeaturesAndMatchItems();
+  ClearFeaturesandMatch();
 
   QProgressDialog progress( "Computation in progress ...", "Abort", 0, 4, this );
   progress.setWindowModality( Qt::WindowModal );
@@ -168,8 +181,6 @@ void MainWindow::onComputeMatching( void )
   progress.setValue( 3 );
 
   // 3 draw result
-  // 3.0 clear previously computed values
-  ClearFeaturesAndMatchItems();
 
   m_feats1 = regions1->GetRegionsPositions();
   m_feats2 = regions2->GetRegionsPositions();
@@ -201,7 +212,7 @@ void MainWindow::onComputeMatching( void )
     const int id1 = m_matches[ i ].i_;
     const int id2 = m_matches[ i ].j_;
 
-    QColor col = QColor::fromHsv( distrib_h( rng ), distrib_s( rng ), distrib_v( rng ) );
+    const QColor col = QColor::fromHsv( distrib_h( rng ), distrib_s( rng ), distrib_v( rng ) );
 
     QPen curPen( col );
     curPen.setWidth( 2 );
@@ -241,6 +252,8 @@ void MainWindow::onComputeMatching( void )
   }
 
   progress.setValue( 4 );
+
+  UpdateActivation();
 }
 
 /**
@@ -252,7 +265,7 @@ void MainWindow::onMoveSomething( void )
   if ( item == m_pixmap1Item ||
        item == m_pixmap2Item )
   {
-    MoveMatcheLines();
+    MoveMatchLines();
   }
 }
 
@@ -273,11 +286,141 @@ void MainWindow::onExportImage( void )
 }
 
 /**
+  * @brief Action to be executed when user request closing of image 1 
+  */
+void MainWindow::onCloseImage1( void )
+{
+  m_feats1.clear();
+  m_matches.clear();
+  m_image1Path.clear();
+
+  for ( size_t i = 0; i < m_ellipsesFeat1.size(); ++i )
+  {
+    m_scn->removeItem( m_ellipsesFeat1[ i ] );
+  }
+  for ( size_t i = 0; i < m_lineMatch.size(); ++i )
+  {
+    m_scn->removeItem( m_lineMatch[ i ] );
+  }
+  m_ellipsesFeat1.clear();
+  m_lineMatch.clear();
+
+  m_scn->removeItem( m_pixmap1Item );
+
+  UpdateActivation();
+}
+
+/**
+  * @brief Action to be executed when user request closing of image 2 
+  */
+void MainWindow::onCloseImage2( void )
+{
+  m_feats2.clear();
+  m_matches.clear();
+  m_image2Path.clear();
+
+  for ( size_t i = 0; i < m_ellipsesFeat2.size(); ++i )
+  {
+    m_scn->removeItem( m_ellipsesFeat2[ i ] );
+  }
+  for ( size_t i = 0; i < m_lineMatch.size(); ++i )
+  {
+    m_scn->removeItem( m_lineMatch[ i ] );
+  }
+  m_ellipsesFeat2.clear();
+  m_lineMatch.clear();
+
+  m_scn->removeItem( m_pixmap2Item );
+
+  UpdateActivation();
+}
+
+/**
+  * @brief Action to be executed when user request closing both images 
+  */
+void MainWindow::onCloseAll( void )
+{
+  onCloseImage1();
+  onCloseImage2();
+
+  UpdateActivation();
+}
+
+/**
+  * @brief Action to be executed when user request to quit the application 
+  */
+void MainWindow::onQuit( void )
+{
+  QApplication::quit();
+}
+
+/**
+  * @brief Action to be executed when user request clearing the computation 
+  */
+void MainWindow::onClearComputation( void )
+{
+  ClearFeaturesandMatch();
+  ClearFeaturesAndMatchItems();
+
+  UpdateActivation();
+}
+
+/**
+  * @brief Set elements enabled/disabled based on currently loaded elements 
+  */
+void MainWindow::UpdateActivation( void )
+{
+  // has loaded image 1 so we can close it
+  if ( m_image1Path.size() > 0 )
+  {
+    m_fileCloseImage1->setEnabled( true );
+    m_fileCloseAll->setEnabled( true );
+  }
+  else
+  {
+    m_fileCloseImage1->setEnabled( false );
+  }
+
+  // has loaded image 2 so we can close it
+  if ( m_image2Path.size() > 0 )
+  {
+    m_fileCloseImage2->setEnabled( true );
+    m_fileCloseAll->setEnabled( true );
+  }
+  else
+  {
+    m_fileCloseImage2->setEnabled( false );
+  }
+
+  // No image opened , close all should be removed
+  if ( !( m_image1Path.size() > 0 || m_image2Path.size() > 0 ) )
+  {
+    m_fileCloseAll->setEnabled( false );
+  }
+
+  // Both loaded, could do computation and exportation
+  if ( m_image1Path.size() > 0 && m_image2Path.size() > 0 )
+  {
+    m_computeMatching->setEnabled( true );
+    m_processingClearMatch->setEnabled( true );
+    m_processingComputeMatch->setEnabled( true );
+    m_fileExportImage->setEnabled( true );
+  }
+  else
+  {
+
+    m_computeMatching->setEnabled( false );
+    m_processingClearMatch->setEnabled( false );
+    m_processingComputeMatch->setEnabled( false );
+    m_fileExportImage->setEnabled( false );
+  }
+}
+
+/**
   * @brief Build all interface widgets 
   */
 void MainWindow::BuildInterface()
 {
-
   // Features
   QGridLayout *featureLayout = new QGridLayout;
   QGroupBox *groupFeatures   = new QGroupBox( "Feature" );
@@ -369,6 +512,33 @@ void MainWindow::BuildInterface()
   */
 void MainWindow::BuildMenus()
 {
+  // File
+  m_fileMenu = new QMenu( "File" );
+
+  m_fileOpenImage1 = m_fileMenu->addAction( "Open image 1" );
+  m_fileOpenImage2 = m_fileMenu->addAction( "Open image 2" );
+  m_fileMenu->addSeparator();
+  m_fileCloseImage1 = m_fileMenu->addAction( "Close image 1" );
+  m_fileCloseImage2 = m_fileMenu->addAction( "Close image 2" );
+  m_fileCloseAll    = m_fileMenu->addAction( "Close all" );
+  m_fileCloseAll->setShortcut( QKeySequence::Close );
+  m_fileMenu->addSeparator();
+  m_fileExportImage = m_fileMenu->addAction( "Save result image" );
+  m_fileExportImage->setShortcut( QKeySequence::Save );
+  m_fileMenu->addSeparator();
+  m_fileQuit = m_fileMenu->addAction( "Quit" );
+  m_fileQuit->setShortcut( QKeySequence::Quit );
+
+  // Processing
+  m_processingMenu = new QMenu( "Processing" );
+
+  m_processingComputeMatch = m_processingMenu->addAction( "Compute match" );
+  m_processingClearMatch   = m_processingMenu->addAction( "Clear computation" );
+
+  QMenuBar *menuBar = this->menuBar();
+
+  menuBar->addMenu( m_fileMenu );
+  menuBar->addMenu( m_processingMenu );
 }
 
 /**
@@ -376,11 +546,25 @@ void MainWindow::BuildMenus()
   */
 void MainWindow::MakeConnections()
 {
+  // Buttons
   connect( m_loadImage1, SIGNAL( clicked() ), this, SLOT( onOpenImage1() ) );
   connect( m_loadImage2, SIGNAL( clicked() ), this, SLOT( onOpenImage2() ) );
   connect( m_computeMatching, SIGNAL( clicked() ), this, SLOT( onComputeMatching() ) );
-  connect( m_scn, SIGNAL( changed( const QList<QRectF> & ) ), this, SLOT( onMoveSomething() ) );
   connect( m_exportResult, SIGNAL( clicked() ), this, SLOT( onExportImage() ) );
+
+  // Moving an image
+  connect( m_scn, SIGNAL( changed( const QList<QRectF> & ) ), this, SLOT( onMoveSomething() ) );
+
+  // menus
+  connect( m_fileQuit, SIGNAL( triggered() ), this, SLOT( onQuit() ) );
+  connect( m_fileOpenImage1, SIGNAL( triggered() ), this, SLOT( onOpenImage1() ) );
+  connect( m_fileOpenImage2, SIGNAL( triggered() ), this, SLOT( onOpenImage2() ) );
+  connect( m_fileCloseImage1, SIGNAL( triggered() ), this, SLOT( onCloseImage1() ) );
+  connect( m_fileCloseImage2, SIGNAL( triggered() ), this, SLOT( onCloseImage2() ) );
+  connect( m_fileCloseAll, SIGNAL( triggered() ), this, SLOT( onCloseAll() ) );
+  connect( m_fileExportImage, SIGNAL( triggered() ), this, SLOT( onExportImage() ) );
+  connect( m_processingComputeMatch, SIGNAL( triggered() ), this, SLOT( onComputeMatching() ) );
+  connect( m_processingClearMatch, SIGNAL( triggered() ), this, SLOT( onClearComputation() ) );
 }
 
 /** 
@@ -406,11 +590,20 @@ void MainWindow::PopulateMatchingType()
   m_comboMatchingName->addItem( "BRUTEFORCEL2" );
   m_comboMatchingName->addItem( "ANNL2" );
   m_comboMatchingName->addItem( "CASCADEHASHINGL2" );
-  m_comboMatchingName->addItem( "FASTCASCADEHASHINGL2" );
   m_comboMatchingName->insertSeparator( 4 );
   m_comboMatchingName->addItem( "BRUTEFORCEHAMMING" );
 
   m_comboMatchingName->setCurrentIndex( 1 );
+}
+
+/**
+  * @brief remove previous computation (internal data)
+  */
+void MainWindow::ClearFeaturesandMatch()
+{
+  m_feats1.clear();
+  m_feats2.clear();
+  m_matches.clear();
 }
 
 /**
@@ -438,7 +631,7 @@ void MainWindow::ClearFeaturesAndMatchItems()
 /**
   * @brief Redraw match lines at correct position (ie:after image move)
   */
-void MainWindow::MoveMatcheLines()
+void MainWindow::MoveMatchLines()
 {
   // Position anchor of the images (in global space and local space)
   QPointF gpos1 = m_pixmap1Item->pos();
@@ -502,8 +695,7 @@ std::unique_ptr<Image_describer> MainWindow::GetFeatureDescriber( const EDESCRIB
   }
   else if ( sImage_Describer_Method == "SIFT_ANATOMY" )
   {
-    image_describer.reset(
-        new SIFT_Anatomy_Image_describer( SIFT_Anatomy_Image_describer::Params() ) );
+    image_describer.reset( new SIFT_Anatomy_Image_describer( SIFT_Anatomy_Image_describer::Params() ) );
   }
   else if ( sImage_Describer_Method == "AKAZE_FLOAT" )
   {
