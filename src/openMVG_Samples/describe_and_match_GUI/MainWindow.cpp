@@ -294,13 +294,13 @@ void MainWindow::onCloseImage1( void )
   m_matches.clear();
   m_image1Path.clear();
 
-  for ( size_t i = 0; i < m_ellipsesFeat1.size(); ++i )
+  for ( auto item : m_ellipsesFeat1 )
   {
-    m_scn->removeItem( m_ellipsesFeat1[ i ] );
+    m_scn->removeItem( item );
   }
-  for ( size_t i = 0; i < m_lineMatch.size(); ++i )
+  for ( auto item : m_lineMatch )
   {
-    m_scn->removeItem( m_lineMatch[ i ] );
+    m_scn->removeItem( item );
   }
   m_ellipsesFeat1.clear();
   m_lineMatch.clear();
@@ -319,13 +319,13 @@ void MainWindow::onCloseImage2( void )
   m_matches.clear();
   m_image2Path.clear();
 
-  for ( size_t i = 0; i < m_ellipsesFeat2.size(); ++i )
+  for ( auto item : m_ellipsesFeat2 )
   {
-    m_scn->removeItem( m_ellipsesFeat2[ i ] );
+    m_scn->removeItem( item );
   }
-  for ( size_t i = 0; i < m_lineMatch.size(); ++i )
+  for ( auto item : m_lineMatch )
   {
-    m_scn->removeItem( m_lineMatch[ i ] );
+    m_scn->removeItem( item );
   }
   m_ellipsesFeat2.clear();
   m_lineMatch.clear();
@@ -611,17 +611,17 @@ void MainWindow::ClearFeaturesandMatch()
   */
 void MainWindow::ClearFeaturesAndMatchItems()
 {
-  for ( size_t i = 0; i < m_ellipsesFeat1.size(); ++i )
+  for( auto item : m_ellipsesFeat1 ) 
   {
-    m_scn->removeItem( m_ellipsesFeat1[ i ] );
+    m_scn->removeItem( item ) ; 
   }
-  for ( size_t i = 0; i < m_ellipsesFeat2.size(); ++i )
+  for( auto item : m_ellipsesFeat2 ) 
   {
-    m_scn->removeItem( m_ellipsesFeat2[ i ] );
+    m_scn->removeItem( item );
   }
-  for ( size_t i = 0; i < m_lineMatch.size(); ++i )
+  for( auto item : m_lineMatch )
   {
-    m_scn->removeItem( m_lineMatch[ i ] );
+    m_scn->removeItem( item );
   }
   m_ellipsesFeat1.clear();
   m_ellipsesFeat2.clear();
