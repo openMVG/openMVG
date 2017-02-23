@@ -82,7 +82,7 @@ endif (WIN32)
 # Set shared or static mode
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
-elseif()
+else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
@@ -402,9 +402,6 @@ add_subdirectory(third_party)
 # ==============================================================================
 set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${JPEG_INCLUDE_DIR}
-  ${PNG_INCLUDE_DIRS}
-  ${TIFF_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
@@ -412,10 +409,6 @@ set(OpenMVG_INCLUDE_DIRS
   ${EIGEN_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
   ${FLANN_INCLUDE_DIRS}
-  ${LP_INCLUDE_DIRS}
-  ${COINUTILS_INCLUDE_DIRS}
-  ${CLP_INCLUDE_DIRS}
-  ${OSI_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
 )
 
