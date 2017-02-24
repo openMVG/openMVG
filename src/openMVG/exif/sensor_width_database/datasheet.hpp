@@ -57,7 +57,7 @@ struct Datasheet
       std::string db_model_digit_substring = "";
       for (const std::string & db_sub_model : vec_db_model)
       {
-        if( std::find_if(db_sub_model.begin(), db_sub_model.end(), isdigit) != db_sub_model.end() )
+        if ( std::find_if(db_sub_model.begin(), db_sub_model.end(), isdigit) != db_sub_model.end() )
         {
           db_model_digit_substring = db_sub_model;
           break;
@@ -68,7 +68,7 @@ struct Datasheet
 
       const bool has_digit =
         std::find_if(rhs_model.begin(), rhs_model.end(), isdigit) != rhs_model.end();
-      if (!has_digit || ( db_model_digit_substring == "" ) )
+      if (!has_digit || db_model_digit_substring.empty() )
       {
         // If there is no digit in either the db entry or the image camera then compare the full model string
         return (this_model.compare(rhs_model) == 0);
