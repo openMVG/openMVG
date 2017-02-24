@@ -10,8 +10,9 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 
-#include <ceres/types.h>
-#include <ceres/cost_function.h>
+namespace ceres {
+class CostFunction;
+}
 
 namespace openMVG {
 
@@ -38,9 +39,9 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     bool bVerbose_;
     unsigned int nb_threads_;
     bool bCeres_summary_;
-    ceres::LinearSolverType linear_solver_type_;
-    ceres::PreconditionerType preconditioner_type_;
-    ceres::SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type_;
+    int linear_solver_type_;
+    int preconditioner_type_;
+    int sparse_linear_algebra_library_type_;
     double parameter_tolerance_;
     bool bUse_loss_function_;
 

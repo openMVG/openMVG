@@ -23,6 +23,8 @@
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
+#include <ceres/types.h>
+
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
 

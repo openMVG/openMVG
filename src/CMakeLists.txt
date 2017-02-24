@@ -395,7 +395,6 @@ set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
   ${LEMON_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}
   ${FLANN_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
 )

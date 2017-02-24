@@ -25,9 +25,13 @@ set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
 install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 target_link_libraries(
   openMVG_multiview
-    openMVG_numeric
-    ${LEMON_LIBRARY}
-    ${CERES_LIBRARIES})
+  openMVG_numeric
+  ${LEMON_LIBRARY}
+  ${CERES_LIBRARIES})
+target_include_directories(
+  openMVG_multiview
+  PRIVATE
+  ${CERES_INCLUDE_DIRS})
 set_target_properties(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 add_library(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
