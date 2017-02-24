@@ -103,6 +103,30 @@ TEST(Matching, ParseDatabaseCanon_EOS_1100D)
   EXPECT_EQ( 22.2, datasheet.sensorSize_ );
 }
 
+TEST(Matching, ParseDatabaseCanon_IXUS_70)
+{
+  std::vector<Datasheet> vec_database;
+  Datasheet datasheet;
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon DIGITAL IXUS 70";
+
+  EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( 5.7, datasheet.sensorSize_ );
+}
+
+TEST(Matching, ParseDatabaseCanon_EOS_M)
+{
+  std::vector<Datasheet> vec_database;
+  Datasheet datasheet;
+  const std::string sfileDatabase = stlplus::create_filespec( std::string(THIS_SOURCE_DIR), sDatabase );
+  const std::string sModel = "Canon EOS M";
+
+  EXPECT_TRUE( parseDatabase( sfileDatabase, vec_database ) );
+  EXPECT_TRUE( getInfo( sModel, vec_database, datasheet ) );
+  EXPECT_EQ( 22.3, datasheet.sensorSize_ );
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
