@@ -1,7 +1,7 @@
 # This recipe is known to work under Ubuntu 16.04 (yet, the generated .snap
 # file will work on any Linux distribution having snap installed).
 name: openmvg
-version: '1.1-0'
+version: '1.1-1'
 summary: OpenMVG (open Multiple View Geometry)
 description: |
   OpenMVG (Multiple View Geometry) "open Multiple View Geometry" is a library
@@ -97,6 +97,12 @@ apps:
   SfM-Localization:
     command: openMVG_main_SfM_Localization
     plugs: [home]
+  SfM-GlobalPipeline-py:
+    command: python3 $SNAP/bin/SfM_GlobalPipeline.py
+    plugs: [home]
+  SfM-SequentialPipeline-py:
+    command: python3 $SNAP/bin/SfM_SequentialPipeline.py
+    plugs: [home]
 
 parts:
   openmvg:
@@ -112,6 +118,13 @@ parts:
       - libxxf86vm-dev
       - libxi-dev
       - libxrandr-dev
+    prepare: |
+      sed -i 's|import commands||' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i -e '28iOPENMVG_SFM_BIN = os.environ["SNAP"] + "/bin"' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i -e '28iCAMERA_SENSOR_WIDTH_DIRECTORY = os.environ["SNAP"] + "/data"' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i 's|import commands||' src/software/SfM/SfM_SequentialPipeline.py.in
+      sed -i -e '28iOPENMVG_SFM_BIN = os.environ["SNAP"] + "/bin"' src/software/SfM/SfM_SequentialPipeline.py.in
+      sed -i -e '28iCAMERA_SENSOR_WIDTH_DIRECTORY = os.environ["SNAP"] + "/data"' src/software/SfM/SfM_SequentialPipeline.py.in
     build: |
       mkdir openMVG_build
       cd openMVG_build
@@ -120,5 +133,10 @@ parts:
     install: |
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp openMVG_build/Linux-*-RELEASE/openMVG_main_* $SNAPCRAFT_PART_INSTALL/bin/
+      cp openMVG_build/software/SfM/SfM_*.py $SNAPCRAFT_PART_INSTALL/bin/
       mkdir -p $SNAPCRAFT_PART_INSTALL/data
       cp src/openMVG/exif/sensor_width_database/sensor_width_camera_database.txt $SNAPCRAFT_PART_INSTALL/data
+  python:
+    plugin: nil
+    stage-packages:
+      - python3-minimal
