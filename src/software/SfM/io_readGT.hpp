@@ -146,7 +146,6 @@ bool readGt(
     std::vector<std::string> vec_camfilenames =
       stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
     std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
-    std::vector<std::string>::const_iterator citerBegin = vec_camfilenames.begin();
     if (!vec_camfilenames.empty())
     {
       for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();

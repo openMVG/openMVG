@@ -10,11 +10,7 @@
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#ifdef OPENMVG_HAVE_MOSEK
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
-#endif
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
 
 // Multiple View Geometry solver that rely on Linear programming formulations
 #include "openMVG/linearProgramming/lInfinityCV/lInfinityCV.hpp"

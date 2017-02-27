@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     cmd.process(argc, argv);
   } catch(const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_dir] the path where the spherical panoramic image are saved \n"
+    << "[-i|--input_dir] the path where the spherical panoramic images are saved \n"
     << "[-o|--output_dir] the path where output rectilinear image will be saved \n"
     << " OPTIONAL:\n"
     << "[-r|--image_resolution] the rectilinear image size (default:" << image_resolution << ") \n"

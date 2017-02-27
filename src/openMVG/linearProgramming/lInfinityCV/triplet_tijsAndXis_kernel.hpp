@@ -16,9 +16,6 @@
 // Linear programming solver(s)
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#ifdef OPENMVG_HAVE_MOSEK
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
-#endif
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
@@ -103,11 +100,7 @@ struct translations_Triplet_Solver {
 
     using namespace openMVG::lInfinityCV;
 
-#ifdef OPENMVG_HAVE_MOSEK
-    MOSEK_SolveWrapper LPsolver(static_cast<int>(vec_solution.size()));
-#else
     OSI_CLP_SolverWrapper LPsolver(static_cast<int>(vec_solution.size()));
-#endif
 
     Translation_Structure_L1_ConstraintBuilder cstBuilder(vec_KR, megaMat);
     double gamma;

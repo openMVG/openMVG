@@ -270,7 +270,7 @@ public:
     const int NN = 2
   ) const
   {
-    using MetricT = L2_Vectorized<typename MatrixT::Scalar>;
+    using MetricT = L2<typename MatrixT::Scalar>;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;

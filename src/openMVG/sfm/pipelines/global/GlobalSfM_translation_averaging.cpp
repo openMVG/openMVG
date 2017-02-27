@@ -133,11 +133,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         {
           vec_solution.resize(iNview*3 + vec_relative_motion_cpy.size() + 1);
           using namespace openMVG::linearProgramming;
-          #ifdef OPENMVG_HAVE_MOSEK
-            MOSEK_SolveWrapper solverLP(vec_solution.size());
-          #else
-            OSI_CLP_SolverWrapper solverLP(vec_solution.size());
-          #endif
+          OSI_CLP_SolverWrapper solverLP(vec_solution.size());
 
           lInfinityCV::Tifromtij_ConstraintBuilder cstBuilder(vec_relative_motion_cpy);
 
@@ -677,7 +673,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   using namespace openMVG::trifocal;
   using namespace openMVG::trifocal::kernel;
 
-  using KernelType = 
+  using KernelType =
     TranslationTripletKernel_ACRansac<
       translations_Triplet_Solver,
       translations_Triplet_Solver,

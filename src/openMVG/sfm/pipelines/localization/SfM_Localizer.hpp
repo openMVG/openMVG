@@ -14,11 +14,11 @@
 namespace openMVG {
 
 namespace features {
-  struct Regions;
+  class Regions;
 } // namespace features 
 
 namespace geometry {
-  struct Pose3;
+  class Pose3;
 } // namespace geometry 
 
 namespace cameras {

@@ -75,7 +75,7 @@ TEST(exportGraphToMapSubgraphs, CC_Subgraph) {
   lemon::ListGraph graph;
 
   // single
-  lemon::ListGraph::Node a = graph.addNode();
+  graph.addNode();
 
   // two
   lemon::ListGraph::Node b = graph.addNode(), c = graph.addNode();
