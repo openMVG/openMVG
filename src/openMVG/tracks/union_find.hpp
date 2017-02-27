@@ -79,7 +79,7 @@ struct UnionFind
   {
     i = Find(i);
     j = Find(j);
-    if (i==j)
+    if (i == j)
     { // Already in the same set. Nothing to do
       return;
     }

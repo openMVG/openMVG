@@ -21,7 +21,7 @@ namespace openMVG {
 
 namespace sfm {
   struct Regions_Provider;
-} // namespace sfm 
+} // namespace sfm
 
 namespace matching_image_collection {
 
@@ -77,7 +77,7 @@ struct GeometricFilter_HMatrix_AC
 
     // Robustly estimate the Homography matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_H, upper_bound_precision);
 
@@ -85,7 +85,7 @@ struct GeometricFilter_HMatrix_AC
       m_dPrecision_robust = ACRansacOut.first;
       // update geometric_inliers
       geometric_inliers.reserve(vec_inliers.size());
-      for ( const size_t & index : vec_inliers)  {
+      for (const uint32_t & index : vec_inliers) {
         geometric_inliers.push_back( vec_PutativeMatches[index] );
       }
       return true;
@@ -194,4 +194,4 @@ struct GeometricFilter_HMatrix_AC
 } // namespace matching_image_collection
 } // namespace openMVG
 
-#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP 
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP

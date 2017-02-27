@@ -138,7 +138,7 @@ bool InlierMatches2SVG
   const std::pair<size_t,size_t> & right_image_size,
   const features::PointFeatures & right_features,
   const matching::IndMatches & matches,
-  const std::vector<size_t> & inliers,
+  const std::vector<uint32_t> & inliers,
   const std::string & svg_filename,
   const bool b_vertical_display,
   const double feature_circle_radius,

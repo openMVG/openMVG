@@ -36,7 +36,7 @@ void InitRotationsMST
 (
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID
+  const uint32_t nMainViewID
 );
 
 /**
@@ -51,7 +51,7 @@ void InitRotationsMST
 bool GlobalRotationsRobust(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   float threshold = 0.f,
   std::vector<bool> * vec_inliers = nullptr );
 
@@ -66,7 +66,7 @@ bool GlobalRotationsRobust(
 bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   const double sigma=openMVG::D2R(5));
 
 /**

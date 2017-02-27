@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
     system::Timer timer;
     // Export views as undistorted images (those with valid Intrinsics)
     Image<RGBColor> image, image_ud;
+    Image<uint8_t> image_gray, image_gray_ud;
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXTRACT UNDISTORTED IMAGES -\n" );
 
     #ifdef OPENMVG_USE_OPENMP
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef OPENMVG_USE_OPENMP
     omp_set_num_threads(iNumThreads);
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image,image_ud)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image, image_ud, image_gray, image_gray_ud)
 #endif
     for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
@@ -119,6 +120,16 @@ int main(int argc, char *argv[]) {
         {
           UndistortImage(image, cam, image_ud, BLACK);
           const bool bRes = WriteImage(dstImage.c_str(), image_ud);
+#ifdef OPENMVG_USE_OPENMP
+          #pragma omp critical
+#endif
+          bOk &= bRes;
+        }
+        else // If RGBColor reading fails, we try to read a gray image
+        if (ReadImage( srcImage.c_str(), &image_gray))
+        {
+          UndistortImage(image_gray, cam, image_gray_ud, BLACK);
+          const bool bRes = WriteImage(dstImage.c_str(), image_gray_ud);
 #ifdef OPENMVG_USE_OPENMP
           #pragma omp critical
 #endif

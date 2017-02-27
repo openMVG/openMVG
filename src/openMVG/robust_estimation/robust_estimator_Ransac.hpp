@@ -34,20 +34,20 @@ template<typename Kernel, typename Scorer>
 typename Kernel::Model RANSAC(
   const Kernel &kernel,
   const Scorer &scorer,
-  std::vector<size_t> *best_inliers = nullptr ,
+  std::vector<uint32_t> *best_inliers = nullptr ,
   size_t *best_score = nullptr , // Found number of inliers
   double outliers_probability = 1e-2)
 {
   assert(outliers_probability < 1.0);
   assert(outliers_probability > 0.0);
-  size_t iteration = 0;
-  const size_t min_samples = Kernel::MINIMUM_SAMPLES;
-  const size_t total_samples = kernel.NumSamples();
+  uint32_t iteration = 0;
+  const uint32_t min_samples = Kernel::MINIMUM_SAMPLES;
+  const uint32_t total_samples = kernel.NumSamples();
 
-  size_t max_iterations = 100;
-  const size_t really_max_iterations = 4096;
+  uint32_t max_iterations = 100;
+  const uint32_t really_max_iterations = 4096;
 
-  size_t best_num_inliers = 0;
+  uint32_t best_num_inliers = 0;
   double best_inlier_ratio = 0.0;
   typename Kernel::Model best_model;
 
@@ -61,10 +61,10 @@ typename Kernel::Model RANSAC(
 
   // In this robust estimator, the scorer always works on all the data points
   // at once. So precompute the list ahead of time [0,..,total_samples].
-  std::vector<size_t> all_samples(total_samples);
+  std::vector<uint32_t> all_samples(total_samples);
   std::iota(all_samples.begin(), all_samples.end(), 0);
 
-  std::vector<size_t> sample;
+  std::vector<uint32_t> sample;
   for (iteration = 0;
     iteration < max_iterations &&
     iteration < really_max_iterations; ++iteration) {
@@ -74,8 +74,8 @@ typename Kernel::Model RANSAC(
       kernel.Fit(sample, &models);
 
       // Compute the inlier list for each fit.
-      for (size_t i = 0; i < models.size(); ++i) {
-        std::vector<size_t> inliers;
+      for (uint32_t i = 0; i < models.size(); ++i) {
+        std::vector<uint32_t> inliers;
         scorer.Score(kernel, models[i], all_samples, &inliers);
 
         if (best_num_inliers < inliers.size()) {

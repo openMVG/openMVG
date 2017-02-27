@@ -56,14 +56,7 @@ int main(int argc, char ** argv)
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
-  if (sMatchesDir.empty()) {
-    std::cerr << "\nmatchdir cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (sMatchFile.empty()) {
-    std::cerr << "\nmatchfile cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
+
 
   //---------------------------------------
   // Read SfM Scene (image view names)
@@ -118,16 +111,16 @@ int main(int argc, char ** argv)
   // ------------
   // For each pair, export the matches
   // ------------
-  const size_t viewCount = sfm_data.GetViews().size();
+  const uint32_t viewCount(sfm_data.GetViews().size());
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n viewCount: " << viewCount << std::endl;
   std::cout << "\n Export pairwise tracks" << std::endl;
   C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 
-  for (size_t I = 0; I < viewCount; ++I)
+  for (uint32_t I = 0; I < viewCount; ++I)
   {
-    for (size_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
+    for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
 
       const View * view_I = sfm_data.GetViews().at(I).get();
@@ -139,7 +132,7 @@ int main(int argc, char ** argv)
 
       // Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      const std::set<size_t> set_imageIndex = {I,J};
+      const std::set<uint32_t> set_imageIndex = {I,J};
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
       if (!map_tracksCommon.empty())

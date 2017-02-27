@@ -75,11 +75,11 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
-  * @brief Compute projection of a 3D point into the camera plane
+  * @brief Compute projection of a 3D point into the image plane
   * (Apply pose, disto (if any) and Intrinsics)
   * @param pose Pose used to compute projection
-  * @param pt3D 3D-point to project on camera plane
-  * @return Projected (2D) point on camera plane
+  * @param pt3D 3D-point to project on image plane
+  * @return Projected (2D) point on image plane
   */
   Vec2 project(
     const geometry::Pose3 & pose,

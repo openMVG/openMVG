@@ -83,10 +83,8 @@ bool ExpectKernelProperties(const Mat &x1,
                               Mat3 *F_expected = NULL) {
   bool bOk = true;
   Kernel kernel(x1, x2);
-  vector<size_t> samples;
-  for (size_t i = 0; i < x1.cols(); ++i) {
-    samples.push_back(i);
-  }
+  vector<uint32_t> samples(x1.cols());
+  std::iota(samples.begin(), samples.end(), 0);
   vector<Mat3> Fs;
   kernel.Fit(samples, &Fs);
 

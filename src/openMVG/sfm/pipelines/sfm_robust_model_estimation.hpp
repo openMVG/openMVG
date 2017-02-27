@@ -39,10 +39,10 @@ bool estimate_Rt_fromE
   const Mat3X & x1,
   const Mat3X & x2,
   const Mat3 & E,
-  const std::vector<size_t> & vec_inliers,
+  const std::vector<uint32_t> & vec_inliers,
   Mat3 * R = nullptr,
   Vec3 * t = nullptr,
-  std::vector<size_t> * vec_selected_points = nullptr,
+  std::vector<uint32_t> * vec_selected_points = nullptr,
   std::vector<Vec3> * vec_points = nullptr,
   const double positive_depth_solution_ratio = 0.7
 );
@@ -51,7 +51,7 @@ bool estimate_Rt_fromE
 (
   const Mat3 & K1, const Mat3 & K2,
   const Mat & x1, const Mat & x2,
-  const Mat3 & E, const std::vector<size_t> & vec_inliers,
+  const Mat3 & E, const std::vector<uint32_t> & vec_inliers,
   Mat3 * R, Vec3 * t
 );
 
@@ -59,7 +59,7 @@ struct RelativePose_Info
 {
   Mat3 essential_matrix;
   geometry::Pose3 relativePose;
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   double initial_residual_tolerance;
   double found_residual_precision;
 

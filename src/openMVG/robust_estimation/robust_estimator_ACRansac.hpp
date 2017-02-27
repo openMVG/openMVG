@@ -55,15 +55,15 @@ namespace acransac_nfa_internal {
 template <typename T>
 static T logcombi
 (
-  size_t k,
-  size_t n,
+  uint32_t k,
+  uint32_t n,
   const std::vector<T> & vec_log10 // lookuptable in [0,n+1]
 )
 {
   if (k>=n || k<=0) return T(0);
   if (n-k<k) k=n-k;
   T r(0);
-  for (size_t i = 1; i <= k; ++i)
+  for (uint32_t i = 1; i <= k; ++i)
     r += vec_log10[n-i+1] - vec_log10[i];
   return r;
 }
@@ -72,13 +72,13 @@ static T logcombi
 template<typename Type>
 static void makelogcombi_n
 (
-  size_t n,
+  uint32_t n,
   std::vector<Type> & l,
   std::vector<Type> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(n+1);
-  for (size_t k = 0; k <= n; ++k)
+  for (uint32_t k = 0; k <= n; ++k)
     l[k] = logcombi<Type>(k, n, vec_log10);
 }
 
@@ -86,29 +86,29 @@ static void makelogcombi_n
 template<typename Type>
 static void makelogcombi_k
 (
-  size_t k,
-  size_t nmax,
+  uint32_t k,
+  uint32_t nmax,
   std::vector<Type> & l,
   std::vector<Type> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(nmax+1);
-  for (size_t n = 0; n <= nmax; ++n)
+  for (uint32_t n = 0; n <= nmax; ++n)
     l[n] = logcombi<Type>(k, n, vec_log10);
 }
 
 template <typename Type>
 static void makelogcombi
 (
-  size_t k,
-  size_t n,
+  uint32_t k,
+  uint32_t n,
   std::vector<Type> & vec_logc_k,
   std::vector<Type> & vec_logc_n
 )
 {
   // compute a lookuptable of log10 value for the range [0,n+1]
   std::vector<Type> vec_log10(n + 1);
-  for (size_t k = 0; k <= n; ++k)
+  for (uint32_t k = 0; k <= n; ++k)
     vec_log10[k] = log10((Type)k);
 
   makelogcombi_n(n, vec_logc_n, vec_log10);
@@ -163,7 +163,7 @@ public:
    */
   bool ComputeNFA_and_inliers
   (
-    std::vector<size_t> & inliers,
+    std::vector<uint32_t> & inliers,
     std::pair<double,double> & nfa_threshold
   );
 
@@ -172,7 +172,7 @@ private:
   /// residual array
   std::vector<double> m_residuals;
   /// [residual,index] array -> used in the exhaustive nfa computation mode
-  std::vector<std::pair<double,int> > m_sorted_residuals;
+  std::vector<std::pair<double,uint32_t> > m_sorted_residuals;
 
   /// Combinatorial log
   std::vector<float> m_logc_n, m_logc_k;
@@ -191,7 +191,7 @@ template <typename Kernel>
 bool
 NFA_Interface<Kernel>::ComputeNFA_and_inliers
 (
-    std::vector<size_t> & inliers,
+    std::vector<uint32_t> & inliers,
     /// NFA and residual threshold
     std::pair<double,double> & nfa_threshold
 )
@@ -246,7 +246,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
       nfa_threshold.second = current_best_nfa.second; // Corresponding threshold
 
       inliers.clear();
-      for (size_t index = 0; index < m_kernel.NumSamples(); ++index)
+      for (uint32_t index = 0; index < m_kernel.NumSamples(); ++index)
       {
         if (m_residuals[index] <= nfa_threshold.second)
           inliers.push_back(index);
@@ -260,7 +260,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     {
       m_sorted_residuals.clear();
       m_sorted_residuals.reserve(m_kernel.NumSamples());
-      for (size_t i = 0; i < m_kernel.NumSamples(); ++i)
+      for (uint32_t i = 0; i < m_kernel.NumSamples(); ++i)
       {
         m_sorted_residuals.emplace_back(m_residuals[i], i);
       }
@@ -268,7 +268,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     }
 
     // Find best NFA and its index wrt square error threshold in m_sorted_residuals.
-    using nfa_indexT = std::pair<double,int>;
+    using nfa_indexT = std::pair<double, uint32_t>;
     nfa_indexT current_best_nfa(std::numeric_limits<double>::infinity(), Kernel::MINIMUM_SAMPLES);
     const size_t n = m_kernel.NumSamples();
     for(size_t k=Kernel::MINIMUM_SAMPLES+1;
@@ -326,7 +326,7 @@ template<typename Kernel>
 std::pair<double, double> ACRANSAC
 (
   const Kernel &kernel,
-  std::vector<size_t> & vec_inliers,
+  std::vector<uint32_t> & vec_inliers,
   const unsigned int num_max_iteration = 1024,
   typename Kernel::Model * model = NULL,
   double precision = std::numeric_limits<double>::infinity(),
@@ -343,10 +343,10 @@ std::pair<double, double> ACRANSAC
   //--
   // Sampling:
   // Possible sampling indices [0,..,nData] (will change in the optimization phase)
-  std::vector<size_t> vec_index(nData);
+  std::vector<uint32_t> vec_index(nData);
   std::iota(vec_index.begin(), vec_index.end(), 0);
   // Sample indices (used for model evaluation)
-  std::vector<size_t> vec_sample(sizeSample);
+  std::vector<uint32_t> vec_sample(sizeSample);
 
   const double maxThreshold = (precision==std::numeric_limits<double>::infinity()) ?
     std::numeric_limits<double>::infinity() :
@@ -411,7 +411,7 @@ std::pair<double, double> ACRANSAC
       if (bACRansacMode)
       {
         // NFA evaluation; If better than the previous: update scoring & inliers indices
-        std::pair<double,double> nfa_threshold(minNFA, 0.0);
+        std::pair<double, double> nfa_threshold(minNFA, 0.0);
         const bool b_better_model_found =
           nfa_interface.ComputeNFA_and_inliers(vec_inliers, nfa_threshold);
 
@@ -431,7 +431,7 @@ std::pair<double, double> ACRANSAC
               << " (iter=" << iter
               << " ,sample=";
             std::copy(vec_sample.begin(), vec_sample.end(),
-              std::ostream_iterator<size_t>(std::cout, ","));
+              std::ostream_iterator<uint32_t>(std::cout, ","));
             std::cout << ")" << std::endl;
           }
         }

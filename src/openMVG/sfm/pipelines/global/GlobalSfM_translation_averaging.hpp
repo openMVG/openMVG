@@ -75,7 +75,7 @@ private:
     const graph::Triplet & poses_id,
     std::vector<Vec3> & vec_tis,
     double & dPrecision, // UpperBound of the precision found by the AContrario estimator
-    std::vector<size_t> & vec_inliers,
+    std::vector<uint32_t> & vec_inliers,
     openMVG::tracks::STLMAPTracks & rig_tracks,
     const std::string & sOutDirectory) const;
 };
