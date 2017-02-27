@@ -25,7 +25,7 @@ struct Regions_Provider_Cache : public Regions_Provider
 public:
 
   Regions_Provider_Cache (const unsigned int max_cache_size)
-    : max_cache_size_(max_cache_size), Regions_Provider()
+    : Regions_Provider(), max_cache_size_(max_cache_size)
   {
   }
 

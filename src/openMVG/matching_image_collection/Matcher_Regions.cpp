@@ -33,9 +33,9 @@ void Matcher_Regions::Match(
 {
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
-#endif
   const bool b_multithreaded_pair_search = (eMatcherType_ == CASCADE_HASHING_L2);
   // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
+#endif
 
   C_Progress_display my_progress_bar( pairs.size() );
 

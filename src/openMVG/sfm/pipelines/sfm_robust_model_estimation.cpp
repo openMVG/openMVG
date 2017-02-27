@@ -31,7 +31,7 @@ bool estimate_Rt_fromE
 )
 {
   // Accumulator to find the best solution
-  std::array<size_t, 4> f = {0, 0, 0, 0};
+  std::array<size_t, 4> f {{0, 0, 0, 0}};
 
   // Recover plausible rotation and translation from E.
   std::vector<Mat3> Rs;  // Rotation matrix.

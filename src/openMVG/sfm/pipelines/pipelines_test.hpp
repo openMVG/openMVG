@@ -46,7 +46,7 @@ struct Synthetic_Features_Provider : public Features_Provider
 //  - for contiguous triplets store the corresponding observations indexes
 struct Synthetic_Matches_Provider : public Matches_Provider
 {
-  virtual bool load
+  bool load
   (
     const NViewDataSet & synthetic_data
   )

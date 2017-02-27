@@ -43,7 +43,6 @@ void PointsToMat(
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  using Scalar = typename MatT::Scalar; // Output matrix type
 
   Mat::Index i = 0;
   for (PointFeatures::const_iterator iter = vec_feats.begin();

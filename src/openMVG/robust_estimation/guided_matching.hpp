@@ -223,7 +223,7 @@ void GuidedMatching(
 
 /// Compute a bucket index from an epipolar point
 ///  (the one that is closer to image border intersection)
-static unsigned int pix_to_bucket(const Vec2i &x, int W, int H)
+static inline unsigned int pix_to_bucket(const Vec2i &x, int W, int H)
 {
 	if (x(1) == 0) return x(0); // Top border
 	if (x(0) == W-1) return W-1 + x(1); // Right border
@@ -232,7 +232,7 @@ static unsigned int pix_to_bucket(const Vec2i &x, int W, int H)
 }
 
 /// Compute intersection of the epipolar line with the image border
-static bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0, Vec2 & x1)
+static inline bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0, Vec2 & x1)
 {
   const double a = line(0), b = line(1), c = line(2);
 

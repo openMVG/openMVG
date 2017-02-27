@@ -143,7 +143,6 @@ public:
     const image::Image<unsigned char> * mask = nullptr
   ) override
   {
-    const int w = image.Width(), h = image.Height();
     // Convert to float in range [0;1]
     const image::Image<float> If(image.GetMat().cast<float>()/255.0f);
 

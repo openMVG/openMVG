@@ -23,7 +23,6 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <string>
 #include <iostream>
@@ -32,7 +31,6 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
-using namespace svg;
 using namespace std;
 
 int main(int argc, char **argv) {
