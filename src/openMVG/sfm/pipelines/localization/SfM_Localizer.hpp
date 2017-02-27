@@ -15,15 +15,15 @@ namespace openMVG {
 
 namespace features {
   class Regions;
-} // namespace features 
+} // namespace features
 
 namespace geometry {
   class Pose3;
-} // namespace geometry 
+} // namespace geometry
 
 namespace cameras {
   struct IntrinsicBase;
-} // namespace cameras 
+} // namespace cameras
 
 namespace sfm {
 
@@ -35,10 +35,10 @@ struct Image_Localizer_Match_Data
   Mat34 projection_matrix;
   Mat pt3D;
   Mat pt2D;
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
-  size_t max_iteration = 4096;
+  uint32_t max_iteration = 4096;
 };
 
 class SfM_Localizer

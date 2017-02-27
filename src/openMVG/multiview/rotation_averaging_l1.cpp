@@ -54,7 +54,7 @@ namespace l1  {
 // lower-bound threshold = median-trust_region
 template<typename TYPE>
 inline std::pair<TYPE, TYPE>
-ComputeX84Threshold(const TYPE* const values, size_t size, TYPE mul=TYPE(5.2))
+ComputeX84Threshold(const TYPE* const values, uint32_t size, TYPE mul=TYPE(5.2))
 {
   assert(size > 0);
   typename std::vector<TYPE> data(values, values+size);
@@ -72,7 +72,7 @@ ComputeX84Threshold(const TYPE* const values, size_t size, TYPE mul=TYPE(5.2))
 /////////////////////////
 
 using Matrix3x3 = openMVG::Mat3;
-using IndexArr = std::vector<size_t>;
+using IndexArr = std::vector<uint32_t>;
 
 // find the shortest cycle for the given graph and starting vertex
 struct Node {
@@ -82,15 +82,15 @@ struct Node {
 using NodeArr = std::vector<Node>;
 
 struct Link {
-  size_t ID; // node index
-  size_t parentID;// parent link
-  inline Link(size_t ID_=0, size_t parentID_=0) : ID(ID_), parentID(parentID_) {}
+  uint32_t ID; // node index
+  uint32_t parentID;// parent link
+  inline Link(uint32_t ID_=0, uint32_t parentID_=0) : ID(ID_), parentID(parentID_) {}
 };
 using LinkQue = std::queue<Link>;
 
 #ifdef HAVE_BOOST
 using edge_property_t = boost::property<boost::edge_weight_t, float>;
-using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, size_t, edge_property_t>;
+using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, uint32_t, edge_property_t>;
 using vertex_t = graph_t::vertex_descriptor;
 using edge_t = graph_t::edge_descriptor;
 using edge_iter = boost::graph_traits<graph_t>::edge_iterator;
@@ -98,12 +98,12 @@ using edge_iter = boost::graph_traits<graph_t>::edge_iterator;
 using graph_t = lemon::ListGraph;
 using map_EdgeMap = graph_t::EdgeMap<double>;
 #endif
-using MapEdgeIJ2R = std::map<std::pair<size_t,size_t>, Matrix3x3>;
+using MapEdgeIJ2R = std::map<std::pair<uint32_t,uint32_t>, Matrix3x3>;
 
 // Look for the maximum spanning tree along the graph of relative rotations
 // since we look for the maximum spanning tree using a minimum spanning tree algorithm
 // weight are negated.
-size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEdgeIJ2R& mapIJ2R, NodeArr& minGraph)
+uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEdgeIJ2R& mapIJ2R, NodeArr& minGraph)
 {
   assert(!RelRs.empty());
 #ifdef HAVE_BOOST
@@ -128,7 +128,7 @@ size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEd
 #else
 
   //A-- Compute the number of node we need
-  std::set<size_t> setNodes;
+  std::set<uint32_t> setNodes;
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
     setNodes.insert(relR.i);
@@ -136,11 +136,11 @@ size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEd
   }
 
   //B-- Create a node graph for each element of the set
-  using map_Size_t_Node = std::map<size_t, graph_t::Node>;
-  map_Size_t_Node map_size_t_to_node;
+  using map_NodeT = std::map<uint32_t, graph_t::Node>;
+  map_NodeT map_index_to_node;
   for (const auto & iter : setNodes)
   {
-    map_size_t_to_node[iter] = g.addNode();
+    map_index_to_node[iter] = g.addNode();
   }
 
   //C-- Create a graph from RelRs with weighted edges
@@ -151,7 +151,7 @@ size_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, MapEd
     mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
 
     // add edge to the graph
-    graph_t::Edge edge =  g.addEdge(map_size_t_to_node[relR.i], map_size_t_to_node[relR.j]);
+    graph_t::Edge edge =  g.addEdge(map_index_to_node[relR.i], map_index_to_node[relR.j]);
     map_edgeMap[ edge ] = - relR.weight;
   }
 
@@ -263,7 +263,7 @@ void InitRotationsMST
 (
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID
+  const uint32_t nMainViewID
 )
 {
   assert(!Rs.empty());
@@ -280,7 +280,7 @@ void InitRotationsMST
 
   // start from the main view and link all views using the relative rotation estimates
   LinkQue stack;
-  stack.push(Link(nMainViewID, size_t(0)));
+  stack.push(Link(nMainViewID, uint32_t(0)));
   Rs[nMainViewID] = Matrix3x3::Identity();
   do {
     const Link& link = stack.front();
@@ -309,7 +309,7 @@ void InitRotationsMST
 bool GlobalRotationsRobust(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   float threshold,
   std::vector<bool> * vec_Inliers)
 {
@@ -336,7 +336,7 @@ namespace internal
 // build A in Ax=b
 inline void FillMappingMatrix(
   const RelativeRotations& RelRs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   sMat& A)
 {
   A.reserve(A.rows()*2); // estimate of the number of non-zeros (optional)
@@ -381,14 +381,14 @@ inline void FillErrorMatrix(
 // apply correction to global rotations
 inline void CorrectMatrix(
   const Mat& x,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   Matrix3x3Arr& Rs)
 {
   for (size_t r = 0; r < Rs.size(); ++r) {
     if (r == nMainViewID)
       continue;
     Matrix3x3& Ri = Rs[r];
-    const size_t i = (r<nMainViewID ? r : r-1);
+    const uint32_t i = (r<nMainViewID ? r : r-1);
     const openMVG::Vec3 eRid = openMVG::Vec3(x.block<3,1>(3*i,0));
     const Mat3 eRi;
     ceres::AngleAxisToRotationMatrix((const double*)eRid.data(), (double*)eRi.data());
@@ -521,7 +521,7 @@ bool SolveIRLS
 bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   const double sigma)
 {
   assert(!RelRs.empty() && !Rs.empty());

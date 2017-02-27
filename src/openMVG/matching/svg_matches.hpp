@@ -18,7 +18,7 @@ namespace matching {
  * @brief Saves a svg file containing two images and their feature matches:
  * image are exported side by side, feature depicted by circles and
  * corresponding features are connected by a line.
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.
@@ -55,7 +55,7 @@ bool Matches2SVG
  * @brief Saves a svg file containing two images and their inlier features
  * matches: image are exported side by side, feature depicted by circles and
  * corresponding features (inliers) are connected by a line.
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.
@@ -83,7 +83,7 @@ bool InlierMatches2SVG
   const std::pair<size_t,size_t> & right_image_size,
   const features::PointFeatures & right_features,
   const matching::IndMatches & matches,
-  const std::vector<size_t> & inliers,
+  const std::vector<uint32_t> & inliers,
   const std::string & svg_filename,
   const bool b_vertical_display = true,
   const double feature_circle_radius = 4.0,

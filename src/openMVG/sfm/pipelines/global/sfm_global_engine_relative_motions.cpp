@@ -349,7 +349,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       //-- Display stats:
       //    - number of images
       //    - number of tracks
-      std::set<size_t> set_imagesId;
+      std::set<uint32_t> set_imagesId;
       TracksUtilsMap::ImageIdInTracks(map_selectedTracks, set_imagesId);
       osTrack << "------------------" << "\n"
         << "-- Tracks Stats --" << "\n"
@@ -357,15 +357,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         << " Images Id: " << "\n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),
-        std::ostream_iterator<size_t>(osTrack, ", "));
+        std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<size_t, size_t> map_Occurence_TrackLength;
+      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
       TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (std::map<size_t, size_t>::const_iterator iter = map_Occurence_TrackLength.begin();
-        iter != map_Occurence_TrackLength.end(); ++iter)  {
-        osTrack << "\t" << iter->first << "\t" << iter->second << "\n";
+      for (const auto & iter : map_Occurence_TrackLength)  {
+        osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
       std::cout << osTrack.str();

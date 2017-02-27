@@ -35,9 +35,9 @@ namespace
 */
 inline void UniformSample
 (
-  size_t num_samples,
-  size_t total_samples,
-  std::vector<size_t> *samples
+  uint32_t num_samples,
+  uint32_t total_samples,
+  std::vector<uint32_t> *samples
 )
 {
   std::uniform_int_distribution<unsigned int> distribution(0, total_samples-1);

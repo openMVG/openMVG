@@ -122,7 +122,7 @@ int main() {
     }
 
     //-- Homography robust estimation
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     using KernelType =
       ACKernelAdaptor<
         openMVG::homography::kernel::FourPointSolver,

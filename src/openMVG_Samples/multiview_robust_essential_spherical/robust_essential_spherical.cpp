@@ -24,8 +24,9 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <string>
+#include <array>
 #include <iostream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
 
     //-- Essential matrix robust estimation from spherical bearing vectors
     {
-      std::vector<size_t> vec_inliers;
+      std::vector<uint32_t> vec_inliers;
 
       // Define the AContrario angular error adaptor
       using KernelType =
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
         //  - (check cheirality of correspondence once triangulation is done)
 
         // Accumulator to find the best solution
-        std::vector<size_t> f(4, 0);
+        std::vector<uint32_t> f(4, 0);
 
         std::vector<Mat3> Es;  // Essential,
         std::vector<Mat3> Rs;  // Rotation matrix.
@@ -216,8 +217,8 @@ int main(int argc, char **argv) {
         //-> Test the 4 solutions will all the point
         Mat34 P1;
         P_From_KRt(Mat3::Identity(), Mat3::Identity(), Vec3::Zero(), &P1);
-        std::vector< std::vector<size_t> > vec_newInliers(4);
-        std::vector< std::vector<Vec3> > vec_3D(4);
+        std::array< std::vector<uint32_t>, 4 > vec_newInliers;
+        std::array< std::vector<Vec3>, 4 > vec_3D;
 
         for (int kk = 0; kk < 4; ++kk) {
           const Mat3 &R2 = Rs[kk];
@@ -228,7 +229,7 @@ int main(int argc, char **argv) {
           //-- For each inlier:
           //   - triangulate
           //   - check chierality
-          for (const auto & inlier_it : vec_inliers)
+          for (const uint32_t & inlier_it : vec_inliers)
           {
             const Vec3 & x1_ = xL_spherical.col(inlier_it);
             const Vec3 & x2_ = xR_spherical.col(inlier_it);
@@ -251,7 +252,7 @@ int main(int argc, char **argv) {
         std::cout << " #points in front of both cameras for each solution: "
           << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
 
-        std::vector<size_t>::iterator iter = max_element(f.begin(), f.end());
+        std::vector<uint32_t>::iterator iter = max_element(f.begin(), f.end());
         if(*iter != 0)  {
           const size_t index = std::distance(f.begin(),iter);
           if (f[index] < 120) {

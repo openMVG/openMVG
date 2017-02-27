@@ -326,7 +326,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   vec_globalR = d._R;
   size_t nMainViewID = 0;
   std::vector<bool> vec_inliers;
-  bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+  const bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
   EXPECT_TRUE(bTest);
 
   std::cout << "Inliers: " << std::endl;

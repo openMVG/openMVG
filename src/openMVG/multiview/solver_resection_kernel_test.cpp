@@ -51,7 +51,7 @@ TEST(Resection_Kernel, Multiview) {
     Mat X = d._X;
     openMVG::resection::kernel::PoseResectionKernel kernel(x, X);
 
-    const std::vector<size_t> samples = {0,1,2,3,4,5};
+    const std::vector<uint32_t> samples = {0,1,2,3,4,5};
     std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
     for (Mat::Index i = 0; i < x.cols(); ++i) {
@@ -83,7 +83,7 @@ TEST(P3P_Kneip_CVPR11, Multiview) {
     const Mat X = d._X;
     openMVG::euclidean_resection::P3P_ResectionKernel_K kernel(x, X, d._K[0]);
 
-    const std::vector<size_t> samples = {0,1,2};
+    const std::vector<uint32_t> samples = {0,1,2};
     std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
 
@@ -193,7 +193,7 @@ TEST(EuclideanResection, Points6AllRandomInput) {
     using Kernel = openMVG::euclidean_resection::kernel::ResectionKernel_K;
     Kernel kernel(x_image.block(0, 0, 2, 6), X_world, KK);
 
-    const std::vector<size_t> samples = { 0,1,2,3,4,5 };
+    const std::vector<uint32_t> samples = { 0,1,2,3,4,5 };
     std::vector<Mat34> Ps;
     kernel.Fit(samples, &Ps);
 
