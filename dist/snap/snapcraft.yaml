@@ -128,7 +128,10 @@ parts:
     build: |
       mkdir openMVG_build
       cd openMVG_build
-      cmake -DCMAKE_BUILD_TYPE=RELEASE . ../src
+      cmake \
+          -DCMAKE_BUILD_TYPE=RELEASE \
+          -DTARGET_ARCHITECTURE=generic \
+          . ../src
       make -j8
     install: |
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
