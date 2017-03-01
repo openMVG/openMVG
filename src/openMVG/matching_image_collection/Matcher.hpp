@@ -43,6 +43,6 @@ class Matcher
 };
 
 } // namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG
 
 #endif // OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_HPP
