@@ -5,21 +5,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IND_MATCH_UTILS_H
-#define OPENMVG_MATCHING_IND_MATCH_UTILS_H
+#ifndef OPENMVG_MATCHING_IND_MATCH_UTILS_HPP
+#define OPENMVG_MATCHING_IND_MATCH_UTILS_HPP
 
 #include "openMVG/matching/indMatch.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <map>
 #include <fstream>
 #include <iterator>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -122,4 +123,4 @@ inline bool Save
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // #define OPENMVG_MATCHING_IND_MATCH_UTILS_H
+#endif // #define OPENMVG_MATCHING_IND_MATCH_UTILS_HPP

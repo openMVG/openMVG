@@ -1,4 +1,3 @@
 
-ADD_SUBDIRECTORY(sequential)
-ADD_SUBDIRECTORY(global)
-
+add_subdirectory(sequential)
+add_subdirectory(global)

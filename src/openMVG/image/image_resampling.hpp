@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
-#define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
+#define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
 
 #include "openMVG/image/sample.hpp"
 
@@ -35,6 +35,49 @@ void ImageHalfSample( const Image & src , Image & out )
     {
       // Use .5f offset to ensure mid pixel and correct bilinear sampling
       out( i , j ) =  sampler( src, 2.f * ( i + .5f ), 2.f * ( j + .5f ) );
+    }
+  }
+}
+
+/**
+* @brief Image decimation (get only one pixel over two - no interpolation)
+*/
+template< typename Image >
+void ImageDecimate( const Image & src , Image & out )
+{
+  const int new_width  = src.Width() / 2;
+  const int new_height = src.Height() / 2;
+
+  out.resize( new_width , new_height );
+
+  for ( int i = 0 ; i < new_height ; ++i )
+  {
+    for ( int j = 0 ; j < new_width ; ++j )
+    {
+      out( i , j ) =  src( 2 * i, 2 * j );
+    }
+  }
+}
+
+/**
+* @brief Image Upsample (by a factor of 2 by using linear interpolation)
+*/
+template< typename Image >
+void ImageUpsample( const Image & src , Image & out )
+{
+  const int new_width  = src.Width() * 2;
+  const int new_height = src.Height() * 2;
+
+  out.resize( new_width , new_height );
+
+  const Sampler2d<SamplerLinear> sampler;
+
+  for( int i = 0 ; i < new_height ; ++i )
+  {
+    for( int j = 0 ; j < new_width ; ++j )
+    {
+      out( i , j ) =  sampler( src, i / 2.f, j / 2.f );
+
     }
   }
 }
@@ -78,4 +121,4 @@ void GenericRessample( const Image & src ,
 } // namespace image
 } // namespace openMVG
 
-#endif
+#endif // OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP

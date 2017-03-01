@@ -41,20 +41,18 @@ enum {
 template <typename Scalar>
 class MatrixMarketIterator 
 {
+    typedef typename NumTraits<Scalar>::Real RealScalar;
   public:
     typedef Matrix<Scalar,Dynamic,1> VectorType; 
     typedef SparseMatrix<Scalar,ColMajor> MatrixType; 
   
   public:
-    MatrixMarketIterator(const std::string folder):m_sym(0),m_isvalid(false),m_matIsLoaded(false),m_hasRhs(false),m_hasrefX(false),m_folder(folder)
+    MatrixMarketIterator(const std::string &folder)
+      : m_sym(0), m_isvalid(false), m_matIsLoaded(false), m_hasRhs(false), m_hasrefX(false), m_folder(folder)
     {
       m_folder_id = opendir(folder.c_str());
-      if (!m_folder_id){
-        m_isvalid = false;
-        std::cerr << "The provided Matrix folder could not be opened \n\n";
-        abort();
-      }
-      Getnextvalidmatrix();
+      if(m_folder_id)
+        Getnextvalidmatrix();
     }
     
     ~MatrixMarketIterator()
@@ -81,16 +79,30 @@ class MatrixMarketIterator
       std::string matrix_file = m_folder + "/" + m_matname + ".mtx";
       if ( !loadMarket(m_mat, matrix_file)) 
       {
+        std::cerr << "Warning loadMarket failed when loading \"" << matrix_file << "\"" << std::endl;
         m_matIsLoaded = false;
         return m_mat;
       }
       m_matIsLoaded = true; 
-      
+
       if (m_sym != NonSymmetric) 
-      { // Store the upper part of the matrix. It is needed by the solvers dealing with nonsymmetric matrices ??
-        MatrixType B; 
-        B = m_mat;
-        m_mat = B.template selfadjointView<Lower>();
+      {
+        // Check whether we need to restore a full matrix:
+        RealScalar diag_norm  = m_mat.diagonal().norm();
+        RealScalar lower_norm = m_mat.template triangularView<Lower>().norm();
+        RealScalar upper_norm = m_mat.template triangularView<Upper>().norm();
+        if(lower_norm>diag_norm && upper_norm==diag_norm)
+        {
+          // only the lower part is stored
+          MatrixType tmp(m_mat);
+          m_mat = tmp.template selfadjointView<Lower>();
+        }
+        else if(upper_norm>diag_norm && lower_norm==diag_norm)
+        {
+          // only the upper part is stored
+          MatrixType tmp(m_mat);
+          m_mat = tmp.template selfadjointView<Upper>();
+        }
       }
       return m_mat; 
     }
@@ -143,6 +155,8 @@ class MatrixMarketIterator
         m_refX.resize(m_mat.cols());
         m_hasrefX = loadMarketVector(m_refX, lhs_file);
       }
+      else
+        m_refX.resize(0);
       return m_refX; 
     }
     
@@ -150,8 +164,9 @@ class MatrixMarketIterator
     
     inline int sym() { return m_sym; }
     
-    inline bool hasRhs() {return m_hasRhs; }
-    inline bool hasrefX() {return m_hasrefX; }
+    bool hasRhs() {return m_hasRhs; }
+    bool hasrefX() {return m_hasrefX; }
+    bool isFolderValid() { return bool(m_folder_id); }
     
   protected:
     

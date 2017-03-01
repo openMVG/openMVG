@@ -19,7 +19,7 @@ using namespace openMVG::exif;
 const std::string sImg =
   stlplus::folder_part(
   stlplus::folder_part(
-  stlplus::folder_up(string(THIS_SOURCE_DIR))))
+  stlplus::folder_up(std::string(THIS_SOURCE_DIR))))
     + "/openMVG_Samples/imageData/Exif_Test/100_7100.JPG";
 
 TEST(Matching, Exif_IO_easyexif_ReadData_invalidFile)
@@ -43,6 +43,27 @@ TEST(Matching, Exif_IO_easyexif_ReadData)
   EXPECT_NEAR( 5.85, exif_io->getFocal(), 1e-2);
 
   EXPECT_EQ( "", exif_io->getLensModel());
+
+  double val;
+  EXPECT_FALSE(exif_io->GPSLatitude(&val));
+  EXPECT_FALSE(exif_io->GPSLongitude(&val));
+  EXPECT_FALSE(exif_io->GPSAltitude(&val));
+}
+
+TEST(Matching, Exif_IO_easyexif_Read_GPS_Data)
+{
+  const std::string sImg_gps = std::string(THIS_SOURCE_DIR) + "/image_data/gps_tag.jpg";
+  std::unique_ptr<Exif_IO> exif_io ( new Exif_IO_EasyExif( sImg_gps ) );
+  double val;
+
+  EXPECT_TRUE(exif_io->GPSLatitude(&val));
+  EXPECT_NEAR(47.5129, val, 1e-4);
+
+  EXPECT_TRUE(exif_io->GPSLongitude(&val));
+  EXPECT_NEAR(2.1513, val, 1e-4);
+
+  EXPECT_TRUE(exif_io->GPSAltitude(&val));
+  EXPECT_NEAR(120, val, 1e-0);
 }
 
 /* ************************************************************************* */

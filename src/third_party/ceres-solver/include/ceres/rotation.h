@@ -48,7 +48,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include "glog/logging.h"
 
 namespace ceres {
 
@@ -418,7 +417,6 @@ template <typename T>
 inline void EulerAnglesToRotationMatrix(const T* euler,
                                         const int row_stride_parameter,
                                         T* R) {
-  CHECK_EQ(row_stride_parameter, 3);
   EulerAnglesToRotationMatrix(euler, RowMajorAdapter3x3(R));
 }
 
@@ -496,7 +494,6 @@ void QuaternionToRotation(const T q[4],
   QuaternionToScaledRotation(q, R);
 
   T normalizer = q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3];
-  CHECK_NE(normalizer, T(0));
   normalizer = T(1) / normalizer;
 
   for (int i = 0; i < 3; ++i) {
@@ -579,7 +576,7 @@ void AngleAxisRotatePoint(const T angle_axis[3], const T pt[3], T result[3]) {
     const T theta = sqrt(theta2);
     const T costheta = cos(theta);
     const T sintheta = sin(theta);
-    const T theta_inverse = 1.0 / theta;
+    const T theta_inverse = T(1.0) / theta;
 
     const T w[3] = { angle_axis[0] * theta_inverse,
                      angle_axis[1] * theta_inverse,

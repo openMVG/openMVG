@@ -5,15 +5,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+  struct Features_Provider;
+} // namespace sfm 
+
 namespace matching_image_collection {
 
 /**
@@ -40,7 +44,7 @@ void MatchesPointsToMat
   const size_t n = putativeMatches.size();
   x_I.resize(2, n);
   x_J.resize(2, n);
-  typedef typename MatT::Scalar Scalar; // Output matrix type
+  using Scalar = typename MatT::Scalar; // Output matrix type
 
   for (size_t i=0; i < putativeMatches.size(); ++i)  {
     const features::PointFeature & pt_I = feature_I[putativeMatches[i].i_];
@@ -88,8 +92,10 @@ void MatchesPairToMat
       sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr ;
 
   // Load features of Inth and Jnth images
-  const features::PointFeatures feature_I = regions_provider->regions_per_view.at(pairIndex.first)->GetRegionsPositions();
-  const features::PointFeatures feature_J = regions_provider->regions_per_view.at(pairIndex.second)->GetRegionsPositions();
+  std::shared_ptr<features::Regions> regionsI = regions_provider->get(pairIndex.first);
+  std::shared_ptr<features::Regions> regionsJ = regions_provider->get(pairIndex.second);
+  const features::PointFeatures feature_I = regionsI->GetRegionsPositions();
+  const features::PointFeatures feature_J = regionsJ->GetRegionsPositions();
 
   MatchesPointsToMat(
     putativeMatches,
@@ -141,3 +147,5 @@ void MatchesPairToMat
 
 } //namespace matching_image_collection
 } // namespace openMVG
+
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_UTILS_HPP

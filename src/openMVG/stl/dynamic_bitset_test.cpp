@@ -5,9 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "dynamic_bitset.hpp"
+
 #include "testing/testing.h"
 
-#include "dynamic_bitset.hpp"
 
 TEST(DYNAMIC_BITSET, InitAndReset_64)
 {

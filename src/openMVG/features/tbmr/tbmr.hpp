@@ -23,11 +23,11 @@
 //- Date: 2014
 //- IEEE Transactions on Image Processing, Institute of Electrical and Electronics Engineers (IEEE)
 
-#ifndef TBMR_HPP
-#define TBMR_HPP
+#ifndef OPENMVG_FEATURES_TBMR_TBMR_HPP
+#define OPENMVG_FEATURES_TBMR_TBMR_HPP
 
-#include "openMVG/image/image_container.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_container.hpp"
 
 namespace openMVG
 {
@@ -58,4 +58,4 @@ namespace tbmr
 } // namespace features
 } // namespace openMVG
 
-#endif // TBMR_HPP
+#endif // OPENMVG_FEATURES_TBMR_TBMR_HPP

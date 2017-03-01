@@ -41,8 +41,6 @@ static void planarToSpherical(
   }
 }
 
-using namespace std;
-
 /**
  * Eight-point algorithm for solving for the essential matrix from normalized
  * image coordinates of point correspondences.
@@ -121,19 +119,19 @@ struct AngularError
     const Vec3 Em1 = (model * x1).normalized();
     double angleVal = (x2.transpose() * Em1);
     angleVal /= (x2.norm() * Em1.norm());
-    return abs(asin(angleVal));
+    return std::abs(asin(angleVal));
   }
 };
 
 class EssentialKernel_spherical
 {
 public:
-  typedef Mat3 Model;
+  using Model = Mat3;
   enum { MINIMUM_SAMPLES = EightPointRelativePoseSolver::MINIMUM_SAMPLES };
 
   EssentialKernel_spherical(const Mat &x1, const Mat &x2) : x1_(x1), x2_(x2) {}
 
-  void Fit(const vector<size_t> &samples, std::vector<Model> *models) const
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const
   {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
@@ -149,7 +147,7 @@ public:
   size_t NumSamples() const {return x1_.cols();}
 
   /// Return the angular error (between 0 and PI/2)
-  double Error(size_t sample, const Model &model) const
+  double Error(uint32_t sample, const Model &model) const
   {
     return AngularError::Error(model, x1_.col(sample), x2_.col(sample));
   }
@@ -157,46 +155,6 @@ public:
   protected:
   const Mat & x1_, & x2_;
 };
-
-// Solve:
-// [cross(x0,P0) X = 0]
-// [cross(x1,P1) X = 0]
-void TriangulateDLT
-(
-    const Mat34 &P1,
-    const Vec3 &x1,
-    const Mat34 &P2,
-    const Vec3 &x2,
-    Vec4 *X_homogeneous
-  )
-  {
-  Mat design(6,4);
-  for (int i = 0; i < 4; ++i)
-  {
-    design(0,i) = -x1[2] * P1(1,i) + x1[1] * P1(2,i);
-    design(1,i) =  x1[2] * P1(0,i) - x1[0] * P1(2,i);
-    design(2,i) = -x1[1] * P1(0,i) + x1[0] * P1(1,i);
-
-    design(3,i) = -x2[2] * P2(1,i) + x2[1] * P2(2,i);
-    design(4,i) =  x2[2] * P2(0,i) - x2[0] * P2(2,i);
-    design(5,i) = -x2[1] * P2(0,i) + x2[0] * P2(1,i);
-  }
-  Nullspace(&design, X_homogeneous);
-}
-
-void TriangulateDLT
-(
-    const Mat34 &P1,
-    const Vec3 &x1,
-    const Mat34 &P2,
-    const Vec3 &x2,
-    Vec3 *X_euclidean
-)
-{
-  Vec4 X_homogeneous;
-  TriangulateDLT(P1, x1, P2, x2, &X_homogeneous);
-  HomogeneousToEuclidean(X_homogeneous, X_euclidean);
-}
 
 } // namespace spherical_cam
 } // namespace openMVG

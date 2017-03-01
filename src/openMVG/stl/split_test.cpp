@@ -1,6 +1,6 @@
-#include "testing/testing.h"
-
 #include "split.hpp"
+
+#include "testing/testing.h"
 
 #include <string>
 #include <vector>

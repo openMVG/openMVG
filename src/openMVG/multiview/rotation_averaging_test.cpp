@@ -4,17 +4,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "CppUnitLite/TestHarness.h"
-#include "openMVG/multiview/rotation_averaging.hpp"
 #include "openMVG/multiview/essential.hpp"
-#include "testing/testing.h"
-
+#include "openMVG/multiview/rotation_averaging.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 
-#include <iostream>
+#include "CppUnitLite/TestHarness.h"
+#include "testing/testing.h"
+
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <iterator>
+#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::rotation_averaging;
@@ -61,13 +61,13 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
   using namespace std;
 
   //--
-  // Setup 3 camera that have a relative orientation of 120°
+  // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
+  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120 degree
 
   std::vector<RelativeRotation > vec_relativeRotEstimate;
   vec_relativeRotEstimate.push_back( RelativeRotation(0,1, R01));
@@ -162,13 +162,13 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   using namespace std;
 
   //--
-  // Setup 3 camera that have a relative orientation of 120°
+  // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation
   // They are in the same plane and looking in O={0,0,0}
   //--
-  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120°
-  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120°
+  const Mat3 R01 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R12 = RotationAroundZ(2.*M_PI/3.0); //120 degree
+  const Mat3 R20 = RotationAroundZ(2.*M_PI/3.0); //120 degree
 
   // Setup the relative motions (relative rotations)
   RelativeRotations vec_relativeRotEstimate;
@@ -291,7 +291,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index1], d._t[index1], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index0, index1, Rrel, 1));
-      vec_unique.push_back(make_pair(index0, index1));
+      vec_unique.emplace_back(index0, index1);
     }
 
     if ( std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index1, index2)) == vec_unique.end()
@@ -299,7 +299,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index1], d._t[index1], d._R[index2], d._t[index2], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index1, index2, Rrel, 1));
-      vec_unique.push_back(make_pair(index1, index2));
+      vec_unique.emplace_back(index1, index2);
     }
 
     if ( std::find(vec_unique.begin(), vec_unique.end(), std::make_pair(index0, index2)) == vec_unique.end()
@@ -307,7 +307,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
     {
       RelativeCameraMotion(d._R[index0], d._t[index0], d._R[index2], d._t[index2], &Rrel, &trel);
       vec_relativeRotEstimate.push_back(RelativeRotation(index0, index2, Rrel, 1));
-      vec_unique.push_back(make_pair(index0, index2));
+      vec_unique.emplace_back(index0, index2);
     }
   }
 
@@ -326,11 +326,11 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   vec_globalR = d._R;
   size_t nMainViewID = 0;
   std::vector<bool> vec_inliers;
-  bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
+  const bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
   EXPECT_TRUE(bTest);
 
   std::cout << "Inliers: " << std::endl;
-  std::copy(vec_inliers.begin(), vec_inliers.end(), ostream_iterator<bool>(std::cout, " "));
+  std::copy(vec_inliers.begin(), vec_inliers.end(), std::ostream_iterator<bool>(std::cout, " "));
   std::cout << std::endl;
 
   // Check inlier list

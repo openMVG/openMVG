@@ -88,9 +88,7 @@ int main( int argc, char **argv )
 
     return EXIT_SUCCESS;
   }
-  else
-  {
-    std::cerr << "\n Something goes wrong in the process" << std::endl;
-  }
+
+  std::cerr << "\n Something goes wrong in the process" << std::endl;
   return EXIT_FAILURE;
 }

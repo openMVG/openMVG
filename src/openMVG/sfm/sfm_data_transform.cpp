@@ -5,9 +5,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data_transform.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/geometry/Similarity3.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -16,7 +16,8 @@ namespace sfm {
 void ApplySimilarity
 (
   const geometry::Similarity3 & sim,
-  SfM_Data & sfm_data
+  SfM_Data & sfm_data,
+  bool transform_priors
 )
 {
   // Transform the landmark positions
@@ -29,6 +30,24 @@ void ApplySimilarity
   for (auto & iterPose : sfm_data.poses)
   {
     iterPose.second = sim(iterPose.second);
+  }
+
+  if (transform_priors)
+  {
+    for (auto & iterView : sfm_data.views)
+    {
+      // Transform the camera position priors
+      if (sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(iterView.second.get()))
+      {
+          prior->pose_center_ = sim(prior->pose_center_);
+      }
+    }
+    
+    // Transform the control points
+    for (auto & iterControlPoint : sfm_data.control_points)
+    {
+      iterControlPoint.second.X = sim(iterControlPoint.second.X);
+    }
   }
 }
 

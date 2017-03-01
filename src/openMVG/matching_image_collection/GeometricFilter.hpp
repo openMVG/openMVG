@@ -5,19 +5,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_HPP
 
 #include "openMVG/features/feature.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+} // namespace sfm 
 namespace matching_image_collection {
 
 using namespace openMVG::matching;
@@ -70,7 +74,7 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
   for (int i = 0; i < (int)putative_matches.size(); ++i)
   {
     if (my_progress_bar.hasBeenCanceled())
-        continue;
+      continue;
     auto iter = putative_matches.begin();
     advance(iter,i);
 
@@ -109,6 +113,6 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
 }
 
 } // namespace matching_image_collection
-} // namespace openMVG 
+} // namespace openMVG
 
-
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_HPP

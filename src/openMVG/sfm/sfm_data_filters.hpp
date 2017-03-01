@@ -5,12 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_FILTERS_HPP
-#define OPENMVG_SFM_DATA_FILTERS_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_FILTERS_HPP
+#define OPENMVG_SFM_SFM_DATA_FILTERS_HPP
+
+#include "openMVG/types.hpp"
 
 #include <iterator>
 #include <set>
-#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -95,4 +96,4 @@ void KeepLargestViewCCTracks
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_FILTERS_HPP
+#endif // OPENMVG_SFM_SFM_DATA_FILTERS_HPP

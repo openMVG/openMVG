@@ -4,12 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINEAR_PROGRAMMING_INTERFACE_H_
-#define OPENMVG_LINEAR_PROGRAMMING_INTERFACE_H_
+#ifndef OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
+#define OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
 
-#include <vector>
-#include <utility>
 #include "openMVG/numeric/numeric.h"
+
+#include <utility>
+#include <vector>
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -98,4 +99,4 @@ protected :
 } // namespace openMVG
 
 
-#endif // OPENMVG_LINEAR_PROGRAMMING_INTERFACE_H_
+#endif // OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP

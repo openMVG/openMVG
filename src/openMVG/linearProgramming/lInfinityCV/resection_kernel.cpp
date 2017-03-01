@@ -4,10 +4,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#include "openMVG/linearProgramming/bisectionLP.hpp"
-
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 
@@ -17,17 +16,25 @@ namespace openMVG {
 namespace lInfinityCV {
 namespace kernel {
 
-using namespace std;
+using namespace linearProgramming ;
 
-void translate(const Mat3X & X, const Vec3 & vecTranslation,
-               Mat3X * XPoints) {
-  XPoints->resize(X.rows(), X.cols());
-  for (Mat3X::Index i=0; i<X.cols(); ++i)  {
-    XPoints->col(i) = X.col(i) + vecTranslation;
-  }
+inline void translate
+(
+  const Mat3X & X,
+  const Vec3 & vecTranslation,
+  Mat3X * XPoints
+)
+{
+  (*XPoints) = X.colwise() + vecTranslation;
 }
 
-void l1SixPointResectionSolver::Solve(const Mat &pt2D, const Mat &pt3d, vector<Mat34> *Ps) {
+void l1SixPointResectionSolver::Solve
+(
+  const Mat &pt2D,
+  const Mat &pt3d,
+  std::vector<Mat34> *Ps
+)
+{
   assert(2 == pt2D.rows());
   assert(3 == pt3d.rows());
   assert(6 <= pt2D.cols());

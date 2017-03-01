@@ -11,6 +11,7 @@
 #include "openMVG/numeric/numeric.h"
 
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -33,13 +34,15 @@ exportToPly
   outfile << "ply"
     << std::endl << "format ascii 1.0"
     << std::endl << "element vertex " << vec_points.size()
-    << std::endl << "property float x"
-    << std::endl << "property float y"
-    << std::endl << "property float z"
+    << std::endl << "property double x"
+    << std::endl << "property double y"
+    << std::endl << "property double z"
     << std::endl << "property uchar red"
     << std::endl << "property uchar green"
     << std::endl << "property uchar blue"
     << std::endl << "end_header" << std::endl;
+
+  outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
 
   for (size_t i=0; i < vec_points.size(); ++i)
   {
@@ -55,9 +58,7 @@ exportToPly
 }
 
 /// Export 3D point vector and camera position to PLY format
-inline
-bool
-exportToPly
+inline bool exportToPly
 (
   const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
@@ -72,13 +73,15 @@ exportToPly
   outfile << "ply"
     << '\n' << "format ascii 1.0"
     << '\n' << "element vertex " << vec_points.size()+vec_camPos.size()
-    << '\n' << "property float x"
-    << '\n' << "property float y"
-    << '\n' << "property float z"
+    << '\n' << "property double x"
+    << '\n' << "property double y"
+    << '\n' << "property double z"
     << '\n' << "property uchar red"
     << '\n' << "property uchar green"
     << '\n' << "property uchar blue"
     << '\n' << "end_header" << std::endl;
+
+  outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
 
   for (size_t i=0; i < vec_points.size(); ++i)  {
     if (vec_coloredPoints == nullptr)
@@ -86,15 +89,15 @@ exportToPly
         << vec_points[i](0) << ' '
         << vec_points[i](1) << ' '
         << vec_points[i](2) << ' '
-        << "255 255 255" << "\n";
+        << "255 255 255\n";
     else
       outfile
         << vec_points[i](0) << ' '
         << vec_points[i](1) << ' '
         << vec_points[i](2) << ' '
-        << (*vec_coloredPoints)[i](0) << ' '
-        << (*vec_coloredPoints)[i](1) << ' '
-        << (*vec_coloredPoints)[i](2)
+        << static_cast<int>((*vec_coloredPoints)[i](0)) << ' '
+        << static_cast<int>((*vec_coloredPoints)[i](1)) << ' '
+        << static_cast<int>((*vec_coloredPoints)[i](2))
         << "\n";
   }
 
@@ -103,7 +106,7 @@ exportToPly
       << vec_camPos[i](0) << ' '
       << vec_camPos[i](1) << ' '
       << vec_camPos[i](2) << ' '
-      << "0 255 0" << "\n";
+      << "0 255 0\n";
   }
   outfile.flush();
   const bool bOk = outfile.good();

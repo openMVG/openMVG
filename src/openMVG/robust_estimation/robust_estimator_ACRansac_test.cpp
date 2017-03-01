@@ -5,19 +5,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
+
+#include "testing/testing.h"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+
 #include <iterator>
 #include <random>
 
-#include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "testing/testing.h"
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
 
 using namespace openMVG;
 using namespace openMVG::robust;
 using namespace std;
+using namespace svg;
 
 /// ACRansac Kernel for line estimation
 template <typename SolverArg,
@@ -26,8 +28,8 @@ template <typename SolverArg,
 class ACRANSACOneViewKernel
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
   ACRANSACOneViewKernel(const Mat &x1, int w1, int h1)
     : x1_(x1), N1_(Mat3::Identity()), logalpha0_(0.0)
@@ -44,12 +46,12 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat sampled_xs = ExtractColumns(x1_, samples);
     Solver::Solve(sampled_xs, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorArg::Error(model, x1_.col(sample));
   }
 
@@ -93,7 +95,7 @@ TEST(RansacLineFitter, OutlierFree) {
 
   // Check the best model that fit the most of the data
   //  in a robust framework (ACRANSAC).
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   Vec2 line;
   ACRANSAC(lineKernel, vec_inliers, 300, &line);
 
@@ -111,7 +113,7 @@ TEST(RansacLineFitter, OutlierFree_DoNotGetBackModel) {
         3, 5, 7, 9, 11;
 
   ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy, 12, 12);
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   ACRANSAC(lineKernel, vec_inliers);
 
   CHECK_EQUAL(5, vec_inliers.size());
@@ -130,7 +132,7 @@ TEST(RansacLineFitter, OneOutlier) {
 
   // Check the best model that fit the most of the data
   //  in a robust framework (ACRANSAC).
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   Vec2 line;
   ACRANSAC(lineKernel, vec_inliers, 300, &line);
 
@@ -148,7 +150,7 @@ TEST(RansacLineFitter, TooFewPoints) {
   // y = 2x + 1
   xy << 1, 2;
   ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy, 12, 12);
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   ACRANSAC(lineKernel, vec_inliers);
 
   CHECK_EQUAL(0, vec_inliers.size());
@@ -179,7 +181,7 @@ TEST(RansacLineFitter, RealisticCase) {
 
   //-- Simulate outliers (for the asked percentage amount of the datum)
   const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  vector<size_t> vec_samples; // Fit with unique random index
+  vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {
@@ -194,7 +196,7 @@ TEST(RansacLineFitter, RealisticCase) {
 
   // Check the best model that fit the most of the data
   //  in a robust framework (ACRANSAC).
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   Vec2 line;
   ACRANSAC(lineKernel, vec_inliers, 300, &line);
 
@@ -225,11 +227,10 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   // generate outlier
   std::normal_distribution<double> d_outlier(0, 0.2);
   const size_t count = outlierPourcent * nbPoints;
-  std::vector<size_t> vec_indexes(count,0);
+  std::vector<uint32_t> vec_indexes(count,0);
   UniformSample(count, nbPoints, &vec_indexes);
-  for (size_t i = 0; i < count; ++i)
+  for (const auto pos : vec_indexes)
   {
-    const size_t pos = vec_indexes[i];
     points.col(pos) = Vec2(rand()%W + d_outlier(gen), rand()%H - d_outlier(gen));
   }
 }
@@ -326,7 +327,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
     // Check the best model that fit the most of the data
     //  in a robust framework (ACRANSAC).
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     const std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
     const double errorMax = ret.first;
     EXPECT_TRUE(sqrt(errorMax) < noise*2+.5);
@@ -334,13 +335,13 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     ostringstream os;
     os << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".png";
 
-    //Svg drawing
+    // Svg drawing
     {
       svgDrawer svgTest(W,H);
       for (size_t i = 0; i < nbPoints; ++i) {
         string sCol = "red";
-        float x = points.col(i)[0];
-        float y = points.col(i)[1];
+        const float x = points.col(i)[0];
+        const float y = points.col(i)[1];
         if (find(vec_inliers.begin(), vec_inliers.end(), i) != vec_inliers.end())
         {
           sCol = "green";
@@ -348,9 +349,9 @@ TEST(RansacLineFitter, ACRANSACSimu) {
         svgTest.drawCircle(x,y, 1, svgStyle().fill(sCol).noStroke());
       }
       //draw the found line
-      float xa = 0, xb = W;
-      float ya = line[1] * xa + line[0];
-      float yb = line[1] * xb + line[0];
+      const float xa = 0, xb = W;
+      const float ya = line[1] * xa + line[0];
+      const float yb = line[1] * xb + line[0];
       svgTest.drawLine(xa, ya, xb, yb, svgStyle().stroke("blue", 0.5));
 
       ostringstream osSvg;

@@ -34,12 +34,12 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 
-#include "ceres/ceres.h"
+#include <ceres/ceres.h>
 
 #include <ctime>
-#include <vector>
-#include <set>
 #include <map>
+#include <set>
+#include <vector>
 
 namespace openMVG {
 

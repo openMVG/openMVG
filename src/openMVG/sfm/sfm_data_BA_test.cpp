@@ -15,23 +15,34 @@
 // - Perform the test for all the plausible intrinsic camera models
 //-----------------
 
+#include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/sfm/sfm.hpp"
+
+#include "testing/testing.h"
+
+#include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <random>
+
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 
-#include "testing/testing.h"
-#include "../cameras/Camera_Common.hpp"
-
-#include <cmath>
-#include <cstdio>
-#include <iostream>
 
 double RMSE(const SfM_Data & sfm_data);
 
-SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & config, EINTRINSIC eintrinsic);
+SfM_Data getInputScene
+(
+  const NViewDataSet & d,
+  const nViewDatasetConfigurator & config,
+  EINTRINSIC eintrinsic,
+  const bool b_use_gcp = false,
+  const bool b_use_pose_prior = false,
+  const bool b_use_noise_on_image_observations = true
+);
 
 TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole) {
 
@@ -153,17 +164,127 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Fisheye) {
   EXPECT_TRUE( dResidual_before > dResidual_after);
 }
 
+//-- Test with GCP - Camera position once BA done must be the same as the GT
+TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_GCP)
+{
+  const int nviews = 3;
+  const int npoints = 6;
+  const nViewDatasetConfigurator config;
+  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
+
+  // Translate the input dataset to a SfM_Data scene
+  SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA, true);
+
+  const double dResidual_before = RMSE(sfm_data);
+
+  // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
+  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  EXPECT_TRUE( ba_object->Adjust(sfm_data,
+    Optimize_Options(
+      Intrinsic_Parameter_Type::NONE,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL,
+      //-> Use GCP to fit the SfM scene to the GT coordinates system (Scale, Rotation, Translation)
+      Control_Point_Parameter(20.0, true))) );
+
+  const double dResidual_after = RMSE(sfm_data);
+  EXPECT_TRUE( dResidual_before > dResidual_after);
+
+  //-- Check camera pose are to the right place (since GCP was used, the camera coordinates must be the same)
+  for (const auto & view_it : sfm_data.GetViews())
+  {
+    const View * view = view_it.second.get();
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+    const double position_residual = (d._C[view->id_pose] - pose.center()).norm();
+    EXPECT_NEAR(0.0, position_residual, 1e-4);
+  }
+}
+
+//-- Test with PosePriors - Camera position once BA done must be the same as the GT
+TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_PosePriors) {
+
+  const int nviews = 12;
+  const int npoints = 6;
+  const nViewDatasetConfigurator config;
+  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints, config);
+
+  // Translate the input dataset to a SfM_Data scene
+  const bool b_use_GCP = false;
+  const bool b_use_POSE_PRIOR = true;
+  const bool b_use_noise_on_image_observations = false;
+  SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA,
+    b_use_GCP, b_use_POSE_PRIOR, b_use_noise_on_image_observations);
+
+  const double dResidual_before = RMSE(sfm_data);
+
+  // First run a BA without pose prior
+  // - check that RMSE is tiny and that the scene is not at the right place (the pose prior positions)
+
+  {
+    const bool b_use_POSE_PRIOR_in_BA = false;
+
+    std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+    EXPECT_TRUE( ba_object->Adjust(sfm_data,
+      Optimize_Options(
+        Intrinsic_Parameter_Type::ADJUST_ALL,
+        Extrinsic_Parameter_Type::ADJUST_ALL,
+        Structure_Parameter_Type::ADJUST_ALL,
+        Control_Point_Parameter(0.0, false),
+        b_use_POSE_PRIOR_in_BA)) );
+
+    const double dResidual_after = RMSE(sfm_data);
+    EXPECT_TRUE( dResidual_before > dResidual_after);
+
+    // Compute distance between SfM poses center and GPS Priors
+    Mat residuals(3, sfm_data.GetViews().size());
+    for (const auto & view_it : sfm_data.GetViews())
+    {
+      const ViewPriors * view = dynamic_cast<ViewPriors*>(view_it.second.get());
+      residuals.col(view->id_pose) = (sfm_data.GetPoseOrDie(view).center() - view->pose_center_).transpose();
+    }
+    // Check that the scene is not at the position of the POSE PRIORS center.
+    EXPECT_FALSE( (residuals.colwise().norm().sum() < 1e-8) );
+  }
+
+  // Then activate BA with pose prior & check that the scene is at the right place
+  {
+    const bool b_use_POSE_PRIOR_in_BA = true;
+
+    std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+    EXPECT_TRUE( ba_object->Adjust(sfm_data,
+      Optimize_Options(
+        Intrinsic_Parameter_Type::ADJUST_ALL,
+        Extrinsic_Parameter_Type::ADJUST_ALL,
+        Structure_Parameter_Type::ADJUST_ALL,
+        Control_Point_Parameter(0.0, false),
+        b_use_POSE_PRIOR_in_BA)) );
+
+    const double dResidual_after = RMSE(sfm_data);
+    EXPECT_TRUE( dResidual_before > dResidual_after);
+
+    // Compute distance between SfM poses center and GPS Priors
+    for (const auto & view_it : sfm_data.GetViews())
+    {
+      const ViewPriors * view = dynamic_cast<ViewPriors*>(view_it.second.get());
+      const Pose3 pose = sfm_data.GetPoseOrDie(view);
+      const double position_residual = (d._C[view->id_pose] - pose.center()).norm();
+      EXPECT_NEAR(0.0, position_residual, 1e-8);
+    }
+  }
+}
+
+
 /// Compute the Root Mean Square Error of the residuals
 double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
   std::vector<double> vec;
-  for(Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
+  for (Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
       iterTracks != sfm_data.GetLandmarks().end();
       ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
-    for(Observations::const_iterator itObs = obs.begin();
+    for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data.GetViews().find(itObs->first)->second.get();
@@ -181,8 +302,17 @@ double RMSE(const SfM_Data & sfm_data)
 
 // Translation a synthetic scene into a valid SfM_Data scene.
 // => A synthetic scene is used:
-//    a random noise between [-.5,.5] is added on observed data points
-SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & config, EINTRINSIC eintrinsic)
+//    some random noise is added on observed structure data points
+//    a tiny rotation to ground truth is added to the true rotation (in order to test BA effectiveness)
+SfM_Data getInputScene
+(
+  const NViewDataSet & d,
+  const nViewDatasetConfigurator & config,
+  EINTRINSIC eintrinsic,
+  const bool b_use_gcp,
+  const bool b_use_pose_prior,
+  const bool b_use_noise_on_image_observations
+)
 {
   // Translate the input dataset to a SfM_Data scene
   SfM_Data sfm_data;
@@ -191,6 +321,7 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   // 2. Poses
   // 3. Intrinsic data (shared, so only one camera intrinsic is defined)
   // 4. Landmarks
+  // 5. GCP (optional)
 
   const int nviews = d._C.size();
   const int npoints = d._X.cols();
@@ -199,13 +330,27 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   for (int i = 0; i < nviews; ++i)
   {
     const IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
-    sfm_data.views[i] = std::make_shared<View>("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
+
+    if (!b_use_pose_prior)
+    {
+      sfm_data.views[i] = std::make_shared<View>("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
+    }
+    else // b_use_pose_prior == true
+    {
+      sfm_data.views[i] = std::make_shared<ViewPriors>("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
+      ViewPriors * view = dynamic_cast<ViewPriors*>(sfm_data.views[i].get());
+      view->b_use_pose_center_ = true;
+      view->pose_center_ = d._C[i];
+    }
   }
+
+  // Add a rotation to the GT (in order to make BA do some work)
+  const Mat3 rot = RotationAroundX(D2R(6));
 
   // 2. Poses
   for (int i = 0; i < nviews; ++i)
   {
-    Pose3 pose(d._R[i], d._C[i]);
+    const Pose3 pose(rot * d._R[i], d._C[i]);
     sfm_data.poses[i] = pose;
   }
 
@@ -241,21 +386,52 @@ SfM_Data getInputScene(const NViewDataSet & d, const nViewDatasetConfigurator & 
   }
 
   // 4. Landmarks
-  for (int i = 0; i < npoints; ++i) {
-    // Collect observation of the landmarks X in each frame.
+  // Collect image observation of the landmarks X in each frame.
+  // => add some random noise to each (x,y) observation
+  std::default_random_engine random_generator;
+  std::normal_distribution<double> distribution(0, 0.1);
+  for (int i = 0; i < npoints; ++i)
+  {
+    // Create a landmark for each 3D points
     Landmark landmark;
     landmark.X = d._X.col(i);
-    for (int j = 0; j < nviews; ++j) {
+    for (int j = 0; j < nviews; ++j)
+    {
       Vec2 pt = d._x[j].col(i);
-      // => random noise between [-.5,.5] is added
-      pt(0) += rand()/RAND_MAX - .5;
-      pt(1) += rand()/RAND_MAX - .5;
+      if (b_use_noise_on_image_observations)
+      {
+        // Add some noise to image observations
+        pt(0) += distribution(random_generator);
+        pt(1) += distribution(random_generator);
+      }
 
       landmark.obs[j] = Observation(pt, i);
     }
     sfm_data.structure[i] = landmark;
   }
 
+  // 5. GCP
+  if (b_use_gcp)
+  {
+    if (npoints >= 4) // Use 4 GCP for this test
+    {
+      for (int i = 0; i < 4; ++i) // Select the 4 first point as GCP
+      {
+        // Collect observations of the landmarks X in each frame.
+        Landmark landmark;
+        landmark.X = d._X.col(i);
+        for (int j = 0; j < nviews; ++j)
+        {
+          landmark.obs[j] = Observation(d._x[j].col(i), i);
+        }
+        sfm_data.control_points[i] = landmark;
+      }
+    }
+    else
+    {
+      std::cerr << "Insufficient point count" << std::endl;
+    }
+  }
   return sfm_data;
 }
 

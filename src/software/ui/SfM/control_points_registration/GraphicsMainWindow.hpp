@@ -25,8 +25,6 @@ class QGraphicsItem;
 
 namespace control_point_GUI {
 
-using namespace std;
-
   class GraphicsMainWindow : public QMainWindow
   {
     Q_OBJECT // mandatory for signals and slots

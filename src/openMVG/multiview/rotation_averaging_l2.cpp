@@ -6,11 +6,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/rotation_averaging_l2.hpp"
-#include <vector>
-#include <map>
 
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
+
+#include <vector>
+#include <map>
+
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -154,7 +156,7 @@ bool L2RotationAveraging
   {
     return false;
   }
-  else
+  // else
   {
     // Sort abs(eigenvalues)
     std::vector<std::pair<double, Vec> > eigs(AtA.cols());
@@ -327,5 +329,3 @@ bool L2RotationAveraging_Refine
 } // namespace l2
 } // namespace rotation_averaging
 } // namespace openMVG
-
-

@@ -26,9 +26,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/numeric/numeric.h"
-#include <iostream>
+
 #include <fstream>
-#include <string>
 
 namespace openMVG {
 
@@ -116,21 +115,19 @@ Mat3 LookAt2(const Vec3 &eyePosition3D,
 void MeanAndVarianceAlongRows(const Mat &A,
   Vec *mean_pointer,
   Vec *variance_pointer) {
-    Vec &mean = *mean_pointer;
-    Vec &variance = *variance_pointer;
-    Mat::Index n = A.rows();
-    double m = static_cast<double>(A.cols());
-    mean = variance = Vec::Zero(n);
+  const Mat::Index n = A.rows();
+  const double m = static_cast<double>(A.cols());
+  (*mean_pointer) = Vec::Zero(n);
+  (*variance_pointer) = Vec::Zero(n);
 
-    for (Mat::Index i = 0; i < n; ++i) {
-      mean(i) += A.row(i).array().sum();
-      variance(i) += (A.row(i).array() * A.row(i).array()).array().sum();
-    }
-
-    mean /= m;
-    for (Mat::Index i = 0; i < n; ++i) {
-      variance(i) = variance(i) / m - Square(mean(i));
-    }
+  for (Mat::Index i = 0; i < n; ++i) {
+    (*mean_pointer)(i) += A.row(i).array().sum();
+    (*variance_pointer)(i) += (A.row(i).array() * A.row(i).array()).array().sum();
+  }
+  (*mean_pointer) /= m;
+  for (Mat::Index i = 0; i < n; ++i) {
+    (*variance_pointer)(i) = (*variance_pointer)(i) / m - Square((*mean_pointer)(i));
+  }
 }
 
 bool exportMatToTextFile(const Mat & mat, const std::string & filename,
@@ -155,4 +152,3 @@ bool exportMatToTextFile(const Mat & mat, const std::string & filename,
 }
 
 }  // namespace openMVG
-

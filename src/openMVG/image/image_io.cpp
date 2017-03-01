@@ -6,17 +6,15 @@
 
 #include "openMVG/image/image.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <iostream>
-#include <cmath>
 
 extern "C" {
   #include "png.h"
   #include "tiffio.h"
   #include "jpeglib.h"
 }
-
-using namespace std;
 
 namespace openMVG {
 namespace image {
@@ -51,7 +49,7 @@ Format GetFormat(const char *c) {
 }
 
 int ReadImage(const char *filename,
-              vector<unsigned char> * ptr,
+              std::vector<unsigned char> * ptr,
               int * w,
               int * h,
               int * depth){
@@ -72,7 +70,7 @@ int ReadImage(const char *filename,
 }
 
 int WriteImage(const char * filename,
-              const vector<unsigned char> & ptr,
+              const std::vector<unsigned char> & ptr,
               int w,
               int h,
               int depth){
@@ -93,14 +91,14 @@ int WriteImage(const char * filename,
 }
 
 int ReadJpg(const char * filename,
-            vector<unsigned char> * ptr,
+            std::vector<unsigned char> * ptr,
             int * w,
             int * h,
             int * depth) {
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadJpgStream(file, ptr, w, h, depth);
@@ -122,7 +120,7 @@ jpeg_error (j_common_ptr cinfo)
 }
 
 int ReadJpgStream(FILE * file,
-                  vector<unsigned char> * ptr,
+                  std::vector<unsigned char> * ptr,
                   int * w,
                   int * h,
                   int * depth) {
@@ -132,7 +130,7 @@ int ReadJpgStream(FILE * file,
   jerr.pub.error_exit = &jpeg_error;
 
   if (setjmp(jerr.setjmp_buffer)) {
-    cerr << "Error JPG: Failed to decompress.";
+    std::cerr << "Error JPG: Failed to decompress.";
     jpeg_destroy_decompress(&cinfo);
     return 0;
   }
@@ -164,14 +162,14 @@ int ReadJpgStream(FILE * file,
 
 
 int WriteJpg(const char * filename,
-             const vector<unsigned char> & array,
+             const std::vector<unsigned char> & array,
              int w,
              int h,
              int depth,
              int quality) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = WriteJpgStream(file, array, w, h, depth, quality);
@@ -180,13 +178,13 @@ int WriteJpg(const char * filename,
 }
 
 int WriteJpgStream(FILE *file,
-                   const vector<unsigned char> & array,
+                   const std::vector<unsigned char> & array,
                    int w,
                    int h,
                    int depth,
                    int quality) {
   if (quality < 0 || quality > 100)
-    cerr << "Error: The quality parameter should be between 0 and 100";
+    std::cerr << "Error: The quality parameter should be between 0 and 100";
 
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -204,7 +202,7 @@ int WriteJpgStream(FILE *file,
   } else if (cinfo.input_components==1) {
     cinfo.in_color_space = JCS_GRAYSCALE;
   } else {
-    cerr << "Error: Unsupported number of channels in file";
+    std::cerr << "Error: Unsupported number of channels in file";
     jpeg_destroy_compress(&cinfo);
     return 0;
   }
@@ -235,13 +233,13 @@ int WriteJpgStream(FILE *file,
 }
 
 int ReadPng(const char *filename,
-            vector<unsigned char> * ptr,
+            std::vector<unsigned char> * ptr,
             int * w,
             int * h,
             int * depth) {
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadPngStream(file, ptr, w, h, depth);
@@ -250,7 +248,7 @@ int ReadPng(const char *filename,
 }
 
 int ReadPngStream(FILE *file,
-                  vector<unsigned char> * ptr,
+                  std::vector<unsigned char> * ptr,
                   int * w,
                   int * h,
                   int * depth)  {
@@ -357,13 +355,13 @@ int ReadPngStream(FILE *file,
 }
 
 int WritePng(const char * filename,
-             const vector<unsigned char> & ptr,
+             const std::vector<unsigned char> & ptr,
              int w,
              int h,
              int depth) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = WritePngStream(file, ptr, w, h, depth);
@@ -372,7 +370,7 @@ int WritePng(const char * filename,
 }
 
 int WritePngStream(FILE * file,
-                   const vector<unsigned char> & ptr,
+                   const std::vector<unsigned char> & ptr,
                    int w,
                    int h,
                    int depth) {
@@ -420,13 +418,13 @@ int WritePngStream(FILE * file,
 }
 
 int ReadPnm(const char * filename,
-            vector<unsigned char> * array,
+            std::vector<unsigned char> * array,
             int * w,
             int * h,
             int * depth)  {
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = ReadPnmStream(file, array, w, h, depth);
@@ -439,7 +437,7 @@ int ReadPnm(const char * filename,
 //   http://netpbm.sourceforge.net/doc/pgm.html
 // and http://netpbm.sourceforge.net/doc/pbm.html
 int ReadPnmStream(FILE *file,
-                  vector<unsigned char> * array,
+                  std::vector<unsigned char> * array,
                   int * w,
                   int * h,
                   int * depth) {
@@ -516,13 +514,13 @@ int ReadPnmStream(FILE *file,
 }
 
 int WritePnm(const char * filename,
-              const vector<unsigned char> & array,
+              const std::vector<unsigned char> & array,
               int w,
               int h,
               int depth) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = WritePnmStream(file, array, w, h, depth);
@@ -532,7 +530,7 @@ int WritePnm(const char * filename,
 
 
 int WritePnmStream(FILE * file,
-                   const vector<unsigned char> & array,
+                   const std::vector<unsigned char> & array,
                    int w,
                    int h,
                    int depth) {
@@ -557,7 +555,7 @@ int WritePnmStream(FILE * file,
 }
 
 int ReadTiff(const char * filename,
-  vector<unsigned char> * ptr,
+  std::vector<unsigned char> * ptr,
   int * w,
   int * h,
   int * depth)
@@ -598,7 +596,7 @@ int ReadTiff(const char * filename,
 }
 
 int WriteTiff(const char * filename,
-  const vector<unsigned char> & ptr,
+  const std::vector<unsigned char> & ptr,
   int w,
   int h,
   int depth)
@@ -710,7 +708,7 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
 

@@ -441,6 +441,76 @@ TEST(Jet, Jet) {
     ExpectJetsClose(sin(asin(b)), b);
     ExpectJetsClose(asin(sin(b)), b);
   }
+
+  {
+    J zero = J(0.0);
+
+    // Check that J0(0) == 1.
+    ExpectJetsClose(BesselJ0(zero), J(1.0));
+
+    // Check that J1(0) == 0.
+    ExpectJetsClose(BesselJ1(zero), zero);
+
+    // Check that J2(0) == 0.
+    ExpectJetsClose(BesselJn(2, zero), zero);
+
+    // Check that J3(0) == 0.
+    ExpectJetsClose(BesselJn(3, zero), zero);
+
+    J z = MakeJet(0.1, -2.7, 1e-3);
+
+    // Check that J0(z) == Jn(0,z).
+    ExpectJetsClose(BesselJ0(z), BesselJn(0, z));
+
+    // Check that J1(z) == Jn(1,z).
+    ExpectJetsClose(BesselJ1(z), BesselJn(1, z));
+
+    // Check that J0(z)+J2(z) == (2/z)*J1(z).
+    // See formula http://dlmf.nist.gov/10.6.E1
+    ExpectJetsClose(BesselJ0(z) + BesselJn(2, z), (2.0 / z) * BesselJ1(z));
+  }
+
+  { // Check that floor of a positive number works.
+    J a = MakeJet(0.1, -2.7, 1e-3);
+    J b = floor(a);
+    J expected = MakeJet(floor(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
+
+  { // Check that floor of a negative number works.
+    J a = MakeJet(-1.1, -2.7, 1e-3);
+    J b = floor(a);
+    J expected = MakeJet(floor(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
+
+  { // Check that floor of a positive number works.
+    J a = MakeJet(10.123, -2.7, 1e-3);
+    J b = floor(a);
+    J expected = MakeJet(floor(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
+
+  { // Check that ceil of a positive number works.
+    J a = MakeJet(0.1, -2.7, 1e-3);
+    J b = ceil(a);
+    J expected = MakeJet(ceil(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
+
+  { // Check that ceil of a negative number works.
+    J a = MakeJet(-1.1, -2.7, 1e-3);
+    J b = ceil(a);
+    J expected = MakeJet(ceil(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
+
+  { // Check that ceil of a positive number works.
+    J a = MakeJet(10.123, -2.7, 1e-3);
+    J b = ceil(a);
+    J expected = MakeJet(ceil(a.a), 0.0, 0.0);
+    EXPECT_EQ(expected, b);
+  }
 }
 
 TEST(Jet, JetsInEigenMatrices) {

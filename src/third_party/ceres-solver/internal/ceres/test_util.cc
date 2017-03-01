@@ -117,7 +117,10 @@ void ExpectArraysClose(int n,
   CHECK(q);
 
   for (int i = 0; i < n; ++i) {
-    EXPECT_NEAR(p[i], q[i], tol) << "i=" << i;
+    EXPECT_TRUE(ExpectClose(p[i], q[i], tol))
+        << "p[" << i << "]" << p[i] << " "
+        << "q[" << i << "]" << q[i] << " "
+        << "tol: " << tol;
   }
 }
 

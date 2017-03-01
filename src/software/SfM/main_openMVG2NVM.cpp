@@ -31,10 +31,10 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
                     const std::string sOutDirectory ,
                     const std::string filename )
 {
-  const string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
+  const std::string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
   if ( !stlplus::folder_exists( sOutViewsDirectory ) )
   {
-    cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+    std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
     stlplus::folder_create( sOutViewsDirectory );
   }
 
@@ -237,7 +237,7 @@ bool exportToNVM( const SfM_Data & sfm_data , const std::string & sOutDirectory 
   bool bOk = false ;
   if ( !stlplus::is_folder( sOutDirectory ) )
   {
-    cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
     stlplus::folder_create( sOutDirectory );
     bOk = stlplus::is_folder( sOutDirectory );
   }

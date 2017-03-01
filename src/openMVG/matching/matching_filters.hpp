@@ -5,10 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_MATCHINGFILTERS_H
-#define OPENMVG_MATCHING_MATCHINGFILTERS_H
+#ifndef OPENMVG_MATCHING_MATCHING_FILTERS_HPP
+#define OPENMVG_MATCHING_MATCHING_FILTERS_HPP
 
 #include "openMVG/matching/indMatch.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -17,8 +18,6 @@
 
 namespace openMVG {
 namespace matching {
-
-using namespace std;
 
 /**
   * Nearest neighbor distance ratio filtering ( a < fratio * b) :
@@ -74,10 +73,13 @@ inline void NNdistanceRatio
   * \return void.
   */
 // TODO
-inline void SymmetricMatches(const vector<int> & vec_matches,
-  const vector<int> & vec_reversematches,
+inline void SymmetricMatches
+(
+  const std::vector<int> & vec_matches,
+  const std::vector<int> & vec_reversematches,
   int NN,
-  vector<int> & vec_goodIndex)
+  std::vector<int> & vec_goodIndex
+)
 {
   assert (NN >= 1);
 
@@ -104,9 +106,12 @@ inline void SymmetricMatches(const vector<int> & vec_matches,
   * \return void.
   */
 template <typename Iterator, typename Type>
-inline void IntersectMatches( Iterator aStart, Iterator aEnd,
-                       Iterator bStart, Iterator bEnd,
-                       vector<Type> & vec_out)
+inline void IntersectMatches
+(
+  Iterator aStart, Iterator aEnd,
+  Iterator bStart, Iterator bEnd,
+  std::vector<Type> & vec_out
+)
 {
   //-- Compute the intersection of the two vector
   //--- Use STL to perform it. Require that the input vectors are sorted.
@@ -115,7 +120,7 @@ inline void IntersectMatches( Iterator aStart, Iterator aEnd,
                          bStart, bEnd,
                          std::inserter( intersect, intersect.begin() ) );
 
-  vec_out = vector<Type>(intersect.begin(), intersect.end());
+  vec_out = std::vector<Type>(intersect.begin(), intersect.end());
 }
 
 enum eMatchFilter
@@ -125,16 +130,19 @@ enum eMatchFilter
   MATCHFILER_SYM_AND_NNDISTANCERATIO = MATCHFILTER_SYMMETRIC | MATCHFILTER_NNDISTANCERATIO
 };
 
-inline void Filter( int NN,
-       const vector<int> & vec_Matches01,
-       const vector<float> & vec_distance01,
-       const vector<int> & vec_Matches10,
-       const vector<float> & vec_distance10,
-       vector<IndMatch> & vec_outIndex,
-       eMatchFilter matchFilter,
-       float fNNDistanceRatio = 0.6f)
+inline void Filter
+(
+  int NN,
+  const std::vector<int> & vec_Matches01,
+  const std::vector<float> & vec_distance01,
+  const std::vector<int> & vec_Matches10,
+  const std::vector<float> & vec_distance10,
+  std::vector<IndMatch> & vec_outIndex,
+  eMatchFilter matchFilter,
+  float fNNDistanceRatio = 0.6f
+)
 {
-  vector<int> vec_symmetricIndex, vec_NNDistRatioIndexes;
+  std::vector<int> vec_symmetricIndex, vec_NNDistRatioIndexes;
 
   if (matchFilter == MATCHFILTER_SYMMETRIC ||
       matchFilter == MATCHFILER_SYM_AND_NNDISTANCERATIO)
@@ -182,7 +190,7 @@ inline void Filter( int NN,
 
   case MATCHFILER_SYM_AND_NNDISTANCERATIO:
 
-    vector<int> vec_indexes;
+    std::vector<int> vec_indexes;
     //-- Compute the intersection of the two vector
     IntersectMatches(vec_symmetricIndex.begin(), vec_symmetricIndex.end(),
       vec_NNDistRatioIndexes.begin(), vec_NNDistRatioIndexes.end(),
@@ -207,4 +215,4 @@ inline void Filter( int NN,
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_MATCHINGFILTERS_H
+#endif // OPENMVG_MATCHING_MATCHING_FILTERS_HPP

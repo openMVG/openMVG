@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_COLORHARMONIZATION_FULLFRAME_H
-#define OPENMVG_COLORHARMONIZATION_FULLFRAME_H
+#ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_FULLFRAME_HPP
+#define OPENMVG_COLOR_HARMONIZATION_SELECTION_FULLFRAME_HPP
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
 

@@ -4,14 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/test_data_sets.hpp"
-#include "CppUnitLite/TestHarness.h"
-#include "testing/testing.h"
-
 #include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
+#include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
-#include "openMVG/multiview/projection.hpp"
+
+#include "CppUnitLite/TestHarness.h"
+#include "testing/testing.h"
 
 #include <iostream>
 #include <vector>
@@ -31,22 +31,22 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
 
   const int nResectionCameraIndex = 2;
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._R[nResectionCameraIndex] = Mat3::Zero();
-  d2._t[nResectionCameraIndex] = Vec3::Zero();
+  d2._R[nResectionCameraIndex].fill(0.0);
+  d2._t[nResectionCameraIndex].fill(0.0);
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
+    using KernelType = lInfinityCV::kernel::l1PoseResectionKernel;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(2*Square(0.6));
-    Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
 
     // Check that Projection matrix is near to the GT :
-    Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
-                                / d.P(nResectionCameraIndex).norm();
-    Mat34 COMPUTED_ProjectionMatrix = P.array() / P.norm();
+    const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
+      / d.P(nResectionCameraIndex).norm();
+    const Mat34 COMPUTED_ProjectionMatrix = P.array() / P.norm();
 
     // Extract K[R|t]
     Mat3 R,K;
@@ -76,8 +76,8 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
   const int nResectionCameraIndex = 2;
   //-- Set to 0 the future computed data to be sure of computation results :
-  d2._R[nResectionCameraIndex] = Mat3::Zero();
-  d2._t[nResectionCameraIndex] = Vec3::Zero();
+  d2._R[nResectionCameraIndex].fill(0.0);
+  d2._t[nResectionCameraIndex].fill(0.0);
 
   // Set 20% of the 3D point as outlier
   const int nbOutlier = nbPoints*0.2;
@@ -90,17 +90,17 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
   // Solve the problem and check that fitted value are good enough
   {
-    typedef  lInfinityCV::kernel::l1PoseResectionKernel KernelType;
+    using KernelType = lInfinityCV::kernel::l1PoseResectionKernel;
     const Mat & pt2D = d2._x[nResectionCameraIndex];
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(Square(0.1)); //Highly intolerant for the test
-    Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
 
     // Check that Projection matrix is near to the GT :
-    Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
+    const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
       / d.P(nResectionCameraIndex).norm();
-    Mat34 COMPUTED_ProjectionMatrix = P.array() / P.norm();
+    const Mat34 COMPUTED_ProjectionMatrix = P.array() / P.norm();
 
     // Extract K[R|t]
     Mat3 R,K;

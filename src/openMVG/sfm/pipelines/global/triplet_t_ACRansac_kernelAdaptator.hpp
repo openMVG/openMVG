@@ -5,14 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
-#define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
+#ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
+#define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/conditioning.hpp"
-
-#include "openMVG/linearProgramming/linearProgramming.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG{
 namespace sfm{
@@ -26,8 +23,8 @@ template <typename SolverArg,
 class TranslationTripletKernel_ACRansac
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
   TranslationTripletKernel_ACRansac
   (
@@ -58,7 +55,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
 
     // Create a model from the points
     Solver::Solve(
@@ -68,7 +65,7 @@ public:
                   vec_KR_, models, ThresholdUpperBound_);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorArg::Error(model, x1n_.col(sample), x2n_.col(sample), x3n_.col(sample));
   }
 
@@ -109,4 +106,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
+#endif // OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP

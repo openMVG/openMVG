@@ -5,10 +5,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
+
 #include "testing/testing.h"
 
-#include <string>
 #include <sstream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::image;

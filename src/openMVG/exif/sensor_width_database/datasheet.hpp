@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef DATASHEET_HPP
-#define DATASHEET_HPP
+#ifndef OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
+#define OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
 
 #include "openMVG/stl/split.hpp"
 
@@ -86,5 +86,5 @@ struct Datasheet
 };
 
 
-#endif // DATASHEET_HPP
+#endif // OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
 
