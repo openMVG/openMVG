@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
-#define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
+#define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 
+#include <cstdlib>
 #include <random>
-#include <stdlib.h>
 #include <vector>
 
 namespace openMVG {
@@ -35,9 +35,9 @@ namespace
 */
 inline void UniformSample
 (
-  size_t num_samples,
-  size_t total_samples,
-  std::vector<size_t> *samples
+  uint32_t num_samples,
+  uint32_t total_samples,
+  std::vector<uint32_t> *samples
 )
 {
   std::uniform_int_distribution<unsigned int> distribution(0, total_samples-1);
@@ -95,4 +95,4 @@ inline bool UniformSample
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
+#endif // OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP

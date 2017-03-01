@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EXIF_IO_HPP
-#define EXIF_IO_HPP
+#ifndef OPENMVG_EXIF_EXIF_IO_HPP
+#define OPENMVG_EXIF_EXIF_IO_HPP
 
 #include <string>
 
@@ -109,5 +109,6 @@ class Exif_IO
 
 } // namespace exif
 } // namespace openMVG
-#endif //EXIF_IO_HPP
+
+#endif // OPENMVG_EXIF_EXIF_IO_HPP
 

@@ -4,12 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_HALF_SPACE_HPP_
-#define OPENMVG_GEOMETRY_HALF_SPACE_HPP_
+#ifndef OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
+#define OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
 
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION( Eigen::Hyperplane<double, 3> )
 
 namespace openMVG
@@ -20,10 +22,10 @@ namespace halfPlane
 {
 
 /// Define the Half_plane equation (abcd coefficients)
-typedef Eigen::Hyperplane<double, 3> Half_plane;
+using Half_plane = Eigen::Hyperplane<double, 3>;
 
 /// Define a collection of Half_plane
-typedef std::vector<Half_plane> Half_planes;
+using Half_planes = std::vector<Half_plane>;
 
 
 /**
@@ -146,8 +148,36 @@ struct HalfPlaneObject
   }
 };
 
+/**
+* @brief Test if multiple defined 'volume' intersect
+* @param hplanes A vector of HalfPlaneObject
+* @retval true If a non-empty intersection exists
+* @retval false If there's no intersection
+*/
+inline bool
+intersect
+(
+  const std::vector<HalfPlaneObject> & hplanes
+)
+{
+  // Compute the total number of half-planes
+  std::size_t s = 0;
+  std::for_each(hplanes.cbegin(), hplanes.cend(),
+                [&s](const HalfPlaneObject & hp) { s += hp.planes.size(); });
+
+  // Concatenate the half-planes and see if an intersection exists
+  std::vector<Half_plane> vec_planes;
+  vec_planes.reserve(s);
+  for (const HalfPlaneObject & hp : hplanes)
+  {
+    vec_planes.insert(vec_planes.end(), hp.planes.cbegin(), hp.planes.cend());
+  }
+
+  return halfPlane::isNotEmpty(vec_planes);
+}
+
 } // namespace halfPlane
 } // namespace geometry
 } // namespace openMVG
 
-#endif // OPENMVG_GEOMETRY_HALF_SPACE_HPP_
+#endif // OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP

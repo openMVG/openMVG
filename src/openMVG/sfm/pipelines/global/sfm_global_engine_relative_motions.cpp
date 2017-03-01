@@ -6,15 +6,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
-#include "third_party/htmlDoc/htmlDoc.hpp"
 
+#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
-#include "openMVG/system/timer.hpp"
 #include "openMVG/stl/stl.hpp"
-#include "openMVG/multiview/essential.hpp"
+#include "openMVG/system/timer.hpp"
 
+#include <ceres/types.h>
+
+#include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
 
 #ifdef _MSC_VER
@@ -347,7 +349,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       //-- Display stats:
       //    - number of images
       //    - number of tracks
-      std::set<size_t> set_imagesId;
+      std::set<uint32_t> set_imagesId;
       TracksUtilsMap::ImageIdInTracks(map_selectedTracks, set_imagesId);
       osTrack << "------------------" << "\n"
         << "-- Tracks Stats --" << "\n"
@@ -355,15 +357,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         << " Images Id: " << "\n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),
-        std::ostream_iterator<size_t>(osTrack, ", "));
+        std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<size_t, size_t> map_Occurence_TrackLength;
+      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
       TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (std::map<size_t, size_t>::const_iterator iter = map_Occurence_TrackLength.begin();
-        iter != map_Occurence_TrackLength.end(); ++iter)  {
-        osTrack << "\t" << iter->first << "\t" << iter->second << "\n";
+      for (const auto & iter : map_Occurence_TrackLength)  {
+        osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
       std::cout << osTrack.str();
@@ -406,7 +407,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       Optimize_Options(
         Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
         Extrinsic_Parameter_Type::ADJUST_TRANSLATION, // Rotations are held as constant
-        Structure_Parameter_Type::ADJUST_ALL)
+        Structure_Parameter_Type::ADJUST_ALL,
+        Control_Point_Parameter(),
+        this->b_use_motion_prior_)
     );
   if (b_BA_Status)
   {
@@ -424,7 +427,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -442,7 +447,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           ReconstructionEngine::intrinsic_refinement_options_,
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -489,7 +496,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   const Optimize_Options ba_refine_options(
     ReconstructionEngine::intrinsic_refinement_options_,
     Extrinsic_Parameter_Type::ADJUST_ALL,  // adjust camera motion
-    Structure_Parameter_Type::ADJUST_ALL); // adjust scene structure
+    Structure_Parameter_Type::ADJUST_ALL,  // adjust scene structure
+    Control_Point_Parameter(),
+    this->b_use_motion_prior_);
 
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   if (b_BA_Status && !sLogging_file_.empty())
@@ -511,7 +520,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Build the Relative pose graph from matches:
   //
   /// pairwise view relation between poseIds
-  typedef std::map< Pair, Pair_Set > PoseWiseMatches;
+  using PoseWiseMatches = std::map< Pair, Pair_Set >;
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;
@@ -624,7 +633,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
           const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
-          TriangulateDLT(P1, x1_, P2, x2_, &X);
+          TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
           Observations obs;
           obs[view_I->id_view] = Observation(x1_, matches[k].i_);
           obs[view_J->id_view] = Observation(x2_, matches[k].j_);
@@ -717,4 +726,3 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
 } // namespace sfm
 } // namespace openMVG
-

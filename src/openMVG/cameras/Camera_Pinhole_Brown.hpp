@@ -5,11 +5,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
-#define OPENMVG_CAMERA_PINHOLE_BROWN_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
 
@@ -25,7 +25,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Brown_T2 class_type;
+  using class_type = Pinhole_Intrinsic_Brown_T2;
 
   protected:
 
@@ -95,12 +95,14 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     */
     virtual Vec2 remove_disto( const Vec2 & p ) const override
     {
-      const double epsilon = 1e-8; //criteria to stop the iteration
+      const double epsilon = 1e-10; //criteria to stop the iteration
       Vec2 p_u = p;
 
-      while( ( add_disto( p_u ) - p ).lpNorm<1>() > epsilon ) //manhattan distance between the two points
+      Vec2 d = distoFunction(params_, p_u);
+      while ((p_u + d - p).lpNorm<1>() > epsilon) //manhattan distance between the two points
       {
-        p_u = p - distoFunction( params_, p_u );
+        p_u = p - d;
+        d = distoFunction(params_, p_u);
       }
 
       return p_u;
@@ -257,4 +259,4 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Brown_T2, "pinhole_brown_t2" );
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Brown_T2)
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP

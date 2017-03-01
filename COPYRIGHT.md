@@ -76,10 +76,6 @@ This program includes works distributed under the terms of another license(s) an
     Copyright (c) 1991-1997 Silicon Graphics, Inc.
     Licensed under a BSD-like license.
 
-*   __tinythread__<br />
-    Copyright (c) 2010-2012 Marcus Geelnard.
-    Licensed under the [zlib/libpng license](http://www.opensource.org/licenses/zlib-license.php).
-
 *   __vectorGraphics__<br />
     Copyright (c) Pierre Moulon
     Licensed under the [MPL2 license](http://opensource.org/licenses/MPL-2.0).

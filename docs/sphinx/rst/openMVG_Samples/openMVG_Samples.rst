@@ -115,5 +115,9 @@ cameras_undisto_Brown
 Show how:
   - undistord a picture according known Brown radial parameters.
 
+openMVG_sample_pano_converter
+------------------------------
+
+Show how extract many rectilinear images from a spherical panorama.
 
 **Don't hesitate to help to extend the list.**

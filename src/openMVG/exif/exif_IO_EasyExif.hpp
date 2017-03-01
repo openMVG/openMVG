@@ -4,13 +4,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EXIF_IO_EASYEXIF_HPP
-#define EXIF_IO_EASYEXIF_HPP
+#ifndef OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
+#define OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
 
 #include "openMVG/exif/exif_IO.hpp"
+
 #include "third_party/easyexif/exif.h"
 
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -227,7 +229,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSLatitude(double * latitude) const override
     {
-      if (exifInfo_.GeoLocation.Latitude != 0.0)
+      if (exifInfo_.GeoLocation.Latitude != std::numeric_limits<double>::infinity())
       {
         (*latitude) = exifInfo_.GeoLocation.Latitude;
         return true;
@@ -241,7 +243,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSLongitude(double * longitude) const override
     {
-      if (exifInfo_.GeoLocation.Longitude != 0.0)
+      if (exifInfo_.GeoLocation.Longitude != std::numeric_limits<double>::infinity())
       {
         (*longitude) = exifInfo_.GeoLocation.Longitude;
         return true;
@@ -255,7 +257,7 @@ class Exif_IO_EasyExif : public Exif_IO
     */
     bool GPSAltitude(double * altitude) const  override
     {
-      if (exifInfo_.GeoLocation.Altitude != 0.0)
+      if (exifInfo_.GeoLocation.Altitude != std::numeric_limits<double>::infinity())
       {
         (*altitude) = exifInfo_.GeoLocation.Altitude;
         return true;
@@ -276,4 +278,4 @@ class Exif_IO_EasyExif : public Exif_IO
 } // namespace exif
 } // namespace openMVG
 
-#endif //EXIF_IO_EASYEXIF_HPP
+#endif // OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP

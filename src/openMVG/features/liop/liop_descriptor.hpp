@@ -8,6 +8,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP
+#define OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP
+
+
 //------------------
 //-- Bibliography --
 //------------------
@@ -15,10 +19,9 @@
 //- Authors: Zhenhua Wang, Bin Fan and Fuchao Wu
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
-#pragma once
 
-#include <openMVG/image/image.hpp>
-#include <openMVG/features/feature.hpp>
+#include "openMVG/features/feature.hpp" 
+#include "openMVG/image/image.hpp"
 
 #include <map>
 #include <vector>
@@ -56,3 +59,5 @@ public:
 } // namespace LIOP
 } // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP

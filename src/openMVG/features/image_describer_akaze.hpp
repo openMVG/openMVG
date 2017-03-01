@@ -7,18 +7,19 @@
 #ifndef OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP
 
+
+#include "openMVG/features/akaze/AKAZE.hpp"
+#include "openMVG/features/akaze/mldb_descriptor.hpp"
+#include "openMVG/features/akaze/msurf_descriptor.hpp"
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/liop/liop_descriptor.hpp"
+#include "openMVG/features/regions_factory.hpp"
+
+#include <cereal/cereal.hpp>
+
 #include <iostream>
 #include <numeric>
 
-#include "openMVG/features/image_describer.hpp"
-#include "openMVG/features/regions_factory.hpp"
-#include "openMVG/features/akaze/AKAZE.hpp"
-#include "openMVG/features/akaze/msurf_descriptor.hpp"
-#include "openMVG/features/akaze/mldb_descriptor.hpp"
-#include "openMVG/features/liop/liop_descriptor.hpp"
-#include <cereal/cereal.hpp>
-
-using namespace std;
 
 namespace openMVG {
 namespace features {

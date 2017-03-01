@@ -5,27 +5,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_MATCHINGINTERFACE_H
-#define OPENMVG_MATCHING_MATCHINGINTERFACE_H
+#ifndef OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
+#define OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
+
+#include "openMVG/matching/indMatch.hpp"
 
 #include <vector>
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
-
-using namespace std;
 
 template < typename Scalar, typename Metric >
 class ArrayMatcher
 {
   public:
-  typedef Scalar ScalarT;
-  typedef typename Metric::ResultType DistanceType;
-  typedef Metric MetricT;
+  using ScalarT = Scalar;
+  using DistanceType = typename Metric::ResultType;
+  using MetricT = Metric;
 
-  ArrayMatcher() = default ; 
+  ArrayMatcher() = default ;
   virtual ~ArrayMatcher() = default ;
 
   /**
@@ -74,4 +72,4 @@ class ArrayMatcher
 }  // namespace matching
 }  // namespace openMVG
 
-#endif  // OPENMVG_MATCHING_MATCHINGINTERFACE_H
+#endif  // OPENMVG_MATCHING_MATCHING_INTERFACE_HPP

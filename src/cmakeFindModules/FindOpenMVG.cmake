@@ -38,7 +38,6 @@ SET(OPENMVG_LIBRARIES_NAMES
   openMVG_multiview
   #third_party libraries
   ceres
-  flann_cpp_s
   lemon
   stlplus
   easyexif

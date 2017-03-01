@@ -1,20 +1,20 @@
 
 # libs should be static
-SET(BUILD_SHARED_LIBS OFF)
+set(BUILD_SHARED_LIBS OFF)
 
 # use PIC code for link into shared lib
-IF(UNIX)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-ENDIF(UNIX)
+if(UNIX)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+endif(UNIX)
 
 if(NOT USE_SSE2)
-  ADD_DEFINITIONS(-DVL_DISABLE_SSE2)
+  add_definitions(-DVL_DISABLE_SSE2)
 endif()
 
-ADD_DEFINITIONS(-DVL_DISABLE_THREADS)
+add_definitions(-DVL_DISABLE_THREADS)
 
-INCLUDE_DIRECTORIES(./vl)
-SET(FEATS 
+include_directories(./vl)
+set(FEATS 
   vl/generic.c
   vl/imopv_sse2.c
   vl/sift.c
@@ -24,11 +24,11 @@ SET(FEATS
   vl/host.c
   vl/mathop.c
   vl/random.c)
-SET_SOURCE_FILES_PROPERTIES(${FEATS} PROPERTIES LANGUAGE C)
-ADD_LIBRARY(vlsift ${FEATS})
-INSTALL(TARGETS vlsift DESTINATION lib EXPORT openMVG-targets)
-SET_PROPERTY(TARGET vlsift PROPERTY FOLDER OpenMVG/nonFree)
-INSTALL(
+set_source_files_properties(${FEATS} PROPERTIES LANGUAGE C)
+add_library(vlsift ${FEATS})
+install(TARGETS vlsift DESTINATION lib EXPORT openMVG-targets)
+set_property(TARGET vlsift PROPERTY FOLDER OpenMVG/nonFree)
+install(
   DIRECTORY .
   DESTINATION include/openMVG_dependencies/nonFree/sift
   COMPONENT headers

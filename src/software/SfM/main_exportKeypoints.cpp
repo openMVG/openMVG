@@ -5,8 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/features/svg_features.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/sfm/sfm.hpp"
 
@@ -106,30 +105,18 @@ int main(int argc, char ** argv)
     const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
       view->s_Img_path);
 
-    const std::pair<size_t, size_t>
-      dimImage = std::make_pair(view->ui_width, view->ui_height);
-
-    svgDrawer svgStream( dimImage.first, dimImage.second);
-    svgStream.drawImage(sView_filename,
-      dimImage.first,
-      dimImage.second);
-
-    //-- Draw features
-    const PointFeatures & features = feats_provider->getFeatures(view->id_view);
-    for (size_t i=0; i< features.size(); ++i)  {
-      const PointFeature & feature = features[i];
-      svgStream.drawCircle(feature.x(), feature.y(), 3,
-          svgStyle().stroke("yellow", 2.0));
-    }
-
-    // Write the SVG file
     std::ostringstream os;
     os << stlplus::folder_append_separator(sOutDir)
       << stlplus::basename_part(sView_filename)
-      << "_" << features.size() << "_.svg";
-    std::ofstream svgFile( os.str().c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+      << "_" << feats_provider->getFeatures(view->id_view).size() << "_.svg";
+
+    Features2SVG
+    (
+      sView_filename,
+      {view->ui_width, view->ui_height},
+      feats_provider->getFeatures(view->id_view),
+      os.str()
+    );
   }
   return EXIT_SUCCESS;
 }

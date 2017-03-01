@@ -6,6 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/sfm.hpp"
+
 #include "testing/testing.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 

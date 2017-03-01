@@ -4,11 +4,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_LANDMARK_HPP
-#define OPENMVG_SFM_LANDMARK_HPP
+#ifndef OPENMVG_SFM_SFM_LANDMARK_HPP
+#define OPENMVG_SFM_SFM_LANDMARK_HPP
 
 #include "openMVG/types.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include <cereal/cereal.hpp> // Serialization
 
@@ -44,7 +43,7 @@ struct Observation
   }
 };
 /// Observations are indexed by their View_id
-typedef Hash_Map<IndexT, Observation> Observations;
+using Observations = Hash_Map<IndexT, Observation>;
 
 /// Define a landmark (a 3D point, with it's 2d observations)
 struct Landmark
@@ -71,7 +70,10 @@ struct Landmark
   }
 };
 
+/// Define a collection of landmarks are indexed by their TrackId
+using Landmarks = Hash_Map<IndexT, Landmark>;
+
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_LANDMARK_HPP
+#endif // OPENMVG_SFM_SFM_LANDMARK_HPP

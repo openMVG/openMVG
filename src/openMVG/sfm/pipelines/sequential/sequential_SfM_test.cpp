@@ -19,16 +19,18 @@
 
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
 #include "openMVG/sfm/sfm.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
-using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
+
 
 // Test a scene where all the camera intrinsics are known
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {

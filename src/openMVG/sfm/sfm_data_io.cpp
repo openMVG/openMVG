@@ -6,14 +6,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
-
-#include "openMVG/stl/stlMap.hpp"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
+#include "openMVG/sfm/sfm_data_io_baf.hpp"
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
-#include "openMVG/sfm/sfm_data_io_baf.hpp"
+#include "openMVG/stl/stlMap.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -113,5 +113,3 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
 
 } // namespace sfm
 } // namespace openMVG
-
-

@@ -7,6 +7,7 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/multiview/translation_averaging_test.hpp"
+
 #include "testing/testing.h"
 
 #include <fstream>

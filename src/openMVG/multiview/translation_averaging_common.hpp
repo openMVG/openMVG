@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
-#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
+#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
+#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
 
-#include "openMVG/types.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/types.hpp"
 
 #include <utility>
 #include <vector>
@@ -16,16 +16,16 @@
 namespace openMVG {
 
 /// Relative information [Rij|tij] for a pair
-typedef std::pair< Pair, std::pair<Mat3,Vec3> > relativeInfo;
+using relativeInfo = std::pair< Pair, std::pair<Mat3,Vec3> >;
 
-typedef std::vector< relativeInfo > RelativeInfo_Vec;
-typedef std::map< Pair, std::pair<Mat3, Vec3> > RelativeInfo_Map;
+using RelativeInfo_Vec = std::vector< relativeInfo >;
+using RelativeInfo_Map = std::map< Pair, std::pair<Mat3, Vec3> >;
 
 // List the pairs used by the relative motions
 inline Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
 {
   Pair_Set pair_set;
-  for( const auto & rel : vec_relative ) 
+  for( const auto & rel : vec_relative )
   {
     pair_set.insert(Pair(rel.first.first, rel.first.second));
   }
@@ -50,7 +50,7 @@ inline Pair_Set getPairs(const std::vector<RelativeInfo_Vec> & vec_relative)
 inline std::set<IndexT> getIndexT(const RelativeInfo_Vec & vec_relative)
 {
   std::set<IndexT> indexT_set;
-  for ( const auto & rel : vec_relative ) 
+  for ( const auto & rel : vec_relative )
   {
     indexT_set.insert(rel.first.first);
     indexT_set.insert(rel.first.second);
@@ -76,4 +76,4 @@ inline std::set<IndexT> getIndexT(const std::vector<RelativeInfo_Vec> & vec_rela
 
 } // namespace openMVG
 
-#endif //OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_H_
+#endif // OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP

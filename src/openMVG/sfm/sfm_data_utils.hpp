@@ -4,7 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_SFM_DATA_UTILS_HPP
+#define OPENMVG_SFM_SFM_DATA_UTILS_HPP
 
 namespace openMVG {
 namespace sfm {
@@ -19,3 +20,5 @@ void GroupSharedIntrinsics(SfM_Data & sfm_data);
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_SFM_DATA_UTILS_HPP

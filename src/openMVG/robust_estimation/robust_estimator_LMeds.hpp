@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_LMEDS_H_
-#define OPENMVG_ROBUST_ESTIMATION_LMEDS_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_LMEDS_HPP
+#define OPENMVG_ROBUST_ESTIMATION_LMEDS_HPP
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/robust_estimation/robust_ransac_tools.hpp"
@@ -37,19 +37,19 @@ template <typename Kernel>
   const size_t total_samples = kernel.NumSamples();
 
   std::vector<double> residuals(total_samples); // Array for storing residuals
-  std::vector<size_t> vec_sample(min_samples);
+  std::vector<uint32_t> vec_sample(min_samples);
 
   double dBestMedian = std::numeric_limits<double>::max();
 
   // Required number of iterations is evaluated from outliers ratio
-  const size_t N = (min_samples<total_samples)?
+  const uint32_t N = (min_samples<total_samples)?
     getNumSamples(minProba, outlierRatio, min_samples): 0;
-    
+
   // Precompute the index [0,n] that will be used for random sampling
-  std::vector<size_t> all_samples(total_samples);
+  std::vector<uint32_t> all_samples(total_samples);
   std::iota(all_samples.begin(), all_samples.end(), 0);
 
-  for (size_t i=0; i < N; i++)
+  for (uint32_t i=0; i < N; i++)
   {
     // Get Samples indexes
     UniformSample(min_samples, &all_samples, &vec_sample);
@@ -59,22 +59,22 @@ template <typename Kernel>
     kernel.Fit(vec_sample, &models);
 
     // Now test the solutions on the whole data
-    for (size_t k = 0; k < models.size(); ++k)
+    for (uint32_t k = 0; k < models.size(); ++k)
     {
       //Compute Residuals :
-      for (size_t l = 0; l < total_samples; ++l)
+      for (uint32_t l = 0; l < total_samples; ++l)
       {
         residuals[l] = kernel.Error(l, models[k]);
       }
 
       // Compute median
       const auto itMedian = residuals.begin() +
-        std::size_t( total_samples*(1.-outlierRatio) );
+        uint32_t( total_samples*(1.-outlierRatio) );
       std::nth_element(residuals.begin(), itMedian, residuals.end());
       const double median = *itMedian;
 
       // Store best solution
-      if(median < dBestMedian)
+      if (median < dBestMedian)
       {
         dBestMedian = median;
         if (model) (*model) = models[k];
@@ -97,9 +97,9 @@ template <typename Kernel>
   };
 
   // Evaluate the outlier threshold
-  if(outlierThreshold)
+  if (outlierThreshold)
   {
-    const double sigma = ICDF[int((1.-outlierRatio)*20.)] *
+    const double sigma = ICDF[uint32_t((1.-outlierRatio)*20.)] *
       (1. + 5. / double(total_samples - min_samples));
     *outlierThreshold = (double)(sigma * sigma * dBestMedian * 4.);
     if (N==0) *outlierThreshold = std::numeric_limits<double>::max();
@@ -110,4 +110,5 @@ template <typename Kernel>
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATION_LMEDS_H_
+
+#endif // OPENMVG_ROBUST_ESTIMATION_LMEDS_HPP

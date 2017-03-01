@@ -47,6 +47,9 @@
 #                   by default gflags, although can be configured when building
 #                   gflags to be something else (i.e. google for legacy
 #                   compatibility).
+# FOUND_INSTALLED_GFLAGS_CMAKE_CONFIGURATION: True iff the version of gflags
+#                                             found was built & installed /
+#                                             exported as a CMake package.
 #
 # The following variables control the behaviour of this module when an exported
 # gflags CMake configuration is not found.
@@ -85,9 +88,9 @@
 # Reset CALLERS_CMAKE_FIND_LIBRARY_PREFIXES to its value when FindGflags was
 # invoked, necessary for MSVC.
 macro(GFLAGS_RESET_FIND_LIBRARY_PREFIX)
-  if (MSVC)
+  if (MSVC AND CALLERS_CMAKE_FIND_LIBRARY_PREFIXES)
     set(CMAKE_FIND_LIBRARY_PREFIXES "${CALLERS_CMAKE_FIND_LIBRARY_PREFIXES}")
-  endif (MSVC)
+  endif()
 endmacro(GFLAGS_RESET_FIND_LIBRARY_PREFIX)
 
 # Called if we failed to find gflags or any of it's required dependencies,
@@ -121,6 +124,7 @@ macro(GFLAGS_REPORT_NOT_FOUND REASON_MSG)
     # but continues configuration and allows generation.
     message("-- Failed to find gflags - " ${REASON_MSG} ${ARGN})
   endif ()
+  return()
 endmacro(GFLAGS_REPORT_NOT_FOUND)
 
 # Verify that all variable names passed as arguments are defined (can be empty
@@ -266,6 +270,12 @@ function(GFLAGS_CHECK_GFLAGS_NAMESPACE_USING_REGEX)
     return()
   endif()
 endfunction(GFLAGS_CHECK_GFLAGS_NAMESPACE_USING_REGEX)
+
+# Protect against any alternative find_package scripts for this library having
+# been called previously (in a client project) which set GFLAGS_FOUND, but not
+# the other variables we require / set here which could cause the search logic
+# here to fail.
+unset(GFLAGS_FOUND)
 
 # -----------------------------------------------------------------
 # By default, if the user has expressed no preference for using an exported

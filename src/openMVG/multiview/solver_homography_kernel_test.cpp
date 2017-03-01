@@ -26,9 +26,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <vector>
 #include "openMVG/multiview/solver_homography_kernel.hpp"
+
 #include "testing/testing.h"
+
+#include <vector>
 
 using namespace std;
 using namespace openMVG;
@@ -38,7 +40,7 @@ TEST(HomographyKernelTest, Fitting_Unnormalized) {
   vector<Mat3> H_gt(3);
 
   H_gt[0] = Mat3::Identity();
-  H_gt[1] << 1,  0, -4,
+  H_gt[1] << 1,  0, -4, // Affine homography motion
              0,  1,  5,
              0,  0,  1;
   H_gt[2] << 1, -2,  3,
@@ -58,8 +60,7 @@ TEST(HomographyKernelTest, Fitting_Unnormalized) {
 
     homography::kernel::UnnormalizedKernel kernel(x, y);
 
-    size_t samples_[5]={0,1,2,3,4};
-    vector<size_t> samples(samples_,samples_+5);
+    vector<uint32_t> samples = {0,1,2,3,4};
     for (
       Mat::Index j = 4;
       static_cast<Mat::Index>(samples.size()) < x.cols();
@@ -79,7 +80,7 @@ TEST(HomographyKernelTest, Fitting_Normalized) {
   vector<Mat3> H_gt(3);
 
   H_gt[0] = Mat3::Identity();
-  H_gt[1] << 1,  0, -4,
+  H_gt[1] << 1,  0, -4, // Affine homography motion
              0,  1,  5,
              0,  0,  1;
   H_gt[2] << 1, -2,  3,
@@ -99,8 +100,7 @@ TEST(HomographyKernelTest, Fitting_Normalized) {
 
     homography::kernel::Kernel kernel(x, y);
 
-    size_t samples_[5]={0,1,2,3,4};
-    vector<size_t> samples(samples_,samples_+5);
+    vector<uint32_t> samples = {0,1,2,3,4};
     for (
       Mat::Index j = 4;
       static_cast<Mat::Index>(samples.size()) < x.cols();

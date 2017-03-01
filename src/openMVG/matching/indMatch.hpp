@@ -5,16 +5,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IND_MATCH_H
-#define OPENMVG_MATCHING_IND_MATCH_H
+#ifndef OPENMVG_MATCHING_IND_MATCH_HPP
+#define OPENMVG_MATCHING_IND_MATCH_HPP
 
 #include "openMVG/types.hpp"
 
 #include <cereal/cereal.hpp> // Serialization
 
 #include <iostream>
-#include <set>
 #include <map>
+#include <set>
 #include <vector>
 
 namespace openMVG {
@@ -65,7 +65,7 @@ inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
   return in >> obj.i_ >> obj.j_;
 }
 
-typedef std::vector<matching::IndMatch> IndMatches;
+using IndMatches = std::vector<matching::IndMatch>;
 
 /// Pairwise matches (indexed matches for a pair <I,J>)
 /// The interface used to store corresponding point indexes per images pairs
@@ -116,5 +116,6 @@ namespace cereal
     openMVG::matching::PairWiseMatches,
     cereal::specialization::member_serialize>
   {};
-}
-#endif // OPENMVG_MATCHING_IND_MATCH_H
+} // namespace cereal 
+
+#endif // OPENMVG_MATCHING_IND_MATCH_HPP

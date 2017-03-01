@@ -11,6 +11,7 @@
 
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+      << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
@@ -182,6 +184,12 @@ int main(int argc, char **argv)
         (SIFT_Image_describer::Params(), !bUpRight));
     }
     else
+    if (sImage_Describer_Method == "SIFT_ANATOMY")
+    {
+      image_describer.reset(
+        new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params()));
+    }
+    else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
       image_describer.reset(new AKAZE_Image_describer
@@ -255,7 +263,7 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
 #endif
     for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {

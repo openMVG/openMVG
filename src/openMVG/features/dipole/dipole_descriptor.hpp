@@ -4,13 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
-#define OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
+#ifndef OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
+#define OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
-#include "openMVG/numeric/math_trait.hpp"
 
 //------------------
 //-- Bibliography --
@@ -50,33 +49,33 @@ namespace features
     static const float angleSubdiv = 2.0f * M_PI / 12.0f;
     const float memoizeCos[12] =
     {
-      MathTrait<float>::cos(angle + 0 * angleSubdiv),
-      MathTrait<float>::cos(angle + 1 * angleSubdiv),
-      MathTrait<float>::cos(angle + 2 * angleSubdiv),
-      MathTrait<float>::cos(angle + 3 * angleSubdiv),
-      MathTrait<float>::cos(angle + 4 * angleSubdiv),
-      MathTrait<float>::cos(angle + 5 * angleSubdiv),
-      MathTrait<float>::cos(angle + 6 * angleSubdiv),
-      MathTrait<float>::cos(angle + 7 * angleSubdiv),
-      MathTrait<float>::cos(angle + 8 * angleSubdiv),
-      MathTrait<float>::cos(angle + 9 * angleSubdiv),
-      MathTrait<float>::cos(angle + 10 * angleSubdiv),
-      MathTrait<float>::cos(angle + 11 * angleSubdiv)
+      std::cos(angle + 0.f * angleSubdiv),
+      std::cos(angle + 1.f * angleSubdiv),
+      std::cos(angle + 2.f * angleSubdiv),
+      std::cos(angle + 3.f * angleSubdiv),
+      std::cos(angle + 4.f * angleSubdiv),
+      std::cos(angle + 5.f * angleSubdiv),
+      std::cos(angle + 6.f * angleSubdiv),
+      std::cos(angle + 7.f * angleSubdiv),
+      std::cos(angle + 8.f * angleSubdiv),
+      std::cos(angle + 9.f * angleSubdiv),
+      std::cos(angle + 10.f * angleSubdiv),
+      std::cos(angle + 11.f * angleSubdiv)
     };
     const float memoizeSin[12] =
     {
-      MathTrait<float>::sin(angle + 0 * angleSubdiv),
-      MathTrait<float>::sin(angle + 1 * angleSubdiv),
-      MathTrait<float>::sin(angle + 2 * angleSubdiv),
-      MathTrait<float>::sin(angle + 3 * angleSubdiv),
-      MathTrait<float>::sin(angle + 4 * angleSubdiv),
-      MathTrait<float>::sin(angle + 5 * angleSubdiv),
-      MathTrait<float>::sin(angle + 6 * angleSubdiv),
-      MathTrait<float>::sin(angle + 7 * angleSubdiv),
-      MathTrait<float>::sin(angle + 8 * angleSubdiv),
-      MathTrait<float>::sin(angle + 9 * angleSubdiv),
-      MathTrait<float>::sin(angle + 10 * angleSubdiv),
-      MathTrait<float>::sin(angle + 11 * angleSubdiv)
+      std::sin(angle + 0.f * angleSubdiv),
+      std::sin(angle + 1.f * angleSubdiv),
+      std::sin(angle + 2.f * angleSubdiv),
+      std::sin(angle + 3.f * angleSubdiv),
+      std::sin(angle + 4.f * angleSubdiv),
+      std::sin(angle + 5.f * angleSubdiv),
+      std::sin(angle + 6.f * angleSubdiv),
+      std::sin(angle + 7.f * angleSubdiv),
+      std::sin(angle + 8.f * angleSubdiv),
+      std::sin(angle + 9.f * angleSubdiv),
+      std::sin(angle + 10.f * angleSubdiv),
+      std::sin(angle + 11.f * angleSubdiv)
     };
 
     Vecf dipoleF1(12);
@@ -138,12 +137,12 @@ namespace features
     Vecf dipoleF1(12);
     for (int i = 0; i < 12; ++i)
     {
-      const float xi = cx + lambda1 * MathTrait<float>::cos(angle + i * angleSubdiv);
-      const float yi = cy + lambda1 * MathTrait<float>::sin(angle + i * angleSubdiv);
-      const float xi0 = cx + lambda1 * MathTrait<float>::cos(angle + i * angleSubdiv - angleSubdiv/2.0);
-      const float yi0 = cy + lambda1 * MathTrait<float>::sin(angle + i * angleSubdiv - angleSubdiv/2.0);
-      const float xi3 = cx + lambda1 * MathTrait<float>::cos(angle + i * angleSubdiv + angleSubdiv/2.0);
-      const float yi3 = cy + lambda1 * MathTrait<float>::sin(angle + i * angleSubdiv + angleSubdiv/2.0);
+      const float xi = cx + lambda1 * std::cos(angle + i * angleSubdiv);
+      const float yi = cy + lambda1 * std::sin(angle + i * angleSubdiv);
+      const float xi0 = cx + lambda1 * std::cos(angle + i * angleSubdiv - angleSubdiv/2.0);
+      const float yi0 = cy + lambda1 * std::sin(angle + i * angleSubdiv - angleSubdiv/2.0);
+      const float xi3 = cx + lambda1 * std::cos(angle + i * angleSubdiv + angleSubdiv/2.0);
+      const float yi3 = cy + lambda1 * std::sin(angle + i * angleSubdiv + angleSubdiv/2.0);
       // Bilinear interpolation
       dipoleF1(i) =
         (sampler(image, yi, xi) +
@@ -165,19 +164,19 @@ namespace features
     for (int i = 0; i < 12; ++i)
     {
       const double angleSample = i * angleSubdiv;
-      const float xi = cx + (lambda1 + lambda2) * MathTrait<float>::cos(angle + angleSample);
-      const float yi = cy + (lambda1 + lambda2) * MathTrait<float>::sin(angle + angleSample);
-      const float xi0 = cx + (lambda1 + lambda2) * MathTrait<float>::cos(angle + angleSample - angleSubdiv/2.0);
-      const float yi0 = cy + (lambda1 + lambda2) * MathTrait<float>::sin(angle + angleSample - angleSubdiv/2.0);
-      const float xi3 = cx + (lambda1 + lambda2) * MathTrait<float>::cos(angle + angleSample + angleSubdiv/2.0);
-      const float yi3 = cy + (lambda1 + lambda2) * MathTrait<float>::sin(angle + angleSample + angleSubdiv/2.0);
+      const float xi = cx + (lambda1 + lambda2) * std::cos(angle + angleSample);
+      const float yi = cy + (lambda1 + lambda2) * std::sin(angle + angleSample);
+      const float xi0 = cx + (lambda1 + lambda2) * std::cos(angle + angleSample - angleSubdiv/2.0);
+      const float yi0 = cy + (lambda1 + lambda2) * std::sin(angle + angleSample - angleSubdiv/2.0);
+      const float xi3 = cx + (lambda1 + lambda2) * std::cos(angle + angleSample + angleSubdiv/2.0);
+      const float yi3 = cy + (lambda1 + lambda2) * std::sin(angle + angleSample + angleSubdiv/2.0);
 
-      const float xii = cx + (lambda1 - lambda2) * MathTrait<float>::cos(angle + angleSample);
-      const float yii = cy + (lambda1 - lambda2) * MathTrait<float>::sin(angle + angleSample);
-      const float xii0 = cx + (lambda1 - lambda2) * MathTrait<float>::cos(angle + angleSample - angleSubdiv/2.0);
-      const float yii0 = cy + (lambda1 - lambda2) * MathTrait<float>::sin(angle + angleSample - angleSubdiv/2.0);
-      const float xii3 = cx + (lambda1 - lambda2) * MathTrait<float>::cos(angle + angleSample + angleSubdiv/2.0);
-      const float yii3 = cy + (lambda1 - lambda2) * MathTrait<float>::sin(angle + angleSample + angleSubdiv/2.0);
+      const float xii = cx + (lambda1 - lambda2) * std::cos(angle + angleSample);
+      const float yii = cy + (lambda1 - lambda2) * std::sin(angle + angleSample);
+      const float xii0 = cx + (lambda1 - lambda2) * std::cos(angle + angleSample - angleSubdiv/2.0);
+      const float yii0 = cy + (lambda1 - lambda2) * std::sin(angle + angleSample - angleSubdiv/2.0);
+      const float xii3 = cx + (lambda1 - lambda2) * std::cos(angle + angleSample + angleSubdiv/2.0);
+      const float yii3 = cy + (lambda1 - lambda2) * std::sin(angle + angleSample + angleSubdiv/2.0);
 
       // Bilinear interpolation
       dipoleF2(i) =
@@ -221,4 +220,4 @@ namespace features
 } // namespace features
 } // namespace openMVG
 
-#endif // OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_H
+#endif // OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP

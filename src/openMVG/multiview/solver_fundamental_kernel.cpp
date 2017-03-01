@@ -33,8 +33,7 @@ namespace openMVG {
 namespace fundamental {
 namespace kernel {
 
-using namespace std;
-void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
+void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F) {
   assert(2 == x1.rows());
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -43,7 +42,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   Vec9 f1, f2;
   if (x1.cols() == 7) {
     // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
-    typedef Eigen::Matrix<double, 9, 9> Mat9;
+    using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
@@ -59,12 +58,12 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
     Nullspace2(&A, &f1, &f2);
   }
 
-  Mat3 F1 = Map<RMat3>(f1.data());
-  Mat3 F2 = Map<RMat3>(f2.data());
+  const Mat3 F1 = Map<RMat3>(f1.data());
+  const Mat3 F2 = Map<RMat3>(f2.data());
 
   // Then, use the condition det(F) = 0 to determine F. In other words, solve
   // det(F1 + a*F2) = 0 for a.
-  double a = F1(0, 0), j = F2(0, 0),
+  double  a = F1(0, 0), j = F2(0, 0),
           b = F1(0, 1), k = F2(0, 1),
           c = F1(0, 2), l = F2(0, 2),
           d = F1(1, 0), m = F2(1, 0),
@@ -76,7 +75,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
 
   // Run fundamental_7point_coeffs.py to get the below coefficients.
   // The coefficients are in ascending powers of alpha, i.e. P[N]*x^N.
-  double P[4] = {
+  const double P[4] = {
     a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g,
     a*e*r + a*i*n + b*f*p + b*g*o + c*d*q + c*h*m + d*h*l + e*i*j + f*g*k -
     a*f*q - a*h*o - b*d*r - b*i*m - c*e*p - c*g*n - d*i*k - e*g*l - f*h*j,
@@ -86,7 +85,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
 
   // Solve for the roots of P[3]*x^3 + P[2]*x^2 + P[1]*x + P[0] = 0.
   double roots[3];
-  int num_roots = SolveCubicPolynomial(P, roots);
+  const int num_roots = SolveCubicPolynomial(P, roots);
 
   // Build the fundamental matrix for each solution.
   for (int kk = 0; kk < num_roots; ++kk)  {
@@ -94,7 +93,7 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *F) {
   }
 }
 
-void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
+void EightPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs) {
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -102,7 +101,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
 
   Vec9 f;
   if (x1.cols() == 8) {
-    typedef Eigen::Matrix<double, 9, 9> Mat9;
+    using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
@@ -122,8 +121,7 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, vector<Mat3> *Fs) {
   if (x1.cols() > 8) {
     // Force fundamental matrix to have rank 2
     Eigen::JacobiSVD<Mat3> USV(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    Vec3 d = USV.singularValues();
-    d[2] = 0.0;
+    const Vec3 d((Vec3() << USV.singularValues().head<2>(), 0.0).finished());
     F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
   }
   Fs->push_back(F);

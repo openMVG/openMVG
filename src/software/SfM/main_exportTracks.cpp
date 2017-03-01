@@ -7,6 +7,7 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/tracks/tracks.hpp"
@@ -16,14 +17,11 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::tracks;
-using namespace svg;
-
 
 int main(int argc, char ** argv)
 {
@@ -58,7 +56,14 @@ int main(int argc, char ** argv)
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
-
+  if (sMatchesDir.empty()) {
+    std::cerr << "\nmatchdir cannot be an empty option" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if (sMatchFile.empty()) {
+    std::cerr << "\nmatchfile cannot be an empty option" << std::endl;
+    return EXIT_FAILURE;
+  }
 
   //---------------------------------------
   // Read SfM Scene (image view names)
@@ -113,18 +118,17 @@ int main(int argc, char ** argv)
   // ------------
   // For each pair, export the matches
   // ------------
-  const size_t viewCount = sfm_data.GetViews().size();
+  const uint32_t viewCount(sfm_data.GetViews().size());
 
   stlplus::folder_create(sOutDir);
   std::cout << "\n viewCount: " << viewCount << std::endl;
   std::cout << "\n Export pairwise tracks" << std::endl;
   C_Progress_display my_progress_bar( (viewCount*(viewCount-1)) / 2.0 );
 
-  for (size_t I = 0; I < viewCount; ++I)
+  for (uint32_t I = 0; I < viewCount; ++I)
   {
-    for (size_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
+    for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
-
       const View * view_I = sfm_data.GetViews().at(I).get();
       const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
         view_I->s_Img_path);
@@ -132,59 +136,42 @@ int main(int argc, char ** argv)
       const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
         view_J->s_Img_path);
 
-      const std::pair<size_t, size_t>
-        dimImage_I = std::make_pair(view_I->ui_width, view_I->ui_height),
-        dimImage_J = std::make_pair(view_J->ui_width, view_J->ui_height);
-
-      //Get common tracks between view I and J
+      // Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      const std::set<size_t> set_imageIndex = {I,J};
+      const std::set<uint32_t> set_imageIndex = {I,J};
       TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
 
       if (!map_tracksCommon.empty())
       {
-        svgDrawer svgStream( dimImage_I.first + dimImage_J.first, max(dimImage_I.second, dimImage_J.second));
-        svgStream.drawImage(sView_I,
-          dimImage_I.first,
-          dimImage_I.second);
-        svgStream.drawImage(sView_J,
-          dimImage_J.first,
-          dimImage_J.second, dimImage_I.first);
-
-        const PointFeatures & vec_feat_I = feats_provider->getFeatures(view_I->id_view);
-        const PointFeatures & vec_feat_J = feats_provider->getFeatures(view_J->id_view);
-        //-- Draw link between features :
-        for (tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-          iterT != map_tracksCommon.end(); ++ iterT)  {
-
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
-          const PointFeature& imaB = vec_feat_J[ iter->second];
-
-          svgStream.drawLine(imaA.x(), imaA.y(),
-            imaB.x()+dimImage_I.first, imaB.y(),
-            svgStyle().stroke("green", 2.0));
+        // Build corresponding indexes from the two view tracks
+        matching::IndMatches matches;
+        matches.reserve(map_tracksCommon.size());
+        for (const auto & tracks_it : map_tracksCommon)
+        {
+          tracks::submapTrack::const_iterator iter = tracks_it.second.begin();
+          const IndexT i = iter->second; ++iter;
+          const IndexT j = iter->second;
+          matches.emplace_back(i, j);
         }
-
-        //-- Draw features (in two loop, in order to have the features upper the link, svg layer order):
-        for (tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
-          iterT != map_tracksCommon.end(); ++ iterT)  {
-
-          tracks::submapTrack::const_iterator iter = iterT->second.begin();
-          const PointFeature & imaA = vec_feat_I[ iter->second];  ++iter;
-          const PointFeature& imaB = vec_feat_J[ iter->second];
-
-          svgStream.drawCircle(imaA.x(), imaA.y(),
-            3.0, svgStyle().stroke("yellow", 2.0));
-          svgStream.drawCircle(imaB.x() + dimImage_I.first,imaB.y(),
-            3.0, svgStyle().stroke("yellow", 2.0));
-        }
+        
+        // Draw corresponding features
+        const bool bVertical = false;
         std::ostringstream os;
         os << stlplus::folder_append_separator(sOutDir)
            << I << "_" << J
            << "_" << map_tracksCommon.size() << "_.svg";
-        ofstream svgFile( os.str().c_str() );
-        svgFile << svgStream.closeSvgFile().str();
+        Matches2SVG
+        (
+          sView_I,
+          {view_I->ui_width, view_I->ui_height},
+          feats_provider->getFeatures(view_I->id_view),
+          sView_J,
+          {view_J->ui_width, view_J->ui_height},
+          feats_provider->getFeatures(view_J->id_view),
+          matches,
+          os.str(),
+          bVertical
+        );
       }
     }
   }

@@ -1,5 +1,5 @@
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,14 +10,16 @@
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
 
 /// Generic Image Collection image matching
-#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions.hpp"
+#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
+#include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/system/timer.hpp"
@@ -71,6 +73,7 @@ int main(int argc, char **argv)
   bool bForce = false;
   bool bGuided_matching = false;
   int imax_iteration = 2048;
+  unsigned int ui_max_cache_size = 0;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -84,6 +87,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
+  cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
+
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -120,6 +125,9 @@ int main(int argc, char **argv)
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
+      << "[-c|--cache_size]\n"
+      << "  Use a regions cache (only cache_size regions will be stored in memory)"
+      << "  If not used, all regions will be load in memory."
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -137,7 +145,8 @@ int main(int argc, char **argv)
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
             << "--pair_list " << sPredefinedPairList << "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
-            << "--guided_matching " << bGuided_matching << std::endl;
+            << "--guided_matching " << bGuided_matching << "\n"
+            << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -192,7 +201,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  C_Progress_display my_progress_bar;
   //---------------------------------------
   // Load SfM Scene regions
   //---------------------------------------
@@ -214,8 +222,19 @@ int main(int argc, char **argv)
   //---------------------------------------
 
   // Load the corresponding view regions
-  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, my_progress_bar)) {
+  std::shared_ptr<Regions_Provider> regions_provider;
+  if (ui_max_cache_size == 0)
+  {
+    // Default regions provider (load & store all regions in memory)
+    regions_provider = std::make_shared<Regions_Provider>();
+  }
+  else
+  {
+    // Cached regions provider (load & store regions on demand)
+    regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
+  }
+
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -275,44 +294,44 @@ int main(int argc, char **argv)
       if (regions_type->IsScalar())
       {
         std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
+        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
       }
       else
       if (regions_type->IsBinary())
       {
         std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-        collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
+        collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
       }
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEL2")
     {
       std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_L2));
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEHAMMING")
     {
       std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
     {
       std::cout << "Using ANN_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, ANN_L2));
     }
     else
     if (sNearestMatchingMethod == "CASCADEHASHINGL2")
     {
       std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, CASCADE_HASHING_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, CASCADE_HASHING_L2));
     }
     else
     if (sNearestMatchingMethod == "FASTCASCADEHASHINGL2")
     {
       std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
+      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
     }
     if (!collectionMatcher)
     {
@@ -336,7 +355,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, my_progress_bar);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -377,6 +396,7 @@ int main(int argc, char **argv)
   if (filter_ptr)
   {
     system::Timer timer;
+    std::cout << std::endl << " - Geometric filtering - " << std::endl;
 
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
@@ -386,21 +406,21 @@ int main(int argc, char **argv)
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
           map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6, my_progress_bar);
+          bGeometric_only_guided_matching ? -1.0 : 0.6);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching, 0.6, my_progress_bar);
+          map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching, 0.6, my_progress_bar);
+          map_PutativesMatches, bGuided_matching);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap

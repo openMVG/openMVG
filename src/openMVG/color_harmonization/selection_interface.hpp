@@ -5,17 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_COLORHARMONIZATION_SELECTORINTERFACE_H
-#define OPENMVG_COLORHARMONIZATION_SELECTORINTERFACE_H
+#ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
+#define OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
 
 #include "openMVG/image/image.hpp"
+
 #include "third_party/histogram/histogram.hpp"
+
 #include <string>
 
 namespace openMVG {
 namespace color_harmonization {
-
-using namespace std;
 
 class commonDataByPair
 {
@@ -76,4 +76,4 @@ protected:
 }  // namespace color_harmonization
 }  // namespace openMVG
 
-#endif // OPENMVG_COLORHARMONIZATION_SELECTORINTERFACE_H
+#endif // OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP

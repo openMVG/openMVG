@@ -41,7 +41,7 @@ class PolynomialSolverBase
   protected:
     template< typename OtherPolynomial >
     inline void setPolynomial( const OtherPolynomial& poly ){
-      m_roots.resize(poly.size()); }
+      m_roots.resize(poly.size()-1); }
 
   public:
     template< typename OtherPolynomial >
@@ -316,7 +316,7 @@ class PolynomialSolverBase
   * - real roots with greatest, smallest absolute real value.
   * - greatest, smallest real roots.
   *
-  * WARNING: this polynomial solver is experimental, part of the unsuported Eigen modules.
+  * WARNING: this polynomial solver is experimental, part of the unsupported Eigen modules.
   *
   *
   * Currently a QR algorithm is used to compute the eigenvalues of the companion matrix of
@@ -345,10 +345,19 @@ class PolynomialSolver : public PolynomialSolverBase<_Scalar,_Deg>
     void compute( const OtherPolynomial& poly )
     {
       eigen_assert( Scalar(0) != poly[poly.size()-1] );
-      internal::companion<Scalar,_Deg> companion( poly );
-      companion.balance();
-      m_eigenSolver.compute( companion.denseMatrix() );
-      m_roots = m_eigenSolver.eigenvalues();
+      eigen_assert( poly.size() > 1 );
+      if(poly.size() >  2 )
+      {
+        internal::companion<Scalar,_Deg> companion( poly );
+        companion.balance();
+        m_eigenSolver.compute( companion.denseMatrix() );
+        m_roots = m_eigenSolver.eigenvalues();
+      }
+      else if(poly.size () == 2)
+      {
+        m_roots.resize(1);
+        m_roots[0] = -poly[0]/poly[1];
+      }
     }
 
   public:
@@ -376,9 +385,17 @@ class PolynomialSolver<_Scalar,1> : public PolynomialSolverBase<_Scalar,1>
     template< typename OtherPolynomial >
     void compute( const OtherPolynomial& poly )
     {
-      eigen_assert( Scalar(0) != poly[poly.size()-1] );
-      m_roots[0] = -poly[0]/poly[poly.size()-1];
+      eigen_assert( poly.size() == 2 );
+      eigen_assert( Scalar(0) != poly[1] );
+      m_roots[0] = -poly[0]/poly[1];
     }
+
+  public:
+    template< typename OtherPolynomial >
+    inline PolynomialSolver( const OtherPolynomial& poly ){
+      compute( poly ); }
+
+    inline PolynomialSolver(){}
 
   protected:
     using                   PS_Base::m_roots;

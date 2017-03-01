@@ -40,14 +40,16 @@ fi
 
 TMP="/tmp/ceres-solver-$1"
 DOCS_TMP="/tmp/ceres-solver-docs-$1"
-VERSION=$(grep 'set(CERES_VERSION_' CMakeLists.txt | \
-          sed -e 's/\(.*\) \(.*\))/\2/' | \
-          tr '\n' '.' | sed -e 's/.$//')
+VERSION=$(grep '#define CERES_VERSION_' include/ceres/version.h | \
+          sed -e 's/#define CERES_VERSION_STRING.*$//' | \
+          sed -e 's/\(^#define CERES_VERSION_[MR^S].[A-Z]*\) \([0-9]\)/\2/' | \
+          tr '\n' '.' | \
+          sed -e 's/..$//')
 GIT_COMMIT=$(git log -1 HEAD |grep commit)
 
 if [[ $1 != $VERSION ]] ; then
   echo "ERROR: Version from the command line $1 does not match CERES_VERSION"
-  echo "       in CMakeLists.txt, which is $VERSION. You may not be in the "
+  echo "       in include/ceres/version.h, which is $VERSION. You may not be in the "
   echo "       toplevel source dir."
   exit 1
 fi

@@ -5,12 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_FEATURES_PROVIDER_HPP
-#define OPENMVG_SFM_FEATURES_PROVIDER_HPP
+#ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
+#define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
-#include <openMVG/types.hpp>
-#include <openMVG/sfm/sfm_data.hpp>
-#include <openMVG/features/features.hpp>
+#include "openMVG/features/features.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
+
 #include "third_party/progress/progress.hpp"
 
 #include <memory>
@@ -24,6 +25,8 @@ struct Features_Provider
 {
   /// PointFeature array per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
+
+  virtual ~Features_Provider() = default;
 
   virtual bool load(
     const SfM_Data & sfm_data,
@@ -88,4 +91,4 @@ struct Features_Provider
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_FEATURES_PROVIDER_HPP
+#endif // OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP

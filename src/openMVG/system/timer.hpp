@@ -14,9 +14,7 @@
 #ifndef OPENMVG_SYSTEM_TIMER_HPP
 #define OPENMVG_SYSTEM_TIMER_HPP
 
-#ifdef HAVE_CXX11_CHRONO
-  #include <chrono>
-#endif
+#include <chrono>
 #include <iostream>
 
 namespace openMVG
@@ -57,15 +55,7 @@ class Timer
     */
     double elapsedMs() const;
   private:
-
-#ifdef HAVE_CXX11_CHRONO
     std::chrono::high_resolution_clock::time_point start_;
-#else
-    double start_;
-#ifdef _WIN32
-    double frequency_;
-#endif
-#endif // HAVE_CXX11_CHRONO
 };
 
 /**
@@ -80,4 +70,3 @@ std::ostream& operator << ( std::ostream& out , const Timer& tim );
 } // namespace openMVG
 
 #endif // OPENMVG_SYSTEM_TIMER_HPP
-

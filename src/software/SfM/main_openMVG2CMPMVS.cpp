@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (exportToCMPMVSFormat(sfm_data, stlplus::folder_append_separator(sOutDir) + "CMPMVS"))
-    return( EXIT_SUCCESS );
+    return EXIT_SUCCESS;
   else
-    return( EXIT_FAILURE );
+    return EXIT_FAILURE;
 }

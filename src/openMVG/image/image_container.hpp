@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_HPP
-#define OPENMVG_IMAGE_IMAGE_HPP
+#ifndef OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
+#define OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 
 #include "openMVG/numeric/numeric.h"
 
@@ -25,10 +25,10 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
   public:
 
     /// Pixel data type
-    typedef T Tpixel;
+    using Tpixel = T;
 
     /// Full internal type
-    typedef Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Base;
+    using Base = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 
     /**
@@ -261,4 +261,4 @@ Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB )
 } // namespace image
 } // namespace openMVG
 
-#endif // OPENMVG_IMAGE_IMAGE_HPP
+#endif // OPENMVG_IMAGE_IMAGE_CONTAINER_HPP

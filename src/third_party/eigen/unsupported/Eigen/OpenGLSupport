@@ -51,7 +51,7 @@ namespace internal {                                                            
             typename Scalar = typename XprType::Scalar,                                                             \
             int Rows = XprType::RowsAtCompileTime,                                                                  \
             int Cols = XprType::ColsAtCompileTime,                                                                  \
-            bool IsGLCompatible = bool(XprType::Flags&LinearAccessBit)                                              \
+            bool IsGLCompatible = bool(internal::evaluator<XprType>::Flags&LinearAccessBit)                         \
                               && bool(XprType::Flags&DirectAccessBit)                                               \
                               && (XprType::IsVectorAtCompileTime || (XprType::Flags&RowMajorBit)==0)>               \
   struct EIGEN_CAT(EIGEN_CAT(gl_,FUNC),_impl);                                                                      \
@@ -180,11 +180,11 @@ template<typename Scalar> void glLoadMatrix(const Transform<Scalar,3,AffineCompa
 
 inline void glRotate(const Rotation2D<float>& rot)
 {
-  glRotatef(rot.angle()*180.f/float(M_PI), 0.f, 0.f, 1.f);
+  glRotatef(rot.angle()*180.f/float(EIGEN_PI), 0.f, 0.f, 1.f);
 }
 inline void glRotate(const Rotation2D<double>& rot)
 {
-  glRotated(rot.angle()*180.0/M_PI, 0.0, 0.0, 1.0);
+  glRotated(rot.angle()*180.0/EIGEN_PI, 0.0, 0.0, 1.0);
 }
 
 template<typename Derived> void glRotate(const RotationBase<Derived,3>& rot)
@@ -203,7 +203,7 @@ namespace internal {                                                            
             typename Scalar = typename XprType::Scalar,                                                                         \
             int Rows = XprType::RowsAtCompileTime,                                                                              \
             int Cols = XprType::ColsAtCompileTime,                                                                              \
-            bool IsGLCompatible = bool(XprType::Flags&LinearAccessBit)                                                          \
+            bool IsGLCompatible = bool(internal::evaluator<XprType>::Flags&LinearAccessBit)                                     \
                               && bool(XprType::Flags&DirectAccessBit)                                                           \
                               && (XprType::IsVectorAtCompileTime || (XprType::Flags&RowMajorBit)==0)>                           \
   struct EIGEN_CAT(EIGEN_CAT(gl_,FUNC),_impl);                                                                                  \
@@ -276,12 +276,12 @@ EIGEN_GL_FUNC1_SPECIALIZATION_MAT(glUniform,GLint,const,float,        4,4,Matrix
 
 #ifdef GL_VERSION_2_1
 
-static void glUniformMatrix2x3fv_ei(GLint loc, const float* v)         { glUniformMatrix2x3fv(loc,1,false,v); }
-static void glUniformMatrix3x2fv_ei(GLint loc, const float* v)         { glUniformMatrix3x2fv(loc,1,false,v); }
-static void glUniformMatrix2x4fv_ei(GLint loc, const float* v)         { glUniformMatrix2x4fv(loc,1,false,v); }
-static void glUniformMatrix4x2fv_ei(GLint loc, const float* v)         { glUniformMatrix4x2fv(loc,1,false,v); }
-static void glUniformMatrix3x4fv_ei(GLint loc, const float* v)         { glUniformMatrix3x4fv(loc,1,false,v); }
-static void glUniformMatrix4x3fv_ei(GLint loc, const float* v)         { glUniformMatrix4x3fv(loc,1,false,v); }
+inline void glUniformMatrix2x3fv_ei(GLint loc, const float* v)         { glUniformMatrix2x3fv(loc,1,false,v); }
+inline void glUniformMatrix3x2fv_ei(GLint loc, const float* v)         { glUniformMatrix3x2fv(loc,1,false,v); }
+inline void glUniformMatrix2x4fv_ei(GLint loc, const float* v)         { glUniformMatrix2x4fv(loc,1,false,v); }
+inline void glUniformMatrix4x2fv_ei(GLint loc, const float* v)         { glUniformMatrix4x2fv(loc,1,false,v); }
+inline void glUniformMatrix3x4fv_ei(GLint loc, const float* v)         { glUniformMatrix3x4fv(loc,1,false,v); }
+inline void glUniformMatrix4x3fv_ei(GLint loc, const float* v)         { glUniformMatrix4x3fv(loc,1,false,v); }
 
 EIGEN_GL_FUNC1_SPECIALIZATION_MAT(glUniform,GLint,const,float,        2,3,Matrix2x3fv_ei)
 EIGEN_GL_FUNC1_SPECIALIZATION_MAT(glUniform,GLint,const,float,        3,2,Matrix3x2fv_ei)

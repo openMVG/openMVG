@@ -12,10 +12,12 @@
 //
 // -----------------------------------------------------------
 
-#pragma once
+#ifndef OPENMVG_STL_DYNAMIC_BITSET_HPP
+#define OPENMVG_STL_DYNAMIC_BITSET_HPP
 
-#include <limits>
 #include <cassert>
+#include <cstddef>
+#include <limits>
 #include <vector>
 
 namespace stl
@@ -23,7 +25,7 @@ namespace stl
 
   struct dynamic_bitset
   {
-    typedef unsigned char BlockType;
+    using BlockType =  unsigned char;
     static const int bits_per_block = (std::numeric_limits<BlockType>::digits);
 
     // Reference over a single bit of a sub-block
@@ -33,27 +35,48 @@ namespace stl
       const BlockType m_mask;
 
     public:
-      reference(BlockType & b, BlockType pos)
-        :m_block(b),
-        m_mask((assert(pos < bits_per_block), BlockType(1) << pos)
-        )
+      reference
+      (
+        BlockType & b,
+        BlockType pos
+      )
+      : m_block(b),
+        m_mask((assert(pos < bits_per_block), BlockType(1) << pos))
       { }
 
       operator bool() const { return (m_block & m_mask) != 0; }
       reference& operator=(bool x) { do_assign(x); return *this; } // for b[i] = x
 
-      void do_set() { m_block |= m_mask; }
-      void do_reset() { m_block &= ~m_mask; }
-      void do_flip() { m_block ^= m_mask; }
+      void do_set()   { m_block |= m_mask; }
+      void do_reset() { m_block &= ~m_mask;}
+      void do_flip()  { m_block ^= m_mask; }
       void do_assign(bool x) { x ? do_set() : do_reset(); }
     };
 
-    size_t block_index(size_t pos) const { return pos / bits_per_block; }
-    size_t bit_index(size_t pos) const { return static_cast<size_t>(pos % bits_per_block); }
-    BlockType bit_mask(size_t pos) const { return BlockType(1) << bit_index(pos); }
+    size_t block_index(size_t pos) const
+    {
+      return pos / bits_per_block;
+    }
 
-    bool operator[](size_t pos) const { return (vec_bits[block_index(pos)] & bit_mask(pos)) != 0; }
-    reference operator[](size_t pos) { return reference(vec_bits[block_index(pos)], bit_index(pos)); }
+    size_t bit_index(size_t pos) const
+    {
+      return static_cast<size_t>(pos % bits_per_block);
+    }
+
+    BlockType bit_mask(size_t pos) const
+    {
+      return BlockType(1) << bit_index(pos);
+    }
+
+    bool operator[](size_t pos) const
+    {
+      return (vec_bits[block_index(pos)] & bit_mask(pos)) != 0;
+    }
+
+    reference operator[](size_t pos)
+    {
+      return reference(vec_bits[block_index(pos)], bit_index(pos));
+    }
 
     // return the number of stored bits
     size_t size() const { return m_num_bits; }
@@ -88,3 +111,5 @@ namespace stl
     size_t m_num_bits;
   };
 } // namespace stl
+
+#endif // OPENMVG_STL_DYNAMIC_BITSET_HPP

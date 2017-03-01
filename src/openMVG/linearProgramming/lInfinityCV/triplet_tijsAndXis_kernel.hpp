@@ -5,21 +5,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
 
-#include "openMVG/numeric/numeric.h"
 
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/numeric/numeric.h"
 
 // Linear programming solver(s)
+#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-#ifdef OPENMVG_HAVE_MOSEK
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
-#endif
-
-#include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
 namespace openMVG {
@@ -28,9 +25,18 @@ namespace kernel {
 
 /// A trifocal tensor seen as 3 projective cameras
 struct TrifocalTensorModel {
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   Mat34 P1, P2, P3;
 
-  static double Error(const TrifocalTensorModel & t, const Vec2 & pt1, const Vec2 & pt2, const Vec2 & pt3)
+  static double Error
+  (
+    const TrifocalTensorModel & t,
+    const Vec2 & pt1,
+    const Vec2 & pt2,
+    const Vec2 & pt3
+  )
   {
     // Triangulate
     Triangulation triangulationObj;
@@ -52,6 +58,8 @@ struct TrifocalTensorModel {
 }  // namespace trifocal
 }  // namespace openMVG
 
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::trifocal::kernel::TrifocalTensorModel)
+
 namespace openMVG{
 
 using namespace openMVG::trifocal::kernel;
@@ -62,10 +70,15 @@ struct translations_Triplet_Solver {
   enum { MAX_MODELS = 1 };
 
   /// Solve the computation of the "tensor".
-  static void Solve(
-    const Mat &pt0, const Mat & pt1, const Mat & pt2,
-    const std::vector<Mat3> & vec_KR, std::vector<TrifocalTensorModel> *P,
-    const double ThresholdUpperBound)
+  static void Solve
+  (
+    const Mat &pt0,
+    const Mat & pt1,
+    const Mat & pt2,
+    const std::vector<Mat3> & vec_KR,
+    std::vector<TrifocalTensorModel> *P,
+    const double ThresholdUpperBound
+  )
   {
     const int n_obs = pt0.cols();
     if (n_obs < MINIMUM_SAMPLES)
@@ -87,11 +100,7 @@ struct translations_Triplet_Solver {
 
     using namespace openMVG::lInfinityCV;
 
-#ifdef OPENMVG_HAVE_MOSEK
-    MOSEK_SolveWrapper LPsolver(static_cast<int>(vec_solution.size()));
-#else
     OSI_CLP_SolverWrapper LPsolver(static_cast<int>(vec_solution.size()));
-#endif
 
     Translation_Structure_L1_ConstraintBuilder cstBuilder(vec_KR, megaMat);
     double gamma;
@@ -117,9 +126,13 @@ struct translations_Triplet_Solver {
   }
 
   // Compute the residual of reprojections
-  static double Error(
+  static double Error
+  (
     const TrifocalTensorModel & Tensor,
-    const Vec2 & pt0, const Vec2 & pt1, const Vec2 & pt2)
+    const Vec2 & pt0,
+    const Vec2 & pt1,
+    const Vec2 & pt2
+  )
   {
     return TrifocalTensorModel::Error(Tensor, pt0, pt1, pt2);
   }
@@ -127,3 +140,4 @@ struct translations_Triplet_Solver {
 
 } // namespace openMVG
 
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
