@@ -45,6 +45,7 @@ class C_Progress
 
     /** @brief Initializer of the C_Progress class
      * @param expected_count The number of step of the process
+     * @param msg an optional status message
      **/
     virtual void           restart ( unsigned long ulExpected_count, const std::string& msg=std::string())
     //  Effects: display appropriate scale
@@ -180,7 +181,7 @@ class C_Progress_display : public C_Progress
 
     /** @brief Initializer of the C_Progress_display class
      * @param expected_count The number of step of the process
-     * @param msg the status string
+     * @param msg updates the status string. Can be empty to keep the last one.
      **/
     void restart ( unsigned long ulExpected_count, const std::string& msg=std::string()) override
     //  Effects: display appropriate scale
@@ -188,7 +189,7 @@ class C_Progress_display : public C_Progress
     {
       C_Progress::restart ( ulExpected_count,  msg); //-- Initialize the base class
       if (!msg.empty())
-          m_msg = msg;
+        m_msg = msg;
       m_os << m_msg << "0%   10   20   30   40   50   60   70   80   90   100%\n"
       <<  "|----|----|----|----|----|----|----|----|----|----|"
       << std::endl;  // endl implies flush, which ensures display
