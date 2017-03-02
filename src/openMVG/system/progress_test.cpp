@@ -29,10 +29,10 @@ int singleThreadedCount(C_Progress& progress=C_Progress::dummy())
 // This function counts to Count
 int multiThreadedCount(C_Progress& progress=C_Progress::dummy())
 {
-  omp_set_num_threads(num_threads);
   int result = 0;
 
 #ifdef OPENMVG_USE_OPENMP
+  omp_set_num_threads(num_threads);
   #pragma omp parallel for
 #endif
   for (int i = 0; i<Count; i++)
@@ -60,7 +60,7 @@ public:
     this->ulExpected_count = ulExpected_count;
     this->currentCount = 0;
   }
-  virtual bool hasBeenCanceled()const
+  virtual bool hasBeenCanceled()const override
   {
     return false;
   }
@@ -73,7 +73,7 @@ public:
 
 class CancelProgress : public MockProgress
 {
-  virtual bool hasBeenCanceled()const
+  virtual bool hasBeenCanceled()const override
   {
     return true;
   }
@@ -82,7 +82,7 @@ class CancelProgress : public MockProgress
 template<int CancelAtNumber>
 class CancelAt : public MockProgress
 {
-  virtual bool hasBeenCanceled()const
+  virtual bool hasBeenCanceled()const override
   {
     return currentCount==CancelAtNumber;
   }
