@@ -21,9 +21,10 @@ namespace geometry {
   class Pose3;
 } // namespace geometry
 
+
 namespace cameras {
   struct IntrinsicBase;
-} // namespace cameras
+} // namespace cameras 
 
 namespace sfm {
 

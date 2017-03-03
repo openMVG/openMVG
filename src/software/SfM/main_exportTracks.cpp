@@ -56,14 +56,7 @@ int main(int argc, char ** argv)
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
-  if (sMatchesDir.empty()) {
-    std::cerr << "\nmatchdir cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (sMatchFile.empty()) {
-    std::cerr << "\nmatchfile cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
+
 
   //---------------------------------------
   // Read SfM Scene (image view names)
@@ -129,6 +122,7 @@ int main(int argc, char ** argv)
   {
     for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
+
       const View * view_I = sfm_data.GetViews().at(I).get();
       const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
         view_I->s_Img_path);
