@@ -120,8 +120,9 @@ int main(int argc, char **argv)
       << "      L2 Cascade Hashing with precomputed hashed regions\n"
       << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
+      << "    GPU_LATCH: BruteForce Hamming matching specifically for LATCH.\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
-      << "    GPUBRUTEFORCEHAMMING: BruteForce Hamming matching (GPU),\n"
+      << "    GPUBRUTEFORCEHAMMING: BruteForce Hamming matching (GPU).\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
       << std::endl;
@@ -302,7 +303,7 @@ int main(int argc, char **argv)
     else
     if (sNearestMatchingMethod == "GPUBRUTEFORCEHAMMING")
     {
-      std::cout << "Using GPU_LATCH matcher" << std::endl;
+      std::cout << "Using GPU_BRUTE_FORCE_HAMMING matcher" << std::endl;
       collectionMatcher.reset(new GPU_Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
     }
     else
@@ -332,7 +333,7 @@ int main(int argc, char **argv)
     else
     if (sNearestMatchingMethod == "GPUBRUTEFORCEL2")
     {
-      std::cout << "Using GPU_LATCH matcher" << std::endl;
+      std::cout << "Using GPU_BRUTE_FORCE_L2 matcher" << std::endl;
       collectionMatcher.reset(new GPU_Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_L2));
     }
     if (!collectionMatcher)
