@@ -13,6 +13,7 @@
 
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/system/timer.hpp"
@@ -198,14 +199,14 @@ int main(int argc, char **argv)
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
-      image_describer.reset(new AKAZE_Image_describer
-        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF), !bUpRight));
+      image_describer = AKAZE_Image_describer::create
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF), !bUpRight);
     }
     else
     if (sImage_Describer_Method == "AKAZE_MLDB")
     {
-      image_describer.reset(new AKAZE_Image_describer
-        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight));
+      image_describer = AKAZE_Image_describer::create
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight);
     }
     if (!image_describer)
     {
@@ -232,8 +233,7 @@ int main(int argc, char **argv)
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
-      std::unique_ptr<Regions> regionsType;
-      image_describer->Allocate(regionsType);
+      auto regionsType = image_describer->Allocate();
       archive(cereal::make_nvp("regions_type", regionsType));
     }
   }
@@ -305,8 +305,7 @@ int main(int argc, char **argv)
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions, mask);
+        auto regions = image_describer->Describe(imageGray, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
       ++my_progress_bar;

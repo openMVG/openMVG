@@ -9,7 +9,7 @@
 #ifndef OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_IO_HPP
 #define OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_IO_HPP
 
-#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/akaze/AKAZE_io.hpp"
 
 #include <cereal/types/polymorphic.hpp>
@@ -17,7 +17,7 @@
 template<class Archive>
 void openMVG::features::AKAZE_Image_describer::Params::serialize(Archive & ar)
 {
-    ar(options_, eAkazeDescriptor_);
+  ar(options_, eAkazeDescriptor_);
 }
 
 template<class Archive>
