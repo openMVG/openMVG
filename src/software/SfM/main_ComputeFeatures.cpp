@@ -192,14 +192,14 @@ int main(int argc, char **argv)
     else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
-      image_describer.reset(new AKAZE_Image_describer
-        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF), !bUpRight));
+      image_describer = AKAZE_Image_describer::create
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF), !bUpRight);
     }
     else
     if (sImage_Describer_Method == "AKAZE_MLDB")
     {
-      image_describer.reset(new AKAZE_Image_describer
-        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight));
+      image_describer = AKAZE_Image_describer::create
+        (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight);
     }
     if (!image_describer)
     {
@@ -226,8 +226,7 @@ int main(int argc, char **argv)
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
-      std::unique_ptr<Regions> regionsType;
-      image_describer->Allocate(regionsType);
+      auto regionsType = image_describer->Allocate();
       archive(cereal::make_nvp("regions_type", regionsType));
     }
   }
@@ -299,8 +298,7 @@ int main(int argc, char **argv)
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions, mask);
+        auto regions = image_describer->Describe(imageGray, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
 #ifdef OPENMVG_USE_OPENMP

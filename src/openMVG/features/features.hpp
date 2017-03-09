@@ -13,7 +13,7 @@
 #include "openMVG/features/fast/fast_detector.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/image_describer.hpp"
-#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/features/keypointSet.hpp"
 #include "openMVG/features/mser/mser.hpp"
