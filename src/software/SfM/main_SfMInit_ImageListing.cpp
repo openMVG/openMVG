@@ -95,6 +95,38 @@ std::pair<bool, Vec3> checkGPS
 }
 
 
+std::pair<bool, Vec3> checkGPS
+(
+  const std::string & filename,
+  const Hash_Map<std::string,Vec3> & map_GPS_data,
+  const int & GPS_to_XYZ_method = 0
+)
+{
+  std::pair<bool, Vec3> val(false, Vec3::Zero());
+
+  if (!map_GPS_data.empty())
+  {
+    Hash_Map<std::string,Vec3>::const_iterator it_gps = map_GPS_data.find(filename);
+    if (it_gps != map_GPS_data.end())
+    {
+      // Add ECEF or UTM XYZ position to the GPS position array
+      val.first = true;
+      switch(GPS_to_XYZ_method)
+      {
+        case 1:
+          val.second = it_gps->second;
+          break;
+        case 0:
+        default:
+          const Vec3 & vec_gps = it_gps->second;
+          val.second = lla_to_ecef( vec_gps[0], vec_gps[1], vec_gps[2] );
+          break;
+      }
+    }
+  }
+  return val;
+}
+
 /// Check string of prior weights
 std::pair<bool, Vec3> checkPriorWeightsString
 (
@@ -123,6 +155,57 @@ std::pair<bool, Vec3> checkPriorWeightsString
   }
   return val;
 }
+
+
+/// Parse txt file consisting of img_name;x;y;z;
+Hash_Map<std::string,Vec3> parseGPSfile(std::string & sGPSfile)
+{
+  Hash_Map<std::string,Vec3> map_GPS_data;
+
+  std::ifstream fin(sGPSfile);
+  std::vector<std::string> vec_str;
+  std::string header;
+  Vec3 vec_GPS;
+
+  // Read header
+  if(!getline(fin,header))
+  {
+    std::cerr << "\n Missing header in GPS text file" << std::endl;
+    return map_GPS_data;
+  }
+
+  for (std::string line; getline(fin,line); )
+  {
+    stl::split(line, ';', vec_str);
+    if (vec_str.size() != 4)
+    {
+      std::cerr << "\n Missing ';' character in GPS text file" << std::endl;
+      map_GPS_data.clear();
+      return map_GPS_data;
+    }
+
+    // Read xyz values
+    for (size_t i = 1; i < 4; ++i)
+    {
+      double readvalue = 0.0;
+      std::stringstream ss;
+      ss.str(vec_str[i]);
+      if (! (ss >> readvalue) )  {
+        std::cerr << "\n Used an invalid not a number character in local frame origin (in GPS text file)" << std::endl;
+        map_GPS_data.clear();
+        return map_GPS_data;
+      }
+      vec_GPS[i-1] = readvalue;
+    }
+
+    // Add pair to map
+    map_GPS_data[vec_str[0]] = vec_GPS;
+  }
+  std::cout<<"GPS priors added from file: "<<map_GPS_data.size()<<"\n";
+  return map_GPS_data;
+}
+
+
 //
 // Create the description of an input image dataset for OpenMVG toolsuite
 // - Export a SfM_Data file with View & Intrinsic data
@@ -147,6 +230,8 @@ int main(int argc, char **argv)
 
   double focal_pixels = -1.0;
 
+  std::string sGPSfile;
+
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
@@ -157,6 +242,7 @@ int main(int argc, char **argv)
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
+  cmd.add( make_option('G', sGPSfile, "gps_file") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -183,6 +269,7 @@ int main(int argc, char **argv)
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
       << "\t 1: UTM\n"
+      << "[-G|--gps_file (has priority over EXIF GPS)\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -258,6 +345,14 @@ int main(int argc, char **argv)
   else if (cmd.used('P'))
   {
     prior_w_info.first = true;
+  }
+
+  // Process text file with GPS data
+  // use gps_to_xyz_method to define if its ECEF or UTM
+  Hash_Map<std::string,Vec3> map_GPS_data;
+  if (cmd.used('G') && !sGPSfile.empty())
+  {
+    map_GPS_data = parseGPSfile(sGPSfile);
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -392,8 +487,8 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename, i_GPS_XYZ_method);
-    if (gps_info.first && cmd.used('P'))
+    const std::pair<bool, Vec3> gps_info = ( cmd.used('G') && !map_GPS_data.empty() ) ? checkGPS(*iter_image, map_GPS_data, i_GPS_XYZ_method) : checkGPS(sImageFilename, i_GPS_XYZ_method);
+    if (gps_info.first && ( cmd.used('P') || cmd.used('G') ) )
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
