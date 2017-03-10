@@ -108,7 +108,7 @@ private:
   void BuildInterface();
 
   /**
-  * @brief Build all menus items 
+  * @brief Build all menu items 
   */
   void BuildMenus();
 
@@ -118,12 +118,12 @@ private:
   void MakeConnections();
 
   /** 
-  * @brief Get list of all feature type (and mode)
+  * @brief Fill comboboxes with all feature types and feature presets 
   */
   void PopulateFeatureType();
 
   /**
-  * @brief Get list of all matching type
+  * @brief Fill comboboxes with all matching types 
   */
   void PopulateMatchingType();
 
@@ -138,7 +138,7 @@ private:
   void ClearFeaturesAndMatchItems();
 
   /**
-  * @brief Redraw match lines at correct position (ie:after image move)
+  * @brief Redraw match lines at the correct position (i.e. :after image move)
   */
   void MoveMatchLines();
 
@@ -149,7 +149,7 @@ private:
   openMVG::features::EDESCRIBER_PRESET GetFeaturePreset( void );
 
   /**
-  * @brief Get describer instance based on interface choice 
+  * @brief Get describer instance based on the choices made in the interface
   * @param preset Current preset 
   * @return An image describer 
   */
@@ -157,7 +157,7 @@ private:
 
   /**
   * @brief Get Matcher type 
-  * @return current matcher type based on interface choices 
+  * @return current matcher type based on the choices made in the interface
   */
   openMVG::matching::EMatcherType GetMatcherType( void );
 

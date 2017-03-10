@@ -166,7 +166,7 @@ void MainWindow::onComputeMatching( void )
 
   m_matches.clear();
 
-  // 2.1 Compute matching
+  // 2.1 Matches features
   DistanceRatioMatch(
       fDistRatio, matcherType,
       *regions1.get(),
