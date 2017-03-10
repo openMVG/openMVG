@@ -18,8 +18,9 @@
 //-- Linear programming
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+
+#include <set>
 
 namespace openMVG {
 namespace lInfinity {

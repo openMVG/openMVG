@@ -6,10 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching_image_collection/Matcher.hpp"
-#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_cascade_hashing.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
@@ -22,13 +19,13 @@ namespace matching_image_collection {
 using namespace openMVG::matching;
 using namespace openMVG::features;
 
-Matcher_Regions_AllInMemory::Matcher_Regions_AllInMemory(
+Matcher_Regions::Matcher_Regions(
   float distRatio, EMatcherType eMatcherType)
   :Matcher(), f_dist_ratio_(distRatio), eMatcherType_(eMatcherType)
 {
 }
 
-void Matcher_Regions_AllInMemory::Match(
+void Matcher_Regions::Match(
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
@@ -36,14 +33,14 @@ void Matcher_Regions_AllInMemory::Match(
 {
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
-#endif
   const bool b_multithreaded_pair_search = (eMatcherType_ == CASCADE_HASHING_L2);
   // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
+#endif
 
   C_Progress_display my_progress_bar( pairs.size() );
 
   // Sort pairs according the first index to minimize the MatcherT build operations
-  using Map_vectorT = std::map<size_t, std::vector<size_t> >;
+  using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
   for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
   {
@@ -54,8 +51,8 @@ void Matcher_Regions_AllInMemory::Match(
   for (Map_vectorT::const_iterator iter = map_Pairs.begin();
     iter != map_Pairs.end(); ++iter)
   {
-    const size_t I = iter->first;
-    const std::vector<size_t> & indexToCompare = iter->second;
+    const IndexT I = iter->first;
+    const auto & indexToCompare = iter->second;
 
     std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI.get()->RegionCount() == 0)
@@ -72,7 +69,7 @@ void Matcher_Regions_AllInMemory::Match(
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {
-      const size_t J = indexToCompare[j];
+      const IndexT J = indexToCompare[j];
 
       std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
       if (regionsJ.get()->RegionCount() == 0

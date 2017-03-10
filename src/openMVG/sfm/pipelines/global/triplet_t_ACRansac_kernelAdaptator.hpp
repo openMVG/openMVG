@@ -55,7 +55,7 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
 
     // Create a model from the points
     Solver::Solve(
@@ -65,7 +65,7 @@ public:
                   vec_KR_, models, ThresholdUpperBound_);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorArg::Error(model, x1n_.col(sample), x2n_.col(sample), x3n_.col(sample));
   }
 

@@ -114,6 +114,8 @@ protected:
   float orientation_;  // In radians.
 };
 
+using SIOPointFeatures = std::vector<SIOPointFeature>;
+
 //
 inline std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj)
 {

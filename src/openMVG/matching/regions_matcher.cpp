@@ -33,17 +33,13 @@ bool Matcher_Regions_Database::Match
   matching::IndMatches & matches // photometric corresponding points
 )const
 {
-  if (query_regions.RegionCount() == 0)
+  if (query_regions.RegionCount() == 0 || ! matching_interface_)
   {
     return false;
   }
 
-  if (matching_interface_)
-  {
-    matching_interface_->Match(dist_ratio, query_regions, matches);
-    return true;
-  }
-  return false;
+  matching_interface_->Match(dist_ratio, query_regions, matches);
+  return true;
 }
 
 Matcher_Regions_Database::Matcher_Regions_Database():
@@ -74,7 +70,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          using MetricT = L2_Vectorized<unsigned char>;
+          using MetricT = L2<unsigned char>;
           using MatcherT = ArrayMatcherBruteForce<unsigned char, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
@@ -88,7 +84,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
         break;
         case CASCADE_HASHING_L2:
         {
-          using MetricT = L2_Vectorized<unsigned char>;
+          using MetricT = L2<unsigned char>;
           using MatcherT = ArrayMatcherCascadeHashing<unsigned char, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
@@ -104,7 +100,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          using MetricT = L2_Vectorized<float>;
+          using MetricT = L2<float>;
           using MatcherT = ArrayMatcherBruteForce<float, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
@@ -118,7 +114,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
         break;
         case CASCADE_HASHING_L2:
         {
-          using MetricT = L2_Vectorized<float>;
+          using MetricT = L2<float>;
           using MatcherT = ArrayMatcherCascadeHashing<float, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
@@ -134,7 +130,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          using MetricT = L2_Vectorized<double>;
+          using MetricT = L2<double>;
           using MatcherT = ArrayMatcherBruteForce<double, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
@@ -148,7 +144,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
         break;
         case CASCADE_HASHING_L2:
         {
-          std::cerr << "Not yet implemented" << std::endl;
+          std::cerr << "Not implemented" << std::endl;
         }
         break;
         default:

@@ -30,7 +30,7 @@ namespace matching {
 // Implementation of descriptor matching using the cascade hashing method of [1].
 // If you use this matcher, please cite the paper.
 // template Metric parameter is ignored (by default compute square(L2 distance)).
-template < typename Scalar = float, typename Metric = L2_Simple<Scalar> >
+template < typename Scalar = float, typename Metric = L2<Scalar> >
 class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
 {
   public:

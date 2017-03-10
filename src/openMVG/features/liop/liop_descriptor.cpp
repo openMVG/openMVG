@@ -24,7 +24,6 @@ namespace openMVG {
 namespace features{
 namespace LIOP    {
 
-const int MAX_REGION_NUM = 10;
 const int MAX_PIXEL_NUM  = 1681;
 const int MAX_SAMPLE_NUM = 10;
 const int LIOP_NUM = 4;

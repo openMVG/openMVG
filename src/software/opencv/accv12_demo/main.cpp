@@ -188,7 +188,7 @@ int main(int, char**)
           }
 
           //-- Homography robust estimation
-          std::vector<size_t> vec_inliers, vec_inliersRansac;
+          std::vector<uint32_t> vec_inliers, vec_inliersRansac;
           Mat3 H;
           Mat3 Hransac;
           double thresholdransac = 2.0;

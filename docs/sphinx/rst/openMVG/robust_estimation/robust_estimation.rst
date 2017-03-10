@@ -44,7 +44,7 @@ Algorithm 1 Max-Consensus
 				Mbest = Mi
 			end if
 		end for
-	
+
 Here an example of how find a best fit line:
 
 .. code-block:: c++
@@ -56,9 +56,9 @@ Here an example of how find a best fit line:
 
 	// The base model estimator and associated error metric
 	LineKernel kernel ( xy );
-	
+
 	// Call the Max-Consensus routine
-	std::vector<size_t> vec_inliers;
+	std::vector<uint32_t> vec_inliers;
 	Vec2 model = MaxConsensus ( kernel , ScorerEvaluator<LineKernel >(0.3) , &-vec_inliers );
 
 
@@ -79,15 +79,15 @@ Here an example of how find a best fit line:
 	// Defines some data points
 	xy << 1, 2, 3, 4,  5, // x
 	      3, 5, 7, 9, 11; // y
-				
+
 	// The base model estimator and associated error metric
 	LineKernel kernel ( xy );
-	
+
 	// Call the Ransac routine
-	std::vector<size_t> vec_inliers;
+	std::vector<uint32_t> vec_inliers;
 	Vec2 model = Ransac ( kernel, ScorerEvaluator<LineKernel >(0.3) , &vec_inliers );
-	
-	
+
+
 AC-Ransac A Contrario Ransac
 ================================
 
@@ -103,25 +103,25 @@ found.
 
 .. figure:: ACRansac.png
    :align: center
-	
+
    A contrario robust estimation, noise adaptivity.
 
 Here an example of how to find a best fit line, by using the a contrario robust estimation framework:
 It is a bit more complex, we use a class in order to perform the a contrario required task.
 
 .. code-block:: c++
-	
+
 	Mat2X xy ( 2 , 5);
 	// Defines some data points
 	xy << 1, 2, 3, 4,  5, // x
 	      3, 5, 7, 9, 11; // y
-				
+
 	// The acontrario adapted base model estimator and associated error metric
 	const size_t img_width = 12;
 	ACRANSACOneViewKernel<LineSolver, pointToLineError, Vec2> lineKernel(xy,  -img_width, img_width);
-	
+
 	// Call the AC-Ransac routine
-	std::vector<size_t> vec_inliers;
+	std::vector<uint32_t> vec_inliers;
 	Vec2 line;
 	std::pair<double, double> res = ACRANSAC(lineKernel, vec_inliers, 300, &line);
 	double dPrecision = res.first;

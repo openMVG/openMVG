@@ -119,7 +119,7 @@ TEST(EightPointsRelativePose, EightPointsRelativePose_Kernel) {
     const Mat x1 = d._x[(i+1)%iNviews];
 
     Kernel kernel(x0, x1, d._K[i], d._K[(i+1)%iNviews]);
-    std::vector<size_t> samples(Kernel::MINIMUM_SAMPLES);
+    std::vector<uint32_t> samples(Kernel::MINIMUM_SAMPLES);
     std::iota(samples.begin(), samples.end(), 0);
     kernel.Fit(samples, &Es);
 
@@ -171,7 +171,7 @@ TEST(FivePointKernelTest, KernelError) {
   Kernel kernel(x1,x2, Mat3::Identity(), Mat3::Identity());
 
   bool bOk = true;
-  std::vector<size_t> samples(x1.cols());
+  std::vector<uint32_t> samples(x1.cols());
   std::iota(samples.begin(), samples.end(), 0);
   std::vector<Mat3> Es;
   kernel.Fit(samples, &Es);
@@ -207,7 +207,7 @@ TEST(FivePointKernelTest, FivePointsRelativePose_Kernel) {
     const Mat x1 = d._x[i];
 
     Kernel kernel(x0, x1, d._K[0], d._K[1]);
-    std::vector<size_t> samples(Kernel::MINIMUM_SAMPLES);
+    std::vector<uint32_t> samples(Kernel::MINIMUM_SAMPLES);
     std::iota(samples.begin(), samples.end(), 0);
     kernel.Fit(samples, &Es);
 

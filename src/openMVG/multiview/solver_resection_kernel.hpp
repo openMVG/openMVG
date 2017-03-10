@@ -72,7 +72,7 @@ public:
 
   void Fit
   (
-    const std::vector<size_t> &samples,
+    const std::vector<uint32_t> &samples,
     std::vector<ModelArg> *models
   )
   const
@@ -178,7 +178,7 @@ class ResectionKernel_K {
     EuclideanToNormalizedCamera(x_image_, K, &x_camera_);
   }
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat2X x = ExtractColumns(x_camera_, samples);
     const Mat3X X = ExtractColumns(X_, samples);
     Mat34 P;
@@ -191,7 +191,7 @@ class ResectionKernel_K {
     }
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     const Mat3X X = X_.col(sample);
     const Mat2X error = Project(model, X) - x_image_.col(sample);
     return error.col(0).norm();

@@ -87,7 +87,7 @@ public:
 
   void Fit
   (
-    const std::vector<size_t> &samples,
+    const std::vector<uint32_t> &samples,
     std::vector<ModelArg> *models
   )
   const

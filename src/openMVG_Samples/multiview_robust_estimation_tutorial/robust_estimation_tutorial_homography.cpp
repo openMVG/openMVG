@@ -8,6 +8,7 @@
 #include "openMVG/image/image.hpp"
 #include "openMVG/features/features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/matching/svg_matches.hpp"
 
 // Robust estimation includes
 //--
@@ -56,7 +57,7 @@ void display_info
   const PointFeatures & featsR,
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
-  const std::vector<size_t> & vec_inliers,
+  const std::vector<uint32_t> & vec_inliers,
   const std::string & sMethod
 );
 
@@ -98,20 +99,16 @@ int main() {
 
   //- Draw features on the two image (side by side)
   {
-    Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
-
-    //-- Draw features :
-    for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature point = regionsL->Features()[i];
-      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
-    }
-    for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature point = regionsR->Features()[i];
-      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
-    }
-    string out_filename = "02_features.jpg";
-    WriteImage(out_filename.c_str(), concat);
+    Features2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->Features(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->Features(),
+      "02_features.svg"
+    );
   }
 
   std::vector<IndMatch> vec_PutativeMatches;
@@ -125,21 +122,19 @@ int main() {
       vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
-    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
-      //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
-      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
-    }
-    const std::string out_filename = "03_siftMatches.svg";
-    std::ofstream svgFile( out_filename.c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+    const bool bVertical = true;
+    Matches2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      vec_PutativeMatches,
+      "03_Matches.svg",
+      bVertical
+    );
   }
 
   //---
@@ -179,7 +174,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     H =
       MaxConsensus
       (
@@ -212,7 +207,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     // Inlier count
     size_t inlier_count = 0;
     H =
@@ -254,7 +249,7 @@ int main() {
         &lmeds_threshold // Upper bound of the tolerated error for the inliers
       );
     // List the inliers
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     for (int i = 0; i < xL.cols(); ++i)
     {
       const double residual_error = std::sqrt(kernel.Error(i, H));
@@ -294,7 +289,7 @@ int main() {
     // The Model type
     Mat3 H;
     // The inlier list
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     // Call the Robust Estimator on the KERNEL
     const std::pair<double,double> ACRansacOut = // Return the precision & the associated NFA
       ACRANSAC(
@@ -327,7 +322,7 @@ void display_info
   const PointFeatures & featsR,
   const IndMatches & vec_PutativeMatches,
   const Mat3 &H,
-  const std::vector<size_t> & vec_inliers,
+  const std::vector<uint32_t> & vec_inliers,
   const std::string & sMethod
 )
 {

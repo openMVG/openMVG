@@ -1,13 +1,13 @@
 
 file(
-	GLOB_RECURSE
-	sfm_files_header
-	*.hpp
+  GLOB_RECURSE
+  sfm_files_header
+  *.hpp
 )
 file(
-	GLOB_RECURSE
-	sfm_files_cpp
-	*.cpp
+  GLOB_RECURSE
+  sfm_files_cpp
+  *.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
@@ -26,6 +26,10 @@ target_link_libraries(
   openMVG_system
   openMVG_matching
 )
+target_include_directories(
+  openMVG_sfm
+  PRIVATE
+  ${CERES_INCLUDE_DIRS})
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)

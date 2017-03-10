@@ -346,7 +346,6 @@ protected:
     const Octave & octave = m_Dogs;
     const int w = octave.slices[0].Width();
     const int h = octave.slices[0].Height();
-    const int ns = octave.slices.size();
     const float delta  = octave.delta;
 
     for (const auto & key : keypoints)
