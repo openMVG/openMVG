@@ -25,6 +25,7 @@ option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+option(OpenMVG_USE_CUDA "Enable CUDA features" ON)
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously

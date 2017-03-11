@@ -11,11 +11,6 @@ set(CPACK_PACKAGE_VERSION_PATCH "${cudaSift_VERSION_PATCH}")
 set(CPACK_GENERATOR "ZIP")
 include(CPack)
 
-find_package(CUDA)
-if (NOT CUDA_FOUND)
-  message(STATUS "CUDA not found. CUDA SIFT will not be built.")
-endif(NOT CUDA_FOUND)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -msse2 ")
 list(APPEND CUDA_NVCC_FLAGS "-arch=sm_35;-lineinfo;--compiler-options;-O2;-DVERBOSE")
 

@@ -32,8 +32,8 @@ struct Keypoint
   openMVG::Vecf descr;
 };
 
-} // namespace sift
+} // namespace csift
 } // namespace features
 } // namespace openMVG
 
-#endif // OPENMVG_FEATURES_SIFT_SIFT_KEYPOINT_HPP
+#endif // OPENMVG_FEATURES_CSIFT_KEYPOINT_HPP

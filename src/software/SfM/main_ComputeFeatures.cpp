@@ -12,7 +12,7 @@
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
-#include "openMVG/features/image_describer_cudasift.hpp"
+#include "openMVG/features/cudasift/image_describer_cudasift.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
         std::unique_ptr<Regions> regions;
         image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
-      
+
       }
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical

@@ -9,7 +9,7 @@
 #include "openMVG/features/feature.hpp"
 #include "third_party/cudasift/cudaImage.h"
 #include "third_party/cudasift/cudaSift.h"
-#include "third_party/cudasift/csift_keypoint.hpp"
+#include "openMVG/features/cudasift/csift_keypoint.hpp"
 #include <iostream>
 #include <numeric>
 #include <cereal/cereal.hpp>
@@ -74,12 +74,12 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr) override
     {
+        // Initialize GPU, allocate memory for image
         InitCuda(0);
         CudaImage img1;
         const int w = image.Width(), h = image.Height();
 
-
-        // Convert to float in range [0;1]
+        // Convert to float 
         const image::Image<float> If(image.GetMat().cast<float>());
         img1.Allocate(w, h, iAlignUp(w, 128), false, NULL, (float*)If.data());
         img1.Download();
@@ -88,18 +88,15 @@ public:
         {
             SiftData siftData1;
             InitSiftData(siftData1, 32768, true, true);
-	          //std::string filename = "/home/sai/lambe.png";
-	    //image::WriteImage(filename.c_str(), image.data());
-	    std::cout << "Config is" << params_.initBlur_ << "and " << params_.thresh_ << std::endl;
-            ExtractSift(siftData1, img1, 5, params_.initBlur_, params_.thresh_, 0.0f, false);
+	    ExtractSift(siftData1, img1, 5, params_.initBlur_, params_.thresh_, 0.0f, false);
             int numPts1 = siftData1.numPts;
 	    std::cout << "Number of features detected: " << numPts1 << std::endl;
-	    //std::cout << "Image data" << std::endl;
-	    //std::cout << image.data();
+
             SiftPoint *sift1 = siftData1.h_data;
             std::vector< csift::Keypoint > keys;
             Descriptor<unsigned char, 128> descriptor;
-            for (int i=0;i<numPts1;i++)
+	    // Load keypoint and descriptor data from result
+            for (int i = 0; i < numPts1 ; i++)
             {
                 csift::Keypoint k;
                 k.x = sift1[i].xpos;
@@ -117,9 +114,11 @@ public:
                 Descriptor<unsigned char, 128> descriptor;
                 descriptor << (k.descr.cast<unsigned char>());
                 {
-                  for (int ctr=0;ctr<128;++ctr)
+		  // Convert SIFT descriptor to OpenMVG format
+                  for (unsigned int ctr = 0 ; ctr < 128 ; ++ctr)
+		  {
                     descriptor[ctr] = static_cast<unsigned char>(512.f*k.descr[ctr]);
-
+		  }
 
                     regionsCasted->Descriptors().emplace_back(descriptor);
                     regionsCasted->Features().emplace_back(k.x, k.y, k.sigma, k.theta);
