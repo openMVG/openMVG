@@ -97,6 +97,15 @@ add_subdirectory(easyexif)
 set(FAST_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/fast)
 add_subdirectory(fast)
 
+find_package(CUDA)
+
+if(CUDA_FOUND)
+set(CUDA_SIFT_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/cudasift)
+add_subdirectory(cudasift)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -msse2 ")
+list(APPEND CUDA_NVCC_FLAGS "-lineinfo;--compiler-options;-O2;-DVERBOSE")
+endif(CUDA_FOUND)
+
 ##
 # Install Header only libraries if necessary
 ##

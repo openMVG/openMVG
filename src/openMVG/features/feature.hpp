@@ -114,6 +114,48 @@ protected:
   float orientation_;  // In radians.
 };
 
+class SIOPointFeature2 : public PointFeature {
+
+  friend std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj);
+  friend std::istream& operator>>(std::istream& in, SIOPointFeature& obj);
+
+public:
+  SIOPointFeature2(float x=0.0f, float y=0.0f,
+                  float scale=0.0f, float orient=0.0f)
+    : PointFeature(x,y)
+    , scale_(scale)
+    , orientation_(orient) {}
+
+  float scale() const { return scale_; }
+  float& scale() { return scale_; }
+  float orientation() const { return orientation_; }
+  float& orientation() { return orientation_; }
+
+  bool operator ==(const SIOPointFeature& b) const {
+    return (scale_ == b.scale()) &&
+           (orientation_ == b.orientation()) &&
+           (x() == b.x()) && (y() == b.y()) ;
+  };
+
+  bool operator !=(const SIOPointFeature& b) const {
+    return !((*this)==b);
+  };
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar (
+      coords_(0), coords_(1),
+      scale_,
+      orientation_);
+  }
+
+
+  protected:
+    float scale_;        // In pixels.
+    float orientation_;  // In radians.
+  };
+
 using SIOPointFeatures = std::vector<SIOPointFeature>;
 
 //

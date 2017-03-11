@@ -12,6 +12,7 @@
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
+#include "openMVG/features/image_describer_cudasift.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
@@ -178,10 +179,17 @@ int main(int argc, char **argv)
   {
     // Create the desired Image_describer method.
     // Don't use a factory, perform direct allocation
+
     if (sImage_Describer_Method == "SIFT")
     {
       image_describer.reset(new SIFT_Image_describer
         (SIFT_Image_describer::Params(), !bUpRight));
+    }
+
+    if (sImage_Describer_Method == "CSIFT")
+    {
+      image_describer.reset(
+        new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
     }
     else
     if (sImage_Describer_Method == "SIFT_ANATOMY")
@@ -239,6 +247,7 @@ int main(int argc, char **argv)
   {
     system::Timer timer;
     Image<unsigned char> imageGray, globalMask;
+    Image<double> cudaSiftImage, cudaMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
     if (stlplus::file_exists(sGlobalMask_filename))
@@ -263,7 +272,7 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0)
 #endif
     for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
@@ -278,6 +287,7 @@ int main(int argc, char **argv)
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
+
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
@@ -302,6 +312,7 @@ int main(int argc, char **argv)
         std::unique_ptr<Regions> regions;
         image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
+      
       }
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
