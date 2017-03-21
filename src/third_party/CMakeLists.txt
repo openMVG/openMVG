@@ -99,9 +99,14 @@ add_subdirectory(fast)
 
 if(OpenMVG_USE_CUDA)
   find_package(CUDA)
-  set(CUDA_SIFT_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/cudasift)
-  add_subdirectory(cudasift)
-endif(CUDA_FOUND)
+  if(NOT CUDA_FOUND)
+    message(STATUS "CUDA libraries were not found. Disabling GPU acceleration support.")
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CUDA OFF)
+  else(NOT CUDA_FOUND)
+    set(CUDA_SIFT_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/cudasift)
+    add_subdirectory(cudasift)
+  endif(NOT CUDA_FOUND)
+endif(OpenMVG_USE_CUDA)
 
 ##
 # Install Header only libraries if necessary

@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef CSIFT_IMAGE_DESCRIBER_HPP
 #define CSIFT_IMAGE_DESCRIBER_HPP
 
@@ -25,7 +29,8 @@ public:
     {
         Params(
         float initBlur = 1.0f,
-        float thresh = 3.5f
+        float thresh = 3.5f,
+		int numOctaves = 5
         ):
         initBlur_(initBlur),
         thresh_(thresh) {}
@@ -40,6 +45,7 @@ public:
         }
         float initBlur_;
         float thresh_;
+		int numOctaves_;
     };
 
     CSIFT_Image_describer
@@ -69,8 +75,7 @@ public:
     }
 
 
-    bool Describe(
-        const image::Image<unsigned char>& image,
+    bool Describe(const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr) override
     {
@@ -84,18 +89,18 @@ public:
         img1.Allocate(w, h, iAlignUp(w, 128), false, NULL, (float*)If.data());
         img1.Download();
         Allocate(regions);
-        CSIFT_Regions * regionsCasted = dynamic_cast<CSIFT_Regions*>(regions.get());
+        SIFT_Regions * regionsCasted = dynamic_cast<SIFT_Regions*>(regions.get());
         {
             SiftData siftData1;
             InitSiftData(siftData1, 32768, true, true);
-	    ExtractSift(siftData1, img1, 5, params_.initBlur_, params_.thresh_, 0.0f, false);
+			ExtractSift(siftData1, img1, params_.numOctaves_, params_.initBlur_, params_.thresh_, 0.0f, false);
             int numPts1 = siftData1.numPts;
-	    std::cout << "Number of features detected: " << numPts1 << std::endl;
+			std::cout << "Number of features detected: " << numPts1 << std::endl;
 
             SiftPoint *sift1 = siftData1.h_data;
             std::vector< csift::Keypoint > keys;
             Descriptor<unsigned char, 128> descriptor;
-	    // Load keypoint and descriptor data from result
+			// Load keypoint and descriptor data from result, convert descriptor array into Eigen matrix
             for (int i = 0; i < numPts1 ; i++)
             {
                 csift::Keypoint k;
@@ -114,23 +119,22 @@ public:
                 Descriptor<unsigned char, 128> descriptor;
                 descriptor << (k.descr.cast<unsigned char>());
                 {
-		  // Convert SIFT descriptor to OpenMVG format
-                  for (unsigned int ctr = 0 ; ctr < 128 ; ++ctr)
-		  {
-                    descriptor[ctr] = static_cast<unsigned char>(512.f*k.descr[ctr]);
-		  }
-
-                    regionsCasted->Descriptors().emplace_back(descriptor);
-                    regionsCasted->Features().emplace_back(k.x, k.y, k.sigma, k.theta);
-                }
-            }
+					// Convert SIFT descriptor to OpenMVG format
+					for (unsigned int ctr = 0 ; ctr < 128 ; ++ctr)
+					{
+	                    descriptor[ctr] = static_cast<unsigned char>(512.f*k.descr[ctr]);
+					}
+					regionsCasted->Descriptors().emplace_back(descriptor);
+					regionsCasted->Features().emplace_back(k.x, k.y, k.sigma, k.theta);
+				}
+			}
         }
         return true;
     }
 
     void Allocate(std::unique_ptr<Regions> &regions) const override
     {
-        regions.reset( new CSIFT_Regions );
+        regions.reset( new SIFT_Regions );
     }
 
     template<class Archive>
@@ -138,7 +142,6 @@ public:
     {
         ar(cereal::make_nvp("params", params_));
     }
-
 
 private:
     Params params_;

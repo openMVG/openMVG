@@ -15,7 +15,6 @@ namespace features {
 
 /// Define the classic SIFT Keypoint
 using SIFT_Regions = Scalar_Regions<SIOPointFeature,unsigned char,128>;
-using CSIFT_Regions = Scalar_Regions<SIOPointFeature2,unsigned char,128>;
 /// Define the AKAZE Keypoint (with a float descriptor)
 using AKAZE_Float_Regions = Scalar_Regions<SIOPointFeature,float,64>;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
@@ -27,7 +26,6 @@ using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature,64>;
 } // namespace openMVG
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::SIFT_Regions)
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::CSIFT_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Float_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Liop_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Binary_Regions)
@@ -39,8 +37,6 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Regions, "SIFT_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::SIFT_Regions)
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::CSIFT_Regions, "CSIFT_Regions");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::CSIFT_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Float_Regions, "AKAZE_Float_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::AKAZE_Float_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Liop_Regions, "AKAZE_Liop_Regions");
