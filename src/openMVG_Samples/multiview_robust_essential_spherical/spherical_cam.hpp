@@ -7,7 +7,7 @@
 #ifndef OPENMVG_SPHERICAL_CAMERA_HPP
 #define OPENMVG_SPHERICAL_CAMERA_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/multiview/projection.hpp"
 
 // [1] "Robust and accurate calibration of camera networks". PhD.
@@ -66,7 +66,7 @@ struct EightPointRelativePoseSolver {
     EncodeEpipolarEquation(x1, x2, &A);
 
     Vec9 e;
-    Nullspace(&A, &e);
+    Nullspace(A, e);
     Mat3 E = Map<RMat3>(e.data());
 
     // Find the closest essential matrix to E in frobenius norm

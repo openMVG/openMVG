@@ -8,7 +8,7 @@
 #include "colorHarmonizeEngineGlobal.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 //-- Feature matches
 #include <openMVG/matching/indMatch.hpp>
 #include "openMVG/matching/indMatch_utils.hpp"

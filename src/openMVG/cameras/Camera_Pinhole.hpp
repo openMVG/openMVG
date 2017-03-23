@@ -11,7 +11,7 @@
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <vector>
 
@@ -80,7 +80,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     /**
     * @brief Destructor
     */
-    virtual ~Pinhole_Intrinsic() override = default;
+    ~Pinhole_Intrinsic() override = default;
 
     /**
     * @brief Get type of the intrinsic

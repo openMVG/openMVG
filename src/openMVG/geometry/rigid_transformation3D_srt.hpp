@@ -8,7 +8,7 @@
 #define OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 
 #include "openMVG/numeric/lm.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

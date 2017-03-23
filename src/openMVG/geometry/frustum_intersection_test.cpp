@@ -8,6 +8,7 @@
 #include "openMVG/geometry/half_space_intersection.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "CppUnitLite/TestHarness.h"
 

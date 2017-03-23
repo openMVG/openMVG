@@ -20,8 +20,8 @@
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
 
-#include "openMVG/features/feature.hpp" 
-#include "openMVG/image/image.hpp"
+namespace openMVG { namespace features { class SIOPointFeature; } }
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 #include <map>
 #include <vector>

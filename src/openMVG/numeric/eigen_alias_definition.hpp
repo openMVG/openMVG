@@ -13,14 +13,9 @@
 // http://eigen.tuxfamily.org/dox-devel/QuickRefPage.html
 //--
 
-#include <Eigen/Core>
-#include <Eigen/Eigenvalues>
-#include <Eigen/Geometry>
-#include <Eigen/LU>
+#include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/StdVector>
-#include <Eigen/SVD>
-#include <Eigen/QR>
 
 #include <initializer_list>
 #include <memory>
@@ -46,14 +41,11 @@ namespace std {                                                            \
     vector(InputIterator first, InputIterator last,                        \
            const allocator_type& a = allocator_type())                     \
         : vector_base(first, last, a) {}                                   \
-    vector(const vector& c) : vector_base(c) {}                            \
+    vector(const vector& c) = default;                                     \
     explicit vector(size_type num, const value_type& val = value_type())   \
         : vector_base(num, val) {}                                         \
     vector(iterator start, iterator end) : vector_base(start, end) {}      \
-    vector& operator=(const vector& x) {                                   \
-      vector_base::operator=(x);                                           \
-      return *this;                                                        \
-    }                                                                      \
+    vector& operator=(const vector& x) = default;                          \
     /* Add initializer list constructor support*/                          \
     vector(initializer_list<__VA_ARGS__> list)                             \
         : vector_base(list.begin(), list.end()) {}                         \

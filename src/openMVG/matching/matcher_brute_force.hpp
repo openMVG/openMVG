@@ -26,7 +26,7 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
   public:
   using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcherBruteForce() = default ;
+  ArrayMatcherBruteForce() = default;
   virtual ~ArrayMatcherBruteForce()
   {
     memMapping.reset();

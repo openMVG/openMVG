@@ -6,6 +6,9 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/numeric/numeric.h"
+
+#include <limits>
 
 namespace openMVG {
 
@@ -25,8 +28,8 @@ void TriangulateNView
     A.block<3, 4>(3 * i, 0)     = -Ps[i];
     A.block<3,1> (3 * i, 4 + i) = x.col(i);
   }
-  Vec X_and_alphas;
-  Nullspace(&A, &X_and_alphas);
+  Vec X_and_alphas(4 + nviews);
+  Nullspace(A, X_and_alphas);
   *X = X_and_alphas.head(4);
 }
 
@@ -52,7 +55,7 @@ void TriangulateNViewAlgebraic
       x.col(i)[0] * Ps[i].row(2) - x.col(i)[2] * Ps[i].row(0),
       x.col(i)[1] * Ps[i].row(2) - x.col(i)[2] * Ps[i].row(1);
   }
-  Nullspace(&A, X);
+  Nullspace(A, *X);
 }
 
 void Triangulation::add
@@ -77,10 +80,10 @@ void Triangulation::clear()
 double Triangulation::error(const Vec3 &X) const
 {
   double squared_reproj_error = 0.0;
-  for (std::size_t i=0; i<views.size(); ++i)
+  for (const auto & view_it : views)
   {
-    const Mat34& PMat = views[i].first;
-    const Vec2 & xy = views[i].second;
+    const Mat34& PMat = view_it.first;
+    const Vec2 & xy = view_it.second;
     squared_reproj_error += (xy - Project(PMat, X)).norm();
   }
   return squared_reproj_error;
@@ -89,7 +92,7 @@ double Triangulation::error(const Vec3 &X) const
 // Camera triangulation using the iterated linear method
 Vec3 Triangulation::compute(int iter) const
 {
-  const int nviews = int(views.size());
+  const int nviews(views.size());
   assert(nviews>=2);
 
   // Iterative weighted linear least squares

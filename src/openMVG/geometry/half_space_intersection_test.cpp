@@ -6,6 +6,7 @@
 
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/geometry/half_space_intersection.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
@@ -57,8 +58,8 @@ TEST(HALF_PLANE, EmptyIntersection) {
   /*
       /\
    ___|____ z = 0
-  
-  
+
+
    _______ z = -2
       |
      \/
@@ -83,7 +84,7 @@ TEST(HALF_PLANE, Side)
   /*
       /\
    ___|____ z = 2
-  
+
       /\
    ___|____ z = 0
   */

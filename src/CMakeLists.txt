@@ -222,7 +222,9 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
     add_executable(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
 
     set_property(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
-
+    target_include_directories(${NAMESPACE}_test_${NAME}
+                               PRIVATE
+                               ${CMAKE_SOURCE_DIR}/third_party)
     target_link_libraries(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
@@ -390,7 +392,6 @@ add_subdirectory(third_party)
 # ==============================================================================
 set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
   ${LEMON_INCLUDE_DIRS}

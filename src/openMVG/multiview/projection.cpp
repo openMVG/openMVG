@@ -26,6 +26,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 

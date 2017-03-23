@@ -8,7 +8,7 @@
 #ifndef OPENMVG_SFM_IO_H
 #define OPENMVG_SFM_IO_H
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/stl/split.hpp"
 
 #include <fstream>
@@ -219,4 +219,3 @@ inline bool loadImageList
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_IO_H
-

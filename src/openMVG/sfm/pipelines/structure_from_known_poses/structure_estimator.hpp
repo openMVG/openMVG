@@ -9,11 +9,13 @@
 
 #include "openMVG/matching/indMatch.hpp"
 
+#include <memory>
+
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
+
 namespace openMVG {
 namespace sfm {
-
-struct Regions_Provider;
-struct SfM_Data;
 
 class SfM_Data_Structure_Estimation_From_Known_Poses
 {

@@ -28,7 +28,7 @@
 #ifndef OPENMVG_MULTIVIEW_PROJECTION_HPP
 #define OPENMVG_MULTIVIEW_PROJECTION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 /// Collection of function related to the classic Projection matrix used
 ///  in computer vision. P = K[R|t] with [t]=[-RC] Cf HZ

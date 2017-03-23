@@ -29,6 +29,7 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 

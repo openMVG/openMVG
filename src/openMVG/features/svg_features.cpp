@@ -204,4 +204,3 @@ bool Features2SVG
 
 }  // namespace features
 }  // namespace openMVG
-

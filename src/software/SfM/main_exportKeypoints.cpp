@@ -5,26 +5,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/features/svg_features.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
-#include <string>
-#include <vector>
 #include <fstream>
-#include <map>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
-using namespace svg;
-
 
 int main(int argc, char ** argv)
 {

@@ -11,15 +11,13 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license ( see the COPYING file).
 */
 
-#include "kvld.h"
+#include "openMVG/matching/kvld/kvld.h"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/features/feature.hpp"
 
-#include "algorithm.h"
-
-#include "openMVG/image/image.hpp"
-
-#include <functional>
-#include <numeric>
-
+#include <cassert>
+#include <cmath>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -433,4 +431,3 @@ float KVLD( const Image< float >& I1,
     }
   return float( matchesFiltered.size() ) / matches.size();
 }
-

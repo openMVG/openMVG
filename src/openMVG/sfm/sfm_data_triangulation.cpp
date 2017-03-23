@@ -4,15 +4,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
 
 #include "third_party/progress/progress.hpp"
-
-#include <deque>
-#include <memory>
 
 namespace openMVG {
 namespace sfm {

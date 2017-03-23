@@ -7,16 +7,16 @@
 #ifndef OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 #define OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
 
 #include <set>
 
+namespace openMVG { namespace sfm { struct SfM_Data; } }
+
 namespace openMVG {
 namespace sfm {
-
-struct SfM_Data;
 
 /// Generic basis struct for triangulation of track data contained
 ///  in the SfM_Data scene structure.

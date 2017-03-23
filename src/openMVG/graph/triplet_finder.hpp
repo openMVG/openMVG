@@ -96,15 +96,8 @@ struct Triplet
     return os;
   }
 
-  /// First index id
-  IndexT i;
-
-  /// Second index id
-  IndexT j;
-
-  /// Third index id
-  IndexT k;
-
+  /// the three triplet index id
+  IndexT i, j, k;
 };
 
 

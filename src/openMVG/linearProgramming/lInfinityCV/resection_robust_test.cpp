@@ -41,7 +41,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(2*Square(0.6));
-    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, nullptr, 128);
 
     // Check that Projection matrix is near to the GT :
     const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
@@ -95,7 +95,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(Square(0.1)); //Highly intolerant for the test
-    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, nullptr, 128);
 
     // Check that Projection matrix is near to the GT :
     const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()

@@ -4,15 +4,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/mser/mser.hpp"
+#include "openMVG/features/mser/mser_region.hpp"
+#include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_drawing.hpp"
+#include "openMVG/image/image_resampling.hpp"
+#include "openMVG/image/sample.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 
-#include <string>
-#include <iostream>
 
 #include <unsupported/Eigen/MatrixFunctions>
+
+#include <iostream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -208,4 +216,3 @@ int main(int argc, char **argv)
 
   return EXIT_SUCCESS;
 }
-

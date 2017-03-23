@@ -6,12 +6,17 @@
 
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
 
+#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/features/feature.hpp"
 #include "openMVG/graph/graph.hpp"
-#include "openMVG/matching/metric.hpp"
+#include "openMVG/geometry/pose3.hpp"
+//#include "openMVG/matching/defines.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/tracks/tracks.hpp"
 

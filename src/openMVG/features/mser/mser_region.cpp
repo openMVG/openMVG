@@ -6,8 +6,10 @@
 
 #include "mser_region.hpp"
 
-#include <ctgmath>
+#include <algorithm>
+#include <cmath>
 #include <limits>
+#include <memory>
 
 namespace openMVG
 {
@@ -313,7 +315,7 @@ namespace openMVG
       /**
       * Cut all reference to any region in the hierarchy
       */
-      void MSERRegion::Isolate( void )
+      void MSERRegion::Isolate( )
       {
         m_parent = nullptr ;
         m_child = nullptr ;

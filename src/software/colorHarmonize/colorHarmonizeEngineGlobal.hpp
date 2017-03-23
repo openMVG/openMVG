@@ -8,8 +8,8 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_ENGINE_GLOBAL_H
 #define OPENMVG_COLOR_HARMONIZATION_ENGINE_GLOBAL_H
 
-#include <openMVG/numeric/numeric.h>
-#include <openMVG/features/features.hpp>
+#include <openMVG/numeric/eigen_alias_definition.hpp>
+#include <openMVG/features/feature.hpp>
 #include <openMVG/tracks/tracks.hpp>
 
 #include <memory>

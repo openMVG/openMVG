@@ -52,64 +52,60 @@ namespace robust{
 namespace acransac_nfa_internal {
 
 /// logarithm (base 10) of binomial coefficient
-template <typename T>
-static T logcombi
+static float logcombi
 (
   uint32_t k,
   uint32_t n,
-  const std::vector<T> & vec_log10 // lookuptable in [0,n+1]
+  const std::vector<float> & vec_log10 // lookuptable in [0,n+1]
 )
 {
-  if (k>=n || k<=0) return T(0);
+  if (k>=n || k<=0) return 0.f;
   if (n-k<k) k=n-k;
-  T r(0);
+  float r(0.f);
   for (uint32_t i = 1; i <= k; ++i)
     r += vec_log10[n-i+1] - vec_log10[i];
   return r;
 }
 
 /// tabulate logcombi(.,n)
-template<typename Type>
 static void makelogcombi_n
 (
   uint32_t n,
-  std::vector<Type> & l,
-  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+  std::vector<float> & l,
+  std::vector<float> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(n+1);
   for (uint32_t k = 0; k <= n; ++k)
-    l[k] = logcombi<Type>(k, n, vec_log10);
+    l[k] = logcombi(k, n, vec_log10);
 }
 
 /// tabulate logcombi(k,.)
-template<typename Type>
 static void makelogcombi_k
 (
   uint32_t k,
   uint32_t nmax,
-  std::vector<Type> & l,
-  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+  std::vector<float> & l,
+  std::vector<float> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(nmax+1);
   for (uint32_t n = 0; n <= nmax; ++n)
-    l[n] = logcombi<Type>(k, n, vec_log10);
+    l[n] = logcombi(k, n, vec_log10);
 }
 
-template <typename Type>
 static void makelogcombi
 (
   uint32_t k,
   uint32_t n,
-  std::vector<Type> & vec_logc_k,
-  std::vector<Type> & vec_logc_n
+  std::vector<float> & vec_logc_k,
+  std::vector<float> & vec_logc_n
 )
 {
   // compute a lookuptable of log10 value for the range [0,n+1]
-  std::vector<Type> vec_log10(n + 1);
+  std::vector<float> vec_log10(n + 1);
   for (uint32_t k = 0; k <= n; ++k)
-    vec_log10[k] = log10((Type)k);
+    vec_log10[k] = log10(static_cast<float>(k));
 
   makelogcombi_n(n, vec_logc_n, vec_log10);
   makelogcombi_k(k, n, vec_logc_k, vec_log10);
@@ -328,7 +324,7 @@ std::pair<double, double> ACRANSAC
   const Kernel &kernel,
   std::vector<uint32_t> & vec_inliers,
   const unsigned int num_max_iteration = 1024,
-  typename Kernel::Model * model = NULL,
+  typename Kernel::Model * model = nullptr,
   double precision = std::numeric_limits<double>::infinity(),
   bool bVerbose = false
 )

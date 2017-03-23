@@ -45,7 +45,7 @@ TEST(Camera_IO_ceral, SaveRead) {
 
   for (const auto cam_type : vec_camera_model_type)
   {
-    std::shared_ptr<IntrinsicBase> intrinsic(NULL);
+    std::shared_ptr<IntrinsicBase> intrinsic(nullptr);
     
     const int width = 200;
     const int height = 200;

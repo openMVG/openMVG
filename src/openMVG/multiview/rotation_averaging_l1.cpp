@@ -34,10 +34,7 @@ using namespace lemon;
 #include <Eigen/Cholesky>
 #include <Eigen/SparseCholesky>
 
-#include <cstdint>
-#include <map>
 #include <queue>
-
 
 namespace openMVG   {
 namespace rotation_averaging  {

@@ -5,25 +5,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "openMVG/cameras/cameras.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/sfm/sfm.hpp"
-
-#include "openMVG/matching/matcher_brute_force.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-
-#include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <string>
 #include <iostream>
+#include <string>
+#include <utility>
 
 using namespace openMVG;
 using namespace openMVG::image;

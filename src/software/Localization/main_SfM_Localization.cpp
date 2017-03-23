@@ -6,9 +6,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <openMVG/sfm/sfm.hpp>
-#include <openMVG/features/features.hpp>
-#include <nonFree/sift/SIFT_describer.hpp>
-#include <openMVG/image/image.hpp>
+#include <openMVG/features/feature.hpp>
+#include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/image/image_io.hpp>
 #include <software/SfM/SfMPlyHelper.hpp>
 
 #include <openMVG/system/timer.hpp>
@@ -17,6 +17,7 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
+#include "nonFree/sift/SIFT_describer.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 

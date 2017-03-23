@@ -10,10 +10,19 @@
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_converter.hpp"
 
+#include <stdio.h>
+#include <vector>
+
 namespace openMVG
 {
 namespace image
 {
+
+extern template class Image<unsigned char>;
+extern template class Image<float>;
+extern template class Image<double>;
+extern template class Image<RGBColor>;
+extern template class Image<RGBAColor>;
 
 /**
 * @enum Format List of input format handled by IO operations

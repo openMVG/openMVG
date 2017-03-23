@@ -7,7 +7,7 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 #define OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "Eigen/Dense"
 
 namespace openMVG
 {
@@ -90,10 +90,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     /**
     * @brief destructor
     */
-    virtual inline ~Image() {};
-    //-- Image construction method
-    //------------------------------
-
+    virtual inline ~Image() = default;
 
     /**
     * @brief Change geometry of image

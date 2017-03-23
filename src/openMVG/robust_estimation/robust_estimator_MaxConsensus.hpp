@@ -10,6 +10,7 @@
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 
+#include <numeric>
 #include <limits>
 #include <vector>
 

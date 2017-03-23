@@ -9,6 +9,7 @@
 
 #include "testing/testing.h"
 
+#include <numeric>
 #include <vector>
 
 using namespace openMVG;

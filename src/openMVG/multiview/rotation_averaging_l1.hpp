@@ -9,6 +9,7 @@
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
 
 #include "openMVG/multiview/rotation_averaging_common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 //------------------
 //-- Bibliography --
@@ -67,7 +68,7 @@ bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
   const uint32_t nMainViewID,
-  const double sigma=openMVG::D2R(5));
+  const double sigma = openMVG::D2R(5));
 
 /**
  * @brief Sort relative rotation as inlier, outlier rotations.

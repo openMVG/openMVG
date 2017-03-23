@@ -5,19 +5,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/matching_filters.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/svg_features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/cmdLine/cmdLine.h"
-
 #include "nonFree/sift/SIFT_describer.hpp"
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/cmdLine/cmdLine.h"
+#include <memory>
 #include <string>
-#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::image;

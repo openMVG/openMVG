@@ -32,9 +32,8 @@
 
 #include <cmath>
 #include <iostream>
-#include <numeric>
+#include <iterator>
 #include <string>
-#include <vector>
 
 namespace openMVG
 {
@@ -194,22 +193,11 @@ inline double DistanceLInfinity( const TVec &x, const TVec &y )
 * @note Input matrix A content may be modified during computation
 * @note Input vector nullspace may be resized to store the full result
 */
-template <typename TMat, typename TVec>
-double Nullspace( TMat *A, TVec *nullspace )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    ( *nullspace ) = svd.matrixV().col( A->cols() - 1 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace( &A_extended, nullspace );
-}
+double Nullspace
+(
+  const Eigen::Ref<const Mat> & A,
+  Eigen::Ref<Vec> nullspace
+);
 
 /**
 * @brief Solve linear system and gives the two best solutions
@@ -227,24 +215,11 @@ double Nullspace( TMat *A, TVec *nullspace )
 * @note Input matrix A content may be modified during computation
 * @note Input vector nullspace may be resized to store the full result
 */
-template <typename TMat, typename TVec1, typename TVec2>
-inline double Nullspace2( TMat *A, TVec1 *x1, TVec2 *x2 )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    TMat V = svd.matrixV();
-    *x1 = V.col( A->cols() - 1 );
-    *x2 = V.col( A->cols() - 2 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace2( &A_extended, x1, x2 );
-}
+double Nullspace2(
+  const Eigen::Ref<const Mat> & A,
+  Eigen::Ref<Vec> x1,
+  Eigen::Ref<Vec> x2
+);
 
 
 /**
@@ -384,10 +359,10 @@ double CosinusBetweenMatrices( const TMat &a, const TMat &b )
 * @note columns index start at index 0
 * @note Assuming columns contains a list of valid columns index
 */
-template <typename TMat, typename TCols>
-TMat ExtractColumns( const TMat &A, const TCols &columns )
+template <typename TCols>
+Mat ExtractColumns( const Eigen::Ref<const Mat> &A, const TCols &columns )
 {
-  TMat compressed( A.rows(), columns.size() );
+  Mat compressed( A.rows(), columns.size() );
   for ( size_t i = 0; i < static_cast<size_t>( columns.size() ); ++i )
   {
     compressed.col( i ) = A.col( columns[i] );

@@ -47,7 +47,7 @@ inline bool Save_BAF(
       << sfm_data.GetLandmarks().size() << '\n';
 
     const Intrinsics & intrinsics = sfm_data.GetIntrinsics();
-    for (const auto & iterIntrinsic : intrinsics ) 
+    for (const auto & iterIntrinsic : intrinsics )
     {
       //get params
       const std::vector<double> intrinsicsParams = iterIntrinsic.second.get()->getParams();

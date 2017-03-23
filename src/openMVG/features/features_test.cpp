@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/features/features.hpp"
-
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/descriptor.hpp"
 
 #include "testing/testing.h"
 

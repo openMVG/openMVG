@@ -9,7 +9,7 @@
 #include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.h"
 
 #include "testing/testing.h"
 

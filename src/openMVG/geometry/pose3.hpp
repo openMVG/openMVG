@@ -33,21 +33,17 @@ class Pose3
   public:
 
     /**
-    * @brief Default constructor
-    * @note This defines a Null transform (aligned with cartesian frame, centered at origin)
-    */
-    Pose3()
-      : rotation_( Mat3::Identity() ),
-        center_( Vec3::Zero() )
-    {
-
-    }
-    /**
     * @brief Constructor
     * @param r Rotation
     * @param c Center
+    * @note Default (without args) defines an Identity pose.
     */
-    Pose3( const Mat3& r, const Vec3& c ) : rotation_( r ), center_( c ) {}
+    Pose3
+    (
+      const Mat3& r = std::move(Mat3::Identity()),
+      const Vec3& c = std::move(Vec3::Zero())
+    )
+    : rotation_( r ), center_( c ) {}
 
     /**
     * @brief Get Rotation matrix

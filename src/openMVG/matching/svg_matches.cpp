@@ -6,6 +6,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <openMVG/matching/svg_matches.hpp>
+#include <openMVG/features/feature.hpp>
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
@@ -219,4 +220,3 @@ bool InlierMatches2SVG
 
 }  // namespace matching
 }  // namespace openMVG
-

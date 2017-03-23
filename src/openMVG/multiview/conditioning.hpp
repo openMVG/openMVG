@@ -27,7 +27,7 @@
 #ifndef OPENMVG_MULTIVIEW_CONDITIONNING_HPP
 #define OPENMVG_MULTIVIEW_CONDITIONNING_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 //-- Implementation of normalized coordinates.
 // Normalization improve accuracy of results and provide benefits

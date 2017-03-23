@@ -7,10 +7,13 @@
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+
+using namespace openMVG::matching;
 
 namespace openMVG {
 namespace sfm {

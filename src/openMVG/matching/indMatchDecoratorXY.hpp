@@ -8,7 +8,7 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 #define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 #include <iostream>

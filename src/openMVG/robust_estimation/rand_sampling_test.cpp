@@ -9,6 +9,7 @@
 
 #include "testing/testing.h"
 
+#include <numeric>
 #include <set>
 
 using namespace openMVG;

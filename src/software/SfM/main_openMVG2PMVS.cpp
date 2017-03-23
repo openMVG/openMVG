@@ -5,8 +5,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/types.hpp"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <cstdlib>
+#include <cmath>
+#include <iterator>
+#include <iomanip>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -14,14 +32,6 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <cmath>
-#include <iterator>
-#include <iomanip>
 
 bool exportToPMVSFormat(
   const SfM_Data & sfm_data,

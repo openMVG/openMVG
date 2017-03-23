@@ -12,6 +12,7 @@
 #include "openMVG/robust_estimation/robust_ransac_tools.hpp"
 
 #include <algorithm>
+#include <numeric>
 #include <limits>
 #include <vector>
 

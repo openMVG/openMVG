@@ -28,7 +28,7 @@ namespace features
   // Note :
   // - Angle is in radians.
   // - data the output array (must be allocated to 20 values).
-  template<typename Real, typename T>
+  template<typename Real>
   void PickNaiveDipole
   (
     const image::Image<Real> & image,
@@ -36,7 +36,7 @@ namespace features
     float y,
     float scale,
     float angle,
-    T * data
+    float * data
   )
   {
     // Use bilinear sampling
@@ -115,7 +115,7 @@ namespace features
   }
 
   // Pick an angular smoothed dipole
-  template<typename Real, typename T>
+  template<typename Real>
   void PickASDipole
   (
     const image::Image<Real> & image,
@@ -123,7 +123,7 @@ namespace features
     float y,
     float scale,
     float angle,
-    T * data)
+    float * data)
   {
     const image::Sampler2d<image::SamplerLinear> sampler;
     // Setup the rotation center.
@@ -133,7 +133,7 @@ namespace features
     const float lambda2 = lambda1 / 2.0f;
     const float angleSubdiv = 2.0f * M_PI / 12.0f;
 
-    //-- First order dipole :
+    //-- First order dipole:
     Vecf dipoleF1(12);
     for (int i = 0; i < 12; ++i)
     {
@@ -159,7 +159,7 @@ namespace features
           0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
           1, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0;
 
-    //-- Second order dipole :
+    //-- Second order dipole:
     Vecf dipoleF2(12);
     for (int i = 0; i < 12; ++i)
     {
@@ -199,7 +199,9 @@ namespace features
     ** @param Li Input image
     ** @param ipt Input interest point
     ** @param desc output descriptor (floating point descriptor)
-    ** @param bAngularSmoothedDipole Extract or not a angular smoothed dipole
+    ** @param bAngularSmoothedDipole Tell if we must extract an upright or an
+    **  angular smoothed dipole
+    ** @param magnif_factor Scaling factor used to rescale the dipole sampling
     **/
   template< typename Real>
   void ComputeDipoleDescriptor

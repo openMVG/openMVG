@@ -4,20 +4,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+
+#include "ceres/problem.h"
+#include "ceres/solver.h"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/Similarity3_Kernel.hpp"
 //- Robust estimation - LMeds (since no threshold can be defined)
 #include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
-#include <ceres/ceres.h>
-#include <ceres/cost_function.h>
 #include <ceres/rotation.h>
 #include <ceres/types.h>
+
+#include <iostream>
+#include <limits>
 
 namespace openMVG {
 namespace sfm {
@@ -318,7 +324,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   }
 
   // Set a LossFunction to be less penalized by false measurements
-  //  - set it to NULL if you don't want use a lossFunction.
+  //  - set it to nullptr if you don't want use a lossFunction.
   ceres::LossFunction * p_LossFunction =
     ceres_options_.bUse_loss_function_ ?
       new ceres::HuberLoss(Square(4.0))

@@ -4,21 +4,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <openMVG/numeric/numeric.h>
-#include <openMVG/image/image.hpp>
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/sample.hpp"
 #include "./panorama_helper.hpp"
 
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-using namespace svg;
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <string>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <vector>
+
 using namespace std;
+using namespace svg;
 
 // Convert spherical panorama to rectilinear images
 int main(int argc, char **argv)

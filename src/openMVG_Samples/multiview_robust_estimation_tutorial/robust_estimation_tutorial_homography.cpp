@@ -5,8 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/svg_features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 
@@ -368,4 +370,3 @@ void display_info
     << "\t-- Residual max:\t "  << dMax << std::endl
     << "\t-- Residual mean:\t " << dMean << std::endl;
 }
-

@@ -54,7 +54,7 @@ public:
   };
 
   AKAZE_Image_describer(
-    const Params & params = Params(),
+    const Params & params = std::move(Params()),
     bool bOrientation = true
   ):Image_describer(), params_(params), bOrientation_(bOrientation) {}
 

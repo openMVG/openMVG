@@ -9,7 +9,7 @@
 #define OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 
 #include "openMVG/features/regions.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <cereal/cereal.hpp> // Serialization
 

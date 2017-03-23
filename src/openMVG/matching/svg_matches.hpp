@@ -8,8 +8,11 @@
 #ifndef OPENMVG_MATCHING_SVG_MATCHES_HPP
 #define OPENMVG_MATCHING_SVG_MATCHES_HPP
 
-#include <openMVG/features/feature.hpp>
 #include <openMVG/matching/indMatch.hpp>
+#include <openMVG/features/feature_container.hpp>
+
+#include <string>
+#include <utility>
 
 namespace openMVG {
 namespace matching {

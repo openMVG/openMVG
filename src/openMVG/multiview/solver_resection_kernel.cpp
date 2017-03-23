@@ -42,30 +42,30 @@ void translate(
   Mat3X * XPoints)
 {
   XPoints->resize(X.rows(), X.cols());
-  for (int i=0; i<X.cols(); ++i)
+  for (Mat3X::Index i=0; i<X.cols(); ++i)
     XPoints->col(i) = X.col(i) + vecTranslation;
 }
 
-template <typename TMat, typename TVec>
-double NullspaceRatio(TMat *A, TVec *nullspace) {
-  if (A->rows() >= A->cols()) {
-    Eigen::JacobiSVD<TMat> svd(*A, Eigen::ComputeFullV);
-    (*nullspace) = svd.matrixV().col(A->cols()-1);
-    return svd.singularValues()(A->cols()-2) / svd.singularValues()(0);
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended(A->cols(), A->cols());
-  A_extended.block(A->rows(), 0, A->cols() - A->rows(), A->cols()).setZero();
-  A_extended.block(0,0, A->rows(), A->cols()) = (*A);
-  return Nullspace(&A_extended, nullspace);
+double NullspaceRatio
+(
+  const Eigen::Ref<const Mat> & A,
+  Eigen::Ref<Vec> nullspace
+)
+{
+  Eigen::JacobiSVD<Mat> svd(A, Eigen::ComputeFullV);
+  nullspace = svd.matrixV().col(A.cols()-1);
+  return svd.singularValues()(A.cols()-2) / svd.singularValues()(0);
 }
 
 /// Setup the Direct Linear Transform.
 ///  Use template in order to support fixed or dynamic sized matrix.
-template<typename Matrix>
-void BuildActionMatrix(Matrix & A, const Mat &pt2D, const Mat &XPoints)  {
-
+void BuildActionMatrix
+(
+  Eigen::Ref<Mat> A,
+  const Mat &pt2D,
+  const Mat &XPoints
+)
+{
   const size_t n = pt2D.cols();
   for (size_t i = 0; i < n; ++i) {
     size_t row_index = i * 2;
@@ -127,12 +127,12 @@ void SixPointResectionSolver::Solve(
     using Mat12 = Eigen::Matrix<double, 12, 12>;
     Mat12 A = Mat12::Zero(12, 12);
     BuildActionMatrix(A, pt2D, XPoints);
-    ratio = NullspaceRatio(&A, &p);
+    ratio = NullspaceRatio(A, p);
   }
   else  {
     Mat A = Mat::Zero(n*2, 12);
     BuildActionMatrix(A, pt2D, XPoints);
-    ratio = NullspaceRatio(&A, &p);
+    ratio = NullspaceRatio(A, p);
   }
   if (bcheck) {
     if (ratio > 1e-5) //Assert that at least only one solution if found by SVD

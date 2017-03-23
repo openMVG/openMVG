@@ -13,21 +13,12 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license (see the COPYING file).
 */
 
-#include "openMVG/features/feature.hpp"
+#include <math.h>
+#include <fstream>
 #include "openMVG/image/image_container.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
 
-#include <algorithm>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <numeric>
-#include <sstream>
-#include <vector>
-
+namespace openMVG { namespace features { class SIOPointFeature; } }
 
 const float PI_ = 4.0f * atan( 1.0f );
 

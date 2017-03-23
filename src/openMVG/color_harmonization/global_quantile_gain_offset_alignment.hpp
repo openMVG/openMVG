@@ -20,6 +20,7 @@
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 
+#include <numeric>
 #include <set>
 
 namespace openMVG {

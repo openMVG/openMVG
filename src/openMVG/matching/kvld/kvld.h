@@ -13,14 +13,10 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license (see the COPYING file).
 */
 
-#pragma once
-#include <fstream>
 #include <iostream>
-#include <vector>
-#include <sstream>
-#include "algorithm.h"
-#include <openMVG/image/pixel_types.hpp>
-#include <openMVG/numeric/numeric.h>
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/matching/kvld/algorithm.h"
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 //Parameters concerning speed and performance
   const bool uniqueMatch      = true;//if activated, a point can be matched to only one point in the other image. Note: if false, it also desactivate partially geometric verification

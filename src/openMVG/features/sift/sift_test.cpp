@@ -9,7 +9,7 @@
 #include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/system/timer.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
@@ -58,7 +58,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
 {
   Image<unsigned char> in ;
 
-  const std::string png_filename = std::string( THIS_SOURCE_DIR ) 
+  const std::string png_filename = std::string( THIS_SOURCE_DIR )
     + "/../../../openMVG_Samples/imageData/StanfordMobileVisualSearch/Ace_0.png";
   EXPECT_TRUE( ReadImage( png_filename.c_str(), &in ) );
 

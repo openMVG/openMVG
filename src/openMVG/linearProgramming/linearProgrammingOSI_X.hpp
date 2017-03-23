@@ -10,7 +10,6 @@
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 #include <memory>
-#include <vector>
 
 class OsiClpSolverInterface;
 

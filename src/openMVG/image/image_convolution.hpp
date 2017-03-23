@@ -26,6 +26,10 @@ namespace openMVG
 namespace image
 {
 
+using Mat = Eigen::MatrixXd;
+using Vec = Eigen::VectorXd;
+using Vec3 = Eigen::Vector3d;
+
 /**
  ** General image convolution by a kernel
  ** assume kernel has odd size in both dimensions and (border pixel are copied)
@@ -36,37 +40,37 @@ namespace image
 template< typename Image >
 void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 {
-  const int kernel_width  = kernel.cols() ;
-  const int kernel_height = kernel.rows() ;
+  const int kernel_width  = kernel.cols();
+  const int kernel_height = kernel.rows();
 
-  assert( kernel_width % 2 != 0 && kernel_height % 2 != 0 ) ;
+  assert( kernel_width % 2 != 0 && kernel_height % 2 != 0 );
 
   using pix_t = typename Image::Tpixel;
   using acc_pix_t = typename Accumulator< pix_t >::Type;
 
-  out.resize( img.Width() , img.Height() ) ;
+  out.resize( img.Width() , img.Height() );
 
-  for( int row = 0 ; row < img.rows() ; ++row )
+  for( int row = 0; row < img.rows(); ++row )
   {
-    for( int col = 0 ; col < img.cols() ; ++col )
+    for( int col = 0; col < img.cols(); ++col )
     {
-      acc_pix_t sum = acc_pix_t( ) ;
+      acc_pix_t sum = acc_pix_t( );
 
-      for( int i = 0 ; i < kernel_height ; ++i )
+      for( int i = 0; i < kernel_height; ++i )
       {
-        for( int j = 0 ; j < kernel_width ; ++j )
+        for( int j = 0; j < kernel_width; ++j )
         {
-          int idy = row + i - kernel_height / 2 ;
-          int idx = col + j - kernel_width / 2 ;
+          int idy = row + i - kernel_height / 2;
+          int idx = col + j - kernel_width / 2;
 
           // Get correct value
-          idx = idx < 0 ? 0 : ( idx >= img.cols() ? img.cols() - 1 : idx ) ;
-          idy = idy < 0 ? 0 : ( idy >= img.rows() ? img.rows() - 1 : idy ) ;
+          idx = idx < 0 ? 0 : ( idx >= img.cols() ? img.cols() - 1 : idx );
+          idy = idy < 0 ? 0 : ( idy >= img.rows() ? img.rows() - 1 : idy );
 
-          sum += kernel( i , j ) * img( idy , idx ) ;
+          sum += kernel( i , j ) * img( idy , idx );
         }
       }
-      out( row , col ) = sum ;
+      out( row , col ) = sum;
     }
   }
 }
@@ -86,32 +90,32 @@ void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel
   const int rows ( img.rows() );
   const int cols ( img.cols() );
 
-  out.resize( cols , rows ) ;
+  out.resize( cols , rows );
 
-  const int kernel_width = kernel.size() ;
-  const int half_kernel_width = kernel_width / 2 ;
+  const int kernel_width = kernel.size();
+  const int half_kernel_width = kernel_width / 2;
 
   std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( cols + kernel_width );
 
-  for( int row = 0 ; row < rows ; ++row )
+  for( int row = 0; row < rows; ++row )
   {
     // Copy line
-    const pix_t start_pix = img.coeffRef( row , 0 ) ;
-    for( int k = 0 ; k < half_kernel_width ; ++k ) // pad before
+    const pix_t start_pix = img.coeffRef( row , 0 );
+    for( int k = 0; k < half_kernel_width; ++k ) // pad before
     {
-      line[ k ] = start_pix ;
+      line[ k ] = start_pix;
     }
-    memcpy( &line[0] + half_kernel_width, img.data() + row * cols, sizeof( pix_t ) * cols );
-    const pix_t end_pix = img.coeffRef( row , cols - 1 ) ;
-    for( int k = 0 ; k < half_kernel_width ; ++k ) // pad after
+    std::memcpy( &line[0] + half_kernel_width, img.data() + row * cols, sizeof( pix_t ) * cols );
+    const pix_t end_pix = img.coeffRef( row , cols - 1 );
+    for( int k = 0; k < half_kernel_width; ++k ) // pad after
     {
-      line[ k + half_kernel_width + cols ] = end_pix ;
+      line[ k + half_kernel_width + cols ] = end_pix;
     }
 
     // Apply convolution
     conv_buffer_( &line[0] , kernel.data() , cols , kernel_width );
 
-    memcpy( out.data() + row * cols, &line[0], sizeof( pix_t ) * cols );
+    std::memcpy( out.data() + row * cols, &line[0], sizeof( pix_t ) * cols );
   }
 }
 
@@ -127,36 +131,36 @@ void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel ,
 {
   using pix_t = typename ImageTypeIn::Tpixel;
 
-  const int kernel_width = kernel.size() ;
-  const int half_kernel_width = kernel_width / 2 ;
+  const int kernel_width = kernel.size();
+  const int half_kernel_width = kernel_width / 2;
 
-  const int rows = img.rows() ;
-  const int cols = img.cols() ;
+  const int rows = img.rows();
+  const int cols = img.cols();
 
-  out.resize( cols , rows ) ;
+  out.resize( cols , rows );
 
   std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( rows + kernel_width );
 
-  for( int col = 0 ; col < cols ; ++col )
+  for( int col = 0; col < cols; ++col )
   {
     // Copy column
-    for( int k = 0 ; k < half_kernel_width ; ++k )
+    for( int k = 0; k < half_kernel_width; ++k )
     {
-      line[ k ] = img.coeffRef( 0 , col ) ;
+      line[ k ] = img.coeffRef( 0 , col );
     }
-    for( int k = 0 ; k < rows ; ++k )
+    for( int k = 0; k < rows; ++k )
     {
-      line[ k + half_kernel_width ] = img.coeffRef( k , col ) ;
+      line[ k + half_kernel_width ] = img.coeffRef( k , col );
     }
-    for( int k = 0 ; k < half_kernel_width ; ++k )
+    for( int k = 0; k < half_kernel_width; ++k )
     {
-      line[ k + half_kernel_width + rows ] = img.coeffRef( rows - 1 , col ) ;
+      line[ k + half_kernel_width + rows ] = img.coeffRef( rows - 1 , col );
     }
 
     // Apply convolution
     conv_buffer_( &line[0] , kernel.data() , rows , kernel_width );
 
-    for( int row = 0 ; row < rows ; ++row )
+    for( int row = 0; row < rows; ++row )
     {
       out.coeffRef( row , col ) = line[row];
     }
@@ -183,9 +187,9 @@ void ImageSeparableConvolution( const ImageType & img ,
   const VecKernel horiz_k_cast = horiz_k.template cast< typename Accumulator<pix_t>::Type >();
   const VecKernel vert_k_cast = vert_k.template cast< typename Accumulator<pix_t>::Type >();
 
-  ImageType tmp ;
-  ImageHorizontalConvolution( img , horiz_k_cast , tmp ) ;
-  ImageVerticalConvolution( tmp , vert_k_cast , out ) ;
+  ImageType tmp;
+  ImageHorizontalConvolution( img , horiz_k_cast , tmp );
+  ImageVerticalConvolution( tmp , vert_k_cast , out );
 }
 
 using RowMatrixXf = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;

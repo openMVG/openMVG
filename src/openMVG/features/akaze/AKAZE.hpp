@@ -32,10 +32,7 @@
 //  TrueVision Solutions (2)
 //------
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/descriptor.hpp"
-#include "openMVG/features/feature.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/image/image_container.hpp"
 
 #include <cereal/cereal.hpp>
 
@@ -115,7 +112,7 @@ public:
   AKAZE(const image::Image<unsigned char> & in, const Params & options);
 
   /// Compute the AKAZE non linear diffusion scale space per slice
-  void Compute_AKAZEScaleSpace(void);
+  void Compute_AKAZEScaleSpace();
 
   /// Detect AKAZE feature in the AKAZE scale space
   void Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const;

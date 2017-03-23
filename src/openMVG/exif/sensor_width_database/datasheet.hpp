@@ -15,8 +15,7 @@
 // Database structure to store camera model and sensor size
 struct Datasheet
 {
-  Datasheet()
-  {}
+  Datasheet() = default;
 
   Datasheet
   (

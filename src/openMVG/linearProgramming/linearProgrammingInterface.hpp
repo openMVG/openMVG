@@ -7,7 +7,7 @@
 #ifndef OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
 #define OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <utility>
 #include <vector>
@@ -28,8 +28,7 @@ struct LP_Constraints
   {
     LP_LESS_OR_EQUAL    = 1,  // (<=)
     LP_GREATER_OR_EQUAL = 2,  // (>=)
-    LP_EQUAL            = 3,  // (=)
-    LP_FREE             = 4   //only supported in MOSEK
+    LP_EQUAL            = 3   // (=)
   };
 
   LP_Constraints() {

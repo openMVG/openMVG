@@ -72,7 +72,7 @@ using IndMatches = std::vector<matching::IndMatch>;
 class PairWiseMatchesContainer
 {
 public:
-  virtual ~PairWiseMatchesContainer() {}
+  virtual ~PairWiseMatchesContainer() = default;
   virtual void insert(std::pair<Pair, IndMatches>&& pairWiseMatches) = 0;
 };
 
@@ -116,6 +116,6 @@ namespace cereal
     openMVG::matching::PairWiseMatches,
     cereal::specialization::member_serialize>
   {};
-} // namespace cereal 
+} // namespace cereal
 
 #endif // OPENMVG_MATCHING_IND_MATCH_HPP

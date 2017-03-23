@@ -29,7 +29,7 @@
 #ifndef OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
 #define OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <vector>
 

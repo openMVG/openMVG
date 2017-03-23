@@ -17,8 +17,12 @@
 
 #include "openMVG/features/liop/liop_descriptor.hpp"
 
-#include <algorithm>
-#include <cfloat>
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/sample.hpp"
+
+#include <limits>
 
 namespace openMVG {
 namespace features{
@@ -209,7 +213,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
       const float nDirX = static_cast<float>(x);
       const float nDirY = static_cast<float>(y);
       float nOri = atan2(nDirY, nDirX);
-      if (fabs(nOri - M_PI) < FLT_EPSILON)	//[-M_PI, M_PI)
+      if (fabs(nOri - M_PI) < std::numeric_limits<float>::epsilon()) //[-M_PI, M_PI)
       {
         nOri = static_cast<float>(-M_PI);
       }
@@ -275,7 +279,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
 
       while (true)
       {
-        if (fabs(pixel[curId].f_gray-fenceGray) < FLT_EPSILON)
+        if (fabs(pixel[curId].f_gray-fenceGray) < std::numeric_limits<float>::epsilon())
         {
           lastId = curId;
           break;

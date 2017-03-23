@@ -5,14 +5,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/system/timer.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/io_regions_type.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/geometry/frustum.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
+#include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_report.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <iostream>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
+using namespace openMVG::matching;
 using namespace openMVG::sfm;
 
 /// Build a list of pair from the camera frusta intersections
@@ -144,7 +164,7 @@ int main(int argc, char **argv)
     else if (!sMatchFile.empty() && sPairFile.empty())
     {
       PairWiseMatches matches;
-      if (!matching::Load(matches, sMatchFile))
+      if (!Load(matches, sMatchFile))
       {
         std::cerr<< "Unable to read the matches file." << std::endl;
         return EXIT_FAILURE;

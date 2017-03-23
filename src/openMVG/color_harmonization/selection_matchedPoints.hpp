@@ -9,7 +9,8 @@
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_drawing.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 #include <vector>

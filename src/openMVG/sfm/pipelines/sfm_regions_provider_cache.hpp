@@ -66,7 +66,7 @@ public:
   }
 
   // Initialize the regions_provider_cache
-  virtual bool load
+  bool load
   (
     const SfM_Data & sfm_data,
     const std::string & feat_directory,

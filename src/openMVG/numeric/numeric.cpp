@@ -27,6 +27,8 @@
 
 #include "openMVG/numeric/numeric.h"
 
+#include <Eigen/Geometry>
+
 #include <fstream>
 
 namespace openMVG {
@@ -150,5 +152,71 @@ bool exportMatToTextFile(const Mat & mat, const std::string & filename,
   outfile.close();
   return bOk;
 }
+
+double Nullspace
+(
+  const Eigen::Ref<const Mat> & A,
+  Eigen::Ref<Vec> nullspace
+)
+{
+  if ( A.rows() >= A.cols() )
+  {
+    Eigen::JacobiSVD<Mat> svd( A, Eigen::ComputeFullV );
+    nullspace = svd.matrixV().col( A.cols() - 1 );
+    return svd.singularValues()( A.cols() - 1 );
+  }
+  // Extend A with rows of zeros to make it square. It's a hack, but it is
+  // necessary until Eigen supports SVD with more columns than rows.
+  Mat A_extended( A.cols(), A.cols() );
+  A_extended.block( A.rows(), 0, A.cols() - A.rows(), A.cols() ).setZero();
+  A_extended.block( 0, 0, A.rows(), A.cols() ) = A;
+  return Nullspace( A_extended, nullspace );
+}
+/*
+template <typename Derived>
+double Nullspace
+(
+  Eigen::MatrixBase<Derived> & A,
+  Eigen::Ref<openMVG::Vec> nullspace
+)
+{
+  if ( A.rows() >= A.cols() )
+  {
+    Eigen::JacobiSVD<Derived> svd( A, Eigen::ComputeFullV );
+    nullspace = svd.matrixV().col( A.cols() - 1 );
+    return svd.singularValues()( A.cols() - 1 );
+  }
+  // Extend A with rows of zeros to make it square. It's a hack, but is
+  // necessary until Eigen supports SVD with more columns than rows.
+  Derived A_extended( A.cols(), A.cols() );
+  A_extended.block( A.rows(), 0, A.cols() - A.rows(), A.cols() ).setZero();
+  A_extended.block( 0, 0, A.rows(), A.cols() ) = A;
+  return Nullspace( A_extended, nullspace );
+}
+*/
+
+double Nullspace2(
+  const Eigen::Ref<const Mat> & A,
+  Eigen::Ref<Vec> x1,
+  Eigen::Ref<Vec> x2
+)
+{
+  if ( A.rows() >= A.cols() )
+  {
+    Eigen::JacobiSVD<Mat> svd( A, Eigen::ComputeFullV );
+    const Mat & V = svd.matrixV();
+    x1 = V.col( A.cols() - 1 );
+    x2 = V.col( A.cols() - 2 );
+    return svd.singularValues()( A.cols() - 1 );
+  }
+  // Extend A with rows of zeros to make it square. It's a hack, but it is
+  // necessary until Eigen supports SVD with more columns than rows.
+  Mat A_extended( A.cols(), A.cols() );
+  A_extended.block( A.rows(), 0, A.cols() - A.rows(), A.cols() ).setZero();
+  A_extended.block( 0, 0, A.rows(), A.cols() ) = A;
+  return Nullspace2( A_extended, x1, x2 );
+}
+
+
 
 }  // namespace openMVG

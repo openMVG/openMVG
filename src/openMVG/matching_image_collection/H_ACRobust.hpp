@@ -99,14 +99,12 @@ struct GeometricFilter_HMatrix_AC
 
   /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
   /// Use the camera intrinsics in order to get undistorted pixel coordinates
-  template<typename MatT >
   static void PointsToMat(
     const cameras::IntrinsicBase * cam,
     const features::PointFeatures & vec_feats,
-    MatT & m)
+    Eigen::Ref<Mat> m)
   {
     m.resize(2, vec_feats.size());
-    using Scalar = typename MatT::Scalar; // Output matrix type
 
     size_t i = 0;
     for( features::PointFeatures::const_iterator iter = vec_feats.begin();
@@ -115,7 +113,7 @@ struct GeometricFilter_HMatrix_AC
       if (cam)
         m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
       else
-        m.col(i) = iter->coords().cast<Scalar>();
+        m.col(i) = iter->coords().cast<double>();
     }
   }
 

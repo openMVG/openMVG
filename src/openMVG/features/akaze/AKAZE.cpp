@@ -5,6 +5,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/akaze/AKAZE.hpp"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/image_diffusion.hpp"
+#include "openMVG/image/image_resampling.hpp"
 
 #include <cmath>
 
@@ -208,7 +212,7 @@ AKAZE::AKAZE
 }
 
 /// Compute the AKAZE non linear diffusion scale space per slice
-void AKAZE::Compute_AKAZEScaleSpace(void)
+void AKAZE::Compute_AKAZEScaleSpace()
 {
   float contrast_factor = ComputeAutomaticContrastFactor( in_, 0.7f ) ;
   Image<float> input = in_;
@@ -477,4 +481,3 @@ void AKAZE::Compute_Main_Orientation(
 
 } // namespace features
 } // namespace openMVG
-

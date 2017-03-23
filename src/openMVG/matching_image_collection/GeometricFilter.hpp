@@ -17,11 +17,10 @@
 #include <map>
 #include <vector>
 
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+
 namespace openMVG {
 
-namespace sfm {
-  struct Regions_Provider;
-} // namespace sfm 
 namespace matching_image_collection {
 
 using namespace openMVG::matching;
@@ -34,10 +33,13 @@ struct ImageCollectionGeometricFilter
   (
     const sfm::SfM_Data * sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider
-  ):sfm_data_(sfm_data), regions_provider_(regions_provider)
+  ):sfm_data_(sfm_data),
+    regions_provider_(regions_provider)
   {}
 
-  /// Perform robust model estimation (with optional guided_matching) for all the pairs and regions correspondences contained in the putative_matches set.
+  /// Perform robust model estimation (with optional guided_matching) for all
+  /// the pairs and regions correspondences contained in the putative_matches
+  /// set.
   template<typename GeometryFunctor>
   void Robust_model_estimation
   (
@@ -47,7 +49,10 @@ struct ImageCollectionGeometricFilter
     const double d_distance_ratio = 0.6
   );
 
-  const PairWiseMatches & Get_geometric_matches() const {return _map_GeometricMatches;}
+  const PairWiseMatches & Get_geometric_matches() const
+  {
+    return _map_GeometricMatches;
+  }
 
   // Data
   const sfm::SfM_Data * sfm_data_;
@@ -81,13 +86,25 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
     {
       IndMatches putative_inliers;
       GeometryFunctor geometricFilter = functor; // use a copy since we are in a multi-thread context
-      if (geometricFilter.Robust_estimation(sfm_data_, regions_provider_, iter->first, vec_PutativeMatches, putative_inliers))
+      if (geometricFilter.Robust_estimation(
+        sfm_data_,
+        regions_provider_,
+        iter->first,
+        vec_PutativeMatches,
+        putative_inliers))
       {
         if (b_guided_matching)
         {
           IndMatches guided_geometric_inliers;
-          geometricFilter.Geometry_guided_matching(sfm_data_, regions_provider_, iter->first, d_distance_ratio, guided_geometric_inliers);
-          //std::cout << "#before/#after: " << putative_inliers.size() << "/" << guided_geometric_inliers.size() << std::endl;
+          geometricFilter.Geometry_guided_matching(
+            sfm_data_,
+            regions_provider_,
+            iter->first,
+            d_distance_ratio,
+            guided_geometric_inliers);
+          //std::cout
+          // << "#before/#after: " << putative_inliers.size()
+          // << "/" << guided_geometric_inliers.size() << std::endl;
           std::swap(putative_inliers, guided_geometric_inliers);
         }
 
@@ -95,7 +112,8 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
 #pragma omp critical
 #endif
         {
-          _map_GeometricMatches.insert(std::make_pair(current_pair, std::move(putative_inliers)));
+          _map_GeometricMatches.insert(
+            std::make_pair(current_pair, std::move(putative_inliers)));
         }
       }
     }

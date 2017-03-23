@@ -10,13 +10,10 @@
 
 #include "openMVG/types.hpp"
 
-#include <iterator>
-#include <set>
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace sfm {
-
-struct SfM_Data;
 
 /// List the view indexes that have valid camera intrinsic and pose.
 std::set<IndexT> Get_Valid_Views

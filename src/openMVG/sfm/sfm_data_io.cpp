@@ -5,14 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/stl/stlMap.hpp"
-
+#include "openMVG/types.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {

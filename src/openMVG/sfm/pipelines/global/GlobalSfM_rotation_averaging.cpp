@@ -9,7 +9,8 @@
 
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/multiview/rotation_averaging.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/stl/stlMap.hpp"
 
 #include "third_party/histogram/histogram.hpp"
@@ -248,4 +249,3 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
 
 } // namespace sfm
 } // namespace openMVG
-

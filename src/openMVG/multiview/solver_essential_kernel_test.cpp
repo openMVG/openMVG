@@ -33,6 +33,7 @@
 
 #include "testing/testing.h"
 
+#include <numeric>
 using namespace openMVG;
 
 /// Check that the E matrix fit the Essential Matrix properties

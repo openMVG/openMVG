@@ -5,11 +5,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cstdlib>
-
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/system/timer.hpp"
+#include "openMVG/geometry/frustum.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

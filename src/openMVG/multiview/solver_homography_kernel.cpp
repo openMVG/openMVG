@@ -35,9 +35,13 @@ namespace kernel {
 /// Setup the Direct Linear Transform.
 ///  Use template in order to support fixed or dynamic sized matrix.
 /// Allow solve H as homogeneous(x2) = H homogeneous(x1)
-template<typename Matrix >
-void BuildActionMatrix(Matrix & L, const Mat &x, const Mat &y)  {
-
+void BuildActionMatrix
+(
+  Eigen::Ref<Mat> L,
+  const Mat &x,
+  const Mat &y
+)
+{
   const Mat::Index n = x.cols();
   for (Mat::Index i = 0; i < n; ++i) {
     Mat::Index j = 2 * i;
@@ -73,12 +77,12 @@ void FourPointSolver::Solve(const Mat &x, const Mat &y, std::vector<Mat3> *Hs) {
     using Mat16_9 = Eigen::Matrix<double, 16, 9>;
     Mat16_9 L = Mat::Zero(16, 9);
     BuildActionMatrix(L, x, y);
-    Nullspace(&L, &h);
+    Nullspace(L, h);
   }
   else {
     MatX9 L = Mat::Zero(n * 2, 9);
     BuildActionMatrix(L, x, y);
-    Nullspace(&L, &h);
+    Nullspace(L, h);
   }
   // map the linear vector as the H matrix and save it
   Hs->emplace_back(Map<RMat3>(h.data()));

@@ -54,7 +54,7 @@ namespace tracks  {
 //  The corresponding image points with their imageId and FeatureId.
 using submapTrack = std::map<uint32_t, uint32_t>;
 // A track is a collection of {trackId, submapTrack}
-using STLMAPTracks = std::map< uint32_t, submapTrack >;
+using STLMAPTracks = std::map< uint32_t, submapTrack>;
 
 struct TracksBuilder
 {
@@ -68,8 +68,7 @@ struct TracksBuilder
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
-    using SetIndexedPair = std::set<indexedFeaturePair>;
-    SetIndexedPair allFeatures;
+    std::set<indexedFeaturePair> allFeatures;
     // For each couple of images list the used features
     for ( const auto & iter : map_pair_wise_matches )
     {

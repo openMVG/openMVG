@@ -11,7 +11,6 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 

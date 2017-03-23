@@ -8,15 +8,11 @@
 #ifndef OPENMVG_MATCHING_REGION_MATCHER_HPP
 #define OPENMVG_MATCHING_REGION_MATCHER_HPP
 
-#include "openMVG/matching/matcher_type.hpp"
-#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
-
+#include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/features/regions.hpp"
-
-#include <vector>
 
 namespace openMVG {
 namespace matching {

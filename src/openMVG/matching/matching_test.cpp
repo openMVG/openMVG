@@ -10,7 +10,7 @@
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 
 #include "testing/testing.h"

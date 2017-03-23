@@ -8,7 +8,13 @@
 
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
+#include "cereal/details/helpers.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
+
+#include <fstream>
+#include <string>
+
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
@@ -18,10 +24,6 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-
-#include <fstream>
-#include <iomanip>
-#include <string>
 
 namespace openMVG {
 namespace sfm {

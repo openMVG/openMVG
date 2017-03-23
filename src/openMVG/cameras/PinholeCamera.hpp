@@ -26,7 +26,7 @@ struct PinholeCamera
     _C = -R.transpose() * t;
     P_From_KRt(_K, _R, _t, &_P);
   }
-  
+
   PinholeCamera(const Mat34 & P)
   {
     _P = P;
@@ -108,4 +108,3 @@ struct PinholeCamera
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLECAMERA_HPP
-

@@ -208,4 +208,3 @@ TEST(translation_averaging, globalTi_from_tijs_l2_chordal) {
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

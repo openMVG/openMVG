@@ -7,8 +7,6 @@
 #ifndef OPENMVG_IMAGE_PIXEL_TYPES_HPP
 #define OPENMVG_IMAGE_PIXEL_TYPES_HPP
 
-#include "openMVG/numeric/numeric.h"
-
 namespace openMVG
 {
 namespace image

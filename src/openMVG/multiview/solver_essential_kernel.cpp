@@ -47,7 +47,7 @@ void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, std::vect
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
 
   Vec9 e;
-  Nullspace(&A, &e);
+  Nullspace(A, e);
   Mat3 E = Map<RMat3>(e.data());
 
   // Find the closest essential matrix to E in frobenius norm

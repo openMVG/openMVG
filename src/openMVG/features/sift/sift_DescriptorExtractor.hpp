@@ -42,6 +42,7 @@ The implementation is based on
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
+#include "openMVG/image/image_container.hpp"
 
 namespace openMVG{
 namespace features{
@@ -106,7 +107,7 @@ public:
     Keypoints_orientations(keypoints);
     Keypoints_description(keypoints);
   }
-  
+
   void Compute_Orientations
   (
     const Octave & octave,

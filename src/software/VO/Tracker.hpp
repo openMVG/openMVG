@@ -9,7 +9,8 @@
 #define TRACKER_VO_HPP
 
 #include <software/VO/Abstract_Tracker.hpp>
-#include <openMVG/features/features.hpp>
+#include <openMVG/features/dipole/dipole_descriptor.hpp>
+#include <openMVG/features/feature.hpp>
 
 #include <vector>
 

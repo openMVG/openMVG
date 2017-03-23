@@ -8,7 +8,7 @@
 #ifndef OPENMVG_MULTIVIEW_TRIANGULATION_HPP
 #define OPENMVG_MULTIVIEW_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

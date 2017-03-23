@@ -7,7 +7,6 @@
 
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 
-#include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
@@ -31,7 +30,7 @@ bool estimate_Rt_fromE
 )
 {
   // Accumulator to find the best solution
-  std::array<uint32_t, 4> f {{0, 0, 0, 0}};
+  std::array<uint32_t, 4> f{0, 0, 0, 0};
 
   // Recover plausible rotation and translation from E.
   std::vector<Mat3> Rs;  // Rotation matrix.

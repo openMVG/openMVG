@@ -8,7 +8,8 @@
 #ifndef OPENMVG_FEATURES_REGIONS_HPP
 #define OPENMVG_FEATURES_REGIONS_HPP
 
-#include "openMVG/features/feature.hpp"
+#include <openMVG/features/feature.hpp>
+#include <openMVG/features/feature_container.hpp>
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
@@ -158,8 +159,7 @@ public:
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(vec_feats_);
-    ar(vec_descs_);
+    ar(vec_feats_, vec_descs_);
   }
 
   Regions * EmptyClone() const override
@@ -278,8 +278,7 @@ public:
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(vec_feats_);
-    ar(vec_descs_);
+    ar(vec_feats_, vec_descs_);
   }
 
   Regions * EmptyClone() const override

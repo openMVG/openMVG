@@ -11,6 +11,7 @@
 #include "openMVG/matching/metric_avx2.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+#include <cstdint>
 
 namespace openMVG {
 namespace matching {

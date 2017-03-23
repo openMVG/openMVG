@@ -7,8 +7,8 @@
 #ifndef OPENMVG_FEATURES_MSER_MSER_HPP
 #define OPENMVG_FEATURES_MSER_MSER_HPP
 
-#include "openMVG/features/mser/mser_region.hpp"
-#include "openMVG/image/image_container.hpp"
+#include <vector>
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 /**
 * @note Implementation based of the D. Nister method : "Linear Time Maximally Stable Extremal Regions" [1]
@@ -27,6 +27,8 @@ namespace openMVG
   {
     namespace MSER
     {
+
+      class MSERRegion;
 
       /**
       * @brief Function used to extract MSER regions of an image
@@ -99,8 +101,8 @@ namespace openMVG
         double m_min_diversity ; // Stability distance between two region in the same hierarchy
         int m_connectivity ;
       } ;
-    } // namespace MSER 
-  } // namespace features 
-} // namespace openMVG 
+    } // namespace MSER
+  } // namespace features
+} // namespace openMVG
 
 #endif // OPENMVG_FEATURES_MSER_MSER_HPP

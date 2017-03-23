@@ -11,16 +11,14 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
-#include <fstream>
 #include <map>
 #include <numeric>
 #include <vector>
-
-// rperrot : TODO : remove using from .h 
 
 int modifiedMod
 (

@@ -5,7 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_GRAPH_EXPORT_HPP 
+#ifndef OPENMVG_GRAPH_GRAPH_EXPORT_HPP
 #define OPENMVG_GRAPH_GRAPH_EXPORT_HPP
 
 #include "openMVG/types.hpp"
@@ -75,7 +75,7 @@ inline void exportToGraphvizData
 
   //Use Graphviz
   const std::string cmd = "neato -Tsvg -O -Goverlap=scale -Gsplines=false " + sfile;
-  int ret = std::system(cmd.c_str());
+  const int ret = std::system(cmd.c_str());
   (void)ret;
 }
 

@@ -28,7 +28,7 @@
 #ifndef OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 #define OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

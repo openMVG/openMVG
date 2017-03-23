@@ -7,7 +7,7 @@
 #ifndef OPENMVG_MATCHING_KVLD_DRAW_H
 #define OPENMVG_MATCHING_KVLD_DRAW_H
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_drawing.hpp"
 #include "openMVG/features/feature.hpp"
 #include <vector>
 

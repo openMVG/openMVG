@@ -7,12 +7,12 @@
 
 // Implements [1]: the *Tree-based Morse Regions* (TBMR) local
 // feature detector.
-// This detector extracts as features the connected components of the level 
+// This detector extracts as features the connected components of the level
 // sets of the input intensity image. Among all such regions, the ones that
-// are maximally topological equivalent to the critical regions (based on 
+// are maximally topological equivalent to the critical regions (based on
 // Morse theory) are selected.
 // TBMRs are affine co-variant, as well as largely co-variant to generic
-// diffeomorphic transformations, and truly invariant to affine contrast 
+// diffeomorphic transformations, and truly invariant to affine contrast
 // changes.
 
 //------------------
@@ -26,8 +26,11 @@
 #ifndef OPENMVG_FEATURES_TBMR_TBMR_HPP
 #define OPENMVG_FEATURES_TBMR_TBMR_HPP
 
+#include <functional>
+#include <vector>
 #include "openMVG/features/feature.hpp"
-#include "openMVG/image/image_container.hpp"
+
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 namespace openMVG
 {

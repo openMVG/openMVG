@@ -8,15 +8,14 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
 #define OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
 
-#include "openMVG/cameras/cameras.hpp"
-#include "openMVG/image/image.hpp"
-
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/image/sample.hpp"
 
 namespace openMVG
 {
 namespace cameras
 {
-
 
 /**
 * @brief  Undistort an image according a given camera & it's distortion model

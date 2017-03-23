@@ -12,7 +12,8 @@
 // ========================================================================== //
 
 #include "openMVG/system/timer.hpp"
-
+#include <ratio>
+#include <type_traits>
 
 namespace openMVG {
 namespace system {

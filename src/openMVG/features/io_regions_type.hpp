@@ -8,7 +8,7 @@
 #ifndef OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 #define OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/archives/json.hpp>
@@ -25,7 +25,6 @@ inline std::unique_ptr<features::Regions> Init_region_type_from_file
   const std::string & sImage_describer_file
 )
 {
-  using namespace openMVG::features;
   std::unique_ptr<Regions> regions_type;
   if (stlplus::is_file(sImage_describer_file))
   {

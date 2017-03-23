@@ -7,7 +7,7 @@
 #ifndef OPENMVG_FEATURES_SIFT_OCTAVER_HPP
 #define OPENMVG_FEATURES_SIFT_OCTAVER_HPP
 
-#include "openMVG/image/image.hpp"
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 namespace openMVG{
 namespace features{
@@ -42,13 +42,13 @@ struct Octaver
   /**
   * @brief Get number of slice in an octave
   */
-  int NbSlice(void) const { return m_nb_slice;}
+  int NbSlice() const { return m_nb_slice;}
 
   /**
   * @brief Get number of octave computed
   * @note maybe less than specified in constructor because of input image size
   */
-  int NbOctave(void) const {return m_nb_octave;}
+  int NbOctave() const {return m_nb_octave;}
 
 protected:
   // Constant parameters

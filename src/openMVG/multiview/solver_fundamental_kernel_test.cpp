@@ -31,6 +31,8 @@
 
 #include "testing/testing.h"
 
+#include <numeric>
+
 using namespace openMVG;
 using namespace std;
 
@@ -54,8 +56,7 @@ bool Colinear(const A &a, const B &b, double tolerance) {
 //   1. The determinant is 0 (rank deficient)
 //   2. The condition x'T*F*x = 0 is satisfied to precision.
 //
-template<typename TMat>
-bool ExpectFundamentalProperties(const TMat &F,
+bool ExpectFundamentalProperties(const Mat3 &F,
                                  const Mat &ptsA,
                                  const Mat &ptsB,
                                  double precision) {
@@ -79,8 +80,8 @@ bool ExpectFundamentalProperties(const TMat &F,
 //
 template <class Kernel>
 bool ExpectKernelProperties(const Mat &x1,
-                              const Mat &x2,
-                              Mat3 *F_expected = NULL) {
+                            const Mat &x2,
+                            Mat3 *F_expected = nullptr) {
   bool bOk = true;
   Kernel kernel(x1, x2);
   vector<uint32_t> samples(x1.cols());

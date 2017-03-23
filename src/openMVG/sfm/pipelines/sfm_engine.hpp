@@ -33,7 +33,7 @@ public:
   {
   }
 
-  virtual ~ReconstructionEngine() {}
+  virtual ~ReconstructionEngine() = default;
 
   virtual bool Process() = 0;
 

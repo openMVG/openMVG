@@ -7,6 +7,7 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 

@@ -8,8 +8,8 @@
 #ifndef MONOCULAR_VO_HPP
 #define MONOCULAR_VO_HPP
 
-#include "openMVG/features/features.hpp"
-#include <openMVG/numeric/numeric.h>
+#include "openMVG/features/feature.hpp"
+#include <openMVG/numeric/eigen_alias_definition.hpp>
 
 #include <software/VO/Abstract_Tracker.hpp>
 #include <deque>

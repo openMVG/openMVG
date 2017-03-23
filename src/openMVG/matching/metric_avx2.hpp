@@ -160,4 +160,3 @@ inline float L2_128_float_AVX2
 #endif
 
 #endif // OPENMVG_MATCHING_METRIC_AVX2_HPP
-

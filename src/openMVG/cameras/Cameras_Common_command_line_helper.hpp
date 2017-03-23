@@ -7,11 +7,13 @@
 #ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 #define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 
+#include "openMVG/stl/split.hpp"
+#include <iostream>
+
 namespace openMVG
 {
 namespace cameras
 {
-#include "openMVG/stl/split.hpp"
 
 // Allow to initialize an object cameras::Intrinsic_Parameter_Type BA from
 // a string and delimiters('|')

@@ -29,7 +29,7 @@
 #ifndef TESTING_TESTING_H_
 #define TESTING_TESTING_H_
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "third_party/CppUnitLite/TestHarness.h"
 
 #define EXPECT_MATRIX_NEAR(a, b, tolerance) \

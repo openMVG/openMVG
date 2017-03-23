@@ -8,8 +8,15 @@
 #ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
 #define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
 
-#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/types.hpp"
+
+namespace openMVG { namespace cameras { struct IntrinsicBase; } }
+namespace openMVG { namespace features { class Regions; } }
+namespace openMVG { namespace geometry { class Pose3; } }
+namespace openMVG { namespace matching { class Matcher_Regions_Database; } }
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace sfm {
@@ -37,7 +44,7 @@ public:
   (
     const SfM_Data & sfm_data,
     const Regions_Provider & regions_provider
-  );
+  ) override;
 
   /**
   * @brief Try to localize an image in the database
@@ -55,8 +62,8 @@ public:
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,
     geometry::Pose3 & pose,
-    Image_Localizer_Match_Data * resection_data_ptr = NULL // optional
-  ) const;
+    Image_Localizer_Match_Data * resection_data_ptr = nullptr
+  ) const override;
 
 private:
   // Reference to the scene
@@ -67,7 +74,7 @@ private:
   std::vector<IndexT> index_to_landmark_id_;
   /// A matching interface to find matches between 2D descriptor matches
   ///  and 3D points observation descriptors
-  std::unique_ptr<matching::Matcher_Regions_Database> matching_interface_;
+  std::shared_ptr<matching::Matcher_Regions_Database> matching_interface_;
 };
 
 } // namespace sfm

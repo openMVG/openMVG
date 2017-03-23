@@ -8,9 +8,12 @@
 #ifndef OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP
 #define OPENMVG_SFM_SFM_DATA_FILTERS_FRUSTUM_HPP
 
-#include "openMVG/geometry/frustum.hpp"
-#include "openMVG/geometry/half_space_intersection.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/types.hpp"
+
+namespace openMVG { namespace sfm { struct SfM_Data; } }
+namespace openMVG { namespace geometry { struct Frustum; } }
+namespace openMVG { namespace geometry { namespace halfPlane { struct HalfPlaneObject; }  } }
 
 namespace openMVG {
 namespace sfm {
@@ -39,8 +42,8 @@ public:
   // defined as a vector of half-plane objects can also be provided to further
   // limit the intersection area.
   Pair_Set getFrustumIntersectionPairs(
-      const std::vector<HalfPlaneObject>& bounding_volume
-        = std::vector<HalfPlaneObject>()
+      const std::vector<geometry::halfPlane::HalfPlaneObject>& bounding_volume
+        = {}
   ) const;
 
   // Export defined frustum in PLY file for viewing

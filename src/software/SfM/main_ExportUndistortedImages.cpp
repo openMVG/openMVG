@@ -5,20 +5,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/system/timer.hpp"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress.hpp"
+
+#include <cstdlib>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
-
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
-
-#include <stdlib.h>
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>

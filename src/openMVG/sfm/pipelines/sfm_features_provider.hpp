@@ -8,7 +8,9 @@
 #ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/feature_container.hpp"
+#include "openMVG/features/regions.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 

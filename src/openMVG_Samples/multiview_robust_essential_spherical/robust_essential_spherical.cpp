@@ -5,20 +5,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-
-#include "nonFree/sift/SIFT_describer.hpp"
 #include "openMVG_Samples/multiview_robust_essential_spherical/spherical_cam.hpp"
 
+#include "nonFree/sift/SIFT_describer.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"

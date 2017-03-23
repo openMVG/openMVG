@@ -61,7 +61,7 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/stl/dynamic_bitset.hpp"
 
 #include <cmath>
@@ -112,7 +112,7 @@ private:
   int nb_buckets_per_group_;
 
 public:
-  CascadeHasher() {}
+  CascadeHasher() = default;
 
   // Creates the hashing projections (cascade of two level of hash codes)
   bool Init

@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -19,6 +19,12 @@ extern "C" {
 namespace openMVG {
 namespace image {
 
+template class Image<unsigned char>;
+template class Image<float>;
+template class Image<double>;
+template class Image<RGBColor>;
+template class Image<RGBAColor>;
+
 inline bool CmpFormatExt(const char *a, const char *b) {
   const size_t len_a = strlen(a);
   const size_t len_b = strlen(b);
@@ -32,7 +38,7 @@ inline bool CmpFormatExt(const char *a, const char *b) {
 Format GetFormat(const char *c) {
   const char *p = strrchr (c, '.');
 
-  if (p == NULL)
+  if (p == nullptr)
     return Unknown;
 
   if (CmpFormatExt(p, ".png")) return Png;
@@ -217,7 +223,7 @@ int WriteJpgStream(FILE *file,
   JSAMPLE *row = new JSAMPLE[row_bytes];
 
   while (cinfo.next_scanline < cinfo.image_height) {
-    memcpy(&row[0], &ptr[0], row_bytes*sizeof(unsigned char));
+    std::memcpy(&row[0], &ptr[0], row_bytes*sizeof(unsigned char));
     //int i;
     //for (i = 0; i < row_bytes; ++i)
     //	row[i] = ptr[i];
@@ -263,18 +269,18 @@ int ReadPngStream(FILE *file,
   }
 
   // create the two png(-info) structures
-  png_structp png_ptr = NULL;
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
-    (png_error_ptr)NULL, (png_error_ptr)NULL);
+  png_structp png_ptr = nullptr;
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr,
+    (png_error_ptr)nullptr, (png_error_ptr)nullptr);
   if (!png_ptr)
   {
     return 0;
   }
-  png_infop info_ptr = NULL;
+  png_infop info_ptr = nullptr;
   info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr)
   {
-    png_destroy_read_struct(&png_ptr, NULL, NULL);
+    png_destroy_read_struct(&png_ptr, nullptr, nullptr);
     return 0;
   }
 
@@ -291,7 +297,7 @@ int ReadPngStream(FILE *file,
   int                 iBitDepth;
   int                 iColorType;
   png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
-    &iColorType, NULL, NULL, NULL);
+    &iColorType, nullptr, nullptr, nullptr);
 
   // expand images of all color-type to 8-bit
 
@@ -316,16 +322,16 @@ int ReadPngStream(FILE *file,
   // get again width, height and the new bit-depth and color-type
 
   png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
-    &iColorType, NULL, NULL, NULL);
+    &iColorType, nullptr, nullptr, nullptr);
 
   // Get number of byte along a tow
   png_uint_32         ulRowBytes;
   ulRowBytes = png_get_rowbytes(png_ptr, info_ptr);
 
   // and allocate memory for an array of row-pointers
-  png_byte   **ppbRowPointers = NULL;
+  png_byte   **ppbRowPointers = nullptr;
   if ((ppbRowPointers = (png_bytepp) malloc(hPNG
-    * sizeof(png_bytep))) == NULL)
+    * sizeof(png_bytep))) == nullptr)
   {
     std::cerr << "PNG: out of memory" << std::endl;
     return 0;
@@ -346,11 +352,11 @@ int ReadPngStream(FILE *file,
   png_read_image(png_ptr, ppbRowPointers);
 
   // read the additional chunks in the PNG file (not really needed)
-  png_read_end(png_ptr, NULL);
+  png_read_end(png_ptr, nullptr);
 
   free (ppbRowPointers);
 
-  png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+  png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
   return 1;
 }
 
@@ -375,7 +381,7 @@ int WritePngStream(FILE * file,
                    int h,
                    int depth) {
   png_structp png_ptr =
-      png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+      png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 
   if (!png_ptr)
     return 0;
@@ -412,7 +418,7 @@ int WritePngStream(FILE * file,
   for (int y = 0; y < h; ++y)
     png_write_row(png_ptr, (png_byte*) (&ptr[0]) + w * depth * y);
 
-  png_write_end(png_ptr, NULL);
+  png_write_end(png_ptr, nullptr);
   png_destroy_write_struct(&png_ptr, &info_ptr);
   return 1;
 }
@@ -477,7 +483,7 @@ int ReadPnmStream(FILE *file,
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
         inToken = 0;
-        intBuffer[intIndex] = 0 ; // NULL-terminate the string
+        intBuffer[intIndex] = 0 ; // nullptr-terminate the string
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class
@@ -576,7 +582,7 @@ int ReadTiff(const char * filename,
   ptr->resize((*h)*(*w)*(*depth));
 
   if (*depth==4) {
-    if (ptr != NULL) {
+    if (ptr != nullptr) {
       if (!TIFFReadRGBAImageOriented(tiff, *w, *h, (uint32*)&((*ptr)[0]), ORIENTATION_TOPLEFT, 0)) {
         TIFFClose(tiff);
         return 0;
@@ -661,17 +667,17 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   }
 
   // create the two png(-info) structures
-  png_structp png_ptr = NULL;
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
-    (png_error_ptr)NULL, (png_error_ptr)NULL);
+  png_structp png_ptr = nullptr;
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr,
+    (png_error_ptr)nullptr, (png_error_ptr)nullptr);
   if (!png_ptr) {
     fclose(file);
     return false;
   }
-  png_infop info_ptr = NULL;
+  png_infop info_ptr = nullptr;
   info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr)  {
-    png_destroy_read_struct(&png_ptr, NULL, NULL);
+    png_destroy_read_struct(&png_ptr, nullptr, nullptr);
     fclose(file);
     return false;
   }
@@ -689,7 +695,7 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   int iBitDepth;
   int iColorType;
   png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
-    &iColorType, NULL, NULL, NULL);
+    &iColorType, nullptr, nullptr, nullptr);
 
   if (imgheader)
   {
@@ -788,7 +794,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
         inToken = 0;
-        intBuffer[intIndex] = 0 ; // NULL-terminate the string
+        intBuffer[intIndex] = 0 ; // nullptr-terminate the string
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class

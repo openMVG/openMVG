@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 
 #include "testing/testing.h"
 

@@ -9,13 +9,17 @@
 #define OPENMVG_FEATURES_SVG_FEATURES_HPP
 
 #include <openMVG/features/feature.hpp>
+#include <openMVG/features/feature_container.hpp>
+
+#include <string>
+#include <utility>
 
 namespace openMVG {
 namespace features {
 
 /**
  * @brief Saves a svg file containing the image and its features
- * 
+ *
  * @param[in] image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] image_size Image size {width,height}.
@@ -38,7 +42,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing the image and its scale invariant features
- * 
+ *
  * @param[in] image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] image_size Image size {width,height}.
@@ -61,7 +65,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing two images and their features
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.
@@ -94,7 +98,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing two images and their features
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.

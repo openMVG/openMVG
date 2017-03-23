@@ -29,7 +29,7 @@
 #ifndef OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP
 #define OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 
@@ -54,11 +54,13 @@ namespace openMVG {
  * \note Need at least 3 non aligned points
  * \note Points coordinates must be normalized (euclidean)
  */
-bool Affine2DFromCorrespondencesLinear(const Mat &x1,
-                                       const Mat &x2,
-                                       Mat3 *M,
-                                       double expected_precision =
-                                         EigenDoubleTraits::dummy_precision());
+bool Affine2DFromCorrespondencesLinear
+(
+  const Mat &x1,
+  const Mat &x2,
+  Mat3 *M,
+  double expected_precision = EigenDoubleTraits::dummy_precision()
+);
 
 /** 3D Affine transformation estimation
  *
@@ -82,11 +84,12 @@ bool Affine2DFromCorrespondencesLinear(const Mat &x1,
  * \note Need at least 4 non coplanar points
  * \note Points coordinates must be normalized (euclidean)
  */
-bool Affine3DFromCorrespondencesLinear(const Mat &x1,
-                                       const Mat &x2,
-                                       Mat4 *M,
-                                       double expected_precision =
-                                         EigenDoubleTraits::dummy_precision());
+bool Affine3DFromCorrespondencesLinear
+(
+  const Mat &x1,
+  const Mat &x2,
+  Mat4 *M,
+  double expected_precision = EigenDoubleTraits::dummy_precision());
 } // namespace openMVG
 
 #endif  // OPENMVG_SOLVER_MULTIVIEW_AFFINE_HPP

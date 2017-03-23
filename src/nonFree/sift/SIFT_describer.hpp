@@ -7,12 +7,12 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
-#include <cereal/cereal.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"

@@ -9,6 +9,7 @@
 
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/image/sample.hpp"
 
 namespace openMVG {
 namespace features {
