@@ -7,13 +7,15 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
 
-#include "openMVG/types.hpp"
-#include "openMVG/stl/split.hpp"
-
 #include <set>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <vector>
+
+#include "openMVG/types.hpp"
+#include "openMVG/stl/split.hpp"
 
 namespace openMVG {
 
@@ -69,7 +71,7 @@ inline bool loadPairs(
     oss.clear(); oss.str(vec_str[0]);
     IndexT I, J;
     oss >> I;
-    for (IndexT i=1; i<str_size ; ++i)
+    for (IndexT i=1; i<str_size; ++i)
     {
       oss.clear(); oss.str(vec_str[i]);
       oss >> J;
@@ -104,7 +106,7 @@ inline bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
       << "savePairs: Impossible to open the output specified file: \"" << sFileName << "\"." << std::endl;
     return false;
   }
-  for ( const auto & cur_pair : pairs ) 
+  for ( const auto & cur_pair : pairs )
     {
     outStream << cur_pair.first << ' ' << cur_pair.second << '\n';
   }

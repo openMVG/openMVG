@@ -7,6 +7,9 @@
 #ifndef OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP
 
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 #include "openMVG/features/akaze/AKAZE.hpp"
 #include "openMVG/features/akaze/mldb_descriptor.hpp"
@@ -16,10 +19,6 @@
 #include "openMVG/features/regions_factory.hpp"
 
 #include <cereal/cereal.hpp>
-
-#include <iostream>
-#include <numeric>
-
 
 namespace openMVG {
 namespace features {

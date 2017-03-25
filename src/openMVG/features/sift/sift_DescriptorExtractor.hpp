@@ -39,6 +39,10 @@ The implementation is based on
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_DESCRIPTOR_EXTRACTOR_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_DESCRIPTOR_EXTRACTOR_HPP
 
+#include <algorithm>
+#include <limits>
+#include <vector>
+
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
@@ -355,7 +359,7 @@ protected:
     float angle, r;
     const float c3 = 0.1821f;
     const float c1 = 0.9675f;
-    const float abs_y = std::fabs(y) + std::numeric_limits<float>::min();
+    const float abs_y = std::abs(y) + std::numeric_limits<float>::min();
 
     if (x >= 0) {
       r = (x - abs_y) / (x + abs_y);
@@ -424,7 +428,7 @@ protected:
         const float X = c * Xref - s * Yref;
         const float Y = s * Xref + c * Yref;
         // Does this sample fall inside the descriptor area ?
-        if (std::max(std::fabs(X), std::fabs(Y)) < R)
+        if (std::max(std::abs(X), std::abs(Y)) < R)
         {
           // Compute the gradient orientation (theta) on keypoint referential.
           const float dx = xgradient(sj, si);
@@ -454,16 +458,16 @@ protected:
               int k = ((int)gamma + m_nb_split_angle) % m_nb_split_angle;
               descr[index+k]
                 += (1.0f-(gamma-floor(gamma)))
-                   *(1.0f-std::fabs((float)i-alpha))
-                   *(1.0f-std::fabs((float)j-beta))
+                   *(1.0f-std::abs((float)i-alpha))
+                   *(1.0f-std::abs((float)j-beta))
                    *M;
 
               // Contribution to right bin.
               k = ((int)gamma + 1 + m_nb_split_angle) % m_nb_split_angle;
               descr[index+k]
                 += (1.0f-(floor(gamma)+1.f-gamma))
-                  *(1.0f-std::fabs((float)i-alpha))
-                  *(1.0f-std::fabs((float)j-beta))
+                  *(1.0f-std::abs((float)i-alpha))
+                  *(1.0f-std::abs((float)j-beta))
                   *M;
             }
           }

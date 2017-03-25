@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_SFM_DATA_FILTERS_HPP
 #define OPENMVG_SFM_SFM_DATA_FILTERS_HPP
 
+#include <set>
+
 #include "openMVG/types.hpp"
 
 namespace openMVG { namespace sfm { struct SfM_Data; } }

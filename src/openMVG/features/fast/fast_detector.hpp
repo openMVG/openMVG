@@ -7,10 +7,11 @@
 #ifndef OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
 #define OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
 
+#include <type_traits>
+#include <vector>
+
 #include "openMVG/image/image_container.hpp"
 #include "third_party/fast/fast.h"
-
-#include <type_traits>
 
 //
 // Bibliography

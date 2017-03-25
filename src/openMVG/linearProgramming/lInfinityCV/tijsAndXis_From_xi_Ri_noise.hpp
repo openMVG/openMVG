@@ -7,11 +7,12 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRANSLATIONANDSTRUCTUREFrom_xi_RI_NOISE_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRANSLATIONANDSTRUCTUREFrom_xi_RI_NOISE_HPP
 
+#include <utility>
+#include <vector>
+
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
-#include <utility>
-#include <vector>
 //--
 //- Implementation of algorithm from Paper titled :
 //- [1] "Multiple-View Geometry under the L_\infty Norm."

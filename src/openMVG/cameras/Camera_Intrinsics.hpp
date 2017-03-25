@@ -8,6 +8,8 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 #define OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -26,8 +28,8 @@ namespace cameras
 template< typename T>
 struct Clonable
 {
-  virtual T * clone() const = 0 ;
-} ;
+  virtual T * clone() const = 0;
+};
 
 /**
 * @brief Base class used to store common intrinsics parameters

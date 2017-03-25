@@ -28,6 +28,8 @@
 #ifndef OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 #define OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 
+#include <vector>
+
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG

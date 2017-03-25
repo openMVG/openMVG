@@ -7,10 +7,12 @@
 #ifndef OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
 #define OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
 
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+#include <algorithm>
+#include <vector>
+
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION( Eigen::Hyperplane<double, 3> )
 

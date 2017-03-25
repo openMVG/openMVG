@@ -7,13 +7,14 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 #define OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 
+#include <algorithm>
+#include <limits>
+#include <vector>
+
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
-
 
 namespace openMVG{
 namespace geometry_aware{

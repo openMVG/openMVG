@@ -8,13 +8,14 @@
 #ifndef OPENMVG_FEATURES_FEATURE_HPP
 #define OPENMVG_FEATURES_FEATURE_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace features {

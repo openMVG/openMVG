@@ -7,8 +7,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 #define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 
-#include "openMVG/stl/split.hpp"
 #include <iostream>
+#include <string>
+#include <vector>
+
+#include "openMVG/stl/split.hpp"
 
 namespace openMVG
 {

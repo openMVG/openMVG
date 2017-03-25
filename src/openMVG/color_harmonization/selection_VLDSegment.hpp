@@ -8,6 +8,9 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
 
+#include <string>
+#include <vector>
+
 #include "openMVG/color_harmonization/selection_interface.hpp"
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/matching/kvld/kvld_draw.h"
@@ -28,7 +31,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
            _vec_PutativeMatches( vec_PutativeMatches )
   {}
 
-  ~commonDataByPair_VLDSegment() override = default ;
+  ~commonDataByPair_VLDSegment() override = default;
 
   /**
    * Put masks to white, images are conserved
@@ -97,7 +100,8 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
         E);
       bOk = true;
     }
-    else{
+    else
+    {
       maskLeft.fill( 0 );
       maskRight.fill( 0 );
     }

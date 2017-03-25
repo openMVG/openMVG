@@ -32,6 +32,8 @@
 //  TrueVision Solutions (2)
 //------
 
+#include <vector>
+
 #include "openMVG/image/image_container.hpp"
 
 #include <cereal/cereal.hpp>

@@ -13,7 +13,8 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license (see the COPYING file).
 */
 
-#include <math.h>
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/types.hpp"
@@ -56,8 +57,8 @@ struct IntegralImages
 private :
   inline double get( double x, double y )const
   {
-		int ix = int( x );
-		int iy = int( y );
+		const int ix (x );
+		const int iy (y );
 		double dx = x - ix;
 		double dy = y - iy;
 		if( dx == 0 && dy == 0 )

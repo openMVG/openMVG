@@ -8,6 +8,10 @@
 #ifndef OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
 #define OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
 
+#include <set>
+#include <string>
+#include <vector>
+
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
 #include "openMVG/tracks/tracks.hpp"

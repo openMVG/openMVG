@@ -9,9 +9,9 @@
 #ifndef OPENMVG_SFM_SFM_DATA_IO_HPP
 #define OPENMVG_SFM_SFM_DATA_IO_HPP
 
-#include "openMVG/types.hpp"
-
 #include <string>
+
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {

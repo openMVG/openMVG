@@ -7,11 +7,11 @@
 #ifndef OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 #define OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 
+#include <set>
+
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
-
-#include <set>
 
 namespace openMVG { namespace sfm { struct SfM_Data; } }
 

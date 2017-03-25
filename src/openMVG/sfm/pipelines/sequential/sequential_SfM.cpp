@@ -717,8 +717,8 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
       const Pose3 pose = sfm_data_.GetPoseOrDie(view);
       const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
-      vec_residuals.push_back( fabs(residual(0)) );
-      vec_residuals.push_back( fabs(residual(1)) );
+      vec_residuals.push_back( std::abs(residual(0)) );
+      vec_residuals.push_back( std::abs(residual(1)) );
     }
   }
   // Display statistics

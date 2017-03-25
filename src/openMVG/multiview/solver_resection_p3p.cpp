@@ -100,7 +100,7 @@ inline void solveQuartic
  * Description: Compute the absolute pose of a camera using three 3D-to-2D correspondences
  *   Reference: [1] A Novel Parametrization of the P3P-Problem for a Direct Computation of
  *              Absolute Camera Position and Orientation
- *              Kneip, L.; Scaramuzza, D. ; Siegwart, R.
+ *              Kneip, L.; Scaramuzza, D.; Siegwart, R.
  *              CVPR 2011
  *
  *       Input: featureVectors: 3x3 matrix with UNITARY feature vectors (each column is a vector)

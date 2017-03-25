@@ -8,11 +8,12 @@
 #ifndef OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_HPP
 #define OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_HPP
 
-#include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
 #include <limits>
 #include <utility>
+#include <vector>
+
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace sfm {

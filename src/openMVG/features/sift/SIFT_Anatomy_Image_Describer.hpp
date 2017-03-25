@@ -46,6 +46,10 @@ Changes are:
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 
+#include <iostream>
+#include <numeric>
+#include <vector>
+
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
@@ -55,10 +59,6 @@ Changes are:
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
 
 #include <cereal/cereal.hpp>
-
-#include <iostream>
-#include <numeric>
-
 
 namespace openMVG {
 namespace features {

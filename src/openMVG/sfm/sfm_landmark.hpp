@@ -7,6 +7,8 @@
 #ifndef OPENMVG_SFM_SFM_LANDMARK_HPP
 #define OPENMVG_SFM_SFM_LANDMARK_HPP
 
+#include <vector>
+
 #include "openMVG/types.hpp"
 
 #include <cereal/cereal.hpp> // Serialization

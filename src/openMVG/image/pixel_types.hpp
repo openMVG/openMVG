@@ -139,7 +139,7 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgb& col )
     {
-      os << " {" ;
+      os << " {";
       for( int i = 0; i < 2; ++i )
       {
         os << col( i ) << ",";
@@ -329,7 +329,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgba& col )
     {
-      os << " {" ;
+      os << " {";
       for( int i = 0; i < 3; ++i )
       {
         os << col( i ) << ",";

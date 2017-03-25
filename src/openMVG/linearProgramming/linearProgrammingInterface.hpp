@@ -7,10 +7,10 @@
 #ifndef OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
 #define OPENMVG_LINEAR_PROGRAMMING_INTERFACE_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
 #include <utility>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -78,7 +78,7 @@ class LP_Solver
 {
 public:
 
-  LP_Solver(int nbParams):nbParams_(nbParams){};
+  LP_Solver(int nbParams):nbParams_(nbParams){}
 
   /// Setup constraint for the given library.
   virtual bool setup(const LP_Constraints & constraints) = 0;

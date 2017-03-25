@@ -12,6 +12,8 @@
 
 #include <fstream>
 #include <iomanip>
+#include <limits>
+#include <string>
 
 namespace openMVG {
 namespace sfm {

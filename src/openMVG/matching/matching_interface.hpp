@@ -8,9 +8,9 @@
 #ifndef OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
 #define OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-
 #include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -23,8 +23,8 @@ class ArrayMatcher
   using DistanceType = typename Metric::ResultType;
   using MetricT = Metric;
 
-  ArrayMatcher() = default ;
-  virtual ~ArrayMatcher() = default ;
+  ArrayMatcher() = default;
+  virtual ~ArrayMatcher() = default;
 
   /**
    * Build the matching structure

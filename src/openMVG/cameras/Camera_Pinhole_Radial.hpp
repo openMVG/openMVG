@@ -8,11 +8,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
-
-#include <vector>
 
 namespace openMVG
 {

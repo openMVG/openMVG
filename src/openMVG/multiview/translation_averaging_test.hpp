@@ -7,6 +7,12 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
 
+#include <algorithm>
+#include <map>
+#include <numeric>
+#include <string>
+#include <vector>
+
 #include "openMVG/graph/triplet_finder.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
@@ -15,10 +21,6 @@
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
-#include <map>
-#include <numeric>
-#include <vector>
 
 int modifiedMod
 (

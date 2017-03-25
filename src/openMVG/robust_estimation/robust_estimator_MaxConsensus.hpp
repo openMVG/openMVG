@@ -8,11 +8,11 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 #define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-
 #include <numeric>
 #include <limits>
 #include <vector>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
 
 namespace openMVG {
 namespace robust{

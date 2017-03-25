@@ -10,11 +10,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
 
 namespace openMVG
 {

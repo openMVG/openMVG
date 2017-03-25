@@ -23,7 +23,7 @@ namespace features {
   template <typename Real>
   static inline Real gaussian( const Real x, const Real y, const Real sigma )
   {
-    return std::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) ) ;
+    return std::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) );
   }
 
   /**
@@ -52,7 +52,7 @@ namespace features {
     int kx = 0, ky = 0, i = 0, j = 0, dcount = 0;
 
     // Subregion centers for the 4x4 gaussian weighting
-    Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 ) ;
+    Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 );
 
     // Set the descriptor size and the sample and pattern sizes
     const int sample_step = 5;
@@ -61,7 +61,7 @@ namespace features {
     // Get the information from the keypoint
     const Real ratio = static_cast<Real>( 1 << id_octave );
     const int scale = std::round( ipt.scale() / ratio );
-    const Real angle = ipt.orientation() ;
+    const Real angle = ipt.orientation();
     const Real yf = ipt.y() / ratio;
     const Real xf = ipt.x() / ratio;
     const Real co = std::cos( angle );
@@ -120,7 +120,7 @@ namespace features {
         }
 
         // Add the values to the descriptor vector
-        gauss_s2 = gaussian( cx - static_cast<Real>( 2.0 ) , cy - static_cast<Real>( 2.0 ) , static_cast<Real>( 1.5 ) ) ;
+        gauss_s2 = gaussian( cx - static_cast<Real>( 2.0 ) , cy - static_cast<Real>( 2.0 ) , static_cast<Real>( 1.5 ) );
         desc[dcount++] = dx * gauss_s2;
         desc[dcount++] = dy * gauss_s2;
         desc[dcount++] = mdx * gauss_s2;

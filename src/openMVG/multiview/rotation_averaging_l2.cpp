@@ -51,7 +51,7 @@ Mat3 ClosestSVDRotationMatrix
 // <eigenvalue, eigenvector> pair comparator
 bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
 {
- return fabs(x.first) < fabs(y.first);
+ return std::abs(x.first) < std::abs(y.first);
 }
 
 //-- Solve the Global Rotation matrix registration for each camera given a list

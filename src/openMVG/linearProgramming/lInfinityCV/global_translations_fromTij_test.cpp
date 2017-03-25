@@ -41,7 +41,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
 
   //-- Compute the global translations from the translation heading directions
   //-   with the L_infinity optimization
-  // 3*NCam*[X,Y,Z] ; Ncam*[Lambda], [gamma]
+  // 3*NCam*[X,Y,Z]; Ncam*[Lambda], [gamma]
   std::vector<double> vec_solution(iNviews*3 + vec_relative_estimates.size() + 1);
 
   //- a. Setup the LP solver,

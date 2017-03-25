@@ -8,14 +8,16 @@
 #ifndef OPENMVG_FEATURES_FEATURE_CONTAINER_HPP
 #define OPENMVG_FEATURES_FEATURE_CONTAINER_HPP
 
+#include <vector>
+
 namespace openMVG {
 namespace features {
 
-  class PointFeature;
-  using PointFeatures = std::vector<PointFeature>;
+class PointFeature;
+using PointFeatures = std::vector<PointFeature>;
 
-  class SIOPointFeature;
-  using SIOPointFeatures = std::vector<SIOPointFeature>;
+class SIOPointFeature;
+using SIOPointFeatures = std::vector<SIOPointFeature>;
 
 } // namespace features
 } // namespace openMVG

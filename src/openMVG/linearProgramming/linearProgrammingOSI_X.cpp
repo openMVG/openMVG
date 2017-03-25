@@ -62,7 +62,7 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-
         cstraints.vec_sign_[i] == LP_Constraints::LP_LESS_OR_EQUAL)
     {
       const int coef = 1;
-      for ( int j = 0; j < A.cols() ; ++j )
+      for ( int j = 0; j < A.cols(); ++j )
       {
         row.insert(j, coef * temp.data()[j]);
       }
@@ -75,7 +75,7 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-
         cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL)
     {
       const int coef = -1;
-      for ( int j = 0; j < A.cols() ; ++j )
+      for ( int j = 0; j < A.cols(); ++j )
       {
         row.insert(j, coef * temp.data()[j]);
       }

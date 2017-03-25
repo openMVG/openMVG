@@ -8,6 +8,8 @@
 #ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
 #define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/numeric/numeric.h"
 

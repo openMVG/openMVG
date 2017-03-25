@@ -41,6 +41,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"

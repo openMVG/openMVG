@@ -7,7 +7,6 @@
 
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
 
-#include "openMVG/geometry/frustum.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data.hpp"

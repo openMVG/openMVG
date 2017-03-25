@@ -8,14 +8,15 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_HPP
 #define OPENMVG_MATCHING_IND_MATCH_HPP
 
-#include "openMVG/types.hpp"
-
-#include <cereal/cereal.hpp> // Serialization
-
 #include <iostream>
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
+
+#include "openMVG/types.hpp"
+
+#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 namespace matching {

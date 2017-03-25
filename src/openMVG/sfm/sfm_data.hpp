@@ -7,6 +7,8 @@
 #ifndef OPENMVG_SFM_SFM_DATA_HPP
 #define OPENMVG_SFM_SFM_DATA_HPP
 
+#include <string>
+
 #include "openMVG/cameras/cameras.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"

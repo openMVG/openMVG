@@ -8,6 +8,8 @@
 #ifndef OPENMVG_MATCHING_REGION_MATCHER_HPP
 #define OPENMVG_MATCHING_REGION_MATCHER_HPP
 
+#include <vector>
+
 #include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
@@ -32,7 +34,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  virtual ~RegionsMatcher() = default ;
+  virtual ~RegionsMatcher() = default;
 
   /**
    * @brief Initialize the retrieval database

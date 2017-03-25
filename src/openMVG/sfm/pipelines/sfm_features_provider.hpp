@@ -8,6 +8,9 @@
 #ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
+#include <memory>
+#include <string>
+
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/feature_container.hpp"
 #include "openMVG/features/regions.hpp"
@@ -15,8 +18,6 @@
 #include "openMVG/types.hpp"
 
 #include "third_party/progress/progress.hpp"
-
-#include <memory>
 
 namespace openMVG {
 namespace sfm {

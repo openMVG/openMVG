@@ -7,6 +7,11 @@
 #ifndef OPENMVG_SFM_SFM_REPORT_HPP
 #define OPENMVG_SFM_SFM_REPORT_HPP
 
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "openMVG/sfm/sfm_data.hpp"
 
 #include "third_party/histogram/histogram.hpp"

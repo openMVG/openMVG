@@ -8,12 +8,12 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
-
-#include <vector>
 
 namespace openMVG
 {
@@ -135,8 +135,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     Vec3 operator () ( const Vec2& p ) const override
     {
-      Vec3 p3( p( 0 ), p( 1 ), 1.0 );
-      return ( Kinv_ * p3 ).normalized();
+      return (Kinv_ * p.homogeneous()).normalized();
     }
 
     /**

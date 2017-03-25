@@ -27,7 +27,8 @@
 //  by the generic ACRANSAC routine.
 //
 
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
 
 namespace openMVG {

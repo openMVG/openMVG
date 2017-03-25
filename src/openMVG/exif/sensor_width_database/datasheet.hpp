@@ -7,10 +7,11 @@
 #ifndef OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
 #define OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
 
-#include "openMVG/stl/split.hpp"
-
 #include <algorithm>
 #include <string>
+#include <vector>
+
+#include "openMVG/stl/split.hpp"
 
 // Database structure to store camera model and sensor size
 struct Datasheet

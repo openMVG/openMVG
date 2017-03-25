@@ -8,6 +8,8 @@
 #ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L2_HPP
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L2_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 
 #ifdef _MSC_VER

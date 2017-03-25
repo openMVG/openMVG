@@ -7,11 +7,13 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_COMMON_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-#include "openMVG/types.hpp"
-
+#include <map>
+#include <set>
 #include <utility>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 

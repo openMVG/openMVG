@@ -8,10 +8,10 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 
+#include <memory>
+
 #include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
-
-#include <memory>
 
 namespace openMVG { namespace matching { class PairWiseMatchesContainer; } }
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
@@ -41,7 +41,7 @@ class Matcher_Regions : public Matcher
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
     matching::PairWiseMatchesContainer & map_PutativesMatches // the pairwise photometric corresponding points
-  ) const override ;
+  ) const override;
 
   private:
   // Distance ratio used to discard spurious correspondence

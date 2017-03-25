@@ -8,6 +8,10 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_H_AC_ROBUST_HPP
 
+#include <limits>
+#include <utility>
+#include <vector>
+
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
@@ -32,7 +36,7 @@ struct GeometricFilter_HMatrix_AC
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_H(Mat3::Identity()),
-      m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
+      m_dPrecision_robust(std::numeric_limits<double>::infinity()){}
 
   /// Robust fitting of the HOMOGRAPHY matrix
   template<typename Regions_or_Features_ProviderT>

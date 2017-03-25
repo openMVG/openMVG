@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_SFM_MATCHES_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_MATCHES_PROVIDER_HPP
 
+#include <string>
+
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/sfm/sfm_data.hpp"

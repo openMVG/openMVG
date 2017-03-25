@@ -7,6 +7,8 @@
 #ifndef OPENMVG_GEOMETRY_POSE3_HPP
 #define OPENMVG_GEOMETRY_POSE3_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include <cereal/cereal.hpp> // Serialization
 
@@ -14,7 +16,6 @@ namespace openMVG
 {
 namespace geometry
 {
-
 
 /**
 * @brief Defines a pose in 3d space

@@ -32,17 +32,19 @@
 #ifndef OPENMVG_TRACKS_TRACKS_HPP
 #define OPENMVG_TRACKS_TRACKS_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/tracks/flat_pair_map.hpp"
-#include "openMVG/tracks/union_find.hpp"
-
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/tracks/flat_pair_map.hpp"
+#include "openMVG/tracks/union_find.hpp"
 
 namespace openMVG  {
 
@@ -312,7 +314,7 @@ struct TracksUtilsMap
         find_if(
           map_tracks.begin(), map_tracks.end(),
           [id] (const std::pair<uint32_t, submapTrack > & s) { return (id == s.first); }
-        ) ;
+        );
       // The current track.
       const submapTrack & map_ref = itF->second;
 

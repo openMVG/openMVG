@@ -8,14 +8,15 @@
 #ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
 
+#include <memory>
+#include <string>
+
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/progress/progress.hpp"
-
-#include <memory>
 
 namespace openMVG {
 namespace sfm {

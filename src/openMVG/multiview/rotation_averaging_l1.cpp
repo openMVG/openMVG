@@ -160,7 +160,7 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   minGraph.resize(nViews);
 
   //E-- Export compute MST
-  for(size_t i= 0 ; i < tree_edge_vec.size(); i++)
+  for(size_t i= 0; i < tree_edge_vec.size(); i++)
   {
     minGraph[g.id(g.u(tree_edge_vec[i]))].edges.push_back(g.id(g.v(tree_edge_vec[i])));
     minGraph[g.id(g.v(tree_edge_vec[i]))].edges.push_back(g.id(g.u(tree_edge_vec[i])));

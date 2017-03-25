@@ -6,7 +6,6 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
 #define OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
 
-
 //------------------
 //-- Bibliography --
 //------------------
@@ -15,13 +14,14 @@
 //- Date: November 2013.
 //- Conference: CVMP.
 
-//-- Linear programming
+#include <numeric>
+#include <set>
+#include <utility>
+#include <vector>
+
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
-#include <numeric>
-#include <set>
 
 namespace openMVG {
 namespace lInfinity {
@@ -31,7 +31,7 @@ struct relativeColorHistogramEdge
   size_t I,J;
   std::vector<size_t> histoI, histoJ;
 
-  relativeColorHistogramEdge() = default ;
+  relativeColorHistogramEdge() = default;
 
   relativeColorHistogramEdge(
     size_t i, size_t j,
@@ -98,7 +98,7 @@ static void Encode_histo_relation(
   // By default set free variable:
   vec_bounds = std::vector< std::pair<double,double> >(NVar);
   fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair((double)-1e+30, (double)1e+30));
+    std::make_pair(static_cast<double>(-1e+30), static_cast<double>(1e+30)));
 
   // Set gain as positive values
   for (size_t i = 0; i < Nima; ++i)
@@ -124,7 +124,7 @@ static void Encode_histo_relation(
   //--
 
   size_t rowPos = 0;
-  double incrementPourcentile = 1./(double) nbQuantile;
+  double incrementPourcentile = 1./ static_cast<double>(nbQuantile);
 
   for (size_t i = 0; i < Nrelative; ++i)
   {

@@ -7,11 +7,11 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRANSLATIONANDSTRUCTUREFrom_xi_RI_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRANSLATIONANDSTRUCTUREFrom_xi_RI_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-
 #include <utility>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 //--
 //- Implementation of algorithm from Paper titled :

@@ -7,9 +7,10 @@
 #ifndef OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
 #define OPENMVG_LINEAR_PROGRAMMING_LINEAR_PROGRAMMING_OSI_X_HPP
 
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-
 #include <memory>
+#include <vector>
+
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 class OsiClpSolverInterface;
 

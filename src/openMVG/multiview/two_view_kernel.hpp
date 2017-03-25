@@ -29,10 +29,10 @@
 #ifndef OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
 
 namespace openMVG {
 namespace two_view {

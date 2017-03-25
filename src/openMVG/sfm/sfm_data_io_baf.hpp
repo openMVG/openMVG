@@ -8,9 +8,12 @@
 #ifndef OPENMVG_SFM_SFM_DATA_IO_BAF_HPP
 #define OPENMVG_SFM_SFM_DATA_IO_BAF_HPP
 
-#include "openMVG/sfm/sfm_data_io.hpp"
-
+#include <algorithm>
 #include <fstream>
+#include <string>
+#include <vector>
+
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 namespace openMVG {
 namespace sfm {

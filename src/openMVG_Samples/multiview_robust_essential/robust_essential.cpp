@@ -211,10 +211,10 @@ int main() {
 
       const Vec2 residual0 = intrinsic0.residual(pose0, X, LL.coords().cast<double>());
       const Vec2 residual1 = intrinsic1.residual(pose1, X, RR.coords().cast<double>());
-      vec_residuals.push_back(fabs(residual0(0)));
-      vec_residuals.push_back(fabs(residual0(1)));
-      vec_residuals.push_back(fabs(residual1(0)));
-      vec_residuals.push_back(fabs(residual1(1)));
+      vec_residuals.push_back(std::abs(residual0(0)));
+      vec_residuals.push_back(std::abs(residual0(1)));
+      vec_residuals.push_back(std::abs(residual1(0)));
+      vec_residuals.push_back(std::abs(residual1(1)));
       vec_3DPoints.emplace_back(X);
     }
 

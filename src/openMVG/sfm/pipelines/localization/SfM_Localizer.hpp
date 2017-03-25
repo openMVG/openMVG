@@ -8,10 +8,11 @@
 #ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 #define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 
+#include <limits>
+#include <vector>
+
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/types.hpp"
-
-#include <limits>
 
 namespace openMVG { namespace cameras { struct IntrinsicBase; } }
 namespace openMVG { namespace features { class Regions; } }

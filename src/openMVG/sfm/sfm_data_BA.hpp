@@ -83,8 +83,6 @@ class Bundle_Adjustment
     // tell which parameter needs to be adjusted
     const Optimize_Options options
   ) = 0;
-
-  // TODO: Use filter to say wich parameter is const or not (allow to refine only a subpart of the intrinsics or the poses)
 };
 
 } // namespace sfm

@@ -7,12 +7,13 @@
 #ifndef OPENMVG_FEATURES_SIFT_HIERARCHICAL_GAUSSIAN_SCALE_SPACE_HPP
 #define OPENMVG_FEATURES_SIFT_HIERARCHICAL_GAUSSIAN_SCALE_SPACE_HPP
 
+#include <algorithm>
+#include <vector>
+
 #include "openMVG/features/sift/octaver.hpp"
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/image_resampling.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
 
 namespace openMVG{
 namespace features{

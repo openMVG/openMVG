@@ -8,13 +8,14 @@
 #ifndef OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 #define OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 
+#include <fstream>
+#include <string>
+#include <vector>
+
 #include "openMVG/features/regions_factory.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/archives/json.hpp>
-
-#include <fstream>
-#include <vector>
 
 namespace openMVG {
 namespace features {

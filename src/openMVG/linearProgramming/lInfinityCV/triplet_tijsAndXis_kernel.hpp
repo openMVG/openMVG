@@ -8,6 +8,7 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRIPLET_TIJS_AND_KIS_KERNEL_HPP
 
+#include <vector>
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {

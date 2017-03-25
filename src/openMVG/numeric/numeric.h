@@ -28,12 +28,14 @@
 #ifndef OPENMVG_NUMERIC_NUMERIC_H
 #define OPENMVG_NUMERIC_NUMERIC_H
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

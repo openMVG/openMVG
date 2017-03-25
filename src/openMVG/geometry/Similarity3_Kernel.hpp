@@ -7,6 +7,8 @@
 #ifndef OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
 #define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"

@@ -41,9 +41,9 @@
 #ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_FIVE_POINT_HPP
 #define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_FIVE_POINT_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

@@ -25,30 +25,30 @@ using namespace openMVG::system;
 
 TEST( GaussianScaleSpace , OctaveGeneration )
 {
-  Image<unsigned char> in ;
+  Image<unsigned char> in;
 
   const std::string png_filename = std::string( THIS_SOURCE_DIR )
     + "/../../../openMVG_Samples/imageData/StanfordMobileVisualSearch/Ace_0.png";
   EXPECT_TRUE( ReadImage( png_filename.c_str(), &in ) );
 
-  Image<float> image ;
-  image = in.GetMat().cast<float>() ;
+  Image<float> image;
+  image = in.GetMat().cast<float>();
 
   HierarchicalGaussianScaleSpace octave_gen(6, 3, GaussianScaleSpaceParams(1.6f, 1.0f, 0.5f));
   Octave octave;
 
-  octave_gen.SetImage( image ) ;
+  octave_gen.SetImage( image );
 
   std::cerr << "Octave computation started" << std::endl;
   uint8_t octave_id = 0;
   while( octave_gen.NextOctave( octave ) )
   {
-    std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl ;
-    for( int i = 0 ; i < octave.slices.size() ; ++i )
+    std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl;
+    for( int i = 0; i < octave.slices.size(); ++i )
     {
-      std::stringstream str ;
-      str << "gaussian_octave_" << std::to_string(octave_id) << "_" << i << ".png" ;
-      EXPECT_TRUE( WriteImage( str.str().c_str() , Image<unsigned char>( octave.slices[i].cast<unsigned char>()  ) ) ) ;
+      std::stringstream str;
+      str << "gaussian_octave_" << std::to_string(octave_id) << "_" << i << ".png";
+      EXPECT_TRUE( WriteImage( str.str().c_str() , Image<unsigned char>( octave.slices[i].cast<unsigned char>()  ) ) );
     }
     ++octave_id;
   }
@@ -56,7 +56,7 @@ TEST( GaussianScaleSpace , OctaveGeneration )
 
 TEST( Sift_Keypoint , DetectionAndDescription )
 {
-  Image<unsigned char> in ;
+  Image<unsigned char> in;
 
   const std::string png_filename = std::string( THIS_SOURCE_DIR )
     + "/../../../openMVG_Samples/imageData/StanfordMobileVisualSearch/Ace_0.png";
@@ -73,7 +73,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
 
   // Convert to float in range [0;1]
   const image::Image<float> image(in.GetMat().cast<float>()/255.0f);
-  octave_gen.SetImage( image ) ;
+  octave_gen.SetImage( image );
 
   std::vector<Keypoint> keypoints;
   keypoints.reserve(5000);
@@ -81,7 +81,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
   uint8_t octave_id = 0;
   while( octave_gen.NextOctave( octave ) )
   {
-    std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl ;
+    std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl;
     std::vector< Keypoint > keys;
     SIFT_KeypointExtractor keypointDetector(0.04f / octave_gen.NbSlice(), 10.f, 5);
     keypointDetector(octave, keys);

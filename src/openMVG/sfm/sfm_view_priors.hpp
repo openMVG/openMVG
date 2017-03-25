@@ -7,6 +7,9 @@
 #ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
 #define OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
 
+#include <string>
+#include <vector>
+
 #include "openMVG/geometry/pose3.hpp"
 
 #include <cereal/types/polymorphic.hpp>

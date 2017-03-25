@@ -16,7 +16,7 @@ namespace openMVG {
 namespace lInfinityCV {
 namespace kernel {
 
-using namespace linearProgramming ;
+using namespace linearProgramming;
 
 inline void translate
 (

@@ -59,14 +59,16 @@
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
 
+#include <cmath>
+#include <iostream>
+#include <random>
+#include <utility>
+#include <vector>
+
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/stl/dynamic_bitset.hpp"
-
-#include <cmath>
-#include <iostream>
-#include <random>
 
 namespace openMVG {
 namespace matching {

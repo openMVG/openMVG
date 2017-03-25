@@ -7,14 +7,16 @@
 #ifndef OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 #define OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 
+#include <algorithm>
+#include <memory>
+#include <future>
+#include <thread>
+#include <vector>
+
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
-
-#include <memory>
-#include <future>
-#include <thread>
 
 namespace openMVG {
 namespace matching {
@@ -120,7 +122,7 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
     SplitRange( (int)0 , (int)nbQuery , nb_thread , range );
 
     std::vector<std::future<void>> fut;
-    for ( size_t i = 1 ; i < range.size() ; ++i )
+    for ( size_t i = 1; i < range.size(); ++i )
     {
       fut.push_back(
         std::async(

@@ -8,6 +8,7 @@
 #ifndef OPENMVG_STL_INDEXED_SORT_HPP
 #define OPENMVG_STL_INDEXED_SORT_HPP
 
+#include <algorithm>
 #include <vector>
 
 namespace stl

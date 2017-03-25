@@ -28,6 +28,8 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 #define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 
+#include <vector>
+
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG {

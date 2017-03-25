@@ -7,10 +7,10 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
-#include "openMVG/cameras/cameras.hpp"
-
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
+
+#include "openMVG/cameras/cameras.hpp"
 
 //--
 //- Define ceres Cost_functor for each OpenMVG camera model

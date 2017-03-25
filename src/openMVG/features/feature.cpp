@@ -61,7 +61,7 @@ float& SIOPointFeature::orientation() { return orientation_; }
 bool SIOPointFeature::operator ==(const SIOPointFeature& b) const {
   return (scale_ == b.scale()) &&
          (orientation_ == b.orientation()) &&
-         (x() == b.x()) && (y() == b.y()) ;
+         (x() == b.x()) && (y() == b.y());
 };
 
 bool SIOPointFeature::operator !=(const SIOPointFeature& b) const {

@@ -7,6 +7,8 @@
 #ifndef OPENMVG_SFM_GLOBAL_REINDEX_HPP
 #define OPENMVG_SFM_GLOBAL_REINDEX_HPP
 
+#include <set>
+
 namespace openMVG {
 namespace sfm{
 

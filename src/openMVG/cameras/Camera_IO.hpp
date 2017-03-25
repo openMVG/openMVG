@@ -8,12 +8,13 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_IO_HPP
 #define OPENMVG_CAMERAS_CAMERA_IO_HPP
 
-#include "openMVG/cameras/PinholeCamera.hpp"
-
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
+
+#include "openMVG/cameras/PinholeCamera.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG
 {

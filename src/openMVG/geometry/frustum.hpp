@@ -7,10 +7,13 @@
 #ifndef OPENMVG_GEOMETRY_FRUSTUM_HPP
 #define OPENMVG_GEOMETRY_FRUSTUM_HPP
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-
 #include <fstream>
 #include <iomanip>
+#include <limits>
+#include <string>
+#include <vector>
+
+#include "openMVG/geometry/half_space_intersection.hpp"
 
 namespace openMVG
 {

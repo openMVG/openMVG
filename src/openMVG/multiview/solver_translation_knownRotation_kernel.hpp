@@ -8,11 +8,11 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
-
-#include <vector>
 
 //------------------
 //-- Bibliography --

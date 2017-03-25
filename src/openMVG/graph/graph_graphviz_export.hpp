@@ -8,14 +8,15 @@
 #ifndef OPENMVG_GRAPH_GRAPH_EXPORT_HPP
 #define OPENMVG_GRAPH_GRAPH_EXPORT_HPP
 
-#include "openMVG/types.hpp"
-
 #include <lemon/list_graph.h>
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <string>
+
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace graph {

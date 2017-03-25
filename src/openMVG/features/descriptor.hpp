@@ -8,13 +8,14 @@
 #ifndef OPENMVG_FEATURES_DESCRIPTOR_HPP
 #define OPENMVG_FEATURES_DESCRIPTOR_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace features {
@@ -85,7 +86,7 @@ template<>
 inline std::ostream& printT<unsigned char>(std::ostream& os, unsigned char *tab, size_t N)
 {
   for(size_t i=0; i < N; ++i)
-    os << (int)tab[i] << " ";
+    os << static_cast<int>(tab[i]) << " ";
   return os;
 }
 
@@ -170,11 +171,10 @@ inline bool loadDescsFromBinFile(
     return false;
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
-  fileIn.read((char*) &cardDesc,  sizeof(std::size_t));
+  fileIn.read(reinterpret_cast<char*>(&cardDesc),  sizeof(std::size_t));
   vec_desc.resize(cardDesc);
-  for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
-    iter != vec_desc.end(); ++iter) {
-    fileIn.read((char*) (*iter).data(),
+  for (auto & it :vec_desc) {
+    fileIn.read(reinterpret_cast<char*>(it.data()),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = !fileIn.bad();

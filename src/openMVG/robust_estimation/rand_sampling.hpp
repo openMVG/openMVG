@@ -8,6 +8,7 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 #define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 
+#include <algorithm>
 #include <cstdlib>
 #include <random>
 #include <vector>

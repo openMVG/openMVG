@@ -8,8 +8,9 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
 #define OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace euclidean_resection {

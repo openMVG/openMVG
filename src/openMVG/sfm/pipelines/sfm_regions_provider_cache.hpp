@@ -12,7 +12,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <mutex>
+#include <string>
 #include <thread>
 
 namespace openMVG {

@@ -8,11 +8,11 @@
 #ifndef OPENMVG_FEATURES_SVG_FEATURES_HPP
 #define OPENMVG_FEATURES_SVG_FEATURES_HPP
 
-#include <openMVG/features/feature.hpp>
-#include <openMVG/features/feature_container.hpp>
-
 #include <string>
 #include <utility>
+
+#include <openMVG/features/feature.hpp>
+#include <openMVG/features/feature_container.hpp>
 
 namespace openMVG {
 namespace features {

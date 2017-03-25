@@ -7,6 +7,7 @@
 #ifndef OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 #define OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 
+#include <limits>
 #include "openMVG/numeric/lm.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 

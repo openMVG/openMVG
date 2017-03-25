@@ -8,12 +8,12 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 
+#include <memory>
+#include <string>
+
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
-
-#include <memory>
-#include <string>
 
 namespace htmlDocument { class htmlDocumentStream; }
 namespace openMVG { namespace matching { struct PairWiseMatches; } }

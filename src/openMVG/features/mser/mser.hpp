@@ -33,12 +33,12 @@ namespace openMVG
       /**
       * @brief Function used to extract MSER regions of an image
       * @note This should used in a two step approach :
-      * MSERExtractor extr8( ... , MSER_8_CONNECTIVITY ) ;
-      * MSERExtractor extr4( ... , MSER_4_CONNECTIVITY ) ;
-      * Image img ;
-      * std::vector< MSERRegion > regs ;
-      * extr8( img , regs ) ;
-      * extr4( ~img , regs ) ; // ~is the inverse color image
+      * MSERExtractor extr8( ... , MSER_8_CONNECTIVITY );
+      * MSERExtractor extr4( ... , MSER_4_CONNECTIVITY );
+      * Image img;
+      * std::vector< MSERRegion > regs;
+      * extr8( img , regs );
+      * extr4( ~img , regs ); // ~is the inverse color image
       *
       * We do this because MSER is extracted from the lowest grayscale level to the upper and so is extracts only the black regions
       */
@@ -58,8 +58,8 @@ namespace openMVG
                  | 4 | X | 0 |
                  | 5 | 6 | 7 |
         */
-        static const int MSER_4_CONNECTIVITY ;
-        static const int MSER_8_CONNECTIVITY ;
+        static const int MSER_4_CONNECTIVITY;
+        static const int MSER_8_CONNECTIVITY;
 
 
         /**
@@ -75,14 +75,14 @@ namespace openMVG
                        const double min_area = 0.0001 , const double max_area = 0.5 ,
                        const double max_variation = 0.5 ,
                        const double min_diversity = 1.0 / 3.0 ,
-                       const int connectivity = MSER_4_CONNECTIVITY ) ;
+                       const int connectivity = MSER_4_CONNECTIVITY );
 
         /**
         * @brief Extract MSER regions
         * @param img Input image
         * @param[out] regions Output regions
         */
-        void Extract( const image::Image<unsigned char> & img , std::vector< MSERRegion > & regions ) const ;
+        void Extract( const image::Image<unsigned char> & img , std::vector< MSERRegion > & regions ) const;
 
       private:
 
@@ -92,15 +92,15 @@ namespace openMVG
         * @param pixel_x X-coord of the base of the merged region
         * @param pixel_y Y-coord of the base of the merged region
         */
-        void ProcessStack( const int nextLevel , const int pixel_x , const int pixel_y , std::vector< MSERRegion * > & regionStack ) const ;
+        void ProcessStack( const int nextLevel , const int pixel_x , const int pixel_y , std::vector< MSERRegion * > & regionStack ) const;
 
-        int m_delta ; // Maximum level distance to check stability
-        double m_minimum_area ; // Minimum area (relative to the image) of the valid regions
-        double m_maximum_area ; // Maximum area (relative to the image) of the valid regions
-        double m_max_variation ; // Maximum variation between two regions
-        double m_min_diversity ; // Stability distance between two region in the same hierarchy
-        int m_connectivity ;
-      } ;
+        int m_delta; // Maximum level distance to check stability
+        double m_minimum_area; // Minimum area (relative to the image) of the valid regions
+        double m_maximum_area; // Maximum area (relative to the image) of the valid regions
+        double m_max_variation; // Maximum variation between two regions
+        double m_min_diversity; // Stability distance between two region in the same hierarchy
+        int m_connectivity;
+      };
     } // namespace MSER
   } // namespace features
 } // namespace openMVG

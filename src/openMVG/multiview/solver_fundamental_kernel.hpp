@@ -29,10 +29,10 @@
 #ifndef OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
-
-#include <vector>
 
 namespace openMVG {
 namespace fundamental {

@@ -7,12 +7,12 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
 #define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
 
+#include <cassert>
+#include <vector>
+
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_convolution_base.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
-
-#include <cassert>
-#include <vector>
 
 /**
  ** @file Standard 2D image convolution functions :

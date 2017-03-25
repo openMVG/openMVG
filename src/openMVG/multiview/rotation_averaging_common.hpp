@@ -8,11 +8,11 @@
 #ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_HPP
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_COMMON_HPP
 
-#include "openMVG/numeric/eigen_alias_definition.hpp"
-#include "openMVG/types.hpp"
-
 #include <map>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG   {
 namespace rotation_averaging  {
@@ -51,7 +51,7 @@ inline RelativeRotations_map getMap(const RelativeRotations & relRots)
 {
   RelativeRotations_map map_rots;
   for( const auto & cur_rotation : relRots )
-    map_rots[std::make_pair(cur_rotation.i, cur_rotation.j)] = cur_rotation ;
+    map_rots[std::make_pair(cur_rotation.i, cur_rotation.j)] = cur_rotation;
   return map_rots;
 }
 

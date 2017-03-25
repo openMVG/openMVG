@@ -8,6 +8,13 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_UTILS_HPP
 #define OPENMVG_MATCHING_IND_MATCH_UTILS_HPP
 
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <map>
+#include <string>
+#include <vector>
+
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -16,13 +23,6 @@
 #include <cereal/types/map.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
-
-
-#include <fstream>
-#include <iterator>
-#include <map>
-#include <string>
-#include <vector>
 
 namespace openMVG {
 namespace matching {
@@ -90,12 +90,12 @@ inline bool Save
     {
       return false;
     }
-    for ( const auto & cur_match : matches ) 
+    for ( const auto & cur_match : matches )
     {
-      const size_t I = cur_match.first.first ;
-      const size_t J = cur_match.first.second ; 
-      
-      const std::vector<IndMatch> & pair_matches = cur_match.second ;
+      const size_t I = cur_match.first.first;
+      const size_t J = cur_match.first.second;
+
+      const std::vector<IndMatch> & pair_matches = cur_match.second;
       stream << I << " " << J << '\n' << pair_matches.size() << '\n';
       copy(pair_matches.begin(), pair_matches.end(),
            std::ostream_iterator<IndMatch>(stream, "\n"));

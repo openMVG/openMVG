@@ -8,10 +8,11 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 
+#include <string>
+#include <vector>
+
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/tracks/tracks.hpp"
-
-#include <string>
 
 namespace openMVG { namespace graph { struct Triplet; } }
 namespace openMVG { namespace matching { struct PairWiseMatches; } }

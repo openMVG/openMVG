@@ -8,6 +8,10 @@
 #ifndef OPENMVG_FEATURES_REGIONS_HPP
 #define OPENMVG_FEATURES_REGIONS_HPP
 
+#include <string>
+#include <typeinfo>
+#include <vector>
+
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/feature_container.hpp>
 #include "openMVG/features/descriptor.hpp"
@@ -15,9 +19,6 @@
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <cereal/types/vector.hpp>
-
-#include <string>
-#include <typeinfo>
 
 namespace openMVG {
 namespace features {
@@ -28,7 +29,7 @@ class Regions
 {
 public:
 
-  virtual ~Regions() = default ;
+  virtual ~Regions() = default;
 
   //--
   // IO - one file for region features, one file for region descriptors

@@ -476,14 +476,14 @@ int ReadPnmStream(FILE *file,
   // whitespace character, and only one whitespace char is eaten after the
   // third int token is parsed.
   while (valuesIndex < NUM_VALUES) {
-    char nextChar ;
+    char nextChar;
     res = fread(&nextChar,1,1,file);
     if (res == 0) return 0; // read failed, EOF?
 
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
         inToken = 0;
-        intBuffer[intIndex] = 0 ; // nullptr-terminate the string
+        intBuffer[intIndex] = 0; // nullptr-terminate the string
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class
@@ -491,8 +491,8 @@ int ReadPnmStream(FILE *file,
       }
     }
     else if (isdigit(nextChar)) {
-      inToken = 1 ; // in case it's not already set
-      intBuffer[intIndex++] = nextChar ;
+      inToken = 1; // in case it's not already set
+      intBuffer[intIndex++] = nextChar;
       if (intIndex == INT_BUFFER_SIZE) // tokens should never be this long
         return 0;
     }
@@ -621,7 +621,7 @@ int WriteTiff(const char * filename,
   TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
   TIFFSetField(tiff, TIFFTAG_COMPRESSION,COMPRESSION_NONE);
   TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, 16);
-  for (uint32 y=0; y < static_cast<uint32>(h) ; ++y) {
+  for (uint32 y=0; y < static_cast<uint32>(h); ++y) {
     if (TIFFWriteScanline(tiff,(tdata_t)(((uint8*)(&ptr[0]))+depth*w*y),y)<0) {
       TIFFClose(tiff);
       return 0;
@@ -794,7 +794,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
     if (isspace(nextChar)) {
       if (inToken) { // we were reading a token, so this white space delimits it
         inToken = 0;
-        intBuffer[intIndex] = 0 ; // nullptr-terminate the string
+        intBuffer[intIndex] = 0; // nullptr-terminate the string
         values[valuesIndex++] = atoi(intBuffer);
         intIndex = 0; // reset for next int token
         // to conform with current image class
@@ -805,8 +805,8 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
       }
     }
     else if (isdigit(nextChar)) {
-      inToken = 1 ; // in case it's not already set
-      intBuffer[intIndex++] = nextChar ;
+      inToken = 1; // in case it's not already set
+      intBuffer[intIndex++] = nextChar;
       if (intIndex == INT_BUFFER_SIZE) {// tokens should never be this long
         fclose(file);
         return false;

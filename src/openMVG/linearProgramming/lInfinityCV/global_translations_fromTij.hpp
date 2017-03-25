@@ -7,11 +7,11 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_GLOBAL_TRANSLATIONS_FROMBEARING_HPP
 
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-#include "openMVG/multiview/translation_averaging_common.hpp"
-
 #include <utility>
 #include <vector>
+
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/multiview/translation_averaging_common.hpp"
 
 //------------------
 //-- Bibliography --

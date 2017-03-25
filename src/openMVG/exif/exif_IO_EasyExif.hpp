@@ -7,14 +7,14 @@
 #ifndef OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
 #define OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
 
-#include "openMVG/exif/exif_IO.hpp"
-
-#include "third_party/easyexif/exif.h"
-
 #include <fstream>
 #include <limits>
 #include <sstream>
+#include <string>
 #include <vector>
+
+#include "openMVG/exif/exif_IO.hpp"
+#include "third_party/easyexif/exif.h"
 
 namespace openMVG
 {

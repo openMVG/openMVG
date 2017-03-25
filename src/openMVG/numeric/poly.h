@@ -27,6 +27,7 @@
 #ifndef OPENMVG_NUMERIC_POLY_H
 #define OPENMVG_NUMERIC_POLY_H
 
+#include <algorithm>
 #include <cmath>
 
 namespace openMVG
@@ -49,17 +50,17 @@ template<typename Real>
 int SolveCubicPolynomial( Real a, Real b, Real c,
                           Real *x0, Real *x1, Real *x2 )
 {
-  Real q = a * a - 3 * b;
-  Real r = 2 * a * a * a - 9 * a * b + 27 * c;
+  const Real q = a * a - 3 * b;
+  const Real r = 2 * a * a * a - 9 * a * b + 27 * c;
 
-  Real Q = q / 9;
-  Real R = r / 54;
+  const Real Q = q / 9;
+  const Real R = r / 54;
 
-  Real Q3 = Q * Q * Q;
-  Real R2 = R * R;
+  const Real Q3 = Q * Q * Q;
+  const Real R2 = R * R;
 
-  Real CR2 = 729 * r * r;
-  Real CQ3 = 2916 * q * q * q;
+  const Real CR2 = 729 * r * r;
+  const Real CQ3 = 2916 * q * q * q;
 
   if ( R == 0 && Q == 0 )
   {
@@ -76,7 +77,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
     // Due to finite precision some double roots may be missed, and considered
     // to be a pair of complex roots z = x +/- epsilon i close to the real
     // axis.
-    Real sqrtQ = sqrt ( Q );
+    const Real sqrtQ = sqrt ( Q );
     if ( R > 0 )
     {
       *x0 = -2 * sqrtQ - a / 3;
@@ -95,10 +96,10 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
   else if ( CR2 < CQ3 )
   {
     // This case is equivalent to R2 < Q3.
-    Real sqrtQ = sqrt ( Q );
-    Real sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
-    Real theta = acos ( R / sqrtQ3 );
-    Real norm = -2 * sqrtQ;
+    const Real sqrtQ = sqrt ( Q );
+    const Real sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
+    const Real theta = acos ( R / sqrtQ3 );
+    const Real norm = -2 * sqrtQ;
     *x0 = norm * cos ( theta / 3 ) - a / 3;
     *x1 = norm * cos ( ( theta + 2.0 * M_PI ) / 3 ) - a / 3;
     *x2 = norm * cos ( ( theta - 2.0 * M_PI ) / 3 ) - a / 3;
@@ -118,9 +119,9 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
     }
     return 3;
   }
-  Real sgnR = ( R >= 0 ? 1 : -1 );
-  Real A = -sgnR * pow ( fabs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
-  Real B = Q / A ;
+  const Real sgnR = ( R >= 0 ? 1 : -1 );
+  const Real A = -sgnR * pow ( fabs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
+  const Real B = Q / A ;
   *x0 = A + B - a / 3;
   return 1;
 }
@@ -144,9 +145,9 @@ int SolveCubicPolynomial( const Real *coeffs, Real *solutions )
     // solver!
     return 0;
   }
-  Real a = coeffs[2] / coeffs[3];
-  Real b = coeffs[1] / coeffs[3];
-  Real c = coeffs[0] / coeffs[3];
+  const Real a = coeffs[2] / coeffs[3];
+  const Real b = coeffs[1] / coeffs[3];
+  const Real c = coeffs[0] / coeffs[3];
   return SolveCubicPolynomial( a, b, c,
                                solutions + 0,
                                solutions + 1,

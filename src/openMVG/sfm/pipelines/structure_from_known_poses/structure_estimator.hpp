@@ -7,9 +7,9 @@
 #ifndef OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
 #define OPENMVG_SFM_PIPELINES_SFKP_STRUCTURE_ESTIMATOR_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-
 #include <memory>
+
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
 namespace openMVG { namespace sfm { struct SfM_Data; } }

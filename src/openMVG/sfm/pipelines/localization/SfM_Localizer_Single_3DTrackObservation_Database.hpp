@@ -8,6 +8,8 @@
 #ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
 #define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_STO_DB_HPP
 
+#include <vector>
+
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/types.hpp"
 

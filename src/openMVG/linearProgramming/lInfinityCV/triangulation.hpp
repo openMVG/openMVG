@@ -7,10 +7,10 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
-
 #include <utility>
 #include <vector>
+
+#include "openMVG/numeric/numeric.h"
 
 //--
 //- Implementation of algorithm from Paper titled :

@@ -202,7 +202,7 @@ void ComputeBarycentricCoordinates(const Mat3X &X_world_centered,
                                    const Mat34 &X_control_points,
                                    Mat4X *alphas) {
   size_t num_points = X_world_centered.cols();
-  Mat3 C2 ;
+  Mat3 C2;
   for (size_t c = 1; c < 4; c++) {
     C2.col(c-1) = X_control_points.col(c) - X_control_points.col(0);
   }

@@ -8,11 +8,10 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
 
-#include "openMVG/image/image_container.hpp"
-
-#include "third_party/histogram/histogram.hpp"
-
 #include <string>
+
+#include "openMVG/image/image_container.hpp"
+#include "third_party/histogram/histogram.hpp"
 
 namespace openMVG {
 namespace color_harmonization {
@@ -25,7 +24,7 @@ public:
     _sLeftImage( sLeftImage ), _sRightImage( sRightImage )
   {}
 
-  virtual ~commonDataByPair() = default ;
+  virtual ~commonDataByPair() = default;
 
   /**
    * Compute mask forthe two images

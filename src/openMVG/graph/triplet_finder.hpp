@@ -7,13 +7,14 @@
 #ifndef OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 #define OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/types.hpp"
 
 #include "lemon/list_graph.h"
-
-#include <algorithm>
-#include <vector>
 
 namespace openMVG
 {

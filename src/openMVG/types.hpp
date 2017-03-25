@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <set>
@@ -17,11 +18,11 @@
 
 #ifdef OPENMVG_STD_UNORDERED_MAP
 
-#include "openMVG/stl/hash.hpp"
-
+#include <algorithm>
 #include <unordered_map>
 #include <utility>
 
+#include "openMVG/stl/hash.hpp"
 namespace std {
   template<typename T1, typename T2>
   struct hash<std::pair<T1, T2>> {

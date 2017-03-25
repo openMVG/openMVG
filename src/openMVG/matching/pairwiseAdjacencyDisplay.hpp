@@ -8,10 +8,11 @@
 #ifndef OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
 #define OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
 
+#include <string>
+
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
 
 namespace openMVG  {
 namespace matching {

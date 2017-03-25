@@ -8,14 +8,15 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_GEOMETRIC_FILTER_HPP
 
+#include <algorithm>
+#include <map>
+#include <vector>
+
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
-
-#include <map>
-#include <vector>
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
 
