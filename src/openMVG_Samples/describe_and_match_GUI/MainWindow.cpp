@@ -7,9 +7,10 @@
 #include "MainWindow.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer_akaze.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 
 #include <QApplication>
@@ -17,11 +18,9 @@
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QHboxLayout>
 #include <QMenuBar>
 #include <QProgressDialog>
 #include <QString>
-#include <QVboxLayout>
 
 #include <memory>
 #include <random>
@@ -131,8 +130,7 @@ void MainWindow::onComputeMatching( void )
   progress.setMinimumDuration( 0 );
 
   // 1.0 -> Load images from names
-  Image<unsigned char> image1;
-  Image<unsigned char> image2;
+  Image<unsigned char> image1, image2;
   ReadImage( m_image1Path.c_str(), &image1 );
   if ( progress.wasCanceled() )
     return;
@@ -149,8 +147,7 @@ void MainWindow::onComputeMatching( void )
   // 1.2 Compute description of the two images
   Image<unsigned char> *mask = nullptr; // The mask is null by default
 
-  std::unique_ptr<Regions> regions1;
-  std::unique_ptr<Regions> regions2;
+  std::unique_ptr<Regions> regions1, regions2;
   image_describer->Describe( image1, regions1, mask );
   if ( progress.wasCanceled() )
     return;
@@ -186,26 +183,28 @@ void MainWindow::onComputeMatching( void )
   m_feats2 = regions2->GetRegionsPositions();
 
   // Position anchor of the images (in global space and local space)
-  QPointF gpos1 = m_pixmap1Item->pos();
-  QPointF gpos2 = m_pixmap2Item->pos();
+  const QPointF gpos1 = m_pixmap1Item->pos();
+  const QPointF gpos2 = m_pixmap2Item->pos();
 
-  QPointF pos1 = m_pixmap1Item->mapFromScene( gpos1 );
-  QPointF pos2 = m_pixmap2Item->mapFromScene( gpos2 );
+  const QPointF pos1 = m_pixmap1Item->mapFromScene( gpos1 );
+  const QPointF pos2 = m_pixmap2Item->mapFromScene( gpos2 );
 
   // Default color for unmatched points
   QPen penFeat( QColor( 0, 0, 0 ) );
 
   // Generate random color per pair
-  std::map<int, QPen> feat1Pen;
-  std::map<int, QPen> feat2Pen;
-  std::map<int, QPen> matchesPen;
+  std::map<int, QPen>
+   feat1Pen,
+   feat2Pen,
+   matchesPen;
 
   std::random_device rd;
   std::mt19937 rng( rd() );
 
-  std::uniform_int_distribution<int> distrib_h( 0, 359 );
-  std::uniform_int_distribution<int> distrib_s( 200, 255 );
-  std::uniform_int_distribution<int> distrib_v( 200, 255 );
+  std::uniform_int_distribution<int>
+    distrib_h( 0, 359 ),
+    distrib_s( 200, 255 ),
+    distrib_v( 200, 255 );
 
   for ( size_t i = 0; i < m_matches.size(); ++i )
   {

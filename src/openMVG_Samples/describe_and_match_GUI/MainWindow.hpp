@@ -7,9 +7,10 @@
 #ifndef OPENMVG_SAMPLES_FEATURES_PAIR_DEMO_MAIN_WINDOW_HPP
 #define OPENMVG_SAMPLES_FEATURES_PAIR_DEMO_MAIN_WINDOW_HPP
 
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer.hpp"
 #include "openMVG/matching/matcher_type.hpp"
-#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 
 #include "ImageView.hpp"
 

@@ -9,6 +9,7 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
 
 #include <algorithm>
 #include <iostream>
