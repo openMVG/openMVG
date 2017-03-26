@@ -14,7 +14,7 @@ if( Qt5Widgets_FOUND )
     add_executable( openMVG_sample_describe_and_match_GUI MACOSX_BUNDLE ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
     set_target_properties(openMVG_sample_describe_and_match_GUI PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in)
   else( APPLE )
-    add_executable( openMVG_sample_describe_and_match_GUI WIN32 ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )  
+    add_executable( openMVG_sample_describe_and_match_GUI WIN32 ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
   endif( APPLE )
 
   target_link_libraries( openMVG_sample_describe_and_match_GUI Qt5::Widgets openMVG_features openMVG_image openMVG_matching vlsift )
