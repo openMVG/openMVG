@@ -42,20 +42,9 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
-  PINHOLE_CAMERA_END
+  PINHOLE_CAMERA_END = 6,
+  CAMERA_SPHERICAL = PINHOLE_CAMERA_END + 1
 };
-
-
-/**
-* @brief Test if given intrinsic value is valid
-* @param eintrinsic Intrinsic value to test
-* @retval true if parameter is valid
-* @retval false if parameter is invalid
-*/
-static inline bool isValid( EINTRINSIC eintrinsic )
-{
-  return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
-}
 
 /**
 * @brief test if given intrinsic value corresponds to a pinhole
@@ -66,6 +55,22 @@ static inline bool isValid( EINTRINSIC eintrinsic )
 static inline bool isPinhole( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
+static inline bool isSpherical( EINTRINSIC eintrinsic )
+{
+  return eintrinsic == CAMERA_SPHERICAL;
+}
+
+/**
+* @brief Test if given intrinsic value is valid
+* @param eintrinsic Intrinsic value to test
+* @retval true if parameter is valid
+* @retval false if parameter is invalid
+*/
+static inline bool isValid( EINTRINSIC eintrinsic )
+{
+  return isPinhole(eintrinsic) || isSpherical(eintrinsic);
 }
 
 /**

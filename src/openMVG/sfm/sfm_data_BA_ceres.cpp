@@ -85,7 +85,7 @@ ceres::CostFunction * IntrinsicsToCostFunction
   {
     case PINHOLE_CAMERA:
       return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
-     break;
+    break;
     case PINHOLE_CAMERA_RADIAL1:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1::Create(observation, weight);
     break;
@@ -97,6 +97,8 @@ ceres::CostFunction * IntrinsicsToCostFunction
     break;
     case PINHOLE_CAMERA_FISHEYE:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
+    case CAMERA_SPHERICAL:
+      return ResidualErrorFunctor_Intrinsic_Spherical::Create(intrinsic, observation, weight);
     default:
       return nullptr;
   }
@@ -296,24 +298,26 @@ bool Bundle_Adjustment_Ceres::Adjust
     if (isValid(intrinsic_it.second->getType()))
     {
       map_intrinsics[indexCam] = intrinsic_it.second->getParams();
-
-      double * parameter_block = &map_intrinsics[indexCam][0];
-      problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      if (options.intrinsics_opt == Intrinsic_Parameter_Type::NONE)
+      if (!map_intrinsics[indexCam].empty())
       {
-        // set the whole parameter block as constant for best performance
-        problem.SetParameterBlockConstant(parameter_block);
-      }
-      else
-      {
-        const std::vector<int> vec_constant_intrinsic =
-          intrinsic_it.second->subsetParameterization(options.intrinsics_opt);
-        if (!vec_constant_intrinsic.empty())
+        double * parameter_block = &map_intrinsics[indexCam][0];
+        problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
+        if (options.intrinsics_opt == Intrinsic_Parameter_Type::NONE)
         {
-          ceres::SubsetParameterization *subset_parameterization =
-            new ceres::SubsetParameterization(
-              map_intrinsics[indexCam].size(), vec_constant_intrinsic);
-          problem.SetParameterization(parameter_block, subset_parameterization);
+          // set the whole parameter block as constant for best performance
+          problem.SetParameterBlockConstant(parameter_block);
+        }
+        else
+        {
+          const std::vector<int> vec_constant_intrinsic =
+            intrinsic_it.second->subsetParameterization(options.intrinsics_opt);
+          if (!vec_constant_intrinsic.empty())
+          {
+            ceres::SubsetParameterization *subset_parameterization =
+              new ceres::SubsetParameterization(
+                map_intrinsics[indexCam].size(), vec_constant_intrinsic);
+            problem.SetParameterization(parameter_block, subset_parameterization);
+          }
         }
       }
     }
@@ -347,11 +351,23 @@ bool Bundle_Adjustment_Ceres::Adjust
         IntrinsicsToCostFunction(sfm_data.intrinsics[view->id_intrinsic].get(), obs_it.second.x);
 
       if (cost_function)
-        problem.AddResidualBlock(cost_function,
-          p_LossFunction,
-          &map_intrinsics[view->id_intrinsic][0],
-          &map_poses[view->id_pose][0],
-          structure_landmark_it.second.X.data());
+      {
+        if (!map_intrinsics[view->id_intrinsic].empty())
+        {
+          problem.AddResidualBlock(cost_function,
+            p_LossFunction,
+            &map_intrinsics[view->id_intrinsic][0],
+            &map_poses[view->id_pose][0],
+            structure_landmark_it.second.X.data());
+        }
+        else
+        {
+          problem.AddResidualBlock(cost_function,
+            p_LossFunction,
+            &map_poses[view->id_pose][0],
+            structure_landmark_it.second.X.data());
+        }
+      }
     }
     if (options.structure_opt == Structure_Parameter_Type::NONE)
       problem.SetParameterBlockConstant(structure_landmark_it.second.X.data());
@@ -422,9 +438,12 @@ bool Bundle_Adjustment_Ceres::Adjust
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options ceres_config_options;
   ceres_config_options.max_num_iterations = 500;
-  ceres_config_options.preconditioner_type = static_cast<ceres::PreconditionerType>(ceres_options_.preconditioner_type_);
-  ceres_config_options.linear_solver_type = static_cast<ceres::LinearSolverType>(ceres_options_.linear_solver_type_);
-  ceres_config_options.sparse_linear_algebra_library_type = static_cast<ceres::SparseLinearAlgebraLibraryType>(ceres_options_.sparse_linear_algebra_library_type_);
+  ceres_config_options.preconditioner_type =
+    static_cast<ceres::PreconditionerType>(ceres_options_.preconditioner_type_);
+  ceres_config_options.linear_solver_type =
+    static_cast<ceres::LinearSolverType>(ceres_options_.linear_solver_type_);
+  ceres_config_options.sparse_linear_algebra_library_type =
+    static_cast<ceres::SparseLinearAlgebraLibraryType>(ceres_options_.sparse_linear_algebra_library_type_);
   ceres_config_options.minimizer_progress_to_stdout = ceres_options_.bVerbose_;
   ceres_config_options.logging_type = ceres::SILENT;
   ceres_config_options.num_threads = ceres_options_.nb_threads_;

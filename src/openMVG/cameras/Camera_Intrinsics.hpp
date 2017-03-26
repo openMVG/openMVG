@@ -83,7 +83,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @param pt3D 3D-point to project on image plane
   * @return Projected (2D) point on image plane
   */
-  Vec2 project(
+  virtual Vec2 project(
     const geometry::Pose3 & pose,
     const Vec3 & pt3D ) const
   {
