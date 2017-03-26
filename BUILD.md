@@ -9,37 +9,49 @@ Required tools:
 * Git
 * C/C++ compiler (GCC, Visual Studio or Clang)
 
-Getting the sources:
+Getting the sources (and the submodules):
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
 ```
 or
 ```shell
 $ git clone https://github.com/openMVG/openMVG.git
-```
-```shell
 $ cd openMVG
 $ git submodule init
 $ git submodule update
 ```
 
 As OpenMVG uses some C++11 features, you must have a C++11 ready compiler:
+
 - Visual Studio >= 2015 (recommended)
 - GCC >= 4.8.1
 - Clang >= 3.3
 
-General information for OpenMVG CMake options
-- OpenMVG_BUILD_TESTS (ON/OFF(default))=> Build OpenMVG unit tests
-- OpenMVG_BUILD_EXAMPLES (ON/OFF(default))=> Build OpenMVG example applications.
-This does not affect binaries under 'software'
+General information for OpenMVG CMake options:
+
+- OpenMVG_BUILD_TESTS (ON/OFF(default))
+    - Build OpenMVG unit tests
+- OpenMVG_BUILD_EXAMPLES (ON/OFF(default))
+    - Build OpenMVG example applications.
+
+Note: options does not affect binaries under 'software'
 
 
-General information for OpenMVG SfM pipelines
+General information for OpenMVG SfM pipelines:
 
 - OpenMVG can export graphs as Graphviz .dot files and render them as SVG files. If you want this graph visualization feature, please install Graphviz.
 
+Compilation
+----------------
+
+- [Linux](#linux)
+- [Windows](#windows)
+- [MacOS](#macos)
+
+
 Linux compilation
 -----------------
+<a name="linux"></a>
 
 Install the required external libraries.
 ```shell
@@ -68,16 +80,6 @@ otherwise
 ```shell
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 ```
-
-In order to use the MOSEK 6 back-end for the linear programming, OpenMVG checks that you have an up-to-date MOSEK licence, else OpenMVG MOSEK unit tests will fail.
-
-```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE
-    -DMOSEK_SEARCH_HEADER="~/Documents/Lib/mosek/6/tools/platform/linux64x86/h"
-    -DMOSEK_SEARCH_LIB="~/Documents/Lib/mosek/6/tools/platform/linux64x86/bin"
-    . ../openMVG/src/
-```
-
 If you want to have an IDE openable project with Code::Blocks:
 ```shell
 $ cmake -G "CodeBlocks - Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
@@ -104,6 +106,7 @@ $ cd openMVG_Samples
 
 Windows compilation
 -------------------
+<a name="windows"></a>
 
 Checkout the project
 ```shell
@@ -120,6 +123,7 @@ $ git clone --recursive https://github.com/openMVG/openMVG.git
 
 Mac compilation
 -------------------
+<a name="macos"></a>
 
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
@@ -129,18 +133,21 @@ $ ls
 $ cd ..
 $ mkdir openMVG_Build
 $ cd openMVG_Build
+```
+
+If you want to use Xcode and compile by using the command line, run
+```
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
+$ xcodebuild -configuration Release
 ```
 If you want to add unit tests and examples to the build, run
 ```shell
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
 ```
-otherwise
+
+otherwise you can use standard makefiles
 ```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
-```
-```shell
-$ xcodebuild -configuration Release
+$ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 ```
 
 Using OpenCV sample
@@ -175,3 +182,4 @@ Specify in CMake where OpenMVG has been installed by using the CMake OpenMVG_DIR
 e.g. `-DOpenMVG_DIR:STRING="YourInstallPath"/share/openMVG/cmake`
 
 A message will be displayed if OpenMVG is found or not at the CMake configure step.
+
