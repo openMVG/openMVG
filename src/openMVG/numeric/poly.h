@@ -120,7 +120,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
     return 3;
   }
   const Real sgnR = ( R >= 0 ? 1 : -1 );
-  const Real A = -sgnR * pow ( fabs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
+  const Real A = -sgnR * pow ( std::abs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
   const Real B = Q / A ;
   *x0 = A + B - a / 3;
   return 1;

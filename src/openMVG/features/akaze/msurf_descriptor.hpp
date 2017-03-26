@@ -114,8 +114,8 @@ namespace features {
             // Sum the derivatives to the cumulative descriptor
             dx += rrx;
             dy += rry;
-            mdx += std::fabs( rrx );
-            mdy += std::fabs( rry );
+            mdx += std::abs( rrx );
+            mdy += std::abs( rry );
           }
         }
 

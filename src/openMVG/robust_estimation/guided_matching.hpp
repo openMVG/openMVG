@@ -245,7 +245,7 @@ static inline bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0,
 		double y = -(a*x+c)/b;
 		if (y < 0) y = 0.;
 		else if (y >= H) y = H-1;
-		r1 = fabs(a*x + b*y + c);
+		r1 = std::abs(a*x + b*y + c);
 		x0 << x,y;
 	}
 	else  {
@@ -259,7 +259,7 @@ static inline bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0,
 		double x = -(b*y+c)/a;
 		if (x < 0) x = 0.;
 		else if (x >= W) x = W-1;
-		r2 = fabs(a*x + b*y + c);
+		r2 = std::abs(a*x + b*y + c);
 		x1 << x,y;
 	}
 	else  {

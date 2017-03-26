@@ -140,7 +140,7 @@ namespace openMVG
         ell_minor_length = std::sqrt( e1 );
 
         // Check if ellipse is axis aligned or not
-        if( std::fabs( b ) < 0.0001 )
+        if( std::abs( b ) < 0.0001 )
         {
           // Axis aligned
           ell_major_x = 1.0;

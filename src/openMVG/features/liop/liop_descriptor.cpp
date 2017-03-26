@@ -213,7 +213,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
       const float nDirX = static_cast<float>(x);
       const float nDirY = static_cast<float>(y);
       float nOri = atan2(nDirY, nDirX);
-      if (fabs(nOri - M_PI) < std::numeric_limits<float>::epsilon()) //[-M_PI, M_PI)
+      if (std::abs(nOri - M_PI) < std::numeric_limits<float>::epsilon()) //[-M_PI, M_PI)
       {
         nOri = static_cast<float>(-M_PI);
       }
@@ -279,7 +279,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
 
       while (true)
       {
-        if (fabs(pixel[curId].f_gray-fenceGray) < std::numeric_limits<float>::epsilon())
+        if (std::abs(pixel[curId].f_gray-fenceGray) < std::numeric_limits<float>::epsilon())
         {
           lastId = curId;
           break;
