@@ -137,14 +137,6 @@ bool L2RotationAveraging
     AtA = Mat(AtAsparse); // convert to dense
   }
 
-  // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
-
-  // Solve Ax=0 => SVD
-  //Eigen::JacobiSVD<Mat> svd(A,Eigen::ComputeFullV);
-  //const Vec & NullspaceVector0 = svd.matrixV().col(A.cols()-1);
-  //const Vec & NullspaceVector1 = svd.matrixV().col(A.cols()-2);
-  //const Vec & NullspaceVector2 = svd.matrixV().col(A.cols()-3);
-
   // Solve Ax=0 => eigen vectors
   Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
 

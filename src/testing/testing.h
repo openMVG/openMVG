@@ -30,6 +30,7 @@
 #define TESTING_TESTING_H_
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "third_party/CppUnitLite/TestHarness.h"
 
 #define EXPECT_MATRIX_NEAR(a, b, tolerance) \

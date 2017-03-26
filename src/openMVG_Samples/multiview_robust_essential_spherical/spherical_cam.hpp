@@ -8,6 +8,7 @@
 #define OPENMVG_SPHERICAL_CAMERA_HPP
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/numeric/nullspace.hpp"
 #include "openMVG/multiview/projection.hpp"
 
 // [1] "Robust and accurate calibration of camera networks". PhD.

@@ -7,6 +7,7 @@
 #include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
@@ -58,7 +59,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
 
     //CHeck matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-2 );
-    Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
+    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
     EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-2);
   }
 }
@@ -112,7 +113,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
     //CHeck matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-3 );
-    Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
+    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
     EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-1);
   }
   d2.ExportToPLY("test_After_Infinity.ply");

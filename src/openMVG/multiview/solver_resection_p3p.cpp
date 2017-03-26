@@ -34,6 +34,7 @@
 
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/numeric/numeric.h"
 
 #include <cmath>

@@ -6,7 +6,7 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/nullspace.hpp"
 
 #include <limits>
 

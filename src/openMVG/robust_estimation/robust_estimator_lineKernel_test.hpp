@@ -30,7 +30,7 @@
 
 #include <vector>
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace robust{

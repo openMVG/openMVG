@@ -28,6 +28,8 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 
@@ -39,14 +41,14 @@ using namespace std;
 // Check that sin(angle(a, b)) < tolerance.
 template<typename A, typename B>
 bool Colinear(const A &a, const B &b, double tolerance) {
-  bool dims_match = (a.rows() == b.rows()) && (a.cols() == b.cols());
+  const bool dims_match = (a.rows() == b.rows()) && (a.cols() == b.cols());
   if (!dims_match) {
     return false;
   }
-  double c = CosinusBetweenMatrices(a, b);
+  const double c = CosinusBetweenMatrices(a, b);
   if (c * c < 1) {
-    double s = sqrt(1 - c * c);
-    return fabs(s) < tolerance;
+    const double s = sqrt(1 - c * c);
+    return std::abs(s) < tolerance;
   }
   return false;
 }
@@ -67,7 +69,7 @@ bool ExpectFundamentalProperties(const Mat3 &F,
   EuclideanToHomogeneous(ptsA, &hptsA);
   EuclideanToHomogeneous(ptsB, &hptsB);
   for (int i = 0; i < ptsA.cols(); ++i) {
-    double residual = hptsB.col(i).dot(F * hptsA.col(i));
+    const double residual = hptsB.col(i).dot(F * hptsA.col(i));
     bOk &= residual < precision;
   }
   return bOk;

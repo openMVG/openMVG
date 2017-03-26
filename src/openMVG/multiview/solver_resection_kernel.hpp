@@ -33,6 +33,7 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 namespace resection {

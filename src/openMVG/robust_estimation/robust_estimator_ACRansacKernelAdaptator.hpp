@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace robust{

@@ -27,6 +27,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/numeric/nullspace.hpp"
 
 namespace openMVG {
 namespace homography {

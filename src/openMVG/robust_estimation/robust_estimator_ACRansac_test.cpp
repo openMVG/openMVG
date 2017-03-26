@@ -8,6 +8,7 @@
 
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"

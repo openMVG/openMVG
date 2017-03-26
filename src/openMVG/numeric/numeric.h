@@ -181,50 +181,6 @@ inline double DistanceLInfinity( const TVec &x, const TVec &y )
 }
 
 /**
-* @brief Solve linear system
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] nullspace result vector containing the solution of the system
-* @return Singular value corresponding to the solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-double Nullspace
-(
-  const Eigen::Ref<const Mat> & A,
-  Eigen::Ref<Vec> nullspace
-);
-
-/**
-* @brief Solve linear system and gives the two best solutions
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] x1 result vector containing the best solution of the system
-* @param[out] x2 result vector containing the second best solution of the system
-* @return Singular value corresponding to the best solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-double Nullspace2(
-  const Eigen::Ref<const Mat> & A,
-  Eigen::Ref<Vec> x1,
-  Eigen::Ref<Vec> x2
-);
-
-
-/**
 * @brief Compute look at matrix
 * Make a rotation matrix such that center becomes the direction of the
 * positive z-axis, and y is oriented close to up by default.
@@ -352,26 +308,6 @@ double CosinusBetweenMatrices( const TMat &a, const TMat &b )
   return ( a.array() * b.array() ).sum() /
          FrobeniusNorm( a ) / FrobeniusNorm( b );
 }
-
-/**
-* @brief Extract a submatrix given a list of column
-* @param A Input matrix
-* @param columns A vector of columns index to extract
-* @return Matrix containing a subset of input matrix columns
-* @note columns index start at index 0
-* @note Assuming columns contains a list of valid columns index
-*/
-template <typename TCols>
-Mat ExtractColumns( const Eigen::Ref<const Mat> &A, const TCols &columns )
-{
-  Mat compressed( A.rows(), columns.size() );
-  for ( size_t i = 0; i < static_cast<size_t>( columns.size() ); ++i )
-  {
-    compressed.col( i ) = A.col( columns[i] );
-  }
-  return compressed;
-}
-
 
 /**
 * @brief Compute per row mean and variance

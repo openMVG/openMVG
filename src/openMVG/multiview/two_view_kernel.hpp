@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace two_view {
