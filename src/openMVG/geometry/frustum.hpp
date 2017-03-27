@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -102,7 +104,7 @@ struct Frustum : public HalfPlaneObject
   * @param K Intrinsic matrix
   * @param R Extrinsic rotation matrix
   * @param C Center of the camera (optical center)
-  * @param Specify a far plane 
+  * @param Specify a far plane
   */
   Frustum
   (
@@ -111,7 +113,7 @@ struct Frustum : public HalfPlaneObject
     const Mat3 & K,
     const Mat3 & R,
     const Vec3 & C ,
-    const double zFar 
+    const double zFar
   )
     : z_near( -1. ),
       z_far ( zFar )

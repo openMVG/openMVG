@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,7 +9,11 @@
 #ifndef OPENMVG_TYPES_HPP
 #define OPENMVG_TYPES_HPP
 
+#ifndef OPENMVG_STD_UNORDERED_MAP
+
 #include <Eigen/Core>
+
+#endif
 
 #include <cstdint>
 #include <functional>

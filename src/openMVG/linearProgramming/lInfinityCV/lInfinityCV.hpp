@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef OPENMVG_L_INFINITY_COMPUTER_VISION_HPP
-#define OPENMVG_L_INFINITY_COMPUTER_VISION_HPP 
+#define OPENMVG_L_INFINITY_COMPUTER_VISION_HPP
 
 // Pose estimation solver
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"

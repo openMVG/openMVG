@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2017 Romuald Perrot.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,7 +36,7 @@ namespace features_pair_demo
 {
 
 /**
-  * @brief Constructor 
+  * @brief Constructor
   */
 MainWindow::MainWindow()
 {
@@ -49,7 +51,7 @@ MainWindow::MainWindow()
 }
 
 /**
-  * @brief Action to be done when user wants to load the first image 
+  * @brief Action to be done when user wants to load the first image
   */
 void MainWindow::onOpenImage1( void )
 {
@@ -80,7 +82,7 @@ void MainWindow::onOpenImage1( void )
 }
 
 /**
-  * @brief Action to be done when user wants to load the second image 
+  * @brief Action to be done when user wants to load the second image
   */
 void MainWindow::onOpenImage2( void )
 {
@@ -111,7 +113,7 @@ void MainWindow::onOpenImage2( void )
 }
 
 /**
-  * @brief Action to be done when user wants to compute features and matching bewteen image pairs 
+  * @brief Action to be done when user wants to compute features and matching bewteen image pairs
   */
 void MainWindow::onComputeMatching( void )
 {
@@ -256,7 +258,7 @@ void MainWindow::onComputeMatching( void )
 }
 
 /**
-  * @brief Action to be executed when user move image on the interface 
+  * @brief Action to be executed when user move image on the interface
   */
 void MainWindow::onMoveSomething( void )
 {
@@ -269,7 +271,7 @@ void MainWindow::onMoveSomething( void )
 }
 
 /**
-  * @brief Action to be executed when user wants to export the final computation to an image 
+  * @brief Action to be executed when user wants to export the final computation to an image
   */
 void MainWindow::onExportImage( void )
 {
@@ -285,7 +287,7 @@ void MainWindow::onExportImage( void )
 }
 
 /**
-  * @brief Action to be executed when user request closing of image 1 
+  * @brief Action to be executed when user request closing of image 1
   */
 void MainWindow::onCloseImage1( void )
 {
@@ -310,7 +312,7 @@ void MainWindow::onCloseImage1( void )
 }
 
 /**
-  * @brief Action to be executed when user request closing of image 2 
+  * @brief Action to be executed when user request closing of image 2
   */
 void MainWindow::onCloseImage2( void )
 {
@@ -335,7 +337,7 @@ void MainWindow::onCloseImage2( void )
 }
 
 /**
-  * @brief Action to be executed when user request closing both images 
+  * @brief Action to be executed when user request closing both images
   */
 void MainWindow::onCloseAll( void )
 {
@@ -346,7 +348,7 @@ void MainWindow::onCloseAll( void )
 }
 
 /**
-  * @brief Action to be executed when user request to quit the application 
+  * @brief Action to be executed when user request to quit the application
   */
 void MainWindow::onQuit( void )
 {
@@ -354,7 +356,7 @@ void MainWindow::onQuit( void )
 }
 
 /**
-  * @brief Action to be executed when user request clearing the computation 
+  * @brief Action to be executed when user request clearing the computation
   */
 void MainWindow::onClearComputation( void )
 {
@@ -365,7 +367,7 @@ void MainWindow::onClearComputation( void )
 }
 
 /**
-  * @brief Set elements enabled/disabled based on currently loaded elements 
+  * @brief Set elements enabled/disabled based on currently loaded elements
   */
 void MainWindow::UpdateActivation( void )
 {
@@ -416,7 +418,7 @@ void MainWindow::UpdateActivation( void )
 }
 
 /**
-  * @brief Build all interface widgets 
+  * @brief Build all interface widgets
   */
 void MainWindow::BuildInterface()
 {
@@ -507,7 +509,7 @@ void MainWindow::BuildInterface()
 }
 
 /**
-  * @brief Build all menus items 
+  * @brief Build all menus items
   */
 void MainWindow::BuildMenus()
 {
@@ -566,7 +568,7 @@ void MainWindow::MakeConnections()
   connect( m_processingClearMatch, SIGNAL( triggered() ), this, SLOT( onClearComputation() ) );
 }
 
-/** 
+/**
   * @brief Get list of all feature type (and mode)
   */
 void MainWindow::PopulateFeatureType()
@@ -610,11 +612,11 @@ void MainWindow::ClearFeaturesandMatch()
   */
 void MainWindow::ClearFeaturesAndMatchItems()
 {
-  for( auto item : m_ellipsesFeat1 ) 
+  for( auto item : m_ellipsesFeat1 )
   {
-    m_scn->removeItem( item ) ; 
+    m_scn->removeItem( item ) ;
   }
-  for( auto item : m_ellipsesFeat2 ) 
+  for( auto item : m_ellipsesFeat2 )
   {
     m_scn->removeItem( item );
   }
@@ -649,7 +651,7 @@ void MainWindow::MoveMatchLines()
 
 /**
   * @brief Get feature preset from interface
-  * @return descriptor preset given the interface choice 
+  * @return descriptor preset given the interface choice
   */
 EDESCRIBER_PRESET MainWindow::GetFeaturePreset()
 {
@@ -677,9 +679,9 @@ EDESCRIBER_PRESET MainWindow::GetFeaturePreset()
 }
 
 /**
-  * @brief Get describer instance based on interface choice 
-  * @param preset Current preset 
-  * @return An image describer 
+  * @brief Get describer instance based on interface choice
+  * @param preset Current preset
+  * @return An image describer
   */
 std::unique_ptr<Image_describer> MainWindow::GetFeatureDescriber( const EDESCRIBER_PRESET preset )
 {
@@ -715,8 +717,8 @@ std::unique_ptr<Image_describer> MainWindow::GetFeatureDescriber( const EDESCRIB
 }
 
 /**
-  * @brief Get Matcher type 
-  * @return current matcher type based on interface choices 
+  * @brief Get Matcher type
+  * @return current matcher type based on interface choices
   */
 EMatcherType MainWindow::GetMatcherType( void )
 {

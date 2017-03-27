@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2017 Romuald Perrot.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,82 +36,82 @@ namespace features_pair_demo
 {
 
 /**
-  * @brief Main class 
+  * @brief Main class
   */
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
 public:
   /**
-  * @brief Constructor 
+  * @brief Constructor
   */
   MainWindow();
 
 public slots:
 
   /**
-  * @brief Action to be done when user wants to load the first image 
+  * @brief Action to be done when user wants to load the first image
   */
   void onOpenImage1( void );
 
   /**
-  * @brief Action to be done when user wants to load the second image 
+  * @brief Action to be done when user wants to load the second image
   */
   void onOpenImage2( void );
 
   /**
-  * @brief Action to be done when user wants to compute features and matching bewteen image pairs 
+  * @brief Action to be done when user wants to compute features and matching bewteen image pairs
   */
   void onComputeMatching( void );
 
   /**
-  * @brief Action to be executed when user move image on the interface 
+  * @brief Action to be executed when user move image on the interface
   */
   void onMoveSomething( void );
 
   /**
-  * @brief Action to be executed when user wants to export the final computation to an image 
+  * @brief Action to be executed when user wants to export the final computation to an image
   */
   void onExportImage( void );
 
   /**
-  * @brief Action to be executed when user request closing of image 1 
+  * @brief Action to be executed when user request closing of image 1
   */
   void onCloseImage1( void );
 
   /**
-  * @brief Action to be executed when user request closing of image 2 
+  * @brief Action to be executed when user request closing of image 2
   */
   void onCloseImage2( void );
 
   /**
-  * @brief Action to be executed when user request closing both images 
+  * @brief Action to be executed when user request closing both images
   */
   void onCloseAll( void );
 
   /**
-  * @brief Action to be executed when user request to quit the application 
+  * @brief Action to be executed when user request to quit the application
   */
   void onQuit( void );
 
   /**
-  * @brief Action to be executed when user request clearing the computation 
+  * @brief Action to be executed when user request clearing the computation
   */
   void onClearComputation( void );
 
 private:
   /**
-  * @brief Set elements enabled/disabled based on currently loaded elements 
+  * @brief Set elements enabled/disabled based on currently loaded elements
   */
   void UpdateActivation( void );
 
   /**
-  * @brief Build all interface widgets 
+  * @brief Build all interface widgets
   */
   void BuildInterface();
 
   /**
-  * @brief Build all menu items 
+  * @brief Build all menu items
   */
   void BuildMenus();
 
@@ -118,13 +120,13 @@ private:
   */
   void MakeConnections();
 
-  /** 
-  * @brief Fill comboboxes with all feature types and feature presets 
+  /**
+  * @brief Fill comboboxes with all feature types and feature presets
   */
   void PopulateFeatureType();
 
   /**
-  * @brief Fill comboboxes with all matching types 
+  * @brief Fill comboboxes with all matching types
   */
   void PopulateMatchingType();
 
@@ -145,19 +147,19 @@ private:
 
   /**
   * @brief Get feature preset from interface
-  * @return descriptor preset given the interface choice 
+  * @return descriptor preset given the interface choice
   */
   openMVG::features::EDESCRIBER_PRESET GetFeaturePreset( void );
 
   /**
   * @brief Get describer instance based on the choices made in the interface
-  * @param preset Current preset 
-  * @return An image describer 
+  * @param preset Current preset
+  * @return An image describer
   */
   std::unique_ptr<openMVG::features::Image_describer> GetFeatureDescriber( const openMVG::features::EDESCRIBER_PRESET preset );
 
   /**
-  * @brief Get Matcher type 
+  * @brief Get Matcher type
   * @return current matcher type based on the choices made in the interface
   */
   openMVG::matching::EMatcherType GetMatcherType( void );

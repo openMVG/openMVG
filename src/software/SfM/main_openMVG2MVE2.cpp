@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 /* v.0.17 October 14th, 2015
  * Kevin CAIN, www.insightdigital.org
  * Adapted from the openMVG libraries,

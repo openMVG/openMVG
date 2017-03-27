@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -52,7 +54,7 @@ struct Tifromtij_ConstraintBuilder
   (
     const std::vector< openMVG::RelativeInfo_Vec > & vec_relative
   );
-  
+
   /// Setup constraints for the global translations problem,
   ///  in the LP_Constraints_Sparse object.
   bool Build(LP_Constraints_Sparse & constraint);

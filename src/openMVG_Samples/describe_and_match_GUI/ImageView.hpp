@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2017 Romuald Perrot.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -17,15 +19,15 @@ class ImageView : public QGraphicsView
 {
 public:
   /**
-  * @brief ctr 
-  * @param scn the scene to render in this widget 
-  * @param parent The parent widget 
+  * @brief ctr
+  * @param scn the scene to render in this widget
+  * @param parent The parent widget
   */
   ImageView( QGraphicsScene *scn, QWidget *parent = nullptr );
 
   /**
-  * @brief handling of the zoom effect 
-  * @param event Container used to answer the mouse wheel informations 
+  * @brief handling of the zoom effect
+  * @param event Container used to answer the mouse wheel informations
   */
   virtual void wheelEvent( QWheelEvent *event );
 

@@ -1,15 +1,11 @@
-// ========================================================================== //
-//
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (C) 2013 David Ok <david.ok8@gmail.com>
 // Copyright (C) 2014 Pierre Moulon
-//
-// Adapted from DO++, a basic set of libraries in C++ for computer
-// vision.
-//
+
 // This Source Code Form is subject to the terms of the Mozilla Public
-// License v. 2.0. If a copy of the MPL was not distributed with this file,
-// you can obtain one at http://mozilla.org/MPL/2.0/.
-// ========================================================================== //
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/system/timer.hpp"
 #include <ratio>

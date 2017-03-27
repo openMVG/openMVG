@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2013 Pierre MOULON.
 
@@ -15,7 +16,7 @@ namespace openMVG {
 namespace spherical_cam {
 
 /**
- * Eight-point algorithm for solving for the essential matrix from bearing 
+ * Eight-point algorithm for solving for the essential matrix from bearing
  * vector correspondences.
  * See page 294 in HZ Result 11.1.
  *

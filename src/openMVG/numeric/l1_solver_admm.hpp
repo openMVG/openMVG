@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Chris Sweeney (cmsweeney@cs.ucsb.edu)
 // Copyright (c) 2016 Pierre Moulon
 

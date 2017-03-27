@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (C) 2013  "Robot Vision Group, NLPR, CASIA", Zhenhua Wang,
 // Bin Fan and Fuchao Wu.

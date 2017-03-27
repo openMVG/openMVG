@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 openMVG authors.
 
@@ -91,7 +92,7 @@ int main(int argc, char **argv) {
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
 
-//--
+  //--
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;

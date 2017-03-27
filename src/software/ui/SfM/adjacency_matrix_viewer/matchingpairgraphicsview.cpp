@@ -1,4 +1,4 @@
-// This file is part of OpenMVG (Open Multiple View Geometry) C++ library.
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017 <Zillow Inc.> Pierre Moulon
 
