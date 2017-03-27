@@ -34,6 +34,7 @@
 #define OPENMVG_TRACKS_TRACKS_HPP
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <limits>
