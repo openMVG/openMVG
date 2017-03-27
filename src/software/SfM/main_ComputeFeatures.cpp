@@ -13,7 +13,7 @@
 #include "openMVG/features/features.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 
-#ifdef OPENMVG_USE_CUDA
+#ifdef OPENMVG_HAVE_CUDA
 #include "openMVG/features/cudasift/image_describer_cudasift.hpp"
 #endif
 
@@ -194,9 +194,8 @@ int main(int argc, char **argv)
 
     if (sImage_Describer_Method == "CSIFT")
     {
-#ifdef OPENMVG_USE_CUDA
-      image_describer.reset(
-        new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
+#ifdef OPENMVG_HAVE_CUDA
+      image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
 #else
 		std::cerr << "Cannot create CUDA SIFT image describer." << std::endl;
 #endif
