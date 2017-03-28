@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     ESfM_Data(ALL));
     
   std::ofstream file_LocalFrameOrigin(stlplus::create_filespec(sOutDir, "local_frame_origin", ".txt"));
-    file_LocalFrameOrigin<<setprecision(8) << fixed;
+    file_LocalFrameOrigin<<std::setprecision(8) << std::fixed;
   file_LocalFrameOrigin<<local_Frame_Origin<<"\n";
   file_LocalFrameOrigin.close();
       return EXIT_SUCCESS;
