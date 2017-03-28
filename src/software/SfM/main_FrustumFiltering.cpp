@@ -47,7 +47,7 @@ Pair_Set BuildPairsFromFrustumsIntersections(
   const SfM_Data & sfm_data,
   const double z_near = -1., // default near plane
   const double z_far = -1.,  // default far plane
-  const string & sOutDirectory = "") // output directory to save frustums as PLY
+  const std::string & sOutDirectory = "") // output directory to save frustums as PLY
 {
   const Frustum_Filter frustum_filter(sfm_data, z_near, z_far);
   if (!sOutDirectory.empty())
@@ -94,8 +94,8 @@ int main(int argc, char **argv)
   }
 
   // Assert that we can create the output directory
-  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile) ))
-    if(!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
+  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile)) &&
+      !stlplus::folder_create( stlplus::folder_part(sOutFile)))
       return EXIT_FAILURE;
 
   // Load input SfM_Data scene
@@ -119,10 +119,6 @@ int main(int argc, char **argv)
   {
     return EXIT_SUCCESS;
   }
-  else
-  {
-    return EXIT_FAILURE;
-  }
 
-
+  return EXIT_FAILURE;
 }

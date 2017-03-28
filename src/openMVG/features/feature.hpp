@@ -9,6 +9,7 @@
 #define OPENMVG_FEATURES_FEATURE_HPP
 
 #include "openMVG/numeric/numeric.h"
+
 #include <iostream>
 #include <iterator>
 #include <fstream>
@@ -51,7 +52,7 @@ protected:
   Vec2f coords_;  // (x, y).
 };
 
-typedef std::vector<PointFeature> PointFeatures;
+using PointFeatures = std::vector<PointFeature>;
 
 //with overloaded operators:
 inline std::ostream& operator<<(std::ostream& out, const PointFeature& obj)
@@ -74,6 +75,10 @@ class SIOPointFeature : public PointFeature {
   friend std::istream& operator>>(std::istream& in, SIOPointFeature& obj);
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  ~SIOPointFeature() = default;
+
   SIOPointFeature(float x=0.0f, float y=0.0f,
                   float scale=0.0f, float orient=0.0f)
     : PointFeature(x,y)
@@ -108,6 +113,8 @@ protected:
   float scale_;        // In pixels.
   float orientation_;  // In radians.
 };
+
+using SIOPointFeatures = std::vector<SIOPointFeature>;
 
 //
 inline std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj)
@@ -146,19 +153,25 @@ class AffinePointFeature : public PointFeature {
   friend std::istream& operator>>(std::istream& in, AffinePointFeature& obj);
 
 public:
-  virtual ~AffinePointFeature() {};
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  AffinePointFeature(float x = 0.0f, float y = 0.0f,
-    float a = 0.0f, float b = 0.0f, float c = 0.0f)
-    : PointFeature(x, y)
-    , a_(a), b_(b), c_(c)
+  virtual ~AffinePointFeature() = default;
+
+  AffinePointFeature
+  (
+    float x = 0.0f,
+    float y = 0.0f,
+    float a = 0.0f,
+    float b = 0.0f,
+    float c = 0.0f
+  ) : PointFeature(x, y), a_(a), b_(b), c_(c)
   {
-    l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
-    l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2;
-    l1_ = 1.0 / std::sqrt(l1_);
-    l2_ = 1.0 / std::sqrt(l2_);
+    l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
+    l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
+    l1_ = 1.f / std::sqrt(l1_);
+    l2_ = 1.f / std::sqrt(l2_);
 
-    phi_ = 0.0;
+    phi_ = 0.f;
     if (b == 0)
     {
       if (a > c)
@@ -267,7 +280,7 @@ void PointsToMat(
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  typedef typename FeaturesT::value_type ValueT; // Container type
+  using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
   for( typename FeaturesT::const_iterator iter = vec_feats.begin();

@@ -4,12 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_H
-#define OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_H
+#ifndef OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_HPP
+#define OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_HPP
 
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/numeric/math_trait.hpp"
 
 namespace openMVG {
 namespace features {
@@ -23,7 +22,7 @@ namespace features {
   template <typename Real>
   static inline Real gaussian( const Real x, const Real y, const Real sigma )
   {
-    return MathTrait<Real>::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) ) ;
+    return std::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) ) ;
   }
 
   /**
@@ -60,12 +59,12 @@ namespace features {
 
     // Get the information from the keypoint
     const Real ratio = static_cast<Real>( 1 << id_octave );
-    const int scale = MathTrait<float>::round( ipt.scale() / ratio );
+    const int scale = std::round( ipt.scale() / ratio );
     const Real angle = ipt.orientation() ;
     const Real yf = ipt.y() / ratio;
     const Real xf = ipt.x() / ratio;
-    const Real co = MathTrait<Real>::cos( angle );
-    const Real si = MathTrait<Real>::sin( angle );
+    const Real co = std::cos( angle );
+    const Real si = std::sin( angle );
 
     i = -8;
 
@@ -114,8 +113,8 @@ namespace features {
             // Sum the derivatives to the cumulative descriptor
             dx += rrx;
             dy += rry;
-            mdx += MathTrait<Real>::abs( rrx );
-            mdy += MathTrait<Real>::abs( rry );
+            mdx += std::fabs( rrx );
+            mdy += std::fabs( rry );
           }
         }
 
@@ -156,4 +155,4 @@ namespace features {
 } // namespace features
 } // namespace openMVG
 
-#endif
+#endif // OPENMVG_IMAGE_DESCRIPTION_MSURF_DESCRIPTOR_HPP

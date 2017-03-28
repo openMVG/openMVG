@@ -88,8 +88,8 @@ int main(int argc, char **argv)
     int w,h,depth;
     vector<unsigned char> tmp_vec;
     const string sOutFileName =
-      stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
-    const string sInFileName = stlplus::create_filespec(sPath, stlplus::basename_part(vec_fileNames[j]));
+      stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "png");
+    const string sInFileName = stlplus::create_filespec(sPath, stlplus::filename_part(vec_fileNames[j]));
     const int res = ReadImage(sInFileName.c_str(), &tmp_vec, &w, &h, &depth);
 
     const Pinhole_Intrinsic_Radial_K3 cam(w, h, f, c(0), c(1), k(0), k(1), k(2));

@@ -24,9 +24,6 @@
   */
 //@{
 
-#include "../../Eigen/src/misc/Solve.h"
-#include "../../Eigen/src/misc/SparseSolve.h"
-
 #ifndef EIGEN_MPL2_ONLY
 #include "src/IterativeSolvers/IterationController.h"
 #include "src/IterativeSolvers/ConstrainedConjGrad.h"
@@ -36,7 +33,7 @@
 #include "../../Eigen/Jacobi"
 #include "../../Eigen/Householder"
 #include "src/IterativeSolvers/GMRES.h"
-#include "src/IterativeSolvers/IncompleteCholesky.h"
+#include "src/IterativeSolvers/DGMRES.h"
 //#include "src/IterativeSolvers/SSORPreconditioner.h"
 #include "src/IterativeSolvers/MINRES.h"
 

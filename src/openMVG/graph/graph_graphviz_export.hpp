@@ -5,16 +5,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_EXPORT_H_
-#define OPENMVG_GRAPH_EXPORT_H_
+#ifndef OPENMVG_GRAPH_GRAPH_EXPORT_HPP 
+#define OPENMVG_GRAPH_GRAPH_EXPORT_HPP
 
 #include "openMVG/types.hpp"
 
-#include "lemon/list_graph.h"
+#include <lemon/list_graph.h>
 
-#include <iostream>
-#include <fstream>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 #include <map>
 
 namespace openMVG {
@@ -82,4 +82,4 @@ inline void exportToGraphvizData
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_EXPORT_H_
+#endif // OPENMVG_GRAPH_GRAPH_EXPORT_HPP

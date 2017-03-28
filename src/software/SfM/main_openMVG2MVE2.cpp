@@ -58,7 +58,7 @@ bool exportToMVE2Format(
   // Create basis directory structure
   if (!stlplus::is_folder(sOutDirectory))
   {
-    cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
     stlplus::folder_create(sOutDirectory);
     bOk = stlplus::is_folder(sOutDirectory);
   }
@@ -72,10 +72,10 @@ bool exportToMVE2Format(
   // Export the SfM_Data scene to the MVE2 format
   {
     // Create 'views' subdirectory
-    const string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
+    const std::string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
     if (!stlplus::folder_exists(sOutViewsDirectory))
     {
-      cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+      std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
       stlplus::folder_create(sOutViewsDirectory);
     }
 
@@ -286,9 +286,9 @@ int main(int argc, char *argv[])
   }
 
   if (exportToMVE2Format(sfm_data, stlplus::folder_append_separator(sOutDir) + "MVE"))
-    return( EXIT_SUCCESS );
+    return EXIT_SUCCESS;
   else
-    return( EXIT_FAILURE );
+    return EXIT_FAILURE;
 }
 
 /// Naive image bilinear resampling of an image for thumbnail generation

@@ -115,8 +115,7 @@ class LevenbergMarquardt : internal::no_assignment_operator
     typedef typename FunctorType::JacobianType JacobianType;
     typedef typename JacobianType::Scalar Scalar;
     typedef typename JacobianType::RealScalar RealScalar; 
-    typedef typename JacobianType::Index Index;
-    typedef typename QRSolver::Index PermIndex;
+    typedef typename QRSolver::StorageIndex PermIndex;
     typedef Matrix<Scalar,Dynamic,1> FVectorType;
     typedef PermutationMatrix<Dynamic,Dynamic> PermutationType;
   public:
@@ -144,11 +143,13 @@ class LevenbergMarquardt : internal::no_assignment_operator
     
     /** Sets the default parameters */
     void resetParameters() 
-    { 
+    {
+      using std::sqrt;        
+
       m_factor = 100.; 
       m_maxfev = 400; 
-      m_ftol = std::sqrt(NumTraits<RealScalar>::epsilon());
-      m_xtol = std::sqrt(NumTraits<RealScalar>::epsilon());
+      m_ftol = sqrt(NumTraits<RealScalar>::epsilon());
+      m_xtol = sqrt(NumTraits<RealScalar>::epsilon());
       m_gtol = 0. ; 
       m_epsfcn = 0. ;
     }
@@ -173,6 +174,24 @@ class LevenbergMarquardt : internal::no_assignment_operator
     
     /** Use an external Scaling. If set to true, pass a nonzero diagonal to diag() */
     void setExternalScaling(bool value) {m_useExternalScaling  = value; }
+    
+    /** \returns the tolerance for the norm of the solution vector */
+    RealScalar xtol() const {return m_xtol; }
+    
+    /** \returns the tolerance for the norm of the vector function */
+    RealScalar ftol() const {return m_ftol; }
+    
+    /** \returns the tolerance for the norm of the gradient of the error vector */
+    RealScalar gtol() const {return m_gtol; }
+    
+    /** \returns the step bound for the diagonal shift */
+    RealScalar factor() const {return m_factor; }
+    
+    /** \returns the error precision */
+    RealScalar epsilon() const {return m_epsfcn; }
+    
+    /** \returns the maximum number of function evaluation */
+    Index maxfev() const {return m_maxfev; }
     
     /** \returns a reference to the diagonal of the jacobian */
     FVectorType& diag() {return m_diag; }
@@ -285,7 +304,7 @@ LevenbergMarquardt<FunctorType>::minimizeInit(FVectorType  &x)
 //     m_fjac.reserve(VectorXi::Constant(n,5)); // FIXME Find a better alternative
     if (!m_useExternalScaling)
         m_diag.resize(n);
-    eigen_assert( (!m_useExternalScaling || m_diag.size()==n) || "When m_useExternalScaling is set, the caller must provide a valid 'm_diag'");
+    eigen_assert( (!m_useExternalScaling || m_diag.size()==n) && "When m_useExternalScaling is set, the caller must provide a valid 'm_diag'");
     m_qtf.resize(n);
 
     /* Function Body */

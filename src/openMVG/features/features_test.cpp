@@ -5,26 +5,30 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/features.hpp"
-using namespace openMVG;
-using namespace openMVG::features;
+
 
 #include "testing/testing.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <vector>
+
+using namespace openMVG;
+using namespace openMVG::features;
 using namespace std;
+
 using std::string;
 
 // Define a feature and a container of features
-typedef SIOPointFeature Feature_T;
-typedef std::vector<Feature_T> Feats_T;
+using Feature_T = SIOPointFeature;
+using Feats_T = std::vector<Feature_T>;
 
 // Define a descriptor and a container of descriptors
 static const int DESC_LENGTH = 128;
-typedef Descriptor<float, DESC_LENGTH> Desc_T;
-typedef std::vector<Desc_T> Descs_T;
+using Desc_T = Descriptor<float, DESC_LENGTH>;
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Desc_T)
+using Descs_T = std::vector<Desc_T>;
 
 //--
 //-- Features interface test

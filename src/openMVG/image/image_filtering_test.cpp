@@ -5,12 +5,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/image/image.hpp"
+
 #include "testing/testing.h"
+
+#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::image;
-
-#include <iostream>
 using namespace std;
 
 TEST(Image, Convolution)

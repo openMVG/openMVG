@@ -5,11 +5,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
+#define OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
 
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 #include "third_party/htmlDoc/htmlDoc.hpp"
@@ -17,6 +16,9 @@
 
 namespace openMVG {
 namespace sfm {
+
+struct Features_Provider;
+struct Matches_Provider;
 
 /// Sequential SfM Pipeline Reconstruction Engine.
 class SequentialSfMReconstructionEngine : public ReconstructionEngine
@@ -72,10 +74,10 @@ private:
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
   /// List the images that the greatest number of matches to the current 3D reconstruction.
-  bool FindImagesWithPossibleResection(std::vector<size_t> & vec_possible_indexes);
+  bool FindImagesWithPossibleResection(std::vector<uint32_t> & vec_possible_indexes);
 
   /// Add a single Image to the scene and triangulate new possible tracks.
-  bool Resection(const size_t imageIndex);
+  bool Resection(const uint32_t imageIndex);
 
   /// Bundle adjustment to refine Structure; Motion and Intrinsics
   bool BundleAdjustment();
@@ -103,9 +105,10 @@ private:
   openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
-  std::set<size_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
+  std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
 };
 
 } // namespace sfm
 } // namespace openMVG
 
+#endif // OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP

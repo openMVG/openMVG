@@ -1,1 +1,1 @@
-ADD_SUBDIRECTORY(sift)
+add_subdirectory(sift)

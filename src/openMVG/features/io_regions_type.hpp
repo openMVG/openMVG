@@ -5,11 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef IO_REGIONS_TYPE_HPP
-#define IO_REGIONS_TYPE_HPP
+#ifndef OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
+#define OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 
 #include "openMVG/features/features.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 #include <cereal/archives/json.hpp>
 
 #include <fstream>
@@ -46,4 +47,4 @@ inline std::unique_ptr<features::Regions> Init_region_type_from_file
 } // namespace features
 } // namespace openMVG
 
-#endif // IO_REGIONS_TYPE_HPP
+#endif // OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP

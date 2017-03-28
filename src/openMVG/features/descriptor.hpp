@@ -9,6 +9,7 @@
 #define OPENMVG_FEATURES_DESCRIPTOR_HPP
 
 #include "openMVG/numeric/numeric.h"
+
 #include <iostream>
 #include <iterator>
 #include <fstream>
@@ -29,8 +30,8 @@ class Descriptor : public Eigen::Matrix<T, N, 1>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef T bin_type;
-  typedef std::size_t size_type;
+  using bin_type = T;
+  using size_type = std::size_t;
 
   /// Compile-time length of the descriptor
   static const std::size_t static_size = N;
@@ -161,7 +162,7 @@ inline bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
-  typedef typename DescriptorsT::value_type VALUE;
+  using VALUE = typename DescriptorsT::value_type;
 
   vec_desc.clear();
   std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
@@ -187,7 +188,7 @@ inline bool saveDescsToBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
-  typedef typename DescriptorsT::value_type VALUE;
+  using VALUE = typename DescriptorsT::value_type;
 
   std::ofstream file(sfileNameDescs.c_str(), std::ios::out | std::ios::binary);
   if (!file.is_open())

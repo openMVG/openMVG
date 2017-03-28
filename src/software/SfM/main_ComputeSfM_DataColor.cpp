@@ -52,7 +52,7 @@ bool ColorizeTracks(
       std::inserter(remainingTrackToColor, remainingTrackToColor.begin()),
       stl::RetrieveKey());
 
-    while( !remainingTrackToColor.empty() )
+    while ( !remainingTrackToColor.empty() )
     {
       // Find the most representative image (for the remaining 3D points)
       //  a. Count the number of observation per view for each 3Dpoint Index
@@ -66,7 +66,7 @@ bool ColorizeTracks(
       {
         const size_t trackId = *iterT;
         const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
-        for( Observations::const_iterator iterObs = obs.begin();
+        for (Observations::const_iterator iterObs = obs.begin();
           iterObs != obs.end(); ++iterObs)
         {
           const size_t viewId = iterObs->first;
@@ -206,13 +206,6 @@ int main(int argc, char **argv)
     {
       return EXIT_SUCCESS;
     }
-    else
-    {
-      return EXIT_FAILURE;
-    }
   }
-  else
-  {
-    return EXIT_FAILURE;
-  }
+  return EXIT_FAILURE;
 }

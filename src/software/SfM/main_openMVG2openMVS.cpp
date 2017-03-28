@@ -228,6 +228,8 @@ int main(int argc, char *argv[])
   }
 
   if (exportToOpenMVS(sfm_data, sOutFile, sOutDir))
-    return( EXIT_SUCCESS );
-  return( EXIT_FAILURE );
+  {
+    return EXIT_SUCCESS;
+  }
+  return EXIT_FAILURE;
 }

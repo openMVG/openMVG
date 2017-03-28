@@ -7,6 +7,7 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/multiview/translation_averaging_test.hpp"
+
 #include "testing/testing.h"
 
 #include <fstream>
@@ -115,7 +116,7 @@ TEST(translation_averaging, globalTi_from_tijs_softl1_Ceres) {
   }
 }
 
-TEST(translation_averaging, globalTi_from_tijs_Triplets_l2_chordal) {
+TEST(translation_averaging, globalTi_from_tijs_l2_chordal) {
 
   const int focal = 1000;
   const int principal_Point = 500;
@@ -124,7 +125,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets_l2_chordal) {
   const int iNbPoints = 6;
 
   const bool bCardiod = true;
-  const bool bRelative_Translation_PerTriplet = true;
+  const bool bRelative_Translation_PerTriplet = false;
   std::vector<openMVG::RelativeInfo_Vec > vec_relative_estimates;
 
   const NViewDataSet d =

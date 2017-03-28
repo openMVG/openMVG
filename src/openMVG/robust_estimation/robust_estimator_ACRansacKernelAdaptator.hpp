@@ -5,8 +5,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_H_
-#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_H_
+#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_HPP
+#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_HPP
 
 // Here a collection of A contrario Kernel adaptor.
 //  - See // [1] "Robust and accurate calibration of camera networks". PhD.
@@ -45,9 +45,9 @@ template <typename SolverArg,
 class ACKernelAdaptor
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   ACKernelAdaptor(
     const Mat &x1, int w1, int h1,
@@ -78,20 +78,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
@@ -133,9 +133,9 @@ template <typename SolverArg,
 class ACKernelAdaptorResection
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   ACKernelAdaptorResection(const Mat &x2d, int w, int h, const Mat &x3D)
     : x2d_(x2d.rows(), x2d.cols()), x3D_(x3D),
@@ -151,20 +151,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x2d_, samples);
     const Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(int sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x2d_.cols());
-    for (size_t sample = 0; sample < x2d_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
@@ -196,9 +196,9 @@ template <typename SolverArg,
 class ACKernelAdaptorResection_K
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   ACKernelAdaptorResection_K(const Mat &x2d, const Mat &x3D, const Mat3 & K)
     : x2d_(x2d.rows(), x2d.cols()), x3D_(x3D),
@@ -210,26 +210,26 @@ public:
     assert(x2d_.cols() == x3D_.cols());
 
     // Normalize points by inverse(K)
-    ApplyTransformationToPoints(x2d, N1_, &x2d_);
+    x2d_ = (N1_ * x2d.colwise().homogeneous()).colwise().hnormalized();
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x2d_, samples);
     const Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x2d_.cols());
-    for (size_t sample = 0; sample < x2d_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
@@ -261,9 +261,9 @@ template <typename SolverArg,
 class ACKernelAdaptorEssential
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   ACKernelAdaptorEssential(
     const Mat &x1, int w1, int h1,
@@ -277,8 +277,8 @@ public:
     assert(x1_.rows() == x2_.rows());
     assert(x1_.cols() == x2_.cols());
 
-    ApplyTransformationToPoints(x1_, K1_.inverse(), &x1k_);
-    ApplyTransformationToPoints(x2_, K2_.inverse(), &x2k_);
+    x1k_ = (K1_.inverse() * x1_.colwise().homogeneous()).colwise().hnormalized();
+    x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
 
     //Point to line probability (line is the epipolar line)
     const double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
@@ -289,13 +289,13 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1k_, samples);
     const Mat x2 = ExtractColumns(x2k_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     return ErrorT::Error(F, this->x1_.col(sample), this->x2_.col(sample));
@@ -306,7 +306,7 @@ public:
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(F, this->x1_.col(sample), this->x2_.col(sample));
   }
 
@@ -333,9 +333,9 @@ template <typename SolverArg,
 class ACKernelAdaptor_AngularRadianError
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
-  typedef ErrorArg ErrorT;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
   ACKernelAdaptor_AngularRadianError(
     const Mat & xA,
@@ -351,20 +351,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 
@@ -391,4 +391,5 @@ private:
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_H_
+
+#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_KERNEL_ADAPTATOR_HPP

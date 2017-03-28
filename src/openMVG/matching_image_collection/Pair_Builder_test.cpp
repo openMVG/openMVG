@@ -8,11 +8,11 @@
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "testing/testing.h"
 
-#include <iostream>
 #include <algorithm>
-using namespace std;
+#include <iostream>
 
 using namespace openMVG;
+using namespace std;
 
 // Check pairs follow a weak ordering pair.first < pair.second
 template<typename IterablePairs>

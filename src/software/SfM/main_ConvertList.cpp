@@ -194,11 +194,11 @@ int main(int argc, char **argv)
 
   // Store SfM_Data views & intrinsic data
   if (Save(
-    sfm_data,
-    stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
-    ESfM_Data(VIEWS|INTRINSICS))
-    )
+      sfm_data,
+      stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
+      ESfM_Data(VIEWS|INTRINSICS)))
+  {
   return EXIT_SUCCESS;
-    else
+  }
   return EXIT_FAILURE;
 }

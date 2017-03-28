@@ -43,7 +43,6 @@ namespace lemon {
     kruskal(const Digraph& digraph, const In& in, Out& out,dummy<0> = 0) {
       typedef typename In::value_type::second_type Value;
       typedef typename Digraph::template NodeMap<int> IndexMap;
-      typedef typename Digraph::Node Node;
 
       IndexMap index(digraph);
       UnionFind<IndexMap> uf(index);
@@ -72,7 +71,6 @@ namespace lemon {
     kruskal(const Graph& graph, const In& in, Out& out,dummy<1> = 1) {
       typedef typename In::value_type::second_type Value;
       typedef typename Graph::template NodeMap<int> IndexMap;
-      typedef typename Graph::Node Node;
 
       IndexMap index(graph);
       UnionFind<IndexMap> uf(index);

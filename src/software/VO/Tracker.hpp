@@ -61,7 +61,7 @@ struct Tracker_fast_dipole : public Abstract_Tracker
         for (int i=0; i < (int)pt_to_track.size(); ++i)
         {
           size_t best_idx = std::numeric_limits<size_t>::infinity();
-          typedef openMVG::matching::L2_Vectorized<float> metricT;
+          typedef openMVG::matching::L2<float> metricT;
           metricT metric;
           metricT::ResultType best_distance = 30;//std::numeric_limits<double>::infinity();
           for (size_t j=0; j < current_feats.size(); ++j)

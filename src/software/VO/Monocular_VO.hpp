@@ -129,7 +129,7 @@ struct VO_Monocular
       if (frameId > 0 && landmarkListPerFrame_.size() > 1)
       {
         size_t lastKf = frameId-1;
-        std::vector<size_t> ids;
+        std::vector<uint32_t> ids;
         std::set_intersection(
           landmarkListPerFrame_[lastKf].begin(), landmarkListPerFrame_[lastKf].end(),
           landmarkListPerFrame_[frameId].begin(), landmarkListPerFrame_[frameId].end(),

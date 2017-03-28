@@ -88,6 +88,9 @@ ENDIF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
 # dependencies with which OpenMVG was compiled.
 SET(OPENMVG_INCLUDE_DIRS "@OpenMVG_INCLUDE_DIRS@")
 
+# Set the compile flags for OpenMVG.
+SET(OPENMVG_CFLAGS "@OpenMVG_CFLAGS@")
+
 ##### the libraries themselves come in via OpenMVGTargets-<release/debug>.cmake
 # as link libraries rules as target.
 
@@ -103,6 +106,7 @@ MESSAGE(STATUS "----")
 MESSAGE(STATUS "Found OpenMVG version: ${OPENMVG_VERSION}")
 MESSAGE(STATUS "Installed in: ${CURRENT_ROOT_INSTALL_DIR}")
 MESSAGE(STATUS "Used OpenMVG libraries: ${OPENMVG_LIBRARIES}")
+MESSAGE(STATUS "Required CFLAGS: ${OPENMVG_CFLAGS}")
 MESSAGE(STATUS "----")
 
 SET(OPENMVG_FOUND TRUE)

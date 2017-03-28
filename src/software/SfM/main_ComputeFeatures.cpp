@@ -11,6 +11,7 @@
 
 /// Feature/Regions & Image describer interfaces
 #include "openMVG/features/features.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 #include <cereal/archives/json.hpp>
 #include "openMVG/system/timer.hpp"
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+      << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
@@ -182,6 +184,12 @@ int main(int argc, char **argv)
         (SIFT_Image_describer::Params(), !bUpRight));
     }
     else
+    if (sImage_Describer_Method == "SIFT_ANATOMY")
+    {
+      image_describer.reset(
+        new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params()));
+    }
+    else
     if (sImage_Describer_Method == "AKAZE_FLOAT")
     {
       image_describer.reset(new AKAZE_Image_describer
@@ -230,11 +238,18 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray, globalMask, imageMask;
+    Image<unsigned char> imageGray, globalMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if(stlplus::file_exists(sGlobalMask_filename))
-      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+    if (stlplus::file_exists(sGlobalMask_filename))
+    {
+      if (ReadImage(sGlobalMask_filename.c_str(), &globalMask))
+      {
+        std::cout
+          << "Feature extraction will use a GLOBAL MASK:\n"
+          << sGlobalMask_filename << std::endl;
+      }
+    }
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
@@ -248,7 +263,7 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageMask)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
 #endif
     for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
@@ -272,24 +287,21 @@ int main(int argc, char **argv)
           stlplus::create_filespec(sfm_data.s_root_path,
             stlplus::basename_part(sView_filename) + "_mask", "png");
 
-        if(stlplus::file_exists(sImageMask_filename))
+        Image<unsigned char> imageMask;
+        if (stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
         // The mask point to the globalMask, if a valid one exists for the current image
-        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
+        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
           mask = &globalMask;
         // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
-        Image<unsigned char> imageGray;
-        if (ReadImage(sView_filename.c_str(), &imageGray))
-        {
-          // Compute features and descriptors and export them to files
-          std::unique_ptr<Regions> regions;
-          image_describer->Describe(imageGray, regions, mask);
-          image_describer->Save(regions.get(), sFeat, sDesc);
-        }
+        // Compute features and descriptors and export them to files
+        std::unique_ptr<Regions> regions;
+        image_describer->Describe(imageGray, regions, mask);
+        image_describer->Save(regions.get(), sFeat, sDesc);
       }
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical

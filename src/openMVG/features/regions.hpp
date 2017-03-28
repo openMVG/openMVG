@@ -8,11 +8,13 @@
 #ifndef OPENMVG_FEATURES_REGIONS_HPP
 #define OPENMVG_FEATURES_REGIONS_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/matching/metric.hpp"
-#include "cereal/types/vector.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+
+#include <cereal/types/vector.hpp>
+
 #include <string>
 #include <typeinfo>
 
@@ -68,7 +70,10 @@ public:
   // A default metric is used according the descriptor type:
   // - Scalar: SquaredL2,
   // - Binary: SquaredHamming
-  virtual double SquaredDescriptorDistance(size_t i, const Regions *, size_t j) const = 0;
+  virtual double SquaredDescriptorDistance(
+    size_t i,
+    const Regions *,
+    size_t j) const = 0;
 
   /// Add the Inth region to another Region container
   virtual void CopyRegion(size_t i, Regions *) const = 0;
@@ -83,18 +88,18 @@ class Scalar_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region type
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Region descriptor
-  typedef Descriptor<T, L> DescriptorT;
+  using DescriptorT = Descriptor<T, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple regions description
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT, Eigen::aligned_allocator<DescriptorT>>;
 
   //-- Class functions
   //--
@@ -141,12 +146,12 @@ public:
   size_t RegionCount() const override {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return vec_feats_; }
-  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
+  inline FeatsT & Features() { return vec_feats_; }
+  inline const FeatsT & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
+  inline DescsT & Descriptors() { return vec_descs_; }
+  inline const DescsT & Descriptors() const { return vec_descs_; }
 
   const void * DescriptorRawData() const override { return &vec_descs_[0];}
 
@@ -163,14 +168,20 @@ public:
   }
 
   // Return the L2 distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override
+  double SquaredDescriptorDistance
+  (
+    size_t i,
+    const Regions * regions,
+    size_t j
+  )
+  const override
   {
     assert(i < vec_descs_.size());
     assert(regions);
     assert(j < regions->RegionCount());
 
     const Scalar_Regions<FeatT, T, L> * regionsT = dynamic_cast<const Scalar_Regions<FeatT, T, L> *>(regions);
-    static matching::L2_Vectorized<T> metric;
+    matching::L2<T> metric;
     return metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
   }
 
@@ -185,8 +196,8 @@ public:
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> vec_feats_;    // region features
-  std::vector<DescriptorT> vec_descs_; // region descriptions
+  FeatsT vec_feats_;    // region features
+  DescsT vec_descs_; // region descriptions
 };
 
 /// Binary_Regions represented as uchar based array
@@ -197,18 +208,18 @@ class Binary_Regions : public Regions
 {
 public:
 
-  //-- Typedef
+  //-- Type alias
   //--
 
   /// Region
-  typedef FeatT FeatureT;
+  using FeatureT = FeatT;
   /// Description of a region
-  typedef Descriptor<unsigned char, L> DescriptorT;
+  using DescriptorT = Descriptor<unsigned char, L>;
 
   /// Container for multiple regions
-  typedef std::vector<FeatureT> FeatsT;
+  using FeatsT = std::vector<FeatureT>;
   /// Container for multiple region descriptions
-  typedef std::vector<DescriptorT > DescsT;
+  using DescsT = std::vector<DescriptorT, Eigen::aligned_allocator<DescriptorT>>;
 
   //-- Class functions
   //--
@@ -255,12 +266,12 @@ public:
   size_t RegionCount() const override {return vec_feats_.size();}
 
   /// Mutable and non-mutable FeatureT getters.
-  inline std::vector<FeatureT> & Features() { return vec_feats_; }
-  inline const std::vector<FeatureT> & Features() const { return vec_feats_; }
+  inline FeatsT & Features() { return vec_feats_; }
+  inline const FeatsT & Features() const { return vec_feats_; }
 
   /// Mutable and non-mutable DescriptorT getters.
-  inline std::vector<DescriptorT> & Descriptors() { return vec_descs_; }
-  inline const std::vector<DescriptorT> & Descriptors() const { return vec_descs_; }
+  inline DescsT & Descriptors() { return vec_descs_; }
+  inline const DescsT & Descriptors() const { return vec_descs_; }
 
   const void * DescriptorRawData() const override { return &vec_descs_[0];}
 
@@ -277,14 +288,20 @@ public:
   }
 
   // Return the squared Hamming distance between two descriptors
-  double SquaredDescriptorDistance(size_t i, const Regions * regions, size_t j) const override
+  double SquaredDescriptorDistance
+  (
+    size_t i,
+    const Regions * regions,
+    size_t j
+  )
+  const override
   {
     assert(i < vec_descs_.size());
     assert(regions);
     assert(j < regions->RegionCount());
 
     const Binary_Regions<FeatT, L> * regionsT = dynamic_cast<const Binary_Regions<FeatT, L> *>(regions);
-    static matching::Hamming<unsigned char> metric;
+    matching::Hamming<unsigned char> metric;
     const typename matching::Hamming<unsigned char>::ResultType descDist =
       metric(vec_descs_[i].data(), regionsT->vec_descs_[j].data(), DescriptorT::static_size);
     return descDist * descDist;
@@ -301,8 +318,8 @@ public:
 private:
   //--
   //-- internal data
-  std::vector<FeatureT> vec_feats_; // region features
-  std::vector<DescriptorT> vec_descs_; // region descriptions
+  FeatsT vec_feats_; // region features
+  DescsT vec_descs_; // region descriptions
 };
 
 } // namespace features

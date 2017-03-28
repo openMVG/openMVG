@@ -6,12 +6,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+
 
 namespace openMVG {
 namespace sfm {
@@ -51,12 +54,15 @@ namespace sfm {
     {
       //--
       // Classic resection (try to compute the entire P matrix)
-      typedef openMVG::resection::kernel::SixPointResectionSolver SolverType;
+      using SolverType = openMVG::resection::kernel::SixPointResectionSolver;
       MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      typedef openMVG::robust::ACKernelAdaptorResection<
-        SolverType, ResectionSquaredResidualError, openMVG::robust::UnnormalizerResection, Mat34>
-        KernelType;
+      using KernelType = 
+        openMVG::robust::ACKernelAdaptorResection<
+        SolverType,
+        ResectionSquaredResidualError,
+        openMVG::robust::UnnormalizerResection,
+        Mat34>;
 
       KernelType kernel(resection_data.pt2D, image_size.first, image_size.second,
         resection_data.pt3D);
@@ -70,11 +76,14 @@ namespace sfm {
     {
       //--
       // Since K calibration matrix is known, compute only [R|t]
-      typedef openMVG::euclidean_resection::P3PSolver SolverType;
+      using SolverType = openMVG::euclidean_resection::P3PSolver;
       MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      typedef openMVG::robust::ACKernelAdaptorResection_K<
-        SolverType, ResectionSquaredResidualError, Mat34>  KernelType;
+      using KernelType = 
+        openMVG::robust::ACKernelAdaptorResection_K<
+          SolverType,
+          ResectionSquaredResidualError,
+          Mat34>;
 
       KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
       // Robust estimation of the Projection matrix and it's precision

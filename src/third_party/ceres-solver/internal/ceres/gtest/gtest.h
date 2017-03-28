@@ -543,7 +543,7 @@
 # define GTEST_FLAG_PREFIX_DASH_ "gtest-"
 # define GTEST_FLAG_PREFIX_UPPER_ "GTEST_"
 # define GTEST_NAME_ "Google Test"
-# define GTEST_PROJECT_URL_ "http://code.google.com/p/googletest/"
+# define GTEST_PROJECT_URL_ "https://github.com/google/googletest/"
 #endif  // !defined(GTEST_DEV_EMAIL_)
 
 #if !defined(GTEST_INIT_GOOGLE_TEST_NAME_)
@@ -614,8 +614,9 @@
 # define GTEST_HAS_STD_FUNCTION_ 1
 # define GTEST_HAS_STD_INITIALIZER_LIST_ 1
 # define GTEST_HAS_STD_MOVE_ 1
-# define GTEST_HAS_STD_UNIQUE_PTR_ 1
 # define GTEST_HAS_STD_SHARED_PTR_ 1
+# define GTEST_HAS_STD_TYPE_TRAITS_ 1
+# define GTEST_HAS_STD_UNIQUE_PTR_ 1
 #endif
 
 // C++11 specifies that <tuple> provides std::tuple.
@@ -651,10 +652,16 @@
 #  include <io.h>
 # endif
 // In order to avoid having to include <windows.h>, use forward declaration
-// assuming CRITICAL_SECTION is a typedef of _RTL_CRITICAL_SECTION.
+#if GTEST_OS_WINDOWS_MINGW && !defined(__MINGW64_VERSION_MAJOR)
+// MinGW defined _CRITICAL_SECTION and _RTL_CRITICAL_SECTION as two
+// separate (equivalent) structs, instead of using typedef
+typedef struct _CRITICAL_SECTION GTEST_CRITICAL_SECTION;
+#else
+// Assume CRITICAL_SECTION is a typedef of _RTL_CRITICAL_SECTION.
 // This assumption is verified by
 // WindowsTypesTest.CRITICAL_SECTIONIs_RTL_CRITICAL_SECTION.
-struct _RTL_CRITICAL_SECTION;
+typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
+#endif
 #else
 // This assumes that non-Windows OSes provide unistd.h. For OSes where this
 // is not the case, we need to include headers that provide the functions
@@ -2028,8 +2035,12 @@ using ::std::tuple_size;
 
 # if GTEST_OS_LINUX && !defined(__ia64__)
 #  if GTEST_OS_LINUX_ANDROID
-// On Android, clone() is only available on ARM starting with Gingerbread.
-#    if defined(__arm__) && __ANDROID_API__ >= 9
+// On Android, clone() became available at different API levels for each 32-bit
+// architecture.
+#    if defined(__LP64__) || \
+        (defined(__arm__) && __ANDROID_API__ >= 9) || \
+        (defined(__mips__) && __ANDROID_API__ >= 12) || \
+        (defined(__i386__) && __ANDROID_API__ >= 17)
 #     define GTEST_HAS_CLONE 1
 #    else
 #     define GTEST_HAS_CLONE 0
@@ -2195,14 +2206,14 @@ using ::std::tuple_size;
 #endif  // GTEST_HAS_SEH
 
 #ifdef _MSC_VER
-
 # if GTEST_LINKED_AS_SHARED_LIBRARY
 #  define GTEST_API_ __declspec(dllimport)
 # elif GTEST_CREATE_SHARED_LIBRARY
 #  define GTEST_API_ __declspec(dllexport)
 # endif
-
-#endif  // _MSC_VER
+#elif __GNUC__ >= 4 || defined(__clang__)
+# define GTEST_API_ __attribute__((visibility ("default")))
+#endif // _MSC_VER
 
 #ifndef GTEST_API_
 # define GTEST_API_
@@ -2967,7 +2978,7 @@ class GTEST_API_ Mutex {
   // by the linker.
   MutexType type_;
   long critical_section_init_phase_;  // NOLINT
-  _RTL_CRITICAL_SECTION* critical_section_;
+  GTEST_CRITICAL_SECTION* critical_section_;
 
   GTEST_DISALLOW_COPY_AND_ASSIGN_(Mutex);
 };
@@ -3243,13 +3254,8 @@ class MutexBase {
      extern ::testing::internal::MutexBase mutex
 
 // Defines and statically (i.e. at link time) initializes a static mutex.
-// The initialization list here does not explicitly initialize each field,
-// instead relying on default initialization for the unspecified fields. In
-// particular, the owner_ field (a pthread_t) is not explicitly initialized.
-// This allows initialization to work whether pthread_t is a scalar or struct.
-// The flag -Wmissing-field-initializers must not be specified for this to work.
 #  define GTEST_DEFINE_STATIC_MUTEX_(mutex) \
-     ::testing::internal::MutexBase mutex = { PTHREAD_MUTEX_INITIALIZER, false }
+     ::testing::internal::MutexBase mutex = { PTHREAD_MUTEX_INITIALIZER, false, pthread_t() }
 
 // The Mutex class can only be used for mutexes created at runtime. It
 // shares its API with MutexBase otherwise.
@@ -3825,13 +3831,12 @@ bool ParseInt32(const Message& src_text, const char* str, Int32* value);
 // corresponding to the given Google Test flag.
 bool BoolFromGTestEnv(const char* flag, bool default_val);
 GTEST_API_ Int32 Int32FromGTestEnv(const char* flag, Int32 default_val);
-const char* StringFromGTestEnv(const char* flag, const char* default_val);
+std::string StringFromGTestEnv(const char* flag, const char* default_val);
 
 }  // namespace internal
 }  // namespace testing
 
 #endif  // GTEST_INCLUDE_GTEST_INTERNAL_GTEST_PORT_H_
-
 
 #if GTEST_OS_LINUX
 # include <stdlib.h>
@@ -19976,39 +19981,38 @@ namespace internal {
 // frame size of CmpHelperEQ. This helps reduce the overhead of some sanitizers
 // when calling EXPECT_* in a tight loop.
 template <typename T1, typename T2>
-AssertionResult CmpHelperEQFailure(const char* expected_expression,
-                                   const char* actual_expression,
-                                   const T1& expected, const T2& actual) {
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   FormatForComparisonFailureMessage(expected, actual),
-                   FormatForComparisonFailureMessage(actual, expected),
+AssertionResult CmpHelperEQFailure(const char* lhs_expression,
+                                   const char* rhs_expression,
+                                   const T1& lhs, const T2& rhs) {
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   FormatForComparisonFailureMessage(lhs, rhs),
+                   FormatForComparisonFailureMessage(rhs, lhs),
                    false);
 }
 
 // The helper function for {ASSERT|EXPECT}_EQ.
 template <typename T1, typename T2>
-AssertionResult CmpHelperEQ(const char* expected_expression,
-                            const char* actual_expression,
-                            const T1& expected,
-                            const T2& actual) {
+AssertionResult CmpHelperEQ(const char* lhs_expression,
+                            const char* rhs_expression,
+                            const T1& lhs,
+                            const T2& rhs) {
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4389 /* signed/unsigned mismatch */)
-  if (expected == actual) {
+  if (lhs == rhs) {
     return AssertionSuccess();
   }
 GTEST_DISABLE_MSC_WARNINGS_POP_()
 
-  return CmpHelperEQFailure(expected_expression, actual_expression, expected,
-                            actual);
+  return CmpHelperEQFailure(lhs_expression, rhs_expression, lhs, rhs);
 }
 
 // With this overloaded version, we allow anonymous enums to be used
 // in {ASSERT|EXPECT}_EQ when compiled with gcc 4, as anonymous enums
 // can be implicitly cast to BiggestInt.
-GTEST_API_ AssertionResult CmpHelperEQ(const char* expected_expression,
-                                       const char* actual_expression,
-                                       BiggestInt expected,
-                                       BiggestInt actual);
+GTEST_API_ AssertionResult CmpHelperEQ(const char* lhs_expression,
+                                       const char* rhs_expression,
+                                       BiggestInt lhs,
+                                       BiggestInt rhs);
 
 // The helper class for {ASSERT|EXPECT}_EQ.  The template argument
 // lhs_is_null_literal is true iff the first argument to ASSERT_EQ()
@@ -20019,12 +20023,11 @@ class EqHelper {
  public:
   // This templatized version is for the general case.
   template <typename T1, typename T2>
-  static AssertionResult Compare(const char* expected_expression,
-                                 const char* actual_expression,
-                                 const T1& expected,
-                                 const T2& actual) {
-    return CmpHelperEQ(expected_expression, actual_expression, expected,
-                       actual);
+  static AssertionResult Compare(const char* lhs_expression,
+                                 const char* rhs_expression,
+                                 const T1& lhs,
+                                 const T2& rhs) {
+    return CmpHelperEQ(lhs_expression, rhs_expression, lhs, rhs);
   }
 
   // With this overloaded version, we allow anonymous enums to be used
@@ -20033,12 +20036,11 @@ class EqHelper {
   //
   // Even though its body looks the same as the above version, we
   // cannot merge the two, as it will make anonymous enums unhappy.
-  static AssertionResult Compare(const char* expected_expression,
-                                 const char* actual_expression,
-                                 BiggestInt expected,
-                                 BiggestInt actual) {
-    return CmpHelperEQ(expected_expression, actual_expression, expected,
-                       actual);
+  static AssertionResult Compare(const char* lhs_expression,
+                                 const char* rhs_expression,
+                                 BiggestInt lhs,
+                                 BiggestInt rhs) {
+    return CmpHelperEQ(lhs_expression, rhs_expression, lhs, rhs);
   }
 };
 
@@ -20053,37 +20055,36 @@ class EqHelper<true> {
   // EXPECT_EQ(false, a_bool).
   template <typename T1, typename T2>
   static AssertionResult Compare(
-      const char* expected_expression,
-      const char* actual_expression,
-      const T1& expected,
-      const T2& actual,
+      const char* lhs_expression,
+      const char* rhs_expression,
+      const T1& lhs,
+      const T2& rhs,
       // The following line prevents this overload from being considered if T2
       // is not a pointer type.  We need this because ASSERT_EQ(NULL, my_ptr)
       // expands to Compare("", "", NULL, my_ptr), which requires a conversion
       // to match the Secret* in the other overload, which would otherwise make
       // this template match better.
       typename EnableIf<!is_pointer<T2>::value>::type* = 0) {
-    return CmpHelperEQ(expected_expression, actual_expression, expected,
-                       actual);
+    return CmpHelperEQ(lhs_expression, rhs_expression, lhs, rhs);
   }
 
   // This version will be picked when the second argument to ASSERT_EQ() is a
   // pointer, e.g. ASSERT_EQ(NULL, a_pointer).
   template <typename T>
   static AssertionResult Compare(
-      const char* expected_expression,
-      const char* actual_expression,
+      const char* lhs_expression,
+      const char* rhs_expression,
       // We used to have a second template parameter instead of Secret*.  That
       // template parameter would deduce to 'long', making this a better match
       // than the first overload even without the first overload's EnableIf.
       // Unfortunately, gcc with -Wconversion-null warns when "passing NULL to
       // non-pointer argument" (even a deduced integral argument), so the old
       // implementation caused warnings in user code.
-      Secret* /* expected (NULL) */,
-      T* actual) {
-    // We already know that 'expected' is a null pointer.
-    return CmpHelperEQ(expected_expression, actual_expression,
-                       static_cast<T*>(NULL), actual);
+      Secret* /* lhs (NULL) */,
+      T* rhs) {
+    // We already know that 'lhs' is a null pointer.
+    return CmpHelperEQ(lhs_expression, rhs_expression,
+                       static_cast<T*>(NULL), rhs);
   }
 };
 
@@ -20142,18 +20143,18 @@ GTEST_IMPL_CMP_HELPER_(GT, >);
 // The helper function for {ASSERT|EXPECT}_STREQ.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTREQ(const char* expected_expression,
-                                          const char* actual_expression,
-                                          const char* expected,
-                                          const char* actual);
+GTEST_API_ AssertionResult CmpHelperSTREQ(const char* s1_expression,
+                                          const char* s2_expression,
+                                          const char* s1,
+                                          const char* s2);
 
 // The helper function for {ASSERT|EXPECT}_STRCASEEQ.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTRCASEEQ(const char* expected_expression,
-                                              const char* actual_expression,
-                                              const char* expected,
-                                              const char* actual);
+GTEST_API_ AssertionResult CmpHelperSTRCASEEQ(const char* s1_expression,
+                                              const char* s2_expression,
+                                              const char* s1,
+                                              const char* s2);
 
 // The helper function for {ASSERT|EXPECT}_STRNE.
 //
@@ -20175,10 +20176,10 @@ GTEST_API_ AssertionResult CmpHelperSTRCASENE(const char* s1_expression,
 // Helper function for *_STREQ on wide strings.
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-GTEST_API_ AssertionResult CmpHelperSTREQ(const char* expected_expression,
-                                          const char* actual_expression,
-                                          const wchar_t* expected,
-                                          const wchar_t* actual);
+GTEST_API_ AssertionResult CmpHelperSTREQ(const char* s1_expression,
+                                          const char* s2_expression,
+                                          const wchar_t* s1,
+                                          const wchar_t* s2);
 
 // Helper function for *_STRNE on wide strings.
 //
@@ -20236,28 +20237,28 @@ namespace internal {
 //
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 template <typename RawType>
-AssertionResult CmpHelperFloatingPointEQ(const char* expected_expression,
-                                         const char* actual_expression,
-                                         RawType expected,
-                                         RawType actual) {
-  const FloatingPoint<RawType> lhs(expected), rhs(actual);
+AssertionResult CmpHelperFloatingPointEQ(const char* lhs_expression,
+                                         const char* rhs_expression,
+                                         RawType lhs_value,
+                                         RawType rhs_value) {
+  const FloatingPoint<RawType> lhs(lhs_value), rhs(rhs_value);
 
   if (lhs.AlmostEquals(rhs)) {
     return AssertionSuccess();
   }
 
-  ::std::stringstream expected_ss;
-  expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
-              << expected;
+  ::std::stringstream lhs_ss;
+  lhs_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+         << lhs_value;
 
-  ::std::stringstream actual_ss;
-  actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
-            << actual;
+  ::std::stringstream rhs_ss;
+  rhs_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+         << rhs_value;
 
-  return EqFailure(expected_expression,
-                   actual_expression,
-                   StringStreamToString(&expected_ss),
-                   StringStreamToString(&actual_ss),
+  return EqFailure(lhs_expression,
+                   rhs_expression,
+                   StringStreamToString(&lhs_ss),
+                   StringStreamToString(&rhs_ss),
                    false);
 }
 
@@ -20465,13 +20466,13 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 // AssertionResult. For more information on how to use AssertionResult with
 // these macros see comments on that class.
 #define EXPECT_TRUE(condition) \
-  GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
+  GTEST_TEST_BOOLEAN_((condition), #condition, false, true, \
                       GTEST_NONFATAL_FAILURE_)
 #define EXPECT_FALSE(condition) \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
                       GTEST_NONFATAL_FAILURE_)
 #define ASSERT_TRUE(condition) \
-  GTEST_TEST_BOOLEAN_(condition, #condition, false, true, \
+  GTEST_TEST_BOOLEAN_((condition), #condition, false, true, \
                       GTEST_FATAL_FAILURE_)
 #define ASSERT_FALSE(condition) \
   GTEST_TEST_BOOLEAN_(!(condition), #condition, true, false, \
@@ -20840,12 +20841,12 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 
 // Macros for testing equalities and inequalities.
 //
-//    * {ASSERT|EXPECT}_EQ(expected, actual): Tests that expected == actual
-//    * {ASSERT|EXPECT}_NE(v1, v2):           Tests that v1 != v2
-//    * {ASSERT|EXPECT}_LT(v1, v2):           Tests that v1 < v2
-//    * {ASSERT|EXPECT}_LE(v1, v2):           Tests that v1 <= v2
-//    * {ASSERT|EXPECT}_GT(v1, v2):           Tests that v1 > v2
-//    * {ASSERT|EXPECT}_GE(v1, v2):           Tests that v1 >= v2
+//    * {ASSERT|EXPECT}_EQ(v1, v2): Tests that v1 == v2
+//    * {ASSERT|EXPECT}_NE(v1, v2): Tests that v1 != v2
+//    * {ASSERT|EXPECT}_LT(v1, v2): Tests that v1 < v2
+//    * {ASSERT|EXPECT}_LE(v1, v2): Tests that v1 <= v2
+//    * {ASSERT|EXPECT}_GT(v1, v2): Tests that v1 > v2
+//    * {ASSERT|EXPECT}_GE(v1, v2): Tests that v1 >= v2
 //
 // When they are not, Google Test prints both the tested expressions and
 // their actual values.  The values must be compatible built-in types,
@@ -20867,8 +20868,8 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 //   are related, not how their content is related.  To compare two C
 //   strings by content, use {ASSERT|EXPECT}_STR*().
 //
-//   3. {ASSERT|EXPECT}_EQ(expected, actual) is preferred to
-//   {ASSERT|EXPECT}_TRUE(expected == actual), as the former tells you
+//   3. {ASSERT|EXPECT}_EQ(v1, v2) is preferred to
+//   {ASSERT|EXPECT}_TRUE(v1 == v2), as the former tells you
 //   what the actual value is when it fails, and similarly for the
 //   other comparisons.
 //
@@ -20884,12 +20885,12 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 //   ASSERT_LT(i, array_size);
 //   ASSERT_GT(records.size(), 0) << "There is no record left.";
 
-#define EXPECT_EQ(expected, actual) \
+#define EXPECT_EQ(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
-                      expected, actual)
-#define EXPECT_NE(expected, actual) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
+                      EqHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      val1, val2)
+#define EXPECT_NE(val1, val2) \
+  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, val1, val2)
 #define EXPECT_LE(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2)
 #define EXPECT_LT(val1, val2) \
@@ -20899,10 +20900,10 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 #define EXPECT_GT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGT, val1, val2)
 
-#define GTEST_ASSERT_EQ(expected, actual) \
+#define GTEST_ASSERT_EQ(val1, val2) \
   ASSERT_PRED_FORMAT2(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
-                      expected, actual)
+                      EqHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      val1, val2)
 #define GTEST_ASSERT_NE(val1, val2) \
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperNE, val1, val2)
 #define GTEST_ASSERT_LE(val1, val2) \
@@ -20957,29 +20958,29 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 //
 // These macros evaluate their arguments exactly once.
 
-#define EXPECT_STREQ(expected, actual) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTREQ, expected, actual)
+#define EXPECT_STREQ(s1, s2) \
+  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTREQ, s1, s2)
 #define EXPECT_STRNE(s1, s2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTRNE, s1, s2)
-#define EXPECT_STRCASEEQ(expected, actual) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASEEQ, expected, actual)
+#define EXPECT_STRCASEEQ(s1, s2) \
+  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASEEQ, s1, s2)
 #define EXPECT_STRCASENE(s1, s2)\
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASENE, s1, s2)
 
-#define ASSERT_STREQ(expected, actual) \
-  ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTREQ, expected, actual)
+#define ASSERT_STREQ(s1, s2) \
+  ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTREQ, s1, s2)
 #define ASSERT_STRNE(s1, s2) \
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTRNE, s1, s2)
-#define ASSERT_STRCASEEQ(expected, actual) \
-  ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASEEQ, expected, actual)
+#define ASSERT_STRCASEEQ(s1, s2) \
+  ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASEEQ, s1, s2)
 #define ASSERT_STRCASENE(s1, s2)\
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperSTRCASENE, s1, s2)
 
 // Macros for comparing floating-point numbers.
 //
-//    * {ASSERT|EXPECT}_FLOAT_EQ(expected, actual):
+//    * {ASSERT|EXPECT}_FLOAT_EQ(val1, val2):
 //         Tests that two float values are almost equal.
-//    * {ASSERT|EXPECT}_DOUBLE_EQ(expected, actual):
+//    * {ASSERT|EXPECT}_DOUBLE_EQ(val1, val2):
 //         Tests that two double values are almost equal.
 //    * {ASSERT|EXPECT}_NEAR(v1, v2, abs_error):
 //         Tests that v1 and v2 are within the given distance to each other.
@@ -20989,21 +20990,21 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 // FloatingPoint template class in gtest-internal.h if you are
 // interested in the implementation details.
 
-#define EXPECT_FLOAT_EQ(expected, actual)\
+#define EXPECT_FLOAT_EQ(val1, val2)\
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<float>, \
-                      expected, actual)
+                      val1, val2)
 
-#define EXPECT_DOUBLE_EQ(expected, actual)\
+#define EXPECT_DOUBLE_EQ(val1, val2)\
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<double>, \
-                      expected, actual)
+                      val1, val2)
 
-#define ASSERT_FLOAT_EQ(expected, actual)\
+#define ASSERT_FLOAT_EQ(val1, val2)\
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<float>, \
-                      expected, actual)
+                      val1, val2)
 
-#define ASSERT_DOUBLE_EQ(expected, actual)\
+#define ASSERT_DOUBLE_EQ(val1, val2)\
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<double>, \
-                      expected, actual)
+                      val1, val2)
 
 #define EXPECT_NEAR(val1, val2, abs_error)\
   EXPECT_PRED_FORMAT3(::testing::internal::DoubleNearPredFormat, \

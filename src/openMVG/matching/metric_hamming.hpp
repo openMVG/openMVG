@@ -5,18 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_METRIC_HAMMING_H
-#define OPENMVG_MATCHING_METRIC_HAMMING_H
+#ifndef OPENMVG_MATCHING_METRIC_HAMMING_HPP
+#define OPENMVG_MATCHING_METRIC_HAMMING_HPP
 
 #include "openMVG/matching/metric.hpp"
+
 #include <bitset>
 
 #ifdef _MSC_VER
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
 #include <intrin.h>
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
 
 #ifdef __ARM_NEON__
@@ -44,8 +43,8 @@ namespace matching {
 template<typename TBitset>
 struct HammingBitSet
 {
-  typedef TBitset ElementType;
-  typedef size_t ResultType;
+  using ElementType = TBitset;
+  using ResultType = size_t;
 
   // Returns the Hamming Distance between two binary descriptors
   template <typename Iterator1, typename Iterator2>
@@ -59,8 +58,8 @@ struct HammingBitSet
 // Lookup table to count the number of common 1 bits on unsigned char values
 static const unsigned char pop_count_LUT[256] =
 {
-#   define B2(n) n,     n+1,     n+1,     n+2
-#   define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
+#   define B2_POPC(n) n,     n+1,     n+1,     n+2
+#   define B4(n) B2_POPC(n), B2_POPC(n+1), B2_POPC(n+1), B2_POPC(n+2)
 #   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
     B6(0), B6(1), B6(1), B6(2)
 };
@@ -70,8 +69,8 @@ static const unsigned char pop_count_LUT[256] =
 template<typename T>
 struct Hamming
 {
-  typedef T ElementType;
-  typedef unsigned int ResultType;
+  using ElementType = T;
+  using ResultType = unsigned int;
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
@@ -165,4 +164,4 @@ struct Hamming
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_HAMMING_H
+#endif // OPENMVG_MATCHING_METRIC_HAMMING_HPP

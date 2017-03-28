@@ -6,7 +6,7 @@
 
 #include "mser_region.hpp"
 
-#include <cmath>
+#include <ctgmath>
 #include <limits>
 
 namespace openMVG

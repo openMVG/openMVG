@@ -5,12 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
-#define OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include <vector>
 
@@ -39,7 +39,7 @@ double bisection_Radius_Solve(
   const std::vector<double> & params, // radial distortion parameters
   double r2, // targeted radius
   Disto_Functor & functor,
-  double epsilon = 1e-8 // criteria to stop the bisection
+  double epsilon = 1e-10 // criteria to stop the bisection
 )
 {
   // Guess plausible upper and lower bound
@@ -77,7 +77,7 @@ double bisection_Radius_Solve(
  */
 class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Radial_K1 class_type;
+  using class_type = Pinhole_Intrinsic_Radial_K1;
 
   protected:
     /// center of distortion is applied by the Intrinsics class
@@ -100,8 +100,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       double k1 = 0.0 )
       : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
     {
-      params_.resize( 1 );
-      params_[0] = k1;
+      params_ = {k1};
     }
 
     ~Pinhole_Intrinsic_Radial_K1() override = default;
@@ -165,7 +164,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
+      params.insert(params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -258,7 +257,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      Pinhole_Intrinsic::load( ar );
+      Pinhole_Intrinsic::load(ar);
       ar( cereal::make_nvp( "disto_k1", params_ ) );
     }
 
@@ -280,9 +279,9 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     * @param r2 square distance (relative to center)
     * @return distance
     */
-    static double distoFunctor( const std::vector<double> & params, double r2 )
+    static inline double distoFunctor( const std::vector<double> & params, double r2 )
     {
-      const double k1 = params[0];
+      const double & k1 = params[0];
       return r2 * Square( 1. + r2 * k1 );
     }
 };
@@ -293,7 +292,7 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
 */
 class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Radial_K3 class_type;
+  using class_type = Pinhole_Intrinsic_Radial_K3;
 
   protected:
     // center of distortion is applied by the Intrinsics class
@@ -319,10 +318,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0 )
       : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
     {
-      params_.resize( 3 );
-      params_[0] = k1;
-      params_[1] = k2;
-      params_[2] = k3;
+      params_ = {k1, k2, k3};
     }
 
     ~Pinhole_Intrinsic_Radial_K3() override = default;
@@ -352,8 +348,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     */
     Vec2 add_disto( const Vec2 & p ) const override
     {
-
-      const double k1 = params_[0], k2 = params_[1], k3 = params_[2];
+      const double & k1 = params_[0], & k2 = params_[1], & k3 = params_[2];
 
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double r4 = r2 * r2;
@@ -387,9 +382,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
-      params.push_back( params_[1] );
-      params.push_back( params_[2] );
+      params.insert( params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -473,7 +466,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     template <class Archive>
     void save( Archive & ar ) const
     {
-      Pinhole_Intrinsic::save( ar );
+      Pinhole_Intrinsic::save(ar);
       ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
 
@@ -484,7 +477,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     template <class Archive>
     void load( Archive & ar )
     {
-      Pinhole_Intrinsic::load( ar );
+      Pinhole_Intrinsic::load(ar);
       ar( cereal::make_nvp( "disto_k3", params_ ) );
     }
 
@@ -506,9 +499,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     * @param r2 square distance (relative to center)
     * @return distance
     */
-    static double distoFunctor( const std::vector<double> & params, double r2 )
+    static inline double distoFunctor( const std::vector<double> & params, double r2 )
     {
-      const double k1 = params[0], k2 = params[1], k3 = params[2];
+      const double & k1 = params[0], & k2 = params[1], & k3 = params[2];
       return r2 * Square( 1. + r2 * ( k1 + r2 * ( k2 + r2 * k3 ) ) );
     }
 };
@@ -519,10 +512,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
 
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1" );
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Radial_K1)
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3" );
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::Pinhole_Intrinsic, openMVG::cameras::Pinhole_Intrinsic_Radial_K3)
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K1);
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K3);
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_RADIAL_K_HPP
-
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_K_HPP

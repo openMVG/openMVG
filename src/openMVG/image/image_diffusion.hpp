@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
-#define OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP
+#define OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP
 
 #ifdef _MSC_VER
   #pragma warning(once:4244)
@@ -40,7 +40,7 @@ void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , cons
     out.resize( width , height ) ;
   }
 
-  typedef typename Image::Tpixel Real;
+  using Real = typename Image::Tpixel;
   out.array() = ( static_cast<Real>( 1.f ) + ( Lx.array().square() + Ly.array().square() ) / ( k * k ) ).inverse();
 }
 
@@ -57,7 +57,7 @@ template< typename Image >
 void ImageFEDCentral( const Image & src , const Image & diff , const typename Image::Tpixel half_t , Image & out ,
                       const int row_start , const int row_end )
 {
-  typedef typename Image::Tpixel Real ;
+  using Real = typename Image::Tpixel;
   const int width = src.Width() ;
   Real n_diff[4] ;
   Real n_src[4] ;
@@ -128,7 +128,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 template< typename Image >
 void ImageFED( const Image & src , const Image & diff , const typename Image::Tpixel t , Image & out )
 {
-  typedef typename Image::Tpixel Real ;
+  using Real = typename Image::Tpixel;
   const int width = src.Width() ;
   const int height = src.Height() ;
   const Real half_t = t * static_cast<Real>( 0.5 ) ;
@@ -356,4 +356,4 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
 }  // namespace image
 }  // namespace openMVG
 
-#endif //  OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP_
+#endif //  OPENMVG_IMAGE_IMAGE_DIFFUSION_HPP

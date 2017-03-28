@@ -4,9 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "testing/testing.h"
-#include "openMVG/image/image.hpp"
 #include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/image/image.hpp"
+
+#include "testing/testing.h"
+
 
 using namespace openMVG;
 using namespace image; 

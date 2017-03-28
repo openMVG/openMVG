@@ -4,12 +4,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
-#define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
+#ifndef OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
+#define OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/numeric/accumulator_trait.hpp"
 #include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_convolution_base.hpp"
+#include "openMVG/numeric/accumulator_trait.hpp"
 
 #include <cassert>
 #include <vector>
@@ -41,8 +41,8 @@ void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 
   assert( kernel_width % 2 != 0 && kernel_height % 2 != 0 ) ;
 
-  typedef typename Image::Tpixel pix_t ;
-  typedef typename Accumulator< pix_t >::Type acc_pix_t ;
+  using pix_t = typename Image::Tpixel;
+  using acc_pix_t = typename Accumulator< pix_t >::Type;
 
   out.resize( img.Width() , img.Height() ) ;
 
@@ -81,7 +81,7 @@ void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
 void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
-  typedef typename ImageTypeIn::Tpixel pix_t ;
+  using pix_t = typename ImageTypeIn::Tpixel;
 
   const int rows ( img.rows() );
   const int cols ( img.cols() );
@@ -125,7 +125,7 @@ void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel
 template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
 void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
-  typedef typename ImageTypeIn::Tpixel pix_t ;
+  using pix_t = typename ImageTypeIn::Tpixel;
 
   const int kernel_width = kernel.size() ;
   const int half_kernel_width = kernel_width / 2 ;
@@ -178,8 +178,8 @@ void ImageSeparableConvolution( const ImageType & img ,
                                 ImageType & out )
 {
   // Cast the Kernel to the appropriate type
-  typedef typename ImageType::Tpixel pix_t;
-  typedef Eigen::Matrix<typename Accumulator<pix_t>::Type, Eigen::Dynamic, 1> VecKernel;
+  using pix_t = typename ImageType::Tpixel;
+  using VecKernel = Eigen::Matrix<typename Accumulator<pix_t>::Type, Eigen::Dynamic, 1>;
   const VecKernel horiz_k_cast = horiz_k.template cast< typename Accumulator<pix_t>::Type >();
   const VecKernel vert_k_cast = vert_k.template cast< typename Accumulator<pix_t>::Type >();
 
@@ -188,7 +188,7 @@ void ImageSeparableConvolution( const ImageType & img ,
   ImageVerticalConvolution( tmp , vert_k_cast , out ) ;
 }
 
-typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixXf;
+using RowMatrixXf = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 /// Specialization for Float based image (for arbitrary sized kernel)
 inline void SeparableConvolution2d( const RowMatrixXf& image,
@@ -279,8 +279,8 @@ void ImageSeparableConvolution( const Image<float> & img ,
                                 Image<float> & out )
 {
   // Cast the Kernel to the appropriate type
-  typedef Image<float>::Tpixel pix_t;
-  typedef Eigen::Matrix<typename openMVG::Accumulator<pix_t>::Type, Eigen::Dynamic, 1> VecKernel;
+  using pix_t = Image<float>::Tpixel;
+  using VecKernel = Eigen::Matrix<typename openMVG::Accumulator<pix_t>::Type, Eigen::Dynamic, 1>;
   const VecKernel horiz_k_cast = horiz_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
   const VecKernel vert_k_cast = vert_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
 
@@ -291,4 +291,4 @@ void ImageSeparableConvolution( const Image<float> & img ,
 } // namespace image
 } // namespace openMVG
 
-#endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP_
+#endif // OPENMVG_IMAGE_IMAGE_CONVOLUTION_HPP

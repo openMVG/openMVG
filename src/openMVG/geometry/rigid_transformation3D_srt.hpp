@@ -4,11 +4,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GEOMETRY_3D_REGISTRATION_7DOF_H_
-#define OPENMVG_GEOMETRY_3D_REGISTRATION_7DOF_H_
+#ifndef OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
+#define OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/lm.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG
 {
@@ -274,4 +274,4 @@ inline void Refine_RTS
 } // namespace geometry
 } // namespace openMVG
 
-#endif  // OPENMVG_GEOMETRY_REGISTRATION_7DOF_H_
+#endif  // OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP

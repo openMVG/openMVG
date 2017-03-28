@@ -44,13 +44,6 @@
 
 #include "glog/logging.h"
 
-// Needed to make the scoped mock log tests work without modification.
-namespace ceres {
-namespace internal {
-using google::WARNING;
-}  // namespace internal
-}  // namespace ceres
-
 namespace testing {
 
 // A ScopedMockLog object intercepts LOG() messages issued during its

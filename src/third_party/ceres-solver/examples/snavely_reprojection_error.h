@@ -60,7 +60,7 @@ struct SnavelyReprojectionError {
                   T* residuals) const {
     // camera[0,1,2] are the angle-axis rotation.
     T p[3];
-    ceres::AngleAxisRotatePoint(camera, point, p);
+    AngleAxisRotatePoint(camera, point, p);
 
     // camera[3,4,5] are the translation.
     p[0] += camera[3];
@@ -70,19 +70,20 @@ struct SnavelyReprojectionError {
     // Compute the center of distortion. The sign change comes from
     // the camera model that Noah Snavely's Bundler assumes, whereby
     // the camera coordinate system has a negative z axis.
-    const T& focal = camera[6];
-    T xp = - p[0] / p[2];
-    T yp = - p[1] / p[2];
+    const T xp = - p[0] / p[2];
+    const T yp = - p[1] / p[2];
 
     // Apply second and fourth order radial distortion.
     const T& l1 = camera[7];
     const T& l2 = camera[8];
-    T r2 = xp*xp + yp*yp;
-    T distortion = T(1.0) + r2  * (l1 + l2  * r2);
+    const T r2 = xp*xp + yp*yp;
+    const T distortion = T(1.0) + r2  * (l1 + l2  * r2);
+
 
     // Compute final projected point position.
-    T predicted_x = focal * distortion * xp;
-    T predicted_y = focal * distortion * yp;
+    const T& focal = camera[6];
+    const T predicted_x = focal * distortion * xp;
+    const T predicted_y = focal * distortion * yp;
 
     // The error is the difference between the predicted and observed position.
     residuals[0] = predicted_x - T(observed_x);
@@ -115,37 +116,39 @@ struct SnavelyReprojectionErrorWithQuaternions {
       : observed_x(observed_x), observed_y(observed_y) {}
 
   template <typename T>
-  bool operator()(const T* const camera_rotation,
-                  const T* const camera_translation_and_intrinsics,
+  bool operator()(const T* const camera,
                   const T* const point,
                   T* residuals) const {
-    const T& focal = camera_translation_and_intrinsics[3];
-    const T& l1 = camera_translation_and_intrinsics[4];
-    const T& l2 = camera_translation_and_intrinsics[5];
-
-    // Use a quaternion rotation that doesn't assume the quaternion is
-    // normalized, since one of the ways to run the bundler is to let Ceres
-    // optimize all 4 quaternion parameters unconstrained.
+    // camera[0,1,2,3] is are the rotation of the camera as a quaternion.
+    //
+    // We use QuaternionRotatePoint as it does not assume that the
+    // quaternion is normalized, since one of the ways to run the
+    // bundle adjuster is to let Ceres optimize all 4 quaternion
+    // parameters without a local parameterization.
     T p[3];
-    QuaternionRotatePoint(camera_rotation, point, p);
+    QuaternionRotatePoint(camera, point, p);
 
-    p[0] += camera_translation_and_intrinsics[0];
-    p[1] += camera_translation_and_intrinsics[1];
-    p[2] += camera_translation_and_intrinsics[2];
+    p[0] += camera[4];
+    p[1] += camera[5];
+    p[2] += camera[6];
 
     // Compute the center of distortion. The sign change comes from
     // the camera model that Noah Snavely's Bundler assumes, whereby
     // the camera coordinate system has a negative z axis.
-    T xp = - p[0] / p[2];
-    T yp = - p[1] / p[2];
+    const T xp = - p[0] / p[2];
+    const T yp = - p[1] / p[2];
 
     // Apply second and fourth order radial distortion.
-    T r2 = xp*xp + yp*yp;
-    T distortion = T(1.0) + r2  * (l1 + l2  * r2);
+    const T& l1 = camera[8];
+    const T& l2 = camera[9];
+
+    const T r2 = xp*xp + yp*yp;
+    const T distortion = T(1.0) + r2  * (l1 + l2  * r2);
 
     // Compute final projected point position.
-    T predicted_x = focal * distortion * xp;
-    T predicted_y = focal * distortion * yp;
+    const T& focal = camera[7];
+    const T predicted_x = focal * distortion * xp;
+    const T predicted_y = focal * distortion * yp;
 
     // The error is the difference between the predicted and observed position.
     residuals[0] = predicted_x - T(observed_x);
@@ -159,7 +162,7 @@ struct SnavelyReprojectionErrorWithQuaternions {
   static ceres::CostFunction* Create(const double observed_x,
                                      const double observed_y) {
     return (new ceres::AutoDiffCostFunction<
-            SnavelyReprojectionErrorWithQuaternions, 2, 4, 6, 3>(
+            SnavelyReprojectionErrorWithQuaternions, 2, 10, 3>(
                 new SnavelyReprojectionErrorWithQuaternions(observed_x,
                                                             observed_y)));
   }

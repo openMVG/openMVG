@@ -4,13 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_TRIANGULATION_HPP
-#define OPENMVG_SFM_DATA_TRIANGULATION_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
+#define OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/numeric/numeric.h"
+#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/types.hpp"
+
+#include <set>
 
 namespace openMVG {
 namespace sfm {
+
+struct SfM_Data;
 
 /// Generic basis struct for triangulation of track data contained
 ///  in the SfM_Data scene structure.
@@ -77,4 +83,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_TRIANGULATION_HPP
+#endif // OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP

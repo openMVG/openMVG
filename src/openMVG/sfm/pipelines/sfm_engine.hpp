@@ -5,10 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_SFM_ENGINE_HPP
+#define OPENMVG_SFM_SFM_ENGINE_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+
 #include <string>
 
 namespace openMVG {
@@ -48,6 +50,14 @@ public:
     intrinsic_refinement_options_ = rhs;
   }
 
+  void Set_Use_Motion_Prior
+  (
+    bool rhs
+  )
+  {
+    b_use_motion_prior_ = rhs;
+  }
+
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
@@ -62,7 +72,10 @@ protected:
   //-- Reconstruction parameters
   //-----
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
+  bool b_use_motion_prior_;
 };
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_SFM_ENGINE_HPP

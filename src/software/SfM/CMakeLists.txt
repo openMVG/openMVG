@@ -42,6 +42,15 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   vlsift
   )
 
+ADD_EXECUTABLE(openMVG_main_ListMatchingPairs main_ListMatchingPairs.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ListMatchingPairs
+  openMVG_system
+  openMVG_features
+  openMVG_multiview
+  openMVG_sfm
+  stlplus
+  )
+
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_system
@@ -55,6 +64,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
 

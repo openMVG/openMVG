@@ -5,20 +5,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP
+#define OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP
 
-#ifdef OPENMVG_USE_CXX11
 #include <mutex>
-using namespace std;
-typedef std::mutex mutexT;
-typedef std::lock_guard<mutexT> lock_guardT;
-#else // OPENMVG_USE_CXX11
-#include "third_party/tinythread/fast_mutex.h"
-#include "third_party/tinythread/tinythread.h"
-using namespace tthread;
-typedef tthread::fast_mutex mutexT;
-typedef tthread::lock_guard<mutexT> lock_guardT;
-#endif
+#include <set>
+
+using mutexT = std::mutex;
+using lock_guardT = std::lock_guard<mutexT>;
 
 namespace openMVG {
 namespace sfm{
@@ -50,3 +44,5 @@ private:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_MUTEX_SET_HPP
