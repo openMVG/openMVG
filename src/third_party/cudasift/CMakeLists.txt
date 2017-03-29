@@ -11,17 +11,16 @@ set(CPACK_PACKAGE_VERSION_PATCH "${cudaSift_VERSION_PATCH}")
 set(CPACK_GENERATOR "ZIP")
 include(CPack)
 
+list(APPEND CUDA_NVCC_FLAGS "-arch=sm_35;--compiler-options;-O2;-DVERBOSE") 
+
 if (WIN32)
   set(EXTRA_CXX_FLAGS "/DVERBOSE /D_CRT_SECURE_NO_WARNINGS ")
-  list(APPEND CUDA_NVCC_FLAGS "-arch=sm_35;--compiler-options;-O2;-DVERBOSE") 
 endif()
 if (UNIX)
   if (APPLE)
     set(EXTRA_CXX_FLAGS "-DVERBOSE -msse2")
-    list(APPEND CUDA_NVCC_FLAGS "-arch=sm_35;--compiler-options;-O2;-DVERBOSE") 
   else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -msse2 ")
-    list(APPEND CUDA_NVCC_FLAGS "-arch=sm_35;-lineinfo;--compiler-options;-O2;-DVERBOSE") 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -msse2 ") 
   endif()
 endif()
 
@@ -46,7 +45,6 @@ set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/cudasift")
 set(
     CUDA_NVCC_FLAGS
     ${CUDA_NVCC_FLAGS};
-    -O3 -gencode arch=compute_35,code=sm_35;
     )
 
 cuda_add_library(cudasift SHARED

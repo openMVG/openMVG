@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_HAVE_CUDA
       image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
 #else
-		std::cerr << "Cannot create CUDA SIFT image describer." << std::endl;
+      std::cerr << "Cannot create CUDA SIFT image describer." << std::endl;
 #endif
     }
 
