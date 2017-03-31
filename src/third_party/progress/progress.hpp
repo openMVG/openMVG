@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <atomic>
 using namespace std;
 
 /**
@@ -120,8 +121,8 @@ class C_Progress
 
   protected:
     /// Internal data to _count the number of step (the _count can go to the _expected_count value).
-    unsigned long _count, _expected_count, _next_tic_count;
-    unsigned int  _tic;
+    std::atomic<unsigned long> _count, _expected_count, _next_tic_count;
+    std::atomic<unsigned int> _tic;
 
   private:
     virtual void inc_tic()
