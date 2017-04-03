@@ -29,8 +29,8 @@ public:
   {
     Params(
       float initBlur = 1.0f,
-      float thresh = 3.5f,
-      int numOctaves = 5
+      float thresh = 3.0f,
+      int numOctaves = 6
     ):
     initBlur_(initBlur),
     thresh_(thresh),
@@ -60,13 +60,13 @@ public:
     switch(preset)
     {
       case NORMAL_PRESET:
-        params_.thresh_ = 2.5f;
+        params_.thresh_ = 3.0f;
         break;
       case HIGH_PRESET:
-        params_.thresh_ = 3.5f;
+        params_.thresh_ = 2.0f;
         break;
       case ULTRA_PRESET:
-        params_.thresh_ = 4.00f;
+        params_.thresh_ = 1.0f;
         break;
       default:
         return false;

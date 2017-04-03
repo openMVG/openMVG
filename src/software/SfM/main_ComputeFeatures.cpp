@@ -191,7 +191,7 @@ int main(int argc, char **argv)
         (SIFT_Image_describer::Params(), !bUpRight));
     }
 
-
+    else
     if (sImage_Describer_Method == "CSIFT")
     {
 #ifdef OPENMVG_HAVE_CUDA
@@ -200,7 +200,6 @@ int main(int argc, char **argv)
       std::cerr << "Cannot create CUDA SIFT image describer." << std::endl;
 #endif
     }
-
 
     else
     if (sImage_Describer_Method == "SIFT_ANATOMY")
@@ -329,7 +328,7 @@ int main(int argc, char **argv)
 #endif
       ++my_progress_bar;
     }
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+    std::cout << "Task done in (ms): " << timer.elapsed() << std::endl;
   }
   return EXIT_SUCCESS;
 }
