@@ -30,6 +30,9 @@ INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 # - openMVG_main_ComputeFeatures: features and descriptors
 # - openMVG_main_ComputeMatches: putative matches + geometric filtered matches
 ###
+if(OpenMVG_USE_CUDA)
+  add_definitions(-DOPENMVG_HAVE_CUDA)
+endif(OpenMVG_USE_CUDA)
 
 ADD_EXECUTABLE(openMVG_main_ComputeFeatures main_ComputeFeatures.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures

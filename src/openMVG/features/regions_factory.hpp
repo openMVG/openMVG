@@ -15,7 +15,6 @@ namespace features {
 
 /// Define the classic SIFT Keypoint
 using SIFT_Regions = Scalar_Regions<SIOPointFeature,unsigned char,128>;
-
 /// Define the AKAZE Keypoint (with a float descriptor)
 using AKAZE_Float_Regions = Scalar_Regions<SIOPointFeature,float,64>;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
