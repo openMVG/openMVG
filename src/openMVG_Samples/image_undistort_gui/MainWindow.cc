@@ -75,7 +75,7 @@ void MainWindow::onOpenImage( void )
 
     m_ppx->setValue( w / 2.0 );
     m_ppy->setValue( h / 2.0 );
-    m_fov_spin->setValue( std::max( w, h) * 1.1 );
+    m_fov_spin->setValue( 1.1 * std::max( w, h ) );
 
     m_current_state = STATE_HAS_INPUT;
     UpdateInterface();
