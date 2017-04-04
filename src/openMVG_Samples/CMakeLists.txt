@@ -21,3 +21,4 @@ add_subdirectory(describe_and_match_GUI)
 add_subdirectory(geodesy_show_exif_gps_position)
 add_subdirectory(image_spherical_to_pinholes)
 
+add_subdirectory(image_undistort_gui)
