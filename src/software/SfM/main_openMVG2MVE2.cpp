@@ -146,11 +146,11 @@ bool exportToMVE2Format(
     std::cout << "Exporting views..." << std::endl;
 
     // Create 'views' subdirectory
-    const string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
+    const std::string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
     if (!stlplus::folder_exists(sOutViewsDirectory))
     {
-        cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
-        stlplus::folder_create(sOutViewsDirectory);
+      std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+      stlplus::folder_create(sOutViewsDirectory);
     }
 
     C_Progress_display my_progress_bar(views.size());
