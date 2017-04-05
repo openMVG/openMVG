@@ -9,10 +9,11 @@
 #ifndef _OPENMVG_CLUSTERING_K_MEANS_HPP_
 #define _OPENMVG_CLUSTERING_K_MEANS_HPP_
 
-#include "kmeans_trait.hpp"
+#include "openMVG/clustering/kmeans_trait.hpp"
+#include "openMVG/numeri/eigen_alias_definition.hpp"
 
-#include "openMVG/numeric/numeric.h"
-
+#include <limits>
+#include <random>
 #include <vector>
 
 namespace openMVG
@@ -37,7 +38,7 @@ void KMeans( const std::vector< DataType > & source_data ,
              const uint32_t nb_cluster ,
              const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max() )
 {
-  using trait = KMeansVectorDataTrait<DataType> ;
+  using trait = KMeansVectorDataTrait<DataType>;
 
   // 1 - Compute range of the input
   DataType min , max ;

@@ -164,15 +164,8 @@ class KMeansVectorDataTrait<std::array<T, N>>
       }
 
       // Init
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
-      {
-        for( size_t id_dim = 0 ; id_dim < elts[id_pt].size() ; ++id_dim )
-        {
-          // Get min_max for ith dim
-          min[ id_dim ] = std::numeric_limits<scalar_type>::max() ;
-          max[ id_dim ] = std::numeric_limits<scalar_type>::lowest() ;
-        }
-      }
+      std::fill( min.begin() , min.end() , std::numeric_limits<scalar_type>::max() ) ;
+      std::fill( max.begin() , max.end() , std::numeric_limits<scalar_type>::lowest() ) ;
 
       // min/max search
       for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )

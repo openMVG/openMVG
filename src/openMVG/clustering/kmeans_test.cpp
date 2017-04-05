@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "kmeans.hpp"
+#include "openMVG/clustering/kmeans.hpp"
 
 #include "testing/testing.h"
 
@@ -65,19 +65,19 @@ TEST( clustering , threeClustersVec2 )
   }
 
   // First set
-  uint32_t id_0 = ids[ 0 ] ;
+  const uint32_t id_0 = ids[ 0 ] ;
   for( int id_pt_1 = 1 ; id_pt_1 < nb_pts_1 ; ++id_pt_1 )
   {
     EXPECT_EQ( ids[id_pt_1] , id_0 ) ;
   }
   // Second set
-  uint32_t id_1 = ids[ nb_pts_1 ] ;
+  const uint32_t id_1 = ids[ nb_pts_1 ] ;
   for( int id_pt_2 = nb_pts_1 ; id_pt_2 < nb_pts_1 + nb_pts_2 ; ++id_pt_2 )
   {
     EXPECT_EQ( ids[id_pt_2] , id_1 ) ;
   }
   // Third set
-  uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
+  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
   for( int id_pt_3 = nb_pts_1 + nb_pts_2 ; id_pt_3 < ids.size() ; ++id_pt_3 )
   {
     EXPECT_EQ( ids[id_pt_3] , id_2 ) ;
@@ -136,19 +136,19 @@ TEST( clustering , threeClustersVec3 )
   }
 
   // First set
-  uint32_t id_0 = ids[ 0 ] ;
+  const uint32_t id_0 = ids[ 0 ] ;
   for( int id_pt_1 = 1 ; id_pt_1 < nb_pts_1 ; ++id_pt_1 )
   {
     EXPECT_EQ( ids[id_pt_1] , id_0 ) ;
   }
   // Second set
-  uint32_t id_1 = ids[ nb_pts_1 ] ;
+  const uint32_t id_1 = ids[ nb_pts_1 ] ;
   for( int id_pt_2 = nb_pts_1 ; id_pt_2 < nb_pts_1 + nb_pts_2 ; ++id_pt_2 )
   {
     EXPECT_EQ( ids[id_pt_2] , id_1 ) ;
   }
   // Third set
-  uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
+  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
   for( int id_pt_3 = nb_pts_1 + nb_pts_2 ; id_pt_3 < ids.size() ; ++id_pt_3 )
   {
     EXPECT_EQ( ids[id_pt_3] , id_2 ) ;
@@ -236,19 +236,19 @@ TEST( clustering , threeClustersStdArray )
   }
 
   // First set
-  uint32_t id_0 = ids[ 0 ] ;
+  const uint32_t id_0 = ids[ 0 ] ;
   for( int id_pt_1 = 1 ; id_pt_1 < nb_pts_1 ; ++id_pt_1 )
   {
     EXPECT_EQ( ids[id_pt_1] , id_0 ) ;
   }
   // Second set
-  uint32_t id_1 = ids[ nb_pts_1 ] ;
+  const uint32_t id_1 = ids[ nb_pts_1 ] ;
   for( int id_pt_2 = nb_pts_1 ; id_pt_2 < nb_pts_1 + nb_pts_2 ; ++id_pt_2 )
   {
     EXPECT_EQ( ids[id_pt_2] , id_1 ) ;
   }
   // Third set
-  uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
+  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
   for( int id_pt_3 = nb_pts_1 + nb_pts_2 ; id_pt_3 < ids.size() ; ++id_pt_3 )
   {
     EXPECT_EQ( ids[id_pt_3] , id_2 ) ;
@@ -344,19 +344,19 @@ TEST( clustering , threeClustersStdVector )
   }
 
   // First set
-  uint32_t id_0 = ids[ 0 ] ;
+  const uint32_t id_0 = ids[ 0 ] ;
   for( int id_pt_1 = 1 ; id_pt_1 < nb_pts_1 ; ++id_pt_1 )
   {
     EXPECT_EQ( ids[id_pt_1] , id_0 ) ;
   }
   // Second set
-  uint32_t id_1 = ids[ nb_pts_1 ] ;
+  const uint32_t id_1 = ids[ nb_pts_1 ] ;
   for( int id_pt_2 = nb_pts_1 ; id_pt_2 < nb_pts_1 + nb_pts_2 ; ++id_pt_2 )
   {
     EXPECT_EQ( ids[id_pt_2] , id_1 ) ;
   }
   // Third set
-  uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
+  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
   for( int id_pt_3 = nb_pts_1 + nb_pts_2 ; id_pt_3 < ids.size() ; ++id_pt_3 )
   {
     EXPECT_EQ( ids[id_pt_3] , id_2 ) ;
@@ -450,19 +450,19 @@ TEST( clustering , threeClustersEigenVec )
   }
 
   // First set
-  uint32_t id_0 = ids[ 0 ] ;
+  const uint32_t id_0 = ids[ 0 ] ;
   for( int id_pt_1 = 1 ; id_pt_1 < nb_pts_1 ; ++id_pt_1 )
   {
     EXPECT_EQ( ids[id_pt_1] , id_0 ) ;
   }
   // Second set
-  uint32_t id_1 = ids[ nb_pts_1 ] ;
+  const uint32_t id_1 = ids[ nb_pts_1 ] ;
   for( int id_pt_2 = nb_pts_1 ; id_pt_2 < nb_pts_1 + nb_pts_2 ; ++id_pt_2 )
   {
     EXPECT_EQ( ids[id_pt_2] , id_1 ) ;
   }
   // Third set
-  uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
+  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ] ;
   for( int id_pt_3 = nb_pts_1 + nb_pts_2 ; id_pt_3 < ids.size() ; ++id_pt_3 )
   {
     EXPECT_EQ( ids[id_pt_3] , id_2 ) ;
