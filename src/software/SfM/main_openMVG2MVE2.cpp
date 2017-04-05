@@ -159,7 +159,9 @@ bool exportToMVE2Format(
     for (int i = 0; i < static_cast<int>(views.size()); ++i)
     {
       if (!bOk) continue;
-      const View * view = views.at(i).get();
+      auto views_it = views.begin();
+      std::advance(views_it, i);
+      const View * view = views_it->second.get();
 
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
