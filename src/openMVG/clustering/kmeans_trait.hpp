@@ -9,8 +9,8 @@
 #ifndef _OPENMVG_KMEANS_TRAIT_HPP_
 #define _OPENMVG_KMEANS_TRAIT_HPP_
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/metric.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <algorithm>
 #include <array>

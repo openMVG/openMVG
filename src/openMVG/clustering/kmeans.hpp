@@ -10,7 +10,7 @@
 #define _OPENMVG_CLUSTERING_K_MEANS_HPP_
 
 #include "openMVG/clustering/kmeans_trait.hpp"
-#include "openMVG/numeri/eigen_alias_definition.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <limits>
 #include <random>
@@ -21,6 +21,40 @@ namespace openMVG
 namespace clustering
 {
 
+/**
+* @brief Kind of initialization of the kmeans centers
+*/
+enum KMeansInitType
+{
+  KMEANS_INIT_RANDOM , /* Standard Llyod algoritm */
+  KMEANS_INIT_PP ,     /* Kmeans++ initialisation */
+} ;
+
+/**
+* @brief Compute minimum distance to any center
+* @param pts Input points
+* @param centers Centers
+* @param[out] dists computed (minimum) distence to any center
+*/
+template< typename DataType >
+void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts ,
+                                 const std::vector< DataType > & centers ,
+                                 std::vector< typename KMeansVectorDataTrait<DataType>::scalar_type > & dists )
+{
+  using trait = KMeansVectorDataTrait<DataType>;
+
+  dists.resize( pts.size() , std::numeric_limits<typename trait::scalar_type>::max() ) ;
+
+  for( size_t id_pt = 0 ; id_pt < pts.size() ; ++id_pt )
+  {
+    const auto & pt = pts[ id_pt ] ;
+    for( const auto & c : centers )
+    {
+      const typename trait::scalar_type cur_d = trait::L2( pt , c ) ;
+      dists[ id_pt ] = std::min( dists[ id_pt ] , cur_d ) ;
+    }
+  }
+}
 
 /**
 * @brief Compute simple kmeans clustering on specified data
@@ -36,8 +70,14 @@ void KMeans( const std::vector< DataType > & source_data ,
              std::vector< uint32_t > & cluster_assignment ,
              std::vector< DataType > & centers ,
              const uint32_t nb_cluster ,
-             const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max() )
+             const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max() ,
+             const KMeansInitType init_type = KMEANS_INIT_PP )
 {
+  if( source_data.size() == 0 )
+  {
+    return ;
+  }
+
   using trait = KMeansVectorDataTrait<DataType>;
 
   // 1 - Compute range of the input
@@ -47,9 +87,34 @@ void KMeans( const std::vector< DataType > & source_data ,
   std::mt19937_64 rng ;
 
   // 2 - init center of mass
-  for( uint32_t id_center = 0 ; id_center < nb_cluster ; ++id_center )
+  if( init_type == KMEANS_INIT_PP )
   {
-    centers.emplace_back( trait::random( min , max , rng ) ) ;
+    // Kmeans++ init :
+    // first one is a random one
+    // the others based on the importance probability (Di / \sum_i Di) where :
+    // Di is the minimum distance to any created centers already created
+    std::uniform_int_distribution<size_t> distrib_first( 0 , source_data.size() - 1 ) ;
+    centers.emplace_back( source_data[ distrib_first( rng ) ] );
+
+    std::vector< typename trait::scalar_type > dists ;
+
+    for( size_t id_center = 1 ; id_center < nb_cluster ; ++id_center )
+    {
+      // Compute Di / \sum Di pdf
+      MinimumDistanceToAnyCenter( source_data , centers , dists ) ;
+      std::discrete_distribution<size_t> distrib_c( dists.begin() , dists.end() );
+
+      // Sample a point from this distribution
+      centers.emplace_back( source_data[distrib_c( rng )] ) ;
+    }
+  }
+  else
+  {
+    // Standard Llyod init
+    for( uint32_t id_center = 0 ; id_center < nb_cluster ; ++id_center )
+    {
+      centers.emplace_back( trait::random( min , max , rng ) ) ;
+    }
   }
 
   // Assign all element to the first one
