@@ -81,6 +81,10 @@ if (DEFINED OpenMVG_USE_INTERNAL_CERES)
   add_subdirectory(ceres-solver)
   set_property(TARGET cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
   set_property(TARGET ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
+  if (MSVC)
+    # Disable warning about size_t conversions.
+    target_compile_options(ceres PRIVATE "/wd4267")
+  endif()
 endif()
 
 # Add an Approximate Nearest Neighbor library
