@@ -144,6 +144,7 @@ void KMeans( const std::vector< DataType > & source_data ,
 
   std::mt19937_64 rng ;
 
+
   // 1 - init center of mass
   if( init_type == KMEANS_INIT_PP )
   {
@@ -152,28 +153,31 @@ void KMeans( const std::vector< DataType > & source_data ,
     // the others based on the importance probability (Di / \sum_i Di) where :
     // Di is the minimum distance to any created centers already created
     std::uniform_int_distribution<size_t> distrib_first( 0 , source_data.size() - 1 ) ;
-    centers.emplace_back( source_data[ distrib_first( rng ) ] );
+    centers.emplace_back( source_data[ distrib_first( rng ) ] ) ;
 
     std::vector< typename trait::scalar_type > dists ;
 
-    for( size_t id_center = 1 ; id_center < nb_cluster ; ++id_center )
+    for( uint32_t id_center = 1 ; id_center < nb_cluster ; ++id_center )
     {
       // Compute Di / \sum Di pdf
       MinimumDistanceToAnyCenter( source_data , centers , dists ) ;
       std::discrete_distribution<size_t> distrib_c( dists.begin() , dists.end() );
 
       // Sample a point from this distribution
-      centers.emplace_back( source_data[distrib_c( rng )] ) ;
+      centers.emplace_back( source_data[distrib_c( rng )] ) ; 
     }
   }
   else
   {
     DataType min , max ;
     trait::minMax( source_data , min , max ) ;
+
     // Standard Llyod init
-    for( uint32_t id_center = 0 ; id_center < nb_cluster ; ++id_center )
+    centers.resize( nb_cluster ) ; 
+    std::uniform_int_distribution<size_t> distrib( 0 , source_data.size() - 1 ) ;
+    for( auto & cur_center : centers  ) 
     {
-      centers.emplace_back( trait::random( min , max , rng ) ) ;
+      cur_center = source_data[distrib( rng )] ;
     }
   }
 
