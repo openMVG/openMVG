@@ -102,10 +102,14 @@ bool exportToPMVSFormat(
 
     // Export (calibrated) views as undistorted images
     Image<RGBColor> image, image_ud;
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    const Views & views = sfm_data.GetViews();
+    #pragma omp parallel for private(image, image_ud)
+    for (int i = 0; i < static_cast<int>(views.size()); ++i)
     {
-      const View * view = iter->second.get();
+      ++my_progress_bar;
+      auto view_it = views.begin();
+      std::advance(view_it, i);
+      const View * view = view_it->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
 
