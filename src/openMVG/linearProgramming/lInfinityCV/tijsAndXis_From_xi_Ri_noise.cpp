@@ -8,6 +8,8 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri_noise.hpp"
 
+#include <limits>
+
 //--
 //- Implementation of algorithm from Paper titled :
 //- [1] "Multiple-View Geometry under the L_\infty Norm."
@@ -87,7 +89,9 @@ void EncodeTiXi_withNoise
 
   // By default set free variable:
   vec_bounds = std::vector< std::pair<double,double> >(3 * (Ncam + N3D + Nobs));
-  fill( vec_bounds.begin(), vec_bounds.end(), std::make_pair((double)-1e+30, (double)1e+30));
+  std::fill( vec_bounds.begin(), vec_bounds.end(),
+    std::make_pair(std::numeric_limits<double>::lowest(),
+                   std::numeric_limits<double>::max()));
   // Change the offset to be positive
   for (size_t k = 0; k < 3*Nobs; ++k)
     vec_bounds[offsetStart + k].first = 0;

@@ -21,7 +21,7 @@ using namespace std;
 
 TEST(HALF_PLANE, ExistingSubspace) {
 
-  std::vector<Half_plane> vec_hplanes;
+  Half_planes vec_hplanes;
 
   Vec3 a,b,c;
   a << 0,0,0;
@@ -45,7 +45,7 @@ TEST(HALF_PLANE, ExistingSubspace) {
 
 TEST(HALF_PLANE, EmptyIntersection) {
 
-  std::vector<Half_plane> vec_hplanes;
+  Half_planes vec_hplanes;
 
   Vec3 a,b,c;
   a << 0,0,0;

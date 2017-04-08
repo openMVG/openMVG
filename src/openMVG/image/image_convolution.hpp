@@ -15,6 +15,7 @@
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_convolution_base.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 /**
  ** @file Standard 2D image convolution functions :
@@ -27,10 +28,6 @@ namespace openMVG
 {
 namespace image
 {
-
-using Mat = Eigen::MatrixXd;
-using Vec = Eigen::VectorXd;
-using Vec3 = Eigen::Vector3d;
 
 /**
  ** General image convolution by a kernel

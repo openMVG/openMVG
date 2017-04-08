@@ -8,6 +8,8 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 
+#include <limits>
+
 //--
 //- Implementation of algorithm from Paper titled :
 //- [1] "Multiple-View Geometry under the L_\infty Norm."
@@ -165,10 +167,11 @@ bool Resection_L1_ConstraintBuilder::Build
   const int NParams = 4 * 2 + 3;
 
   constraint.nbParams_ = NParams;
-  constraint.vec_bounds_ = { std::make_pair((double)-1e+30, (double)1e+30) };
+  constraint.vec_bounds_ = { std::make_pair(std::numeric_limits<double>::lowest(),
+                                            std::numeric_limits<double>::max()) };
   // Constraint sign are all LESS or equal (<=)
   constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
-  fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
+  std::fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
     linearProgramming::LP_Constraints::LP_LESS_OR_EQUAL);
 
   return true;

@@ -8,6 +8,8 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri.hpp"
 
+#include <limits>
+
 //--
 //- Implementation of algorithm from Paper titled :
 //- [1] "Multiple-View Geometry under the L_\infty Norm."
@@ -65,7 +67,9 @@ void EncodeTiXi
 
   // By default set free variable:
   vec_bounds = std::vector< std::pair<double,double> >(3 * (N3D + Ncam));
-  fill( vec_bounds.begin(), vec_bounds.end(), std::make_pair((double)-1e+30, (double)1e+30));
+  std::fill( vec_bounds.begin(), vec_bounds.end(),
+    std::make_pair(std::numeric_limits<double>::lowest(),
+                   std::numeric_limits<double>::max()));
   // Fix the translation ambiguity. (set first cam at (0,0,0))
   vec_bounds[0] = vec_bounds[1] = vec_bounds[2] = std::make_pair(0,0);
 

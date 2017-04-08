@@ -9,6 +9,7 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -109,7 +110,8 @@ struct Triangulation_L1_ConstraintBuilder
     // We look for 3 variables [X,Y,Z] with no bounds.
     // Constraint sign are all less or equal (<=)
     constraint.nbParams_ = 3;
-    constraint.vec_bounds_ = {std::make_pair((double)-1e+30, (double)1e+30)};
+    constraint.vec_bounds_ = {std::make_pair(std::numeric_limits<double>::lowest(),
+                                             std::numeric_limits<double>::max())};
     // Setup constraint sign
     constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
     fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),

@@ -10,13 +10,11 @@
 #define OPENMVG_GEOMETRY_HALF_SPACE_INTERSECTION_HPP
 
 #include <Eigen/Geometry>
-#include <Eigen/StdVector>
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION( Eigen::Hyperplane<double, 3> )
 
 namespace openMVG
 {
@@ -29,7 +27,7 @@ namespace halfPlane
 using Half_plane = Eigen::Hyperplane<double, 3>;
 
 /// Define a collection of Half_plane
-using Half_planes = std::vector<Half_plane>;
+using Half_planes = std::vector<Half_plane, Eigen::aligned_allocator<Half_plane>>;
 
 
 /**
@@ -82,24 +80,25 @@ isNotEmpty
     cstraint.nbParams_ = 3; // {X,Y,Z}
     cstraint.vec_bounds_.resize( cstraint.nbParams_ );
     std::fill( cstraint.vec_bounds_.begin(), cstraint.vec_bounds_.end(),
-               std::make_pair( ( double ) - 1e+30, ( double )1e+30 ) ); // [X,Y,Z] => -inf, +inf
+               std::make_pair( std::numeric_limits<double>::lowest(),
+                               std::numeric_limits<double>::max() )); // [X,Y,Z] => -inf, +inf
     cstraint.bminimize_ = true;
 
     // Configure constraints
     const size_t nbConstraints = hplanes.size();
     cstraint.constraint_mat_.resize( nbConstraints, 3 );
     cstraint.vec_sign_.resize( nbConstraints );
-    cstraint.constraint_objective_ = Vec( nbConstraints );
+    cstraint.constraint_objective_.resize( nbConstraints );
 
     // Fill the constrains (half-space equations)
     for ( unsigned char i = 0; i < hplanes.size(); ++i )
     {
       const Vec & half_plane_coeff = hplanes[i].coeffs();
       // add the half plane equation to the system
-      cstraint.constraint_mat_.row( i ) =
-        Vec3( half_plane_coeff( 0 ),
-              half_plane_coeff( 1 ),
-              half_plane_coeff( 2 ) );
+      cstraint.constraint_mat_.row( i ) <<
+        half_plane_coeff( 0 ),
+        half_plane_coeff( 1 ),
+        half_plane_coeff( 2 );
       cstraint.vec_sign_[i] = LP_Constraints::LP_GREATER_OR_EQUAL;
       cstraint.constraint_objective_( i ) = - half_plane_coeff( 3 );
     }
@@ -129,7 +128,7 @@ struct HalfPlaneObject
   bool intersect(const HalfPlaneObject & rhs) const
   {
     // Concatenate the Half Planes and see if an intersection exists
-    std::vector<Half_plane> vec_planes(planes.size() + rhs.planes.size());
+    Half_planes vec_planes(planes.size() + rhs.planes.size());
     std::copy(&planes[0], &planes[0] + planes.size(), &vec_planes[0]);
     std::copy(&rhs.planes[0], &rhs.planes[0] + rhs.planes.size(), &vec_planes[planes.size()]);
 
@@ -170,7 +169,7 @@ intersect
                 [&s](const HalfPlaneObject & hp) { s += hp.planes.size(); });
 
   // Concatenate the half-planes and see if an intersection exists
-  std::vector<Half_plane> vec_planes;
+  Half_planes vec_planes;
   vec_planes.reserve(s);
   for (const HalfPlaneObject & hp : hplanes)
   {

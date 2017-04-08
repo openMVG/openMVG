@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
+#include <limits>
 
 //------------------
 //-- Bibliography --
@@ -72,8 +73,9 @@ void EncodeTi_from_tij
 
   // By default set free variables:
   vec_bounds = std::vector< std::pair<double,double> >(NVar);
-  fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair((double)-1e+30, (double)1e+30));
+  std::fill( vec_bounds.begin(), vec_bounds.end(),
+    std::make_pair(std::numeric_limits<double>::lowest(),
+                   std::numeric_limits<double>::max()));
   //  Make first camera at origin (translation ambiguity)
   vec_bounds[TVAR(0,0)].first = vec_bounds[TVAR(0,0)].second = 0;
   vec_bounds[TVAR(0,1)].first = vec_bounds[TVAR(0,1)].second = 0;

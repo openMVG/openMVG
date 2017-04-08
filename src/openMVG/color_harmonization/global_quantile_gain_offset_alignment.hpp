@@ -17,6 +17,7 @@
 //- Conference: CVMP.
 
 #include <numeric>
+#include <limits>
 #include <set>
 #include <utility>
 #include <vector>
@@ -99,8 +100,9 @@ static void Encode_histo_relation(
 
   // By default set free variable:
   vec_bounds = std::vector< std::pair<double,double> >(NVar);
-  fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair(static_cast<double>(-1e+30), static_cast<double>(1e+30)));
+  std::fill( vec_bounds.begin(), vec_bounds.end(),
+    std::make_pair(std::numeric_limits<double>::lowest(),
+                   std::numeric_limits<double>::max()));
 
   // Set gain as positive values
   for (size_t i = 0; i < Nima; ++i)
