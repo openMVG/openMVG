@@ -322,7 +322,6 @@ INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
 
-
 # -
 # Use openCV Feature detector to describe the images
 # -
@@ -386,3 +385,4 @@ SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_SequentialPipeline.p
 CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_SequentialPipeline.py" @ONLY)
 
+add_subdirectory(clustering)

@@ -1,4 +1,5 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 nomoko AG, Srivathsan Murali<srivathsan@nomoko.camera>
 
 // This Source Code Form is subject to the terms of the Mozilla Public
