@@ -9,7 +9,9 @@
 #ifndef OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
 #define OPENMVG_FEATURES_DIPOLE_DIPOLE_DESCRIPTOR_HPP
 
+
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/descriptor.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
 
