@@ -9,10 +9,13 @@
 #ifndef OPENMVG_SYSTEM_CPUID_HPP
 #define OPENMVG_SYSTEM_CPUID_HPP
 
+#include <array>
+#include <bitset>
+
 #if defined _MSC_VER
-  #include <array>
-  #include <bitset>
   #include <intrin.h>
+#else
+  #include <cpuid.h>
 #endif
 
 namespace openMVG
@@ -22,7 +25,6 @@ namespace openMVG
 */
 namespace system
 {
-
 /**
 * @brief Class to check runtime support of various CPU intrinsic set CPU capability
 */
@@ -41,110 +43,89 @@ class CpuInstructionSet
 
   CpuInstructionSet()
   {
-#if defined _MSC_VER
     std::array<int, 4> cpui;
-    __cpuid(cpui.data(),0);
-
-    const int nIds = cpui[0];
-
-    if (nIds<1){
-     // possible old cpu
-     return;
-    }
-
-    std::array<int, 4> cpui_ext;
-    __cpuidex(cpui_ext.data(),1,0);
-
-    const std::bitset<32> Edx (cpui_ext[3]);
-    m_SSE = Edx[25];
-    m_SSE2 = Edx[26];
-
-    const std::bitset<32> Ecx (cpui_ext[2]);
-    m_AVX = Ecx[28];
-    m_SSE3 = Edx[0];
-    m_SSE41 = Ecx[19];
-    m_SSE42 = Ecx[20];
-    m_POPCNT = Ecx[23];
-
-    if (nIds > 6)
+    if (internal_cpuid(cpui.data(), 0))
     {
-      __cpuidex(cpui_ext.data(),7,0);
-      const std::bitset<32> Ebx (cpui_ext[1]);
-      m_AVX2 = Ebx[5];
+      const int nIds = cpui[0];
+      if (nIds<1){
+        // possible old cpu
+        return;
+      }
+
+      internal_cpuid(cpui.data(), 1);
+
+      const std::bitset<32> Edx (cpui[3]);
+      m_SSE = Edx[25];
+      m_SSE2 = Edx[26];
+
+      const std::bitset<32> Ecx (cpui[2]);
+      m_AVX = Ecx[28];
+      m_SSE3 = Edx[0];
+      m_SSE41 = Ecx[19];
+      m_SSE42 = Ecx[20];
+      m_POPCNT = Ecx[23];
+
+      if (nIds > 6)
+      {
+        internal_cpuid(cpui.data(), 7);
+        const std::bitset<32> Ebx (cpui[1]);
+        m_AVX2 = Ebx[5];
+      }
     }
-#endif
   }
 
   bool supportSSE() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("sse");
-  #else
     return m_SSE;
-  #endif
   }
 
   bool supportSSE2() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("sse2");
-  #else
     return m_SSE2;
-  #endif
   }
 
   bool supportSSE3() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("sse3");
-  #else
     return m_SSE3;
-  #endif
   }
 
   bool supportSSE41() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("sse4.1");
-  #else
     return m_SSE41;
-  #endif
   }
 
   bool supportSSE42() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("sse4.2");
-  #else
     return m_SSE42;
-  #endif
   }
 
   bool supportAVX() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("avx");
-  #else
     return m_AVX;
-  #endif
   }
 
   bool supportAVX2() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("avx2");
-  #else
     return m_AVX2;
-  #endif
   }
 
   bool supportPOPCNT() const
   {
-  #if defined __GNUC__
-    return __builtin_cpu_supports("popcnt");
-  #else
     return m_POPCNT;
-  #endif
+  }
+
+private:
+  static bool internal_cpuid(int32_t out[4], int32_t x)
+  {
+    #if defined __GNUC__
+    __cpuid_count(x, 0, out[0], out[1], out[2], out[3]);
+    return true;
+    #endif
+    #if defined _MSC_VER
+    __cpuidex(out, x, 0);
+    return true;
+    #endif
+    return false;
   }
 };
 
