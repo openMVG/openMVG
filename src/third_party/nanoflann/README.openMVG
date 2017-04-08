@@ -3,4 +3,5 @@ URL: https://github.com/jlblancoc/nanoflann
 License: BSD, see LICENSE.
 Upstream version: nanoflann 1.2.3: Released Dec 20, 2016
 Local modifications: 
+- use std::array in CArray
 
