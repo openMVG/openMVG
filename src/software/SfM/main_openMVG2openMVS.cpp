@@ -161,16 +161,16 @@ bool exportToOpenMVS(
       MVS::Interface::Image* pImage(NULL);
       for (MVS::Interface::Image& image: scene.images)
       {
-	      if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
-	      {
-		      pImage = &image;
-		      break;
-	      }
+        if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
+        {
+          pImage = &image;
+          break;
+        }
       }
       if (pImage == NULL)
       {
-	      std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
-	      continue;
+        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
+        continue;
       }
       // read image meta-data
       ImageHeader imageHeader;
