@@ -10,11 +10,11 @@
 #define OPENMVG_FEATURES_DESCRIPTOR_HPP
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
-#include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
@@ -38,22 +38,23 @@ public:
   /// Compile-time length of the descriptor
   static const std::size_t static_size = N;
 
-  /// Ostream interface
+  /// ostream interface
   std::ostream& print(std::ostream& os) const;
-  /// Istream interface
+  /// istream interface
   std::istream& read(std::istream& in);
 
   template<class Archive>
   void save(Archive & archive) const
   {
-    const std::vector<T> array(this->data(), this->data()+N);
+    std::array<T,N> array;
+    std::copy(this->data(), this->data()+N, array.begin());
     archive( array );
   }
 
   template<class Archive>
   void load(Archive & archive)
   {
-    std::vector<T> array(N);
+    std::array<T, N> array;
     archive( array );
     std::memcpy(this->data(), array.data(), sizeof(T)*N);
   }
@@ -103,7 +104,7 @@ inline std::istream& readT<unsigned char>(std::istream& is, unsigned char *tab, 
 {
   int temp = -1;
   for(size_t i=0; i < N; ++i){
-    is >> temp; tab[i] = (unsigned char)temp;
+    is >> temp; tab[i] = static_cast<unsigned char>(temp);
   }
   return is;
 }
@@ -132,10 +133,11 @@ inline bool loadDescsFromFile(
   if (!fileIn.is_open())
     return false;
 
-  std::copy(
-    std::istream_iterator<typename DescriptorsT::value_type >(fileIn),
-    std::istream_iterator<typename DescriptorsT::value_type >(),
-    std::back_inserter(vec_desc));
+  typename DescriptorsT::value_type value;
+  while (fileIn >> value) {
+    vec_desc.emplace_back(value);
+  }
+
   const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;

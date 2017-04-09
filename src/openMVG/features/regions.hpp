@@ -19,8 +19,6 @@
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
-#include <cereal/types/vector.hpp>
-
 namespace openMVG {
 namespace features {
 
