@@ -15,14 +15,14 @@ namespace openMVG {
 namespace features {
 
 /// Define the classic SIFT Keypoint
-using SIFT_Regions = Scalar_Regions<SIOPointFeature,unsigned char,128>;
+using SIFT_Regions = Scalar_Regions<SIOPointFeature, unsigned char, 128>;
 
 /// Define the AKAZE Keypoint (with a float descriptor)
-using AKAZE_Float_Regions = Scalar_Regions<SIOPointFeature,float,64>;
+using AKAZE_Float_Regions = Scalar_Regions<SIOPointFeature, float, 64>;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
-using AKAZE_Liop_Regions = Scalar_Regions<SIOPointFeature,unsigned char,144>;
+using AKAZE_Liop_Regions = Scalar_Regions<SIOPointFeature, unsigned char, 144>;
 /// Define the AKAZE Keypoint (with a binary descriptor saved in an uchar array)
-using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature,64>;
+using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature, 64>;
 
 } // namespace features
 } // namespace openMVG
@@ -35,7 +35,10 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE
 // Register region type for serialization
 //--
 #include <cereal/cereal.hpp>
+#include <cereal/types/array.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Regions, "SIFT_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::SIFT_Regions)
