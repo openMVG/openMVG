@@ -8,7 +8,7 @@
 
 #include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"

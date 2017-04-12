@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/types.hpp"
 

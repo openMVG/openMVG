@@ -8,14 +8,10 @@
 
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/stl/stl.hpp"
-
-namespace openMVG { namespace cameras { class Pinhole_Intrinsic; } }
-namespace openMVG { namespace sfm { struct View; } }
 
 #include "third_party/progress/progress.hpp"
 

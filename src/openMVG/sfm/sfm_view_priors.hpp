@@ -158,7 +158,7 @@ struct ViewPriors : public View
 
   // Pose center prior
   bool b_use_pose_center_ = false; // Tell if the pose prior must be used
-  Vec3 center_weight_ = Vec3(1.0,1.0,1.0);
+  Vec3 center_weight_ = Vec3::Constant(1.0);
   Vec3 pose_center_ = Vec3::Zero();
 
   // Pose rotation prior
@@ -169,6 +169,8 @@ struct ViewPriors : public View
 
 } // namespace sfm
 } // namespace openMVG
+
+#include <cereal/types/vector.hpp>
 
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::sfm::ViewPriors, "view_priors" );
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::sfm::View, openMVG::sfm::ViewPriors);

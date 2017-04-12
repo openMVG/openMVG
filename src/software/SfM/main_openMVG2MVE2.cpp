@@ -10,6 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_resampling.hpp"

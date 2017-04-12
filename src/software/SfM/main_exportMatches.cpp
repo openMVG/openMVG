@@ -11,7 +11,10 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

@@ -11,6 +11,7 @@
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/linearProgramming/linearProgramming.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"

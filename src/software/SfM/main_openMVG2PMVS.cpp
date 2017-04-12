@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
