@@ -64,7 +64,7 @@ struct L2<uint8_t>
     #ifdef OPENMVG_USE_AVX2
     if (size == 128)
     {
-      return L2_128_uint8_t_AVX2(a, b, size);
+      return L2_AVX2(a, b, size);
     }
     #endif
 
@@ -105,7 +105,7 @@ struct L2<float>
     #ifdef OPENMVG_USE_AVX2
     if (size == 128)
     {
-      return L2_128_float_AVX2(a, b, size);
+      return L2_AVX2(a, b, size);
     }
     #endif
 
