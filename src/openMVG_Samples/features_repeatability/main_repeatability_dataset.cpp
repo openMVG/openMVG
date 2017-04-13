@@ -24,6 +24,9 @@ using namespace std;
 
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
+#ifdef OPENMVG_HAVE_CUDA
+#include "openMVG/features/cudasift/image_describer_cudasift.hpp"
+#endif
 
 // Class to load images and ground truth homography matrices
 // A reference image
@@ -236,6 +239,7 @@ int main(int argc, char **argv)
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
       << "   SIFT_ANATOMY,\n"
+      << "   CSIFT: CUDA accelerated SIFT,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors.\n"
       << "[-p|--describer_preset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -301,6 +305,15 @@ int main(int argc, char **argv)
       {
         image_describer.reset(new AKAZE_Image_describer
           (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF)));
+      }
+      else
+      if (sImage_Describer_Method == "CSIFT")
+      {
+#ifdef OPENMVG_HAVE_CUDA
+        image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
+#else
+        std::cerr << "Cannot create CUDA SIFT image describer: CUDA libraries not linked." << std::endl;
+#endif
       }
 
       if (!image_describer)

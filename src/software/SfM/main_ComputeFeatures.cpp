@@ -95,7 +95,9 @@ int main(int argc, char **argv)
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
-	  << "   CSIFT: CUDA accelerated SIFT, \n"
+#ifdef OPENMVG_HAVE_CUDA
+      << "   CSIFT: CUDA accelerated SIFT, \n"
+#endif
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
@@ -197,7 +199,7 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_HAVE_CUDA
       image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
 #else
-      std::cerr << "Cannot create CUDA SIFT image describer." << std::endl;
+      std::cerr << "Cannot create CUDA SIFT image describer: CUDA libraries not linked." << std::endl;
 #endif
     }
 
@@ -328,7 +330,7 @@ int main(int argc, char **argv)
 #endif
       ++my_progress_bar;
     }
-    std::cout << "Task done in (ms): " << timer.elapsed() << std::endl;
+    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
   }
   return EXIT_SUCCESS;
 }
