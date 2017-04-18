@@ -12,3 +12,4 @@
 build*
 *.out
 docs/openmvg.pdf
+*.txt.user

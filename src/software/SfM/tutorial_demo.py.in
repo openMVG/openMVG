@@ -9,10 +9,11 @@
 #
 
 # Indicate the openMVG binary directory
-OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
+OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_INSTALL_DIR@/bin"
 
 # Indicate the openMVG camera sensor width directory
-CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/../../openMVG/exif/sensor_width_database"
+CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_INSTALL_DIR@/share/openMVG"
+
 
 import os
 import subprocess
