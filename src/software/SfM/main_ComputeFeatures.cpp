@@ -307,9 +307,6 @@ int main(int argc, char **argv)
         image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;

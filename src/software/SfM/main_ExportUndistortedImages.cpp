@@ -145,9 +145,6 @@ int main(int argc, char *argv[]) {
         // copy the image since there is no distortion
         stlplus::file_copy(srcImage, dstImage);
       }
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;

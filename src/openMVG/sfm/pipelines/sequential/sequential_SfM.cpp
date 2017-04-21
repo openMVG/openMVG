@@ -376,9 +376,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   #pragma omp single nowait
 #endif
     {
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
 
       const Pair current_pair = match_pair.first;

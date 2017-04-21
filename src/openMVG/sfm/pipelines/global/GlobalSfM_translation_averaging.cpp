@@ -419,12 +419,8 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     for (int k = 0; k < static_cast<int>(vec_edges.size()); ++k)
     {
       const myEdge & edge = vec_edges[k];
-      #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-      #endif
-      {
-        ++my_progress_bar;
-      }
+      ++my_progress_bar;
+
       if (m_mutexSet.count(edge) == 0 && m_mutexSet.size() != vec_edges.size())
       {
         // Find the triplets that are supporting the given edge

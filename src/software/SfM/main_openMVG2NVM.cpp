@@ -141,9 +141,6 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
           WriteImage( dstImage.c_str(), image );
         }
       }
-      #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-      #endif
       ++my_progress_bar;
     }
   }

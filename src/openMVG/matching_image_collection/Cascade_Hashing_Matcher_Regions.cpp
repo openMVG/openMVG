@@ -152,9 +152,6 @@ void Match
 
       if (regionsI->Type_id() != regionsJ->Type_id())
       {
-#ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-#endif
         ++my_progress_bar;
         continue;
       }
@@ -208,7 +205,6 @@ void Match
 #pragma omp critical
 #endif
       {
-        ++my_progress_bar;
         if (!vec_putative_matches.empty())
         {
           map_PutativesMatches.insert(
@@ -218,6 +214,7 @@ void Match
             ));
         }
       }
+      ++my_progress_bar;
     }
   }
 }

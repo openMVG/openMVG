@@ -123,9 +123,8 @@ public:
 #endif
         {
           cache_[iter->second->id_view] = std::move(regions_ptr);
-          ++my_progress_bar;
         }
-
+        ++my_progress_bar;
       }
     }
     return bContinue;

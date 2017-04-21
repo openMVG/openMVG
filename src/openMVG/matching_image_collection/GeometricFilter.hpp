@@ -119,12 +119,7 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
         }
       }
     }
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp critical
-#endif
-    {
-      ++my_progress_bar;
-    }
+    ++my_progress_bar;
   }
 }
 

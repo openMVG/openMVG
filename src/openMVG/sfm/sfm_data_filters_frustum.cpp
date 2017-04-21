@@ -119,12 +119,7 @@ const
         }
       }
       // Progress bar update
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
-      {
-        ++my_progress_bar;
-      }
+      ++my_progress_bar;
     }
   }
   return pairs;

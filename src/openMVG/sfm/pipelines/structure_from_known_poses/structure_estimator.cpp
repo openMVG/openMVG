@@ -160,10 +160,10 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          ++my_progress_bar;
           putatives_matches[*it].insert(putatives_matches[*it].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
+        ++my_progress_bar;
       }
     }
   }
@@ -193,10 +193,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
     #pragma omp single nowait
 #endif // OPENMVG_USE_OPENMP
     {
-      #ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-      #endif // OPENMVG_USE_OPENMP
-      {++my_progress_bar;}
+      ++my_progress_bar;
 
       const graph::Triplet & triplet = *it;
       const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
@@ -289,10 +286,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
 #endif // OPENMVG_USE_OPENMP
   for (int i = 0; i < map_tracksCommon.size(); ++i)
   {
-    #ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-    #endif // OPENMVG_USE_OPENMP
-    {++my_progress_bar;}
+    ++my_progress_bar;
 
     tracks::STLMAPTracks::const_iterator itTracks = map_tracksCommon.begin();
     std::advance(itTracks, i);

@@ -75,9 +75,6 @@ void Matcher_Regions::Match(
       if (regionsJ->RegionCount() == 0
           || regionsI->Type_id() != regionsJ->Type_id())
       {
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp critical
-#endif
         ++my_progress_bar;
         continue;
       }
@@ -89,12 +86,12 @@ void Matcher_Regions::Match(
   #pragma omp critical
 #endif
       {
-        ++my_progress_bar;
         if (!vec_putatives_matches.empty())
         {
           map_PutativesMatches.insert( std::make_pair( std::make_pair(I,J), std::move(vec_putatives_matches) ));
         }
       }
+      ++my_progress_bar;
     }
   }
 }

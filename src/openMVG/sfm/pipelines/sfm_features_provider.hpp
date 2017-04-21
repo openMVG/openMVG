@@ -70,8 +70,8 @@ struct Features_Provider
         {
           // save loaded Features as PointFeature
           feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
-          ++my_progress_bar;
         }
+        ++my_progress_bar;
       }
     }
     return bContinue;
