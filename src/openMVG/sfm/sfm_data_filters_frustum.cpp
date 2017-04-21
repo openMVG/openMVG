@@ -52,7 +52,7 @@ void Frustum_Filter::initFrustum
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
       continue;
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+    if (!isPinhole(iterIntrinsic->second->getType()))
       continue;
 
     const Pose3 pose = sfm_data.GetPoseOrDie(view);

@@ -66,7 +66,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   for (Views::const_iterator itV = sfm_data.GetViews().begin();
     itV != sfm_data.GetViews().end(); ++itV)
   {
-    set_remaining_view_id_.insert(itV->second.get()->id_view);
+    set_remaining_view_id_.insert(itV->second->id_view);
   }
 }
 
@@ -1060,7 +1060,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           stl::RetrieveKey());
         new_intrinsic_id = (*existing_intrinsicId.rbegin())+1;
       }
-      sfm_data_.views.at(viewIndex).get()->id_intrinsic = new_intrinsic_id;
+      sfm_data_.views.at(viewIndex)->id_intrinsic = new_intrinsic_id;
       sfm_data_.intrinsics[new_intrinsic_id] = optional_intrinsic;
     }
   }

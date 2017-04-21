@@ -84,9 +84,9 @@ public:
     // Build an association table from view id to feature & descriptor files
     for (const auto & iterViews : sfm_data.GetViews())
     {
-      const openMVG::IndexT id = iterViews.second.get()->id_view;
+      const openMVG::IndexT id = iterViews.second->id_view;
       assert( id == iterViews.first);
-      map_id_string_[id] = stlplus::basename_part(iterViews.second.get()->s_Img_path);
+      map_id_string_[id] = stlplus::basename_part(iterViews.second->s_Img_path);
     }
 
     return true;

@@ -217,7 +217,7 @@ int main(int argc, char **argv)
   // list images from sfm_data in a vector
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
-  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n).get()->s_Img_path);} );
+  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n)->s_Img_path);} );
 
   // list images in query directory
   std::vector<std::string> vec_image;
@@ -247,8 +247,8 @@ int main(int argc, char **argv)
     // reconstruction
     for (auto & view : sfm_data.GetViews())
     {
-      view.second.get()->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path),
-          view.second.get()->s_Img_path);
+      view.second->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path),
+          view.second->s_Img_path);
     }
     // change root path to common root path
     sfm_data.s_root_path = common_root_dir;

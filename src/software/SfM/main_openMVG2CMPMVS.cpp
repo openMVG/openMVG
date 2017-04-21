@@ -69,7 +69,7 @@ bool exportToCMPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
       std::ofstream file(

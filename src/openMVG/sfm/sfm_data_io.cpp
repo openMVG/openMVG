@@ -41,8 +41,8 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
   {
     // If a pose is defined, at least the intrinsic must be valid,
     // In order to generate a valid camera.
-    const IndexT id_pose = iter->second.get()->id_pose;
-    const IndexT id_intrinsic = iter->second.get()->id_intrinsic;
+    const IndexT id_pose = iter->second->id_pose;
+    const IndexT id_intrinsic = iter->second->id_intrinsic;
 
     if (set_id_extrinsics.count(id_pose))
       reallyDefined_id_extrinsics.insert(id_pose); //at least it exists

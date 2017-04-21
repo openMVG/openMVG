@@ -509,7 +509,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         const IndexT indexCam = intrinsic_it.first;
 
         const std::vector<double> & vec_params = map_intrinsics[indexCam];
-        intrinsic_it.second.get()->updateFromParams(vec_params);
+        intrinsic_it.second->updateFromParams(vec_params);
       }
     }
 

@@ -58,7 +58,7 @@ bool exportToOpenMVS(
   // define a platform with all the intrinsic group
   for (const auto& intrinsic: sfm_data.GetIntrinsics())
   {
-    if (isPinhole(intrinsic.second.get()->getType()))
+    if (isPinhole(intrinsic.second->getType()))
     {
       const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
       if (map_intrinsic.count(intrinsic.first) == 0)

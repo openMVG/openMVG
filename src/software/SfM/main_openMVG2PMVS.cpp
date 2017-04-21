@@ -89,7 +89,7 @@ bool exportToPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::ofstream file(
@@ -267,7 +267,7 @@ bool exportToBundlerFormat(
       D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
       const double k1 = 0.0, k2 = 0.0; // distortion already removed
 
-      if(isPinhole(iterIntrinsic->second.get()->getType()))
+      if (isPinhole(iterIntrinsic->second->getType()))
       {
         const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
         const double focal = cam->focal();
