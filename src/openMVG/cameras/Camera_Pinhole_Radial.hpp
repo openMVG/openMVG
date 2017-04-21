@@ -496,7 +496,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 
     /**
     * @brief Functor to solve Square(disto(radius(p'))) = r^2
-    * @param params List of parameters (only the first one is used)
+    * @param params List of the radial factors {k1, k2, k3}
     * @param r2 square distance (relative to center)
     * @return distance
     */
