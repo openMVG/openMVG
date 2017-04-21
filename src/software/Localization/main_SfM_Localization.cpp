@@ -169,9 +169,12 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
   // Load the SfM_Data region's views
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
+  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
