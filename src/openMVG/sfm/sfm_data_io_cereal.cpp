@@ -8,7 +8,7 @@
 
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
-#include "cereal/details/helpers.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 

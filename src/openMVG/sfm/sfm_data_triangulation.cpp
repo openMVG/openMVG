@@ -7,6 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+
+#include <deque>
+
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
