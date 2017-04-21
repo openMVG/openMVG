@@ -118,7 +118,7 @@ bool exportToOpenMVS(
       // just copy the image
       stlplus::file_copy(srcImage, image.name);
     }
-    scene.images.push_back(image);
+    scene.images.emplace_back(image);
     ++my_progress_bar;
   }
 
@@ -220,6 +220,13 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
   }
 
+  if (stlplus::extension_part(sOutFile) != "mvs") {
+    std::cerr << std::endl
+      << "Invalid output file extension: " << sOutFile << std::endl
+      << "You must use a filename with a .mvs extension." << std::endl;
+      return EXIT_FAILURE;
+  }
+
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
@@ -228,9 +235,11 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  if (exportToOpenMVS(sfm_data, sOutFile, sOutDir))
+  if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir))
   {
-    return EXIT_SUCCESS;
+    std::cerr << std::endl
+      << "The output openMVS scene file cannot be written" << std::endl;
+    return EXIT_FAILURE;
   }
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
