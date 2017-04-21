@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,8 +9,14 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 
-#include "openMVG/matching_image_collection/Matcher.hpp"
+#include <memory>
+
 #include "openMVG/matching/matcher_type.hpp"
+#include "openMVG/matching_image_collection/Matcher.hpp"
+
+namespace openMVG { namespace matching { class PairWiseMatchesContainer; } }
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -36,7 +43,7 @@ class Matcher_Regions : public Matcher
     const Pair_Set & pairs,
     matching::PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
     C_Progress& progress = C_Progress::dummy()
-  ) const override ;
+  ) const override;
 
   private:
   // Distance ratio used to discard spurious correspondence

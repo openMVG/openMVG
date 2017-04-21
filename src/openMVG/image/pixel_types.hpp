@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,8 +8,6 @@
 
 #ifndef OPENMVG_IMAGE_PIXEL_TYPES_HPP
 #define OPENMVG_IMAGE_PIXEL_TYPES_HPP
-
-#include "openMVG/numeric/numeric.h"
 
 namespace openMVG
 {
@@ -141,7 +141,7 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgb& col )
     {
-      os << " {" ;
+      os << " {";
       for( int i = 0; i < 2; ++i )
       {
         os << col( i ) << ",";
@@ -331,7 +331,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgba& col )
     {
-      os << " {" ;
+      os << " {";
       for( int i = 0; i < 3; ++i )
       {
         os << col( i ) << ",";

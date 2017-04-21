@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,12 +9,13 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_SIMPLE_RANSAC_HPP
 #define OPENMVG_ROBUST_ESTIMATION_SIMPLE_RANSAC_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-#include "openMVG/robust_estimation/robust_ransac_tools.hpp"
 #include <limits>
 #include <numeric>
 #include <vector>
 #include <cassert>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
+#include "openMVG/robust_estimation/robust_ransac_tools.hpp"
 
 namespace openMVG {
 namespace robust{

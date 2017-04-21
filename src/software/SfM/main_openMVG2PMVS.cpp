@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,8 +6,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/types.hpp"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <cstdlib>
+#include <cmath>
+#include <iterator>
+#include <iomanip>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -14,14 +33,6 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <cmath>
-#include <iterator>
-#include <iomanip>
 
 bool exportToPMVSFormat(
   const SfM_Data & sfm_data,
@@ -78,7 +89,7 @@ bool exportToPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << map_viewIdToContiguous[view->id_view];
       std::ofstream file(
@@ -91,10 +102,14 @@ bool exportToPMVSFormat(
 
     // Export (calibrated) views as undistorted images
     Image<RGBColor> image, image_ud;
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    const Views & views = sfm_data.GetViews();
+    #pragma omp parallel for private(image, image_ud)
+    for (int i = 0; i < static_cast<int>(views.size()); ++i)
     {
-      const View * view = iter->second.get();
+      ++my_progress_bar;
+      auto view_it = views.begin();
+      std::advance(view_it, i);
+      const View * view = view_it->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
 
@@ -252,7 +267,7 @@ bool exportToBundlerFormat(
       D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
       const double k1 = 0.0, k2 = 0.0; // distortion already removed
 
-      if(isPinhole(iterIntrinsic->second.get()->getType()))
+      if (isPinhole(iterIntrinsic->second->getType()))
       {
         const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
         const double focal = cam->focal();

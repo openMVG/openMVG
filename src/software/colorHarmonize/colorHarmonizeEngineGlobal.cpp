@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2013, 2014 openMVG authors.
 
@@ -8,7 +9,7 @@
 #include "colorHarmonizeEngineGlobal.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 //-- Feature matches
 #include <openMVG/matching/indMatch.hpp>
 #include "openMVG/matching/indMatch_utils.hpp"

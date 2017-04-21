@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON, Romuald PERROT.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,9 +9,13 @@
 #ifndef OPENMVG_FEATURES_SIFT_HIERARCHICAL_GAUSSIAN_SCALE_SPACE_HPP
 #define OPENMVG_FEATURES_SIFT_HIERARCHICAL_GAUSSIAN_SCALE_SPACE_HPP
 
-#include "openMVG/features/sift/octaver.hpp"
-
+#include <algorithm>
 #include <vector>
+
+#include "openMVG/features/sift/octaver.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/image_resampling.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG{
 namespace features{
@@ -78,8 +84,9 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
   HierarchicalGaussianScaleSpace(
     const int nb_octave = 6,
     const int nb_slice = 3,
-    const GaussianScaleSpaceParams & params = GaussianScaleSpaceParams())
-    :Octaver<Octave>(nb_octave, nb_slice),
+    const GaussianScaleSpaceParams & params =
+      std::move(GaussianScaleSpaceParams())
+  ) :Octaver<Octave>(nb_octave, nb_slice),
     m_params(params),
     m_cur_octave_id(0)
   {

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -5,10 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
+
+#include <fstream>
+#include <string>
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
@@ -18,10 +23,6 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-
-#include <fstream>
-#include <iomanip>
-#include <string>
 
 namespace openMVG {
 namespace sfm {

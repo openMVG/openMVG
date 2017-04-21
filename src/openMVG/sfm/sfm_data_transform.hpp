@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -13,7 +14,7 @@ namespace openMVG {
 namespace geometry
 {
   struct Similarity3;
-} // namespace geometry 
+} // namespace geometry
 
 namespace sfm {
 

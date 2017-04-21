@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014-2016 Yongchao Xu, Pascal Monasse, Thierry Géraud, Laurent Najman
 // Copyright (c) 2016 Pierre Moulon.
 
@@ -6,6 +8,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_container.hpp"
+
+#include <numeric>
 
 namespace openMVG
 {
@@ -38,7 +44,10 @@ namespace tbmr
     const unsigned int pixel_count = input.Width()*input.Height();
     std::vector<unsigned int> v(pixel_count);
     std::iota(v.begin(), v.end(), 0);
-    std::sort(v.begin(), v.begin() + pixel_count, [&input, cmp](unsigned int x, unsigned int y) { return cmp(input[x], input[y]); });
+    std::sort(v.begin(), v.begin() + pixel_count,
+      [&input, cmp](unsigned int x, unsigned int y)
+      { return cmp(input[x], input[y]); }
+    );
     return v;
   }
 

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017 Pierre MOULON.
 
@@ -8,14 +9,18 @@
 #ifndef OPENMVG_FEATURES_SVG_FEATURES_HPP
 #define OPENMVG_FEATURES_SVG_FEATURES_HPP
 
+#include <string>
+#include <utility>
+
 #include <openMVG/features/feature.hpp>
+#include <openMVG/features/feature_container.hpp>
 
 namespace openMVG {
 namespace features {
 
 /**
  * @brief Saves a svg file containing the image and its features
- * 
+ *
  * @param[in] image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] image_size Image size {width,height}.
@@ -38,7 +43,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing the image and its scale invariant features
- * 
+ *
  * @param[in] image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] image_size Image size {width,height}.
@@ -61,7 +66,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing two images and their features
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.
@@ -94,7 +99,7 @@ bool Features2SVG
 
 /**
  * @brief Saves a svg file containing two images and their features
- * 
+ *
  * @param[in] left_image_path Left image path. For compactness of the output
  * svg file the image is exported as a link.
  * @param[in] left_image_size Left image size {width,height}.

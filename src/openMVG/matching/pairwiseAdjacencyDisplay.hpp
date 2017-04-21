@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,10 +9,11 @@
 #ifndef OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
 #define OPENMVG_PAIRWISE_ADJACENCY_DISPLAY_HPP
 
+#include <string>
+
 #include "openMVG/matching/indMatch.hpp"
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
 
 namespace openMVG  {
 namespace matching {

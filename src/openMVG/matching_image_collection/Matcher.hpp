@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -19,7 +20,7 @@ namespace openMVG {
 namespace sfm {
   struct Regions_Provider;
   struct SfM_Data;
-} // namespace sfm 
+} // namespace sfm
 
 namespace matching_image_collection {
 
@@ -28,9 +29,9 @@ namespace matching_image_collection {
 class Matcher
 {
   public:
-  Matcher() = default ;
+  Matcher() = default;
 
-  virtual ~Matcher() = default ;
+  virtual ~Matcher() = default;
 
   /// Find corresponding points between some pair of view Ids
   virtual void Match(

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/types.hpp"
 
-#include <fstream>
-#include <iomanip>
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/stl/stl.hpp"
+
+#include "third_party/progress/progress.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -51,13 +52,13 @@ void Frustum_Filter::initFrustum
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
       continue;
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+    if (!isPinhole(iterIntrinsic->second->getType()))
       continue;
 
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
       continue;
 
     if (!_bTruncated) // use infinite frustum
@@ -118,12 +119,7 @@ const
         }
       }
       // Progress bar update
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
-      {
-        ++my_progress_bar;
-      }
+      ++my_progress_bar;
     }
   }
   return pairs;
@@ -268,4 +264,3 @@ void Frustum_Filter::init_z_near_z_far_depth
 
 } // namespace sfm
 } // namespace openMVG
-

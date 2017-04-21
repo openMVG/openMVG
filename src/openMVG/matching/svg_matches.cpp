@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017 Pierre MOULON.
 
@@ -6,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <openMVG/matching/svg_matches.hpp>
+#include <openMVG/features/feature.hpp>
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
@@ -51,7 +53,7 @@ void hslToRgb
   }
 }
 
-bool Matches2SVG
+std::string Matches2SVGString
 (
   const std::string & left_image_path,
   const std::pair<size_t,size_t> & left_image_size,
@@ -60,7 +62,6 @@ bool Matches2SVG
   const std::pair<size_t,size_t> & right_image_size,
   const features::PointFeatures & right_features,
   const matching::IndMatches & matches,
-  const std::string & svg_filename,
   const bool b_vertical_display,
   const double feature_circle_radius,
   const double stroke_size
@@ -91,6 +92,8 @@ bool Matches2SVG
     b_vertical_display ? 0 : left_image_size.first,
     b_vertical_display ? left_image_size.second : 0);
 
+  std::vector<std::string> colors;
+  colors.reserve(matches.size());
   // Draw corresponding matches
   // Perform two loop (it helps to recognize the scene when there is many matches):
   // 1. First draw lines
@@ -98,31 +101,69 @@ bool Matches2SVG
     // Get back linked features
     const features::PointFeature & L = left_features[match_it.i_];
     const features::PointFeature & R = right_features[match_it.j_];
+    { // Compute a flashy colour for the correspondence
+      std::ostringstream osCol;
+      uint8_t r, g, b;
+      hslToRgb( (rand()%360) / 360., 1.0, .5, r, g, b);
+      osCol << "rgb(" << (int)r <<',' << (int)g << ',' << (int)b <<")";
+      colors.push_back(osCol.str());
+    }
     // Draw the line between the corresponding feature positions
     svgStream.drawLine(
       L.x(), L.y(),
       R.x() + svg_offset_x, R.y() + svg_offset_y,
-      svg::svgStyle().stroke("green", stroke_size));
+      svg::svgStyle().stroke(colors.back(), stroke_size));
   }
   // 2. Then display features circles
-  for (const auto match_it : matches) {
+  for (size_t i = 0; i < matches.size(); ++i) {
     // Get back linked features
-    const features::PointFeature & L = left_features[match_it.i_];
-    const features::PointFeature & R = right_features[match_it.j_];
+    const features::PointFeature & L = left_features[matches[i].i_];
+    const features::PointFeature & R = right_features[matches[i].j_];
     // Draw the features (circle)
     svgStream.drawCircle(
       L.x(), L.y(), feature_circle_radius,
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgStyle().stroke(colors[i], stroke_size));
     svgStream.drawCircle(
       R.x() + svg_offset_x, R.y() + svg_offset_y, feature_circle_radius,
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgStyle().stroke(colors[i], stroke_size));
   }
+  return svgStream.closeSvgFile().str();
+}
 
+bool Matches2SVG
+(
+  const std::string & left_image_path,
+  const std::pair<size_t,size_t> & left_image_size,
+  const features::PointFeatures & left_features,
+  const std::string & right_image_path,
+  const std::pair<size_t,size_t> & right_image_size,
+  const features::PointFeatures & right_features,
+  const matching::IndMatches & matches,
+  const std::string & svg_filename,
+  const bool b_vertical_display,
+  const double feature_circle_radius,
+  const double stroke_size
+)
+{
+  const std::string svg_content =
+    Matches2SVGString
+    (
+      left_image_path,
+      left_image_size,
+      left_features,
+      right_image_path,
+      right_image_size,
+      right_features,
+      matches,
+      b_vertical_display,
+      feature_circle_radius,
+      stroke_size
+    );
   // Save the SVG file
   std::ofstream svgFile( svg_filename.c_str() );
   if (svgFile.is_open())
   {
-    svgFile << svgStream.closeSvgFile().str();
+    svgFile << svg_content;
     svgFile.close();
     return true;
   }
@@ -219,4 +260,3 @@ bool InlierMatches2SVG
 
 }  // namespace matching
 }  // namespace openMVG
-

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -7,6 +8,8 @@
 
 #ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L2_HPP
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L2_HPP
+
+#include <vector>
 
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 

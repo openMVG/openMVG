@@ -158,6 +158,7 @@ if (OpenMVG_USE_OPENMP)
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
+    include(UpdateCacheVariable)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     remove_definitions(-DOPENMVG_USE_OPENMP)
 endif (OpenMVG_USE_OPENMP)
@@ -222,7 +223,9 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
     add_executable(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
 
     set_property(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
-
+    target_include_directories(${NAMESPACE}_test_${NAME}
+                               PRIVATE
+                               ${CMAKE_SOURCE_DIR}/third_party)
     target_link_libraries(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
@@ -390,7 +393,6 @@ add_subdirectory(third_party)
 # ==============================================================================
 set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
   ${LEMON_INCLUDE_DIRS}

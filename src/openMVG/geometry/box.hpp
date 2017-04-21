@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,9 +9,10 @@
 #ifndef OPENMVG_GEOMETRY_BOX_HPP
 #define OPENMVG_GEOMETRY_BOX_HPP
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-
+#include <algorithm>
 #include <fstream>
+#include <string>
+#include "openMVG/geometry/half_space_intersection.hpp"
 
 namespace openMVG
 {
@@ -32,7 +35,7 @@ struct Box : public HalfPlaneObject
   /// Points that define the bounding box
   Vec3 points[8];
 
-  Box() = default ;
+  Box() = default;
 
   /// Define a Square bounding box from a center position and radius (center to corner distance)
   Box

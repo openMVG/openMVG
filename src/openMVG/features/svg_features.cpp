@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017 Pierre MOULON.
 
@@ -204,4 +205,3 @@ bool Features2SVG
 
 }  // namespace features
 }  // namespace openMVG
-

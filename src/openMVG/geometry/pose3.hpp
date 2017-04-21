@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,6 +9,8 @@
 #ifndef OPENMVG_GEOMETRY_POSE3_HPP
 #define OPENMVG_GEOMETRY_POSE3_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include <cereal/cereal.hpp> // Serialization
 
@@ -14,7 +18,6 @@ namespace openMVG
 {
 namespace geometry
 {
-
 
 /**
 * @brief Defines a pose in 3d space
@@ -33,21 +36,17 @@ class Pose3
   public:
 
     /**
-    * @brief Default constructor
-    * @note This defines a Null transform (aligned with cartesian frame, centered at origin)
-    */
-    Pose3()
-      : rotation_( Mat3::Identity() ),
-        center_( Vec3::Zero() )
-    {
-
-    }
-    /**
     * @brief Constructor
     * @param r Rotation
     * @param c Center
+    * @note Default (without args) defines an Identity pose.
     */
-    Pose3( const Mat3& r, const Vec3& c ) : rotation_( r ), center_( c ) {}
+    Pose3
+    (
+      const Mat3& r = std::move(Mat3::Identity()),
+      const Vec3& c = std::move(Vec3::Zero())
+    )
+    : rotation_( r ), center_( c ) {}
 
     /**
     * @brief Get Rotation matrix

@@ -5,15 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/image/image_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <string>
+#include <cstdlib>
 #include <iostream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -129,4 +131,3 @@ int main(int argc, char **argv)
   } //end loop for each file
   return EXIT_SUCCESS;
 }
-

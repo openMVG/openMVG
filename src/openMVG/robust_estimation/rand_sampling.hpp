@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,6 +9,7 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 #define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 
+#include <algorithm>
 #include <cstdlib>
 #include <random>
 #include <vector>

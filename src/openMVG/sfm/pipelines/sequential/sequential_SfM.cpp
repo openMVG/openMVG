@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -6,27 +7,29 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/cameras/cameras.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
-#include "openMVG/system/timer.hpp"
 
-#include <ceres/types.h>
-
+#include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
+
+#include <ceres/types.h>
+#include <functional>
+#include <iostream>
+#include <utility>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -63,7 +66,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   for (Views::const_iterator itV = sfm_data.GetViews().begin();
     itV != sfm_data.GetViews().end(); ++itV)
   {
-    set_remaining_view_id_.insert(itV->second.get()->id_view);
+    set_remaining_view_id_.insert(itV->second->id_view);
   }
 }
 
@@ -373,9 +376,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   #pragma omp single nowait
 #endif
     {
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
 
       const Pair current_pair = match_pair.first;
@@ -391,7 +391,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 
         const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
         const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-        if (cam_I != NULL && cam_J != NULL)
+        if (cam_I != nullptr && cam_J != nullptr)
         {
           openMVG::tracks::STLMAPTracks map_tracksCommon;
           const std::set<uint32_t> set_imageIndex= {I, J};
@@ -500,7 +500,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
   const Pinhole_Intrinsic * cam_I = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_I->second.get());
   const Pinhole_Intrinsic * cam_J = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic_J->second.get());
-  if (cam_I == NULL || cam_J == NULL)
+  if (cam_I == nullptr || cam_J == nullptr)
   {
     return false;
   }
@@ -715,8 +715,8 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
       const Pose3 pose = sfm_data_.GetPoseOrDie(view);
       const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
-      vec_residuals.push_back( fabs(residual(0)) );
-      vec_residuals.push_back( fabs(residual(1)) );
+      vec_residuals.push_back( std::abs(residual(0)) );
+      vec_residuals.push_back( std::abs(residual(1)) );
     }
   }
   // Display statistics
@@ -1057,7 +1057,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           stl::RetrieveKey());
         new_intrinsic_id = (*existing_intrinsicId.rbegin())+1;
       }
-      sfm_data_.views.at(viewIndex).get()->id_intrinsic = new_intrinsic_id;
+      sfm_data_.views.at(viewIndex)->id_intrinsic = new_intrinsic_id;
       sfm_data_.intrinsics[new_intrinsic_id] = optional_intrinsic;
     }
   }

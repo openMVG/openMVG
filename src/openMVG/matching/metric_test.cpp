@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,7 @@
 
 
 #include "openMVG/matching/metric.hpp"
+#include "openMVG/system/cpu_instruction_set.hpp"
 
 #include "testing/testing.h"
 
@@ -126,6 +129,40 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
   }
 }
 
+TEST(METRIC, DIM128)
+{
+  // Test SIFT like descriptor (uint8_t)
+  {
+    using VecUC128 = Eigen::Matrix<uint8_t, 128, 1>;
+    const VecUC128 a = VecUC128::Random();
+    const VecUC128 b = VecUC128::Random();
+    const unsigned int GTL2 = (a.cast<int>()-b.cast<int>()).squaredNorm();
+    L2<uint8_t> metricL2;
+    EXPECT_EQ(GTL2, metricL2(a.data(), b.data(), 128));
+    #ifdef OPENMVG_USE_AVX2
+      openMVG::system::CpuInstructionSet cpu_instruction_set;
+      EXPECT_TRUE(cpu_instruction_set.supportAVX2());
+      EXPECT_EQ(GTL2, L2_AVX2(a.data(), b.data(), 128));
+    #endif
+  }
+
+  // Test SIFT like descriptor (float)
+  {
+    using VecF128 = Eigen::Matrix<float, 128, 1>;
+    const VecF128 a = VecF128::Random();
+    const VecF128 b = VecF128::Random();
+    const double GTL2 = (a-b).squaredNorm();
+    L2<float> metricL2;
+    EXPECT_NEAR(GTL2, metricL2(a.data(), b.data(), 128), 1e-4);
+    #ifdef OPENMVG_USE_AVX2
+      openMVG::system::CpuInstructionSet cpu_instruction_set;
+      EXPECT_TRUE(cpu_instruction_set.supportAVX2());
+      EXPECT_NEAR(GTL2, L2_AVX2(a.data(), b.data(), 128), 1e-4);
+    #endif
+  }
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
+

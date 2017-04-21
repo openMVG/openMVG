@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013,2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,7 +16,7 @@
 //-- Color harmonization solver
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "testing/testing.h"
 
 #include "third_party/histogram/histogram.hpp"

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,11 +9,16 @@
 #ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 #define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "openMVG/stl/split.hpp"
+
 namespace openMVG
 {
 namespace cameras
 {
-#include "openMVG/stl/split.hpp"
 
 // Allow to initialize an object cameras::Intrinsic_Parameter_Type BA from
 // a string and delimiters('|')

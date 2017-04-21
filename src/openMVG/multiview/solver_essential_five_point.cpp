@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -36,8 +38,8 @@ Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
   Eigen::Matrix<double,9, 9> A;
   A.setZero();  // Make A square until Eigen supports rectangular SVD.
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
-  Eigen::JacobiSVD<Eigen::Matrix<double,9, 9> > svd(A,Eigen::ComputeFullV);
-  return svd.matrixV().topRightCorner<9,4>();
+  Eigen::JacobiSVD<Eigen::Matrix<double, 9, 9> > svd(A, Eigen::ComputeFullV);
+  return svd.matrixV().topRightCorner<9, 4>();
 }
 
 Vec o1(const Vec &a, const Vec &b) {
@@ -149,14 +151,14 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
 
   // Equation (21).
   Vec (&L)[3][3] = EET;
-  Vec trace  = 0.5 * (EET[0][0] + EET[1][1] + EET[2][2]);
-  for (int i = 0; i < 3; ++i) {
+  const Vec trace  = 0.5 * (EET[0][0] + EET[1][1] + EET[2][2]);
+  for (const int i : {0,1,2}) {
     L[i][i] -= trace;
   }
 
   // Equation (23).
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
+  for (const int i : {0,1,2}) {
+    for (const int j : {0,1,2}) {
       Vec LEij = o2(L[i][0], E[0][j])
                + o2(L[i][1], E[1][j])
                + o2(L[i][2], E[2][j]);
@@ -212,4 +214,3 @@ void FivePointsRelativePose(const Mat2X &x1,
 }
 
 } // namespace openMVG
-

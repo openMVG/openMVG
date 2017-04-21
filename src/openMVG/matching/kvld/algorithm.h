@@ -13,21 +13,13 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license (see the COPYING file).
 */
 
-#include "openMVG/features/feature.hpp"
+#include <algorithm>
+#include <cmath>
+#include <fstream>
 #include "openMVG/image/image_container.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
 
-#include <algorithm>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <numeric>
-#include <sstream>
-#include <vector>
-
+namespace openMVG { namespace features { class SIOPointFeature; } }
 
 const float PI_ = 4.0f * atan( 1.0f );
 
@@ -65,8 +57,8 @@ struct IntegralImages
 private :
   inline double get( double x, double y )const
   {
-		int ix = int( x );
-		int iy = int( y );
+		const int ix (x );
+		const int iy (y );
 		double dx = x - ix;
 		double dy = y - iy;
 		if( dx == 0 && dy == 0 )

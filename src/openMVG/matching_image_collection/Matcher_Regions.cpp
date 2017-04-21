@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
+#include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/progress/progress.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -57,7 +59,7 @@ void Matcher_Regions::Match(
     const auto & indexToCompare = iter->second;
 
     std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
-    if (regionsI.get()->RegionCount() == 0)
+    if (regionsI->RegionCount() == 0)
     {
       my_progress_bar += indexToCompare.size();
       continue;
@@ -74,12 +76,9 @@ void Matcher_Regions::Match(
       const IndexT J = indexToCompare[j];
 
       std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
-      if (regionsJ.get()->RegionCount() == 0
-          || regionsI.get()->Type_id() != regionsJ.get()->Type_id())
+      if (regionsJ->RegionCount() == 0
+          || regionsI->Type_id() != regionsJ->Type_id())
       {
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp critical
-#endif
         ++my_progress_bar;
         continue;
       }
@@ -91,12 +90,12 @@ void Matcher_Regions::Match(
   #pragma omp critical
 #endif
       {
-        ++my_progress_bar;
         if (!vec_putatives_matches.empty())
         {
           map_PutativesMatches.insert( std::make_pair( std::make_pair(I,J), std::move(vec_putatives_matches) ));
         }
       }
+      ++my_progress_bar;
     }
   }
 }

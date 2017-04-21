@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,10 @@
 
 #ifndef OPENMVG_SFM_SFM_FILTERS_HPP
 #define OPENMVG_SFM_SFM_FILTERS_HPP
+
+#include <map>
+#include <set>
+#include <vector>
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/rotation_averaging_common.hpp"

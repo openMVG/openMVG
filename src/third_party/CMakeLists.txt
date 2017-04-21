@@ -10,6 +10,11 @@ if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif(UNIX)
 
+if (MSVC)
+  # Disable warning about size_t conversions for all third_party libraries.
+  add_compile_options(/wd4267)
+endif()
+
 # Unit test library
 if (OpenMVG_BUILD_TESTS)
   add_subdirectory(CppUnitLite)

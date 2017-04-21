@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2016 Pierre MOULON.
 
@@ -5,35 +6,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
-
-/// Generic Image Collection image matching
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/io_regions_type.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
-#include "openMVG/graph/graph.hpp"
-#include "openMVG/stl/stl.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
-#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
-using namespace openMVG::cameras;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
