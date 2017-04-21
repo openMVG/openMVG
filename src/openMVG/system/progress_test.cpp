@@ -12,23 +12,27 @@ static const int Count = 100*1000;
 static const int num_threads = 10;
 
 // This funcion counts to Count
-int singleThreadedCount(C_Progress& progress=C_Progress::dummy())
+int singleThreadedCount(C_Progress * progress=nullptr)
 {
+  if(!progress)
+      progress = &C_Progress::dummy();
   int result = 0;
   for (int i = 0; i<Count; i++)
   {
-    if (progress.hasBeenCanceled())
+    if (progress->hasBeenCanceled())
       break;
 
     ++result;
-    ++progress;
+    ++(*progress);
   }
   return result;
 }
 
 // This function counts to Count
-int multiThreadedCount(C_Progress& progress=C_Progress::dummy())
+int multiThreadedCount(C_Progress * progress=nullptr)
 {
+  if(!progress)
+      progress = &C_Progress::dummy();
   int result = 0;
 
 #ifdef OPENMVG_USE_OPENMP
@@ -37,7 +41,7 @@ int multiThreadedCount(C_Progress& progress=C_Progress::dummy())
 #endif
   for (int i = 0; i<Count; i++)
   {
-    if (progress.hasBeenCanceled())
+    if (progress->hasBeenCanceled())
       // We are not allowed to use 'break' in an omp loop, 
       continue;
 
@@ -46,7 +50,7 @@ int multiThreadedCount(C_Progress& progress=C_Progress::dummy())
 #endif
     {
       ++result;
-      ++progress;
+      ++(*progress);
     }
   }
   return result;
@@ -97,11 +101,11 @@ TEST(Progress, dummy)
   EXPECT_EQ(Count, multiThreadedCount());
 
   MockProgress progress;
-  EXPECT_EQ(Count, singleThreadedCount(progress));
+  EXPECT_EQ(Count, singleThreadedCount(&progress));
   EXPECT_EQ(Count, progress.currentCount);
 
   progress.restart(Count);
-  EXPECT_EQ(Count, multiThreadedCount(progress));
+  EXPECT_EQ(Count, multiThreadedCount(&progress));
   EXPECT_EQ(Count, progress.currentCount);
 }
 
@@ -109,14 +113,17 @@ TEST(Progress, cancel)
 {
   // Make sure the singleThreadedCount() works with MockProgress
   CancelProgress progress;
-  EXPECT_EQ(0, singleThreadedCount(progress));
+  EXPECT_EQ(0, singleThreadedCount(&progress));
 
   progress.restart(Count);
-  EXPECT_EQ(0, multiThreadedCount(progress));
+  EXPECT_EQ(0, multiThreadedCount(&progress));
 
   CancelAt<13> cancelAtThirteen;
-  EXPECT_EQ(13, singleThreadedCount(cancelAtThirteen));
+  EXPECT_EQ(13, singleThreadedCount(&cancelAtThirteen));
 }
+
+// Put this include here, because C_Progress_display is not needed earlier
+#include "third_party/progress/progress_display.hpp"
 
 TEST(Progress, terminalProgress)
 {
@@ -131,13 +138,13 @@ TEST(Progress, terminalProgress)
 
   // Make sure the singleThreadedCount() works with MockProgress
   C_Progress_display progress(Count, out, "\nCounting electric sheep\n");
-  EXPECT_EQ(Count, singleThreadedCount(progress));
+  EXPECT_EQ(Count, singleThreadedCount(&progress));
 
   EXPECT_EQ(expectedOutPut, out.str());
   out.seekp(0);
 
   progress.restart(Count);
-  EXPECT_EQ(Count, multiThreadedCount(progress));
+  EXPECT_EQ(Count, multiThreadedCount(&progress));
   EXPECT_EQ(expectedOutPut, out.str());
 }
 

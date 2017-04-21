@@ -74,7 +74,7 @@ public:
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type,
-    C_Progress& my_progress_bar
+    C_Progress * 
   ) override
   {
     std::cout << "Initialization of the Regions_Provider_Cache. #Elements in the cache: "<< max_cache_size_ << std::endl;
