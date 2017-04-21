@@ -9,11 +9,12 @@
 #ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
 
+#include <atomic>
 #include <memory>
 #include <string>
 
 #include "openMVG/features/image_describer.hpp"
-#include "openMVG/features/regions.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
@@ -75,14 +76,11 @@ public:
     auto it = cache_.find(x);
     std::shared_ptr<features::Regions> ret;
 
-    if(it == end(cache_))
-    {
-      // Invalid ressource
-    }
-    else
+    if (it != end(cache_))
     {
       ret = it->second;
     }
+    // else Invalid ressource
     return ret;
   }
 
@@ -97,7 +95,7 @@ public:
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
-    bool bContinue = true;
+    std::atomic<bool> bContinue(true);
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel
 #endif
@@ -108,7 +106,7 @@ public:
     #pragma omp single nowait
 #endif
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second->s_Img_path);
         const std::string basename = stlplus::basename_part(sImageName);
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
         const std::string descFile = stlplus::create_filespec(feat_directory, basename, ".desc");
@@ -117,18 +115,17 @@ public:
         if (!regions_ptr->Load(featFile, descFile))
         {
           std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
-#ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-#endif
           bContinue = false;
         }
+        //else
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif
         {
-          cache_[iter->second.get()->id_view] = std::move(regions_ptr);
+          cache_[iter->second->id_view] = std::move(regions_ptr);
           ++my_progress_bar;
         }
+
       }
     }
     return bContinue;

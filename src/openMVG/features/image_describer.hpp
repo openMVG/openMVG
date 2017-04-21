@@ -15,8 +15,6 @@
 #include "openMVG/features/regions.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
-#include <cereal/cereal.hpp> // Serialization
-
 namespace openMVG { namespace image { template<typename Type> class Image; } }
 
 namespace openMVG {

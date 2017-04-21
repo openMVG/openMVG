@@ -9,7 +9,8 @@
 #ifndef OPENMVG_FEATURES_REGIONS_FACTORY_HPP
 #define OPENMVG_FEATURES_REGIONS_FACTORY_HPP
 
-#include "openMVG/features/regions.hpp"
+#include "openMVG/features/binary_regions.hpp"
+#include "openMVG/features/scalar_regions.hpp"
 
 namespace openMVG {
 namespace features {
@@ -34,12 +35,9 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE
 //--
 // Register region type for serialization
 //--
-#include <cereal/cereal.hpp>
 #include <cereal/types/array.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Regions, "SIFT_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::SIFT_Regions)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Float_Regions, "AKAZE_Float_Regions");
