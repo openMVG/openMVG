@@ -11,7 +11,7 @@
 #if defined HAVE_OPENCV
 #include "software/VO/Tracker_opencv_klt.hpp"
 #endif
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace alternative_vo
