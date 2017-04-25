@@ -22,7 +22,7 @@
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {

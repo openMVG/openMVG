@@ -18,7 +18,7 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <cstdlib>
 #include <cmath>

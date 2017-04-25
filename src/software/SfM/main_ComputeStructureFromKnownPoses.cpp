@@ -27,6 +27,7 @@
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 
 #include <iostream>
 #include <memory>
@@ -126,7 +127,11 @@ int main(int argc, char **argv)
     // Cached regions provider (load & store regions on demand)
     regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
   }
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
+
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
+  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
     std::cerr << std::endl
       << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
