@@ -98,7 +98,7 @@ enum class Intrinsic_Parameter_Type : int
   ADJUST_ALL = ADJUST_FOCAL_LENGTH | ADJUST_PRINCIPAL_POINT | ADJUST_DISTORTION
 };
 
-inline constexpr Intrinsic_Parameter_Type
+inline Intrinsic_Parameter_Type
 operator|(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
@@ -106,7 +106,7 @@ operator|(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
      static_cast<std::underlying_type<Intrinsic_Parameter_Type>::type>(y));
 }
 
-inline constexpr Intrinsic_Parameter_Type
+inline Intrinsic_Parameter_Type
 operator&(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
