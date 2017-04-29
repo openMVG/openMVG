@@ -88,12 +88,14 @@ public:
   virtual bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
-    std::unique_ptr<features::Regions>& region_type)
+    std::unique_ptr<features::Regions>& region_type,
+    C_Progress *  my_progress_bar = nullptr)
   {
+    if (!my_progress_bar)
+      my_progress_bar = &C_Progress::dummy();
     region_type_.reset(region_type->EmptyClone());
 
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- Regions Loading -\n");
+    my_progress_bar->restart(sfm_data.GetViews().size(), "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
     std::atomic<bool> bContinue(true);
 #ifdef OPENMVG_USE_OPENMP
@@ -102,6 +104,11 @@ public:
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end() && bContinue; ++iter)
     {
+        if (my_progress_bar->hasBeenCanceled())
+        {
+          bContinue = false;
+          continue;
+        }
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
 #endif
@@ -124,7 +131,7 @@ public:
         {
           cache_[iter->second->id_view] = std::move(regions_ptr);
         }
-        ++my_progress_bar;
+        ++(*my_progress_bar);
       }
     }
     return bContinue;

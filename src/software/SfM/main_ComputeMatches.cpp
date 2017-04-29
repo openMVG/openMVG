@@ -238,7 +238,10 @@ int main(int argc, char **argv)
     regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
   }
 
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -359,7 +362,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -402,6 +405,8 @@ int main(int argc, char **argv)
     system::Timer timer;
     std::cout << std::endl << " - Geometric filtering - " << std::endl;
 
+    const double d_distance_ratio = 0.6;
+
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
     {
@@ -410,21 +415,21 @@ int main(int argc, char **argv)
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
           map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6);
+          bGeometric_only_guided_matching ? -1.0 : d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap

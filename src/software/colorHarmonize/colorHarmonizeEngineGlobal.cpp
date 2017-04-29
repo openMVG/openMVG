@@ -31,7 +31,7 @@
 
 #include "openMVG/system/timer.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <numeric>
 #include <iomanip>

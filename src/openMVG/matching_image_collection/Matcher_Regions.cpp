@@ -29,15 +29,18 @@ void Matcher_Regions::Match(
   const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatchesContainer & map_PutativesMatches)const // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativesMatches,
+  C_Progress * my_progress_bar)const
 {
+  if (!my_progress_bar)
+    my_progress_bar = &C_Progress::dummy();
 #ifdef OPENMVG_USE_OPENMP
   std::cout << "Using the OPENMP thread interface" << std::endl;
   const bool b_multithreaded_pair_search = (eMatcherType_ == CASCADE_HASHING_L2);
   // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
 #endif
 
-  C_Progress_display my_progress_bar( pairs.size() );
+  my_progress_bar->restart(pairs.size(), "\n- Matching -\n");
 
   // Sort pairs according the first index to minimize the MatcherT build operations
   using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
@@ -51,13 +54,15 @@ void Matcher_Regions::Match(
   for (Map_vectorT::const_iterator iter = map_Pairs.begin();
     iter != map_Pairs.end(); ++iter)
   {
+    if (my_progress_bar->hasBeenCanceled())
+      continue;
     const IndexT I = iter->first;
     const auto & indexToCompare = iter->second;
 
     std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI->RegionCount() == 0)
     {
-      my_progress_bar += indexToCompare.size();
+      (*my_progress_bar) += indexToCompare.size();
       continue;
     }
 
@@ -75,7 +80,7 @@ void Matcher_Regions::Match(
       if (regionsJ->RegionCount() == 0
           || regionsI->Type_id() != regionsJ->Type_id())
       {
-        ++my_progress_bar;
+        ++(*my_progress_bar);
         continue;
       }
 
@@ -91,7 +96,7 @@ void Matcher_Regions::Match(
           map_PutativesMatches.insert( std::make_pair( std::make_pair(I,J), std::move(vec_putatives_matches) ));
         }
       }
-      ++my_progress_bar;
+      ++(*my_progress_bar);
     }
   }
 }

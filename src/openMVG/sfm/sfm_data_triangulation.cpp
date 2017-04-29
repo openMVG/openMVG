@@ -16,7 +16,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -47,7 +47,7 @@ void SfM_Data_Structure_Computation_Blind::triangulate
 const
 {
   std::deque<IndexT> rejectedId;
-  std::unique_ptr<C_Progress_display> my_progress_bar;
+  std::unique_ptr<C_Progress> my_progress_bar;
   if (bConsole_verbose_)
     my_progress_bar.reset( new C_Progress_display(
     sfm_data.structure.size(),

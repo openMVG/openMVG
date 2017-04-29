@@ -14,6 +14,8 @@
 
 #include "openMVG/matching/indMatch.hpp"
 
+class C_Progress;
+
 namespace openMVG {
 
 namespace sfm {
@@ -37,8 +39,9 @@ class Matcher
     const sfm::SfM_Data & sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
-    matching::PairWiseMatchesContainer & map_putatives_matches // the output pairwise photometric corresponding points
-    ) const = 0;
+    matching::PairWiseMatchesContainer & map_putatives_matches, // the output pairwise photometric corresponding points
+    C_Progress * progress = nullptr
+    )const = 0;
 };
 
 } // namespace matching_image_collection
