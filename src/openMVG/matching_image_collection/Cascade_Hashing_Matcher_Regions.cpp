@@ -215,10 +215,10 @@ void Match
         if (!vec_putative_matches.empty())
         {
           map_PutativesMatches.insert(
-            std::make_pair(
-              std::make_pair(I,J),
+            {
+              {I,J},
               std::move(vec_putative_matches)
-            ));
+            });
         }
       }
       ++(*my_progress_bar);

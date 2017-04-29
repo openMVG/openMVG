@@ -93,7 +93,7 @@ void Matcher_Regions::Match(
       {
         if (!vec_putatives_matches.empty())
         {
-          map_PutativesMatches.insert( std::make_pair( std::make_pair(I,J), std::move(vec_putatives_matches) ));
+          map_PutativesMatches.insert( { {I,J}, std::move(vec_putatives_matches) } );
         }
       }
       ++(*my_progress_bar);
