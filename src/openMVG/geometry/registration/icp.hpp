@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2017 Romuald Perrot.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef OPENMVG_GEOMETRY_REGISTRATION_ICP_HPP
 #define OPENMVG_GEOMETRY_REGISTRATION_ICP_HPP
 
@@ -32,10 +40,9 @@ static inline void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::Ro
 {
   for( int id_pt = 0 ; id_pt < data.rows() ; ++id_pt )
   {
-    Eigen::Matrix<Scalar, 3, 1> cur_pt;
-    cur_pt << data( id_pt , 0 ) , data( id_pt , 1 ) , data( id_pt , 2 ) ;
-    const Eigen::Matrix<Scalar, 3, 1> tra_pt = ( q * cur_pt ) + t ;
-    data.row( id_pt ) = tra_pt.transpose() ;
+    //    const Eigen::Matrix<Scalar, 3, 1> cur_pt = data.row( id_pt ).transpose() ;
+    //    cur_pt << data( id_pt , 0 ) , data( id_pt , 1 ) , data( id_pt , 2 ) ;
+    data.row( id_pt ) = ( ( q * data.row( id_pt ).transpose() ) + t ).transpose() ;
   }
 }
 
@@ -97,22 +104,22 @@ static inline void RandomSubset( const size_t highest_value , // included
 }
 
 /**
-* @brief Compute standard deviation of a given set
+* @brief Compute standard deviation of a given vector
 * @param v a vector
 * @return standard deviation of the vector
 * @todo : move to numeric ?
-* @note : this assume that at least one value is in the set
+* @note : this assume that at least one value is in the vector
 */
 template< typename Scalar >
 static inline Scalar StdDev( const std::vector< Scalar > & v )
 {
-  double sum = std::accumulate( v.begin(), v.end(), Scalar( 0 ) );
-  double mean = sum / v.size();
+  const double sum = std::accumulate( v.begin(), v.end(), Scalar( 0 ) );
+  const double mean = sum / v.size();
 
   std::vector<double> diff( v.size() );
   std::transform( v.begin(), v.end(), diff.begin(),
                   std::bind2nd( std::minus<double>(), mean ) );
-  double sq_sum = std::inner_product( diff.begin(), diff.end(), diff.begin(), Scalar( 0 ) );
+  const double sq_sum = std::inner_product( diff.begin(), diff.end(), diff.begin(), Scalar( 0 ) );
   return std::sqrt( sq_sum / v.size() );
 }
 
@@ -145,8 +152,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
   // Working sample
   Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> data = data_;
 
-  Mat4 final_tra;
-  final_tra.setIdentity();
+  Mat4 final_tra = Mat4::Identity() ;
 
   std::vector<int> corresp( data.rows() );
   std::vector<Scalar> distance( data.rows() );
@@ -192,6 +198,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
         ++id_dist ;
       }
     }
+    compact_dist.resize( id_dist ) ;
 
     // 3 - Filter points based on 3 * stddev
     const Scalar t = 3.0 * StdDev( compact_dist ) ;
@@ -263,7 +270,6 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
           openMVG::Vec3 &t,
           openMVG::Mat3 &R )
 {
-
   // Build Kd-Tree
   KDTree3d<Scalar> tree( target );
 
@@ -273,10 +279,8 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
   // Working sample
   Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> data = data_;
 
-  Mat4 final_tra;
-  final_tra.setIdentity();
+  Mat4 final_tra = Mat4::Identity() ;
 
-  //  std::vector<bool> already_used( target.rows() );
   std::vector<int> corresp( data.rows() );
   std::vector<Scalar> distance( data.rows() );
 
@@ -322,6 +326,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
         ++id_dist ;
       }
     }
+    compact_dist.resize( id_dist ) ;
 
     // 3 - Filter points based on 3 * stddev
     const Scalar t = 3.0 * StdDev( compact_dist ) ;
