@@ -9,276 +9,284 @@ namespace openMVG
 {
 namespace geometry
 {
-  namespace registration
+namespace registration
+{
+
+/**
+* @brief Function used to compute error using point to point distance metric
+*/
+struct RigidMotion3d3dEstimationCost
+{
+  public:
+
+    /**
+    * @brief Constructor
+    * @param ref Reference point
+    * @param data Data point (ie : point to transform)
+    */
+    RigidMotion3d3dEstimationCost( const Vec3 &ref, const Vec3 &data )
+      : m_ref( ref ),
+        m_data( data )
+    {
+    }
+
+    /**
+    * @brief Compute distance error after applying a transformation to a point
+    * @param quat A quaternion
+    * @param tra A translation
+    * @param[out] residual
+    * @note quat is a 4 component array
+    * @note tra is a 3 component array
+    * @note residual is a 3 component array (residual on x,y,z)
+    */
+    template<typename T>
+    bool operator()( const T * const quat , const T * const tra , T * residual ) const
+    {
+      // The points
+      Eigen::Matrix<T, 3, 1> point;
+      point << T( m_data[0] ), T( m_data[1] ), T( m_data[2] );
+
+      Eigen::Matrix<T, 3, 1> ref;
+      ref << T( m_ref[ 0 ] ), T( m_ref[ 1 ] ), T( m_ref[ 2 ] );
+
+      // Map params to Eigen transformations
+      Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
+      Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
+
+      // Compute transformation
+      Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
+
+      residual[ 0 ] = p[0] - ref[0] ;
+      residual[ 1 ] = p[1] - ref[1] ;
+      residual[ 2 ] = p[2] - ref[2] ;
+
+      return true ;
+    }
+
+  private:
+    /// The reference point
+    Vec3 m_ref;
+    /// The data point
+    Vec3 m_data;
+};
+
+/**
+* @brief Function used to compute error using point to plane distance metric
+*/
+struct RigidMotion3d3dNormalEstimationCost
+{
+  public:
+
+    /**
+    * @brief Constructor
+    * @param ref Reference point
+    * @param ref_n Normal at reference point
+    * @param data Data point (ie : point to transform)
+    */
+    RigidMotion3d3dNormalEstimationCost( const Vec3 &ref, const Vec3 & ref_n , const Vec3 &data )
+      : m_ref( ref ),
+        m_ref_n( ref_n ) ,
+        m_data( data )
+    {
+    }
+
+
+    /**
+    * @brief Compute distance error after applying a transformation to a point
+    * @param quat A quaternion
+    * @param tra A translation
+    * @param[out] residual
+    * @note quat is a 4 component array
+    * @note tra is a 3 component array
+    * @note residual is a 1 component array (residual on distance to plane)
+    */
+    template<typename T>
+    bool operator()( const T * const quat , const T * const tra , T * residual ) const
+    {
+      // The points
+      Eigen::Matrix<T, 3, 1> point;
+      point << T( m_data[0] ), T( m_data[1] ), T( m_data[2] );
+
+      Eigen::Matrix<T, 3, 1> ref;
+      ref << T( m_ref[ 0 ] ), T( m_ref[ 1 ] ), T( m_ref[ 2 ] );
+
+      Eigen::Matrix<T, 3, 1> ref_n;
+      ref_n << T( m_ref_n[0] ) , T( m_ref_n[1] ) , T( m_ref_n[2] ) ;
+
+      // The transformation
+      Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
+      Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
+
+      // Compute transformation
+      Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
+
+      residual[ 0 ] = ( p - ref ).dot( ref_n ) ;
+
+      return true ;
+    }
+
+  private:
+    Vec3 m_ref ;
+    Vec3 m_ref_n ;
+    Vec3 m_data ;
+};
+
+/**
+* @brief Ceres interface used to compute rigid transformation between two set of 3d points
+* @note this use either the point to point distance metric or point to plane
+*/
+template <typename Scalar>
+class RigidMotion3d3dEstimation
+{
+    using point_list_type = Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor>;
+
+  public:
+    RigidMotion3d3dEstimation();
+
+    /**
+    * @brief Computes ridig motion (q,t) : q * data + t that maps data on ref
+    * @param ref Reference point cloud
+    * @param data Data point cloud
+    * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
+    * @return R,t Rigid motion that minimise the MSE
+    */
+    std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> operator()( const point_list_type &ref, const point_list_type &data, const std::vector<int> &corresps );
+
+    /**
+    * @brief Computes ridig motion (q,t) : q * data + t that maps data on ref
+    * @param ref Reference point cloud
+    * @param ref_normal Reference point cloud normals
+    * @param data Data point cloud
+    * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
+    * @return < quat , tra > Rigid motion that minimise the MSE of the point to plane distance
+    */
+    std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> operator()( const point_list_type &ref,
+        const point_list_type &ref_normal,
+        const point_list_type &data, const std::vector<int> &corresps );
+
+
+  private:
+};
+
+template <typename Scalar>
+RigidMotion3d3dEstimation<Scalar>::RigidMotion3d3dEstimation()
+{
+}
+
+/**
+  * @brief Computes ridig motion (R,t) : R * data + t that maps data on ref
+  * @param ref Reference point cloud
+  * @param data Data point cloud
+  * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
+  * @return R,t Rigid motion that minimise the MSE
+  */
+template <typename Scalar>
+std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3dEstimation<Scalar>::operator()( const point_list_type &ref,
+    const point_list_type &data,
+    const std::vector<int> &corresps )
+{
+  // 1 Add residuals functions
+  ceres::Problem problem;
+  // Initial value (no transformation)
+  Eigen::Quaternion<Scalar> q = Eigen::Quaternion<Scalar>::Identity();
+  Eigen::Matrix<Scalar, 3, 1> t( 0, 0, 0 );
+
+  for ( size_t id_data = 0; id_data < data.rows() ; ++id_data )
   {
-
-    // Compute residual projection cost given two points
-    struct RigidMotion3d3dEstimationCost
+    if ( corresps[ id_data ] >= 0 )
     {
-    public:
-      RigidMotion3d3dEstimationCost( const Vec3 &ref, const Vec3 &data )
-          : m_ref( ref ),
-            m_data( data )
-      {
-      }
+      const int id_ref  = corresps[ id_data ];
 
-      template <typename T>
-      bool operator()( const T *const x, T *residual ) const
-      {
-        // x : (R[0;8] | t[0;2])
-        Eigen::Matrix<T, 3, 1> src;
-        src << T( m_data[ 0 ] ), T( m_data[ 1 ] ), T( m_data[ 2 ] );
+      Vec3 ref_pt( ref( id_ref, 0 ), ref( id_ref, 1 ), ref( id_ref, 2 ) );
+      Vec3 data_pt( data( id_data, 0 ), data( id_data, 1 ), data( id_data, 2 ) );
 
-        const T tx = x[ 0 ] * src[ 0 ] + x[ 1 ] * src[ 1 ] + x[ 2 ] * src[ 2 ] + x[ 9 ];
-        const T ty = x[ 3 ] * src[ 0 ] + x[ 4 ] * src[ 1 ] + x[ 5 ] * src[ 2 ] + x[ 10 ];
-        const T tz = x[ 6 ] * src[ 0 ] + x[ 7 ] * src[ 1 ] + x[ 8 ] * src[ 2 ] + x[ 11 ];
-
-        Eigen::Matrix<T, 3, 1> tra;
-        tra << tx, ty, tz;
-
-        // 2 - compute distance between transformed and
-        Eigen::Matrix<T, 3, 1> ref;
-        ref << T( m_ref[ 0 ] ), T( m_ref[ 1 ] ), T( m_ref[ 2 ] );
-
-        residual[ 0 ] = ref[ 0 ] - tra[ 0 ];
-        residual[ 1 ] = ref[ 1 ] - tra[ 1 ];
-        residual[ 2 ] = ref[ 2 ] - tra[ 2 ];
-
-        return true;
-      }
-
-    private:
-      Vec3 m_ref;
-      Vec3 m_data;
-    };
-
-    template <typename Scalar>
-    class RigidMotion3d3dEstimation
-    {
-      using point_list_type = Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor>;
-
-    public:
-      RigidMotion3d3dEstimation();
-
-      /**
-      * @brief Computes ridig motion (R,t) : R * data + t that maps data on ref 
-      * @param ref Reference point cloud 
-      * @param data Data point cloud 
-      * @return R,t Rigid motion that minimise the MSE   
-      */
-      std::pair<Mat3, Vec3> operator()( const point_list_type &ref, const point_list_type &data );
-
-      /**
-      * @brief Computes ridig motion (R,t) : R * data + t that maps data on ref 
-      * @param ref Reference point cloud 
-      * @param data Data point cloud 
-      * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
-      * @return R,t Rigid motion that minimise the MSE   
-      */
-      std::pair<Mat3, Vec3> operator()( const point_list_type &ref, const point_list_type &data, const std::vector<int> &corresps );
-
-    private:
-    };
-
-    template <typename Scalar>
-    RigidMotion3d3dEstimation<Scalar>::RigidMotion3d3dEstimation()
-    {
+      ceres::CostFunction *cost_fun =
+        new ceres::AutoDiffCostFunction<RigidMotion3d3dEstimationCost, 3 , 4 , 3>( new RigidMotion3d3dEstimationCost( ref_pt, data_pt ) );
+      problem.AddResidualBlock( cost_fun, nullptr , q.coeffs().data() , t.data() );
     }
+  }
 
-    /**
-      * @brief Computes ridig motion (R,t) : R * data + t that maps data on ref 
-      * @param ref Reference point cloud 
-      * @param data Data point cloud 
-      * @return R,t Rigid motion that minimise the MSE   
-      */
-    template <typename Scalar>
-    std::pair<Mat3, Vec3> RigidMotion3d3dEstimation<Scalar>::operator()( const RigidMotion3d3dEstimation<Scalar>::point_list_type &ref, const RigidMotion3d3dEstimation<Scalar>::point_list_type &data )
-    {
-      // 1 Add residuals functions
-      ceres::Problem problem;
-      // Initial value (no transformation)
-      Scalar x[ 12 ];
-      x[ 0 ] = 1.0;
-      x[ 1 ] = 0.0;
-      x[ 2 ] = 0.0;
+  ceres::Solver::Options solverOptions;
+  solverOptions.minimizer_progress_to_stdout = false;
+  solverOptions.logging_type                 = ceres::SILENT;
+  solverOptions.linear_solver_type = ceres::DENSE_QR;
 
-      x[ 3 ] = 0.0;
-      x[ 4 ] = 1.0;
-      x[ 5 ] = 0.0;
+  // !!! This is important !
+  // parametrization (in order to make orthogonal transformations and to use eigen ordering)
+  ceres::LocalParameterization* quaternion_local_parameterization =
+    new ceres::EigenQuaternionParameterization;
+  problem.SetParameterization( q.coeffs().data(), quaternion_local_parameterization );
 
-      x[ 6 ] = 0.0;
-      x[ 7 ] = 0.0;
-      x[ 8 ] = 1.0;
-
-      x[ 9 ]  = 0.0;
-      x[ 10 ] = 0.0;
-      x[ 11 ] = 0.0;
-
-      for ( int id_obs = 0; id_obs < ref.rows(); ++id_obs )
-      {
-        Vec3 ref_pt( ref( id_obs, 0 ), ref( id_obs, 1 ), ref( id_obs, 2 ) );
-        Vec3 data_pt( data( id_obs, 0 ), data( id_obs, 1 ), data( id_obs, 2 ) );
-
-        ceres::CostFunction *cost_fun =
-            new ceres::AutoDiffCostFunction<RigidMotion3d3dEstimationCost, 3, 12>( new RigidMotion3d3dEstimationCost( ref_pt, data_pt ) );
-        problem.AddResidualBlock( cost_fun, NULL, x );
-      }
-
-      ceres::Solver::Options solverOptions;
-      solverOptions.minimizer_progress_to_stdout = false;
-      solverOptions.logging_type                 = ceres::SILENT;
-      // Since the problem is sparse, use a sparse solver iff available
-      if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::SUITE_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::CX_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::EIGEN_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else
-      {
-        solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-      }
 #ifdef OPENMVG_USE_OPENMP
-      solverOptions.num_threads               = omp_get_max_threads();
-      solverOptions.num_linear_solver_threads = omp_get_max_threads();
+  solverOptions.num_threads               = omp_get_max_threads();
+  solverOptions.num_linear_solver_threads = omp_get_max_threads();
 #endif // OPENMVG_USE_OPENMP
 
-      ceres::Solver::Summary summary;
-      ceres::Solve( solverOptions, &problem, &summary );
+  ceres::Solver::Summary summary;
+  ceres::Solve( solverOptions, &problem, &summary );
 
-      Mat3 r;
+  return std::make_pair( q , t );
+}
 
-      r( 0, 0 ) = x[ 0 ];
-      r( 0, 1 ) = x[ 1 ];
-      r( 0, 2 ) = x[ 2 ];
+/**
+* @brief Computes ridig motion (R,t) : R * data + t that maps data on ref
+* @param ref Reference point cloud
+* @param ref_normal Reference point cloud normals
+* @param data Data point cloud
+* @param corresps (id of the correspondances from data to ref, -1 if no corresp)
+* @return < quat , tra > Rigid motion that minimise the MSE
+* use point to normal estimation
+*/
+template <typename Scalar>
+std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3dEstimation<Scalar>::operator()( const point_list_type &ref,
+    const point_list_type &ref_normal,
+    const point_list_type &data, const std::vector<int> &corresps )
+{
+  // 1 Add residuals functions
+  ceres::Problem problem;
+  // Initial value (no transformation)
+  Eigen::Quaternion<Scalar> q = Eigen::Quaternion<Scalar>::Identity();
+  Eigen::Matrix<Scalar, 3, 1> t( 0, 0, 0 );
 
-      r( 1, 0 ) = x[ 3 ];
-      r( 1, 1 ) = x[ 4 ];
-      r( 1, 2 ) = x[ 5 ];
-
-      r( 2, 0 ) = x[ 6 ];
-      r( 2, 1 ) = x[ 7 ];
-      r( 2, 2 ) = x[ 8 ];
-
-      Vec3 t;
-      t[ 0 ] = x[ 9 ];
-      t[ 1 ] = x[ 10 ];
-      t[ 2 ] = x[ 11 ];
-
-      return std::make_pair( r, t );
-    }
-
-    /**
-      * @brief Computes ridig motion (R,t) : R * data + t that maps data on ref 
-      * @param ref Reference point cloud 
-      * @param data Data point cloud 
-      * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
-      * @return R,t Rigid motion that minimise the MSE   
-      */
-    template <typename Scalar>
-    std::pair<Mat3, Vec3> RigidMotion3d3dEstimation<Scalar>::operator()( const point_list_type &ref,
-                                                                         const point_list_type &data,
-                                                                         const std::vector<int> &corresps )
+  for ( size_t id_data = 0; id_data < data.rows() ; ++id_data )
+  {
+    if ( corresps[ id_data ] >= 0 )
     {
-      // 1 Add residuals functions
-      ceres::Problem problem;
-      // Initial value (no transformation)
-      Scalar x[ 12 ];
-      x[ 0 ] = 1.0;
-      x[ 1 ] = 0.0;
-      x[ 2 ] = 0.0;
+      const int id_ref  = corresps[ id_data ];
 
-      x[ 3 ] = 0.0;
-      x[ 4 ] = 1.0;
-      x[ 5 ] = 0.0;
+      Vec3 ref_pt( ref( id_ref, 0 ), ref( id_ref, 1 ), ref( id_ref, 2 ) );
+      Vec3 ref_n( ref_normal( id_ref , 0 ) , ref_normal( id_ref , 1 ) , ref_normal( id_ref , 2 ) ) ;
+      Vec3 data_pt( data( id_data, 0 ), data( id_data, 1 ), data( id_data, 2 ) );
 
-      x[ 6 ] = 0.0;
-      x[ 7 ] = 0.0;
-      x[ 8 ] = 1.0;
+      ceres::CostFunction *cost_fun =
+        new ceres::AutoDiffCostFunction<RigidMotion3d3dNormalEstimationCost, 1 , 4 , 3>( new RigidMotion3d3dNormalEstimationCost( ref_pt , ref_n , data_pt ) );
+      problem.AddResidualBlock( cost_fun, nullptr , q.coeffs().data() , t.data() );
+    }
+  }
 
-      x[ 9 ]  = 0.0;
-      x[ 10 ] = 0.0;
-      x[ 11 ] = 0.0;
+  ceres::Solver::Options solverOptions;
+  solverOptions.minimizer_progress_to_stdout = false;
+  solverOptions.logging_type                 = ceres::SILENT;
+  solverOptions.linear_solver_type = ceres::DENSE_QR;
 
-      for ( size_t id_corresp = 0; id_corresp < corresps.size(); ++id_corresp )
-      {
-        if ( corresps[ id_corresp ] >= 0 )
-        {
-          const int id_data = id_corresp;
-          const int id_ref  = corresps[ id_corresp ];
+  // !!! This is important !
+  // parametrization (in order to make orthogonal transformations and to use eigen ordering)
+  ceres::LocalParameterization* quaternion_local_parameterization =
+    new ceres::EigenQuaternionParameterization;
+  problem.SetParameterization( q.coeffs().data(), quaternion_local_parameterization );
 
-          Vec3 ref_pt( ref( id_ref, 0 ), ref( id_ref, 1 ), ref( id_ref, 2 ) );
-          Vec3 data_pt( data( id_data, 0 ), data( id_data, 1 ), data( id_data, 2 ) );
-
-          ceres::CostFunction *cost_fun =
-              new ceres::AutoDiffCostFunction<RigidMotion3d3dEstimationCost, 3, 12>( new RigidMotion3d3dEstimationCost( ref_pt, data_pt ) );
-          problem.AddResidualBlock( cost_fun, NULL, x );
-        }
-      }
-
-      ceres::Solver::Options solverOptions;
-      solverOptions.minimizer_progress_to_stdout = false;
-      solverOptions.logging_type                 = ceres::SILENT;
-      // Since the problem is sparse, use a sparse solver iff available
-      if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::SUITE_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::CX_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else if ( ceres::IsSparseLinearAlgebraLibraryTypeAvailable( ceres::EIGEN_SPARSE ) )
-      {
-        solverOptions.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;
-        solverOptions.linear_solver_type                 = ceres::SPARSE_NORMAL_CHOLESKY;
-      }
-      else
-      {
-        solverOptions.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-      }
 #ifdef OPENMVG_USE_OPENMP
-      solverOptions.num_threads               = omp_get_max_threads();
-      solverOptions.num_linear_solver_threads = omp_get_max_threads();
+  solverOptions.num_threads               = omp_get_max_threads();
+  solverOptions.num_linear_solver_threads = omp_get_max_threads();
 #endif // OPENMVG_USE_OPENMP
 
-      ceres::Solver::Summary summary;
-      ceres::Solve( solverOptions, &problem, &summary );
+  ceres::Solver::Summary summary;
+  ceres::Solve( solverOptions, &problem, &summary );
 
-      Mat3 r;
+  return std::make_pair( q , t );
+}
 
-      r( 0, 0 ) = x[ 0 ];
-      r( 0, 1 ) = x[ 1 ];
-      r( 0, 2 ) = x[ 2 ];
-
-      r( 1, 0 ) = x[ 3 ];
-      r( 1, 1 ) = x[ 4 ];
-      r( 1, 2 ) = x[ 5 ];
-
-      r( 2, 0 ) = x[ 6 ];
-      r( 2, 1 ) = x[ 7 ];
-      r( 2, 2 ) = x[ 8 ];
-
-      Vec3 t;
-      t[ 0 ] = x[ 9 ];
-      t[ 1 ] = x[ 10 ];
-      t[ 2 ] = x[ 11 ];
-
-      return std::make_pair( r, t );
-    }
-
-  } // namespace registration
+} // namespace registration
 } // namespace geometry
 } // namespace openMVG
 
