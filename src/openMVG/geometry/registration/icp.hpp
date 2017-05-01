@@ -19,17 +19,23 @@ namespace registration
 {
 
 
+/**
+* @brief Apply a rigid transformation on a given set
+* @param[in,out] data a data point
+* @param q Quaternion
+* @param t Translation
+*/
 template<typename Scalar>
-void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> & data , const Eigen::Quaternion<Scalar> & q , Eigen::Vector3d & t )
+static inline void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> & data ,
+                              const Eigen::Quaternion<Scalar> & q ,
+                              const Eigen::Matrix<Scalar, 3, 1> & t )
 {
   for( int id_pt = 0 ; id_pt < data.rows() ; ++id_pt )
   {
     Eigen::Matrix<Scalar, 3, 1> cur_pt;
     cur_pt << data( id_pt , 0 ) , data( id_pt , 1 ) , data( id_pt , 2 ) ;
     const Eigen::Matrix<Scalar, 3, 1> tra_pt = ( q * cur_pt ) + t ;
-    data( id_pt , 0 ) = tra_pt[0] ;
-    data( id_pt , 1 ) = tra_pt[1] ;
-    data( id_pt , 2 ) = tra_pt[2] ;
+    data.row( id_pt ) = tra_pt.transpose() ;
   }
 }
 
@@ -42,9 +48,9 @@ void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> & data
 * @retval +inf if number of pair == 0
 */
 template< typename Scalar>
-Scalar ComputeMSE( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &target,
-                   const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data ,
-                   const std::vector<int> & corresp )
+static inline Scalar ComputeMSE( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &target,
+                                 const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data ,
+                                 const std::vector<int> & corresp )
 {
   int nb_valid = 0 ;
   Scalar mse = 0 ;
@@ -53,15 +59,8 @@ Scalar ComputeMSE( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajo
     const int corr = corresp[ id_pt ];
     if ( corr >= 0 )
     {
-      const Scalar d[] = {data( id_pt, 0 ) - target( corr, 0 ),
-                          data( id_pt, 1 ) - target( corr, 1 ),
-                          data( id_pt, 2 ) - target( corr, 2 )
-                         };
-
       // Add distance between the two points
-      mse += ( d[ 0 ] * d[ 0 ] +
-               d[ 1 ] * d[ 1 ] +
-               d[ 2 ] * d[ 2 ] );
+      mse += ( data.row( id_pt ) - target.row( corr ) ) .squaredNorm() ;
       ++nb_valid;
     }
   }
@@ -172,9 +171,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
     for( size_t id_sample = 0 ; id_sample < subset_indice.size() ; ++id_sample )
     {
       const int indice = subset_indice[ id_sample ] ;
-      subset_data( id_sample , 0 ) = data( indice , 0 ) ;
-      subset_data( id_sample , 1 ) = data( indice , 1 ) ;
-      subset_data( id_sample , 2 ) = data( indice , 2 ) ;
+      subset_data.row( id_sample ) = data.row( indice ) ;
     }
 
     // 2 - Establish pairs based on nearest neighbor search
@@ -230,9 +227,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
       // Update global transformation
       Mat4 tmp = Mat4::Identity() ;
       tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix() ;
-      tmp( 0 , 3 ) = tra.second[0] ;
-      tmp( 1 , 3 ) = tra.second[1] ;
-      tmp( 2 , 3 ) = tra.second[2] ;
+      tmp.block( 0 , 3 , 3 , 1 ) = tra.second ;
       final_tra = tmp * final_tra ;
       // Update mse
       cur_mse = mse_after ;
@@ -243,10 +238,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
 
   // Compute final transformation
   R = final_tra.block( 0 , 0 , 3 , 3 ) ;
-
-  t[ 0 ] = final_tra( 0, 3 );
-  t[ 1 ] = final_tra( 1, 3 );
-  t[ 2 ] = final_tra( 2, 3 );
+  t = final_tra.block( 0 , 3 , 3 , 1 ) ;
 }
 
 
@@ -309,9 +301,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
     for( size_t id_sample = 0 ; id_sample < subset_indice.size() ; ++id_sample )
     {
       const int indice = subset_indice[ id_sample ] ;
-      subset_data( id_sample , 0 ) = data( indice , 0 ) ;
-      subset_data( id_sample , 1 ) = data( indice , 1 ) ;
-      subset_data( id_sample , 2 ) = data( indice , 2 ) ;
+      subset_data.row( id_sample ) = data.row( indice ) ;
     }
 
     // 2 - Establish pairs based on nearest neighbor search
@@ -367,9 +357,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
       // Update global transformation
       Mat4 tmp = Mat4::Identity() ;
       tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix() ;
-      tmp( 0 , 3 ) = tra.second[0] ;
-      tmp( 1 , 3 ) = tra.second[1] ;
-      tmp( 2 , 3 ) = tra.second[2] ;
+      tmp.block( 0 , 3 , 3 , 1 ) = tra.second ;
       final_tra = tmp * final_tra ;
 
       // Update mse
@@ -381,10 +369,7 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
 
   // Compute final transformation
   R = final_tra.block( 0 , 0 , 3 , 3 ) ;
-
-  t[ 0 ] = final_tra( 0, 3 );
-  t[ 1 ] = final_tra( 1, 3 );
-  t[ 2 ] = final_tra( 2, 3 );
+  t = final_tra.block( 0 , 3 , 3 , 1 ) ;
 }
 
 

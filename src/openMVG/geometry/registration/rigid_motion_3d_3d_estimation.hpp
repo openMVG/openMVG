@@ -42,7 +42,7 @@ struct RigidMotion3d3dEstimationCost
     template<typename T>
     bool operator()( const T * const quat , const T * const tra , T * residual ) const
     {
-      // The points
+      // The points (promote to ceres::jet type )
       Eigen::Matrix<T, 3, 1> point;
       point << T( m_data[0] ), T( m_data[1] ), T( m_data[2] );
 
@@ -50,11 +50,11 @@ struct RigidMotion3d3dEstimationCost
       ref << T( m_ref[ 0 ] ), T( m_ref[ 1 ] ), T( m_ref[ 2 ] );
 
       // Map params to Eigen transformations
-      Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
-      Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
+      const Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
+      const Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
 
       // Compute transformation
-      Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
+      const Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
 
       residual[ 0 ] = p[0] - ref[0] ;
       residual[ 1 ] = p[1] - ref[1] ;
@@ -114,11 +114,11 @@ struct RigidMotion3d3dNormalEstimationCost
       ref_n << T( m_ref_n[0] ) , T( m_ref_n[1] ) , T( m_ref_n[2] ) ;
 
       // The transformation
-      Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
-      Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
+      const Eigen::Quaternion<T> q = Eigen::Map<const Eigen::Quaternion<T> >( quat );
+      const Eigen::Matrix<T, 3, 1> t = Eigen::Map<const Eigen::Matrix<T, 3, 1> >( tra );
 
       // Compute transformation
-      Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
+      const Eigen::Matrix<T, 3, 1> p = ( q * point ) + t ;
 
       residual[ 0 ] = ( p - ref ).dot( ref_n ) ;
 
@@ -150,7 +150,7 @@ class RigidMotion3d3dEstimation
     * @param corresps (id of the correspondances from data to ref, -1 if no corresp)
     * @return R,t Rigid motion that minimise the MSE
     */
-    std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> operator()( const point_list_type &ref, const point_list_type &data, const std::vector<int> &corresps );
+    std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> operator()( const point_list_type &ref, const point_list_type &data, const std::vector<int> &corresps ) const ;
 
     /**
     * @brief Computes ridig motion (q,t) : q * data + t that maps data on ref
@@ -162,7 +162,8 @@ class RigidMotion3d3dEstimation
     */
     std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> operator()( const point_list_type &ref,
         const point_list_type &ref_normal,
-        const point_list_type &data, const std::vector<int> &corresps );
+        const point_list_type &data,
+        const std::vector<int> &corresps ) const ;
 
 
   private:
@@ -183,7 +184,7 @@ RigidMotion3d3dEstimation<Scalar>::RigidMotion3d3dEstimation()
 template <typename Scalar>
 std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3dEstimation<Scalar>::operator()( const point_list_type &ref,
     const point_list_type &data,
-    const std::vector<int> &corresps )
+    const std::vector<int> &corresps ) const
 {
   // 1 Add residuals functions
   ceres::Problem problem;
@@ -197,8 +198,8 @@ std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3
     {
       const int id_ref  = corresps[ id_data ];
 
-      Vec3 ref_pt( ref( id_ref, 0 ), ref( id_ref, 1 ), ref( id_ref, 2 ) );
-      Vec3 data_pt( data( id_data, 0 ), data( id_data, 1 ), data( id_data, 2 ) );
+      const Vec3 ref_pt = ref.row( id_ref ).template cast<double>() ;
+      const Vec3 data_pt = data.row( id_data ).template cast<double>() ;
 
       ceres::CostFunction *cost_fun =
         new ceres::AutoDiffCostFunction<RigidMotion3d3dEstimationCost, 3 , 4 , 3>( new RigidMotion3d3dEstimationCost( ref_pt, data_pt ) );
@@ -240,7 +241,7 @@ std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3
 template <typename Scalar>
 std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3dEstimation<Scalar>::operator()( const point_list_type &ref,
     const point_list_type &ref_normal,
-    const point_list_type &data, const std::vector<int> &corresps )
+    const point_list_type &data, const std::vector<int> &corresps ) const
 {
   // 1 Add residuals functions
   ceres::Problem problem;
@@ -254,9 +255,9 @@ std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3
     {
       const int id_ref  = corresps[ id_data ];
 
-      Vec3 ref_pt( ref( id_ref, 0 ), ref( id_ref, 1 ), ref( id_ref, 2 ) );
-      Vec3 ref_n( ref_normal( id_ref , 0 ) , ref_normal( id_ref , 1 ) , ref_normal( id_ref , 2 ) ) ;
-      Vec3 data_pt( data( id_data, 0 ), data( id_data, 1 ), data( id_data, 2 ) );
+      const Vec3 ref_pt = ref.row( id_ref ).template cast<double>() ;
+      const Vec3 ref_n = ref_normal.row( id_ref ).template cast<double>() ;
+      const Vec3 data_pt = data.row( id_data ).template cast<double>() ;
 
       ceres::CostFunction *cost_fun =
         new ceres::AutoDiffCostFunction<RigidMotion3d3dNormalEstimationCost, 1 , 4 , 3>( new RigidMotion3d3dNormalEstimationCost( ref_pt , ref_n , data_pt ) );
