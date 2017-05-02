@@ -108,7 +108,7 @@ KDTree3d<Scalar, Metric>::KDTree3d( const Eigen::Matrix<Scalar, Eigen::Dynamic, 
   // Build the index
   target_set_.reset( new flann::Matrix<Scalar>( ( Scalar * )set.data(), set.rows(), 3 ) );
   // Use 100% precision (an exact Kd Tree)
-  target_index_.reset( new flann::Index<Metric>( *target_set_, flann::KDTreeSingleIndexParams( 15 ) ) ) ;
+  target_index_.reset( new flann::Index<Metric>( *target_set_, flann::KDTreeSingleIndexParams( 16 ) ) ) ;
   target_index_->buildIndex();
 }
 
@@ -139,7 +139,10 @@ bool KDTree3d<Scalar, Metric>::Search( const Vec3 &query, int &index, DistanceTy
   flann::Matrix<DistanceType> dists( distPtr, 1, 1 );
 
   // Perform search
-  return target_index_->knnSearch( queries, indices, dists, 1, flann::SearchParams( 0 , true , 32 ) ) > 0;
+  flann::SearchParams params( 0 , true , 32 ) ;
+  params.cores = 0 ;
+
+  return target_index_->knnSearch( queries, indices, dists, 1, params ) > 0;
 }
 
 /**
@@ -166,7 +169,10 @@ bool KDTree3d<Scalar, Metric>::Search( const Eigen::Matrix<Scalar, Eigen::Dynami
   flann::Matrix<DistanceType> fdists( distPtr, query.rows(), 1 );
 
   // Perform search
-  return target_index_->knnSearch( queries, findices, fdists, 1, flann::SearchParams( 0 , true , 32 ) ) > 0;
+  flann::SearchParams params( 0 , true , 32 ) ;
+  params.cores = 0 ;
+
+  return target_index_->knnSearch( queries, findices, fdists, 1, params ) > 0;
 }
 
 /**
@@ -191,7 +197,9 @@ bool KDTree3d<Scalar, Metric>::Search( const Vec3 &query, const int Nb, std::vec
   flann::Matrix<DistanceType> dists( distPtr, 1, Nb );
 
   // Perform search
-  return target_index_->knnSearch( queries, findices, dists, Nb, flann::SearchParams( 0 , true , 32 ) ) > 0;
+  flann::SearchParams params( 0 , true , 32 ) ;
+  params.cores = 0 ;
+  return target_index_->knnSearch( queries, findices, dists, Nb, params ) > 0;
 }
 
 /**
@@ -220,7 +228,10 @@ bool KDTree3d<Scalar, Metric>::Search( const Eigen::Matrix<Scalar, Eigen::Dynami
   flann::Matrix<DistanceType> fdists( distPtr, query.rows(), Nb );
 
   // Perform search
-  return target_index_->knnSearch( queries, findices, fdists, Nb, flann::SearchParams( 0 , true , 32 ) ) > 0;
+  flann::SearchParams params( 0 , true , 32 ) ;
+  params.cores = 0 ;
+
+  return target_index_->knnSearch( queries, findices, fdists, Nb, params ) > 0;
 }
 
 } // namespace geometry
