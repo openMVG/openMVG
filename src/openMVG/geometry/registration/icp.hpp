@@ -26,6 +26,31 @@ namespace geometry
 namespace registration
 {
 
+/**
+* @brief Apply a rigid transformation on a given set
+* @param[in,out] data a data point
+* @param q Quaternion
+* @param t Translation
+*/
+template <typename Scalar>
+void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data, const Mat4 &tra )
+{
+  for ( int id_pt = 0; id_pt < data.rows(); ++id_pt )
+  {
+    const Scalar x = data( id_pt, 0 );
+    const Scalar y = data( id_pt, 1 );
+    const Scalar z = data( id_pt, 2 );
+
+    Vec3 pt_tra( x * tra( 0, 0 ) + y * tra( 0, 1 ) + z * tra( 0, 2 ) + tra( 0, 3 ),
+                 x * tra( 1, 0 ) + y * tra( 1, 1 ) + z * tra( 1, 2 ) + tra( 1, 3 ),
+                 x * tra( 2, 0 ) + y * tra( 2, 1 ) + z * tra( 2, 2 ) + tra( 2, 3 ) );
+    //        const Scalar w = x * tra( 3, 0 ) + y * tra( 3, 1 ) + z * tra( 3, 2 ) + tra( 3, 3 );
+
+    data( id_pt, 0 ) = pt_tra[ 0 ]; // / w;
+    data( id_pt, 1 ) = pt_tra[ 1 ]; // / w;
+    data( id_pt, 2 ) = pt_tra[ 2 ]; // / w;
+  }
+}
 
 /**
 * @brief Apply a rigid transformation on a given set
@@ -125,6 +150,68 @@ static inline Scalar StdDev( const std::vector< Scalar > & v )
 
 
 /**
+* @brief estimate transformation between two set of points
+* @param target Target point
+* @param data data point
+* @param corresp list of correspondonce (index, corresp[index]) map data to target
+* @param use_ceres indicate if ceres will be used for estimation
+*/
+template< typename Scalar >
+Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &target ,
+                             const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data ,
+                             const std::vector<int> &corresp ,
+                             const bool use_ceres = false )
+{
+  if( use_ceres )
+  {
+    RigidMotion3d3dEstimation<Scalar> estimator ;
+    std::pair< Eigen::Quaternion<Scalar> , Eigen::Matrix<Scalar, 3, 1> > tra = estimator( target , data , corresp ) ;
+
+    Mat4 tmp = Mat4::Identity() ;
+    tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix() ;
+    tmp.block( 0 , 3 , 3 , 1 ) = tra.second ;
+
+    return tmp ;
+  }
+  else
+  {
+    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, Eigen::RowMajor> tmp_target ;
+    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, Eigen::RowMajor> tmp_data ;
+
+    int nb_valid = 0 ;
+    for( const auto & cur_corresp : corresp )
+    {
+      if( cur_corresp >= 0 )
+      {
+        ++nb_valid ;
+      }
+    }
+
+    if( nb_valid == 0 )
+    {
+      return Mat4::Identity() ;
+    }
+
+    tmp_target.resize( 3 , nb_valid ) ;
+    tmp_data.resize( 3 , nb_valid ) ;
+
+    int id_out = 0 ;
+    for( int id_pt = 0 ; id_pt < corresp.size() ; ++id_pt )
+    {
+      const int cur_corresp = corresp[ id_pt ] ;
+      if( cur_corresp >= 0 )
+      {
+        tmp_target.col( id_out ) = target.row( cur_corresp ).transpose() ;
+        tmp_data.col( id_out ) = data.row( id_pt ).transpose() ;
+        ++id_out ;
+      }
+    }
+    return Eigen::umeyama( tmp_data , tmp_target , false ) ;
+  }
+}
+
+
+/**
 * @brief Given two sets of points: target and data
 * This function computes rigid transformation that maps model on target minimizing MSE distance
 * @param target Target shape : a matrix of 3d points (one point per row)
@@ -220,22 +307,18 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
     }
 
     // 4 - Compute best rigid transformation based on pairs
-    RigidMotion3d3dEstimation<Scalar> estimator ;
-    std::pair< Eigen::Quaternion<Scalar> , Eigen::Matrix<Scalar, 3, 1> > tra = estimator( target , subset_data , corresp ) ;
+    const Mat4 tra = EstimateTransformation( target , subset_data , corresp ) ;
 
     // 5 - Update data points and final transformation
-    Transform( subset_data , tra.first , tra.second );
+    Transform( subset_data , tra ) ; //.first , tra.second );
     const double mse_after = ComputeMSE( target , subset_data , corresp ) ;
     if( mse_after < mse_before )
     {
       // Update the whole set
-      Transform( data , tra.first , tra.second );
+      Transform( data , tra ) ; //.first , tra.second );
 
       // Update global transformation
-      Mat4 tmp = Mat4::Identity() ;
-      tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix() ;
-      tmp.block( 0 , 3 , 3 , 1 ) = tra.second ;
-      final_tra = tmp * final_tra ;
+      final_tra = tra * final_tra ;
       // Update mse
       cur_mse = mse_after ;
     }
