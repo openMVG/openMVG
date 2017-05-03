@@ -5,9 +5,15 @@ Build instructions
 ------------------
 
 Required tools:
-* CMake
-* Git
-* C/C++ compiler (GCC, Visual Studio or Clang)
+
+- CMake
+- Git
+- C/C++ compiler (GCC, Visual Studio or Clang)
+
+
+Optional tools:
+
+- QT version >= v5.4
 
 Optional tools:
 * CUDA (Compute Code/Arch >= sm_30)
