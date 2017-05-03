@@ -168,7 +168,7 @@ endif (OpenMVG_USE_OPENMP)
 # CUDA detection
 # ==============================================================================
 if (OpenMVG_USE_CUDA)
-  find_package(CUDA QUIET)
+  find_package(CUDA QUIET REQUIRED)
   if (CUDA_FOUND)
     option(OpenMVG_USE_CUDA "Use CUDA for parallelization" ON)
     register_definitions(-DOPENMVG_USE_CUDA)
