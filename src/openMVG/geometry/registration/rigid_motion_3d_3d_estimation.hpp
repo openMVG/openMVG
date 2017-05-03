@@ -197,8 +197,8 @@ std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3
   // 1 Add residuals functions
   ceres::Problem problem;
   // Initial value (no transformation)
-  Eigen::Quaternion<Scalar> q = Eigen::Quaternion<Scalar>::Identity();
-  Eigen::Matrix<Scalar, 3, 1> t( 0, 0, 0 );
+  Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
+  Eigen::Matrix<double, 3, 1> t( 0, 0, 0 );
 
   for ( size_t id_data = 0; id_data < data.rows() ; ++id_data )
   {
@@ -234,7 +234,10 @@ std::pair<Eigen::Quaternion<Scalar>, Eigen::Matrix<Scalar, 3, 1>> RigidMotion3d3
   ceres::Solver::Summary summary;
   ceres::Solve( solverOptions, &problem, &summary );
 
-  return std::make_pair( q , t );
+  // Cast to destination type
+  const Eigen::Quaternion<Scalar> qres = q.cast<Scalar>() ;
+  const Eigen::Matrix<Scalar, 3, 1> tres = t.cast<Scalar>() ;
+  return std::make_pair( qres , tres );
 }
 
 /**

@@ -168,8 +168,8 @@ Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eige
     std::pair< Eigen::Quaternion<Scalar> , Eigen::Matrix<Scalar, 3, 1> > tra = estimator( target , data , corresp ) ;
 
     Mat4 tmp = Mat4::Identity() ;
-    tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix() ;
-    tmp.block( 0 , 3 , 3 , 1 ) = tra.second ;
+    tmp.block( 0 , 0 , 3 , 3 ) = tra.first.toRotationMatrix().template cast<double>() ;
+    tmp.block( 0 , 3 , 3 , 1 ) = tra.second.template cast<double>() ;
 
     return tmp ;
   }
@@ -206,7 +206,9 @@ Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eige
         ++id_out ;
       }
     }
-    return Eigen::umeyama( tmp_data , tmp_target , false ) ;
+    
+    const Eigen::Matrix<Scalar,4,4> res = Eigen::umeyama( tmp_data , tmp_target , false ) ;
+    return res.template cast<double>() ; 
   }
 }
 

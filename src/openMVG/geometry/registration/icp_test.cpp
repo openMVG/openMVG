@@ -12,6 +12,90 @@
 
 #include <cmath>
 
+TEST( icp , icp_no_transfo_f )
+{
+  // Generate point set
+  Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> target;
+  Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor> data;
+
+  // A sphere
+  const double pi          = 3.14159265358979;
+  const int nb_x = 64 ;
+  const int nb_y = 64 ;
+
+  const double x_min = -10 ;
+  const double x_max = 10 ;
+  const double y_min = -10 ;
+  const double y_max = 10 ;
+
+  const double x_range = x_max - x_min ;
+  const double y_range = y_max - y_min ;
+  const double delta_x = x_range / static_cast<double>( nb_x ) ;
+  const double delta_y = y_range / static_cast<double>( nb_y ) ;
+
+  target.resize( nb_x * nb_y , 3 );
+  data.resize( nb_x * nb_y , 3 );
+
+  int id_pt = 0;
+  for( int id_y = 0 ; id_y < nb_y ; ++id_y )
+  {
+    for( int id_x = 0 ; id_x < nb_x ; ++id_x )
+    {
+      const double x = x_min + id_x * delta_x ;
+      const double y = y_min + id_y * delta_y ;
+
+      const double rad = std::sqrt( x * x + y * y ) ;
+      const double z = std::max( 0.0 , x ) + std::max( 0.0 , y ) + std::cos( 2.0 * rad ) ;
+
+      target( id_pt, 0 ) = x;
+      target( id_pt, 1 ) = y;
+      target( id_pt, 2 ) = z;
+
+      data( id_pt, 0 ) = x ;
+      data( id_pt, 1 ) = y ;
+      data( id_pt, 2 ) = z ;
+
+      ++id_pt;
+    }
+  }
+
+  openMVG::Mat3 R;
+  openMVG::Vec3 t;
+
+  openMVG::geometry::registration::ICP( target, data, 200, 0.0001f , t, R );
+  const openMVG::Vec3 invT = R.transpose() * t ;
+
+  std::cout << "Computed" << std::endl;
+  std::cout << invT << std::endl;
+  std::cout << R << std::endl;
+
+  const double tx = 0.0 ;
+  const double ty = 0.0 ;
+  const double tz = 0.0 ;
+
+  openMVG::Mat3 r ;
+  r.setIdentity() ;
+  std::cout << "Expected" << std::endl;
+  std::cout << -tx << " - " << -ty << " - " << -tz << std::endl;
+  std::cout << r << std::endl ;
+
+  EXPECT_NEAR( invT[ 0 ], -tx, 0.00001 );
+  EXPECT_NEAR( invT[ 1 ], -ty, 0.00001 );
+  EXPECT_NEAR( invT[ 2 ], -tz, 0.00001 );
+
+  EXPECT_NEAR( R( 0, 0 ), r( 0, 0 ), 0.00001 );
+  EXPECT_NEAR( R( 0, 1 ), r( 0, 1 ), 0.00001 );
+  EXPECT_NEAR( R( 0, 2 ), r( 0, 2 ), 0.00001 );
+
+  EXPECT_NEAR( R( 1, 0 ), r( 1, 0 ), 0.00001 );
+  EXPECT_NEAR( R( 1, 1 ), r( 1, 1 ), 0.00001 );
+  EXPECT_NEAR( R( 1, 2 ), r( 1, 2 ), 0.00001 );
+
+  EXPECT_NEAR( R( 2, 0 ), r( 2, 0 ), 0.00001 );
+  EXPECT_NEAR( R( 2, 1 ), r( 2, 1 ), 0.00001 );
+  EXPECT_NEAR( R( 2, 2 ), r( 2, 2 ), 0.00001 );
+}
+
 TEST( icp, icp_no_transfo )
 {
   // Generate point set
