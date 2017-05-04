@@ -15,6 +15,10 @@
 
 #include "third_party/progress/progress_display.hpp"
 
+#include <fstream>
+#include <iomanip>
+#include <iterator>
+
 namespace openMVG {
 namespace sfm {
 

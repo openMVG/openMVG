@@ -7,6 +7,7 @@ target_link_libraries(openMVG_sample_multiview_robustEssential
   openMVG_multiview
   openMVG_system
   openMVG_features
+  openMVG_geometry
   openMVG_matching
   openMVG_sfm
   vlsift)

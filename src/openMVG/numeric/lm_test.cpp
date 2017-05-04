@@ -12,6 +12,9 @@
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
+
 #include <fstream>
 #include <iostream>
 #include <string>
