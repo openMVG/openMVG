@@ -8,6 +8,7 @@
 
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/Similarity3_Kernel.hpp"
+#include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"

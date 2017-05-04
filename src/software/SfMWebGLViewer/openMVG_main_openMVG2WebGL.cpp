@@ -20,6 +20,7 @@
 #include "third_party/progress/progress_display.hpp"
 
 #include <iostream>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
