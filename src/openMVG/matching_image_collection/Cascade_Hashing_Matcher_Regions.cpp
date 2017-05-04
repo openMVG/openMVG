@@ -13,6 +13,7 @@
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/types.hpp"
 
 #include "third_party/progress/progress.hpp"

@@ -12,6 +12,8 @@
 #include "openMVG/image/image_diffusion.hpp"
 #include "openMVG/image/image_resampling.hpp"
 
+#include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
 #include <cmath>
 
 namespace openMVG {
@@ -481,5 +483,18 @@ void AKAZE::Compute_Main_Orientation(
   }
 }
 
+template<class Archive>
+void AKAZE::Params::serialize(Archive & ar)
+{
+  ar(
+    cereal::make_nvp("iNbOctave", iNbOctave),
+    cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
+    cereal::make_nvp("fSigma0", fSigma0),
+    cereal::make_nvp("fThreshold", fThreshold),
+    cereal::make_nvp("fDesc_factor", fDesc_factor));
+}
+
+template void AKAZE::Params::serialize<cereal::JSONInputArchive>(cereal::JSONInputArchive&);
+template void AKAZE::Params::serialize<cereal::JSONOutputArchive>(cereal::JSONOutputArchive&);
 } // namespace features
 } // namespace openMVG

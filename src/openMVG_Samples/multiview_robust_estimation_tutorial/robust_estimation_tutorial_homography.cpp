@@ -9,6 +9,7 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_concat.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"

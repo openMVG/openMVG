@@ -22,6 +22,8 @@ using namespace openMVG::sfm;
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#include <cereal/archives/json.hpp>
+
 #include <cstdlib>
 
 // Naive function for finding the biggest common root dir from two paths

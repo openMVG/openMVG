@@ -25,7 +25,7 @@ set(FEATS
   vl/mathop.c
   vl/random.c)
 set_source_files_properties(${FEATS} PROPERTIES LANGUAGE C)
-add_library(vlsift ${FEATS})
+add_library(vlsift ${FEATS} SIFT_describer.cpp)
 install(TARGETS vlsift DESTINATION lib EXPORT openMVG-targets)
 set_property(TARGET vlsift PROPERTY FOLDER OpenMVG/nonFree)
 install(

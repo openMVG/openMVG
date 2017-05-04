@@ -24,7 +24,6 @@
 #include <string>
 
 using namespace openMVG;
-using namespace openMVG::matching;
 using namespace openMVG::sfm;
 
 int main(int argc, char ** argv)

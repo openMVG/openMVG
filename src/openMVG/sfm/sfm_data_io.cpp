@@ -15,6 +15,10 @@
 #include "openMVG/types.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
+
 namespace openMVG {
 namespace sfm {
 

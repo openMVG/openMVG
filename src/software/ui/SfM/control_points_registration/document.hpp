@@ -12,8 +12,6 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 
 #include <fstream>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/map.hpp>
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
