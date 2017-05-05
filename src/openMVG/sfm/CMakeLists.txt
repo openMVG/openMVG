@@ -19,7 +19,7 @@ list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 target_link_libraries(
   openMVG_sfm
-  openMVG_geometry
+  openMVG_cameras
   openMVG_multiview
   stlplus
   ${CERES_LIBRARIES}

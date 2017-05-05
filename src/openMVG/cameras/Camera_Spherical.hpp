@@ -9,7 +9,6 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 #define OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 namespace openMVG
@@ -35,10 +34,7 @@ using  class_type = Intrinsic_Spherical;
   (
     unsigned int w = 0,
     unsigned int h = 0
-  )
-  : IntrinsicBase(w, h)
-  {
-  }
+  );
 
   ~Intrinsic_Spherical() override = default;
 
@@ -46,19 +42,13 @@ using  class_type = Intrinsic_Spherical;
   * @brief Tell from which type the embed camera is
   * @retval CAMERA_SPHERICAL
   */
-  virtual EINTRINSIC getType() const override
-  {
-    return CAMERA_SPHERICAL;
-  }
+  virtual EINTRINSIC getType() const override;
 
   /**
   * @brief Data wrapper for non linear optimization (get data)
   * @return an empty vector of parameter since a spherical camera does not have any intrinsic parameter
   */
-  virtual std::vector<double> getParams() const override
-  {
-    return {};
-  }
+  virtual std::vector<double> getParams() const override;
 
   /**
   * @brief Data wrapper for non linear optimization (update from data)
@@ -66,10 +56,7 @@ using  class_type = Intrinsic_Spherical;
   * @retval true if update is correct
   * @retval false if there was an error during update
   */
-  virtual bool updateFromParams(const std::vector<double> &params) override
-  {
-    return true;
-  }
+  virtual bool updateFromParams(const std::vector<double> &params) override;
 
   /**
   * @brief Return the list of parameter indexes that must be held constant
@@ -78,54 +65,27 @@ using  class_type = Intrinsic_Spherical;
   virtual std::vector<int> subsetParameterization
   (
     const Intrinsic_Parameter_Type & parametrization
-  ) const override
-  {
-    return {};
-  }
+  ) const override;
 
   /**
   * @brief Transform a point from the camera plane to the image plane
   * @param p Camera plane point
   * @return Point on image plane
   */
-  virtual Vec2 cam2ima(const Vec2 &p) const override
-  {
-    const size_t size = std::max(w(), h());
-    return {
-      p.x() * size + w() / 2.0,
-      p.y() * size + h() / 2.0 };
-  }
+  virtual Vec2 cam2ima(const Vec2 &p) const override;
 
   /**
   * @brief Transform a point from the image plane to the camera plane
   * @param p Image plane point
   * @return camera plane point
   */
-  virtual Vec2 ima2cam(const Vec2 &p) const override
-  {
-    const size_t size = std::max(w(), h());
-    return {
-      (p.x() - w() / 2.0) / size,
-      (p.y() - h() / 2.0) / size };
-  }
+  virtual Vec2 ima2cam(const Vec2 &p) const override;
 
   /**
   * @brief Get bearing vector of a point given an image coordinate
   * @return bearing vector
   */
-  virtual Vec3 operator () ( const Vec2& p ) const override
-  {
-    const Vec2 uv = ima2cam(p);
-
-    const double
-      lon = uv.x() * 2 * M_PI,
-      lat = uv.y() * 2 * M_PI;
-
-    return {
-      cos(lat) * sin(lon),
-      -sin(lat),
-      cos(lat) * cos(lon)};
-  }
+  virtual Vec3 operator () ( const Vec2& p ) const override;
 
   /**
   * @brief Compute projection of a 3D point into the image plane
@@ -136,111 +96,79 @@ using  class_type = Intrinsic_Spherical;
   */
   Vec2 project(
     const geometry::Pose3 & pose,
-    const Vec3 & pt3D ) const override
-  {
-    const Vec3 X = pose( pt3D ); // apply pose
-    const double lon = atan2(X.x(), X.z()); // Horizontal normalization of the  X-Z component
-    const double lat = atan2(-X.y(), sqrt(X.x()*X.x() + X.z()*X.z())); // Tilt angle
-    // denormalization (angle to pixel value)
-    return cam2ima({lon / (2 * M_PI), lat / (2 * M_PI)});
-  }
+    const Vec3 & pt3D ) const override;
 
   /**
   * @brief Does the camera model handle a distortion field?
   * @retval false
   */
-  virtual bool have_disto() const override { return false; }
+  virtual bool have_disto() const override;
 
   /**
   * @brief Add the distortion field to a point (that is in normalized camera frame)
   * @param p Point before distortion computation (in normalized camera frame)
   * @return the initial point p (spherical camera does not have distortion field)
   */
-  virtual Vec2 add_disto(const Vec2 &p) const override { return p; }
+  virtual Vec2 add_disto(const Vec2 &p) const override;
 
   /**
   * @brief Remove the distortion to a camera point (that is in normalized camera frame)
   * @param p Point with distortion
   * @return the initial point p (spherical camera does not have distortion field)
   */
-  virtual Vec2 remove_disto(const Vec2 &p) const override { return p; }
+  virtual Vec2 remove_disto(const Vec2 &p) const override;
 
   /**
   * @brief Return the un-distorted pixel (with removed distortion)
   * @param p Input distorted pixel
   * @return Point without distortion
   */
-  virtual Vec2 get_ud_pixel(const Vec2 &p) const override { return p; }
+  virtual Vec2 get_ud_pixel(const Vec2 &p) const override;
 
   /**
   * @brief Return the distorted pixel (with added distortion)
   * @param p Input pixel
   * @return Distorted pixel
   */
-  virtual Vec2 get_d_pixel(const Vec2 &p) const override { return p; }
+  virtual Vec2 get_d_pixel(const Vec2 &p) const override;
 
   /**
   * @brief Normalize a given unit pixel error to the camera plane
   * @param value Error in image plane
   * @return error of passing from the image plane to the camera plane
   */
-  virtual double imagePlane_toCameraPlaneError(double value) const override { return value; }
+  virtual double imagePlane_toCameraPlaneError(double value) const override;
 
   /**
   * @brief Return the projection matrix (interior & exterior) as a simplified projective projection
   * @param pose Extrinsic matrix
   * @return Concatenation of intrinsic matrix and extrinsic matrix
   */
-  virtual Mat34 get_projective_equivalent(const geometry::Pose3 &pose) const override
-  {
-    return HStack(pose.rotation(), pose.translation());
-  }
+  virtual Mat34 get_projective_equivalent(const geometry::Pose3 &pose) const override;
 
   /**
   * @brief Serialization out
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar(cereal::base_class<IntrinsicBase>(this));
-  }
+  void save( Archive & ar ) const;
 
   /**
   * @brief  Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    ar(cereal::base_class<IntrinsicBase>(this));
-  }
+  void load( Archive & ar );
 
   /**
   * @brief Clone the object
   * @return A clone (copy of the stored object)
   */
-  IntrinsicBase * clone( void ) const override
-  {
-    return new class_type( *this );
-  }
+  IntrinsicBase * clone( void ) const override;
 
 };
 
 } // namespace cameras
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Intrinsic_Spherical, "spherical");
-
-namespace cereal
-{
-  // This struct specialization will tell cereal which is the right way to serialize the ambiguity
-  template <class Archive> struct specialize<Archive, openMVG::cameras::Intrinsic_Spherical, cereal::specialization::member_load_save> {};
-}
-
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Intrinsic_Spherical);
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP

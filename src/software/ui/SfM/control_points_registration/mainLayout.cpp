@@ -10,6 +10,7 @@
 #include <QtGui>
 #include <QDebug>
 
+#include <iostream>
 #include <algorithm>
 #include <clocale>
 

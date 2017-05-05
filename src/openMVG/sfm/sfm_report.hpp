@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/sfm/sfm_data.hpp"
 
 #include "third_party/histogram/histogram.hpp"

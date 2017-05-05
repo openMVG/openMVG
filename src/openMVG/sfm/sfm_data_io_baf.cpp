@@ -7,9 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-//#include <algorithm>
 #include <fstream>
-//#include <vector>
+#include <iterator>
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"
