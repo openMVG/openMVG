@@ -25,3 +25,19 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::featur
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::AKAZE_Binary_Regions)
 
+
+bool openMVG::features::registerRegionFormats()
+{
+  // Force dynamic inititalization of region formats.
+  // See http://uscilab.github.io/cereal/polymorphism.html#registering-from-a-source-file
+  //
+  // "Be careful that there are special considerations to make for placing registration in 
+  // a source file, especially if you will not be explicitly referencing anything within
+  // that source file."
+
+    openMVG::features::SIFT_Regions r1;
+    openMVG::features::AKAZE_Float_Regions r2;
+    openMVG::features::AKAZE_Liop_Regions r3;
+    openMVG::features::AKAZE_Binary_Regions r4;
+    return true;
+}

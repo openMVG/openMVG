@@ -101,3 +101,25 @@ template void IntrinsicBase::save<class cereal::PortableBinaryOutputArchive>(cla
 
 } // namespace cameras
 } // namespace openMVG
+
+#include "openMVG/cameras/cameras.hpp"
+
+bool openMVG::cameras::IntrinsicBase::registerCameraTypes()
+{
+  // Force dynamic inititalization of cameras.
+  // See http://uscilab.github.io/cereal/polymorphism.html#registering-from-a-source-file
+  //
+  // "Be careful that there are special considerations to make for placing registration in 
+  // a source file, especially if you will not be explicitly referencing anything within
+  // that source file."
+
+  openMVG::cameras::Pinhole_Intrinsic p1;
+  openMVG::cameras::Pinhole_Intrinsic_Brown_T2 p2;
+  openMVG::cameras::Pinhole_Intrinsic_Fisheye p3;
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K1 p4;
+  openMVG::cameras::Pinhole_Intrinsic_Radial_K3 p5;
+  openMVG::cameras::Intrinsic_Spherical p6;
+  static_assert(openMVG::cameras::PINHOLE_CAMERA_END==6, 
+    "If you've added a camera type, you need to initialize it here.");
+  return true;
+}

@@ -25,6 +25,11 @@ using AKAZE_Liop_Regions = Scalar_Regions<SIOPointFeature, unsigned char, 144>;
 /// Define the AKAZE Keypoint (with a binary descriptor saved in an uchar array)
 using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature, 64>;
 
+/**
+ * @brief This funcion has to be called when features is compiled as a static library.
+ * @return true
+ */
+bool registerRegionFormats();
 } // namespace features
 } // namespace openMVG
 

@@ -218,6 +218,12 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @return Hash value
   */
   virtual std::size_t hashValue() const;
+
+  /**
+  * @brief This funcion has to be called when cameras is compiled as a static library.
+  * @return true
+  */
+  static bool registerCameraTypes();
 };
 
 

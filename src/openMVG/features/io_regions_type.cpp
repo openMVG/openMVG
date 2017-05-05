@@ -27,6 +27,7 @@ std::unique_ptr<features::Regions> Init_region_type_from_file
   const std::string & sImage_describer_file
 )
 {
+  static bool initRegions = openMVG::features::registerRegionFormats();
   std::unique_ptr<Regions> regions_type;
   if (stlplus::is_file(sImage_describer_file))
   {
