@@ -124,13 +124,16 @@ void UndistortImageResized(
 using namespace openMVG::image;
 
 typedef unsigned char Gray8;
-template void UndistortImage<Image<unsigned char>>(const Image<Gray8> &, const IntrinsicBase *, Image<Gray8> &, Gray8);
+template void UndistortImage<Image<Gray8>>(const Image<Gray8> &, const IntrinsicBase *, Image<Gray8> &, Gray8);
+template void UndistortImageResized<Image<Gray8>>(const Image<Gray8> &, const IntrinsicBase *, Image<Gray8> &, Gray8, const uint32_t, const uint32_t);
 
 typedef Rgb<unsigned char> RGB8;
 template void UndistortImage<Image<RGB8>>(const Image<RGB8> &, const IntrinsicBase *, Image<RGB8> &, RGB8);
+template void UndistortImageResized<Image<RGB8>>(const Image<RGB8> &, const IntrinsicBase *, Image<RGB8> &, RGB8, const uint32_t, const uint32_t);
 
 typedef Rgba<unsigned char> RGBA8;
 template void UndistortImage<Image<RGBA8>>(const Image<RGBA8> &, const IntrinsicBase *, Image<RGBA8> &, RGBA8);
+template void UndistortImageResized<Image<RGBA8>>(const Image<RGBA8> &, const IntrinsicBase *, Image<RGBA8> &, RGBA8, const uint32_t, const uint32_t);
 
 } // namespace cameras
 } // namespace openMVG
