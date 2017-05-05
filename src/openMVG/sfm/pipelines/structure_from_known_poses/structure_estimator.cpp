@@ -53,7 +53,7 @@ void PointsToMat(
     iter != vec_feats.end(); ++iter, ++i)
   {
     if (cam)
-      m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
+      m.col(i) = cam->get_ud_pixel({iter->x(), iter->y()});
     else
       m.col(i) << iter->x(), iter->y();
   }
