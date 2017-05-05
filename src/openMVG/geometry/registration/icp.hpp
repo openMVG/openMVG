@@ -13,6 +13,8 @@
 #include "openMVG/geometry/registration/rigid_motion_3d_3d_estimation.hpp"
 #include "openMVG/numeric/numeric.h"
 
+#include "third_party/nabo/nabo.h"
+
 #include <flann/flann.hpp>
 
 #include <memory>
@@ -31,24 +33,15 @@ namespace registration
 * @param[in,out] data a data point
 * @param q Quaternion
 * @param t Translation
+* @note this function assume data as a matrix of size : n x 3
 */
-template <typename Scalar>
-void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data, const Mat4 &tra )
+template <typename Scalar, int DataOrdering1>
+void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering1> &data, const Mat4 &tra )
 {
   for ( int id_pt = 0; id_pt < data.rows(); ++id_pt )
   {
-    const Scalar x = data( id_pt, 0 );
-    const Scalar y = data( id_pt, 1 );
-    const Scalar z = data( id_pt, 2 );
-
-    Vec3 pt_tra( x * tra( 0, 0 ) + y * tra( 0, 1 ) + z * tra( 0, 2 ) + tra( 0, 3 ),
-                 x * tra( 1, 0 ) + y * tra( 1, 1 ) + z * tra( 1, 2 ) + tra( 1, 3 ),
-                 x * tra( 2, 0 ) + y * tra( 2, 1 ) + z * tra( 2, 2 ) + tra( 2, 3 ) );
-    //        const Scalar w = x * tra( 3, 0 ) + y * tra( 3, 1 ) + z * tra( 3, 2 ) + tra( 3, 3 );
-
-    data( id_pt, 0 ) = pt_tra[ 0 ]; // / w;
-    data( id_pt, 1 ) = pt_tra[ 1 ]; // / w;
-    data( id_pt, 2 ) = pt_tra[ 2 ]; // / w;
+    const Vec3 pt = data.row( id_pt ).template cast<double>() ;
+    data.row( id_pt ) = ( tra * pt.homogeneous() ).hnormalized().cast<Scalar>() ;
   }
 }
 
@@ -58,15 +51,13 @@ void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data,
 * @param q Quaternion
 * @param t Translation
 */
-template<typename Scalar>
-static inline void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> & data ,
+template<typename Scalar, int DataOrdering1 >
+static inline void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering1> & data ,
                               const Eigen::Quaternion<Scalar> & q ,
                               const Eigen::Matrix<Scalar, 3, 1> & t )
 {
   for( int id_pt = 0 ; id_pt < data.rows() ; ++id_pt )
   {
-    //    const Eigen::Matrix<Scalar, 3, 1> cur_pt = data.row( id_pt ).transpose() ;
-    //    cur_pt << data( id_pt , 0 ) , data( id_pt , 1 ) , data( id_pt , 2 ) ;
     data.row( id_pt ) = ( ( q * data.row( id_pt ).transpose() ) + t ).transpose() ;
   }
 }
@@ -79,9 +70,9 @@ static inline void Transform( Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::Ro
 * @retval mse if number of pair is > 0
 * @retval +inf if number of pair == 0
 */
-template< typename Scalar>
-static inline Scalar ComputeMSE( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &target,
-                                 const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data ,
+template< typename Scalar, int DataOrdering1 , int DataOrdering2 >
+static inline Scalar ComputeMSE( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering1> &target,
+                                 const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering2> &data ,
                                  const std::vector<int> & corresp )
 {
   int nb_valid = 0 ;
@@ -119,13 +110,12 @@ static inline void RandomSubset( const size_t highest_value , // included
                                  std::vector< int > & samples , // selected samples
                                  std::mt19937_64 & rng ) // random generator
 {
-  std::vector< int > res( highest_value ) ;
-  std::iota( res.begin() , res.end() , 0 ) ;
-  std::shuffle( res.begin() , res.end() , rng ) ;
+  samples.resize( highest_value ) ;
+  std::iota( samples.begin() , samples.end() , 0 ) ;
+  std::shuffle( samples.begin() , samples.end() , rng ) ;
 
   const int nb_values = std::min( static_cast<int>( highest_value ) , static_cast<int>( std::ceil( static_cast<double>( highest_value ) * percentage ) ) ) ;
   samples.resize( nb_values ) ;
-  std::copy( res.begin() , res.begin() + nb_values , samples.begin() ) ;
 }
 
 /**
@@ -138,16 +128,14 @@ static inline void RandomSubset( const size_t highest_value , // included
 template< typename Scalar >
 static inline Scalar StdDev( const std::vector< Scalar > & v )
 {
-  const double sum = std::accumulate( v.begin(), v.end(), Scalar( 0 ) );
-  const double mean = sum / v.size();
+  const Scalar sum = std::accumulate( v.begin(), v.end(), Scalar( 0 ) );
+  const Scalar mean = sum / v.size();
 
-  std::vector<double> diff( v.size() );
-  std::transform( v.begin(), v.end(), diff.begin(),
-                  std::bind2nd( std::minus<double>(), mean ) );
-  const double sq_sum = std::inner_product( diff.begin(), diff.end(), diff.begin(), Scalar( 0 ) );
+  std::vector<Scalar> diff( v.size() );
+  std::transform( v.begin(), v.end(), diff.begin(), std::bind2nd( std::minus<Scalar>(), mean ) );
+  const Scalar sq_sum = std::inner_product( diff.begin(), diff.end(), diff.begin(), Scalar( 0 ) );
   return std::sqrt( sq_sum / v.size() );
 }
-
 
 /**
 * @brief estimate transformation between two set of points
@@ -156,9 +144,9 @@ static inline Scalar StdDev( const std::vector< Scalar > & v )
 * @param corresp list of correspondonce (index, corresp[index]) map data to target
 * @param use_ceres indicate if ceres will be used for estimation
 */
-template< typename Scalar >
-Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &target ,
-                             const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &data ,
+template< typename Scalar , int DataOrdering1 , int DataOrdering2 >
+Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering1 > &target ,
+                             const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, DataOrdering2> &data ,
                              const std::vector<int> &corresp ,
                              const bool use_ceres = false )
 {
@@ -175,8 +163,8 @@ Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eige
   }
   else
   {
-    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, Eigen::RowMajor> tmp_target ;
-    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, Eigen::RowMajor> tmp_data ;
+    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, DataOrdering1> tmp_target ;
+    Eigen::Matrix<Scalar, 3 , Eigen::Dynamic, DataOrdering2> tmp_data ;
 
     int nb_valid = 0 ;
     for( const auto & cur_corresp : corresp )
@@ -206,12 +194,11 @@ Mat4 EstimateTransformation( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eige
         ++id_out ;
       }
     }
-    
-    const Eigen::Matrix<Scalar,4,4> res = Eigen::umeyama( tmp_data , tmp_target , false ) ;
-    return res.template cast<double>() ; 
+
+    const Eigen::Matrix<Scalar, 4, 4> res = Eigen::umeyama( tmp_data , tmp_target , false ) ;
+    return res.template cast<double>() ;
   }
 }
-
 
 /**
 * @brief Given two sets of points: target and data
@@ -231,9 +218,10 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
           openMVG::Vec3 &t,
           openMVG::Mat3 &R )
 {
-
-  // Build Kd-Tree
-  KDTree3d<Scalar> tree( target );
+  // Build search tree with nabo
+  typedef typename Nabo::NearestNeighbourSearch<Scalar> tree_type ;
+  const Eigen::Matrix<Scalar, Eigen::Dynamic , Eigen::Dynamic> tmp_target = target.transpose() ;
+  tree_type * tree = tree_type::createKDTreeLinearHeap( tmp_target ) ;
 
   unsigned long id_iteration = 0;
   Scalar cur_mse             = std::numeric_limits<Scalar>::max();
@@ -244,45 +232,46 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
   Mat4 final_tra = Mat4::Identity() ;
 
   std::vector<int> corresp( data.rows() );
-  std::vector<Scalar> distance( data.rows() );
 
-  Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> indices;
-  Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> dists;
+  Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> indices;
+  Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> dists;
 
   std::vector< int > subset_indice ;
   const double percentage = 0.10 ; // only sample 10% of the subset
   std::mt19937_64 rng ;
-  Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> subset_data ;
+  Eigen::Matrix<Scalar, 3 , Eigen::Dynamic> subset_data_c ;
 
   while ( id_iteration < max_nb_iteration && cur_mse > mse_threshold )
   {
     std::fill( corresp.begin(), corresp.end(), -1 );
-    std::fill( distance.begin(), distance.end(), Scalar( -1.0 ) );
 
     // 1 - Pick a random subset
     RandomSubset( data.rows() - 1 , percentage , subset_indice , rng ) ;
     const int nb_subset_elts = std::min( static_cast<int>( data.rows() ) - 1 , static_cast<int>( subset_indice.size() ) ) ;
-    subset_data.resize( nb_subset_elts , 3 ) ;
+    subset_data_c.resize( 3 , nb_subset_elts ) ;
     for( size_t id_sample = 0 ; id_sample < subset_indice.size() ; ++id_sample )
     {
       const int indice = subset_indice[ id_sample ] ;
-      subset_data.row( id_sample ) = data.row( indice ) ;
+      subset_data_c.col( id_sample ) = data.row( indice ) ;
     }
 
     // 2 - Establish pairs based on nearest neighbor search
-    tree.Search( subset_data , 1 , indices, dists );
-    std::vector< Scalar > compact_dist( subset_data.rows() ) ;
+    indices.resize( 1, subset_indice.size() ) ;
+    dists.resize( 1, subset_indice.size() ) ;
+    tree->knn( subset_data_c , indices , dists , 1 ) ;
+    std::vector< Scalar > compact_dist( subset_data_c.cols() ) ;
     int id_dist = 0 ;
-    for ( int id_pt = 0; id_pt < subset_data.rows(); ++id_pt )
+    for ( int id_pt = 0; id_pt < subset_data_c.cols(); ++id_pt )
     {
-      const int id_point = indices( id_pt, 0 );
+      const int id_point = indices( 0 , id_pt );
+      const Scalar cur_d = dists( 0 ,  id_pt ) ;
 
       if ( ( id_point >= 0 ) &&
-           ( id_point < target.rows() ) )
+           ( id_point < target.rows() ) &&
+           ( cur_d < std::numeric_limits<Scalar>::max() ) )
       {
-        distance[ id_pt ] = dists( id_pt, 0 );
         corresp[ id_pt ]  = id_point;
-        compact_dist[ id_dist ] = dists( id_pt, 0 );
+        compact_dist[ id_dist ] = cur_d ;
 
         ++id_dist ;
       }
@@ -290,19 +279,21 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
     compact_dist.resize( id_dist ) ;
 
     // 3 - Filter points based on 3 * stddev
+    id_dist = 0 ;
     const Scalar t = 3.0 * StdDev( compact_dist ) ;
-    for ( int id_pt = 0; id_pt < subset_data.rows(); ++id_pt )
+    for ( int id_pt = 0; id_pt < subset_data_c.cols(); ++id_pt )
     {
       if ( corresp[ id_pt ] >= 0 )
       {
-        if ( distance[ id_pt ] > t )
+        if ( compact_dist[ id_dist ] > t )
         {
           corresp[ id_pt ]  = -1;
-          distance[ id_pt ] = -1.0;
         }
+        ++id_dist ;
       }
     }
-    const double mse_before = ComputeMSE( target , subset_data , corresp ) ;
+    Eigen::Matrix<Scalar, Eigen::Dynamic , 3> subset_data = subset_data_c.transpose() ;
+    const Scalar mse_before = ComputeMSE( target , subset_data , corresp ) ;
     if( id_iteration == 0 )
     {
       cur_mse = mse_before ;
@@ -312,12 +303,12 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
     const Mat4 tra = EstimateTransformation( target , subset_data , corresp ) ;
 
     // 5 - Update data points and final transformation
-    Transform( subset_data , tra ) ; //.first , tra.second );
-    const double mse_after = ComputeMSE( target , subset_data , corresp ) ;
+    Transform( subset_data , tra ) ;
+    const Scalar mse_after = ComputeMSE( target , subset_data , corresp ) ;
     if( mse_after < mse_before )
     {
       // Update the whole set
-      Transform( data , tra ) ; //.first , tra.second );
+      Transform( data , tra ) ;
 
       // Update global transformation
       final_tra = tra * final_tra ;
@@ -327,6 +318,8 @@ void ICP( const Eigen::Matrix<Scalar, Eigen::Dynamic, 3, Eigen::RowMajor> &targe
 
     ++id_iteration;
   }
+
+  delete tree ;
 
   // Compute final transformation
   R = final_tra.block( 0 , 0 , 3 , 3 ) ;

@@ -115,3 +115,5 @@ install(
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
 endforeach(inDirectory)
+
+add_subdirectory( nabo )
