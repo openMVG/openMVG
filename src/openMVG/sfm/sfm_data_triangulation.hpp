@@ -72,11 +72,6 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
     const IndexT min_sample_index = 3) const;
 
 private:
-  /// Triangulate a given track from a selection of observations
-  Vec3 track_sample_triangulation(
-    const SfM_Data & sfm_data,
-    const Observations & obs,
-    const std::set<IndexT> & samples) const;
 
   // -- DATA
   double max_reprojection_error_;
