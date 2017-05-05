@@ -13,6 +13,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/archives/json.hpp>
+#include <cereal/types/polymorphic.hpp>
 
 #include <fstream>
 #include <string>

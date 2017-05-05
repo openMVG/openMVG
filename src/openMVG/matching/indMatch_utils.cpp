@@ -21,6 +21,17 @@
 #include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
 
+namespace cereal
+{
+  // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
+  template <class Archive>
+  struct specialize<
+    Archive,
+    openMVG::matching::PairWiseMatches,
+    cereal::specialization::member_serialize>
+  {};
+} // namespace cereal
+
 namespace openMVG {
 namespace matching {
 
