@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <iterator>
 
 namespace openMVG {
 namespace sfm {
