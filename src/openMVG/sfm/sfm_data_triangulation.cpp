@@ -66,9 +66,6 @@ const
     {
       if (bConsole_verbose_)
       {
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp critical
-#endif
         ++(*my_progress_bar);
       }
       // Triangulate each landmark
