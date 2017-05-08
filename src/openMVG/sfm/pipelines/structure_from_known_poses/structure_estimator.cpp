@@ -35,10 +35,7 @@ using namespace openMVG::geometry;
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 {
-  const Vec3 c = P2.center();
-  Vec4 center;
-  center << c(0), c(1), c(2), 1.0;
-  return P1*center;
+  return P1 * P2.center().homogeneous();
 }
 
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
@@ -56,7 +53,7 @@ void PointsToMat(
     iter != vec_feats.end(); ++iter, ++i)
   {
     if (cam)
-      m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
+      m.col(i) = cam->get_ud_pixel({iter->x(), iter->y()});
     else
       m.col(i) << iter->x(), iter->y();
   }
