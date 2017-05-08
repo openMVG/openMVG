@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/image_describer_latch.hpp"
 #include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/image/image_io.hpp"
