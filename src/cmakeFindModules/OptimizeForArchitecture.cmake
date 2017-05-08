@@ -41,7 +41,7 @@ macro(AutodetectHostArchitecture)
    if(_vendor_id STREQUAL "GenuineIntel")
       if(_cpu_family EQUAL 6)
          # Any recent Intel CPU except NetBurst
-         if(_cpumodel EQUAL 79)
+         if(_cpu_model EQUAL 79)
             set(TARGET_ARCHITECTURE "broadwell")
          elseif(_cpu_model EQUAL 70) #intel haswell
             set(TARGET_ARCHITECTURE "haswell")
