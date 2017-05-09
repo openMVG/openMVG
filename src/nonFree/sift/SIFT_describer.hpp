@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,12 +9,13 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
-#include <cereal/cereal.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"

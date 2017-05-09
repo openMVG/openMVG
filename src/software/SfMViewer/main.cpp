@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdio.h>
 #include <cmath>
 #include <iterator>
@@ -22,7 +23,7 @@
 #include <GLFW/glfw3.h>
 
 #include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "third_party/progress/progress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -66,8 +67,7 @@ void load_textures()
   const size_t nbCams = vec_cameras.size();
   m_image_vector.resize(nbCams);
 
-  C_Progress_display my_progress_bar( nbCams, std::cout,
-    "\n", " " , "Textures loading, Please wait...\n" );
+  C_Progress_display my_progress_bar( nbCams, std::cout, "Textures loading, Please wait...\n" );
   for ( size_t i_cam=0; i_cam < nbCams; ++i_cam, ++my_progress_bar) {
     const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);

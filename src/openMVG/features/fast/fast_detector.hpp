@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,10 +9,11 @@
 #ifndef OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
 #define OPENMVG_FEATURES_FAST_FAST_DETECTOR_HPP
 
+#include <type_traits>
+#include <vector>
+
 #include "openMVG/image/image_container.hpp"
 #include "third_party/fast/fast.h"
-
-#include <type_traits>
 
 //
 // Bibliography

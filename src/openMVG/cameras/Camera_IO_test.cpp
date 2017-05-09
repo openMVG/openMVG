@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -45,8 +47,8 @@ TEST(Camera_IO_ceral, SaveRead) {
 
   for (const auto cam_type : vec_camera_model_type)
   {
-    std::shared_ptr<IntrinsicBase> intrinsic(NULL);
-    
+    std::shared_ptr<IntrinsicBase> intrinsic(nullptr);
+
     const int width = 200;
     const int height = 200;
     const double ppx = width / 2.0;

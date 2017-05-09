@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -9,10 +10,6 @@
 
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
-
-#include <vector>
-#include <map>
-
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -55,7 +52,7 @@ Mat3 ClosestSVDRotationMatrix
 // <eigenvalue, eigenvector> pair comparator
 bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
 {
- return fabs(x.first) < fabs(y.first);
+ return std::abs(x.first) < std::abs(y.first);
 }
 
 //-- Solve the Global Rotation matrix registration for each camera given a list
@@ -140,14 +137,6 @@ bool L2RotationAveraging
     const sMat AtAsparse = A.transpose() * A;
     AtA = Mat(AtAsparse); // convert to dense
   }
-
-  // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
-
-  // Solve Ax=0 => SVD
-  //Eigen::JacobiSVD<Mat> svd(A,Eigen::ComputeFullV);
-  //const Vec & NullspaceVector0 = svd.matrixV().col(A.cols()-1);
-  //const Vec & NullspaceVector1 = svd.matrixV().col(A.cols()-2);
-  //const Vec & NullspaceVector2 = svd.matrixV().col(A.cols()-3);
 
   // Solve Ax=0 => eigen vectors
   Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);

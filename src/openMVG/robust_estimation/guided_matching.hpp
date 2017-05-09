@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,13 +9,14 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 #define OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 
+#include <algorithm>
+#include <limits>
+#include <vector>
+
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
-
 
 namespace openMVG{
 namespace geometry_aware{
@@ -172,9 +175,9 @@ template<
   >
 void GuidedMatching(
   const ModelArg & mod, // The model
-  const cameras::IntrinsicBase * camL, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const cameras::IntrinsicBase * camL, // Optional camera (in order to undistord on the fly feature positions, can be nullptr)
   const features::Regions & lRegions,  // regions (point features & corresponding descriptors)
-  const cameras::IntrinsicBase * camR, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const cameras::IntrinsicBase * camR, // Optional camera (in order to undistord on the fly feature positions, can be nullptr)
   const features::Regions & rRegions,  // regions (point features & corresponding descriptors)
   double errorTh,       // Maximal authorized error threshold
   double distRatio,     // Maximal authorized distance ratio
@@ -244,7 +247,7 @@ static inline bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0,
 		double y = -(a*x+c)/b;
 		if (y < 0) y = 0.;
 		else if (y >= H) y = H-1;
-		r1 = fabs(a*x + b*y + c);
+		r1 = std::abs(a*x + b*y + c);
 		x0 << x,y;
 	}
 	else  {
@@ -258,7 +261,7 @@ static inline bool line_to_endPoints(const Vec3 & line, int W, int H, Vec2 & x0,
 		double x = -(b*y+c)/a;
 		if (x < 0) x = 0.;
 		else if (x >= W) x = W-1;
-		r2 = fabs(a*x + b*y + c);
+		r2 = std::abs(a*x + b*y + c);
 		x1 << x,y;
 	}
 	else  {
@@ -287,9 +290,9 @@ template<
 void GuidedMatching_Fundamental_Fast(
   const Mat3 & FMat,    // The fundamental matrix
   const Vec3 & epipole2,// Epipole2 (camera center1 in image plane2; must not be normalized)
-  const cameras::IntrinsicBase * camL, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const cameras::IntrinsicBase * camL, // Optional camera (in order to undistord on the fly feature positions, can be nullptr)
   const features::Regions & lRegions,  // regions (point features & corresponding descriptors)
-  const cameras::IntrinsicBase * camR, // Optional camera (in order to undistord on the fly feature positions, can be NULL)
+  const cameras::IntrinsicBase * camR, // Optional camera (in order to undistord on the fly feature positions, can be nullptr)
   const features::Regions & rRegions,  // regions (point features & corresponding descriptors)
   const int widthR, const int heightR,
   double errorTh,       // Maximal authorized error threshold (consider it's a square threshold)

@@ -1,10 +1,12 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Romain Janvier <romain.janvier~AT~univ-orleans.fr>
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 using namespace openMVG;
 using namespace openMVG::cameras;
 

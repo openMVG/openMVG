@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,15 +9,13 @@
 #ifndef OPENMVG_MATCHING_REGION_MATCHER_HPP
 #define OPENMVG_MATCHING_REGION_MATCHER_HPP
 
-#include "openMVG/matching/matcher_type.hpp"
-#include "openMVG/matching/indMatch.hpp"
+#include <vector>
+
+#include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
-
+#include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/features/regions.hpp"
-
-#include <vector>
 
 namespace openMVG {
 namespace matching {
@@ -36,7 +35,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  virtual ~RegionsMatcher() = default ;
+  virtual ~RegionsMatcher() = default;
 
   /**
    * @brief Initialize the retrieval database

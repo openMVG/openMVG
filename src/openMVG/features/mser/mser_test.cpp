@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Romuald PERROT, Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,65 +8,66 @@
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/mser/mser.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/features/mser/mser_region.hpp"
+#include "openMVG/image/image_io.hpp"
 
 #include "testing/testing.h"
 
 
-using namespace openMVG ;
-using namespace image ; 
-using namespace features ;
-using namespace MSER ; 
+using namespace openMVG;
+using namespace image;
+using namespace features;
+using namespace MSER;
 
 TEST( MSER , Extraction )
 {
-  Image<unsigned char> image , outimg ;
+  Image<unsigned char> image , outimg;
   const std::string png_filename = std::string(THIS_SOURCE_DIR) + "/image_test/lena.png";
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
 
   // Inverted image
   Image<unsigned char> image4( 255 - image.array() );
 
-  std::vector< MSERRegion > regs ; 
+  std::vector< MSERRegion > regs;
 
-  MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY ) ;
-  extr4.Extract( image4 , regs ) ; 
-  MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY ) ;
-  extr8.Extract( image , regs ) ;
+  MSERExtractor extr4( 2 , 0.0005, 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
+  extr4.Extract( image4 , regs );
+  MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY );
+  extr8.Extract( image , regs );
 
   // Export ellipse
-  outimg = image ;
-  for( size_t i = 0 ; i < regs.size() ; ++i )
+  outimg = image;
+  for( size_t i = 0; i < regs.size(); ++i )
   {
-    double ex , ey ;
-    double Mx, My ;
-    double mx , my ;
-    double Ml , ml ;
-    regs[i].FitEllipse( ex , ey , Mx , My , mx , my , Ml , ml ) ;
-    
-    for( double t = 0 ; t < 2.0 * 3.141592 ; t += 0.001 )
+    double ex , ey;
+    double Mx, My;
+    double mx , my;
+    double Ml , ml;
+    regs[i].FitEllipse( ex , ey , Mx , My , mx , my , Ml , ml );
+
+    for( double t = 0; t < 2.0 * 3.141592; t += 0.001 )
     {
-      const int x = ex + ( cos( t ) * Mx * Ml + sin( t ) * mx * ml ) * 2.0 + 0.5 ;
-      const int y = ey + ( cos( t ) * My * Ml + sin( t ) * my * ml ) * 2.0 + 0.5 ;
-      
+      const int x = ex + ( cos( t ) * Mx * Ml + sin( t ) * mx * ml ) * 2.0 + 0.5;
+      const int y = ey + ( cos( t ) * My * Ml + sin( t ) * my * ml ) * 2.0 + 0.5;
+
       if( x >= 0 && y >= 0 && x < image.Width() && y < image.Height() )
       {
-        outimg( y , x ) = 255 ; 
+        outimg( y , x ) = 255;
       }
     }
-    
+
     /*
     double a, b, c;
     regs[i].FitEllipse( a, b, c );
     double x, y;
     regs[i].FitEllipse( x, y );
-    
+
     const AffinePointFeature fp(x, y, a, b, c);
     DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &outimg, fp.orientation());
     */
   }
-  
-  WriteImage( "outimg.png" , outimg ) ; 
+
+  WriteImage( "outimg.png" , outimg );
 }
 
 TEST( MSER , Extraction_Synthetic )
@@ -76,7 +79,7 @@ TEST( MSER , Extraction_Synthetic )
     WriteImage( "in_1.png" , image );
 
     std::vector< MSERRegion > regs;
-    // Dark regions 
+    // Dark regions
     MSERExtractor extr( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
     extr.Extract( image , regs );
 

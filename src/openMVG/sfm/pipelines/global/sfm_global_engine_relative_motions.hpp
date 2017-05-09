@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,12 +9,18 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_RELATIVE_MOTIONS_HPP
 
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
+#include <memory>
+#include <string>
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+#include "openMVG/sfm/pipelines/sfm_engine.hpp"
 
-#include "third_party/htmlDoc/htmlDoc.hpp"
+namespace htmlDocument { class htmlDocumentStream; }
+namespace openMVG { namespace matching { struct PairWiseMatches; } }
+namespace openMVG { namespace sfm { struct Features_Provider; } }
+namespace openMVG { namespace sfm { struct Matches_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG{
 namespace sfm{
@@ -29,7 +36,7 @@ public:
     const std::string & soutDirectory,
     const std::string & loggingFile = "");
 
-  ~GlobalSfMReconstructionEngine_RelativeMotions();
+  ~GlobalSfMReconstructionEngine_RelativeMotions() override;
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
@@ -37,7 +44,7 @@ public:
   void SetRotationAveragingMethod(ERotationAveragingMethod eRotationAveragingMethod);
   void SetTranslationAveragingMethod(ETranslationAveragingMethod eTranslation_averaging_method_);
 
-  virtual bool Process();
+  bool Process() override;
 
 protected:
   /// Compute from relative rotations the global rotations of the camera poses

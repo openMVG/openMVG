@@ -1,5 +1,6 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2015 Sida Li.
+// Copyright (c) 2015 Sida Li, Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +9,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 
-#include "openMVG/cameras/Camera_Common.hpp"
-#include "openMVG/numeric/numeric.h"
-
 #include <vector>
+
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -70,7 +72,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Does the camera model handle a distortion field?
     * @retval true
     */
-    virtual bool have_disto() const override
+    bool have_disto() const override
     {
       return true;
     }
@@ -80,7 +82,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Point before distortion computation (in normalized camera frame)
     * @return point with distortion
     */
-    virtual Vec2 add_disto( const Vec2 & p ) const override
+    Vec2 add_disto( const Vec2 & p ) const override
     {
       return ( p + distoFunction( params_, p ) );
     }
@@ -93,7 +95,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     * IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
     */
-    virtual Vec2 remove_disto( const Vec2 & p ) const override
+    Vec2 remove_disto( const Vec2 & p ) const override
     {
       const double epsilon = 1e-10; //criteria to stop the iteration
       Vec2 p_u = p;
@@ -112,7 +114,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
     */
-    virtual std::vector<double> getParams() const override
+    std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
       params.insert(params.end(), std::begin(params_), std::end(params_));
@@ -125,7 +127,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @retval true if update is correct
     * @retval false if there was an error during update
     */
-    virtual bool updateFromParams( const std::vector<double> & params ) override
+    bool updateFromParams( const std::vector<double> & params ) override
     {
       if ( params.size() == 8 )
       {
@@ -146,7 +148,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Return the list of parameter indexes that must be held constant
     * @param parametrization The given parametrization
     */
-    virtual std::vector<int> subsetParameterization
+    std::vector<int> subsetParameterization
     (
       const Intrinsic_Parameter_Type & parametrization) const override
     {
@@ -221,7 +223,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Clone the object
     * @return A clone (copy of the stored object)
     */
-    virtual IntrinsicBase * clone( void ) const override
+    IntrinsicBase * clone( void ) const override
     {
       return new class_type( *this );
     }

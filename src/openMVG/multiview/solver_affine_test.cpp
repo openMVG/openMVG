@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -82,7 +83,7 @@ TEST(Affine2DTest, Rotation45) {
           0,           0,          1;
   Mat x2 = x1;
   for(int i = 0; i < x2.cols(); ++i)  {
-    x2.block<2,1>(0,i) = rot.block<2,2>(0,0) * x1.col(i) ;
+    x2.block<2,1>(0,i) = rot.block<2,2>(0,0) * x1.col(i);
   }
 
   Mat3 affine_mat;
@@ -219,7 +220,7 @@ TEST(Affine3DTest, RotationAndTranslationXYZ) {
   Mat x2 = x1;
   // Transform point from ground affine matrix
   for(int i = 0; i < x2.cols(); ++i)  {
-    x2.block<3,1>(0,i) =  M.block<3,3>(0,0) * x1.col(i) ;
+    x2.block<3,1>(0,i) =  M.block<3,3>(0,0) * x1.col(i);
     x2.block<3,1>(0,i) += M.block<3,1>(0,3); // translation
   }
 

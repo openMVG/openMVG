@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,13 +9,13 @@
 #ifndef OPENMVG_MATCHING_MATCHING_FILTERS_HPP
 #define OPENMVG_MATCHING_MATCHING_FILTERS_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <set>
 #include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -72,7 +73,6 @@ inline void NNdistanceRatio
   *
   * \return void.
   */
-// TODO
 inline void SymmetricMatches
 (
   const std::vector<int> & vec_matches,

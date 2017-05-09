@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
@@ -5,18 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/features/feature.hpp"
 #include "openMVG/tracks/tracks.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -56,14 +61,7 @@ int main(int argc, char ** argv)
     std::cerr << "\nIt is an invalid output directory" << std::endl;
     return EXIT_FAILURE;
   }
-  if (sMatchesDir.empty()) {
-    std::cerr << "\nmatchdir cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (sMatchFile.empty()) {
-    std::cerr << "\nmatchfile cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
+
 
   //---------------------------------------
   // Read SfM Scene (image view names)
@@ -129,6 +127,7 @@ int main(int argc, char ** argv)
   {
     for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
+
       const View * view_I = sfm_data.GetViews().at(I).get();
       const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
         view_I->s_Img_path);
@@ -153,7 +152,7 @@ int main(int argc, char ** argv)
           const IndexT j = iter->second;
           matches.emplace_back(i, j);
         }
-        
+
         // Draw corresponding features
         const bool bVertical = false;
         std::ostringstream os;

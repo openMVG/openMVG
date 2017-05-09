@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,10 +30,11 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
-
-#include <vector>
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 namespace resection {

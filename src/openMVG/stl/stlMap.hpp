@@ -1,20 +1,17 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-/**
- * @file stlMap.h
- * @brief Functor to select key or value of stl maps
- * @author Pierre MOULON
- *
- * Copyright (c) 2011, 2012, 2013 Pierre MOULON
- * All rights reserved.
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
+// Copyright (c) 2011 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef OPENMVG_STL_MAP_ADDITION_HPP
 #define OPENMVG_STL_MAP_ADDITION_HPP
 
+// ---------------------------
+// Brief:
+// Functor to select key or value of stl maps
 // ---------------------------
 // Usage example :
 // ---------------------------

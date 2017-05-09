@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,8 +8,6 @@
 
 #ifndef OPENMVG_NUMERIC_LM_HPP
 #define OPENMVG_NUMERIC_LM_HPP
-
-#include "openMVG/numeric/numeric.h"
 
 // Levenberg Marquardt Non Linear Optimization
 #include <unsupported/Eigen/NonLinearOptimization>
@@ -34,11 +34,11 @@ struct Functor
   };
   using InputType = Matrix<Scalar, InputsAtCompileTime, 1>;
   using ValueType = Matrix<Scalar, ValuesAtCompileTime, 1>;
-  using JacobianType = Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> ;
+  using JacobianType = Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime>;
 
 
   /// Number of values per sample
-  const int m_inputs ;
+  const int m_inputs;
 
   // Number of sample
   const int m_values;

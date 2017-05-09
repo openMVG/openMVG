@@ -1,6 +1,8 @@
 #!/usr/bin/python
 #! -*- encoding: utf-8 -*-
 
+# This file is part of OpenMVG (Open Multiple View Geometry) C++ library.
+
 # Python implementation of the bash script written by Romuald Perrot
 # Created by @vins31
 # Modified by Pierre Moulon
@@ -21,7 +23,6 @@ OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
 # Indicate the openMVG camera sensor width directory
 CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/../../openMVG/exif/sensor_width_database"
 
-import commands
 import os
 import subprocess
 import sys

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,8 @@
 
 #ifndef OPENMVG_SFM_GLOBAL_REINDEX_HPP
 #define OPENMVG_SFM_GLOBAL_REINDEX_HPP
+
+#include <set>
 
 namespace openMVG {
 namespace sfm{

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,20 +9,20 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_TEST_HPP
 
+#include <algorithm>
+#include <map>
+#include <numeric>
+#include <string>
+#include <vector>
+
 #include "openMVG/graph/triplet_finder.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
-
-#include <fstream>
-#include <map>
-#include <numeric>
-#include <vector>
-
-// rperrot : TODO : remove using from .h 
 
 int modifiedMod
 (

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,7 +9,9 @@
 #ifndef OPENMVG_SFM_SFM_DATA_HPP
 #define OPENMVG_SFM_SFM_DATA_HPP
 
-#include "openMVG/cameras/cameras.hpp"
+#include <string>
+
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
@@ -21,7 +25,7 @@ namespace sfm {
 using Poses = Hash_Map<IndexT, geometry::Pose3>;
 
 /// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
-using Intrinsics = Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase> >;
+using Intrinsics = Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase>>;
 
 /// Generic SfM data container
 /// Store structure and camera properties:

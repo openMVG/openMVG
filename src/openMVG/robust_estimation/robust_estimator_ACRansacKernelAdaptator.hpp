@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -27,8 +28,10 @@
 //  by the generic ACRANSAC routine.
 //
 
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace robust{

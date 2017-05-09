@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,9 +9,17 @@
 #ifndef OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 #define OPENMVG_SFM_GLOBAL_ENGINE_PIPELINES_GLOBAL_TRANSLATION_AVERAGING_HPP
 
-#include "openMVG/graph/graph.hpp"
+#include <string>
+#include <vector>
+
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/tracks/tracks.hpp"
+
+namespace openMVG { namespace graph { struct Triplet; } }
+namespace openMVG { namespace matching { struct PairWiseMatches; } }
+namespace openMVG { namespace sfm { struct Features_Provider; } }
+namespace openMVG { namespace sfm { struct Matches_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG{
 namespace sfm{

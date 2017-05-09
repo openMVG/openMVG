@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,17 +8,33 @@
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 
-#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/tracks/tracks.hpp"
+#include "openMVG/types.hpp"
+
+#include "third_party/histogram/histogram.hpp"
+#include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include <ceres/types.h>
 
-#include "third_party/htmlDoc/htmlDoc.hpp"
-#include "third_party/progress/progress.hpp"
+#include <iostream>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -541,12 +558,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Compute the relative pose from pairwise point matches:
   for (int i = 0; i < static_cast<int>(poseWiseMatches.size()); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
-    {
-      ++my_progress_bar;
-    }
+    ++my_progress_bar;
     {
       PoseWiseMatches::const_iterator iter (poseWiseMatches.begin());
       std::advance(iter, i);

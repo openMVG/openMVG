@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (C) 2013  "Robot Vision Group, NLPR, CASIA", Zhenhua Wang,
 // Bin Fan and Fuchao Wu.
@@ -20,8 +21,8 @@
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
 
-#include "openMVG/features/feature.hpp" 
-#include "openMVG/image/image.hpp"
+namespace openMVG { namespace features { class SIOPointFeature; } }
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 #include <map>
 #include <vector>
