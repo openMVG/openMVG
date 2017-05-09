@@ -9,15 +9,9 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_HPP
 #define OPENMVG_MATCHING_IND_MATCH_HPP
 
-#include <iostream>
-#include <map>
-#include <set>
-#include <utility>
-#include <vector>
-
 #include "openMVG/types.hpp"
 
-#include <cereal/cereal.hpp> // Serialization
+#include <iostream>
 
 namespace openMVG {
 namespace matching {
@@ -40,6 +34,14 @@ struct IndMatch
   friend bool operator<(const IndMatch& m1, const IndMatch& m2)  {
     return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
   }
+  
+  friend std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
+    return out << obj.i_ << " " << obj.j_;
+  }
+
+  friend std::istream& operator>>(std::istream & in, IndMatch & obj) {
+    return in >> obj.i_ >> obj.j_;
+  }
 
   /// Remove duplicates ((i_, j_) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
@@ -59,13 +61,6 @@ struct IndMatch
   IndexT i_, j_;  // Left, right index
 };
 
-inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
-  return out << obj.i_ << " " << obj.j_;
-}
-
-inline std::istream& operator>>(std::istream & in, IndMatch & obj) {
-  return in >> obj.i_ >> obj.j_;
-}
 
 using IndMatches = std::vector<matching::IndMatch>;
 
@@ -108,16 +103,5 @@ inline Pair_Set getPairs(const PairWiseMatches & matches)
 
 }  // namespace matching
 }  // namespace openMVG
-
-namespace cereal
-{
-  // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
-  template <class Archive>
-  struct specialize<
-    Archive,
-    openMVG::matching::PairWiseMatches,
-    cereal::specialization::member_serialize>
-  {};
-} // namespace cereal
 
 #endif // OPENMVG_MATCHING_IND_MATCH_HPP

@@ -7,10 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/cameras/Camera_IO.hpp"
-
 #include "openMVG/cameras/cameras.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 #include <cereal/archives/json.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <cereal/cereal.hpp>
+
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::cameras;

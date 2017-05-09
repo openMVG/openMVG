@@ -15,6 +15,10 @@
 #include "openMVG/types.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
+
 namespace openMVG {
 namespace sfm {
 
@@ -66,6 +70,8 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
 
 bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_part)
 {
+  static bool initCameras = openMVG::cameras::IntrinsicBase::registerCameraTypes();
+
   bool bStatus = false;
   const std::string ext = stlplus::extension_part(filename);
   if (ext == "json")

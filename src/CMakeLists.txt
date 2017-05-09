@@ -415,6 +415,8 @@ add_subdirectory(openMVG)
 set(OpenMVG_LIBRARIES
   openMVG_image
   openMVG_features
+  openMVG_geometry
+  openMVG_cameras
   openMVG_matching_image_collection
   openMVG_kvld
   openMVG_multiview

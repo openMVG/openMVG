@@ -13,10 +13,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/stl/hash.hpp"
-
-#include <cereal/types/polymorphic.hpp>
 
 namespace openMVG
 {
@@ -86,18 +82,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   */
   virtual Vec2 project(
     const geometry::Pose3 & pose,
-    const Vec3 & pt3D ) const
-  {
-    const Vec3 X = pose( pt3D ); // apply pose
-    if ( this->have_disto() ) // apply disto & intrinsics
-    {
-      return this->cam2ima( this->add_disto( X.hnormalized() ) );
-    }
-    else // apply intrinsics
-    {
-      return this->cam2ima( X.hnormalized() );
-    }
-  }
+    const Vec3 & pt3D ) const;
 
   /**
   * @brief Compute the residual between the 3D projected point and an image observation
@@ -109,11 +94,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   Vec2 residual(
     const geometry::Pose3 & pose,
     const Vec3 & X,
-    const Vec2 & x ) const
-  {
-    const Vec2 proj = this->project( pose, X );
-    return x - proj;
-  }
+    const Vec2 & x ) const;
 
   // --
   // Virtual members
@@ -223,38 +204,26 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void save( Archive & ar ) const;
 
   /**
   * @brief  Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void load( Archive & ar );
 
   /**
   * @brief Generate a unique Hash from the camera parameters (used for grouping)
   * @return Hash value
   */
-  virtual std::size_t hashValue() const
-  {
-    size_t seed = 0;
-    stl::hash_combine( seed, static_cast<int>( this->getType() ) );
-    stl::hash_combine( seed, w_ );
-    stl::hash_combine( seed, h_ );
-    const std::vector<double> params = this->getParams();
-    for ( const auto & param : params )
-      stl::hash_combine( seed , param );
-    return seed;
-  }
+  virtual std::size_t hashValue() const;
+
+  /**
+  * @brief This funcion has to be called when cameras is compiled as a static library.
+  * @return true
+  */
+  static bool registerCameraTypes();
 };
 
 
@@ -271,23 +240,12 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
 *
 * @return Angle (in degree) between the two rays
 */
-inline double AngleBetweenRay(
+double AngleBetweenRay(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,
   const IntrinsicBase * intrinsic2,
-  const Vec2 & x1, const Vec2 & x2 )
-{
-  // x = (u, v, 1.0)  // image coordinates
-  // X = R.t() * K.inv() * x + C // Camera world point
-  // getting the ray:
-  // ray = X - C = R.t() * K.inv() * x
-  const Vec3 ray1 = ( pose1.rotation().transpose() * intrinsic1->operator()( x1 ) ).normalized();
-  const Vec3 ray2 = ( pose2.rotation().transpose() * intrinsic2->operator()( x2 ) ).normalized();
-  const double mag = ray1.norm() * ray2.norm();
-  const double dotAngle = ray1.dot( ray2 );
-  return R2D( acos( clamp( dotAngle / mag, -1.0 + 1.e-8, 1.0 - 1.e-8 ) ) );
-}
+  const Vec2 & x1, const Vec2 & x2 );
 
 } // namespace cameras
 } // namespace openMVG

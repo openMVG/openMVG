@@ -65,13 +65,13 @@ before_script:
       -DCMAKE_CXX_COMPILER=$COMPILER \
       -DCMAKE_BUILD_TYPE=release \
       -DOpenMVG_BUILD_TESTS=ON \
-      -DOpenMVG_BUILD_EXAMPLES=OFF \
-      -DOpenMVG_BUILD_SOFTWARES=OFF \
+      -DOpenMVG_BUILD_EXAMPLES=ON \
+      -DOpenMVG_BUILD_SOFTWARES=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
       . $OPENMVG_SOURCE
 
 script:
 # limit GCC builds to a reduced number of thread for the virtual machine
-  - make -j 2
+  - make all -j 2
   - make test
 

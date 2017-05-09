@@ -10,15 +10,9 @@
 #define OPENMVG_SFM_SFM_VIEW_HPP
 
 #include <string>
+#include <memory>
 
 #include "openMVG/types.hpp"
-
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/types/polymorphic.hpp>
 
 namespace openMVG {
 namespace sfm {
@@ -44,10 +38,7 @@ struct View
     IndexT view_id = UndefinedIndexT,
     IndexT intrinsic_id = UndefinedIndexT,
     IndexT pose_id = UndefinedIndexT,
-    IndexT width = UndefinedIndexT, IndexT height = UndefinedIndexT)
-    :s_Img_path(sImgPath), id_view(view_id), id_intrinsic(intrinsic_id),
-    id_pose(pose_id), ui_width(width), ui_height(height)
-    {}
+    IndexT width = UndefinedIndexT, IndexT height = UndefinedIndexT);
 
   virtual ~View() = default;
 
@@ -56,38 +47,14 @@ struct View
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar(cereal::make_nvp("local_path", stlplus::folder_part(s_Img_path)),
-       cereal::make_nvp("filename", stlplus::filename_part(s_Img_path)),
-       cereal::make_nvp("width", ui_width),
-       cereal::make_nvp("height", ui_height),
-       cereal::make_nvp("id_view", id_view),
-       cereal::make_nvp("id_intrinsic", id_intrinsic),
-       cereal::make_nvp("id_pose", id_pose));
-  }
+  void save( Archive & ar ) const;
 
   /**
   * @brief Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    //Define a view with two string (base_path & basename)
-    std::string local_path = s_Img_path;
-    std::string filename = s_Img_path;
-
-    ar(cereal::make_nvp("local_path", local_path),
-       cereal::make_nvp("filename", filename),
-       cereal::make_nvp("width", ui_width),
-       cereal::make_nvp("height", ui_height),
-       cereal::make_nvp("id_view", id_view),
-       cereal::make_nvp("id_intrinsic", id_intrinsic),
-       cereal::make_nvp("id_pose", id_pose));
-
-    s_Img_path = stlplus::create_filespec(local_path, filename);
-  }
+  void load( Archive & ar );
 };
 
 /// Define a collection of View

@@ -20,6 +20,7 @@
 
 #include "nonFree/sift/SIFT_describer.hpp"
 
+#include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/details/helpers.hpp>
 

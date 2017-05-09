@@ -9,10 +9,7 @@
 #ifndef OPENMVG_GEOMETRY_POSE3_HPP
 #define OPENMVG_GEOMETRY_POSE3_HPP
 
-#include <vector>
-
-#include "openMVG/multiview/projection.hpp"
-#include <cereal/cereal.hpp> // Serialization
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -45,54 +42,38 @@ class Pose3
     (
       const Mat3& r = std::move(Mat3::Identity()),
       const Vec3& c = std::move(Vec3::Zero())
-    )
-    : rotation_( r ), center_( c ) {}
+    );
 
     /**
     * @brief Get Rotation matrix
     * @return Rotation matrix
     */
-    const Mat3& rotation() const
-    {
-      return rotation_;
-    }
+	const Mat3& rotation() const;
 
     /**
     * @brief Get Rotation matrix
     * @return Rotation matrix
     */
-    Mat3& rotation()
-    {
-      return rotation_;
-    }
+	Mat3& rotation();
 
     /**
     * @brief Get center of rotation
     * @return center of rotation
     */
-    const Vec3& center() const
-    {
-      return center_;
-    }
+	const Vec3& center() const;
 
     /**
     * @brief Get center of rotation
     * @return Center of rotation
     */
-    Vec3& center()
-    {
-      return center_;
-    }
+	Vec3& center();
 
     /**
     * @brief Get translation vector
     * @return translation vector
     * @note t = -RC
     */
-    inline Vec3 translation() const
-    {
-      return -( rotation_ * center_ );
-    }
+	Vec3 translation() const;
 
 
     /**
@@ -100,10 +81,7 @@ class Pose3
     * @param p Point
     * @return transformed point
     */
-    inline Mat3X operator () ( const Mat3X& p ) const
-    {
-      return rotation_ * ( p.colwise() - center_ );
-    }
+	Mat3X operator () (const Mat3X& p) const;
 
 
     /**
@@ -111,20 +89,14 @@ class Pose3
     * @param P a Pose
     * @return Composition of current pose and parameter pose
     */
-    Pose3 operator * ( const Pose3& P ) const
-    {
-      return Pose3( rotation_ * P.rotation_, P.center_ + P.rotation_.transpose() * center_ );
-    }
+	Pose3 operator * (const Pose3& P) const;
 
 
     /**
     * @brief Get inverse of the pose
     * @return Inverse of the pose
     */
-    Pose3 inverse() const
-    {
-      return Pose3( rotation_.transpose(),  -( rotation_ * center_ ) );
-    }
+	Pose3 inverse() const;
 
 
     /**
@@ -132,49 +104,21 @@ class Pose3
     * @param X Input point
     * @return Distance to center
     */
-    double depth( const Vec3 &X ) const
-    {
-      return ( rotation_ * ( X - center_ ) )[2];
-    }
+	double depth(const Vec3 &X) const;
 
     /**
     * Serialization out
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      const std::vector<std::vector<double>> mat =
-      {
-        { rotation_( 0, 0 ), rotation_( 0, 1 ), rotation_( 0, 2 ) },
-        { rotation_( 1, 0 ), rotation_( 1, 1 ), rotation_( 1, 2 ) },
-        { rotation_( 2, 0 ), rotation_( 2, 1 ), rotation_( 2, 2 ) }
-      };
-
-      ar( cereal::make_nvp( "rotation", mat ) );
-
-      const std::vector<double> vec = { center_( 0 ), center_( 1 ), center_( 2 ) };
-      ar( cereal::make_nvp( "center", vec ) );
-    }
+    void save( Archive & ar ) const;
 
     /**
     * @brief Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      std::vector<std::vector<double>> mat( 3, std::vector<double>( 3 ) );
-      ar( cereal::make_nvp( "rotation", mat ) );
-      // copy back to the rotation
-      rotation_.row( 0 ) = Eigen::Map<const Vec3>( &( mat[0][0] ) );
-      rotation_.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
-      rotation_.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
-
-      std::vector<double> vec( 3 );
-      ar( cereal::make_nvp( "center", vec ) );
-      center_ = Eigen::Map<const Vec3>( &vec[0] );
-    }
+    void load( Archive & ar );
 };
 } // namespace geometry
 } // namespace openMVG

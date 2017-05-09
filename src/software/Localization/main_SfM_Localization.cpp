@@ -10,6 +10,7 @@
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/io_regions_type.hpp>
 #include <openMVG/image/image_io.hpp>
+#include <openMVG/multiview/projection.hpp>
 #include <software/SfM/SfMPlyHelper.hpp>
 
 #include <openMVG/system/timer.hpp>
@@ -21,6 +22,9 @@ using namespace openMVG::sfm;
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <cereal/archives/json.hpp>
+#include <cereal/types/polymorphic.hpp>
 
 #include <cstdlib>
 

@@ -1,0 +1,83 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2014 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "openMVG/cameras/Camera_IO.hpp"
+
+#include <fstream>
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+namespace openMVG
+{
+namespace cameras
+{
+
+
+bool save(
+  const std::string & scameraFile,
+  const PinholeCamera & cam )
+{
+  if ( stlplus::extension_part( scameraFile ) != "bin" )
+  {
+    return false;
+  }
+
+  const Mat34 & PMat = cam._P;
+  std::ofstream file( scameraFile.c_str(), std::ios::out | std::ios::binary );
+  file.write( ( const char* )PMat.data(), ( std::streamsize )( 3 * 4 )*sizeof( double ) );
+
+  const bool bOk = ( !file.fail() );
+  file.close();
+  return bOk;
+}
+
+
+bool load(
+  const std::string & scameraFile,
+  PinholeCamera & cam )
+{
+  std::vector<double> val;
+
+  if ( stlplus::extension_part( scameraFile ) == "bin" )
+  {
+    std::ifstream in( scameraFile.c_str(), std::ios::in | std::ios::binary );
+    if ( !in.is_open() )
+    {
+      std::cerr << "Error: failed to open file '" << scameraFile
+                << "' for reading" << std::endl;
+      return false;
+    }
+    val.resize(12);
+    in.read(reinterpret_cast<char*>(&val[0]),(std::streamsize)12*sizeof(double));
+    if (in.fail())
+    {
+      val.clear();
+    }
+  }
+  else
+  {
+    return false;
+  }
+
+  if ( val.size() == 3 * 4 ) //P Matrix
+  {
+    Mat34 P;
+    P << val[0], val[3], val[6], val[9],
+    val[1], val[4], val[7], val[10],
+    val[2], val[5], val[8], val[11];
+
+    Mat3 R, K;
+    Vec3 t;
+    KRt_From_P( P, &K, &R, &t );
+    cam = PinholeCamera( K, R, t );
+    return true;
+  }
+  return false;
+}
+
+} // namespace cameras
+} // namespace openMVG

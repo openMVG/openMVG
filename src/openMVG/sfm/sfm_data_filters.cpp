@@ -12,6 +12,7 @@
 #include "openMVG/tracks/union_find.hpp"
 
 #include <utility>
+#include <iterator>
 
 namespace openMVG {
 namespace sfm {

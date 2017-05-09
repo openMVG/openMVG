@@ -12,6 +12,7 @@
 
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
