@@ -179,16 +179,24 @@ std::unique_ptr<AKAZE_Image_describer_MLDB::Regions_type> AKAZE_Image_describer_
   return regions;
 }
 
+// static
 std::unique_ptr<AKAZE_Image_describer> AKAZE_Image_describer::create(
   const AKAZE_Image_describer::Params& params,
   bool orientation
 )
 {
   switch (params.eAkazeDescriptor_) {
-  case AKAZE_MSURF:return std::unique_ptr<AKAZE_Image_describer>(new AKAZE_Image_describer_SURF(params, orientation));
-  case AKAZE_LIOP:return std::unique_ptr<AKAZE_Image_describer>(new AKAZE_Image_describer_LIOP(params, orientation));
-  case AKAZE_MLDB:return std::unique_ptr<AKAZE_Image_describer>(new AKAZE_Image_describer_MLDB(params, orientation));
-  default:return nullptr;
+  case AKAZE_MSURF:
+    return std::unique_ptr<AKAZE_Image_describer>
+        (new AKAZE_Image_describer_SURF(params, orientation));
+  case AKAZE_LIOP:
+    return std::unique_ptr<AKAZE_Image_describer>
+        (new AKAZE_Image_describer_LIOP(params, orientation));
+  case AKAZE_MLDB:
+    return std::unique_ptr<AKAZE_Image_describer>
+        (new AKAZE_Image_describer_MLDB(params, orientation));
+  default:
+    return nullptr;
   }
 }
 

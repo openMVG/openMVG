@@ -128,7 +128,7 @@ private:
     return Describe(image, mask);
   }
 
-  virtual std::unique_ptr<Regions> AllocateImpl() const override
+  std::unique_ptr<Regions> AllocateImpl() const override
   {
     return Allocate();
   }
@@ -164,7 +164,7 @@ protected:
     return Describe(image, mask);
   }
 
-  virtual std::unique_ptr<Regions> AllocateImpl() const override
+  std::unique_ptr<Regions> AllocateImpl() const override
   {
     return Allocate();
   }
@@ -204,7 +204,7 @@ protected:
     return Describe(image, mask);
   }
 
-  virtual std::unique_ptr<Regions> AllocateImpl() const override
+  std::unique_ptr<Regions> AllocateImpl() const override
   {
     return Allocate();
   }
