@@ -17,8 +17,6 @@
 
 #include "openMVG/types.hpp"
 
-#include <cereal/cereal.hpp> // Serialization
-
 namespace openMVG {
 namespace matching {
 
@@ -52,9 +50,7 @@ struct IndMatch
 
   // Serialization
   template <class Archive>
-  void serialize( Archive & ar )  {
-    ar(i_, j_);
-  }
+  void serialize( Archive & ar ) ;
 
   IndexT i_, j_;  // Left, right index
 };
@@ -109,15 +105,5 @@ inline Pair_Set getPairs(const PairWiseMatches & matches)
 }  // namespace matching
 }  // namespace openMVG
 
-namespace cereal
-{
-  // This struct specialization will tell cereal which is the right way to serialize PairWiseMatches
-  template <class Archive>
-  struct specialize<
-    Archive,
-    openMVG::matching::PairWiseMatches,
-    cereal::specialization::member_serialize>
-  {};
-} // namespace cereal
 
 #endif // OPENMVG_MATCHING_IND_MATCH_HPP

@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/json.hpp>
+
 #include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/feature.hpp>
-#include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/features/image_describer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <software/SfM/SfMPlyHelper.hpp>
 
@@ -18,9 +21,12 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
-#include "nonFree/sift/SIFT_describer.hpp"
+#include "nonFree/sift/SIFT_describer_io.hpp"
+#include "openMVG/features/image_describer_akaze_io.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 
 #include <cstdlib>
 

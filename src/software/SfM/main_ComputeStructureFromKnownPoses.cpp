@@ -8,7 +8,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/matching/indMatch.hpp"
