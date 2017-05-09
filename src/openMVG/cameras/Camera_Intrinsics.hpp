@@ -16,8 +16,6 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
 
-#include <cereal/types/polymorphic.hpp>
-
 namespace openMVG
 {
 namespace cameras
@@ -217,28 +215,21 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @return Concatenation of intrinsic matrix and extrinsic matrix
   */
   virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const = 0;
-
+  
   /**
   * @brief Serialization out
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void save( Archive & ar ) const;
+
 
   /**
   * @brief  Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void load( Archive & ar );
 
   /**
   * @brief Generate a unique Hash from the camera parameters (used for grouping)

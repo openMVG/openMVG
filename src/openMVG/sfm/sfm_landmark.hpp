@@ -9,11 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_LANDMARK_HPP
 #define OPENMVG_SFM_SFM_LANDMARK_HPP
 
-#include <vector>
-
 #include "openMVG/types.hpp"
-
-#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 namespace sfm {
@@ -29,23 +25,13 @@ struct Observation
 
   // Serialization
   template <class Archive>
-  void save( Archive & ar) const
-  {
-    ar(cereal::make_nvp("id_feat", id_feat ));
-    const std::vector<double> pp = { x(0), x(1) };
-    ar(cereal::make_nvp("x", pp));
-  }
+  void save( Archive & ar) const;
 
   // Serialization
   template <class Archive>
-  void load( Archive & ar)
-  {
-    ar(cereal::make_nvp("id_feat", id_feat ));
-    std::vector<double> p(2);
-    ar(cereal::make_nvp("x", p));
-    x = Eigen::Map<const Vec2>(&p[0]);
-  }
+  void load( Archive & ar);
 };
+
 /// Observations are indexed by their View_id
 using Observations = Hash_Map<IndexT, Observation>;
 
@@ -57,21 +43,10 @@ struct Landmark
 
   // Serialization
   template <class Archive>
-  void save( Archive & ar) const
-  {
-    const std::vector<double> point = { X(0), X(1), X(2) };
-    ar(cereal::make_nvp("X", point ));
-    ar(cereal::make_nvp("observations", obs));
-  }
+  void save( Archive & ar) const;
 
   template <class Archive>
-  void load( Archive & ar)
-  {
-    std::vector<double> point(3);
-    ar(cereal::make_nvp("X", point ));
-    X = Eigen::Map<const Vec3>(&point[0]);
-    ar(cereal::make_nvp("observations", obs));
-  }
+  void load( Archive & ar);
 };
 
 /// Define a collection of landmarks are indexed by their TrackId
