@@ -245,22 +245,14 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "disto_k1", params_ ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief  Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      Pinhole_Intrinsic::load(ar);
-      ar( cereal::make_nvp( "disto_k1", params_ ) );
-    }
+    inline void load( Archive & ar );
 
     /**
     * @brief Clone the object
@@ -465,22 +457,14 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      Pinhole_Intrinsic::save(ar);
-      ar( cereal::make_nvp( "disto_k3", params_ ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief  Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      Pinhole_Intrinsic::load(ar);
-      ar( cereal::make_nvp( "disto_k3", params_ ) );
-    }
+    inline void load( Archive & ar );
 
     /**
     * @brief Clone the object
@@ -509,13 +493,5 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 
 } // namespace cameras
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K1);
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K3);
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_K_HPP

@@ -6,6 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/portable_binary.hpp>
+
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_io_baf.hpp"

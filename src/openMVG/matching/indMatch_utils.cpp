@@ -6,7 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/portable_binary.hpp>
+
 #include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/matching/indMatch_io.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -16,7 +20,6 @@
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <cereal/archives/portable_binary.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
