@@ -9,6 +9,9 @@ Required tools:
 * Git
 * C/C++ compiler (GCC, Visual Studio or Clang)
 
+Optional tools:
+* CUDA (Compute Code/Arch >= sm_30)
+
 Getting the sources (and the submodules):
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
