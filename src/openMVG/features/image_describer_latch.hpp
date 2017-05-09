@@ -12,12 +12,17 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
-#include "third_party/koral/KORAL.h"
 #include <cereal/cereal.hpp>
+
+#ifdef OpenMVG_USE_CUDA
+#include "third_party/koral/KORAL.h"
+#endif
 
 #ifdef OPENMVG_USE_SSE
 #include <xmmintrin.h>
 #endif
+
+#ifdef OpenMVG_USE_CUDA
 
 using namespace std;
 
@@ -151,3 +156,5 @@ private:
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::LATCH_Image_describer, "LATCH_Image_describer");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::LATCH_Image_describer)
 #endif // OPENMVG_FEATURES_LATCH_IMAGE_DESCRIBER_HPP
+
+#endif // OpenMVG_USE_CUDA
