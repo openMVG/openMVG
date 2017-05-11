@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/feature.hpp"
-#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/multiview/solver_homography_kernel.hpp"
@@ -301,8 +301,8 @@ int main(int argc, char **argv)
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
-        image_describer.reset(new AKAZE_Image_describer
-          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF)));
+        image_describer = AKAZE_Image_describer::create
+          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF));
       }
 
       if (!image_describer)
