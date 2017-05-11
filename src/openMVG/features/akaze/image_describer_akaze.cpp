@@ -9,7 +9,7 @@
 namespace openMVG {
 namespace features {
 
-std::unique_ptr<AKAZE_Image_describer_SURF::Regions_type> AKAZE_Image_describer_SURF::Describe(
+std::unique_ptr<AKAZE_Image_describer_SURF::Regions_type> AKAZE_Image_describer_SURF::Describe_AKAZE_SURF(
   const image::Image<unsigned char>& image,
   const image::Image<unsigned char>* mask
 )
@@ -24,7 +24,7 @@ std::unique_ptr<AKAZE_Image_describer_SURF::Regions_type> AKAZE_Image_describer_
   akaze.Do_Subpixel_Refinement(kpts);
 
   // will be automatically deleted if something goes wrong
-  auto regions = Allocate();
+  auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
   regions->Descriptors().resize(kpts.size());
 
@@ -58,7 +58,7 @@ std::unique_ptr<AKAZE_Image_describer_SURF::Regions_type> AKAZE_Image_describer_
   return regions;
 }
 
-std::unique_ptr<AKAZE_Image_describer_LIOP::Regions_type> AKAZE_Image_describer_LIOP::Describe(
+std::unique_ptr<AKAZE_Image_describer_LIOP::Regions_type> AKAZE_Image_describer_LIOP::Describe_AKAZE_LIOP(
   const image::Image<unsigned char>& image,
   const image::Image<unsigned char>* mask
 )
@@ -73,7 +73,7 @@ std::unique_ptr<AKAZE_Image_describer_LIOP::Regions_type> AKAZE_Image_describer_
   akaze.Do_Subpixel_Refinement(kpts);
 
   // will be automatically deleted if something goes wrong
-  auto regions = Allocate();
+  auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
   regions->Descriptors().resize(kpts.size());
 
@@ -119,7 +119,7 @@ std::unique_ptr<AKAZE_Image_describer_LIOP::Regions_type> AKAZE_Image_describer_
   return regions;
 }
 
-std::unique_ptr<AKAZE_Image_describer_MLDB::Regions_type> AKAZE_Image_describer_MLDB::Describe(
+std::unique_ptr<AKAZE_Image_describer_MLDB::Regions_type> AKAZE_Image_describer_MLDB::Describe_AKAZE_MLDB(
   const image::Image<unsigned char>& image,
   const image::Image<unsigned char>* mask
 )
@@ -134,7 +134,7 @@ std::unique_ptr<AKAZE_Image_describer_MLDB::Regions_type> AKAZE_Image_describer_
   akaze.Do_Subpixel_Refinement(kpts);
 
   // will be automatically deleted if something goes wrong
-  auto regions = Allocate();
+  auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
   regions->Descriptors().resize(kpts.size());
 

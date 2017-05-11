@@ -57,7 +57,7 @@ public:
     const image::Image<unsigned char> * mask = nullptr
   )
   {
-    regions = DescribeImpl(image, mask);
+    regions = Describe(image, mask);
     return regions != nullptr;
   }
 
@@ -68,19 +68,12 @@ public:
      Non-zero values depict the region of interest.
   @return The detected regions and attributes
   */
-  std::unique_ptr<Regions> Describe(
+  virtual std::unique_ptr<Regions> Describe(
     const image::Image<unsigned char> & image,
-    const image::Image<unsigned char> * mask = nullptr
-  )
-  {
-    return DescribeImpl(image, mask);
-  }
+    const image::Image<unsigned char> * mask = nullptr) = 0;
 
   /// Allocate regions depending of the Image_describer
-  virtual std::unique_ptr<Regions> Allocate()
-  {
-    return AllocateImpl();
-  }
+  virtual std::unique_ptr<Regions> Allocate() const = 0;
 
   //--
   // IO - one file for region features, one file for region descriptors
@@ -114,14 +107,6 @@ public:
   {
     return regions->LoadFeatures(sfileNameFeats);
   }
-
-private:
-  virtual std::unique_ptr<Regions> DescribeImpl(
-    const image::Image<unsigned char> & image,
-    const image::Image<unsigned char> * mask = nullptr
-  ) = 0;
-
-  virtual std::unique_ptr<Regions> AllocateImpl() const = 0;
 };
 
 } // namespace features

@@ -132,9 +132,24 @@ public:
      Non-zero values depict the region of interest.
   @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  std::unique_ptr<Regions_type> Describe(
+  std::unique_ptr<Regions> Describe(
     const image::Image<unsigned char>& image,
     const image::Image<unsigned char>* mask = nullptr
+  ) override
+  {
+    return DescribeSIFT(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> DescribeSIFT(
+      const image::Image<unsigned char>& image,
+      const image::Image<unsigned char>* mask = nullptr
   )
   {
     const int w = image.Width(), h = image.Height();
@@ -155,7 +170,7 @@ public:
     vl_sift_process_first_octave(filt, If.data());
 
     // Build alias to cached data
-    auto regions = Allocate();
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
 
     // reserve some memory for faster keypoint saving
     regions->Features().reserve(2000);
@@ -213,7 +228,7 @@ public:
     return regions;
   }
 
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const override
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }
@@ -227,19 +242,6 @@ public:
   }
 
 private:
-  std::unique_ptr<Regions> DescribeImpl(
-    const image::Image<unsigned char>& image,
-    const image::Image<unsigned char>* mask = nullptr
-  ) override
-  {
-    return Describe(image, mask);
-  }
-
-  std::unique_ptr<Regions> AllocateImpl() const override
-  {
-    return Allocate();
-  }
-
   Params _params;
   bool _bOrientation;
 };

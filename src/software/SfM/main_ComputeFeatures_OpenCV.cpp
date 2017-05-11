@@ -73,7 +73,22 @@ public:
      Non-zero values depict the region of interest.
   @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  std::unique_ptr<Regions_type> Describe(
+  std::unique_ptr<Regions> Describe(
+      const Image<unsigned char>& image,
+      const Image<unsigned char> * mask = nullptr
+  ) override
+  {
+    return Describe_AKAZE_OCV(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> Describe_AKAZE_OCV(
     const Image<unsigned char>& image,
     const Image<unsigned char> * mask = nullptr
   )
@@ -118,7 +133,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const override
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }
@@ -126,20 +141,6 @@ public:
   template<class Archive>
   void serialize( Archive & ar )
   {
-  }
-
-private:
-  std::unique_ptr<Regions> DescribeImpl(
-    const Image<unsigned char>& image,
-    const Image<unsigned char> * mask = nullptr
-  ) override
-  {
-    return Describe(image, mask);
-  }
-
-  std::unique_ptr<Regions> AllocateImpl() const override
-  {
-    return Allocate();
   }
 };
 #include <cereal/cereal.hpp>
@@ -173,9 +174,24 @@ public:
      Non-zero values depict the region of interest.
   @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  std::unique_ptr<Regions_type> Describe(
+  std::unique_ptr<Regions> Describe(
     const image::Image<unsigned char>& image,
     const image::Image<unsigned char> * mask = nullptr
+  ) override
+  {
+    return Describe_SIFT_OPENCV(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> Describe_SIFT_OPENCV(
+      const image::Image<unsigned char>& image,
+      const image::Image<unsigned char>* mask = nullptr
   )
   {
     // Convert for opencv
@@ -196,7 +212,7 @@ public:
     // Process SIFT computation
     siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
 
-    auto regions = Allocate();
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
 
     // reserve some memory for faster keypoint saving
     regions->Features().reserve(v_keypoints.size());
@@ -237,18 +253,6 @@ public:
   {
   }
 private:
-  std::unique_ptr<Regions> DescribeImpl(
-    const Image<unsigned char>& image,
-    const Image<unsigned char> * mask = nullptr
-  ) override
-  {
-    return Describe(image, mask);
-  }
-
-  std::unique_ptr<Regions> AllocateImpl() const override
-  {
-    return Allocate();
-  }
 
   int _i;
 };

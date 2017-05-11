@@ -144,7 +144,7 @@ public:
      Non-zero values depict the region of interest.
   @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  std::unique_ptr<Regions_type> Describe(
+  std::unique_ptr<Regions_type> Describe_SURF_Anatomy(
     const image::Image<unsigned char>& image,
     const image::Image<unsigned char>* mask = nullptr
   )
@@ -153,7 +153,7 @@ public:
     const image::Image<float> If(image.GetMat().cast<float>()/255.0f);
 
     // compute sift keypoints
-    auto regions = Allocate();
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
     {
       using namespace openMVG::features::sift;
       const int supplementary_images = 3;
@@ -208,7 +208,7 @@ public:
     return regions;
   };
 
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const override
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }
@@ -220,20 +220,15 @@ public:
     ar(cereal::make_nvp("params", params_));
   }
 
-private:
-  std::unique_ptr<Regions> DescribeImpl(
+  std::unique_ptr<Regions> Describe(
     const image::Image<unsigned char>& image,
     const image::Image<unsigned char>* mask = nullptr
   ) override
   {
-    return Describe(image, mask);
+    return Describe_SURF_Anatomy(image, mask);
   }
 
-  std::unique_ptr<Regions> AllocateImpl() const override
-  {
-    return Allocate();
-  }
-
+ private:
   Params params_;
 };
 
