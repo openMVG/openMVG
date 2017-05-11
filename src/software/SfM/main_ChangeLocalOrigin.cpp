@@ -111,6 +111,20 @@ int main(int argc, char **argv)
       ++my_progress_bar;
     }
   }
+    
+  // Move view priors
+  {
+    for (auto & view : sfm_data.GetViews())
+    {
+      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+      {
+	    if (prior->b_use_pose_center_)
+	    {
+          prior->pose_center_ = prior->pose_center_- local_Frame_Origin;
+	    }
+      }
+    }
+  }
   
   // Move structure
   {
