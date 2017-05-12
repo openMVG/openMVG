@@ -8,6 +8,10 @@
 
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include "ceres/problem.h"
 #include "ceres/solver.h"
 #include "openMVG/cameras/Camera_Common.hpp"

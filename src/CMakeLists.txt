@@ -415,6 +415,7 @@ add_subdirectory(openMVG)
 set(OpenMVG_LIBRARIES
   openMVG_image
   openMVG_features
+  openMVG_matching
   openMVG_matching_image_collection
   openMVG_kvld
   openMVG_multiview
@@ -422,11 +423,11 @@ set(OpenMVG_LIBRARIES
   openMVG_system
   openMVG_sfm)
 
-FOREACH(omvglib ${OpenMVG_LIBRARIES})
+foreach(omvglib ${OpenMVG_LIBRARIES})
   set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
   set_property(TARGET ${omvglib} APPEND PROPERTY
     INTERFACE_COMPILE_DEFINITIONS ${OpenMVG_DEFINITIONS})
-ENDFOREACH()
+endforeach()
 
 # openMVG tutorial examples
 if (OpenMVG_BUILD_EXAMPLES)
@@ -581,32 +582,32 @@ set(OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
   "${CMAKE_INSTALL_PREFIX}/include/openMVG")
 
-STRING(REGEX REPLACE
+string(REGEX REPLACE
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${CMAKE_INSTALL_PREFIX}/include"
   OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
 )
-STRING(REGEX REPLACE
+string(REGEX REPLACE
   "third_party"
   "openMVG/third_party"
   OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
 )
-STRING(REGEX REPLACE
+string(REGEX REPLACE
   "dependencies"
   "openMVG_dependencies"
   OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
 )
 if (OpenMVG_USE_INTERNAL_CERES)
-  STRING(REGEX REPLACE
+  string(REGEX REPLACE
     "ceres-solver"
     "ceres"
     OpenMVG_INCLUDE_DIRS
     "${OpenMVG_INCLUDE_DIRS}"
   )
-  STRING(REGEX REPLACE
+  string(REGEX REPLACE
     "internal/ceres/"
     ""
     OpenMVG_INCLUDE_DIRS

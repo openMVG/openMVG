@@ -12,6 +12,10 @@
 #include <memory>
 #include <vector>
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include "openMVG/matching/matching_interface.hpp"
 
 #include <flann/flann.hpp>

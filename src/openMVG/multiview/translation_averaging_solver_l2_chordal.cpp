@@ -36,9 +36,13 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 
-#include <ceres/ceres.h>
-
 #include <ctime>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
+#include <ceres/ceres.h>
 
 namespace openMVG {
 

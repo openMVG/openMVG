@@ -8,6 +8,10 @@
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"

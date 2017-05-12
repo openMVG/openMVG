@@ -27,8 +27,11 @@ using namespace openMVG::sfm;
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-
 #include <cstdlib>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
 
 // Naive function for finding the biggest common root dir from two paths
 std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2)
