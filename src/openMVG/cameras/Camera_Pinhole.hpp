@@ -14,6 +14,7 @@
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/multiview/projection.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
