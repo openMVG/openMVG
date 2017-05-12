@@ -9,7 +9,6 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
