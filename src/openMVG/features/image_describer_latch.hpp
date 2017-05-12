@@ -74,7 +74,7 @@ public:
     std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr ) override
   {
-		std::vector<Keypoint> kpts;
+    std::vector<Keypoint> kpts;
     std::vector<uint64_t> descriptors;
 
     constexpr uint8_t KFAST_thresh = 60;
@@ -82,63 +82,62 @@ public:
     kpts = koral_.kps;
     descriptors = koral_.desc;
 
-	Allocate(regions);
-	switch (params_.eLatchDescriptor_)
-	{
-	  case LATCH_BINARY:
-	  {
-		// Build alias to cached data
-		AKAZE_Binary_Regions * regionsCasted = dynamic_cast<AKAZE_Binary_Regions*>(regions.get());
-		regionsCasted->Features().resize(kpts.size());
-		regionsCasted->Descriptors().resize(kpts.size());
-
-	  #ifdef OPENMVG_USE_OPENMP
-		#pragma omp parallel for
-	  #endif
-		for (size_t i = 0; i < static_cast<int>(kpts.size()); ++i)
-		{
-		  const Keypoint ptLatch = kpts[i];
-
-		  // Feature masking
-		  if (mask)
+    Allocate(regions);
+    switch (params_.eLatchDescriptor_)
+    {
+      case LATCH_BINARY:
       {
-			const image::Image<unsigned char> & maskIma = *mask;
-			if (maskIma(ptLatch.y, ptLatch.x) == 0)
-			  continue;
-		  }
-      const float scale = static_cast<float>(std::pow(1.2f, ptLatch.scale));
-		  regionsCasted->Features()[i] = SIOPointFeature(scale * static_cast<float>(ptLatch.x), scale * static_cast<float>(ptLatch.y), 7.0f * scale, 180.0f / 3.14159263f * ptLatch.angle);
-      for (size_t j = 0; j < 8; j++) {
-        const uint64_t descriptor = descriptors[i * 64 + j];
-        for (size_t k = 0; k < 8; k++) {
-          unsigned char descriptorRawByte = static_cast<unsigned char>((descriptor >> (56-k*7)) & 0xFF);
-          regionsCasted->Descriptors()[i][j * 8 + k] = descriptorRawByte;
+        // Build alias to cached data
+        AKAZE_Binary_Regions * regionsCasted = dynamic_cast<AKAZE_Binary_Regions*>(regions.get());
+        regionsCasted->Features().resize(kpts.size());
+        regionsCasted->Descriptors().resize(kpts.size());
+
+        #ifdef OPENMVG_USE_OPENMP
+        #pragma omp parallel for
+        #endif
+        for (size_t i = 0; i < static_cast<int>(kpts.size()); ++i)
+        {
+          const Keypoint ptLatch = kpts[i];
+
+          // Feature masking
+          if (mask)
+          {
+            const image::Image<unsigned char> & maskIma = *mask;
+            if (maskIma(ptLatch.y, ptLatch.x) == 0)
+              continue;
+          }
+          const float scale = static_cast<float>(std::pow(1.2f, ptLatch.scale));
+          regionsCasted->Features()[i] = SIOPointFeature(scale * static_cast<float>(ptLatch.x), scale * static_cast<float>(ptLatch.y), 7.0f * scale, 180.0f / 3.14159263f * ptLatch.angle);
+          for (size_t j = 0; j < 8; j++) {
+            const uint64_t descriptor = descriptors[i * 64 + j];
+            for (size_t k = 0; k < 8; k++) {
+              unsigned char descriptorRawByte = static_cast<unsigned char>((descriptor >> (56-k*7)) & 0xFF);
+              regionsCasted->Descriptors()[i][j * 8 + k] = descriptorRawByte;
+            }
+          }
         }
-		  }
-		}
-	  }
-	  break;
-	}
+      }
+      break;
+    }
     return true;
   };
 
   /// Allocate Regions type depending of the Image_describer
   void Allocate(std::unique_ptr<Regions> &regions) const override
   {
-	switch(params_.eLatchDescriptor_)
-	{
+    switch(params_.eLatchDescriptor_)
+    {
       case LATCH_BINARY:
         return regions.reset(new AKAZE_Binary_Regions);
       break;
-	}
+    }
   }
 
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(
-     cereal::make_nvp("params", params_),
-     cereal::make_nvp("bOrientation", bOrientation_));
+    ar(cereal::make_nvp("params", params_),
+       cereal::make_nvp("bOrientation", bOrientation_));
   }
 
 

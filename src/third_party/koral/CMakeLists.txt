@@ -1,38 +1,36 @@
-PROJECT(koral)
+project(koral)
 cmake_minimum_required (VERSION 3.1)
 
-IF (${OpenMVG_USE_CUDA})
-  FIND_PACKAGE(CUDA REQUIRED)
-  FIND_PACKAGE(SSE REQUIRED)
+if (OpenMVG_USE_CUDA)
+  find_package(CUDA REQUIRED)
+  find_package(SSE REQUIRED)
 
-  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config/)
+  include_directories(${CMAKE_CURRENT_BINARY_DIR}/config/)
 
-  SET (HEADERS CLATCH.h CUDALERP.h FeatureAngle.h KFAST.h KORAL.h Keypoint.h)
+  set (HEADERS CLATCH.h CUDALERP.h FeatureAngle.h KFAST.h KORAL.h Keypoint.h)
 
-  SET (SRC CLATCH.cu CUDALERP.cu)
+  set (SRC CLATCH.cu CUDALERP.cu)
 
-  LIST(APPEND CUDA_NVCC_FLAGS "-D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -Xcompiler -fopenmp -use_fast_math -O3 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_60,code=sm_60 --default-stream per-thread")
+  list(APPEND CUDA_NVCC_FLAGS "-D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -Xcompiler -use_fast_math -O3 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_60,code=sm_60 --default-stream per-thread")
 
-  SET(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
-  SET(CMAKE_CXX_STANDARD 11)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
+  else()
+    set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+  endif()
 
-  IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    SET (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-  ELSE()
-    SET (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-  ENDIF()
+  set(CUDA_PROPOGATE_HOST_FLAGS OFF)
 
-  SET(CUDA_PROPOGATE_HOST_FLAGS OFF)
+  include_directories(${CUDA_INCLUDE_DIRS})
 
-  INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+  cuda_add_library(koral STATIC ${SRC} ${HEADERS})
+  target_link_libraries(koral ${CUDA_LIBRARIES})
 
-  CUDA_ADD_LIBRARY(koral STATIC ${SRC} ${HEADERS})
-  TARGET_LINK_LIBRARIES(koral ${CUDA_LIBRARIES})
+  set_property(TARGET koral PROPERTY FOLDER OpenMVG/3rdParty)
 
-  SET_PROPERTY(TARGET koral PROPERTY FOLDER OpenMVG/3rdParty)
-
-  TARGET_COMPILE_FEATURES(koral PRIVATE cxx_constexpr)
+  target_compile_features(koral PRIVATE cxx_constexpr)
 
   if(KORAL_INCLUDE_INSTALL_DIR)
     set(INCLUDE_INSTALL_DIR ${KORAL_INCLUDE_INSTALL_DIR})
@@ -44,5 +42,5 @@ IF (${OpenMVG_USE_CUDA})
     ${HEADERS}
     DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
   )
-  INSTALL(TARGETS koral DESTINATION lib EXPORT openMVG-targets)
-ENDIF()
+  install(TARGETS koral DESTINATION lib EXPORT openMVG-targets)
+endif()
