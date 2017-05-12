@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/features/image_describer_akaze.hpp"
-#include "openMVG/features/io_regions_type.hpp"
-#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/json.hpp>
+
+#include "openMVG/features/image_describer_akaze_io.hpp"
+
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
@@ -18,9 +21,8 @@
 #include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include "nonFree/sift/SIFT_describer.hpp"
+#include "nonFree/sift/SIFT_describer_io.hpp"
 
-#include <cereal/archives/json.hpp>
 #include <cereal/details/helpers.hpp>
 
 #include <cstdlib>

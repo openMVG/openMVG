@@ -8,7 +8,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"

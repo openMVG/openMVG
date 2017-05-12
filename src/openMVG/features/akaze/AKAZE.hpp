@@ -38,8 +38,6 @@
 
 #include "openMVG/image/image_container.hpp"
 
-#include <cereal/cereal.hpp>
-
 namespace openMVG {
 namespace features {
 
@@ -87,15 +85,7 @@ public:
     }
 
     template<class Archive>
-    void serialize(Archive & ar)
-    {
-      ar(
-        cereal::make_nvp("iNbOctave", iNbOctave),
-        cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
-        cereal::make_nvp("fSigma0", fSigma0),
-        cereal::make_nvp("fThreshold", fThreshold),
-        cereal::make_nvp("fDesc_factor", fDesc_factor));
-    }
+    void serialize(Archive & ar);
 
     int iNbOctave; ///< Octave to process
     int iNbSlicePerOctave; ///< Levels per octave

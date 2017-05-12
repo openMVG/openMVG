@@ -20,8 +20,6 @@
 #include "openMVG/features/liop/liop_descriptor.hpp"
 #include "openMVG/features/regions_factory.hpp"
 
-#include <cereal/cereal.hpp>
-
 namespace openMVG {
 namespace features {
 
@@ -44,10 +42,7 @@ public:
     ):options_(config), eAkazeDescriptor_(eAkazeDescriptor){}
 
     template<class Archive>
-    void serialize(Archive & ar)
-    {
-      ar(options_, eAkazeDescriptor_);
-    }
+    void serialize(Archive & ar);
 
     // Parameters
     features::AKAZE::Params options_;
@@ -267,12 +262,7 @@ public:
   }
 
   template<class Archive>
-  void serialize(Archive & ar)
-  {
-    ar(
-     cereal::make_nvp("params", params_),
-     cereal::make_nvp("bOrientation", bOrientation_));
-  }
+  void serialize(Archive & ar);
 
 private:
   Params params_;
@@ -281,10 +271,5 @@ private:
 
 } // namespace features
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer, "AKAZE_Image_describer");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::AKAZE_Image_describer)
 
 #endif // OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_HPP

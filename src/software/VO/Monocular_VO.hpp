@@ -11,6 +11,7 @@
 
 #include <deque>
 #include <set>
+#include <numeric>
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_container.hpp"
