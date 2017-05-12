@@ -10,8 +10,7 @@
 #define OPENMVG_NUMERIC_LM_HPP
 
 // Levenberg Marquardt Non Linear Optimization
-#include <unsupported/Eigen/NonLinearOptimization>
-#include <unsupported/Eigen/NumericalDiff>
+#include <Eigen/Core>
 
 namespace openMVG
 {
