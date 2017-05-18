@@ -173,24 +173,23 @@ TEST(RansacLineFitter, RealisticCase) {
 
   //-- Build the point list according the given model
   for(int i = 0; i < NbPoints; ++i) {
-    xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
+    xy.col(i) << i, static_cast<double>(i)*GTModel[1] + GTModel[0];
   }
 
   // Setup a normal distribution in order to make outlier not aligned
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  std::mt19937 random_generator(std::mt19937::default_seed);
   std::normal_distribution<> d(0, 5); // More or less 5 units
 
   //-- Simulate outliers (for the asked percentage amount of the datum)
-  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  const int nbPtToNoise = static_cast<int>(NbPoints*inlierPourcentAmount/100.0);
   vector<uint32_t> vec_samples; // Fit with unique random index
-  UniformSample(nbPtToNoise, NbPoints, &vec_samples);
+  UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
   {
     const size_t randomIndex = vec_samples[i];
     // Start from a outlier point (0,0)
     // and move it in a given small range (since it must remains in an outlier area)
-    xy.col(randomIndex)<< d(gen), d(gen);
+    xy.col(randomIndex)<< d(random_generator), d(random_generator);
   }
 
   // The base estimator
@@ -216,13 +215,13 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   Vec2 lineEq(50, 0.3);
 
   // Setup a normal distribution of mean 0 and amplitude equal to noise
-  std::default_random_engine gen;
+  std::mt19937 random_generator(std::mt19937::default_seed);
   std::normal_distribution<double> d(0, noise);
 
   for (size_t i = 0; i < nbPoints; ++i)
   {
     const float x = rand()%W;
-    const float y =  d(gen) + (lineEq[1] * x + lineEq[0]) + d(gen);
+    const float y =  d(random_generator) + (lineEq[1] * x + lineEq[0]) + d(random_generator);
     points.col(i) = Vec2(x, y);
   }
 
@@ -230,10 +229,11 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   std::normal_distribution<double> d_outlier(0, 0.2);
   const size_t count = outlierPourcent * nbPoints;
   std::vector<uint32_t> vec_indexes(count,0);
-  UniformSample(count, nbPoints, &vec_indexes);
-  for (const auto pos : vec_indexes)
+  UniformSample(count, nbPoints, random_generator, &vec_indexes);
+  for (const auto & pos : vec_indexes)
   {
-    points.col(pos) = Vec2(rand()%W + d_outlier(gen), rand()%H - d_outlier(gen));
+    points.col(pos) << rand()%W + d_outlier(random_generator),
+                       rand()%H - d_outlier(random_generator);
   }
 }
 
@@ -249,12 +249,9 @@ struct IndMatchd
   // Lexicographical ordering of matches. Used to remove duplicates.
   friend bool operator<(const IndMatchd& m1, const IndMatchd& m2)
   {
-    if(m1.i_ < m2.i_) return true;
-    if(m1.i_ > m2.i_) return false;
-
-    if(m1.j_ < m2.j_) return true;
-    else
-      return false;
+    if (m1.i_ < m2.i_) return true;
+    if (m1.i_ > m2.i_) return false;
+    return (m1.j_ < m2.j_);
   }
 
   double i_, j_;

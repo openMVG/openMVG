@@ -42,6 +42,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -373,14 +374,18 @@ std::pair<double, double> ACRANSAC
   bool bACRansacMode = (precision == std::numeric_limits<double>::infinity());
 
   //--
+  // Random number generation
+  std::mt19937 random_generator(std::mt19937::default_seed);
+
+  //--
   // Main estimation loop.
   for (unsigned int iter=0; iter < nIter && iter < num_max_iteration; ++iter)
   {
     // Get random samples
     if (bACRansacMode)
-      UniformSample(sizeSample, &vec_index, &vec_sample);
+      UniformSample(sizeSample, random_generator, &vec_index, &vec_sample);
     else
-      UniformSample(sizeSample, nData, &vec_sample);
+      UniformSample(sizeSample, nData, random_generator, &vec_sample);
 
     // Fit model(s). Can find up to Kernel::MAX_MODELS solution(s)
     std::vector<typename Kernel::Model> vec_models;
@@ -388,10 +393,10 @@ std::pair<double, double> ACRANSAC
 
     // Evaluate model(s)
     bool better = false;
-    for (unsigned int k = 0; k < static_cast<unsigned int>(vec_models.size()); ++k)
+    for (const auto& model_it : vec_models)
     {
       // Compute residual values
-      kernel.Errors(vec_models[k], nfa_interface.residuals());
+      kernel.Errors(model_it, nfa_interface.residuals());
 
       if (!bACRansacMode)
       {
@@ -418,7 +423,7 @@ std::pair<double, double> ACRANSAC
           better = true;
           minNFA = nfa_threshold.first;
           errorMax = nfa_threshold.second;
-          if(model) *model = vec_models[k];
+          if(model) *model = model_it;
 
           if(bVerbose)
           {

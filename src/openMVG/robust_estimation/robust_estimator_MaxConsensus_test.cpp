@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
@@ -30,7 +30,7 @@ TEST(MaxConsensusLineFitter, OutlierFree) {
   // Check the best model that fit the most of the data
   //  in a robust framework (Max-consensus).
   std::vector<uint32_t> vec_inliers;
-  Vec2 model = MaxConsensus(kernel,
+  const Vec2 model = MaxConsensus(kernel,
     ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   EXPECT_NEAR(2.0, model[1], 1e-9);
   EXPECT_NEAR(1.0, model[0], 1e-9);
@@ -105,9 +105,10 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   }
 
   //-- Add some noise (for the asked percentage amount)
-  int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
   std::vector<uint32_t> vec_samples; // Fit with unique random index
-  UniformSample(nbPtToNoise, NbPoints, &vec_samples);
+  std::mt19937 random_generator(std::mt19937::default_seed);
+  UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
   for(const auto index : vec_samples)
   {
     //Additive random noise
