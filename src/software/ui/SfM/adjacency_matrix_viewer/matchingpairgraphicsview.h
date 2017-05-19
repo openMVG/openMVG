@@ -9,7 +9,8 @@
 #pragma once
 
 #include <QGraphicsView>
-class MainFrame;
+//class MainFrame;
+#include "mainframe.h"
 class Document;
 
 class MatchingPairGraphicsView : public QGraphicsView
