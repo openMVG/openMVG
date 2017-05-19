@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,14 +8,20 @@
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
+#include <memory>
+#include <utility>
 
 namespace openMVG {
 namespace sfm {
@@ -57,7 +64,7 @@ namespace sfm {
       using SolverType = openMVG::resection::kernel::SixPointResectionSolver;
       MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      using KernelType = 
+      using KernelType =
         openMVG::robust::ACKernelAdaptorResection<
         SolverType,
         ResectionSquaredResidualError,
@@ -79,7 +86,7 @@ namespace sfm {
       using SolverType = openMVG::euclidean_resection::P3PSolver;
       MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      using KernelType = 
+      using KernelType =
         openMVG::robust::ACKernelAdaptorResection_K<
           SolverType,
           ResectionSquaredResidualError,

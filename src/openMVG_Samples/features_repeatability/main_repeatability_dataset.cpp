@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
-#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 
 #include <string>
@@ -21,7 +22,6 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
-using namespace svg;
 using namespace std;
 
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"

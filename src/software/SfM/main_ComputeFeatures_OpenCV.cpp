@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,14 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
-
-/// Feature/Regions & Image describer interfaces
-#include "openMVG/features/features.hpp"
+// The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -134,7 +132,6 @@ public:
 };
 #include <cereal/cereal.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_describer");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, AKAZE_OCV_Image_describer)
 

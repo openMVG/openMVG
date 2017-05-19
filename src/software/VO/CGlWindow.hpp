@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -13,8 +14,6 @@
 #include <OpenGL/gl.h>
 #endif
 #include <GLFW/glfw3.h>
-
-using namespace std;
 
 /// Basic class to handle a GLFW window (no interaction)
 /// GLFW have be initialized before calling this class

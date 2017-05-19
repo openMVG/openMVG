@@ -1,48 +1,30 @@
-FILE(
-	GLOB
-	linearProgramming_headers
-	*.hpp
-)
-FILE(
-	GLOB
-	linearProgramming_cpp
-	*.cpp
-)
-FILE(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 
-SET_SOURCE_FILES_PROPERTIES(${linearProgramming_headers} PROPERTIES LANGUAGE CXX)
+add_library(openMVG_linearProgramming
+  bisectionLP.hpp
+  linearProgrammingInterface.hpp
+  linearProgrammingOSI_X.cpp
+  linearProgrammingOSI_X.hpp
+  linearProgramming.hpp)
 
-#Remove the future main files
-list(REMOVE_ITEM linearProgramming_cpp ${REMOVEFILESUNITTEST})
+set_property(TARGET openMVG_linearProgramming PROPERTY FOLDER OpenMVG/OpenMVG)
+install(TARGETS openMVG_linearProgramming DESTINATION lib EXPORT openMVG-targets)
+set_target_properties(openMVG_linearProgramming PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
-if (NOT MOSEK_FOUND)
-
-  FILE(GLOB_RECURSE REMOVEFILESMOSEK *MOSEK*)
-  list(REMOVE_ITEM linearProgramming_cpp ${REMOVEFILESMOSEK})
-  list(REMOVE_ITEM linearProgramming_headers ${REMOVEFILESMOSEK})
-  
-  set(openMVG_linearProgramming
+target_link_libraries(openMVG_linearProgramming
+  PRIVATE
     ${CLP_LIBRARIES}     # clp + solver wrapper
     ${COINUTILS_LIBRARY} # container tools
     ${OSI_LIBRARY}       # generic LP
-  )
-  
-ELSE (NOT MOSEK_FOUND)
-  # MOSEK_FOUND is true
-  add_library(openMVG_linearProgrammingMSK ${linearProgramming_headers} ${linearProgramming_cpp})
-  set_property(TARGET openMVG_linearProgrammingMSK PROPERTY FOLDER OpenMVG/OpenMVG)
-  install(TARGETS openMVG_linearProgrammingMSK DESTINATION lib EXPORT openMVG-targets)
+)
 
-  set(openMVG_linearProgramming
-    lib_Osi_Msk          # OSI solver wrapper for the Mosek backend
-    ${CLP_LIBRARIES}     # clp + solver wrapper
-    ${COINUTILS_LIBRARY} # container tools
-    ${OSI_LIBRARY}       # generic LP
+target_include_directories(openMVG_linearProgramming
+  PRIVATE
+    ${CLP_INCLUDE_DIRS}
+    ${COINUTILS_INCLUDE_DIRS}
+    ${OSI_INCLUDE_DIRS}
+)
 
-    openMVG_linearProgrammingMSK # openMVG Mosek wrapper
-    ${MOSEK_LIB}    # Mosek lib
-  )
-endif (NOT MOSEK_FOUND)
-UNIT_TEST(openMVG_linearProgramming linearProgramming "${openMVG_linearProgramming}")
+set(UNIT_TEST_LIBS openMVG_linearProgramming)
+UNIT_TEST(openMVG linearProgramming "${UNIT_TEST_LIBS}")
 
-ADD_SUBDIRECTORY(lInfinityCV)
+add_subdirectory(lInfinityCV)

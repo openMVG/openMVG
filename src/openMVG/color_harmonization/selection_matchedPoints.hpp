@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 openMVG authors.
 
@@ -8,11 +9,13 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_MATCHED_POINTS_HPP
 
-#include "openMVG/color_harmonization/selection_interface.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/indMatch.hpp"
-
+#include <string>
 #include <vector>
+
+#include "openMVG/color_harmonization/selection_interface.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_drawing.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace color_harmonization {
@@ -32,7 +35,7 @@ public:
      _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR )
   {}
 
-  ~commonDataByPair_MatchedPoints() override = default ;
+  ~commonDataByPair_MatchedPoints() override = default;
 
   /**
    * Fill mask from corresponding points (each point pictured by a disk of radius _radius)

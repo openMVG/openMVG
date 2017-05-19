@@ -27,6 +27,8 @@ namespace Eigen {
   * via the <a href="http://www.holoborodko.com/pavel/mpfr">MPFR C++</a>
   * library which itself is built upon <a href="http://www.mpfr.org/">MPFR</a>/<a href="http://gmplib.org/">GMP</a>.
   *
+  * \warning MPFR C++ is licensed under the GPL.
+  *
   * You can find a copy of MPFR C++ that is known to be compatible in the unsupported/test/mpreal folder.
   *
   * Here is an example:
@@ -65,30 +67,35 @@ int main()
       IsSigned = 1,
       IsComplex = 0,
       RequireInitialization = 1,
-      ReadCost = 10,
-      AddCost = 10,
-      MulCost = 40
+      ReadCost = HugeCost,
+      AddCost  = HugeCost,
+      MulCost  = HugeCost
     };
 
     typedef mpfr::mpreal Real;
     typedef mpfr::mpreal NonInteger;
     
-    inline static Real highest   (long Precision = mpfr::mpreal::get_default_prec())  { return  mpfr::maxval(Precision); }
-    inline static Real lowest    (long Precision = mpfr::mpreal::get_default_prec())  { return -mpfr::maxval(Precision); }
+    static inline Real highest  (long Precision = mpfr::mpreal::get_default_prec()) { return  mpfr::maxval(Precision); }
+    static inline Real lowest   (long Precision = mpfr::mpreal::get_default_prec()) { return -mpfr::maxval(Precision); }
 
     // Constants
-    inline static Real Pi       (long Precision = mpfr::mpreal::get_default_prec())     {    return mpfr::const_pi(Precision);        }
-    inline static Real Euler    (long Precision = mpfr::mpreal::get_default_prec())     {    return mpfr::const_euler(Precision);     }
-    inline static Real Log2     (long Precision = mpfr::mpreal::get_default_prec())     {    return mpfr::const_log2(Precision);      }
-    inline static Real Catalan  (long Precision = mpfr::mpreal::get_default_prec())     {    return mpfr::const_catalan(Precision);   }
+    static inline Real Pi      (long Precision = mpfr::mpreal::get_default_prec())  { return mpfr::const_pi(Precision);        }
+    static inline Real Euler   (long Precision = mpfr::mpreal::get_default_prec())  { return mpfr::const_euler(Precision);     }
+    static inline Real Log2    (long Precision = mpfr::mpreal::get_default_prec())  { return mpfr::const_log2(Precision);      }
+    static inline Real Catalan (long Precision = mpfr::mpreal::get_default_prec())  { return mpfr::const_catalan(Precision);   }
 
-    inline static Real epsilon  (long Precision = mpfr::mpreal::get_default_prec())     {    return mpfr::machine_epsilon(Precision); }
-    inline static Real epsilon  (const Real& x)                                         {    return mpfr::machine_epsilon(x); }
+    static inline Real epsilon (long Precision = mpfr::mpreal::get_default_prec())  { return mpfr::machine_epsilon(Precision); }
+    static inline Real epsilon (const Real& x)                                      { return mpfr::machine_epsilon(x); }
 
-    inline static Real dummy_precision()   
-    { 
-        unsigned int weak_prec = ((mpfr::mpreal::get_default_prec()-1) * 90) / 100;
-        return mpfr::machine_epsilon(weak_prec);
+#ifdef MPREAL_HAVE_DYNAMIC_STD_NUMERIC_LIMITS
+    static inline int digits10 (long Precision = mpfr::mpreal::get_default_prec())  { return std::numeric_limits<Real>::digits10(Precision); }
+    static inline int digits10 (const Real& x)                                      { return std::numeric_limits<Real>::digits10(x); }
+#endif
+
+    static inline Real dummy_precision()
+    {
+      mpfr_prec_t weak_prec = ((mpfr::mpreal::get_default_prec()-1) * 90) / 100;
+      return mpfr::machine_epsilon(weak_prec);
     }
   };
 
@@ -139,64 +146,63 @@ int main()
     public:
       typedef mpfr::mpreal ResScalar;
       enum {
-        nr = 2, // must be 2 for proper packing...
+        Vectorizable = false,
+        LhsPacketSize = 1,
+        RhsPacketSize = 1,
+        ResPacketSize = 1,
+        NumberOfRegisters = 1,
+        nr = 1,
         mr = 1,
-        WorkSpaceFactor = nr,
         LhsProgress = 1,
         RhsProgress = 1
       };
+      typedef ResScalar LhsPacket;
+      typedef ResScalar RhsPacket;
+      typedef ResScalar ResPacket;
+      
     };
 
-    template<typename Index, int mr, int nr, bool ConjugateLhs, bool ConjugateRhs>
-    struct gebp_kernel<mpfr::mpreal,mpfr::mpreal,Index,mr,nr,ConjugateLhs,ConjugateRhs>
+
+
+    template<typename Index, typename DataMapper, bool ConjugateLhs, bool ConjugateRhs>
+    struct gebp_kernel<mpfr::mpreal,mpfr::mpreal,Index,DataMapper,1,1,ConjugateLhs,ConjugateRhs>
     {
       typedef mpfr::mpreal mpreal;
 
       EIGEN_DONT_INLINE
-      void operator()(mpreal* res, Index resStride, const mpreal* blockA, const mpreal* blockB, Index rows, Index depth, Index cols, mpreal alpha,
-                      Index strideA=-1, Index strideB=-1, Index offsetA=0, Index offsetB=0, mpreal* /*unpackedB*/ = 0)
+      void operator()(const DataMapper& res, const mpreal* blockA, const mpreal* blockB, 
+                      Index rows, Index depth, Index cols, const mpreal& alpha,
+                      Index strideA=-1, Index strideB=-1, Index offsetA=0, Index offsetB=0)
       {
-        mpreal acc1, acc2, tmp;
-        
+        if(rows==0 || cols==0 || depth==0)
+          return;
+
+        mpreal  acc1(0,mpfr_get_prec(blockA[0].mpfr_srcptr())),
+                tmp (0,mpfr_get_prec(blockA[0].mpfr_srcptr()));
+
         if(strideA==-1) strideA = depth;
         if(strideB==-1) strideB = depth;
 
-        for(Index j=0; j<cols; j+=nr)
+        for(Index i=0; i<rows; ++i)
         {
-          Index actual_nr = (std::min<Index>)(nr,cols-j);
-          mpreal *C1 = res + j*resStride;
-          mpreal *C2 = res + (j+1)*resStride;
-          for(Index i=0; i<rows; i++)
+          for(Index j=0; j<cols; ++j)
           {
-            mpreal *B = const_cast<mpreal*>(blockB) + j*strideB + offsetB*actual_nr;
-            mpreal *A = const_cast<mpreal*>(blockA) + i*strideA + offsetA;
+            const mpreal *A = blockA + i*strideA + offsetA;
+            const mpreal *B = blockB + j*strideB + offsetB;
+            
             acc1 = 0;
-            acc2 = 0;
             for(Index k=0; k<depth; k++)
             {
-              mpfr_mul(tmp.mpfr_ptr(), A[k].mpfr_ptr(), B[0].mpfr_ptr(), mpreal::get_default_rnd());
+              mpfr_mul(tmp.mpfr_ptr(), A[k].mpfr_srcptr(), B[k].mpfr_srcptr(), mpreal::get_default_rnd());
               mpfr_add(acc1.mpfr_ptr(), acc1.mpfr_ptr(), tmp.mpfr_ptr(),  mpreal::get_default_rnd());
-              
-              if(actual_nr==2) {
-                mpfr_mul(tmp.mpfr_ptr(), A[k].mpfr_ptr(), B[1].mpfr_ptr(), mpreal::get_default_rnd());
-                mpfr_add(acc2.mpfr_ptr(), acc2.mpfr_ptr(), tmp.mpfr_ptr(),  mpreal::get_default_rnd());
-              }
-              
-              B+=actual_nr;
             }
             
-            mpfr_mul(acc1.mpfr_ptr(), acc1.mpfr_ptr(), alpha.mpfr_ptr(), mpreal::get_default_rnd());
-            mpfr_add(C1[i].mpfr_ptr(), C1[i].mpfr_ptr(), acc1.mpfr_ptr(),  mpreal::get_default_rnd());
-            
-            if(actual_nr==2) {
-              mpfr_mul(acc2.mpfr_ptr(), acc2.mpfr_ptr(), alpha.mpfr_ptr(), mpreal::get_default_rnd());
-              mpfr_add(C2[i].mpfr_ptr(), C2[i].mpfr_ptr(), acc2.mpfr_ptr(),  mpreal::get_default_rnd());
-            }
+            mpfr_mul(acc1.mpfr_ptr(), acc1.mpfr_srcptr(), alpha.mpfr_srcptr(), mpreal::get_default_rnd());
+            mpfr_add(res(i,j).mpfr_ptr(), res(i,j).mpfr_srcptr(), acc1.mpfr_srcptr(),  mpreal::get_default_rnd());
           }
         }
       }
     };
-
   } // end namespace internal
 }
 

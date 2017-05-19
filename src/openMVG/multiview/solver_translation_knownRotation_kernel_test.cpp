@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -38,9 +39,8 @@ TEST(Translation_knownRotation_Kernel, Multiview) {
 
     openMVG::translation::kernel::TranslationFromKnowRotationKernel kernel(x0, xCam, R_GT);
 
-    size_t samples_[2]={0,1};
-    vector<size_t> samples(samples_,samples_+2);
-    vector<Vec3> vec_t;
+    const std::vector<uint32_t> samples = {0,1};
+    std::vector<Vec3> vec_t;
     kernel.Fit(samples, &vec_t);
 
     CHECK_EQUAL(1, vec_t.size());

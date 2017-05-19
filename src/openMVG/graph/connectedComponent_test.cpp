@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 openMVG authors.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -75,7 +77,7 @@ TEST(exportGraphToMapSubgraphs, CC_Subgraph) {
   lemon::ListGraph graph;
 
   // single
-  lemon::ListGraph::Node a = graph.addNode();
+  graph.addNode();
 
   // two
   lemon::ListGraph::Node b = graph.addNode(), c = graph.addNode();

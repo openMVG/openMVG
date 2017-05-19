@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,15 +8,33 @@
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 
-#include "openMVG/graph/connectedComponent.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/tracks/tracks.hpp"
+#include "openMVG/types.hpp"
 
+#include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
-#include "third_party/progress/progress.hpp"
+
+#include <ceres/types.h>
+
+#include <iostream>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -347,7 +366,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       //-- Display stats:
       //    - number of images
       //    - number of tracks
-      std::set<size_t> set_imagesId;
+      std::set<uint32_t> set_imagesId;
       TracksUtilsMap::ImageIdInTracks(map_selectedTracks, set_imagesId);
       osTrack << "------------------" << "\n"
         << "-- Tracks Stats --" << "\n"
@@ -355,15 +374,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         << " Images Id: " << "\n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),
-        std::ostream_iterator<size_t>(osTrack, ", "));
+        std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<size_t, size_t> map_Occurence_TrackLength;
+      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
       TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (std::map<size_t, size_t>::const_iterator iter = map_Occurence_TrackLength.begin();
-        iter != map_Occurence_TrackLength.end(); ++iter)  {
-        osTrack << "\t" << iter->first << "\t" << iter->second << "\n";
+      for (const auto & iter : map_Occurence_TrackLength)  {
+        osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
       std::cout << osTrack.str();
@@ -540,12 +558,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Compute the relative pose from pairwise point matches:
   for (int i = 0; i < static_cast<int>(poseWiseMatches.size()); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
-    {
-      ++my_progress_bar;
-    }
+    ++my_progress_bar;
     {
       PoseWiseMatches::const_iterator iter (poseWiseMatches.begin());
       std::advance(iter, i);
@@ -632,7 +645,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
           const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
           const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
-          TriangulateDLT(P1, x1_, P2, x2_, &X);
+          TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
           Observations obs;
           obs[view_I->id_view] = Observation(x1_, matches[k].i_);
           obs[view_J->id_view] = Observation(x2_, matches[k].j_);
@@ -725,4 +738,3 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
 } // namespace sfm
 } // namespace openMVG
-

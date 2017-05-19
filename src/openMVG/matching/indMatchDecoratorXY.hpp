@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,10 +9,14 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 #define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/indMatch.hpp"
-
+#include <algorithm>
 #include <iostream>
+#include <fstream>
+#include <set>
+#include <vector>
+
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -141,25 +146,25 @@ public:
   }
 
   /**
-    * Save the corresponding matches to file.
-    * \param nameFile   The file where matches will be saved.
-    * \param vec_match  The matches that we want to save.
-    * \return bool True if everything was ok, otherwise false.
-    */
-    bool saveMatch(const char* nameFile) const
-    {
-      std::ofstream f(nameFile);
-      if( f.is_open() ) {
-        std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
-          std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
-      }
-      return f.is_open();
+  * Save the corresponding matches to file.
+  * \param nameFile   The file where matches will be saved.
+  * \param vec_match  The matches that we want to save.
+  * \return bool True if everything was ok, otherwise false.
+  */
+  bool saveMatch(const char* nameFile) const
+  {
+    std::ofstream f(nameFile);
+    if( f.is_open() ) {
+      std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
+        std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
     }
+    return f.is_open();
+  }
 
-    friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)
-    {
-      return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
-    }
+  friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)
+  {
+    return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
+  }
 
 private :
   std::vector<IndMatch> vec_matches_;

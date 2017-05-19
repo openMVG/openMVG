@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,11 +9,11 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
-
-#include <vector>
 
 //------------------
 //-- Bibliography --
@@ -87,7 +88,7 @@ public:
 
   void Fit
   (
-    const std::vector<size_t> &samples,
+    const std::vector<uint32_t> &samples,
     std::vector<ModelArg> *models
   )
   const

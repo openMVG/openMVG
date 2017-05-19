@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,6 +9,7 @@
 #ifndef OPENMVG_STL_INDEXED_SORT_HPP
 #define OPENMVG_STL_INDEXED_SORT_HPP
 
+#include <algorithm>
 #include <vector>
 
 namespace stl

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,23 +9,26 @@
 #ifndef OPENMVG_TYPES_HPP
 #define OPENMVG_TYPES_HPP
 
+#ifndef OPENMVG_STD_UNORDERED_MAP
+
 #include <Eigen/Core>
 
+#endif
+
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <set>
 #include <vector>
 
-#ifdef __clang__
+#ifdef OPENMVG_STD_UNORDERED_MAP
 
-#include "openMVG/stl/hash.hpp"
-
+#include <algorithm>
 #include <unordered_map>
 #include <utility>
 
-#define OPENMVG_STD_UNORDERED_MAP 1
-
+#include "openMVG/stl/hash.hpp"
 namespace std {
   template<typename T1, typename T2>
   struct hash<std::pair<T1, T2>> {
@@ -41,7 +46,7 @@ namespace std {
   };
 }
 
-#endif // __clang__
+#endif // OPENMVG_STD_UNORDERED_MAP
 
 /**
 * @brief Main namespace of openMVG API

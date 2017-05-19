@@ -222,22 +222,29 @@ set(CMAKE_C_OSX_CURRENT_VERSION_FLAG "-current_version ")
 set(CMAKE_CXX_OSX_COMPATIBILITY_VERSION_FLAG "${CMAKE_C_OSX_COMPATIBILITY_VERSION_FLAG}")
 set(CMAKE_CXX_OSX_CURRENT_VERSION_FLAG "${CMAKE_C_OSX_CURRENT_VERSION_FLAG}")
 
-# Specify minimum version as latest SDK version.  Note that only Xcode 7+
-# supports the newer more specific: -m${XCODE_IOS_PLATFORM}-version-min flags,
-# older versions of Xcode use: -m(ios/ios-simulator)-version-min instead.
+# Specify minimum version of deployment target.
+# Unless specified, the latest SDK version is used by default.
+set(IOS_DEPLOYMENT_TARGET "${IOS_SDK_VERSION}"
+    CACHE STRING "Minimum iOS version to build for." )
+message(STATUS "Building for minimum iOS version: ${IOS_DEPLOYMENT_TARGET}"
+               " (SDK version: ${IOS_SDK_VERSION})")
+
+# Note that only Xcode 7+ supports the newer more specific:
+# -m${XCODE_IOS_PLATFORM}-version-min flags, older versions of Xcode use:
+# -m(ios/ios-simulator)-version-min instead.
 if (XCODE_VERSION VERSION_LESS 7.0)
   if (IOS_PLATFORM STREQUAL "OS")
     set(XCODE_IOS_PLATFORM_VERSION_FLAGS
-      "-mios-version-min=${IOS_SDK_VERSION}")
+      "-mios-version-min=${IOS_DEPLOYMENT_TARGET}")
   else()
     # SIMULATOR or SIMULATOR64 both use -mios-simulator-version-min.
     set(XCODE_IOS_PLATFORM_VERSION_FLAGS
-      "-mios-simulator-version-min=${IOS_SDK_VERSION}")
+      "-mios-simulator-version-min=${IOS_DEPLOYMENT_TARGET}")
   endif()
 else()
   # Xcode 7.0+ uses flags we can build directly from XCODE_IOS_PLATFORM.
   set(XCODE_IOS_PLATFORM_VERSION_FLAGS
-    "-m${XCODE_IOS_PLATFORM}-version-min=${IOS_SDK_VERSION}")
+    "-m${XCODE_IOS_PLATFORM}-version-min=${IOS_DEPLOYMENT_TARGET}")
 endif()
 
 set(CMAKE_C_FLAGS

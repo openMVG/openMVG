@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 cDc and Pierre MOULON.
 
@@ -8,7 +9,9 @@
 #ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
 #define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
 
+#include <vector>
 #include "openMVG/multiview/rotation_averaging_common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 //------------------
 //-- Bibliography --
@@ -36,7 +39,7 @@ void InitRotationsMST
 (
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID
+  const uint32_t nMainViewID
 );
 
 /**
@@ -51,7 +54,7 @@ void InitRotationsMST
 bool GlobalRotationsRobust(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   float threshold = 0.f,
   std::vector<bool> * vec_inliers = nullptr );
 
@@ -66,8 +69,8 @@ bool GlobalRotationsRobust(
 bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
-  const double sigma=openMVG::D2R(5));
+  const uint32_t nMainViewID,
+  const double sigma = openMVG::D2R(5));
 
 /**
  * @brief Sort relative rotation as inlier, outlier rotations.

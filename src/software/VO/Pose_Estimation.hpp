@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -8,7 +9,7 @@
 #ifndef POSE_ESTIMATION_VO_HPP
 #define POSE_ESTIMATION_VO_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
@@ -59,7 +60,7 @@ struct Pose_Estimator
       x2, w, h,
       false); // configure as point to point error model.
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat3 H;
     ACRANSAC(kernel, vec_inliers, 1024, &H, std::numeric_limits<double>::infinity(),
       true);
@@ -88,7 +89,7 @@ struct Pose_Estimator
     KernelType kernel(x1, size_ima.first, size_ima.second,
       x2, size_ima.first, size_ima.second, K, K);
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat3 pE;
     double precision = std::numeric_limits<double>::infinity();
     // Robustly estimation of the Essential matrix and it's precision
@@ -112,7 +113,7 @@ struct Pose_Estimator
 
     KernelType kernel(pt2D, pt3D, K);
 
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     Mat34 P;
     const double dPrecision = std::numeric_limits<double>::infinity();
 

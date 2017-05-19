@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,10 +30,11 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
-
-#include <vector>
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 namespace resection {
@@ -72,7 +74,7 @@ public:
 
   void Fit
   (
-    const std::vector<size_t> &samples,
+    const std::vector<uint32_t> &samples,
     std::vector<ModelArg> *models
   )
   const
@@ -178,7 +180,7 @@ class ResectionKernel_K {
     EuclideanToNormalizedCamera(x_image_, K, &x_camera_);
   }
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat2X x = ExtractColumns(x_camera_, samples);
     const Mat3X X = ExtractColumns(X_, samples);
     Mat34 P;
@@ -191,7 +193,7 @@ class ResectionKernel_K {
     }
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     const Mat3X X = X_.col(sample);
     const Mat2X error = Project(model, X) - x_image_.col(sample);
     return error.col(0).norm();

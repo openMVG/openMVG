@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -66,15 +68,14 @@ bool Affine2DFromCorrespondencesLinear(const Mat &x1, const Mat &x2,
     b(j+1,0) = x2(1,i);
   }
   // Solve A x = B
-  Vec x = A.fullPivLu().solve(b);
+  const Vec x = A.fullPivLu().solve(b);
   if ((A * x).isApprox(b, expected_precision))  {
     *M << x(0), x(1), x(4),
           x(2), x(3), x(5),
           0.0,  0.0,  1.0;
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 // Parametrization
@@ -132,15 +133,14 @@ bool Affine3DFromCorrespondencesLinear(const Mat &x1,
     b(j2,0) = x2(2,i);
   }
   // Solve A x = B
-  Vec x = A.fullPivLu().solve(b);
+  const Vec x = A.fullPivLu().solve(b);
   if ((A * x).isApprox(b, expected_precision))  {
     *M << x(0), x(1), x(2), x(9), // a b c x
           x(3), x(4), x(5), x(10), // d e f y
           x(6), x(7), x(8), x(11), // g h i z
           0.0,   0.0,  0.0, 1.0;
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 } // namespace openMVG

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -188,7 +189,7 @@ int main(int, char**)
           }
 
           //-- Homography robust estimation
-          std::vector<size_t> vec_inliers, vec_inliersRansac;
+          std::vector<uint32_t> vec_inliers, vec_inliersRansac;
           Mat3 H;
           Mat3 Hransac;
           double thresholdransac = 2.0;

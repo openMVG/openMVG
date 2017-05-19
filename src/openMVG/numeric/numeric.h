@@ -28,144 +28,17 @@
 #ifndef OPENMVG_NUMERIC_NUMERIC_H
 #define OPENMVG_NUMERIC_NUMERIC_H
 
-//--
-// Eigen
-// http://eigen.tuxfamily.org/dox-devel/QuickRefPage.html
-//--
-#include <Eigen/Core>
-#include <Eigen/Eigenvalues>
-#include <Eigen/Geometry>
-#include <Eigen/LU>
-#include <Eigen/QR>
-#include <Eigen/SparseCore>
-#include <Eigen/StdVector>
-#include <Eigen/SVD>
-
+#include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <numeric>
+#include <iterator>
 #include <string>
 #include <vector>
 
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+
 namespace openMVG
 {
-
-// Check MSVC
-#if _WIN32 || _WIN64
-  #if _WIN64
-    #define ENV64BIT
-  #else
-    #define ENV32BIT
-  #endif
-#endif
-
-// Check GCC
-#if __GNUC__
-  #if __x86_64__ || __ppc64__ || _LP64
-    #define ENV64BIT
-  #else
-    #define ENV32BIT
-  #endif
-#endif
-
-using Eigen::Map;
-
-/// Trait used for double type
-using EigenDoubleTraits = Eigen::NumTraits<double>;
-
-/// 3d vector using double internal format
-using Vec3 = Eigen::Vector3d;
-
-/// 2d vector using int internal format
-using Vec2i = Eigen::Vector2i;
-
-/// 2d vector using float internal format
-using Vec2f = Eigen::Vector2f;
-
-/// 3d vector using float internal format
-using Vec3f =Eigen::Vector3f;
-
-/// 9d vector using double internal format
-using Vec9 = Eigen::Matrix<double, 9, 1>;
-
-/// Quaternion type
-using Quaternion = Eigen::Quaternion<double>;
-
-/// 3x3 matrix using double internal format
-using Mat3 = Eigen::Matrix<double, 3, 3>;
-
-#if defined(ENV32BIT)
-
-  /// 3x4 matrix using double internal format
-  using Mat34 = Eigen::Matrix<double, 3, 4, Eigen::DontAlign>;
-
-  /// 2d vector using double internal format
-  using Vec2 = Eigen::Matrix<double, 2, 1, Eigen::DontAlign>;
-
-  /// 4d vector using double internal format
-  using Vec4 = Eigen::Matrix<double, 4, 1, Eigen::DontAlign>;
-
-  /// 6d vector using double internal format
-  using Vec6 = Eigen::Matrix<double, 6, 1, Eigen::DontAlign>;
-#else // 64 bits compiler
-
-  /// 3x4 matrix using double internal format
-  using Mat34 = Eigen::Matrix<double, 3, 4>;
-
-  /// 2d vector using double internal format
-  using Vec2 = Eigen::Vector2d;
-
-  /// 4d vector using double internal format
-  using Vec4 = Eigen::Vector4d;
-
-  /// 6d vector using double internal format
-  using Vec6 = Eigen::Matrix<double, 6, 1>;
-#endif
-
-
-/// 4x4 matrix using double internal format
-using Mat4 = Eigen::Matrix<double, 4, 4>;
-
-/// generic matrix using unsigned int internal format
-using Matu = Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic>;
-
-/// 3x3 matrix using double internal format with RowMajor storage
-using RMat3 = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
-
-//-- General purpose Matrix and Vector
-/// Unconstrained matrix using double internal format
-using Mat = Eigen::MatrixXd;
-
-/// Unconstrained vector using double internal format
-using Vec = Eigen::VectorXd;
-
-/// Unconstrained vector using unsigned int internal format
-using Vecu = Eigen::Matrix<unsigned int, Eigen::Dynamic, 1>;
-
-/// Unconstrained matrix using float internal format
-using Matf = Eigen::MatrixXf;
-
-/// Unconstrained vector using float internal format
-using Vecf = Eigen::VectorXf;
-
-/// 2xN matrix using double internal format
-using Mat2X = Eigen::Matrix<double, 2, Eigen::Dynamic>;
-
-/// 3xN matrix using double internal format
-using Mat3X = Eigen::Matrix<double, 3, Eigen::Dynamic>;
-
-/// 4xN matrix using double internal format
-using Mat4X = Eigen::Matrix<double, 4, Eigen::Dynamic>;
-
-/// 9xN matrix using double internal format
-using MatX9 = Eigen::Matrix<double, Eigen::Dynamic, 9>;
-
-//-- Sparse Matrix (Column major, and row major)
-/// Sparse unconstrained matrix using double internal format
-using sMat = Eigen::SparseMatrix<double>;
-
-/// Sparse unconstrained matrix using double internal format and Row Major storage
-using sRMat = Eigen::SparseMatrix<double, Eigen::RowMajor>;
 
 //--------------
 //-- Function --
@@ -308,74 +181,6 @@ inline double DistanceLInfinity( const TVec &x, const TVec &y )
 }
 
 /**
-* @brief Solve linear system
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] nullspace result vector containing the solution of the system
-* @return Singular value corresponding to the solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-template <typename TMat, typename TVec>
-double Nullspace( TMat *A, TVec *nullspace )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    ( *nullspace ) = svd.matrixV().col( A->cols() - 1 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace( &A_extended, nullspace );
-}
-
-/**
-* @brief Solve linear system and gives the two best solutions
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] x1 result vector containing the best solution of the system
-* @param[out] x2 result vector containing the second best solution of the system
-* @return Singular value corresponding to the best solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-template <typename TMat, typename TVec1, typename TVec2>
-inline double Nullspace2( TMat *A, TVec1 *x1, TVec2 *x2 )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    TMat V = svd.matrixV();
-    *x1 = V.col( A->cols() - 1 );
-    *x2 = V.col( A->cols() - 2 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace2( &A_extended, x1, x2 );
-}
-
-
-/**
 * @brief Compute look at matrix
 * Make a rotation matrix such that center becomes the direction of the
 * positive z-axis, and y is oriented close to up by default.
@@ -444,7 +249,7 @@ struct vstack_return
     MaxRowsAtCompileTime = SUM_OR_DYNAMIC( Derived1::MaxRowsAtCompileTime, Derived2::MaxRowsAtCompileTime ),
     MaxColsAtCompileTime = Derived1::MaxColsAtCompileTime
   };
-  using type = 
+  using type =
     Eigen::Matrix<
       Scalar,
       RowsAtCompileTime,
@@ -503,26 +308,6 @@ double CosinusBetweenMatrices( const TMat &a, const TMat &b )
   return ( a.array() * b.array() ).sum() /
          FrobeniusNorm( a ) / FrobeniusNorm( b );
 }
-
-/**
-* @brief Extract a submatrix given a list of column
-* @param A Input matrix
-* @param columns A vector of columns index to extract
-* @return Matrix containing a subset of input matrix columns
-* @note columns index start at index 0
-* @note Assuming columns contains a list of valid columns index
-*/
-template <typename TMat, typename TCols>
-TMat ExtractColumns( const TMat &A, const TCols &columns )
-{
-  TMat compressed( A.rows(), columns.size() );
-  for ( size_t i = 0; i < static_cast<size_t>( columns.size() ); ++i )
-  {
-    compressed.col( i ) = A.col( columns[i] );
-  }
-  return compressed;
-}
-
 
 /**
 * @brief Compute per row mean and variance

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,12 +9,12 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 #define OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
-
-#include <cereal/types/polymorphic.hpp>
 
 namespace openMVG
 {
@@ -26,8 +27,8 @@ namespace cameras
 template< typename T>
 struct Clonable
 {
-  virtual T * clone() const = 0 ;
-} ;
+  virtual T * clone() const = 0;
+};
 
 /**
 * @brief Base class used to store common intrinsics parameters
@@ -75,13 +76,13 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
-  * @brief Compute projection of a 3D point into the camera plane
+  * @brief Compute projection of a 3D point into the image plane
   * (Apply pose, disto (if any) and Intrinsics)
   * @param pose Pose used to compute projection
-  * @param pt3D 3D-point to project on camera plane
-  * @return Projected (2D) point on camera plane
+  * @param pt3D 3D-point to project on image plane
+  * @return Projected (2D) point on image plane
   */
-  Vec2 project(
+  virtual Vec2 project(
     const geometry::Pose3 & pose,
     const Vec3 & pt3D ) const
   {
@@ -214,28 +215,21 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @return Concatenation of intrinsic matrix and extrinsic matrix
   */
   virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const = 0;
-
+  
   /**
   * @brief Serialization out
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void save( Archive & ar ) const;
+
 
   /**
   * @brief  Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void load( Archive & ar );
 
   /**
   * @brief Generate a unique Hash from the camera parameters (used for grouping)

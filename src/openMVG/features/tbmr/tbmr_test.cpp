@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/tbmr/tbmr.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/features/feature.hpp"
 
 #include "testing/testing.h"
 
 
 using namespace openMVG;
-using namespace image; 
+using namespace image;
 using namespace features;
 using namespace openMVG::features::tbmr;
 

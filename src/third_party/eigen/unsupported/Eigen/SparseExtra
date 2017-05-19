@@ -37,9 +37,6 @@
   */
 
 
-#include "../../Eigen/src/misc/Solve.h"
-#include "../../Eigen/src/misc/SparseSolve.h"
-
 #include "src/SparseExtra/DynamicSparseMatrix.h"
 #include "src/SparseExtra/BlockOfDynamicSparseMatrix.h"
 #include "src/SparseExtra/RandomSetter.h"

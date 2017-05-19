@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,6 +9,7 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 #define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 
+#include <algorithm>
 #include <cstdlib>
 #include <random>
 #include <vector>
@@ -35,9 +37,9 @@ namespace
 */
 inline void UniformSample
 (
-  size_t num_samples,
-  size_t total_samples,
-  std::vector<size_t> *samples
+  uint32_t num_samples,
+  uint32_t total_samples,
+  std::vector<uint32_t> *samples
 )
 {
   std::uniform_int_distribution<unsigned int> distribution(0, total_samples-1);

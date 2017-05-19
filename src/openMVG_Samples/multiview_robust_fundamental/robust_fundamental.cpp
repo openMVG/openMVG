@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,27 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 #include "nonFree/sift/SIFT_describer.hpp"
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-
-#include <string>
 #include <iostream>
+#include <string>
+#include <utility>
 
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
-using namespace svg;
 using namespace std;
 
 int main() {
@@ -66,20 +68,16 @@ int main() {
 
   //- Draw features on the two image (side by side)
   {
-    Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
-
-    //-- Draw features :
-    for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature point = regionsL->Features()[i];
-      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
-    }
-    for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature point = regionsR->Features()[i];
-      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
-    }
-    string out_filename = "02_features.jpg";
-    WriteImage(out_filename.c_str(), concat);
+    Features2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->Features(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->Features(),
+      "02_features.svg"
+    );
   }
 
   std::vector<IndMatch> vec_PutativeMatches;
@@ -93,21 +91,19 @@ int main() {
       vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
-    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
-      //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
-      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
-    }
-    const string out_filename = "03_siftMatches.svg";
-    ofstream svgFile( out_filename.c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+    const bool bVertical = true;
+    Matches2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      vec_PutativeMatches,
+      "03_Matches.svg",
+      bVertical
+    );
   }
 
   // Fundamental geometry filtering of putative matches
@@ -124,8 +120,8 @@ int main() {
     }
 
     //-- Fundamental robust estimation
-    std::vector<size_t> vec_inliers;
-    using KernelType = 
+    std::vector<uint32_t> vec_inliers;
+    using KernelType =
       ACKernelAdaptor<
         openMVG::fundamental::kernel::SevenPointSolver,
         openMVG::fundamental::kernel::SymmetricEpipolarDistanceError,
@@ -153,27 +149,30 @@ int main() {
         << std::endl;
 
       //Show fundamental validated point and compute residuals
+      const bool bVertical = true;
+      InlierMatches2SVG
+      (
+        jpg_filenameL,
+        {imageL.Width(), imageL.Height()},
+        regionsL->GetRegionsPositions(),
+        jpg_filenameR,
+        {imageR.Width(), imageR.Height()},
+        regionsR->GetRegionsPositions(),
+        vec_PutativeMatches,
+        vec_inliers,
+        "04_ACRansacFundamental.svg",
+        bVertical
+      );
+
       std::vector<double> vec_residuals(vec_inliers.size(), 0.0);
-      svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-      svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-      svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
       for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
         const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[vec_inliers[i]].i_];
         const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[vec_inliers[i]].j_];
-        const Vec2f L = LL.coords();
-        const Vec2f R = RR.coords();
-        svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-        svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
         // residual computation
         vec_residuals[i] = std::sqrt(KernelType::ErrorT::Error(F,
                                        LL.coords().cast<double>(),
                                        RR.coords().cast<double>()));
       }
-      const string out_filename = "04_ACRansacFundamental.svg";
-      ofstream svgFile( out_filename.c_str() );
-      svgFile << svgStream.closeSvgFile().str();
-      svgFile.close();
 
       // Display some statistics of reprojection errors
       float dMin, dMax, dMean, dMedian;

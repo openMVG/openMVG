@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,6 +15,6 @@ int main(int argc, char ** argv)
 
   MainWindow * mainWindow = new MainWindow;
   mainWindow->show();
-  
+
   return app.exec();
 }

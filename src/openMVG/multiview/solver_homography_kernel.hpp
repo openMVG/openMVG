@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -30,14 +31,13 @@
 #define OPENMVG_MULTIVIEW_SOLVER_HOMOGRAPHY_KERNEL_HPP
 
 #include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
 
 namespace openMVG {
 namespace homography {
 namespace kernel {
-
-using namespace std;
 
 struct FourPointSolver {
   enum { MINIMUM_SAMPLES = 4 };
@@ -52,7 +52,7 @@ struct FourPointSolver {
    *
    * The estimated homography should approximately hold the condition y = H x.
    */
-  static void Solve(const Mat &x, const Mat &y, vector<Mat3> *Hs);
+  static void Solve(const Mat &x, const Mat &y, std::vector<Mat3> *Hs);
 };
 
 // Should be distributed as Chi-squared with k = 2.

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -26,7 +27,7 @@ struct PinholeCamera
     _C = -R.transpose() * t;
     P_From_KRt(_K, _R, _t, &_P);
   }
-  
+
   PinholeCamera(const Mat34 & P)
   {
     _P = P;
@@ -108,4 +109,3 @@ struct PinholeCamera
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLECAMERA_HPP
-

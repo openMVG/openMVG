@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2013, 2014 openMVG authors.
 
@@ -8,7 +9,7 @@
 #include "colorHarmonizeEngineGlobal.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 //-- Feature matches
 #include <openMVG/matching/indMatch.hpp>
 #include "openMVG/matching/indMatch_utils.hpp"
@@ -30,7 +31,7 @@
 
 #include "openMVG/system/timer.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <numeric>
 #include <iomanip>
@@ -52,10 +53,10 @@ using FeatureT = features::SIOPointFeature;
 using featsT = std::vector< FeatureT >;
 
 ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
-  const string & sSfM_Data_Filename,
-  const string & sMatchesPath,
+  const std::string & sSfM_Data_Filename,
+  const std::string & sMatchesPath,
   const std::string & sMatchesFile,
-  const string & sOutDirectory,
+  const std::string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
   _selectionMethod( selectionMethod ),
@@ -78,7 +79,7 @@ ColorHarmonizationEngineGlobal::~ColorHarmonizationEngineGlobal()
 void pauseProcess()
 {
   unsigned char i;
-  cout << "\nPause : type key and press enter: ";
+  std::cout << "\nPause : type key and press enter: ";
   std::cin >> i;
 }
 
@@ -97,7 +98,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     return false;
   if( _map_Matches.size() == 0 )
   {
-    cout << endl << "Matches file is empty" << endl;
+    std::cout << std::endl << "Matches file is empty" <<std:: endl;
     return false;
   }
 
@@ -141,14 +142,14 @@ bool ColorHarmonizationEngineGlobal::Process()
   {
     do
     {
-      cout << "Choose your reference image:\n";
+      std::cout << "Choose your reference image:\n";
       for( size_t i = 0; i < _vec_fileNames.size(); ++i )
       {
-        cout << "id: " << i << "\t" << _vec_fileNames[ i ] << endl;
+        std::cout << "id: " << i << "\t" << _vec_fileNames[ i ] << std::endl;
       }
     }
     while (
-      !( cin >> _imgRef )
+      !( std::cin >> _imgRef )
       || _imgRef < 0
       || _imgRef >= static_cast<int>(_vec_fileNames.size()) );
   }
@@ -156,13 +157,13 @@ bool ColorHarmonizationEngineGlobal::Process()
   //Choose selection method
   if( _selectionMethod == -1 )
   {
-    cout << "Choose your selection method:\n"
+    std::cout << "Choose your selection method:\n"
       << "- FullFrame: 0\n"
       << "- Matched Points: 1\n"
       << "- VLD Segment: 2\n";
-    while( ! ( cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
+    while( ! ( std::cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
     {
-      cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
+      std::cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
     }
   }
 
@@ -276,15 +277,15 @@ bool ColorHarmonizationEngineGlobal::Process()
     bool bExportMask = false;
     if (bExportMask)
     {
-      string sEdge = _vec_fileNames[ I ] + "_" + _vec_fileNames[ J ];
+      std::string sEdge = _vec_fileNames[ I ] + "_" + _vec_fileNames[ J ];
       sEdge = stlplus::create_filespec( _sOutDirectory, sEdge );
       if( !stlplus::folder_exists( sEdge ) )
         stlplus::folder_create( sEdge );
 
-      string out_filename_I = "00_mask_I.png";
+      std::string out_filename_I = "00_mask_I.png";
       out_filename_I = stlplus::create_filespec( sEdge, out_filename_I );
 
-      string out_filename_J = "00_mask_J.png";
+      std::string out_filename_J = "00_mask_J.png";
       out_filename_J = stlplus::create_filespec( sEdge, out_filename_J );
 
       WriteImage( out_filename_I.c_str(), maskI );
@@ -336,14 +337,9 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   openMVG::system::Timer timer;
 
-  #ifdef OPENMVG_HAVE_MOSEK
-  using SOLVER_LP_T = MOSEK_SolveWrapper;
-  #else
-  using SOLVER_LP_T = OSI_CLP_SolverWrapper;
-  #endif
   // Red channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_r.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_r.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[0], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -354,7 +350,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Green channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_g.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_g.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[1], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -365,7 +361,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Blue channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_b.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_b.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[2], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -491,7 +487,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
 
   if ( !matching::Load(_map_Matches, _sMatchesFile) )
   {
-    cerr<< "Unable to read the geometric matrix matches" << endl;
+    std::cerr<< "Unable to read the geometric matrix matches" << std::endl;
     return false;
   }
 
@@ -505,7 +501,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
                                       ".feat" ),
             _map_feats[ camIndex ] ) )
     {
-      cerr << "Bad reading of feature files" << endl;
+      std::cerr << "Bad reading of feature files" << std::endl;
       return false;
     }
   }

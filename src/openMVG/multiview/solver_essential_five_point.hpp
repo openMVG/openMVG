@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -41,13 +42,12 @@
 #ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_FIVE_POINT_HPP
 #define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_FIVE_POINT_HPP
 
-#include "openMVG/numeric/numeric.h"
-
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
-using namespace std;
 
 /**
  * @brief Computes the relative pose of two calibrated cameras from 5 correspondences.
@@ -57,7 +57,7 @@ using namespace std;
  * \param E  A list of at most 10 candidate essential matrix solutions.
  */
 void FivePointsRelativePose( const Mat2X &x1, const Mat2X &x2,
-                             vector<Mat3> *E );
+                             std::vector<Mat3> *E );
 
 /**
 * @brief Compute the nullspace of the linear constraints given by the matches.
@@ -144,4 +144,3 @@ enum
 } // namespace openMVG
 
 #endif // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_FIVE_POINT_HPP
-

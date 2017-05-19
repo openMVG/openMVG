@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/image/image_io.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -15,13 +18,13 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
 #include <cmath>
 #include <iterator>
 #include <iomanip>
+#include <fstream>
 
 bool exportToCMPMVSFormat(
   const SfM_Data & sfm_data,
@@ -66,7 +69,7 @@ bool exportToCMPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
       std::ofstream file(
@@ -255,7 +258,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (exportToCMPMVSFormat(sfm_data, stlplus::folder_append_separator(sOutDir) + "CMPMVS"))
-    return( EXIT_SUCCESS );
+    return EXIT_SUCCESS;
   else
-    return( EXIT_FAILURE );
+    return EXIT_FAILURE;
 }

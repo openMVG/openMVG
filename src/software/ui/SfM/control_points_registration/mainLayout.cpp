@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,14 @@
 
 #include "mainLayout.hpp"
 #include <QtGui>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QWidget>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QMenu>
+#include <QGridLayout>
+#include <QMenuBar>
 #include <QDebug>
 
 #include <algorithm>
@@ -364,6 +374,7 @@ MainWindow::MainWindow
   createConnections();
 
   setWindowTitle(tr("Control_point_editor"));
+ 
   QMainWindow::statusBar()->showMessage("Welcome in Control_point_editor GUI.");
   resize(640, 480);
 }

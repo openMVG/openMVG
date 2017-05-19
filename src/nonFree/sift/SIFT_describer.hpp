@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,12 +9,13 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
-#include <cereal/cereal.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"
@@ -63,16 +66,7 @@ public:
       _root_sift(root_sift) {}
 
     template<class Archive>
-    void serialize( Archive & ar )
-    {
-      ar(
-        cereal::make_nvp("first_octave", _first_octave),
-        cereal::make_nvp("num_octaves",_num_octaves),
-        cereal::make_nvp("num_scales",_num_scales),
-        cereal::make_nvp("edge_threshold",_edge_threshold),
-        cereal::make_nvp("peak_threshold",_peak_threshold),
-        cereal::make_nvp("root_sift",_root_sift));
-    }
+    inline void serialize( Archive & ar );
 
     // Parameters
     int _first_octave;      // Use original image, or perform an upscale if == -1
@@ -218,12 +212,7 @@ public:
   }
 
   template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(
-     cereal::make_nvp("params", _params),
-     cereal::make_nvp("bOrientation", _bOrientation));
-  }
+  inline void serialize( Archive & ar );
 
 private:
   Params _params;
@@ -232,10 +221,5 @@ private:
 
 } // namespace features
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::SIFT_Image_describer)
 
 #endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP

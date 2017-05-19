@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,16 +9,16 @@
 #ifndef OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 #define OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include <set>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
 
-#include <set>
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace sfm {
-
-struct SfM_Data;
 
 /// Generic basis struct for triangulation of track data contained
 ///  in the SfM_Data scene structure.
@@ -70,11 +72,6 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
     const IndexT min_sample_index = 3) const;
 
 private:
-  /// Triangulate a given track from a selection of observations
-  Vec3 track_sample_triangulation(
-    const SfM_Data & sfm_data,
-    const Observations & obs,
-    const std::set<IndexT> & samples) const;
 
   // -- DATA
   double max_reprojection_error_;

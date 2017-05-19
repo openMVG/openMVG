@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,11 +9,12 @@
 #ifndef OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
 #define OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
 
+#include <memory>
+#include <vector>
+
 #include "openMVG/matching/matching_interface.hpp"
 
 #include <flann/flann.hpp>
-
-#include <memory>
 
 namespace openMVG {
 namespace matching  {
@@ -29,7 +32,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   public:
   using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcher_Kdtree_Flann() = default ;
+  ArrayMatcher_Kdtree_Flann() = default;
 
   virtual ~ArrayMatcher_Kdtree_Flann()
   {
@@ -88,7 +91,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     DistanceType * distance
   ) override
   {
-    if (index_.get() != nullptr)  {
+    if (index_.get() != nullptr)
+    {
       int * indicePTR = indice;
       DistanceType * distancePTR = distance;
       flann::Matrix<Scalar> queries((Scalar*)query, 1, dimension_);
@@ -98,7 +102,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
       // do a knn search, using 128 checks
       return (index_->knnSearch(queries, indices, dists, 1, flann::SearchParams(128)) > 0);
     }
-    else  {
+    else
+    {
       return false;
     }
   }
@@ -111,7 +116,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
    * \param[in]   nbQuery         The number of query rows
    * \param[out]  indices   The corresponding (query, neighbor) indices
    * \param[out]  pvec_distances  The distances between the matched arrays.
-   * \param[out]  NN              The number of maximal neighbor that will be searched.
+   * \param[in]  NN              The number of maximal neighbor that will be searched.
    *
    * \return True if success.
    */
@@ -123,7 +128,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
     size_t NN
   ) override
   {
-    if (index_.get() != nullptr && NN <= datasetM_->rows)  {
+    if (index_.get() != nullptr && NN <= datasetM_->rows)
+    {
       std::vector<DistanceType> vec_distances(nbQuery * NN);
       DistanceType * distancePTR = &(vec_distances[0]);
       flann::Matrix<DistanceType> dists(distancePTR, nbQuery, NN);
@@ -146,17 +152,19 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
         {
           for (size_t j = 0; j < NN; ++j)
           {
-            pvec_indices->emplace_back(IndMatch(i, vec_indices[i*NN+j]));
+            pvec_indices->emplace_back(i, vec_indices[i*NN+j]);
             pvec_distances->emplace_back(vec_distances[i*NN+j]);
           }
         }
         return true;
       }
-      else  {
+      else
+      {
         return false;
       }
     }
-    else  {
+    else
+    {
       return false;
     }
   }

@@ -28,7 +28,21 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 //         mierle@gmail.com (Keir Mierle)
-//
+
+#ifndef CERES_PUBLIC_DYNAMIC_AUTODIFF_COST_FUNCTION_H_
+#define CERES_PUBLIC_DYNAMIC_AUTODIFF_COST_FUNCTION_H_
+
+#include <cmath>
+#include <numeric>
+#include <vector>
+
+#include "ceres/dynamic_cost_function.h"
+#include "ceres/internal/scoped_ptr.h"
+#include "ceres/jet.h"
+#include "glog/logging.h"
+
+namespace ceres {
+
 // This autodiff implementation differs from the one found in
 // autodiff_cost_function.h by supporting autodiff on cost functions
 // with variable numbers of parameters with variable sizes. With the
@@ -60,36 +74,13 @@
 // default, controlled by the Stride template parameter) with each
 // pass. There is a tradeoff with the size of the passes; you may want
 // to experiment with the stride.
-
-#ifndef CERES_PUBLIC_DYNAMIC_AUTODIFF_COST_FUNCTION_H_
-#define CERES_PUBLIC_DYNAMIC_AUTODIFF_COST_FUNCTION_H_
-
-#include <cmath>
-#include <numeric>
-#include <vector>
-
-#include "ceres/cost_function.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/jet.h"
-#include "glog/logging.h"
-
-namespace ceres {
-
 template <typename CostFunctor, int Stride = 4>
-class DynamicAutoDiffCostFunction : public CostFunction {
+class DynamicAutoDiffCostFunction : public DynamicCostFunction {
  public:
   explicit DynamicAutoDiffCostFunction(CostFunctor* functor)
     : functor_(functor) {}
 
   virtual ~DynamicAutoDiffCostFunction() {}
-
-  void AddParameterBlock(int size) {
-    mutable_parameter_block_sizes()->push_back(size);
-  }
-
-  void SetNumResiduals(int num_residuals) {
-    set_num_residuals(num_residuals);
-  }
 
   virtual bool Evaluate(double const* const* parameters,
                         double* residuals,

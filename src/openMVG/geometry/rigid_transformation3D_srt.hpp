@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,8 +9,9 @@
 #ifndef OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 #define OPENMVG_GEOMETRY_RIGID_TRANSFORMATION_3D_SRT_HPP
 
+#include <limits>
 #include "openMVG/numeric/lm.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

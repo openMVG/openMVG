@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -46,16 +48,17 @@ Changes are:
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 
+#include <iostream>
+#include <numeric>
+#include <vector>
+
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
 #include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
-
-#include <cereal/cereal.hpp>
-
-#include <iostream>
-#include <numeric>
 
 
 namespace openMVG {
@@ -82,16 +85,7 @@ public:
       root_sift_(root_sift) {}
 
     template<class Archive>
-    void serialize( Archive & ar )
-    {
-      ar(
-        cereal::make_nvp("first_octave", first_octave_),
-        cereal::make_nvp("num_octaves",num_octaves_),
-        cereal::make_nvp("num_scales",num_scales_),
-        cereal::make_nvp("edge_threshold",edge_threshold_),
-        cereal::make_nvp("peak_threshold",peak_threshold_),
-        cereal::make_nvp("root_sift",root_sift_));
-    }
+    inline void serialize( Archive & ar );
 
     // Parameters
     int first_octave_;      // Use original image, or perform an upscale if == -1
@@ -143,7 +137,6 @@ public:
     const image::Image<unsigned char> * mask = nullptr
   ) override
   {
-    const int w = image.Width(), h = image.Height();
     // Convert to float in range [0;1]
     const image::Image<float> If(image.GetMat().cast<float>()/255.0f);
 
@@ -213,10 +206,7 @@ public:
   }
 
   template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(cereal::make_nvp("params", params_));
-  }
+  inline void serialize( Archive & ar );
 
 private:
   Params params_;
@@ -225,8 +215,5 @@ private:
 } // namespace features
 } // namespace openMVG
 
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Anatomy_Image_describer, "SIFT_Anatomy_Image_describer");
 
 #endif // OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP

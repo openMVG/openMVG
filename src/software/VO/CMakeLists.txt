@@ -1,4 +1,6 @@
 
+add_subdirectory( AlternativeVO )
+
 if (OpenMVG_BUILD_OPENGL_EXAMPLES)
 
   #

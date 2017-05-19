@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,7 +12,7 @@
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 
 #include "testing/testing.h"

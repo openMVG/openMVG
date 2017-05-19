@@ -1,14 +1,24 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Romuald Perrot, Pierre Moulon
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <iomanip>
+#include <cstdlib>
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
@@ -31,10 +41,10 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
                     const std::string sOutDirectory ,
                     const std::string filename )
 {
-  const string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
+  const std::string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
   if ( !stlplus::folder_exists( sOutViewsDirectory ) )
   {
-    cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+    std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
     stlplus::folder_create( sOutViewsDirectory );
   }
 
@@ -131,9 +141,6 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
           WriteImage( dstImage.c_str(), image );
         }
       }
-      #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-      #endif
       ++my_progress_bar;
     }
   }
@@ -237,7 +244,7 @@ bool exportToNVM( const SfM_Data & sfm_data , const std::string & sOutDirectory 
   bool bOk = false ;
   if ( !stlplus::is_folder( sOutDirectory ) )
   {
-    cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
     stlplus::folder_create( sOutDirectory );
     bOk = stlplus::is_folder( sOutDirectory );
   }

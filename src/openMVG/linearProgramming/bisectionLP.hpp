@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,11 +9,11 @@
 #ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 #define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
-
 #include <iostream>
 #include <iterator>
 #include <vector>
+
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -41,14 +43,14 @@ bool BisectionLP(
   {
     ++k; // One more iteration
 
-    double gamma = (gammaLow + gammaUp) / 2.0;
+    const double gamma = (gammaLow + gammaUp) / 2.0;
 
     //-- Setup constraint and solver
     cstraintBuilder.Build(gamma, constraint);
-    solver.setup( constraint );
+    solver.setup(constraint);
     //--
     // Solving
-    bool bFeasible = solver.solve();
+    const bool bFeasible = solver.solve();
     //--
 
     if (bFeasible)

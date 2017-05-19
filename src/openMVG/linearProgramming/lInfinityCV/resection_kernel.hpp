@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,17 +9,15 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_KERNEL_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_KERNEL_HPP
 
+#include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
-#include "openMVG/numeric/numeric.h"
-
-#include <vector>
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace lInfinityCV {
 namespace kernel {
-
-using namespace std;
 
 /**
  * Six-point resection
@@ -30,7 +30,7 @@ struct l1SixPointResectionSolver {
   enum { MAX_MODELS = 1 };
   // Solve the problem of camera pose.
   // First 3d point will be translated in order to have X0 = (0,0,0,1)
-  static void Solve(const Mat &pt2D, const Mat &pt3D, vector<Mat34> *P);
+  static void Solve(const Mat &pt2D, const Mat &pt3D, std::vector<Mat34> *P);
 
   // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
   static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D)

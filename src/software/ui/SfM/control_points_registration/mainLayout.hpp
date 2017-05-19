@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,6 +9,7 @@
 #pragma once
 
 #include <QtGui>
+#include <QTreeView>
 #include <string>
 
 #include "GraphicsMainWindow.hpp"
