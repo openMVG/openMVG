@@ -9,6 +9,7 @@
 #pragma once
 
 #include <QtGui>
+#include <QTreeView>
 #include <string>
 
 #include "GraphicsMainWindow.hpp"
