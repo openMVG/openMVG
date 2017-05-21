@@ -15,8 +15,12 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - ubuntu-sdk-team/ppa
           packages:
             - g++-4.8
+            - qtbase5-dev
+            - libqt5svg5-dev
+            - libqt5opengl5-dev
       env: COMPILER=g++-4.8
     - os: linux
       compiler: clang
@@ -44,6 +48,7 @@ addons:
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev
+      - qtbase5-dev
 
 env:
   global:
