@@ -23,6 +23,7 @@ option(OpenMVG_BUILD_DOC "Build OpenMVG documentation" ON)
 option(OpenMVG_BUILD_EXAMPLES "Build OpenMVG samples applications." ON)
 option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
+option(OpenMVG_BUILD_GUI_SOFTWARES "Build OpenMVG GUI softwares (QT5)" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 # ==============================================================================
