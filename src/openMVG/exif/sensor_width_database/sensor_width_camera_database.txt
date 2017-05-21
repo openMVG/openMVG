@@ -1587,6 +1587,7 @@ Minox DD1 Diamond;6.4
 Minox DC 3311;7.11
 Minox DC 2111;5.33
 Minox DC 1311;5.33
+Moto G (4);6.06
 XT1033;3.8
 Nikon Coolpix A;23.6
 Nikon Coolpix P330;7.53
