@@ -706,27 +706,27 @@ void MainWindow::BuildInterface()
 void MainWindow::BuildMenus()
 {
   m_fileMenu = new QMenu( "File" );
-  m_quit_act = new QAction( "Quit" );
+  m_quit_act = new QAction( QString("Quit") );
   m_quit_act->setShortcut( QKeySequence::Quit );
   m_fileMenu->addAction( m_quit_act );
 
   m_inputMenu      = new QMenu( "Input" );
-  m_open_image_act = new QAction( "Open image" );
+  m_open_image_act = new QAction( QString("Open image") );
   m_open_image_act->setShortcut( QKeySequence::Open );
-  m_use_grid_act = new QAction( "Use grid" );
+  m_use_grid_act = new QAction( QString("Use grid") );
   m_inputMenu->addAction( m_open_image_act );
   m_inputMenu->addAction( m_use_grid_act );
 
   m_intrinsicMenu = new QMenu( "Intrinsic Type" );
-  m_no_dist_act   = new QAction( "No distortion" );
+  m_no_dist_act   = new QAction( QString("No distortion") );
   m_no_dist_act->setCheckable( true );
-  m_radial_k1_act = new QAction( "Radial 1" );
+  m_radial_k1_act = new QAction( QString("Radial 1") );
   m_radial_k1_act->setCheckable( true );
-  m_radial_k3_act = new QAction( "Radial 3" );
+  m_radial_k3_act = new QAction( QString("Radial 3") );
   m_radial_k3_act->setCheckable( true );
-  m_brown_act = new QAction( "Brown (3R-2T)" );
+  m_brown_act = new QAction( QString("Brown (3R-2T)") );
   m_brown_act->setCheckable( true );
-  m_fisheye_act = new QAction( "Fisheye" );
+  m_fisheye_act = new QAction( QString("Fisheye") );
   m_fisheye_act->setCheckable( true );
   m_intrinsicMenu->addAction( m_no_dist_act );
   m_intrinsicMenu->addAction( m_radial_k1_act );
@@ -735,8 +735,8 @@ void MainWindow::BuildMenus()
   m_intrinsicMenu->addAction( m_fisheye_act );
 
   m_processMenu = new QMenu( "Processing" );
-  m_process_act = new QAction( "Undistort" );
-  m_export_act  = new QAction( "Export image" );
+  m_process_act = new QAction( QString("Undistort") );
+  m_export_act  = new QAction( QString("Export image") );
   m_processMenu->addAction( m_process_act );
   m_processMenu->addAction( m_export_act );
 
