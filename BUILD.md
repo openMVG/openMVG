@@ -15,6 +15,9 @@ Optional tools:
 
 - QT version >= v5.4
 
+Optional tools:
+* CUDA (Compute Code/Arch >= sm_30)
+
 Getting the sources (and the submodules):
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
