@@ -92,8 +92,8 @@ TEST(MaxConsensusLineFitter, TooFewPoints) {
 //  Check that the number of inliers and the model are correct.
 TEST(MaxConsensusLineFitter, RealisticCase) {
 
-  const int NbPoints = 30;
-  const int inlierPourcentAmount = 30; //works with 40
+  constexpr int NbPoints = 30;
+  constexpr double inlierRatio = 30.0 / 100.0; // works with 40
   Mat2X xy(2, NbPoints);
 
   Vec2 GTModel; // y = 2x + 1
@@ -101,19 +101,21 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
 
   //-- Build the point list according the given model
   for(int i = 0; i < NbPoints; ++i)  {
-    xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
+    xy.col(i) << i, static_cast<double>(i)*GTModel[1] + GTModel[0];
   }
 
   //-- Add some noise (for the asked percentage amount)
-  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  std::vector<uint32_t> vec_samples; // Fit with unique random index
+  constexpr auto nbPtToNoise = static_cast<uint32_t>(NbPoints*inlierRatio);
+  std::vector<uint32_t> vec_samples; // fit with unique random index
   std::mt19937 random_generator(std::mt19937::default_seed);
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
-  for(const auto index : vec_samples)
-  {
-    //Additive random noise
-    xy.col(index) << xy.col(index)(0)+rand()%2-3,
-                     xy.col(index)(1)+rand()%8-6;
+  
+  std::uniform_int_distribution<int> d0(-3, 2);
+  std::uniform_int_distribution<int> d1(-6, 8);
+  for(const auto index : vec_samples) {
+    // additive random noise
+    xy.col(index) << xy.col(index)(0) + static_cast<double>(d0(random_generator)),
+                     xy.col(index)(1) + static_cast<double>(d1(random_generator));
   }
 
   LineKernel kernel(xy);

@@ -32,15 +32,17 @@ namespace robust{
 * \param[out] samples         num_samples of numbers in [0, total_samples) is placed
 *                             here on return.
 */
-template <class RandomGeneratorT, typename SamplingType = uint32_t>
+template <class RandomGeneratorT, typename SamplingType>
 inline void UniformSample
 (
   uint32_t num_samples,
   uint32_t total_samples,
   RandomGeneratorT &&random_generator,
-  std::vector<uint32_t> *samples
+  std::vector<SamplingType> *samples
 )
 {
+  static_assert(std::is_integral<SamplingType>::value, "SamplingType must be an integral type");
+
   std::uniform_int_distribution<SamplingType> distribution(0, total_samples-1);
   samples->resize(0);
   while (samples->size() < num_samples) {
@@ -66,13 +68,13 @@ inline void UniformSample
 * \param[out] samples Output randomly picked value.
 * \return true if the sampling can be performed
 */
-template<class RandomGeneratorT, typename SamplingType = uint32_t>
+template<typename T, class RandomGeneratorT, typename SamplingType = uint32_t>
 bool UniformSample
 (
   const size_t num_samples,
   RandomGeneratorT &&random_generator,
-  std::vector<SamplingType> * vec_index, // the array that provide the index (will be shuffled)
-  std::vector<SamplingType> * samples // output found indices
+  std::vector<T> * vec_index, // the array that provide the index (will be shuffled)
+  std::vector<T> * samples // output found indices
 )
 {
   static_assert(std::is_integral<SamplingType>::value, "SamplingType must be an integral type");

@@ -25,7 +25,7 @@ TEST(LineFitter, ItWorks) {
         3, 5, 7, 9, 11;
   std::vector<Vec2> models;
   LineKernel kernel(xy);
-  std::vector<uint32_t> samples(xy.cols());
+  std::vector<uint32_t> samples(static_cast<size_t>(xy.cols()));
   std::iota(samples.begin(), samples.end(), 0);
   kernel.Fit(samples, &models);
   CHECK_EQUAL(1, models.size());

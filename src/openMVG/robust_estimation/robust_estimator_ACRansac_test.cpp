@@ -164,8 +164,8 @@ TEST(RansacLineFitter, TooFewPoints) {
 //  Check that the number of inliers and the model are correct.
 TEST(RansacLineFitter, RealisticCase) {
 
-  const int NbPoints = 100;
-  const int inlierPourcentAmount = 30;
+  constexpr int NbPoints = 100;
+  constexpr double inlierRatio = 30.0 / 100.0;
   Mat2X xy(2, NbPoints);
 
   Vec2 GTModel; // y = 6.3 x + (-2.0)
@@ -181,7 +181,7 @@ TEST(RansacLineFitter, RealisticCase) {
   std::normal_distribution<> d(0, 5); // More or less 5 units
 
   //-- Simulate outliers (for the asked percentage amount of the datum)
-  const int nbPtToNoise = static_cast<int>(NbPoints*inlierPourcentAmount/100.0);
+  constexpr auto nbPtToNoise = static_cast<uint32_t>(NbPoints*inlierRatio);
   vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
   for(size_t i = 0; i <vec_samples.size(); ++i)
@@ -208,7 +208,7 @@ TEST(RansacLineFitter, RealisticCase) {
 
 // Generate nbPoints along a line and add gaussian noise.
 // Move some point in the dataset to create outlier contamined data
-void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, float outlierPourcent)
+void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, float outlierRatio)
 {
   points = Mat(2, nbPoints);
 
@@ -218,22 +218,26 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   std::mt19937 random_generator(std::mt19937::default_seed);
   std::normal_distribution<double> d(0, noise);
 
+  // Setup uniform distribution
+  std::uniform_int_distribution<int> dW(0, W);
+  std::uniform_int_distribution<int> dH(0, H);
+
   for (size_t i = 0; i < nbPoints; ++i)
   {
-    const float x = rand()%W;
+    auto x = static_cast<double>(dW(random_generator));
     const float y =  d(random_generator) + (lineEq[1] * x + lineEq[0]) + d(random_generator);
     points.col(i) = Vec2(x, y);
   }
 
   // generate outlier
   std::normal_distribution<double> d_outlier(0, 0.2);
-  const size_t count = outlierPourcent * nbPoints;
+  const auto count = static_cast<uint32_t>(outlierRatio * nbPoints);
   std::vector<uint32_t> vec_indexes(count,0);
   UniformSample(count, nbPoints, random_generator, &vec_indexes);
   for (const auto & pos : vec_indexes)
   {
-    points.col(pos) << rand()%W + d_outlier(random_generator),
-                       rand()%H - d_outlier(random_generator);
+    points.col(pos) = Vec2(static_cast<double>(dW(random_generator)) + d_outlier(random_generator),
+                           static_cast<double>(dH(random_generator)) - d_outlier(random_generator));
   }
 }
 
@@ -279,9 +283,9 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     size_t nbPoints = 2.0 * S * sqrt(2.0);
     const float noise = gaussianNoiseLevel;
 
-    const float outlierPourcent = .3f;
+    const float outlierRatio = .3f;
     Mat points;
-    generateLine(points, nbPoints, W, H, noise, outlierPourcent);
+    generateLine(points, nbPoints, W, H, noise, outlierRatio);
 
     // Remove point that have the same coords
     {
