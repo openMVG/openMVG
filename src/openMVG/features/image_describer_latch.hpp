@@ -108,13 +108,7 @@ public:
           }
           const float scale = static_cast<float>(std::pow(1.2f, ptLatch.scale));
           regionsCasted->Features()[i] = SIOPointFeature(scale * static_cast<float>(ptLatch.x), scale * static_cast<float>(ptLatch.y), 7.0f * scale, 180.0f / 3.14159263f * ptLatch.angle);
-          for (size_t j = 0; j < 8; j++) {
-            const uint64_t descriptor = descriptors[i * 64 + j];
-            for (size_t k = 0; k < 8; k++) {
-              unsigned char descriptorRawByte = static_cast<unsigned char>((descriptor >> (56-k*7)) & 0xFF);
-              regionsCasted->Descriptors()[i][j * 8 + k] = descriptorRawByte;
-            }
-          }
+          std::memcpy(&(regionsCasted->Descriptors()[i]), &(descriptors[i * 64]), 64 * sizeof(uint64_t));
         }
       }
       break;
