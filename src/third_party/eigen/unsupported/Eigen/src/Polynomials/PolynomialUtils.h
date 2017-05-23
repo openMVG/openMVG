@@ -56,7 +56,7 @@ T poly_eval( const Polynomials& poly, const T& x )
     for( DenseIndex i=1; i<poly.size(); ++i ){
       val = val*inv_x + poly[i]; }
 
-    return std::pow(x,(T)(poly.size()-1)) * val;
+    return numext::pow(x,(T)(poly.size()-1)) * val;
   }
 }
 

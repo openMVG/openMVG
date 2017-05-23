@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,13 +9,14 @@
 #ifndef OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 #define OPENMVG_FEATURES_IO_REGIONS_TYPE_HPP
 
-#include "openMVG/features/features.hpp"
+#include <fstream>
+#include <string>
+#include <vector>
+
+#include "openMVG/features/regions_factory.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/archives/json.hpp>
-
-#include <fstream>
-#include <vector>
 
 namespace openMVG {
 namespace features {
@@ -25,7 +27,6 @@ inline std::unique_ptr<features::Regions> Init_region_type_from_file
   const std::string & sImage_describer_file
 )
 {
-  using namespace openMVG::features;
   std::unique_ptr<Regions> regions_type;
   if (stlplus::is_file(sImage_describer_file))
   {

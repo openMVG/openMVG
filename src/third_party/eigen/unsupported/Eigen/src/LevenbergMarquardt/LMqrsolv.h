@@ -19,18 +19,17 @@ namespace Eigen {
 
 namespace internal {
 
-template <typename Scalar,int Rows, int Cols, typename Index>
+template <typename Scalar,int Rows, int Cols, typename PermIndex>
 void lmqrsolv(
   Matrix<Scalar,Rows,Cols> &s,
-  const PermutationMatrix<Dynamic,Dynamic,Index> &iPerm,
+  const PermutationMatrix<Dynamic,Dynamic,PermIndex> &iPerm,
   const Matrix<Scalar,Dynamic,1> &diag,
   const Matrix<Scalar,Dynamic,1> &qtb,
   Matrix<Scalar,Dynamic,1> &x,
   Matrix<Scalar,Dynamic,1> &sdiag)
 {
-
     /* Local variables */
-    Index i, j, k, l;
+    Index i, j, k;
     Scalar temp;
     Index n = s.cols();
     Matrix<Scalar,Dynamic,1>  wa(n);
@@ -52,7 +51,7 @@ void lmqrsolv(
 
         /*        prepare the row of d to be eliminated, locating the */
         /*        diagonal element using p from the qr factorization. */
-        l = iPerm.indices()(j);
+        const PermIndex l = iPerm.indices()(j);
         if (diag[l] == 0.)
             break;
         sdiag.tail(n-j).setZero();

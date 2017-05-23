@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,14 +9,12 @@
 #ifndef OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
 #define OPENMVG_MATCHING_MATCHING_INTERFACE_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-
 #include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {
-
-using namespace std;
 
 template < typename Scalar, typename Metric >
 class ArrayMatcher
@@ -25,8 +24,8 @@ class ArrayMatcher
   using DistanceType = typename Metric::ResultType;
   using MetricT = Metric;
 
-  ArrayMatcher() = default ;
-  virtual ~ArrayMatcher() = default ;
+  ArrayMatcher() = default;
+  virtual ~ArrayMatcher() = default;
 
   /**
    * Build the matching structure

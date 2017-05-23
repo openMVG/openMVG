@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 openMVG authors.
 
@@ -5,40 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-
-using namespace openMVG::image;
-
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/regions_matcher.hpp"
-
-using namespace openMVG::matching;
-
-#include "nonFree/sift/SIFT_describer.hpp"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
-#include "openMVG/multiview/solver_homography_kernel.hpp"
-#include "openMVG/multiview/conditioning.hpp"
-
-using namespace openMVG;
-
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-
-using namespace openMVG::robust;
-
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-
-using namespace svg;
-
-#include <string>
-#include <iostream>
-using namespace std;
-
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/matching/kvld/kvld_draw.h"
+#include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/matching/svg_matches.hpp"
+
+#include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+using namespace openMVG;
+using namespace openMVG::image;
+using namespace openMVG::matching;
+using namespace svg;
+using namespace std;
 
 int main(int argc, char **argv) {
   CmdLine cmd;
@@ -101,7 +91,7 @@ int main(int argc, char **argv) {
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
 
-//--
+  //--
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;
@@ -128,20 +118,16 @@ int main(int argc, char **argv) {
 
   //- Draw features on the two image (side by side)
   {
-    Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
-
-    //-- Draw features :
-    for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature point = regionsL->Features()[i];
-      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
-    }
-    for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature point = regionsR->Features()[i];
-      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
-    }
-    string out_filename = "01_features.jpg";
-    WriteImage(out_filename.c_str(), concat);
+    Features2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->Features(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->Features(),
+      "01_features.svg"
+    );
   }
 
   std::vector<IndMatch> vec_PutativeMatches;
@@ -155,21 +141,20 @@ int main(int argc, char **argv) {
       vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
-    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
-      //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
-      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
-    }
-    const std::string out_filename = "02_siftMatches.svg";
-    std::ofstream svgFile( out_filename.c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+    const bool bVertical = true;
+    Matches2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      vec_PutativeMatches,
+      "02_Matches.svg",
+      bVertical,
+      std::max(std::max(imageL.Width(), imageL.Height()) / float(600), 2.0f)
+    );
   }
 
   //K-VLD filter
@@ -189,13 +174,13 @@ int main(int argc, char **argv) {
   // the following two parameters has been externalized as inputs of the function KVLD.
   openMVG::Mat E = openMVG::Mat::Ones(vec_PutativeMatches.size(), vec_PutativeMatches.size())*(-1);
   // gvld-consistancy matrix, intitialized to -1,  >0 consistancy value, -1=unknow, -2=false
-  std::vector<bool> valide(vec_PutativeMatches.size(), true);// indices of match in the initial matches, if true at the end of KVLD, a match is kept.
+  std::vector<bool> valid(vec_PutativeMatches.size(), true);// indices of match in the initial matches, if true at the end of KVLD, a match is kept.
 
   size_t it_num=0;
   KvldParameters kvldparameters; // initial parameters of KVLD
   while (it_num < 5 &&
           kvldparameters.inlierRate > KVLD(imgA, imgB, regionsL->Features(), regionsR->Features(),
-          matchesPair, matchesFiltered, vec_score,E,valide,kvldparameters)) {
+          matchesPair, matchesFiltered, vec_score,E,valid,kvldparameters)) {
     kvldparameters.inlierRate /= 2;
     //std::cout<<"low inlier rate, re-select matches with new rate="<<kvldparameters.inlierRate<<std::endl;
     kvldparameters.K = 2;
@@ -219,7 +204,7 @@ int main(int argc, char **argv) {
 
     for (size_t it1=0; it1<matchesPair.size()-1;it1++){
       for (size_t it2=it1+1; it2<matchesPair.size();it2++){
-         if (valide[it1] && valide[it2] && E(it1,it2)>=0){
+         if (valid[it1] && valid[it2] && E(it1,it2)>=0){
 
           const PointFeature & l1 = featsL[matchesPair[it1].first];
           const PointFeature & r1 = featsR[matchesPair[it1].second];
@@ -238,12 +223,11 @@ int main(int argc, char **argv) {
         }
       }
     }
-    const string out_filename = stlplus::create_filespec(sOutDir, "05_KVLD_Matches.svg");
+    const string out_filename = stlplus::create_filespec(sOutDir, "03_KVLD_Matches.svg");
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
-
 
   {
     //Print keypoints kept by K-VLD
@@ -254,7 +238,7 @@ int main(int argc, char **argv) {
     svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
     for (size_t it=0; it<matchesPair.size();it++){
-       if (valide[it]){
+       if (valid[it]){
 
         const PointFeature & l = featsL[matchesPair[it].first];
         const PointFeature & r = featsR[matchesPair[it].second];
@@ -264,7 +248,7 @@ int main(int argc, char **argv) {
         svgStream.drawCircle(r.x() + imageL.Width(), r.y(), 10, svgStyle().stroke("yellow", 2.0));
       }
     }
-    const string out_filename = stlplus::create_filespec(sOutDir, "06_KVLD_Keypoints.svg");
+    const string out_filename = stlplus::create_filespec(sOutDir, "04_KVLD_Keypoints.svg");
     ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
@@ -277,15 +261,15 @@ int main(int argc, char **argv) {
     &imageOutL, &imageOutR,
     regionsL->Features(), regionsR->Features(),
     matchesPair,
-    valide,
+    valid,
     E);
 
   {
-    const string out_filename = stlplus::create_filespec(sOutDir, "07_Left-K-VLD-MASK.jpg");
+    const string out_filename = stlplus::create_filespec(sOutDir, "05_Left-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutL);
   }
   {
-    const string out_filename = stlplus::create_filespec(sOutDir, "08_Right-K-VLD-MASK.jpg");
+    const string out_filename = stlplus::create_filespec(sOutDir, "06_Right-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutR);
   }
 

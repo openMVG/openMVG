@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -28,7 +29,7 @@ TEST(MaxConsensusLineFitter, OutlierFree) {
 
   // Check the best model that fit the most of the data
   //  in a robust framework (Max-consensus).
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   Vec2 model = MaxConsensus(kernel,
     ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   EXPECT_NEAR(2.0, model[1], 1e-9);
@@ -45,7 +46,7 @@ TEST(MaxConsensusLineFitter, OutlierFree_DoNotGetBackModel) {
         3, 5, 7, 9, 11;
 
   LineKernel kernel(xy);
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   const Vec2 model = MaxConsensus(kernel,
     ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(5, vec_inliers.size());
@@ -63,8 +64,8 @@ TEST(MaxConsensusLineFitter, OneOutlier) {
 
   LineKernel kernel(xy);
 
-  std::vector<size_t> vec_inliers;
-  Vec2 model = MaxConsensus(kernel,
+  std::vector<uint32_t> vec_inliers;
+  const Vec2 model = MaxConsensus(kernel,
     ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   EXPECT_NEAR(2.0, model[1], 1e-9);
   EXPECT_NEAR(1.0, model[0], 1e-9);
@@ -80,7 +81,7 @@ TEST(MaxConsensusLineFitter, TooFewPoints) {
   xy << 1,
         3;   // y = 2x + 1 with x = 1
   LineKernel kernel(xy);
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   MaxConsensus(kernel, ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(0, vec_inliers.size());
 }
@@ -105,19 +106,18 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
 
   //-- Add some noise (for the asked percentage amount)
   int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  std::vector<size_t> vec_samples; // Fit with unique random index
+  std::vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, &vec_samples);
-  for(size_t i = 0; i <vec_samples.size(); ++i)
+  for(const auto index : vec_samples)
   {
-    const size_t randomIndex = vec_samples[i];
     //Additive random noise
-    xy.col(randomIndex) << xy.col(randomIndex)(0)+rand()%2-3,
-                           xy.col(randomIndex)(1)+rand()%8-6;
+    xy.col(index) << xy.col(index)(0)+rand()%2-3,
+                     xy.col(index)(1)+rand()%8-6;
   }
 
   LineKernel kernel(xy);
-  std::vector<size_t> vec_inliers;
-  Vec2 model = MaxConsensus(kernel,
+  std::vector<uint32_t> vec_inliers;
+  const Vec2 model = MaxConsensus(kernel,
     ScorerEvaluator<LineKernel>(0.3), &vec_inliers);
   CHECK_EQUAL(NbPoints-nbPtToNoise, vec_inliers.size());
   EXPECT_NEAR(-2.0, model[0], 1e-9);

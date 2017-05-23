@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,10 +9,15 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
-#include "openMVG/cameras/cameras.hpp"
-
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
+
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Brown.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
+#include "openMVG/cameras/Camera_Spherical.hpp"
 
 //--
 //- Define ceres Cost_functor for each OpenMVG camera model
@@ -56,6 +63,26 @@ struct WeightedCostFunction
     return false;
   }
 
+  template <typename T>
+  bool operator()
+  (
+    const T* const cam_extrinsics,
+    const T* const pos_3dpoint,
+    T* out_residuals
+  ) const
+  {
+    if (functor_->operator()(cam_extrinsics, pos_3dpoint, out_residuals))
+    {
+      // Reweight the residual values
+      for (int i = 0; i < CostFunctor::num_residuals(); ++i)
+      {
+        out_residuals[i] *= T(weight_);
+      }
+      return true;
+    }
+    return false;
+  }
+
   ceres::internal::scoped_ptr<CostFunctor> functor_;
   const double weight_;
 };
@@ -79,7 +106,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
-  enum {
+  enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
     OFFSET_PRINCIPAL_POINT_Y = 2
@@ -133,8 +160,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
-    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
     return true;
   }
@@ -188,7 +215,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
-  enum {
+  enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
     OFFSET_PRINCIPAL_POINT_Y = 2,
@@ -240,7 +267,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 
     // Apply distortion (xd,yd) = disto(x_u,y_u)
     const T r2 = x_u*x_u + y_u*y_u;
-    const T r_coeff = (T(1) + k1*r2);
+    const T r_coeff = 1.0 + k1*r2;
     const T x_d = x_u * r_coeff;
     const T y_d = y_u * r_coeff;
 
@@ -250,8 +277,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
-    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
     return true;
   }
@@ -305,7 +332,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
-  enum {
+  enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
     OFFSET_PRINCIPAL_POINT_Y = 2,
@@ -363,7 +390,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     const T r2 = x_u*x_u + y_u*y_u;
     const T r4 = r2 * r2;
     const T r6 = r4 * r2;
-    const T r_coeff = (T(1) + k1*r2 + k2*r4 + k3*r6);
+    const T r_coeff = (1.0 + k1*r2 + k2*r4 + k3*r6);
     const T x_d = x_u * r_coeff;
     const T y_d = y_u * r_coeff;
 
@@ -373,8 +400,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
-    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
     return true;
   }
@@ -428,7 +455,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
-  enum {
+  enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
     OFFSET_PRINCIPAL_POINT_Y = 2,
@@ -490,9 +517,9 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     const T r2 = x_u*x_u + y_u*y_u;
     const T r4 = r2 * r2;
     const T r6 = r4 * r2;
-    const T r_coeff = (T(1) + k1*r2 + k2*r4 + k3*r6);
-    const T t_x = t2 * (r2 + T(2) * x_u*x_u) + T(2) * t1 * x_u * y_u;
-    const T t_y = t1 * (r2 + T(2) * y_u*y_u) + T(2) * t2 * x_u * y_u;
+    const T r_coeff = (1.0 + k1*r2 + k2*r4 + k3*r6);
+    const T t_x = t2 * (r2 + 2.0 * x_u*x_u) + 2.0 * t1 * x_u * y_u;
+    const T t_y = t1 * (r2 + 2.0 * y_u*y_u) + 2.0 * t2 * x_u * y_u;
     const T x_d = x_u * r_coeff + t_x;
     const T y_d = y_u * r_coeff + t_y;
 
@@ -502,8 +529,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
-    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
     return true;
   }
@@ -559,7 +586,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
   }
 
   // Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
-  enum {
+  enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
     OFFSET_PRINCIPAL_POINT_Y = 2,
@@ -628,7 +655,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
       theta9 = theta8*theta;
     const T theta_dist = theta + k1*theta3 + k2*theta5 + k3*theta7 + k4*theta9;
     const T inv_r = r > T(1e-8) ? T(1.0)/r : T(1.0);
-    const T cdist = r > T(1e-8) ? theta_dist * inv_r : T(1);
+    const T cdist = r > T(1e-8) ? theta_dist * inv_r : T(1.0);
 
     const T x_d = x_u * cdist;
     const T y_d = y_u * cdist;
@@ -639,8 +666,8 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    out_residuals[0] = projected_x - T(m_pos_2dpoint[0]);
-    out_residuals[1] = projected_y - T(m_pos_2dpoint[1]);
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
     return true;
   }
@@ -673,6 +700,101 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
   }
 
   const double * m_pos_2dpoint; // The 2D observation
+};
+
+struct ResidualErrorFunctor_Intrinsic_Spherical
+{
+  ResidualErrorFunctor_Intrinsic_Spherical
+  (
+    const double* const pos_2dpoint,
+    const size_t imageSize_w,
+    const size_t imageSize_h
+  )
+  : m_pos_2dpoint(pos_2dpoint),
+    m_imageSize{imageSize_w, imageSize_h}
+  {
+  }
+
+  /**
+  * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
+  *   - 3 for rotation(angle axis), 3 for translation
+  * @param[in] pos_3dpoint
+  * @param[out] out_residuals
+  */
+  template <typename T>
+  bool operator()
+  (
+    const T* const cam_extrinsics,
+    const T* const pos_3dpoint,
+    T* out_residuals
+  )
+  const
+  {
+    //--
+    // Apply external parameters (Pose)
+    //--
+
+    const T * cam_R = cam_extrinsics;
+    const T * cam_t = &cam_extrinsics[3];
+
+    T pos_proj[3];
+    // Rotate the point according the camera rotation
+    ceres::AngleAxisRotatePoint(cam_R, pos_3dpoint, pos_proj);
+
+    // Apply the camera translation
+    pos_proj[0] += cam_t[0];
+    pos_proj[1] += cam_t[1];
+    pos_proj[2] += cam_t[2];
+
+    // Transform the coord in is Image space
+    const T lon = ceres::atan2(pos_proj[0] , pos_proj[2]); // Horizontal normalization of the  X-Z component
+    const T lat = ceres::atan2(-pos_proj[1], ceres::sqrt(pos_proj[0] * pos_proj[0]  + pos_proj[2] * pos_proj[2])); // Tilt angle
+    const T coord[] = {lon / (2 * M_PI), lat / (2 * M_PI)}; // normalization
+
+    const T size ( std::max(m_imageSize[0], m_imageSize[1]) );
+    const T projected_x = coord[0] * size - 0.5 + m_imageSize[0] / 2.0;
+    const T projected_y = coord[1] * size - 0.5 + m_imageSize[1] / 2.0;
+
+    out_residuals[0] = projected_x - m_pos_2dpoint[0];
+    out_residuals[1] = projected_y - m_pos_2dpoint[1];
+
+    return true;
+  }
+
+  static const int num_residuals() { return 2; }
+
+  // Factory to hide the construction of the CostFunction object from
+  // the client code.
+  static ceres::CostFunction* Create
+  (
+    const cameras::IntrinsicBase * cameraInterface,
+    const Vec2 & observation,
+    const double weight = 0.0
+  )
+  {
+
+    if (weight == 0.0)
+    {
+      return
+          (new ceres::AutoDiffCostFunction
+              <ResidualErrorFunctor_Intrinsic_Spherical, 2, 6, 3>(
+              new ResidualErrorFunctor_Intrinsic_Spherical(
+                observation.data(), cameraInterface->w(), cameraInterface->h())));
+    }
+    else
+    {
+      return
+          (new ceres::AutoDiffCostFunction
+              <WeightedCostFunction<ResidualErrorFunctor_Intrinsic_Spherical>, 2, 6, 3>
+              (new WeightedCostFunction<ResidualErrorFunctor_Intrinsic_Spherical>
+                   (new ResidualErrorFunctor_Intrinsic_Spherical(
+                     observation.data(), cameraInterface->w(), cameraInterface->h()),
+                     weight)));
+    }
+  }
+
+  const double * m_pos_2dpoint;  // The 2D observation
+  size_t         m_imageSize[2]; // The image width and height
 };
 
 } // namespace sfm

@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 project(openMVG C CXX)
 
@@ -25,6 +25,7 @@ option(OpenMVG_BUILD_OPENGL_EXAMPLES "Build OpenMVG openGL examples" OFF)
 option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+option(OpenMVG_USE_CUDA "Enable CUDA parallelization" OFF)
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
@@ -60,19 +61,36 @@ endif (NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
 set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}")
 
+# ==============================================================================
+# Macro used to forward compiler preprocessors to OpenMVGConfig.cmake targets
+# ==============================================================================
+set(OpenMVG_DEFINITIONS "")
+MACRO(register_definitions DEF)
+  add_definitions(${DEF})
+  string(REPLACE "-D" "" STRIPPED_DEF ${DEF})
+  list(APPEND OpenMVG_DEFINITIONS ${STRIPPED_DEF})
+ENDMACRO()
+
 if (WIN32)
-  add_definitions(-DNOMINMAX)
-  add_definitions(-DVC_EXTRALEAN)
+  register_definitions(-DNOMINMAX)
+  register_definitions(-DVC_EXTRALEAN)
+  register_definitions(-D_USE_MATH_DEFINES)
   if (MSVC)
-    add_definitions(/bigobj)
+    register_definitions(/bigobj)
   endif (MSVC)
 endif (WIN32)
 
 # Set shared or static mode
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
-elseif()
+else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
+endif()
+
+# For both regular Clang and AppleClang
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  message("clang detected: using std::unordered_map for Hash_Map")
+  register_definitions(-DOPENMVG_STD_UNORDERED_MAP)
 endif()
 
 # ==============================================================================
@@ -90,13 +108,18 @@ endif()
 set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
+AutodetectHostArchitecture()
 OptimizeForArchitecture()
-if (SSE2_FOUND OR TARGET_ARCHITECTURE STREQUAL "native")
+
+if (SSE2_FOUND)
   if (MSVC AND NOT ${CMAKE_CL_64})
-    add_definitions(/arch:SSE2)
+    register_definitions(/arch:SSE2)
   endif (MSVC AND NOT ${CMAKE_CL_64})
-  add_definitions(-DOPENMVG_USE_SSE)
+  register_definitions(-DOPENMVG_USE_SSE)
 endif ()
+if (AVX2_FOUND AND NOT MSVC)
+  register_definitions(-DOPENMVG_USE_AVX2)
+endif()
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   set(CMAKE_C_FLAGS_RELEASE "-O3")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -109,17 +132,11 @@ include(CXX11)
 check_for_cxx11_compiler(CXX11_COMPILER)
 # If a C++11 compiler is available, then set the appropriate flags
 if (CXX11_COMPILER)
-  add_definitions(-DOPENMVG_USE_CXX11)
-  enable_cxx11()
-  include(CheckIncludeFileCXX)
-  CHECK_INCLUDE_FILE_CXX(thread HAVE_CXX11_THREAD)
-  if (HAVE_CXX11_THREAD)
-    add_definitions(-DHAVE_CXX11_THREAD)
-  endif (HAVE_CXX11_THREAD)
-    CHECK_INCLUDE_FILE_CXX(chrono HAVE_CXX11_CHRONO)
-  if (HAVE_CXX11_CHRONO)
-    add_definitions(-DHAVE_CXX11_CHRONO)
-  endif (HAVE_CXX11_CHRONO)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+else (CXX11_COMPILER)
+  message(FATAL_ERROR "A CXX11 compiler is required.")
 endif (CXX11_COMPILER)
 
 # ==============================================================================
@@ -130,7 +147,7 @@ if (OpenMVG_USE_OPENMP)
   if (OPENMP_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
-    add_definitions(-DOPENMVG_USE_OPENMP)
+    register_definitions(-DOPENMVG_USE_OPENMP)
     if (NOT MSVC)
       IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         # for those using the clang with OpenMP support
@@ -142,9 +159,26 @@ if (OpenMVG_USE_OPENMP)
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
+    include(UpdateCacheVariable)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     remove_definitions(-DOPENMVG_USE_OPENMP)
 endif (OpenMVG_USE_OPENMP)
+
+# ==============================================================================
+# CUDA detection
+# ==============================================================================
+if (OpenMVG_USE_CUDA)
+  find_package(CUDA QUIET REQUIRED)
+  if (CUDA_FOUND)
+    option(OpenMVG_USE_CUDA "Use CUDA for parallelization" ON)
+    register_definitions(-DOPENMVG_USE_CUDA)
+ endif (CUDA_FOUND)
+else (OpenMVG_USE_CUDA)
+    option(OpenMVG_USE_OPENMP "Use CUDA for parallelization" OFF)
+    include(UpdateCacheVariable)
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CUDA OFF)
+    remove_definitions(-DOPENMVG_USE_CUDA)
+endif (OpenMVG_USE_CUDA)
 
 # ==============================================================================
 # enable code coverage generation (only with GCC)
@@ -160,11 +194,9 @@ endif()
 # ==============================================================================
 # IMAGE IO detection
 # ==============================================================================
-if (NOT APPLE)
-  find_package(JPEG QUIET)
-  find_package(PNG QUIET)
-  find_package(TIFF QUIET)
-endif (NOT APPLE)
+find_package(JPEG QUIET)
+find_package(PNG QUIET)
+find_package(TIFF QUIET)
 
 # Folders
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -183,18 +215,6 @@ if (OpenMVG_BUILD_OPENGL_EXAMPLES)
   include_directories(SYSTEM dependencies/glfw/include)
   set_property(TARGET glfw PROPERTY FOLDER OpenMVG/3rdParty/glfw)
 endif (OpenMVG_BUILD_OPENGL_EXAMPLES)
-
-#- Mosek (linear programming interface)
-#===============================================================================
-find_package(Mosek)
-if (MOSEK_FOUND)
-  add_definitions(-DOPENMVG_HAVE_MOSEK)
-  set(LP_INCLUDE_DIRS
-    ${MOSEK_INCLUDE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/OsiMsk/
-  )
-  include_directories(${LP_INCLUDE_DIRS})
-endif (MOSEK_FOUND)
 
 #INSTALL RULES
 install(
@@ -220,7 +240,9 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
     add_executable(${NAMESPACE}_test_${NAME} ${NAME}_test.cpp)
 
     set_property(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
-
+    target_include_directories(${NAMESPACE}_test_${NAME}
+                               PRIVATE
+                               ${CMAKE_SOURCE_DIR}/third_party)
     target_link_libraries(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
@@ -248,7 +270,7 @@ endif (EIGEN_FOUND)
 # Ceres
 # ==============================================================================
 # - internal by default (ceres-solver+cxsparse+miniglog),
-# - external if CERES_DIR_HINTS and FIND_PACKAGE return a valid Ceres setup
+# - external if CERES_DIR_HINTS and find_package return a valid Ceres setup
 # ==============================================================================
 find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 if (NOT Ceres_FOUND)
@@ -362,7 +384,7 @@ endif()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 if (OpenMVG_USE_OPENCV)
-  FIND_PACKAGE( OpenCV )
+  find_package( OpenCV 3.0 QUIET )
   if (NOT OpenCV_FOUND)
     message(STATUS "OpenCV was not found. Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
@@ -388,20 +410,11 @@ add_subdirectory(third_party)
 # ==============================================================================
 set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${JPEG_INCLUDE_DIR}
-  ${PNG_INCLUDE_DIRS}
-  ${TIFF_INCLUDE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/third_party
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
   ${LEMON_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}
   ${FLANN_INCLUDE_DIRS}
-  ${LP_INCLUDE_DIRS}
-  ${COINUTILS_INCLUDE_DIRS}
-  ${CLP_INCLUDE_DIRS}
-  ${OSI_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
 )
 
@@ -428,6 +441,8 @@ set(OpenMVG_LIBRARIES
 
 FOREACH(omvglib ${OpenMVG_LIBRARIES})
   set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
+  set_property(TARGET ${omvglib} APPEND PROPERTY
+    INTERFACE_COMPILE_DEFINITIONS ${OpenMVG_DEFINITIONS})
 ENDFOREACH()
 
 # openMVG tutorial examples
@@ -497,11 +512,13 @@ message("\n")
 message("** OpenMVG version: " ${OPENMVG_VERSION})
 message("** Build Shared libs: " ${OpenMVG_BUILD_SHARED})
 message("** Build OpenMVG tests: " ${OpenMVG_BUILD_TESTS})
+message("** Build OpenMVG softwares: " ${OpenMVG_BUILD_SOFTWARES})
 message("** Build OpenMVG documentation: " ${OpenMVG_BUILD_DOC})
 message("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 message("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
 message("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 message("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
+message("** Enable CUDA parallelization: " ${OpenMVG_USE_CUDA})
 message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
 
@@ -615,8 +632,14 @@ if (OpenMVG_USE_INTERNAL_CERES)
   )
 endif (OpenMVG_USE_INTERNAL_CERES)
 
+# Build OpenMVG_CFLAGS variable for export
+set(OpenMVG_CFLAGS "")
+foreach(d ${OpenMVG_DEFINITIONS})
+  list(APPEND OpenMVG_CFLAGS "-D${d}")
+endforeach()
+
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
-# FIND_PACKAGE() automatically. We configure that file so that we can put any
+# find_package() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
 configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)

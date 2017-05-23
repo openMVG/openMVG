@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,10 +9,11 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 #define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-
+#include <numeric>
 #include <limits>
 #include <vector>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
 
 namespace openMVG {
 namespace robust{
@@ -32,51 +34,55 @@ namespace robust{
 /// 3. Kernel::Fit(vector<int>, vector<Kernel::Model> *)
 /// 4. Kernel::Error(Model, int) -> error
 template<typename Kernel, typename Scorer>
-typename Kernel::Model MaxConsensus(const Kernel &kernel,
+typename Kernel::Model MaxConsensus
+(
+  const Kernel &kernel,
   const Scorer &scorer,
-  std::vector<size_t> *best_inliers = nullptr , size_t max_iteration = 1024) {
+  std::vector<uint32_t> *best_inliers = nullptr,
+  uint32_t max_iteration = 1024
+)
+{
+  const uint32_t min_samples = Kernel::MINIMUM_SAMPLES;
+  const uint32_t total_samples = kernel.NumSamples();
 
-    const size_t min_samples = Kernel::MINIMUM_SAMPLES;
-    const size_t total_samples = kernel.NumSamples();
+  size_t best_num_inliers = 0;
+  typename Kernel::Model best_model;
 
-    size_t best_num_inliers = 0;
-    typename Kernel::Model best_model;
-
-    // Test if we have sufficient points to for the kernel.
-    if (total_samples < min_samples) {
-      if (best_inliers) {
-        best_inliers->resize(0);
-      }
-      return best_model;
-    }
-
-    // In this robust estimator, the scorer always works on all the data points
-    // at once. So precompute the list ahead of time.
-    std::vector<size_t> all_samples(total_samples);
-    std::iota(all_samples.begin(), all_samples.end(), 0);
-
-    std::vector<size_t> sample;
-    for (size_t iteration = 0;  iteration < max_iteration; ++iteration) {
-      UniformSample(min_samples, &all_samples, &sample);
-
-        std::vector<typename Kernel::Model> models;
-        kernel.Fit(sample, &models);
-
-        // Compute costs for each fit.
-        for (size_t i = 0; i < models.size(); ++i) {
-          std::vector<size_t> inliers;
-          scorer.Score(kernel, models[i], all_samples, &inliers);
-
-          if (best_num_inliers < inliers.size()) {
-            best_num_inliers = inliers.size();
-            best_model = models[i];
-            if (best_inliers) {
-              best_inliers->swap(inliers);
-            }
-          }
-        }
+  // Test if we have sufficient points to for the kernel.
+  if (total_samples < min_samples) {
+    if (best_inliers) {
+      best_inliers->resize(0);
     }
     return best_model;
+  }
+
+  // In this robust estimator, the scorer always works on all the data points
+  // at once. So precompute the list ahead of time.
+  std::vector<uint32_t> all_samples(total_samples);
+  std::iota(all_samples.begin(), all_samples.end(), 0);
+
+  std::vector<uint32_t> sample;
+  for (uint32_t iteration = 0;  iteration < max_iteration; ++iteration) {
+    UniformSample(min_samples, &all_samples, &sample);
+
+      std::vector<typename Kernel::Model> models;
+      kernel.Fit(sample, &models);
+
+      // Compute costs for each fit.
+      for (size_t i = 0; i < models.size(); ++i) {
+        std::vector<uint32_t> inliers;
+        scorer.Score(kernel, models[i], all_samples, &inliers);
+
+        if (best_num_inliers < inliers.size()) {
+          best_num_inliers = inliers.size();
+          best_model = models[i];
+          if (best_inliers) {
+            best_inliers->swap(inliers);
+          }
+        }
+      }
+  }
+  return best_model;
 }
 
 } // namespace robust

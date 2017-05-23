@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,15 +9,13 @@
 #ifndef OPENMVG_MATCHING_REGION_MATCHER_HPP
 #define OPENMVG_MATCHING_REGION_MATCHER_HPP
 
-#include "openMVG/matching/matcher_type.hpp"
-#include "openMVG/matching/indMatch.hpp"
+#include <vector>
+
+#include "openMVG/features/regions.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/matching_filters.hpp"
-
+#include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/numeric/numeric.h"
-#include "openMVG/features/regions.hpp"
-
-#include <vector>
 
 namespace openMVG {
 namespace matching {
@@ -36,7 +35,7 @@ void DistanceRatioMatch
 class RegionsMatcher
 {
   public:
-  virtual ~RegionsMatcher() = default ;
+  virtual ~RegionsMatcher() = default;
 
   /**
    * @brief Initialize the retrieval database
@@ -135,10 +134,12 @@ public:
   /**
    * @brief Match some regions to the database of internal regions.
    */
-  bool Match(
+  bool Match
+  (
     const float f_dist_ratio,
     const features::Regions& queryregions_,
-    matching::IndMatches & vec_putative_matches) override
+    matching::IndMatches & vec_putative_matches
+  ) override
   {
     if (regions_ == nullptr)
       return false;
@@ -146,11 +147,11 @@ public:
     const Scalar * queries = reinterpret_cast<const Scalar *>(queryregions_.DescriptorRawData());
 
     const size_t NNN__ = 2;
-    matching::IndMatches vec_nIndice;
-    std::vector<DistanceType> vec_fDistance;
+    matching::IndMatches vec_Indice;
+    std::vector<DistanceType> vec_Distance;
 
     // Search the 2 closest features neighbours for each query descriptor
-    if (!matcher_.SearchNeighbours(queries, queryregions_.RegionCount(), &vec_nIndice, &vec_fDistance, NNN__))
+    if (!matcher_.SearchNeighbours(queries, queryregions_.RegionCount(), &vec_Indice, &vec_Distance, NNN__))
       return false;
 
     std::vector<int> vec_nn_ratio_idx;
@@ -159,8 +160,8 @@ public:
     //   the ratio of distance from the closest neighbor to the distance
     //   of the second closest.
     matching::NNdistanceRatio(
-      vec_fDistance.begin(), // distance start
-      vec_fDistance.end(),   // distance end
+      vec_Distance.begin(), // distance start
+      vec_Distance.end(),   // distance end
       NNN__, // Number of neighbor in iterator sequence (minimum required 2)
       vec_nn_ratio_idx, // output (indices that respect the distance Ratio)
       b_squared_metric_ ? Square(f_dist_ratio) : f_dist_ratio);
@@ -168,7 +169,7 @@ public:
     vec_putative_matches.reserve(vec_nn_ratio_idx.size());
     for ( const auto & index : vec_nn_ratio_idx )
     {
-      vec_putative_matches.emplace_back(vec_nIndice[index*NNN__].j_, vec_nIndice[index*NNN__].i_);
+      vec_putative_matches.emplace_back(vec_Indice[index*NNN__].j_, vec_Indice[index*NNN__].i_);
     }
 
     // Remove duplicates

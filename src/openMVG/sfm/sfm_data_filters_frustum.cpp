@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/types.hpp"
 
-#include <fstream>
-#include <iomanip>
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/stl/stl.hpp"
+
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -22,8 +23,14 @@ using namespace openMVG::geometry;
 using namespace openMVG::geometry::halfPlane;
 
 // Constructor
-Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
-  const double zNear, const double zFar)
+Frustum_Filter::Frustum_Filter
+(
+  const SfM_Data & sfm_data,
+  const double zNear,
+  const double zFar,
+  const NearFarPlanesT & z_near_z_far
+)
+: z_near_z_far_perView(z_near_z_far)
 {
   //-- Init Z_Near & Z_Far for all valid views
   init_z_near_z_far_depth(sfm_data, zNear, zFar);
@@ -33,7 +40,10 @@ Frustum_Filter::Frustum_Filter(const SfM_Data & sfm_data,
 }
 
 // Init a frustum for each valid views of the SfM scene
-void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
+void Frustum_Filter::initFrustum
+(
+  const SfM_Data & sfm_data
+)
 {
   for (NearFarPlanesT::const_iterator it = z_near_z_far_perView.begin();
       it != z_near_z_far_perView.end(); ++it)
@@ -42,13 +52,13 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
       continue;
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+    if (!isPinhole(iterIntrinsic->second->getType()))
       continue;
 
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
       continue;
 
     if (!_bTruncated) // use infinite frustum
@@ -67,7 +77,11 @@ void Frustum_Filter::initFrustum(const SfM_Data & sfm_data)
   }
 }
 
-Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
+Pair_Set Frustum_Filter::getFrustumIntersectionPairs
+(
+  const std::vector<HalfPlaneObject>& bounding_volume
+)
+const
 {
   Pair_Set pairs;
   // List active view Id
@@ -86,9 +100,16 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
 #endif
   for (int i = 0; i < (int)viewIds.size(); ++i)
   {
+    // Prepare vector of intersecting objects (within loop to keep it
+    // thread-safe)
+    std::vector<HalfPlaneObject> objects = bounding_volume;
+    objects.insert(objects.end(),
+                   { frustum_perView.at(viewIds[i]), HalfPlaneObject() });
+
     for (size_t j = i+1; j < viewIds.size(); ++j)
     {
-      if (frustum_perView.at(viewIds[i]).intersect(frustum_perView.at(viewIds[j])))
+      objects.back() = frustum_perView.at(viewIds[j]);
+      if (intersect(objects))
       {
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
@@ -98,19 +119,18 @@ Pair_Set Frustum_Filter::getFrustumIntersectionPairs() const
         }
       }
       // Progress bar update
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
-      {
-        ++my_progress_bar;
-      }
+      ++my_progress_bar;
     }
   }
   return pairs;
 }
 
 // Export defined frustum in PLY file for viewing
-bool Frustum_Filter::export_Ply(const std::string & filename) const
+bool Frustum_Filter::export_Ply
+(
+  const std::string & filename
+)
+const
 {
   std::ofstream of(filename.c_str());
   if (!of.is_open())
@@ -186,8 +206,12 @@ bool Frustum_Filter::export_Ply(const std::string & filename) const
   return bOk;
 }
 
-void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
-  const double zNear, const double zFar)
+void Frustum_Filter::init_z_near_z_far_depth
+(
+  const SfM_Data & sfm_data,
+  const double zNear,
+  const double zFar
+)
 {
   // If z_near & z_far are -1 and structure if not empty,
   //  compute the values for each camera and the structure
@@ -207,7 +231,6 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
         if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
 
-        Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
         const double z = pose.depth(X);
         NearFarPlanesT::iterator itZ = z_near_z_far_perView.find(id_view);
@@ -233,11 +256,11 @@ void Frustum_Filter::init_z_near_z_far_depth(const SfM_Data & sfm_data,
       const View * view = it->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
         continue;
-      z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
+      if (z_near_z_far_perView.find(view->id_view) == z_near_z_far_perView.end())
+        z_near_z_far_perView[view->id_view] = std::make_pair(zNear, zFar);
     }
   }
 }
 
 } // namespace sfm
 } // namespace openMVG
-

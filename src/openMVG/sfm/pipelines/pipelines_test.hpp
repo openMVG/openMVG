@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,11 +9,12 @@
 #ifndef OPENMVG_SFM_PIPELINES_TEST_HPP
 #define OPENMVG_SFM_PIPELINES_TEST_HPP
 
-#include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/sfm/sfm.hpp"
-
 #include <iostream>
 #include <random>
+#include <vector>
+
+#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/sfm/sfm.hpp"
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -46,7 +48,7 @@ struct Synthetic_Features_Provider : public Features_Provider
 //  - for contiguous triplets store the corresponding observations indexes
 struct Synthetic_Matches_Provider : public Matches_Provider
 {
-  virtual bool load
+  bool load
   (
     const NViewDataSet & synthetic_data
   )
@@ -54,7 +56,7 @@ struct Synthetic_Matches_Provider : public Matches_Provider
     // For each view
     for (IndexT j = 0; j < synthetic_data._n; ++j)
     {
-      for (IndexT jj = j+1; jj < j+3 ; ++jj)
+      for (IndexT jj = j+1; jj < j+3; ++jj)
       {
         for (Mat2X::Index idx = 0; idx < synthetic_data._x[j].cols(); ++idx)
         {

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (C) 2013  "Robot Vision Group, NLPR, CASIA", Zhenhua Wang,
 // Bin Fan and Fuchao Wu.
@@ -17,14 +18,17 @@
 
 #include "openMVG/features/liop/liop_descriptor.hpp"
 
-#include <algorithm>
-#include <cfloat>
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/sample.hpp"
+
+#include <limits>
 
 namespace openMVG {
 namespace features{
 namespace LIOP    {
 
-const int MAX_REGION_NUM = 10;
 const int MAX_PIXEL_NUM  = 1681;
 const int MAX_SAMPLE_NUM = 10;
 const int LIOP_NUM = 4;
@@ -210,7 +214,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
       const float nDirX = static_cast<float>(x);
       const float nDirY = static_cast<float>(y);
       float nOri = atan2(nDirY, nDirX);
-      if (fabs(nOri - M_PI) < FLT_EPSILON)	//[-M_PI, M_PI)
+      if (std::abs(nOri - M_PI) < std::numeric_limits<float>::epsilon()) //[-M_PI, M_PI)
       {
         nOri = static_cast<float>(-M_PI);
       }
@@ -276,7 +280,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
 
       while (true)
       {
-        if (fabs(pixel[curId].f_gray-fenceGray) < FLT_EPSILON)
+        if (std::abs(pixel[curId].f_gray-fenceGray) < std::numeric_limits<float>::epsilon())
         {
           lastId = curId;
           break;

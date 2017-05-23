@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -79,7 +80,7 @@ struct UnionFind
   {
     i = Find(i);
     j = Find(j);
-    if (i==j)
+    if (i == j)
     { // Already in the same set. Nothing to do
       return;
     }

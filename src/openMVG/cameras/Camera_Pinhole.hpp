@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,12 +9,12 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
-
-#include <vector>
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -62,9 +63,25 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
 
     /**
+    * @brief Constructor
+    * @param w Width of the image plane
+    * @param h Height of the image plane
+    * @param K Intrinsic Matrix (3x3) {f,0,ppx; 0,f,ppy; 0,0,1}
+    */
+    Pinhole_Intrinsic(
+      unsigned int w,
+      unsigned int h,
+      const Mat3& K)
+      : IntrinsicBase( w, h ), K_(K)
+    {
+      K_(0,0) = K_(1,1) = (K(0,0) + K(1,1)) / 2.0;
+      Kinv_ = K_.inverse();
+    }
+
+    /**
     * @brief Destructor
     */
-    virtual ~Pinhole_Intrinsic() override = default;
+    ~Pinhole_Intrinsic() override = default;
 
     /**
     * @brief Get type of the intrinsic
@@ -119,8 +136,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     Vec3 operator () ( const Vec2& p ) const override
     {
-      Vec3 p3( p( 0 ), p( 1 ), 1.0 );
-      return ( Kinv_ * p3 ).normalized();
+      return (Kinv_ * p.homogeneous()).normalized();
     }
 
     /**

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013,2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -38,6 +40,33 @@ TEST(box_point, intersection)
   EXPECT_FALSE( box.contains(Vec3(1,1,1)) );
 }
 
+TEST(box_box, intersection)
+{
+  const double r = 1.;
+
+  // Test with a set of intersecting boxes
+  std::vector<HalfPlaneObject> boxes_ok;
+  for (int i=0; i < 6; ++i)
+  {
+    Vec3 center = Vec3::Zero();
+    center[i/2] += std::pow(-1, i%2) * r / 5.;
+    boxes_ok.emplace_back(Box(center, r));
+  }
+  EXPECT_TRUE( boxes_ok[0].intersect(boxes_ok[1]) );
+  EXPECT_TRUE( intersect(boxes_ok) );
+
+  // Test with a set of non-intersecting boxes
+  std::vector<HalfPlaneObject> boxes_ko;
+  for (int i=0; i < 6; ++i)
+  {
+    Vec3 center = Vec3::Zero();
+    center[i/2] += std::pow(-1, i%2) * 1.5 * r;
+    boxes_ko.emplace_back(Box(center, 1));
+  }
+  EXPECT_FALSE( boxes_ko[0].intersect(boxes_ko[1]) );
+  EXPECT_FALSE( intersect(boxes_ko) );
+}
+
 TEST(box_frustum, intersection)
 {
   const int focal = 1000;
@@ -64,6 +93,7 @@ TEST(box_frustum, intersection)
       const Frustum f (principal_Point*2, principal_Point*2, d._K[i], d._R[i], d._C[i]);
       EXPECT_TRUE(f.intersect(box));
       EXPECT_TRUE(box.intersect(f));
+      EXPECT_TRUE(intersect({f, box}));
 
       std::ostringstream os;
       os << i << "frust.ply";
@@ -91,6 +121,7 @@ TEST(box_frustum, intersection)
 
       EXPECT_TRUE(f.intersect(box));
       EXPECT_TRUE(box.intersect(f));
+      EXPECT_TRUE(intersect({f, box}));
     }
   }
 }
@@ -125,6 +156,7 @@ TEST(box_frustum, no_intersection)
       const Frustum f(principal_Point * 2, principal_Point * 2, d._K[i], d._R[i], d._C[i]);
       EXPECT_FALSE(f.intersect(box));
       EXPECT_FALSE(box.intersect(f));
+      EXPECT_FALSE(intersect({f, box}));
 
       std::ostringstream os;
       os << i << "frust.ply";
@@ -152,6 +184,7 @@ TEST(box_frustum, no_intersection)
 
       EXPECT_FALSE(f.intersect(box));
       EXPECT_FALSE(box.intersect(f));
+      EXPECT_FALSE(intersect({f, box}));
     }
   }
 }

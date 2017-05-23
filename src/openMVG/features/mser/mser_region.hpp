@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Romuald PERROT.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -17,9 +19,9 @@ namespace MSER
 {
 
     /**
-     * @brief Class holding a MSER region 
-     * @note User should not deal with construction of the class but only use MSERExtractor to build regions 
-     * User should only use the FitEllipse method 
+     * @brief Class holding a MSER region
+     * @note User should not deal with construction of the class but only use MSERExtractor to build regions
+     * User should only use the FitEllipse method
      */
     class MSERRegion
     {
@@ -62,7 +64,7 @@ namespace MSER
       void FitEllipse( double &x, double &y ) const;
 
       private:
-      
+
       // Connectivity
       MSERRegion *m_parent; // Pointer to the parent region
       MSERRegion *m_child;  // Pointer to the first child of the region
@@ -139,8 +141,8 @@ namespace MSER
       void ComputeMSER( const int delta, const int minArea, const int maxArea, const double maxVariation, const double minDiversity, std::vector<MSERRegion> &regions );
     };
 
-} // namespace MSER 
-} // namespace features 
-} // namespace openMVG 
+} // namespace MSER
+} // namespace features
+} // namespace openMVG
 
 #endif // OPENMVG_MSER_MSER_REGION_HPP

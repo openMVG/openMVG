@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,13 +9,16 @@
 #ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
-#include "openMVG/features/features.hpp"
+#include <memory>
+#include <string>
+
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/feature_container.hpp"
+#include "openMVG/features/regions.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
-#include "third_party/progress/progress.hpp"
-
-#include <memory>
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -47,7 +51,7 @@ struct Features_Provider
     #pragma omp single nowait
 #endif
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second->s_Img_path);
         const std::string basename = stlplus::basename_part(sImageName);
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
 
@@ -65,9 +69,9 @@ struct Features_Provider
 #endif
         {
           // save loaded Features as PointFeature
-          feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
-          ++my_progress_bar;
+          feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
         }
+        ++my_progress_bar;
       }
     }
     return bContinue;

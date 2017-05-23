@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,45 +9,20 @@
 #ifndef OPENMVG_MATCHING_METRIC_HPP
 #define OPENMVG_MATCHING_METRIC_HPP
 
+#include "openMVG/matching/metric_avx2.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
-
-#ifdef OPENMVG_USE_SSE
-#include <xmmintrin.h>
-#endif
-
-#include <cstddef>
-#include <iostream>
+#include <cstdint>
 
 namespace openMVG {
 namespace matching {
 
-/// Squared Euclidean distance functor.
+/// Squared Euclidean distance functor
 template<class T>
-struct L2_Simple
+struct L2
 {
   using ElementType = T;
-  using ResultType = typename Accumulator<T>::Type;
-
-  template <typename Iterator1, typename Iterator2>
-  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
-  {
-    ResultType result = ResultType();
-    ResultType diff;
-    for(size_t i = 0; i < size; ++i ) {
-      diff = *a++ - *b++;
-      result += diff*diff;
-    }
-    return result;
-  }
-};
-
-/// Squared Euclidean distance functor (vectorized version)
-template<class T>
-struct L2_Vectorized
-{
-  using ElementType = T;
-  using ResultType = typename Accumulator<T>::Type;
+  using ResultType = typename Accumulator<ElementType>::Type;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
@@ -56,7 +32,7 @@ struct L2_Vectorized
     Iterator1 last = a + size;
     Iterator1 lastgroup = last - 3;
 
-    // Process 4 items with each loop for efficiency.
+    // Process 4 items for each loop for efficiency.
     while (a < lastgroup) {
       diff0 = a[0] - b[0];
       diff1 = a[1] - b[1];
@@ -66,7 +42,7 @@ struct L2_Vectorized
       a += 4;
       b += 4;
     }
-    // Process last 0-3 pixels.  Not needed for standard vector lengths.
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
     while (a < last) {
       diff0 = *a++ - *b++;
       result += diff0 * diff0;
@@ -75,67 +51,87 @@ struct L2_Vectorized
   }
 };
 
-#ifdef OPENMVG_USE_SSE
-
-namespace optim_ss2{
-
-  /// Union to switch between SSE and float array
-  union sseRegisterHelper
-  {
-      __m128 m;
-      float f[4];
-  };
-
-  // Euclidean distance (SSE method) (squared result)
-  inline float l2_sse(const float * b1, const float * b2, int size)
-  {
-    float* b1Pt = (float*)b1;
-    float* b2Pt = (float*)b2;
-    if(size%4 == 0)
-    {
-      __m128 srcA, srcB, temp, cumSum;
-      float zeros[4] = {0.f,0.f,0.f,0.f};
-      cumSum = _mm_load_ps( zeros );
-      for(int i = 0 ; i < size; i+=4)
-      {
-        srcA = _mm_load_ps(b1Pt+i);
-        srcB = _mm_load_ps(b2Pt+i);
-        //-- Subtract
-        temp = _mm_sub_ps( srcA, srcB );
-        //-- Multiply
-        temp =  _mm_mul_ps( temp, temp );
-        //-- sum
-        cumSum = _mm_add_ps( cumSum, temp );
-      }
-      sseRegisterHelper res;
-      res.m = cumSum;
-      return (res.f[0]+res.f[1]+res.f[2]+res.f[3]);
-    }
-    else
-    {
-      std::cerr <<"\n/!\\ size is not modulus 4,"
-        << " distance cannot be performed in SSE"<< std::endl;
-      return 0.0f;
-    }
-  }
-} // namespace optim_ss2
-
-// Template specification to run SSE L2 squared distance
-//  on float vector
+// Template specialization for the uint8_t type
 template<>
-struct L2_Vectorized<float>
+struct L2<uint8_t>
 {
-  using ElementType = float;
-  using ResultType = Accumulator<float>::Type;
+  using ElementType = uint8_t;
+  using ResultType = int;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
-    return optim_ss2::l2_sse(a,b,size);
+    #ifdef OPENMVG_USE_AVX2
+    if (size == 128)
+    {
+      return L2_AVX2(a, b, size);
+    }
+    #endif
+
+    ResultType result = ResultType();
+    ResultType diff0, diff1, diff2, diff3;
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
+
+    // Process 4 items for each loop for efficiency.
+    while (a < lastgroup) {
+      diff0 = a[0] - b[0];
+      diff1 = a[1] - b[1];
+      diff2 = a[2] - b[2];
+      diff3 = a[3] - b[3];
+      result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
+      a += 4;
+      b += 4;
+    }
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
+    while (a < last) {
+      diff0 = *a++ - *b++;
+      result += diff0 * diff0;
+    }
+    return result;
   }
 };
 
-#endif // OPENMVG_USE_SSE
+// Template specialization for the float type
+template<>
+struct L2<float>
+{
+  using ElementType = float;
+  using ResultType = typename Accumulator<ElementType>::Type;
+
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    #ifdef OPENMVG_USE_AVX2
+    if (size == 128)
+    {
+      return L2_AVX2(a, b, size);
+    }
+    #endif
+
+    ResultType result = ResultType();
+    ResultType diff0, diff1, diff2, diff3;
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
+
+    // Process 4 items for each loop for efficiency.
+    while (a < lastgroup) {
+      diff0 = a[0] - b[0];
+      diff1 = a[1] - b[1];
+      diff2 = a[2] - b[2];
+      diff3 = a[3] - b[3];
+      result += diff0 * diff0 + diff1 * diff1 + diff2 * diff2 + diff3 * diff3;
+      a += 4;
+      b += 4;
+    }
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
+    while (a < last) {
+      diff0 = *a++ - *b++;
+      result += diff0 * diff0;
+    }
+    return result;
+  }
+};
 
 }  // namespace matching
 }  // namespace openMVG

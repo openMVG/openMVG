@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,11 +9,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_RADIAL_HPP
 
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/numeric/numeric.h"
-
-#include <vector>
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -39,7 +40,7 @@ double bisection_Radius_Solve(
   const std::vector<double> & params, // radial distortion parameters
   double r2, // targeted radius
   Disto_Functor & functor,
-  double epsilon = 1e-8 // criteria to stop the bisection
+  double epsilon = 1e-10 // criteria to stop the bisection
 )
 {
   // Guess plausible upper and lower bound
@@ -279,9 +280,9 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     * @param r2 square distance (relative to center)
     * @return distance
     */
-    static double distoFunctor( const std::vector<double> & params, double r2 )
+    static inline double distoFunctor( const std::vector<double> & params, double r2 )
     {
-      const double k1 = params[0];
+      const double & k1 = params[0];
       return r2 * Square( 1. + r2 * k1 );
     }
 };
@@ -348,8 +349,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     */
     Vec2 add_disto( const Vec2 & p ) const override
     {
-
-      const double k1 = params_[0], k2 = params_[1], k3 = params_[2];
+      const double & k1 = params_[0], & k2 = params_[1], & k3 = params_[2];
 
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );
       const double r4 = r2 * r2;
@@ -496,13 +496,13 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
 
     /**
     * @brief Functor to solve Square(disto(radius(p'))) = r^2
-    * @param params List of parameters (only the first one is used)
+    * @param params List of the radial factors {k1, k2, k3}
     * @param r2 square distance (relative to center)
     * @return distance
     */
-    static double distoFunctor( const std::vector<double> & params, double r2 )
+    static inline double distoFunctor( const std::vector<double> & params, double r2 )
     {
-      const double k1 = params[0], k2 = params[1], k3 = params[2];
+      const double & k1 = params[0], & k2 = params[1], & k3 = params[2];
       return r2 * Square( 1. + r2 * ( k1 + r2 * ( k2 + r2 * k3 ) ) );
     }
 };

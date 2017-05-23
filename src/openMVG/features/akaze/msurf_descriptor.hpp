@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Romuald PERROT, Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -9,7 +11,7 @@
 
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/numeric/math_trait.hpp"
+#include "openMVG/image/sample.hpp"
 
 namespace openMVG {
 namespace features {
@@ -23,7 +25,7 @@ namespace features {
   template <typename Real>
   static inline Real gaussian( const Real x, const Real y, const Real sigma )
   {
-    return MathTrait<Real>::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) ) ;
+    return std::exp( - ( ( x * x ) + ( y * y ) ) / ( static_cast<Real>( 2 ) * sigma * sigma ) );
   }
 
   /**
@@ -52,7 +54,7 @@ namespace features {
     int kx = 0, ky = 0, i = 0, j = 0, dcount = 0;
 
     // Subregion centers for the 4x4 gaussian weighting
-    Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 ) ;
+    Real cx = - static_cast<Real>( 0.5 ) , cy = static_cast<Real>( 0.5 );
 
     // Set the descriptor size and the sample and pattern sizes
     const int sample_step = 5;
@@ -60,12 +62,12 @@ namespace features {
 
     // Get the information from the keypoint
     const Real ratio = static_cast<Real>( 1 << id_octave );
-    const int scale = MathTrait<float>::round( ipt.scale() / ratio );
-    const Real angle = ipt.orientation() ;
+    const int scale = std::round( ipt.scale() / ratio );
+    const Real angle = ipt.orientation();
     const Real yf = ipt.y() / ratio;
     const Real xf = ipt.x() / ratio;
-    const Real co = MathTrait<Real>::cos( angle );
-    const Real si = MathTrait<Real>::sin( angle );
+    const Real co = std::cos( angle );
+    const Real si = std::sin( angle );
 
     i = -8;
 
@@ -114,13 +116,13 @@ namespace features {
             // Sum the derivatives to the cumulative descriptor
             dx += rrx;
             dy += rry;
-            mdx += MathTrait<Real>::abs( rrx );
-            mdy += MathTrait<Real>::abs( rry );
+            mdx += std::abs( rrx );
+            mdy += std::abs( rry );
           }
         }
 
         // Add the values to the descriptor vector
-        gauss_s2 = gaussian( cx - static_cast<Real>( 2.0 ) , cy - static_cast<Real>( 2.0 ) , static_cast<Real>( 1.5 ) ) ;
+        gauss_s2 = gaussian( cx - static_cast<Real>( 2.0 ) , cy - static_cast<Real>( 2.0 ) , static_cast<Real>( 1.5 ) );
         desc[dcount++] = dx * gauss_s2;
         desc[dcount++] = dy * gauss_s2;
         desc[dcount++] = mdx * gauss_s2;

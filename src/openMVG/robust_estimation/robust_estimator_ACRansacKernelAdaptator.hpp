@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -27,8 +28,10 @@
 //  by the generic ACRANSAC routine.
 //
 
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace robust{
@@ -78,20 +81,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
@@ -151,20 +154,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x2d_, samples);
     const Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(int sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x2d_.cols());
-    for (size_t sample = 0; sample < x2d_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
@@ -216,20 +219,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x2d_, samples);
     const Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x2d_.cols());
-    for (size_t sample = 0; sample < x2d_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
@@ -289,13 +292,13 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1k_, samples);
     const Mat x2 = ExtractColumns(x2k_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     return ErrorT::Error(F, this->x1_.col(sample), this->x2_.col(sample));
@@ -306,7 +309,7 @@ public:
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(F, this->x1_.col(sample), this->x2_.col(sample));
   }
 
@@ -351,20 +354,20 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
     const Mat x1 = ExtractColumns(x1_, samples);
     const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
     vec_errors.resize(x1_.cols());
-    for (size_t sample = 0; sample < x1_.cols(); ++sample)
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 

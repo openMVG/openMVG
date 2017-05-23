@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -12,7 +13,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <mutex>
+#include <string>
 #include <thread>
 
 namespace openMVG {
@@ -25,7 +28,7 @@ struct Regions_Provider_Cache : public Regions_Provider
 public:
 
   Regions_Provider_Cache (const unsigned int max_cache_size)
-    : max_cache_size_(max_cache_size), Regions_Provider()
+    : Regions_Provider(), max_cache_size_(max_cache_size)
   {
   }
 
@@ -66,11 +69,12 @@ public:
   }
 
   // Initialize the regions_provider_cache
-  virtual bool load
+  bool load
   (
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
-    std::unique_ptr<features::Regions>& region_type
+    std::unique_ptr<features::Regions>& region_type,
+    C_Progress * 
   ) override
   {
     std::cout << "Initialization of the Regions_Provider_Cache. #Elements in the cache: "<< max_cache_size_ << std::endl;
@@ -81,9 +85,9 @@ public:
     // Build an association table from view id to feature & descriptor files
     for (const auto & iterViews : sfm_data.GetViews())
     {
-      const openMVG::IndexT id = iterViews.second.get()->id_view;
+      const openMVG::IndexT id = iterViews.second->id_view;
       assert( id == iterViews.first);
-      map_id_string_[id] = stlplus::basename_part(iterViews.second.get()->s_Img_path);
+      map_id_string_[id] = stlplus::basename_part(iterViews.second->s_Img_path);
     }
 
     return true;

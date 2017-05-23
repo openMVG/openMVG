@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2013, 2014 openMVG authors.
 
@@ -88,9 +89,7 @@ int main( int argc, char **argv )
 
     return EXIT_SUCCESS;
   }
-  else
-  {
-    std::cerr << "\n Something goes wrong in the process" << std::endl;
-  }
+
+  std::cerr << "\n Something goes wrong in the process" << std::endl;
   return EXIT_FAILURE;
 }

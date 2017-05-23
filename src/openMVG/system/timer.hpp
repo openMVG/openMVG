@@ -1,22 +1,17 @@
-// ========================================================================== //
-//
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (C) 2013 David Ok <david.ok8@gmail.com>
 // Copyright (C) 2014 Pierre Moulon
-//
-// Adapted from DO++, a basic set of libraries in C++ for computer
-// vision.
-//
+
 // This Source Code Form is subject to the terms of the Mozilla Public
-// License v. 2.0. If a copy of the MPL was not distributed with this file,
-// you can obtain one at http://mozilla.org/MPL/2.0/.
-// ========================================================================== //
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 
 #ifndef OPENMVG_SYSTEM_TIMER_HPP
 #define OPENMVG_SYSTEM_TIMER_HPP
 
-#ifdef HAVE_CXX11_CHRONO
-  #include <chrono>
-#endif
+#include <chrono>
 #include <iostream>
 
 namespace openMVG
@@ -57,15 +52,7 @@ class Timer
     */
     double elapsedMs() const;
   private:
-
-#ifdef HAVE_CXX11_CHRONO
     std::chrono::high_resolution_clock::time_point start_;
-#else
-    double start_;
-#ifdef _WIN32
-    double frequency_;
-#endif // _WIN32
-#endif // HAVE_CXX11_CHRONO
 };
 
 /**
@@ -80,4 +67,3 @@ std::ostream& operator << ( std::ostream& out , const Timer& tim );
 } // namespace openMVG
 
 #endif // OPENMVG_SYSTEM_TIMER_HPP
-

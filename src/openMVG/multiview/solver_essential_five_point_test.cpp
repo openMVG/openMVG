@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -195,9 +196,8 @@ TEST(FivePointsRelativePose, Random) {
 
   TestData d = SomeTestData();
 
-  vector<Mat3> Es;
-  vector<Mat3> Rs;
-  vector<Vec3> ts;
+  std::vector<Mat3> Es, Rs;
+  std::vector<Vec3> ts;
   FivePointsRelativePose(d.x1, d.x2, &Es);
 
   // Recover rotation and translation from E
@@ -235,14 +235,14 @@ TEST(FivePointsRelativePose, test_data_sets) {
 
   //-- Setup a circular camera rig and assert that 5PT relative pose works.
   const int iNviews = 5;
-  NViewDataSet d = NRealisticCamerasRing(iNviews, 5,
+  const NViewDataSet d = NRealisticCamerasRing(iNviews, 5,
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
   // Compute pose [R|t] from 0 to [1;..;iNviews]
-  for(int i=1; i <iNviews; ++i)
+  for (int i=1; i <iNviews; ++i)
   {
-    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    vector<Vec3> ts;      // Translation matrix.
+    std::vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
+    std::vector<Vec3> ts;      // Translation matrix.
     FivePointsRelativePose(d._x[0], d._x[i], &Es);
 
     // Recover rotation and translation from E.

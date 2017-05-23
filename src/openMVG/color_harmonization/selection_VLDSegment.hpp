@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 openMVG authors.
 
@@ -7,6 +8,9 @@
 
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
+
+#include <string>
+#include <vector>
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
 #include "openMVG/matching/kvld/kvld.h"
@@ -21,14 +25,14 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
   commonDataByPair_VLDSegment( const std::string & sLeftImage,
                                const std::string & sRightImage,
                                const std::vector< matching::IndMatch >& vec_PutativeMatches,
-                               const vector< features::SIOPointFeature >& vec_featsL,
-                               const vector< features::SIOPointFeature >& vec_featsR):
+                               const std::vector< features::SIOPointFeature >& vec_featsL,
+                               const std::vector< features::SIOPointFeature >& vec_featsR):
            commonDataByPair( sLeftImage, sRightImage ),
            _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ),
            _vec_PutativeMatches( vec_PutativeMatches )
   {}
 
-  ~commonDataByPair_VLDSegment() override = default ;
+  ~commonDataByPair_VLDSegment() override = default;
 
   /**
    * Put masks to white, images are conserved
@@ -97,7 +101,8 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
         E);
       bOk = true;
     }
-    else{
+    else
+    {
       maskLeft.fill( 0 );
       maskRight.fill( 0 );
     }

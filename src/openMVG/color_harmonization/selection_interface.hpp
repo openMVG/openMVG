@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 openMVG authors.
 
@@ -8,16 +9,13 @@
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_INTERFACE_HPP
 
-#include "openMVG/image/image.hpp"
-
-#include "third_party/histogram/histogram.hpp"
-
 #include <string>
+
+#include "openMVG/image/image_container.hpp"
+#include "third_party/histogram/histogram.hpp"
 
 namespace openMVG {
 namespace color_harmonization {
-
-using namespace std;
 
 class commonDataByPair
 {
@@ -27,7 +25,7 @@ public:
     _sLeftImage( sLeftImage ), _sRightImage( sRightImage )
   {}
 
-  virtual ~commonDataByPair() = default ; 
+  virtual ~commonDataByPair() = default;
 
   /**
    * Compute mask forthe two images

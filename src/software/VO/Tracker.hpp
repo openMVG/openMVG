@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -7,10 +8,13 @@
 
 #ifndef TRACKER_VO_HPP
 #define TRACKER_VO_HPP
-
 #include <software/VO/Abstract_Tracker.hpp>
-#include <openMVG/features/features.hpp>
+#include <openMVG/features/dipole/dipole_descriptor.hpp>
 
+#include <openMVG/features/fast/fast_detector.hpp>
+#include <openMVG/features/feature.hpp>
+#include <openMVG/features/feature_container.hpp>
+#include "openMVG/matching/metric.hpp"
 #include <vector>
 
 namespace openMVG  {
@@ -61,7 +65,8 @@ struct Tracker_fast_dipole : public Abstract_Tracker
         for (int i=0; i < (int)pt_to_track.size(); ++i)
         {
           size_t best_idx = std::numeric_limits<size_t>::infinity();
-          typedef openMVG::matching::L2_Vectorized<float> metricT;
+          
+          typedef openMVG::matching::L2<float> metricT;
           metricT metric;
           metricT::ResultType best_distance = 30;//std::numeric_limits<double>::infinity();
           for (size_t j=0; j < current_feats.size(); ++j)

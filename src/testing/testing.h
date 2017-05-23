@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -29,6 +31,7 @@
 #ifndef TESTING_TESTING_H_
 #define TESTING_TESTING_H_
 
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/numeric/numeric.h"
 #include "third_party/CppUnitLite/TestHarness.h"
 

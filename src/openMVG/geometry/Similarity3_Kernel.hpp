@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
-#define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP 
+#define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
+
+#include <vector>
 
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
@@ -42,7 +46,7 @@ struct Similarity3Solver
     assert(3 == x.rows());
     assert(x.rows() == y.rows());
     assert(x.cols() == y.cols());
-    
+
     double S;
     Vec3 t;
     Mat3 R;
@@ -80,13 +84,12 @@ struct Similarity3ErrorSquaredMetric
 };
 
 // Define a Kernel to solve a robust 3D similarity between point cloud
-typedef two_view::kernel::Kernel
+using Similarity3_Kernel = two_view::kernel::Kernel
   <
     Similarity3Solver,              // The model solver
     Similarity3ErrorSquaredMetric,  // The datum to model error metric
     Similarity3                     // The model type
-  >
-  Similarity3_Kernel;
+  >;
 
 } // namespace kernel
 } // namespace geometry

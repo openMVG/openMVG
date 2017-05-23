@@ -150,7 +150,7 @@ HybridNonLinearSolver<FunctorType,Scalar>::solveInit(FVectorType  &x)
     fjac.resize(n, n);
     if (!useExternalScaling)
         diag.resize(n);
-    eigen_assert( (!useExternalScaling || diag.size()==n) || "When useExternalScaling is set, the caller must provide a valid 'diag'");
+    eigen_assert( (!useExternalScaling || diag.size()==n) && "When useExternalScaling is set, the caller must provide a valid 'diag'");
 
     /* Function Body */
     nfev = 0;
@@ -390,7 +390,7 @@ HybridNonLinearSolver<FunctorType,Scalar>::solveNumericalDiffInit(FVectorType  &
     fvec.resize(n);
     if (!useExternalScaling)
         diag.resize(n);
-    eigen_assert( (!useExternalScaling || diag.size()==n) || "When useExternalScaling is set, the caller must provide a valid 'diag'");
+    eigen_assert( (!useExternalScaling || diag.size()==n) && "When useExternalScaling is set, the caller must provide a valid 'diag'");
 
     /* Function Body */
     nfev = 0;

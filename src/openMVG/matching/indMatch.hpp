@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,14 +9,15 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_HPP
 #define OPENMVG_MATCHING_IND_MATCH_HPP
 
-#include "openMVG/types.hpp"
-
-#include <cereal/cereal.hpp> // Serialization
-
 #include <iostream>
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
+
+#include "openMVG/types.hpp"
+
+#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 namespace matching {
@@ -72,7 +74,7 @@ using IndMatches = std::vector<matching::IndMatch>;
 class PairWiseMatchesContainer
 {
 public:
-  virtual ~PairWiseMatchesContainer() {}
+  virtual ~PairWiseMatchesContainer() = default;
   virtual void insert(std::pair<Pair, IndMatches>&& pairWiseMatches) = 0;
 };
 
@@ -116,6 +118,6 @@ namespace cereal
     openMVG::matching::PairWiseMatches,
     cereal::specialization::member_serialize>
   {};
-} // namespace cereal 
+} // namespace cereal
 
 #endif // OPENMVG_MATCHING_IND_MATCH_HPP

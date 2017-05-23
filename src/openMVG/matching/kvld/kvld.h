@@ -13,27 +13,27 @@ This file is part of the KVLD library and is made available under
 the terms of the BSD license (see the COPYING file).
 */
 
-#pragma once
-#include <fstream>
+#include <algorithm>
 #include <iostream>
 #include <vector>
-#include <sstream>
-#include "algorithm.h"
-#include <openMVG/image/pixel_types.hpp>
-#include <openMVG/numeric/numeric.h>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/matching/kvld/algorithm.h"
+
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 //Parameters concerning speed and performance
-  const bool uniqueMatch      = true;//if activated, a point can be matched to only one point in the other image. Note: if false, it also desactivate partially geometric verification
-  const double juge           = 0.35;
-  const size_t max_connection = 20;
-  const double distance_thres = 0.5;
-  const float min_dist        = 10;
-  const float maxContrast     = 300.0f;
+const bool uniqueMatch      = true;//if activated, a point can be matched to only one point in the other image. Note: if false, it also desactivate partially geometric verification
+const double juge           = 0.35;
+const size_t max_connection = 20;
+const double distance_thres = 0.5;
+const float min_dist        = 10;
+const float maxContrast     = 300.0f;
 
 //===inner parameters of VLD, usually not to change
-  const int dimension         = 10; //number of simplified SIFT-like chain used in a single vld
-  const int subdirection      = 8; // number of bins in a SIFT-like chain histogram
-  const int binNum            = 24;//number of bins for SIFT-like chain main direction. Must be a pair number
+const int dimension         = 10; //number of simplified SIFT-like chain used in a single vld
+const int subdirection      = 8; // number of bins in a SIFT-like chain histogram
+const int binNum            = 24;//number of bins for SIFT-like chain main direction. Must be a pair number
 
 //===== initialize parameters for a KVLD process ====//
 // inlierRate: the minimum rate down to which the KVLD should be reprocessed with a lower number of inlierRate, initially set to 0.04
@@ -45,7 +45,7 @@ struct KvldParameters
   float inlierRate;
   size_t K;
   bool geometry;
-  KvldParameters(): inlierRate( 0.04 ), K( 3 ), geometry( true ){};
+  KvldParameters(): inlierRate( 0.04 ), K( 3 ), geometry( true ){}
 };
 
 //====== Pyramid of scale images ======//

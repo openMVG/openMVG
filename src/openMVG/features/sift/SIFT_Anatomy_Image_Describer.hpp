@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -46,17 +48,19 @@ Changes are:
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 
+#include <iostream>
+#include <numeric>
+#include <vector>
+
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
 #include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
 
 #include <cereal/cereal.hpp>
-
-#include <iostream>
-#include <numeric>
-
 
 namespace openMVG {
 namespace features {
@@ -143,7 +147,6 @@ public:
     const image::Image<unsigned char> * mask = nullptr
   ) override
   {
-    const int w = image.Width(), h = image.Height();
     // Convert to float in range [0;1]
     const image::Image<float> If(image.GetMat().cast<float>()/255.0f);
 
@@ -228,5 +231,6 @@ private:
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Anatomy_Image_describer, "SIFT_Anatomy_Image_describer");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::SIFT_Anatomy_Image_describer)
 
 #endif // OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP

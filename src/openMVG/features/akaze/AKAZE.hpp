@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Romuald PERROT, Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -32,11 +34,9 @@
 //  TrueVision Solutions (2)
 //------
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/descriptor.hpp"
-#include "openMVG/features/feature.hpp"
-#include "openMVG/numeric/math_trait.hpp"
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
+#include "openMVG/image/image_container.hpp"
 
 #include <cereal/cereal.hpp>
 
@@ -116,7 +116,7 @@ public:
   AKAZE(const image::Image<unsigned char> & in, const Params & options);
 
   /// Compute the AKAZE non linear diffusion scale space per slice
-  void Compute_AKAZEScaleSpace(void);
+  void Compute_AKAZEScaleSpace();
 
   /// Detect AKAZE feature in the AKAZE scale space
   void Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const;

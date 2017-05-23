@@ -1,18 +1,21 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/types.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
-#include <string>
-#include <vector>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -52,7 +55,7 @@ bool ColorizeTracks(
       std::inserter(remainingTrackToColor, remainingTrackToColor.begin()),
       stl::RetrieveKey());
 
-    while( !remainingTrackToColor.empty() )
+    while ( !remainingTrackToColor.empty() )
     {
       // Find the most representative image (for the remaining 3D points)
       //  a. Count the number of observation per view for each 3Dpoint Index
@@ -206,13 +209,6 @@ int main(int argc, char **argv)
     {
       return EXIT_SUCCESS;
     }
-    else
-    {
-      return EXIT_FAILURE;
-    }
   }
-  else
-  {
-    return EXIT_FAILURE;
-  }
+  return EXIT_FAILURE;
 }

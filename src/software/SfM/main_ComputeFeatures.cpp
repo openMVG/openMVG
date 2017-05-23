@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,23 +6,31 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/features/image_describer_akaze.hpp"
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#ifdef OpenMVG_USE_CUDA
+#include "openMVG/features/image_describer_latch.hpp"
+#endif
 
-/// Feature/Regions & Image describer interfaces
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
-#include "nonFree/sift/SIFT_describer.hpp"
-#include <cereal/archives/json.hpp>
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
+
+#include "nonFree/sift/SIFT_describer.hpp"
+
+#include <cereal/archives/json.hpp>
+#include <cereal/details/helpers.hpp>
 
 #include <cstdlib>
 #include <fstream>
+#include <string>
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
@@ -263,7 +272,7 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0)
+    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
 #endif
     for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
@@ -303,9 +312,6 @@ int main(int argc, char **argv)
         image_describer->Describe(imageGray, regions, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;

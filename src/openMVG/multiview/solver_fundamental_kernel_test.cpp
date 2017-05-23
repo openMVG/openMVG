@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -28,8 +29,12 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
+
+#include <numeric>
 
 using namespace openMVG;
 using namespace std;
@@ -37,14 +42,14 @@ using namespace std;
 // Check that sin(angle(a, b)) < tolerance.
 template<typename A, typename B>
 bool Colinear(const A &a, const B &b, double tolerance) {
-  bool dims_match = (a.rows() == b.rows()) && (a.cols() == b.cols());
+  const bool dims_match = (a.rows() == b.rows()) && (a.cols() == b.cols());
   if (!dims_match) {
     return false;
   }
-  double c = CosinusBetweenMatrices(a, b);
+  const double c = CosinusBetweenMatrices(a, b);
   if (c * c < 1) {
-    double s = sqrt(1 - c * c);
-    return fabs(s) < tolerance;
+    const double s = sqrt(1 - c * c);
+    return std::abs(s) < tolerance;
   }
   return false;
 }
@@ -54,8 +59,7 @@ bool Colinear(const A &a, const B &b, double tolerance) {
 //   1. The determinant is 0 (rank deficient)
 //   2. The condition x'T*F*x = 0 is satisfied to precision.
 //
-template<typename TMat>
-bool ExpectFundamentalProperties(const TMat &F,
+bool ExpectFundamentalProperties(const Mat3 &F,
                                  const Mat &ptsA,
                                  const Mat &ptsB,
                                  double precision) {
@@ -66,7 +70,7 @@ bool ExpectFundamentalProperties(const TMat &F,
   EuclideanToHomogeneous(ptsA, &hptsA);
   EuclideanToHomogeneous(ptsB, &hptsB);
   for (int i = 0; i < ptsA.cols(); ++i) {
-    double residual = hptsB.col(i).dot(F * hptsA.col(i));
+    const double residual = hptsB.col(i).dot(F * hptsA.col(i));
     bOk &= residual < precision;
   }
   return bOk;
@@ -79,14 +83,12 @@ bool ExpectFundamentalProperties(const TMat &F,
 //
 template <class Kernel>
 bool ExpectKernelProperties(const Mat &x1,
-                              const Mat &x2,
-                              Mat3 *F_expected = NULL) {
+                            const Mat &x2,
+                            Mat3 *F_expected = nullptr) {
   bool bOk = true;
   Kernel kernel(x1, x2);
-  vector<size_t> samples;
-  for (size_t i = 0; i < x1.cols(); ++i) {
-    samples.push_back(i);
-  }
+  vector<uint32_t> samples(x1.cols());
+  std::iota(samples.begin(), samples.end(), 0);
   vector<Mat3> Fs;
   kernel.Fit(samples, &Fs);
 

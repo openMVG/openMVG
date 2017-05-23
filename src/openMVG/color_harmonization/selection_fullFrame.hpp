@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 openMVG authors.
 
@@ -7,6 +8,8 @@
 
 #ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_FULLFRAME_HPP
 #define OPENMVG_COLOR_HARMONIZATION_SELECTION_FULLFRAME_HPP
+
+#include <string>
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
 
@@ -21,7 +24,7 @@ public:
         commonDataByPair( sLeftImage, sRightImage )
   {}
 
-  ~commonDataByPair_FullFrame() override = default ; 
+  ~commonDataByPair_FullFrame() override = default;
 
   /**
    * Put masks to white, all image is considered as valid pixel selection
@@ -31,7 +34,7 @@ public:
    *
    * \return True.
    */
-  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override 
+  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override
   {
     maskLeft.fill( image::WHITE );
     maskRight.fill( image::WHITE );

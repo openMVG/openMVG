@@ -1,0 +1,8 @@
+Project: KORAL
+URL: http://www.github.com/komrad36/KORAL
+License: MIT
+Upstream version: Version e1e90aa of 28-Dec-2016.
+Local modifications: 
+
+* Removed all files, except for *.c, *.h and license-relevant.
+* Created CMakeLists.txt for CMake build

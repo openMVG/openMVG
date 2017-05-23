@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -17,10 +19,10 @@ using namespace std;
 /// Sorted vector intersection (increasing order)
 TEST( matching, setIntersection)
 {
-  int tab0[] = {0, 1, 2, 3, 4, 5, 6, 7};
-  int tab1[] = {0, 1, 8, 3, 4, 9, 6, 7};
-  set<int> vec_0(tab0, tab0+8);
-  set<int> vec_1(tab1, tab1+8);
+  const int tab0[] = {0, 1, 2, 3, 4, 5, 6, 7};
+  const int tab1[] = {0, 1, 8, 3, 4, 9, 6, 7};
+  const set<int> vec_0(tab0, tab0+8);
+  const set<int> vec_1(tab1, tab1+8);
   /// Array must be sorted
 
   vector<int> vec_intersect;

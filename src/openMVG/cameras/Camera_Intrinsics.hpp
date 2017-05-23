@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,6 +8,8 @@
 
 #ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 #define OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
+
+#include <vector>
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
@@ -26,8 +29,8 @@ namespace cameras
 template< typename T>
 struct Clonable
 {
-  virtual T * clone() const = 0 ;
-} ;
+  virtual T * clone() const = 0;
+};
 
 /**
 * @brief Base class used to store common intrinsics parameters
@@ -75,13 +78,13 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
-  * @brief Compute projection of a 3D point into the camera plane
+  * @brief Compute projection of a 3D point into the image plane
   * (Apply pose, disto (if any) and Intrinsics)
   * @param pose Pose used to compute projection
-  * @param pt3D 3D-point to project on camera plane
-  * @return Projected (2D) point on camera plane
+  * @param pt3D 3D-point to project on image plane
+  * @return Projected (2D) point on image plane
   */
-  Vec2 project(
+  virtual Vec2 project(
     const geometry::Pose3 & pose,
     const Vec3 & pt3D ) const
   {
