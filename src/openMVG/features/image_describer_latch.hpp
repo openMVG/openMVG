@@ -16,15 +16,6 @@
 
 #ifdef OpenMVG_USE_CUDA
 #include "third_party/koral/KORAL.h"
-#endif
-
-#ifdef OPENMVG_USE_SSE
-#include <xmmintrin.h>
-#endif
-
-#ifdef OpenMVG_USE_CUDA
-
-using namespace std;
 
 namespace openMVG {
 namespace features {
@@ -38,25 +29,38 @@ struct LATCHParams
 {
   LATCHParams(
     ELATCH_DESCRIPTOR eLatchDescriptor = LATCH_BINARY
-  ):eLatchDescriptor_(eLatchDescriptor){}
+  ):eLatchDescriptor_(eLatchDescriptor)
+  {
+  }
 
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(eLatchDescriptor_);
+    ar
+      << eLatchDescriptor_
+      << scale_factor_
+      << scale_levels_
+      << KFAST_threshold_;
   }
 
   // Parameters
   ELATCH_DESCRIPTOR eLatchDescriptor_;
+  float scale_factor_ = 1.2f;
+  uint8_t scale_levels_ = 8;
+  uint8_t KFAST_threshold_ = 60;
 };
 
 class LATCH_Image_describer : public Image_describer
 {
 public:
-  LATCH_Image_describer(
-  const LATCHParams & params = LATCHParams()
-  ):Image_describer(), params_(params), koral_(1.2f, 8) {
-        }
+  LATCH_Image_describer
+  (
+    const LATCHParams & params = {}
+  ):Image_describer(),
+    params_(params),
+    koral_(params_.scale_factor_, params_.scale_levels_)
+  {
+  }
 
   // Don't need to really define this for the LATCH class yet, until more descriptors come out.
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
@@ -70,17 +74,16 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe(const image::Image<unsigned char>& image,
+  bool Describe
+  (
+    const image::Image<unsigned char>& image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = nullptr ) override
+    const image::Image<unsigned char> * mask = nullptr
+  ) override
   {
-    std::vector<Keypoint> kpts;
-    std::vector<uint64_t> descriptors;
-
-    constexpr uint8_t KFAST_thresh = 60;
-    koral_.go(image.data(), image.cols(), image.rows(), KFAST_thresh);
-    kpts = koral_.kps;
-    descriptors = koral_.desc;
+    koral_.go(image.data(), image.cols(), image.rows(), params_.KFAST_thresh);
+    const auto & kpts = koral_.kps;
+    const auto & descriptors = koral_.desc;
 
     Allocate(regions);
     switch (params_.eLatchDescriptor_)
@@ -107,7 +110,12 @@ public:
               continue;
           }
           const float scale = static_cast<float>(std::pow(1.2f, ptLatch.scale));
-          regionsCasted->Features()[i] = SIOPointFeature(scale * static_cast<float>(ptLatch.x), scale * static_cast<float>(ptLatch.y), 7.0f * scale, 180.0f / 3.14159263f * ptLatch.angle);
+          regionsCasted->Features()[i] = {
+            scale * static_cast<float>(ptLatch.x),
+            scale * static_cast<float>(ptLatch.y),
+            7.0f * scale,
+            180.0f / 3.14159263f * ptLatch.angle
+          };
           std::memcpy(&(regionsCasted->Descriptors()[i]), &(descriptors[i * 64]), 64 * sizeof(uint64_t));
         }
       }
@@ -133,7 +141,6 @@ public:
     ar(cereal::make_nvp("params", params_),
        cereal::make_nvp("bOrientation", bOrientation_));
   }
-
 
 private:
   LATCHParams params_;

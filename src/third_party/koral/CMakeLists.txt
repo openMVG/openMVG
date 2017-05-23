@@ -7,19 +7,17 @@ if (OpenMVG_USE_CUDA)
 
   include_directories(${CMAKE_CURRENT_BINARY_DIR}/config/)
 
-  set (HEADERS CLATCH.h CUDALERP.h FeatureAngle.h KFAST.h KORAL.h Keypoint.h)
+  set(HEADERS CLATCH.h CUDALERP.h FeatureAngle.h KFAST.h KORAL.h Keypoint.h)
 
-  set (SRC CLATCH.cu CUDALERP.cu)
+  set(SRC CLATCH.cu CUDALERP.cu)
 
   list(APPEND CUDA_NVCC_FLAGS "-D_MWAITXINTRIN_H_INCLUDED -lineinfo -Xptxas -v -Xcompiler -use_fast_math -O3 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_60,code=sm_60 --default-stream per-thread")
 
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set (CMAKE_CXX_FLAGS "--std=gnu++11 ${CMAKE_CXX_FLAGS}")
-  else()
-    set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-  endif()
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
   set(CUDA_PROPOGATE_HOST_FLAGS OFF)
 
