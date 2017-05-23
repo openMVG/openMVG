@@ -14,7 +14,7 @@
 #include "openMVG/features/regions_factory.hpp"
 #include <cereal/cereal.hpp>
 
-#ifdef OpenMVG_USE_CUDA
+#ifdef OPENMVG_USE_CUDA
 #include "third_party/koral/KORAL.h"
 
 namespace openMVG {
@@ -25,40 +25,35 @@ enum ELATCH_DESCRIPTOR
   LATCH_BINARY
 };
 
-struct LATCHParams
-{
-  LATCHParams(
-    ELATCH_DESCRIPTOR eLatchDescriptor = LATCH_BINARY
-  ):eLatchDescriptor_(eLatchDescriptor)
-  {
-  }
-
-  template<class Archive>
-  void serialize(Archive & ar)
-  {
-    ar
-      << eLatchDescriptor_
-      << scale_factor_
-      << scale_levels_
-      << KFAST_threshold_;
-  }
-
-  // Parameters
-  ELATCH_DESCRIPTOR eLatchDescriptor_;
-  float scale_factor_ = 1.2f;
-  uint8_t scale_levels_ = 8;
-  uint8_t KFAST_threshold_ = 60;
-};
-
 class LATCH_Image_describer : public Image_describer
 {
 public:
-  LATCH_Image_describer
-  (
-    const LATCHParams & params = {}
-  ):Image_describer(),
-    params_(params),
-    koral_(params_.scale_factor_, params_.scale_levels_)
+
+  struct Params
+  {
+    Params(
+      ELATCH_DESCRIPTOR eLatchDescriptor = LATCH_BINARY
+    ):eLatchDescriptor_(eLatchDescriptor)
+    {
+    }
+
+    template<class Archive>
+    void serialize(Archive & ar)
+    {
+      ar(eLatchDescriptor_, scale_factor_, scale_levels_, KFAST_threshold_);
+    }
+
+    // Parameters
+    ELATCH_DESCRIPTOR eLatchDescriptor_;
+    float scale_factor_ = 1.2f;
+    uint8_t scale_levels_ = 8;
+    uint8_t KFAST_threshold_ = 60;
+  };
+
+
+  LATCH_Image_describer(
+    const Params & params = std::move(Params())
+  ):Image_describer(), params_(params), koral_(params_.scale_factor_, params_.scale_levels_)
   {
   }
 
@@ -81,7 +76,7 @@ public:
     const image::Image<unsigned char> * mask = nullptr
   ) override
   {
-    koral_.go(image.data(), image.cols(), image.rows(), params_.KFAST_thresh);
+    koral_.go(image.data(), image.cols(), image.rows(), params_.KFAST_threshold_);
     const auto & kpts = koral_.kps;
     const auto & descriptors = koral_.desc;
 
@@ -143,7 +138,7 @@ public:
   }
 
 private:
-  LATCHParams params_;
+  Params params_;
   bool bOrientation_;
   KORAL koral_;
 };
