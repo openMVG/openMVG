@@ -44,6 +44,7 @@ addons:
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev
+      - nvidia-cuda-toolkit
 
 env:
   global:
