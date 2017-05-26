@@ -44,6 +44,7 @@ addons:
       - libxxf86vm-dev
       - x11proto-xf86vidmode-dev
       - libxrandr-dev
+      - nvidia-cuda-toolkit
 
 env:
   global:
@@ -67,6 +68,7 @@ before_script:
       -DOpenMVG_BUILD_TESTS=ON \
       -DOpenMVG_BUILD_EXAMPLES=OFF \
       -DOpenMVG_BUILD_SOFTWARES=OFF \
+      -DOpenMVG_USE_CUDA=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
       . $OPENMVG_SOURCE
 
