@@ -331,8 +331,15 @@ int main(int argc, char **argv)
           focal = focal_pixels;
     }
     else // If image contains meta data
-    {
-      const std::string sCamModel = exifReader->getModel();
+    {	  
+      std::string sCamModel = exifReader->getModel();
+
+	  // Change: Do this to ensure we can handle images in which the cam model exif do not contain the brand name
+	  const std::string sCamBrand = exifReader->getBrand();
+	  if (sCamModel.find(sCamBrand) == std::string::npos)
+	  {
+		  sCamModel = sCamBrand + " " + sCamModel;
+	  }
 
       // Handle case where focal length is equal to 0
       if (exifReader->getFocal() == 0.0f)
