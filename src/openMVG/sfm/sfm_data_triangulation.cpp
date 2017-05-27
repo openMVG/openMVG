@@ -280,11 +280,15 @@ const
   std::deque<IndexT> best_inlier_set;
   double best_error = std::numeric_limits<double>::max();
 
+  //--
+  // Random number generation
+  std::mt19937 random_generator(std::mt19937::default_seed);
+
   // - Ransac loop
   for (IndexT i = 0; i < nbIter; ++i)
   {
     std::vector<uint32_t> vec_samples;
-    robust::UniformSample(min_sample_index, obs.size(), &vec_samples);
+    robust::UniformSample(min_sample_index, obs.size(), random_generator, &vec_samples);
     const std::set<IndexT> samples(vec_samples.begin(), vec_samples.end());
 
     // Hypothesis generation

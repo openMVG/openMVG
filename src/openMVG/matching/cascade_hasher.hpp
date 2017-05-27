@@ -123,7 +123,8 @@ public:
   (
     const uint8_t nb_hash_code = 128,
     const uint8_t nb_bucket_groups = 6,
-    const uint8_t nb_bits_per_bucket = 10)
+    const uint8_t nb_bits_per_bucket = 10,
+    const unsigned random_seed = std::mt19937::default_seed)
   {
     nb_bucket_groups_= nb_bucket_groups;
     nb_hash_code_ = nb_hash_code;
@@ -134,8 +135,7 @@ public:
     // Box Muller transform is used in the original paper to get fast random number
     // from a normal distribution with <mean = 0> and <variance = 1>.
     // Here we use C++11 normal distribution random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(random_seed);
     std::normal_distribution<> d(0,1);
 
     primary_hash_projection_.resize(nb_hash_code, nb_hash_code);
