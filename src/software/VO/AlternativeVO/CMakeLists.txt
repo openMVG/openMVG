@@ -1,31 +1,35 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package( Qt5Widgets )
+if (OpenMVG_BUILD_GUI_SOFTWARES)
 
-if( Qt5Widgets_FOUND )
+  find_package( Qt5Widgets )
 
-  set( ALTERNATIVE_VO_SOURCES main.cpp ControlButtonsPanel.cpp MainWindow.cpp VOFolderProcessor.cpp VOViewerPanel.cpp VOViewerDrawableElements.cpp )
-  set( ALTERNATIVE_VO_HEADERS ControlButtonsPanel.hpp MainWindow.hpp VOFolderProcessor.hpp VOViewerPanel.hpp VOViewerDrawableElements.hpp )
+  if( Qt5Widgets_FOUND )
 
-  if( APPLE )
-    add_executable( openMVG_main_AlternativeVO MACOSX_BUNDLE ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS} )  
-  else( APPLE )
-    if ( WIN32 )
-      add_executable( openMVG_main_AlternativeVO WIN32 ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS}  )
-    else ( WIN32 )
-      add_executable( openMVG_main_AlternativeVO ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS}  )
-    endif( WIN32 )
-  endif( APPLE )
+    set( ALTERNATIVE_VO_SOURCES main.cpp ControlButtonsPanel.cpp MainWindow.cpp VOFolderProcessor.cpp VOViewerPanel.cpp VOViewerDrawableElements.cpp )
+    set( ALTERNATIVE_VO_HEADERS ControlButtonsPanel.hpp MainWindow.hpp VOFolderProcessor.hpp VOViewerPanel.hpp VOViewerDrawableElements.hpp )
 
-  target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features stlplus )
-  
-  if( OpenMVG_USE_OPENCV )
-    target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )
-  endif( OpenMVG_USE_OPENCV )
+    if( APPLE )
+      add_executable( openMVG_main_AlternativeVO MACOSX_BUNDLE ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS} )  
+    else( APPLE )
+      if ( WIN32 )
+        add_executable( openMVG_main_AlternativeVO WIN32 ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS}  )
+      else ( WIN32 )
+        add_executable( openMVG_main_AlternativeVO ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS}  )
+      endif( WIN32 )
+    endif( APPLE )
 
-  set_property( TARGET openMVG_main_AlternativeVO PROPERTY CXX_STANDARD 11 )
-  set_property(TARGET openMVG_main_AlternativeVO PROPERTY FOLDER OpenMVG/software)
-  install(TARGETS openMVG_main_AlternativeVO DESTINATION bin/)
+    target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features stlplus )
 
-endif( Qt5Widgets_FOUND )
+    if( OpenMVG_USE_OPENCV )
+      target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )
+    endif( OpenMVG_USE_OPENCV )
+
+    set_property( TARGET openMVG_main_AlternativeVO PROPERTY CXX_STANDARD 11 )
+    set_property(TARGET openMVG_main_AlternativeVO PROPERTY FOLDER OpenMVG/software)
+    install(TARGETS openMVG_main_AlternativeVO DESTINATION bin/)
+
+  endif( Qt5Widgets_FOUND )
+
+endif(OpenMVG_BUILD_GUI_SOFTWARES)

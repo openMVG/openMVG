@@ -6,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <algorithm>
+#include <chrono>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include "CppUnitLite/TestHarness.h"
@@ -166,7 +169,7 @@ TEST(Subgraphs, CC_Subgraph_CC_count) {
   //--
   Pair_Vec pairs_vec(pairs.begin(), pairs.end());
   //random shuffle to assert that contiguous edges are close together.
-  std::random_shuffle(pairs_vec.begin(), pairs_vec.end());
+  std::shuffle(pairs_vec.begin(), pairs_vec.end(), std::mt19937(std::mt19937::default_seed));
   {
     std::set<IndexT> node_largest_cc = graph::KeepLargestCC_Nodes<Pair_Vec, IndexT>(pairs_vec);
     EXPECT_EQ(5, node_largest_cc.size());

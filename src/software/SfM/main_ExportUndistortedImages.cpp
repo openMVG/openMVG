@@ -18,6 +18,10 @@
 #include <cstdlib>
 #include <string>
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;

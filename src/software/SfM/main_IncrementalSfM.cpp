@@ -8,7 +8,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"

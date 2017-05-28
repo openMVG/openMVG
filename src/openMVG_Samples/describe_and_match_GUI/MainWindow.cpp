@@ -10,7 +10,7 @@
 
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/features/image_describer_akaze.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
@@ -700,11 +700,11 @@ std::unique_ptr<Image_describer> MainWindow::GetFeatureDescriber( const EDESCRIB
   }
   else if ( sImage_Describer_Method == "AKAZE_FLOAT" )
   {
-    image_describer.reset( new AKAZE_Image_describer( AKAZE_Image_describer::Params( AKAZE::Params(), AKAZE_MSURF ), !bUpRight ) );
+    image_describer = AKAZE_Image_describer::create( AKAZE_Image_describer::Params( AKAZE::Params(), AKAZE_MSURF ), !bUpRight );
   }
   else if ( sImage_Describer_Method == "AKAZE_MLDB" )
   {
-    image_describer.reset( new AKAZE_Image_describer( AKAZE_Image_describer::Params( AKAZE::Params(), AKAZE_MLDB ), !bUpRight ) );
+    image_describer = AKAZE_Image_describer::create( AKAZE_Image_describer::Params( AKAZE::Params(), AKAZE_MLDB ), !bUpRight );
   }
   else
   {

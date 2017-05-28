@@ -185,7 +185,7 @@ bool exportToOpenMVS(
   }
 
   // write OpenMVS data
-  if (!ARCHIVE::SerializeSave(scene, sOutFile))
+  if (!MVS::ARCHIVE::SerializeSave(scene, sOutFile))
     return false;
 
   std::cout

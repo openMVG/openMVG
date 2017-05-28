@@ -32,7 +32,6 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 
-
 double RMSE(const SfM_Data & sfm_data);
 
 SfM_Data getInputScene
@@ -58,7 +57,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole) {
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -82,7 +85,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K1) {
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -106,7 +113,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Radial_K3) {
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -130,7 +141,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Brown_T2) {
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -154,7 +169,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Fisheye) {
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -166,8 +185,8 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_Intrinsic_Fisheye) {
 }
 
 //-- Test with GCP - Camera position once BA done must be the same as the GT
-TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_GCP)
-{
+TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_GCP) {
+
   const int nviews = 3;
   const int npoints = 6;
   const nViewDatasetConfigurator config;
@@ -179,7 +198,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_GCP)
   const double dResidual_before = RMSE(sfm_data);
 
   // Call the BA interface and let it refine (Structure and Camera parameters [Intrinsics|Motion])
-  std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+  const bool bVerbose = true;
+  const bool bMultithread = false;
+  std::shared_ptr<Bundle_Adjustment> ba_object =
+    std::make_shared<Bundle_Adjustment_Ceres>(
+      Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
   EXPECT_TRUE( ba_object->Adjust(sfm_data,
     Optimize_Options(
       Intrinsic_Parameter_Type::NONE,
@@ -224,7 +247,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_PosePriors) {
   {
     const bool b_use_POSE_PRIOR_in_BA = false;
 
-    std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+    const bool bVerbose = true;
+    const bool bMultithread = false;
+    std::shared_ptr<Bundle_Adjustment> ba_object =
+      std::make_shared<Bundle_Adjustment_Ceres>(
+        Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
     EXPECT_TRUE( ba_object->Adjust(sfm_data,
       Optimize_Options(
         Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -251,7 +278,11 @@ TEST(BUNDLE_ADJUSTMENT, EffectiveMinimization_Pinhole_PosePriors) {
   {
     const bool b_use_POSE_PRIOR_in_BA = true;
 
-    std::shared_ptr<Bundle_Adjustment> ba_object = std::make_shared<Bundle_Adjustment_Ceres>();
+    const bool bVerbose = true;
+    const bool bMultithread = false;
+    std::shared_ptr<Bundle_Adjustment> ba_object =
+      std::make_shared<Bundle_Adjustment_Ceres>(
+        Bundle_Adjustment_Ceres::BA_Ceres_options(bVerbose, bMultithread));
     EXPECT_TRUE( ba_object->Adjust(sfm_data,
       Optimize_Options(
         Intrinsic_Parameter_Type::ADJUST_ALL,
@@ -280,18 +311,15 @@ double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
   std::vector<double> vec;
-  for (Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
-      iterTracks != sfm_data.GetLandmarks().end();
-      ++iterTracks)
+  for (const auto& landmark_it : sfm_data.GetLandmarks())
   {
-    const Observations & obs = iterTracks->second.obs;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    const Observations & obs = landmark_it.second.obs;
+    for (const auto& obs_it : obs)
     {
-      const View * view = sfm_data.GetViews().find(itObs->first)->second.get();
+      const View * view = sfm_data.GetViews().find(obs_it.first)->second.get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       const std::shared_ptr<IntrinsicBase> intrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic)->second;
-      const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
+      const Vec2 residual = intrinsic->residual(pose, landmark_it.second.X, obs_it.second.x);
       vec.push_back( residual(0) );
       vec.push_back( residual(1) );
     }

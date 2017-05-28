@@ -11,6 +11,10 @@
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/types.hpp"
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
