@@ -12,6 +12,7 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
 #include <cereal/cereal.hpp>
 
 #ifdef OPENMVG_USE_CUDA
@@ -69,10 +70,9 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe
+  std::unique_ptr<Regions> Describe
   (
     const image::Image<unsigned char>& image,
-    std::unique_ptr<Regions> &regions,
     const image::Image<unsigned char> * mask = nullptr
   ) override
   {
@@ -80,20 +80,16 @@ public:
     const auto & kpts = koral_.kps;
     const auto & descriptors = koral_.desc;
 
-    Allocate(regions);
+    auto regions = std::unique_ptr<AKAZE_Binary_Regions>(new AKAZE_Binary_Regions);
     switch (params_.eLatchDescriptor_)
     {
       case LATCH_BINARY:
       {
         // Build alias to cached data
-        AKAZE_Binary_Regions * regionsCasted = dynamic_cast<AKAZE_Binary_Regions*>(regions.get());
-        regionsCasted->Features().resize(kpts.size());
-        regionsCasted->Descriptors().resize(kpts.size());
+        regions->Features().resize(kpts.size());
+        regions->Descriptors().resize(kpts.size());
 
-        #ifdef OPENMVG_USE_OPENMP
-        #pragma omp parallel for
-        #endif
-        for (size_t i = 0; i < static_cast<int>(kpts.size()); ++i)
+        for (int i = 0; i < static_cast<int>(kpts.size()); ++i)
         {
           const Keypoint ptLatch = kpts[i];
 
@@ -105,29 +101,24 @@ public:
               continue;
           }
           const float scale = static_cast<float>(std::pow(1.2f, ptLatch.scale));
-          regionsCasted->Features()[i] = {
+          regions->Features()[i] = {
             scale * static_cast<float>(ptLatch.x),
             scale * static_cast<float>(ptLatch.y),
             7.0f * scale,
-            180.0f / 3.14159263f * ptLatch.angle
+            ptLatch.angle
           };
-          std::memcpy(&(regionsCasted->Descriptors()[i]), &(descriptors[i * 64]), 64 * sizeof(uint64_t));
+          std::memcpy(&(regions->Descriptors()[i]), &(descriptors[i * 8]), 8 * sizeof(uint64_t));
         }
       }
       break;
     }
-    return true;
+    return regions;
   };
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const override
+  std::unique_ptr<Regions> Allocate() const override
   {
-    switch(params_.eLatchDescriptor_)
-    {
-      case LATCH_BINARY:
-        return regions.reset(new AKAZE_Binary_Regions);
-      break;
-    }
+    return std::unique_ptr<AKAZE_Binary_Regions>(new AKAZE_Binary_Regions);
   }
 
   template<class Archive>

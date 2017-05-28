@@ -21,10 +21,9 @@ if (OpenMVG_USE_CUDA)
 
   set(CUDA_PROPOGATE_HOST_FLAGS OFF)
 
-  include_directories(${CUDA_INCLUDE_DIRS})
-
   cuda_add_library(koral STATIC ${SRC} ${HEADERS})
   target_link_libraries(koral ${CUDA_LIBRARIES})
+  target_include_directories(koral PUBLIC ${CUDA_INCLUDE_DIRS})
 
   set_property(TARGET koral PROPERTY FOLDER OpenMVG/3rdParty)
 

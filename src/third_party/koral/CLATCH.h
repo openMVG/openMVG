@@ -150,9 +150,8 @@
 
 #pragma once
 
-#include "cuda_runtime.h"
-
 #include <cstdint>
+#include <cuda_runtime.h>
 
 #ifdef __INTELLISENSE__
 #define asm(x)
