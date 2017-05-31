@@ -10,6 +10,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 #include "openMVG/matching_image_collection/gpu/CudaBruteForceMatcher.h"
 
@@ -117,23 +118,19 @@ void LatchBitMatcher::match(void* h_descriptorsQuery, void* h_descriptorsTrainin
 }
 
 openMVG::matching::IndMatches LatchBitMatcher::retrieveMatches(float ratio) {
-  int h_Matches1[m_maxKP];
-  int h_Matches2[m_maxKP];
-  cudaMemcpyAsync(h_Matches1, m_dMatches1, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream1);
-  cudaMemcpyAsync(h_Matches2, m_dMatches2, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream2);
+  std::vector<int> h_Matches1(m_maxKP);
+  std::vector<int> h_Matches2(m_maxKP);
+  cudaMemcpyAsync(&h_Matches1[0], m_dMatches1, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream1);
+  cudaMemcpyAsync(&h_Matches2[0], m_dMatches2, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream2);
 
   cudaStreamSynchronize(m_stream1);
   cudaStreamSynchronize(m_stream2);
 
   openMVG::matching::IndMatches matches;
-  const uint32_t threshold = std::ceil(ratio * 16);
-
-#ifdef OPENMVG_USE_OMP
-  #pragma omp parallel for schedule(dynamic)
-#endif
-  for (size_t i = 0; i < m_numKPQuery; i++) {
+  for (unsigned int i = 0; i < m_numKPQuery; i++)
+  {
    if (h_Matches1[i] >= ratio && h_Matches1[i] < m_numKPTraining && h_Matches2[h_Matches1[i]] == i)
-      matches.push_back(openMVG::matching::IndMatch(i, h_Matches1[i]));
+      matches.emplace_back(i, h_Matches1[i]);
   }
   return matches;
 }

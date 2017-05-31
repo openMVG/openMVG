@@ -72,7 +72,7 @@ void GPU_Matcher_Regions::Match(
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp parallel for schedule(dynamic)
 #endif
-        for (size_t j = 0; j < (int)indexToCompare.size(); ++j)
+        for (int j = 0; j < static_cast<int>(indexToCompare.size()); ++j)
         {
           const size_t J = indexToCompare[j];
 
@@ -80,9 +80,6 @@ void GPU_Matcher_Regions::Match(
           if (regionsJ->RegionCount() == 0
               || regionsI->Type_id() != regionsJ->Type_id())
           {
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
             ++my_progress_bar;
             continue;
           }
