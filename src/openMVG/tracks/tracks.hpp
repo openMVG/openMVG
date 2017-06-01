@@ -138,7 +138,7 @@ struct TracksBuilder
     // Build tracks from the UF tree, track problematic ids.
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
-      const uint32_t & track_id = uf_tree.m_cc_parent[k];
+      const uint32_t & track_id = uf_tree.Find(k);
       if (problematic_track_id.count(track_id) != 0)
         continue; // Track already marked
 
