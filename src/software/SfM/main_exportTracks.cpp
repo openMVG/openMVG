@@ -111,6 +111,7 @@ int main(int argc, char ** argv)
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks);
   }
+  openMVG::tracks::SharedTrackVisibilityHelper track_visibility_helper(map_tracks);
 
   // ------------
   // For each pair, export the matches
@@ -126,18 +127,17 @@ int main(int argc, char ** argv)
   {
     for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
+      const View
+        *view_I = sfm_data.GetViews().at(I).get(),
+        *view_J = sfm_data.GetViews().at(J).get();
 
-      const View * view_I = sfm_data.GetViews().at(I).get();
-      const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
-        view_I->s_Img_path);
-      const View * view_J = sfm_data.GetViews().at(J).get();
-      const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
-        view_J->s_Img_path);
+      const std::string
+        sView_I = stlplus::create_filespec(sfm_data.s_root_path, view_I->s_Img_path),
+        sView_J = stlplus::create_filespec(sfm_data.s_root_path, view_J->s_Img_path);
 
       // Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      const std::set<uint32_t> set_imageIndex = {I,J};
-      TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
+      track_visibility_helper.GetTracksInImages({I,J}, map_tracksCommon);
 
       if (!map_tracksCommon.empty())
       {
