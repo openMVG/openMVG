@@ -18,6 +18,20 @@
 #include "openMVG/stl/split.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+// Add an entry to the database
+void addEntryToDatabase( const std::string& dbEntry, std::vector<Datasheet>& vec_database )
+{
+  std::vector<std::string> values;
+  stl::split(dbEntry, ';', values);
+  if ( values.size() == 2 )
+  {
+    vec_database.emplace_back(
+      values[0], // model
+      atof( values[1].c_str() ) // sensor size
+      );
+  }
+}
+
 // Parse the database
 bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& vec_database )
 {
@@ -32,15 +46,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
       {
         if ( line[0] != '#' )
         {
-          std::vector<std::string> values;
-          stl::split(line, ';', values);
-          if ( values.size() == 2 )
-          {
-            vec_database.emplace_back(
-              values[0], // model
-              atof( values[1].c_str() ) // sensor size
-              );
-          }
+          addEntryToDatabase( line, vec_database );
         }
       }
     }

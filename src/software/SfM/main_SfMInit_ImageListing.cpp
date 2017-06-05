@@ -137,6 +137,7 @@ int main(int argc, char **argv)
 
   std::string sImageDir,
     sfileDatabase = "",
+    sSensorWidth = "",
     sOutputDir = "",
     sKmatrix;
 
@@ -153,6 +154,7 @@ int main(int argc, char **argv)
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
+  cmd.add( make_option('s', sSensorWidth, "sensorWidth") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focal_pixels, "focal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
@@ -169,6 +171,7 @@ int main(int argc, char **argv)
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
+      << "[-s|--sensorWidth]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
@@ -197,6 +200,7 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--imageDirectory " << sImageDir << std::endl
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
+            << "--sensorWidth " << sSensorWidth << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focal " << focal_pixels << std::endl
             << "--intrinsics " << sKmatrix << std::endl
@@ -243,6 +247,16 @@ int main(int argc, char **argv)
   }
 
   std::vector<Datasheet> vec_database;
+  if (!sSensorWidth.empty())
+  {
+    // Add any sensor width overrides first
+    std::vector<std::string> dbEntries;
+    stl::split(sSensorWidth, ',', dbEntries);
+    for ( std::string entry : dbEntries )
+    {
+      addEntryToDatabase( entry, vec_database );
+    }
+  }
   if (!sfileDatabase.empty())
   {
     if ( !parseDatabase( sfileDatabase, vec_database ) )
