@@ -15,6 +15,8 @@
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/feature_container.hpp>
 #include "openMVG/matching/metric.hpp"
+
+#include <random>
 #include <vector>
 
 namespace openMVG  {
