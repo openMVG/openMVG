@@ -26,6 +26,7 @@ option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
 option(OpenMVG_BUILD_GUI_SOFTWARES "Build OpenMVG GUI softwares (QT5)" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+option(OpenMVG_USE_CUDA "Enable CUDA parallelization" OFF)
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
@@ -163,6 +164,22 @@ else (OpenMVG_USE_OPENMP)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
     remove_definitions(-DOPENMVG_USE_OPENMP)
 endif (OpenMVG_USE_OPENMP)
+
+# ==============================================================================
+# CUDA detection
+# ==============================================================================
+if (OpenMVG_USE_CUDA)
+  find_package(CUDA QUIET)
+  if (CUDA_FOUND)
+    option(OpenMVG_USE_CUDA "Use CUDA for parallelization" ON)
+    register_definitions(-DOPENMVG_USE_CUDA)
+ endif (CUDA_FOUND)
+else (OpenMVG_USE_CUDA)
+    option(OpenMVG_USE_OPENMP "Use CUDA for parallelization" OFF)
+    include(UpdateCacheVariable)
+    UPDATE_CACHE_VARIABLE(OpenMVG_USE_CUDA OFF)
+    remove_definitions(-DOPENMVG_USE_CUDA)
+endif (OpenMVG_USE_CUDA)
 
 # ==============================================================================
 # enable code coverage generation (only with GCC)
@@ -504,6 +521,7 @@ message("** Build OpenMVG samples applications: " ${OpenMVG_BUILD_EXAMPLES})
 message("** Build OpenMVG openGL examples: " ${OpenMVG_BUILD_OPENGL_EXAMPLES})
 message("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 message("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
+message("** Enable CUDA parallelization: " ${OpenMVG_USE_CUDA})
 message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
 
