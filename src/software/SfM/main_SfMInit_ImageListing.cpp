@@ -150,13 +150,14 @@ int main(int argc, char **argv)
 
   int i_GPS_XYZ_method = 0;
 
-  double focal_pixels = -1.0;
+  double focal_pixels = -1.0, default_focal_pixels = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
   cmd.add( make_option('s', sSensorWidth, "sensorWidth") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focal_pixels, "focal") );
+  cmd.add( make_option('l', default_focal_pixels, "defaultFocal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
@@ -174,6 +175,7 @@ int main(int argc, char **argv)
       << "[-s|--sensorWidth]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
+      << "[-l|--defaultFocal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
       << "\t 1: Pinhole\n"
@@ -203,6 +205,7 @@ int main(int argc, char **argv)
             << "--sensorWidth " << sSensorWidth << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focal " << focal_pixels << std::endl
+            << "--defaultFocal " << default_focal_pixels << std::endl
             << "--intrinsics " << sKmatrix << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
@@ -254,7 +257,11 @@ int main(int argc, char **argv)
     stl::split(sSensorWidth, ',', dbEntries);
     for ( std::string entry : dbEntries )
     {
-      addEntryToDatabase( entry, vec_database );
+      if ( !addEntryToDatabase( entry, vec_database ) )
+      {
+        std::cerr << "\nInvalid input, cannot register sensor size definition: " <<
+        entry << std::endl;
+      }
     }
   }
   if (!sfileDatabase.empty())
@@ -340,9 +347,15 @@ int main(int argc, char **argv)
         if (!checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy))
           focal = -1.0;
       }
-      else // User provided focal length value
-        if (focal_pixels != -1 )
-          focal = focal_pixels;
+      else if (focal_pixels != -1 )
+      {
+        // User provided focal length value
+        focal = focal_pixels;
+      }
+      else if ( default_focal_pixels != -1 )
+      {
+        focal = default_focal_pixels;
+      }
     }
     else // If image contains meta data
     {
@@ -351,9 +364,16 @@ int main(int argc, char **argv)
       // Handle case where focal length is equal to 0
       if (exifReader->getFocal() == 0.0f)
       {
-        error_report_stream
-          << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
-        focal = -1.0;
+        if ( default_focal_pixels != -1 )
+        {
+          focal = default_focal_pixels;
+        }
+        else
+        {
+          error_report_stream
+            << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
+            focal = -1.0;
+        }
       }
       else
       // Create the image entry in the list file
@@ -361,16 +381,20 @@ int main(int argc, char **argv)
         Datasheet datasheet;
         if ( getInfo( sCamModel, vec_database, datasheet ))
         {
-          // The camera model was found in the database so we can compute it's approximated focal length
+          // The camera model was found in the database so we can compute its approximated focal length
           const double ccdw = datasheet.sensorSize_;
           focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+        }
+        else if ( default_focal_pixels != -1 )
+        {
+          focal = default_focal_pixels;
         }
         else
         {
           error_report_stream
             << stlplus::basename_part(sImageFilename)
             << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
-            << "Please consider add your camera model and sensor width in the database." << "\n";
+            << "Please consider adding your camera model and sensor width to the database." << "\n";
         }
       }
     }

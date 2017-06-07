@@ -19,7 +19,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 // Add an entry to the database
-void addEntryToDatabase( const std::string& dbEntry, std::vector<Datasheet>& vec_database )
+bool addEntryToDatabase( const std::string& dbEntry, std::vector<Datasheet>& vec_database )
 {
   std::vector<std::string> values;
   stl::split(dbEntry, ';', values);
@@ -29,6 +29,11 @@ void addEntryToDatabase( const std::string& dbEntry, std::vector<Datasheet>& vec
       values[0], // model
       atof( values[1].c_str() ) // sensor size
       );
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }
 
