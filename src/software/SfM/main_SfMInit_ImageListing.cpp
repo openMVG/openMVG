@@ -164,6 +164,7 @@ int main(int argc, char **argv)
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
+  cmd.add( make_switch('n', "interactive") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -192,6 +193,7 @@ int main(int argc, char **argv)
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
       << "\t 1: UTM\n"
+      << "[-n|--interactive] ask user for missing camera details\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -384,6 +386,72 @@ int main(int argc, char **argv)
           // The camera model was found in the database so we can compute its approximated focal length
           const double ccdw = datasheet.sensorSize_;
           focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+        }
+        else if ( cmd.used('n') )
+        {
+          // Interactive mode - get the sensor width value from the user
+          std::string sUserSensorWidth;
+          bool valueFound = false;
+          // Ask the user for the camera sensor width details
+          std::cout << "\nCamera \"" << sCamModel << "\" not found in database" << std::endl;
+          while( !valueFound )
+          {
+            std::cout << "Please enter the sensor width in mm ( or blank to skip): ";
+            getline(std::cin, sUserSensorWidth);
+
+            if ( !sUserSensorWidth.empty() )
+            {
+              // Compute focal length
+              const double ccdw = atof( sUserSensorWidth.c_str() );
+              if( ccdw > 0.0 )
+              {
+                focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+                // Add camera to database
+                if ( addEntryToDatabase( sCamModel + ";" + std::to_string(ccdw), vec_database ) )
+                {
+                  // Check if user wants to append this camera to the local DB text file
+                  std::string sAddToDB;
+                  std::cout << "Do you want to add this camera permanently to the database (y/n): ";
+                  getline(std::cin, sAddToDB);
+                  if ( !sAddToDB.empty() && ( sAddToDB.at(0) == 'y' || sAddToDB.at(0) == 'Y' ) )
+                  {
+                    std::ofstream oDBFile( sfileDatabase.c_str(), std::ios_base::app );
+                    if ( oDBFile )
+                    {
+                      oDBFile << "# Added via interactive mode" << std::endl;
+                      oDBFile << sCamModel + ";" + std::to_string(ccdw) << std::endl;
+                      oDBFile.close();
+                    }
+                    else
+                    {
+                      std::cerr << "Could not open database file: " << sfileDatabase << std::endl;
+                    }
+                  }
+                }
+                else
+                {
+                  std::cerr << "Error adding sensor width to database" << std::endl;
+                }
+                valueFound = true;
+              }
+              else
+              {
+                std::cout << "Invalid sensor width: " << ccdw << std::endl;
+              }
+            }
+            else
+            {
+              // Skip this entry
+              valueFound = true;
+            }
+          }
+          // Redisplay the progress bar
+          int progress_count = my_progress_bar.count();
+          my_progress_bar.restart( vec_image.size() );
+          for( int step = 0; step < progress_count; step++ )
+          {
+            ++my_progress_bar;
+          }
         }
         else if ( default_focal_pixels != -1 )
         {
