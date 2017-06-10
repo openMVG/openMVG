@@ -448,10 +448,7 @@ int main(int argc, char **argv)
           // Redisplay the progress bar
           int progress_count = my_progress_bar.count();
           my_progress_bar.restart( vec_image.size() );
-          for( int step = 0; step < progress_count; step++ )
-          {
-            ++my_progress_bar;
-          }
+          my_progress_bar += progress_count;
         }
         else if ( default_focal_pixels != -1 )
         {
