@@ -37,11 +37,14 @@ namespace gpu {
 LatchBitMatcher::LatchBitMatcher(unsigned int keypoints) :
     m_maxKP(keypoints) {
   if (cudaStreamCreate(&m_stream1) == cudaErrorInvalidValue
-      || cudaStreamCreate(&m_stream2) == cudaErrorInvalidValue)
+    || cudaStreamCreate(&m_stream2) == cudaErrorInvalidValue)
+  {
     std::cerr << "Unable to create stream" << std::endl;
+    return;
+  }
 
   const size_t sizeD = m_maxKP * 64; // D for Descriptor
-  const size_t sizeMatches = m_maxKP * sizeof(uint32_t); // M for Matches
+  const size_t sizeMatches = m_maxKP * sizeof(int);
 
   cudaCalloc((void**) &m_dQuery, sizeD, m_stream1);
   cudaCalloc((void**) &m_dTraining, sizeD, m_stream2);
@@ -99,7 +102,7 @@ void LatchBitMatcher::match(void* h_descriptorsQuery, void* h_descriptorsTrainin
 
   const size_t sizeDQuery = numKPQuery * 64; // D1 for descriptor1
   const size_t sizeDTraining = numKPTraining * 64; // D2 for descriptor2
-  const size_t sizeMatches = m_maxKP * sizeof(int); // M for Matches
+  const size_t sizeMatches = m_maxKP * sizeof(int);
 
   cudaMemsetAsync(m_dQuery, 0, sizeDQuery, m_stream1);
   cudaMemsetAsync(m_dTraining, 0, sizeDTraining, m_stream2);
@@ -109,17 +112,17 @@ void LatchBitMatcher::match(void* h_descriptorsQuery, void* h_descriptorsTrainin
 
   cudaMemcpyAsync(m_dQuery, h_descriptorsQuery, sizeDQuery, cudaMemcpyHostToDevice, m_stream1);
   cudaMemcpyAsync(m_dTraining, h_descriptorsTraining, sizeDTraining, cudaMemcpyHostToDevice, m_stream2);
- 
+
   cudaStreamSynchronize(m_stream1);
   cudaStreamSynchronize(m_stream2);
 
-  cudaBruteForceMatcher(m_dTraining, m_numKPTraining, m_texQuery, m_numKPQuery, m_dMatches1, m_stream1);
-  cudaBruteForceMatcher(m_dQuery, m_numKPQuery, m_texTraining, m_numKPTraining, m_dMatches2, m_stream2);
+  constexpr int MATCH_THRESHOLD = 5;
+  cudaBruteForceMatcher(m_dTraining, m_numKPTraining, m_texQuery, m_numKPQuery, m_dMatches1, MATCH_THRESHOLD, m_stream1);
+  cudaBruteForceMatcher(m_dQuery, m_numKPQuery, m_texTraining, m_numKPTraining, m_dMatches2, MATCH_THRESHOLD, m_stream2);
 }
 
 openMVG::matching::IndMatches LatchBitMatcher::retrieveMatches(float ratio) {
-  std::vector<int> h_Matches1(m_maxKP);
-  std::vector<int> h_Matches2(m_maxKP);
+  std::vector<int> h_Matches1(m_maxKP), h_Matches2(m_maxKP);
   cudaMemcpyAsync(&h_Matches1[0], m_dMatches1, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream1);
   cudaMemcpyAsync(&h_Matches2[0], m_dMatches2, m_maxKP * sizeof(int), cudaMemcpyDeviceToHost, m_stream2);
 
@@ -127,9 +130,9 @@ openMVG::matching::IndMatches LatchBitMatcher::retrieveMatches(float ratio) {
   cudaStreamSynchronize(m_stream2);
 
   openMVG::matching::IndMatches matches;
-  for (unsigned int i = 0; i < m_numKPQuery; i++)
+  for (unsigned int i = 0; i < m_numKPQuery; ++i)
   {
-   if (h_Matches1[i] >= ratio && h_Matches1[i] < m_numKPTraining && h_Matches2[h_Matches1[i]] == i)
+    if (h_Matches1[i] != -1 && h_Matches2[h_Matches1[i]] == i)
       matches.emplace_back(i, h_Matches1[i]);
   }
   return matches;

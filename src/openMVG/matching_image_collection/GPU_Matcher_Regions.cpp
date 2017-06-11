@@ -43,6 +43,10 @@ void GPU_Matcher_Regions::Match(
   std::cout << "Using the OPENMP thread interface" << std::endl;
 #endif
 
+  if (!my_progress_bar)
+    my_progress_bar = &C_Progress::dummy();
+  my_progress_bar->restart(pairs.size(), "\n- Matching -\n");
+
   // Sort pairs according the first index to minimize the MatcherT build operations
   typedef std::map<size_t, std::vector<size_t> > Map_vectorT;
   Map_vectorT map_Pairs;
@@ -61,7 +65,7 @@ void GPU_Matcher_Regions::Match(
     std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI->RegionCount() == 0)
     {
-      my_progress_bar += indexToCompare.size();
+      (*my_progress_bar) += indexToCompare.size();
       continue;
     }
 
@@ -74,19 +78,20 @@ void GPU_Matcher_Regions::Match(
 #endif
         for (int j = 0; j < static_cast<int>(indexToCompare.size()); ++j)
         {
+          ++(*my_progress_bar);
           const size_t J = indexToCompare[j];
-
           std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
           if (regionsJ->RegionCount() == 0
               || regionsI->Type_id() != regionsJ->Type_id())
           {
-            ++my_progress_bar;
             continue;
           }
 
           switch (regionsI->DescriptorLength()) {
             case 64: {
 #ifdef OPENMVG_USE_CUDA
+              if (!regionsI->IsBinary() || !regionsJ->IsBinary())
+                continue;
               gpu::LatchBitMatcher matcher(std::max(regionsI->RegionCount(), regionsJ->RegionCount()));
               matcher.match(
                 const_cast<unsigned int*>(static_cast<const unsigned int*>(regionsI->DescriptorRawData())),
@@ -111,12 +116,10 @@ void GPU_Matcher_Regions::Match(
         for (int j = 0; j < static_cast<int>(indexToCompare.size()); j++)
         {
           const size_t J = indexToCompare[j];
-
           IndMatches vec_putatives_matches;
           for (size_t k = 0; k < matchedPoints[j].size(); k++) {
             vec_putatives_matches.emplace_back(matchedPoints[j][k].i_, matchedPoints[j][k].j_);
           }
-          ++my_progress_bar;
 #ifdef OPENMVG_USE_OPENMP
           #pragma omp critical
 #endif

@@ -1,13 +1,11 @@
-/*******************************************************************
-*   CudaBruteForceMatcher.h
-*   CudaBruteForceMatcher
-*
-*	Author: Kareem Omar
-*	kareem.omar@uah.edu
-*	https://github.com/komrad36
-*
-*	Last updated Oct 8, 2016
-*******************************************************************/
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2016 Kareem Omar (kareem.omar@uah.edu - https://github.com/komrad36)
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 //
 // Fastest GPU implementation of a brute-force
 // Hamming-weight matrix for 512-bit binary descriptors.
@@ -17,8 +15,8 @@
 // approach for binary descriptors.
 //
 // This laboriously crafted kernel is EXTREMELY fast.
-// 43 BILLION comparisons per second on a stock GTX1080,
-// enough to match nearly 38,000 descriptors per frame at 30 fps (!)
+// 63 BILLION comparisons per second on a stock GTX1080,
+// enough to match nearly 48,000 descriptors per frame at 30 fps (!)
 //
 // A key insight responsible for much of the performance of
 // this insanely fast CUDA kernel is due to
@@ -40,10 +38,11 @@
 
 #ifdef __INTELLISENSE__
 #define asm(x)
+#define min(x) 0
 #include "device_launch_parameters.h"
 #define __CUDACC__
 #include "device_functions.h"
 #undef __CUDACC__
 #endif
 
-void cudaBruteForceMatcher(const void* const __restrict d_t, const int num_t, const cudaTextureObject_t tex_q, const int num_q, uint32_t* const __restrict, const cudaStream_t stream);
+void cudaBruteForceMatcher(const void* const __restrict d_t, const int num_t, const cudaTextureObject_t tex_q, const int num_q, int* const __restrict d_m, const int threshold, const cudaStream_t stream);

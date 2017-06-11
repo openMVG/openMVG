@@ -33,8 +33,8 @@ class LatchBitMatcher {
     unsigned int m_numKPQuery;
     unsigned int m_numKPTraining;
 
-    uint32_t* m_dMatches1;
-    uint32_t* m_dMatches2;
+    int* m_dMatches1;
+    int* m_dMatches2;
 
     cudaTextureObject_t m_texQuery;
     cudaTextureObject_t m_texTraining;
