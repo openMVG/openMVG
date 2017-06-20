@@ -51,20 +51,25 @@ bool track_sample_triangulation
 {
   if (samples.size() >= 2 && obs.size() >= 2)
   {
-    Triangulation trianObj;
+    Triangulation trian_obj;
     for (const auto& idx : samples)
     {
       Observations::const_iterator itObs = obs.begin();
       std::advance(itObs, idx);
       const View * view = sfm_data.views.at(itObs->first).get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      trianObj.add(
+      trian_obj.add(
         cam->get_projective_equivalent(pose),
         cam->get_ud_pixel(itObs->second.x));
     }
-    X = trianObj.compute();
-    return true;
+    if (trian_obj.size() >= 2)
+    {
+      X = trian_obj.compute();
+      return true;
+    }
   }
   return false;
 }
@@ -143,10 +148,14 @@ const
 SfM_Data_Structure_Computation_Robust::SfM_Data_Structure_Computation_Robust
 (
   const double max_reprojection_error,
+  const IndexT min_required_inliers,
+  const IndexT min_sample_index,
   bool bConsoleVerbose
 ):
   SfM_Data_Structure_Computation_Basis(bConsoleVerbose),
-  max_reprojection_error_(max_reprojection_error)
+  max_reprojection_error_(max_reprojection_error),
+  min_required_inliers_(min_required_inliers),
+  min_sample_index_(min_sample_index)
 {
 }
 
@@ -218,13 +227,11 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation
 (
   const SfM_Data & sfm_data,
   const Observations & obs,
-  Landmark & landmark, // X & valid observations
-  const IndexT min_required_inliers,
-  const IndexT min_sample_index
+  Landmark & landmark // X & valid observations
 )
 const
 {
-  if (obs.size() < min_required_inliers)
+  if (obs.size() < min_required_inliers_)
   {
     return false;
   }
@@ -232,11 +239,11 @@ const
   const double dSquared_pixel_threshold = Square(max_reprojection_error_);
 
   // Handle the case where all observations must be used
-  if (min_required_inliers == min_sample_index &&
-      obs.size() == min_required_inliers)
+  if (min_required_inliers_ == min_sample_index_ &&
+      obs.size() == min_required_inliers_)
   {
     std::set<IndexT> samples;
-    for (int i = 0; i < min_required_inliers; ++i)  { samples.insert(i); }
+    for (int i = 0; i < min_required_inliers_; ++i)  { samples.insert(i); }
     // Generate the 3D point hypothesis by triangulating the observations
     Vec3 X;
     if (track_sample_triangulation(sfm_data, obs, samples, X))
@@ -246,21 +253,26 @@ const
       // - chierality
       bool bChierality = true;
       bool bReprojection_error = true;
+      IndexT validity_test_count = 0;
       for (std::set<IndexT>::const_iterator it = samples.begin();
         it != samples.end() && bChierality && bReprojection_error; ++it)
       {
         Observations::const_iterator itObs = obs.begin();
         std::advance(itObs, *it);
         const View * view = sfm_data.views.at(itObs->first).get();
+        if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+          continue;
         const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
         const double z = pose.depth(X);
         bChierality &= z > 0;
         const Vec2 residual = cam->residual(pose, X, itObs->second.x);
         bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
+        validity_test_count += (bChierality && bReprojection_error) ? 1 : 0;
       }
 
-      if (bChierality && bReprojection_error)
+      if (bChierality && bReprojection_error &&
+          validity_test_count >= min_required_inliers_)
       {
         landmark.X = X;
         landmark.obs = obs;
@@ -288,12 +300,13 @@ const
   for (IndexT i = 0; i < nbIter; ++i)
   {
     std::vector<uint32_t> vec_samples;
-    robust::UniformSample(min_sample_index, obs.size(), random_generator, &vec_samples);
+    robust::UniformSample(min_sample_index_, obs.size(), random_generator, &vec_samples);
     const std::set<IndexT> samples(vec_samples.begin(), vec_samples.end());
 
     // Hypothesis generation
     Vec3 X;
-    track_sample_triangulation(sfm_data, obs, samples, X);
+    if (!track_sample_triangulation(sfm_data, obs, samples, X))
+      continue;
 
     // Test validity of the hypothesis
     // - chierality (for the samples)
@@ -301,37 +314,43 @@ const
 
     bool bChierality = true;
     bool bReprojection_error = true;
+    IndexT validity_test_count = 0;
     for (std::set<IndexT>::const_iterator it = samples.begin();
       it != samples.end() && bChierality && bReprojection_error; ++it)
     {
       Observations::const_iterator itObs = obs.begin();
       std::advance(itObs, *it);
       const View * view = sfm_data.views.at(itObs->first).get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       const double z = pose.depth(X);
       bChierality &= z > 0;
       const Vec2 residual = cam->residual(pose, X, itObs->second.x);
       bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
+      validity_test_count += (bChierality && bReprojection_error) ? 1 : 0;
     }
 
-    if (!bChierality || !bReprojection_error)
+    if (!bChierality || !bReprojection_error ||
+        validity_test_count < min_required_inliers_)
       continue;
 
     std::deque<IndexT> inlier_set;
     double current_error = 0.0;
     // inlier/outlier classification according pixel residual errors.
-    for (Observations::const_iterator itObs = obs.begin();
-        itObs != obs.end(); ++itObs)
+    for (const auto & obs_it : obs)
     {
-      const View * view = sfm_data.views.at(itObs->first).get();
+      const View * view = sfm_data.views.at(obs_it.first).get();
+      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+        continue;
       const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const Vec2 residual = intrinsic->residual(pose, X, itObs->second.x);
+      const Vec2 residual = intrinsic->residual(pose, X, obs_it.second.x);
       const double residual_d = residual.squaredNorm();
       if (residual_d < dSquared_pixel_threshold)
       {
-        inlier_set.push_front(itObs->first);
+        inlier_set.push_front(obs_it.first);
         current_error += residual_d;
       }
       else
@@ -340,14 +359,14 @@ const
       }
     }
     // Does the hypothesis is the best one we have seen and have sufficient inliers.
-    if (current_error < best_error && inlier_set.size() >= min_required_inliers)
+    if (current_error < best_error && inlier_set.size() >= min_required_inliers_)
     {
       best_model = X;
       best_inlier_set = inlier_set;
       best_error = current_error;
     }
   }
-  if (!best_inlier_set.empty() && best_inlier_set.size() >= min_required_inliers)
+  if (!best_inlier_set.empty() && best_inlier_set.size() >= min_required_inliers_)
   {
     // Update information (3D landmark position & valid observations)
     landmark.X = best_model;
