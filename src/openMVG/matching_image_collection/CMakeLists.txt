@@ -1,11 +1,11 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   matching_collection_images_files_header
   *.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   matching_collection_images_files_cpp
   *.cpp
 )
