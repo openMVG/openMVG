@@ -57,9 +57,9 @@ env:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source .travis/install-cuda-trusty.sh; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap caskroom/cask; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap caskroom/drivers; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew outdated cuda || brew upgrade cuda; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask install cuda; fi
 
 before_script:
   # Display cmake version
