@@ -3,7 +3,7 @@
 #
 
 dist: trusty
-sudo: false
+sudo: required
 
 language: cpp
 
@@ -21,7 +21,7 @@ matrix:
             - qtbase5-dev
             - libqt5svg5-dev
             - libqt5opengl5-dev
-      env: COMPILER=g++-4.8
+      env: COMPILER=g++-4.8 CUDA=8.0.61-1
     - os: linux
       compiler: clang
       addons:
@@ -31,7 +31,7 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
-      env: COMPILER=clang++-3.7
+      env: COMPILER=clang++-3.7 CUDA=8.0.61-1
     - os: osx
       osx_image: xcode8.2
 
@@ -54,6 +54,12 @@ env:
   global:
     - OPENMVG_SOURCE=${TRAVIS_BUILD_DIR}/src
     - OPENMVG_BUILD=${TRAVIS_BUILD_DIR}/build
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source .travis/install-cuda-trusty.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap caskroom/cask; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew outdated cuda || brew upgrade cuda; fi
 
 before_script:
   # Display cmake version
