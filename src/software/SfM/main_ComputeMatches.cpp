@@ -402,8 +402,6 @@ int main(int argc, char **argv)
   if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - Geometric filtering - " << std::endl;
-
     const double d_distance_ratio = 0.6;
 
     PairWiseMatches map_GeometricMatches;
@@ -433,22 +431,20 @@ int main(int argc, char **argv)
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
-        for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
-          iterMap != map_GeometricMatches.end(); ++iterMap)
+        for (const auto & pairwisematches_it : map_GeometricMatches)
         {
-          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          const size_t putativeGeometricCount = iterMap->second.size();
-          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          const size_t putativePhotometricCount = map_PutativesMatches.find(pairwisematches_it.first)->second.size();
+          const size_t putativeGeometricCount = pairwisematches_it.second.size();
+          const float ratio = putativeGeometricCount / static_cast<float>(putativePhotometricCount);
           if (putativeGeometricCount < 50 || ratio < .3f)  {
             // the pair will be removed
-            vec_toRemove.push_back(iterMap->first);
+            vec_toRemove.push_back(pairwisematches_it.first);
           }
         }
         //-- remove discarded pairs
-        for (std::vector<PairWiseMatches::key_type>::const_iterator
-          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+        for (const auto & pair_to_remove_it : vec_toRemove)
         {
-          map_GeometricMatches.erase(*iter);
+          map_GeometricMatches.erase(pair_to_remove_it);
         }
       }
       break;
