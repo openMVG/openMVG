@@ -26,6 +26,10 @@ RUN curl -O https://cmake.org/files/v3.8/cmake-3.8.0.tar.gz \
      && tar -xvf cmake-3.8.0.tar.gz
 RUN cd cmake-3.8.0 && ./bootstrap && make && make install
 
+# build CUDA (we want the latest and greatest)
+RUN wget -P /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1-1_amd64.deb
+RUN dpkg -i /tmp/nvidia-docker*.deb && rm /tmp/nvidia-docker*.deb
+
 # Clone the openvMVG repo 
 ADD . /opt/openMVG
 RUN cd /opt/openMVG && git submodule update --init --recursive
