@@ -32,6 +32,7 @@
 #include <cmath>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -372,8 +373,8 @@ bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
   std::sort( vec_val.begin(), vec_val.end() );
   min = vec_val[0];
   max = vec_val[vec_val.size() - 1];
-  mean = accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
-         / static_cast<Type>( vec_val.size() );
+  mean = std::accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
+    / static_cast<Type>( vec_val.size() );
   median = vec_val[vec_val.size() / 2];
   return true;
 }
