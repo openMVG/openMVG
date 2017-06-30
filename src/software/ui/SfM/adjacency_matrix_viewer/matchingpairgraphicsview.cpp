@@ -86,7 +86,7 @@ void MatchingPairGraphicsView::mousePressEvent(QMouseEvent * event)
             bVertical
           );
         QSvgWidget *svg = new QSvgWidget;
-        svg->load(QByteArray::fromStdString(svg_string));
+        svg->load(QString::fromStdString(svg_string));
 
         std::ostringstream ofs;
         ofs << view_I->s_Img_path << " " << view_J->s_Img_path

@@ -8,16 +8,16 @@
 
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/stl/stl.hpp"
 
-namespace openMVG { namespace cameras { class Pinhole_Intrinsic; } }
-namespace openMVG { namespace sfm { struct View; } }
+#include "third_party/progress/progress_display.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include <fstream>
+#include <iomanip>
+#include <iterator>
 
 namespace openMVG {
 namespace sfm {
@@ -56,7 +56,7 @@ void Frustum_Filter::initFrustum
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
       continue;
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+    if (!isPinhole(iterIntrinsic->second->getType()))
       continue;
 
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
@@ -123,12 +123,7 @@ const
         }
       }
       // Progress bar update
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
-      {
-        ++my_progress_bar;
-      }
+      ++my_progress_bar;
     }
   }
   return pairs;

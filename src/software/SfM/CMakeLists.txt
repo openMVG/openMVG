@@ -129,6 +129,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
   openMVG_sfm
   stlplus
   )
+  
+ADD_EXECUTABLE(openMVG_main_PointsFiltering main_PointsFiltering.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_PointsFiltering
+  openMVG_system
+  openMVG_sfm
+  stlplus
+  )
 
 ADD_EXECUTABLE(openMVG_main_ChangeLocalOrigin main_ChangeLocalOrigin.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ChangeLocalOrigin
@@ -151,6 +158,8 @@ SET_PROPERTY(TARGET openMVG_main_ComputeStructureFromKnownPoses PROPERTY FOLDER 
 INSTALL(TARGETS openMVG_main_ComputeStructureFromKnownPoses DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeSfM_DataColor PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_PointsFiltering PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_PointsFiltering DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ChangeLocalOrigin PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ChangeLocalOrigin DESTINATION bin/)
 

@@ -5,12 +5,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>

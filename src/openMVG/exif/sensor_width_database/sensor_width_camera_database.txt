@@ -686,6 +686,7 @@ FC220;6.17
 FC300S;6.16
 FC300X;6.16
 FC350;6.17
+X5R;17.3
 Epson R-D1xG;23.7
 Epson RD-1s;23.7
 Epson L-500V;5.75
@@ -1589,6 +1590,7 @@ Minox DD1 Diamond;6.4
 Minox DC 3311;7.11
 Minox DC 2111;5.33
 Minox DC 1311;5.33
+Moto G (4);6.06
 XT1033;3.8
 Nikon Coolpix A;23.6
 Nikon Coolpix P330;7.53

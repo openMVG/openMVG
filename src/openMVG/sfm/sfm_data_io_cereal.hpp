@@ -9,8 +9,9 @@
 #ifndef OPENMVG_SFM_SFM_DATA_IO_CEREAL_HPP
 #define OPENMVG_SFM_SFM_DATA_IO_CEREAL_HPP
 
-#include "openMVG/sfm/sfm_data_io.hpp"
 #include <string>
+
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 namespace openMVG { namespace sfm { struct SfM_Data; } }
 

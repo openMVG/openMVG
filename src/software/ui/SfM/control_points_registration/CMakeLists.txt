@@ -2,63 +2,52 @@
 # Generic CMake File for QTBased project
 # ==============================================================================
 
-# The name of my project.
-SET(ProjectName ui_openMVG_control_points_registration)
-PROJECT(${ProjectName})
+find_package( Qt5Widgets )
 
-# CMake version control
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+if(Qt5Widgets_FOUND)
+  # CMake version control
+  CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-# ==============================================================================
-# Libraries setup
-# ==============================================================================
-# Find and setup Qt4.
-FIND_PACKAGE(Qt4 REQUIRED)
-INCLUDE(${QT_USE_FILE})
+  if(POLICY CMP0020)
+  cmake_policy(SET CMP0020 OLD)
+  endif(POLICY CMP0020)
 
-# ==============================================================================
-# List all source files here.
-# ==============================================================================
+  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  set(CMAKE_AUTOMOC ON)
+  # The name of my project.
+  SET(ProjectName ui_openMVG_control_points_registration)
+  PROJECT(${ProjectName})
 
-# All Source Files here
-SET(SourceFiles
+  # All Source Files here
+  SET(SourceFiles
   main.cpp
   mainLayout.cpp
   GraphicsMainWindow.cpp
   ControlPointTableView.cpp
   node.cpp)
 
-# All non moc header files here
-SET(HeaderFiles
+  # All non moc header files here
+  SET(HeaderFiles
   mainLayout.hpp
   GraphicsMainWindow.hpp
   node.hpp
   document.hpp)
 
-# ==============================================================================
-# Qt4 specific moc source files generation files
-# ==============================================================================
-# After this call, moc source files will be generated.
-QT4_AUTOMOC(${SourceFiles})
-
-# Call this instruction if you don't include moc files.
-QT4_WRAP_CPP(MocSourceFiles ${HeaderFiles})
-
-# ==============================================================================
-# Add the following files, modules and libraries to the project.
-# ==============================================================================
-# Files
-ADD_EXECUTABLE(${ProjectName} 
+  # ==============================================================================
+  # Add the following files, modules and libraries to the project.
+  # ==============================================================================
+  # Files
+  ADD_EXECUTABLE(${ProjectName} 
   ${SourceFiles}
-  ${HeaderFiles}
-  ${MocSourceFiles})
+  ${HeaderFiles} )
+  #${MocSourceFiles})
 
-# Linking with Qt Libraries.
-TARGET_LINK_LIBRARIES(${ProjectName}
-  ${QT_LIBRARIES}
+  # Linking with Qt Libraries.
+  TARGET_LINK_LIBRARIES(${ProjectName}
+  Qt5::Widgets Qt5::Gui
   ${OpenMVG_LIBRARIES}
-)
+  )
 
-SET_PROPERTY(TARGET ${ProjectName} PROPERTY FOLDER OpenMVG/software/ui)
-INSTALL(TARGETS ${ProjectName} DESTINATION bin/)
-
+  SET_PROPERTY(TARGET ${ProjectName} PROPERTY FOLDER OpenMVG/software/ui)
+  INSTALL(TARGETS ${ProjectName} DESTINATION bin/)
+endif(Qt5Widgets_FOUND)

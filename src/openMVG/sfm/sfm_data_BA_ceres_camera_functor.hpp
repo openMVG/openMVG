@@ -12,7 +12,12 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Brown.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
+#include "openMVG/cameras/Camera_Spherical.hpp"
 
 //--
 //- Define ceres Cost_functor for each OpenMVG camera model

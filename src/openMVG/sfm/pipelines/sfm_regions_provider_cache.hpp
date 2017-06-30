@@ -73,7 +73,8 @@ public:
   (
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
-    std::unique_ptr<features::Regions>& region_type
+    std::unique_ptr<features::Regions>& region_type,
+    C_Progress * 
   ) override
   {
     std::cout << "Initialization of the Regions_Provider_Cache. #Elements in the cache: "<< max_cache_size_ << std::endl;
@@ -84,9 +85,9 @@ public:
     // Build an association table from view id to feature & descriptor files
     for (const auto & iterViews : sfm_data.GetViews())
     {
-      const openMVG::IndexT id = iterViews.second.get()->id_view;
+      const openMVG::IndexT id = iterViews.second->id_view;
       assert( id == iterViews.first);
-      map_id_string_[id] = stlplus::basename_part(iterViews.second.get()->s_Img_path);
+      map_id_string_[id] = stlplus::basename_part(iterViews.second->s_Img_path);
     }
 
     return true;

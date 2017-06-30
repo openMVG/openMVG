@@ -6,19 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/xml.hpp>
+
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
-#include "cereal/details/helpers.hpp"
+#include "openMVG/cameras/cameras_io.hpp"
+#include "openMVG/geometry/pose3_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_landmark_io.hpp"
+#include "openMVG/sfm/sfm_view_io.hpp"
 #include "openMVG/types.hpp"
 
 #include <fstream>
 #include <string>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/xml.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/unordered_map.hpp>

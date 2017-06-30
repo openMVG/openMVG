@@ -10,11 +10,11 @@
 #define OPENMVG_FEATURES_DESCRIPTOR_HPP
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
-#include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
@@ -27,47 +27,47 @@ namespace features {
  * Surf 64 => <float,64>
  * Brief 512 bits => <unsigned char,512/sizeof(unsigned char)>
  */
-template <typename T, std::size_t N>
+template <typename T, uint32_t N>
 class Descriptor : public Eigen::Matrix<T, N, 1>
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using bin_type = T;
-  using size_type = std::size_t;
+  using size_type = uint32_t;
 
   /// Compile-time length of the descriptor
-  static const std::size_t static_size = N;
+  static const uint32_t static_size = N;
 
-  /// Ostream interface
+  /// ostream interface
   std::ostream& print(std::ostream& os) const;
-  /// Istream interface
+  /// istream interface
   std::istream& read(std::istream& in);
 
   template<class Archive>
   void save(Archive & archive) const
   {
-    const std::vector<T> array(this->data(), this->data()+N);
+    std::array<T,N> array;
+    std::copy(this->data(), this->data()+N, array.begin());
     archive( array );
   }
 
   template<class Archive>
   void load(Archive & archive)
   {
-    std::vector<T> array(N);
+    std::array<T, N> array;
     archive( array );
     std::memcpy(this->data(), array.data(), sizeof(T)*N);
   }
 };
 
 // Output stream definition
-template <typename T, std::size_t N>
+template <typename T, uint32_t N>
 inline std::ostream& operator<<(std::ostream& out, const Descriptor<T, N>& obj)
 {
   return obj.print(out); //simply call the print method.
 }
 
 // Input stream definition
-template <typename T, std::size_t N>
+template <typename T, uint32_t N>
 inline std::istream& operator>>(std::istream& in, Descriptor<T, N>& obj)
 {
   return obj.read(in); //simply call the read method.
@@ -77,44 +77,45 @@ inline std::istream& operator>>(std::istream& in, Descriptor<T, N>& obj)
 //-- We do not want confuse unsigned char value with the spaces written in the file
 
 template<typename T>
-inline std::ostream& printT(std::ostream& os, T *tab, size_t N)
+inline std::ostream& printT(std::ostream& os, T *tab, uint32_t N)
 {
   std::copy( tab, &tab[N], std::ostream_iterator<T>(os," "));
   return os;
 }
 
 template<>
-inline std::ostream& printT<unsigned char>(std::ostream& os, unsigned char *tab, size_t N)
+inline std::ostream& printT<unsigned char>(std::ostream& os, unsigned char *tab, uint32_t N)
 {
-  for(size_t i=0; i < N; ++i)
+  for(uint32_t i=0; i < N; ++i)
     os << static_cast<int>(tab[i]) << " ";
   return os;
 }
 
 template<typename T>
-inline std::istream& readT(std::istream& is, T *tab, size_t N)
+inline std::istream& readT(std::istream& is, T *tab, uint32_t N)
 {
-  for(size_t i=0; i<N; ++i) is >> tab[i];
+  for(uint32_t i=0; i<N; ++i)
+    is >> tab[i];
   return is;
 }
 
 template<>
-inline std::istream& readT<unsigned char>(std::istream& is, unsigned char *tab, size_t N)
+inline std::istream& readT<unsigned char>(std::istream& is, unsigned char *tab, uint32_t N)
 {
   int temp = -1;
-  for(size_t i=0; i < N; ++i){
-    is >> temp; tab[i] = (unsigned char)temp;
+  for(uint32_t i=0; i < N; ++i){
+    is >> temp; tab[i] = static_cast<unsigned char>(temp);
   }
   return is;
 }
 
-template<typename T, std::size_t N>
+template<typename T, uint32_t N>
 std::ostream& Descriptor<T,N>::print(std::ostream& os) const
 {
   return printT<T>(os, (T*) this->data(), N);
 }
 
-template<typename T, std::size_t N>
+template<typename T, uint32_t N>
 std::istream& Descriptor<T,N>::read(std::istream& in)
 {
   return readT<T>(in, (T*) this->data(), N);
@@ -132,10 +133,11 @@ inline bool loadDescsFromFile(
   if (!fileIn.is_open())
     return false;
 
-  std::copy(
-    std::istream_iterator<typename DescriptorsT::value_type >(fileIn),
-    std::istream_iterator<typename DescriptorsT::value_type >(),
-    std::back_inserter(vec_desc));
+  typename DescriptorsT::value_type value;
+  while (fileIn >> value) {
+    vec_desc.emplace_back(value);
+  }
+
   const bool bOk = !fileIn.bad();
   fileIn.close();
   return bOk;
@@ -172,7 +174,7 @@ inline bool loadDescsFromBinFile(
     return false;
   //Read the number of descriptor in the file
   std::size_t cardDesc = 0;
-  fileIn.read(reinterpret_cast<char*>(&cardDesc),  sizeof(std::size_t));
+  fileIn.read(reinterpret_cast<char*>(&cardDesc), sizeof(std::size_t));
   vec_desc.resize(cardDesc);
   for (auto & it :vec_desc) {
     fileIn.read(reinterpret_cast<char*>(it.data()),

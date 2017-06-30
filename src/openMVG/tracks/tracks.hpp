@@ -37,6 +37,7 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>
@@ -138,7 +139,7 @@ struct TracksBuilder
     // Build tracks from the UF tree, track problematic ids.
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
-      const uint32_t & track_id = uf_tree.m_cc_parent[k];
+      const uint32_t & track_id = uf_tree.Find(k);
       if (problematic_track_id.count(track_id) != 0)
         continue; // Track already marked
 
@@ -207,6 +208,106 @@ struct TracksBuilder
   }
 };
 
+// This structure help to store the track visibility per view.
+// Computing the tracks in common between many view can then be done
+//  by computing the intersection of the track visibility for the asked view index.
+// Thank to an additional array in memory this solution is faster than TracksUtilsMap::GetTracksInImages.
+struct SharedTrackVisibilityHelper
+{
+  private:
+  using TrackIdsPerView = std::map< uint32_t, std::set<uint32_t>>;
+
+  TrackIdsPerView track_ids_per_view_;
+  const STLMAPTracks & tracks_;
+
+public:
+
+  SharedTrackVisibilityHelper
+  (
+    const STLMAPTracks & tracks
+  ): tracks_(tracks)
+  {
+    for (const auto & tracks_it : tracks_)
+    {
+      // Add the track id visibility in the corresponding view track list
+      for (const auto & track_obs_it : tracks_it.second)
+      {
+        track_ids_per_view_[track_obs_it.first].insert(tracks_it.first);
+      }
+    }
+  }
+
+  /**
+   * @brief Find the shared tracks between some images ids.
+   *
+   * @param[in] image_ids: images id to consider
+   * @param[out] tracks: tracks shared by the input images id
+   */
+  bool GetTracksInImages
+  (
+    const std::set<uint32_t> & image_ids,
+    STLMAPTracks & tracks
+  )
+  {
+    tracks.clear();
+    if (image_ids.empty())
+      return false;
+
+    // Collect the shared tracks ids by the views
+    std::set<uint32_t> common_track_ids;
+    {
+      // Compute the intersection of all the track ids of the view's track ids.
+      // 1. Initialize the track_id with the view first tracks
+      // 2. Iteratively collect the common id of the remaining requested view
+      auto image_index_it = image_ids.cbegin();
+      if (track_ids_per_view_.count(*image_index_it))
+      {
+        common_track_ids = track_ids_per_view_[*image_index_it];
+      }
+      bool merged = false;
+      std::advance(image_index_it, 1);
+      while (image_index_it != image_ids.cend())
+      {
+        if (track_ids_per_view_.count(*image_index_it))
+        {
+          const auto ids_per_view_it = track_ids_per_view_.find(*image_index_it);
+          const auto & track_ids = ids_per_view_it->second;
+
+          std::set<uint32_t> tmp;
+          std::set_intersection(
+            common_track_ids.cbegin(), common_track_ids.cend(),
+            track_ids.cbegin(), track_ids.cend(),
+            std::inserter(tmp, tmp.begin()));
+          common_track_ids.swap(tmp);
+          merged = true;
+        }
+        std::advance(image_index_it, 1);
+      }
+      if (image_ids.size() > 1 && !merged)
+      {
+        // If more than one image id is required and no merge operation have been done
+        //  we need to reset the common track id
+        common_track_ids.clear();
+      }
+    }
+
+    // Collect the selected {img id, feat id} data for the shared track ids
+    for (const auto track_ids_it : common_track_ids)
+    {
+      const auto track_it = tracks_.find(track_ids_it);
+      const auto & track = track_it->second;
+      // Find the corresponding output track and update it
+      submapTrack& trackFeatsOut = tracks[track_it->first];
+      for (const auto img_index: image_ids)
+      {
+        const auto track_view_info = track.find(img_index);
+        trackFeatsOut[img_index] = track_view_info->second;
+      }
+    }
+    return !tracks.empty();
+  }
+};
+
 struct TracksUtilsMap
 {
   /**
@@ -264,27 +365,27 @@ struct TracksUtilsMap
   /// Get feature index PerView and TrackId
   static bool GetFeatIndexPerViewAndTrackId
   (
-    const STLMAPTracks & map_tracks,
-    const std::set<uint32_t> & set_trackId,
+    const STLMAPTracks & tracks,
+    const std::set<uint32_t> & track_ids,
     size_t nImageIndex,
-    std::vector<uint32_t> * pvec_featIndex
+    std::vector<uint32_t> * feat_ids
   )
   {
-    for (const uint32_t & trackId: set_trackId)
+    feat_ids->reserve(tracks.size());
+    for (const uint32_t & trackId: track_ids)
     {
-      STLMAPTracks::const_iterator iterT = map_tracks.find(trackId);
-      if (iterT != map_tracks.end())
+      const auto iterT = tracks.find(trackId);
+      if (iterT != tracks.end())
       {
-        //try to find imageIndex
-        const submapTrack & map_ref = iterT->second;
-        submapTrack::const_iterator iterSearch = map_ref.find(nImageIndex);
-        if (iterSearch != map_ref.end())
+        // Look if the desired image index exists in the track visibility
+        const auto iterSearch = iterT->second.find(nImageIndex);
+        if (iterSearch != iterT->second.end())
         {
-          pvec_featIndex->emplace_back(iterSearch->second);
+          feat_ids->emplace_back(iterSearch->second);
         }
       }
     }
-    return !pvec_featIndex->empty();
+    return !feat_ids->empty();
   }
 
   /**

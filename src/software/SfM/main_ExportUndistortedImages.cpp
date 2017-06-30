@@ -6,17 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <cstdlib>
 #include <string>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -145,9 +149,6 @@ int main(int argc, char *argv[]) {
         // copy the image since there is no distortion
         stlplus::file_copy(srcImage, dstImage);
       }
-#ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-#endif
       ++my_progress_bar;
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;

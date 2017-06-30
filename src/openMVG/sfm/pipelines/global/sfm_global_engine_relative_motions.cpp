@@ -558,12 +558,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Compute the relative pose from pairwise point matches:
   for (int i = 0; i < static_cast<int>(poseWiseMatches.size()); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
-    {
-      ++my_progress_bar;
-    }
+    ++my_progress_bar;
     {
       PoseWiseMatches::const_iterator iter (poseWiseMatches.begin());
       std::advance(iter, i);

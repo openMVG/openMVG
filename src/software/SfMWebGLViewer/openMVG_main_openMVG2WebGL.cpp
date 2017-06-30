@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -17,9 +17,10 @@
 #include "config.h"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <iostream>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -62,7 +63,7 @@ void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
           }
           // get it's intrinsic (if available)
           Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-          if (!isPinhole(iterIntrinsic->second.get()->getType()))
+          if (!isPinhole(iterIntrinsic->second->getType()))
           {
             continue;
           }
@@ -278,7 +279,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
     }
     // get it's intrinsic (if available)
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
+    if (!isPinhole(iterIntrinsic->second->getType()))
     {
       ++it;
       continue;
@@ -314,17 +315,17 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
   {
     const View * view = sfm_data.GetViews().at(it->first).get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-      {
-        ++it;
-        continue;
-      }
+    {
+      ++it;
+      continue;
+    }
     // get it's intrinsic (if available)
     Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-    if (!isPinhole(iterIntrinsic->second.get()->getType()))
-      {
-        ++it;
-        continue;
-      }
+    if (!isPinhole(iterIntrinsic->second->getType()))
+    {
+      ++it;
+      continue;
+    }
 
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
@@ -350,7 +351,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
     file << p3[0] << "," << p3[1] << "," << p3[2] << ",";
     file << p4[0] << "," << p4[1] << "," << p4[2] << "]";
 
-    if( ++it != sfm_data.GetViews().end() )
+    if ( ++it != sfm_data.GetViews().end() )
     {
       file << ",";
     }

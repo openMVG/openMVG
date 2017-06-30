@@ -10,7 +10,6 @@
 #include "mainwindow.h"
 #include "mainframe.h"
 
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 

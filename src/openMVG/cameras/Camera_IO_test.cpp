@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_IO.hpp"
-
-#include "openMVG/cameras/cameras.hpp"
+// The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
-#include <cereal/cereal.hpp>
+
+#include "openMVG/cameras/Camera_IO.hpp"
+#include "openMVG/cameras/cameras_io.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;

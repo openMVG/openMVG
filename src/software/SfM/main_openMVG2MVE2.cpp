@@ -10,6 +10,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_resampling.hpp"
@@ -24,7 +26,7 @@ using namespace openMVG::sfm;
 using namespace openMVG::features;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <cstdlib>
 #include <cmath>

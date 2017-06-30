@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Spherical.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -20,23 +20,25 @@
 #include "openMVG/multiview/solver_essential_spherical.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <array>
 #include <iostream>
 #include <string>
 
 using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 using namespace std;
 

@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iomanip>
@@ -139,9 +141,6 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
           WriteImage( dstImage.c_str(), image );
         }
       }
-      #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-      #endif
       ++my_progress_bar;
     }
   }

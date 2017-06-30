@@ -117,7 +117,7 @@ TEST(LMedsLineFitter, RealisticCase) {
   //-- Add some noise (for the asked percentage amount)
   const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
   std::vector<uint32_t> vec_samples; // Fit with unique random index
-  UniformSample(nbPtToNoise, NbPoints, &vec_samples);
+  UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
   for(const auto index : vec_samples)
   {
     //Additive random noise

@@ -17,6 +17,10 @@
 #include <vector>
 #include <cmath>
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG

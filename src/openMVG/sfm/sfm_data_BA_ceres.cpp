@@ -8,6 +8,10 @@
 
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 #include "ceres/problem.h"
 #include "ceres/solver.h"
 #include "openMVG/cameras/Camera_Common.hpp"
@@ -509,7 +513,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         const IndexT indexCam = intrinsic_it.first;
 
         const std::vector<double> & vec_params = map_intrinsics[indexCam];
-        intrinsic_it.second.get()->updateFromParams(vec_params);
+        intrinsic_it.second->updateFromParams(vec_params);
       }
     }
 

@@ -8,6 +8,8 @@
 
 #pragma once
 
+namespace openMVG { namespace Image { template<typename T> class Image; } }
+
 namespace openMVG  {
 namespace VO  {
 

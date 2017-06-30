@@ -13,8 +13,12 @@
 
 // Qt4 headers
 #include <QtGui>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QGraphicsLineItem>
 #include <QGraphicsItem>
+#include <QAction>
+#include <QMessageBox>
 #include <memory>
 #include <QPen>
 #include <QInputDialog>

@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/json.hpp>
+
 #include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/feature.hpp>
-#include <openMVG/features/io_regions_type.hpp>
+#include <openMVG/features/image_describer.hpp>
 #include <openMVG/image/image_io.hpp>
 #include <software/SfM/SfMPlyHelper.hpp>
 
@@ -18,11 +21,17 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
-#include "nonFree/sift/SIFT_describer.hpp"
+#include "nonFree/sift/SIFT_describer_io.hpp"
+#include "openMVG/features/image_describer_akaze_io.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
 
 // Naive function for finding the biggest common root dir from two paths
 std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2)
@@ -169,9 +178,12 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
   // Load the SfM_Data region's views
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type)) {
+  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -217,7 +229,7 @@ int main(int argc, char **argv)
   // list images from sfm_data in a vector
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
-  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n).get()->s_Img_path);} );
+  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n)->s_Img_path);} );
 
   // list images in query directory
   std::vector<std::string> vec_image;
@@ -247,8 +259,8 @@ int main(int argc, char **argv)
     // reconstruction
     for (auto & view : sfm_data.GetViews())
     {
-      view.second.get()->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path),
-          view.second.get()->s_Img_path);
+      view.second->s_Img_path = stlplus::create_filespec(stlplus::folder_to_relative_path(common_root_dir, sfm_data.s_root_path),
+          view.second->s_Img_path);
     }
     // change root path to common root path
     sfm_data.s_root_path = common_root_dir;

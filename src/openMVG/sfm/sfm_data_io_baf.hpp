@@ -54,7 +54,7 @@ inline bool Save_BAF(
     for (const auto & iterIntrinsic : intrinsics )
     {
       //get params
-      const std::vector<double> intrinsicsParams = iterIntrinsic.second.get()->getParams();
+      const std::vector<double> intrinsicsParams = iterIntrinsic.second->getParams();
       std::copy(intrinsicsParams.begin(), intrinsicsParams.end(),
         std::ostream_iterator<double>(stream, " "));
       stream << '\n';

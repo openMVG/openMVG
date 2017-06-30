@@ -32,7 +32,6 @@ This projection of the camera is described as:
    &  &  & t_x \\
    & R_{3 \times 3} &  & t_y \\
     &  &  & t_z \\
-    0 & 0 & 0 & 1\\
   \end{bmatrix}
 
 
@@ -66,7 +65,6 @@ A 3D point is projected in a image with the following formula (homogeneous coord
    &  &  & t_x \\
    & R_{3 \times 3} &  & t_y \\
    &  &  & t_z \\
-   0 & 0 & 0 & 1\\
   \end{bmatrix}
   \begin{bmatrix}
   X_i\\

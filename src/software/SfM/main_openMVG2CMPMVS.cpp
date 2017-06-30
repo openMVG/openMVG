@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -17,7 +18,7 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <cstdlib>
 #include <cmath>
@@ -68,7 +69,7 @@ bool exportToCMPMVSFormat(
       map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
 
       // We have a valid view with a corresponding camera & pose
-      const Mat34 P = iterIntrinsic->second.get()->get_projective_equivalent(pose);
+      const Mat34 P = iterIntrinsic->second->get_projective_equivalent(pose);
       std::ostringstream os;
       os << std::setw(5) << std::setfill('0') << map_viewIdToContiguous[view->id_view] << "_P";
       std::ofstream file(

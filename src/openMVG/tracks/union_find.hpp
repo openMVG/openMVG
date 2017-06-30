@@ -56,7 +56,7 @@ struct UnionFind
   // Return the number of nodes that have been initialized in the UF tree
   unsigned int GetNumNodes() const
   {
-    return m_cc_size.size();
+    return static_cast<unsigned int>(m_cc_size.size());
   }
 
   // Return the representative set id of I nth component
@@ -97,7 +97,7 @@ struct UnionFind
     {
       m_cc_parent[j] = i;
       m_cc_size[i] += m_cc_size[j];
-      if (m_cc_rank[i] > m_cc_rank[j])
+      if (m_cc_rank[i] == m_cc_rank[j])
         ++m_cc_rank[i];
     }
   }

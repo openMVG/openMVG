@@ -7,10 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/graph.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
-#include "openMVG/features/image_describer_akaze.hpp"
-#include "openMVG/features/io_regions_type.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
@@ -238,7 +237,10 @@ int main(int argc, char **argv)
     regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
   }
 
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -359,7 +361,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -400,7 +402,7 @@ int main(int argc, char **argv)
   if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+    const double d_distance_ratio = 0.6;
 
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
@@ -410,41 +412,39 @@ int main(int argc, char **argv)
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
           map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6);
+          bGeometric_only_guided_matching ? -1.0 : d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
-        for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
-          iterMap != map_GeometricMatches.end(); ++iterMap)
+        for (const auto & pairwisematches_it : map_GeometricMatches)
         {
-          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          const size_t putativeGeometricCount = iterMap->second.size();
-          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          const size_t putativePhotometricCount = map_PutativesMatches.find(pairwisematches_it.first)->second.size();
+          const size_t putativeGeometricCount = pairwisematches_it.second.size();
+          const float ratio = putativeGeometricCount / static_cast<float>(putativePhotometricCount);
           if (putativeGeometricCount < 50 || ratio < .3f)  {
             // the pair will be removed
-            vec_toRemove.push_back(iterMap->first);
+            vec_toRemove.push_back(pairwisematches_it.first);
           }
         }
         //-- remove discarded pairs
-        for (std::vector<PairWiseMatches::key_type>::const_iterator
-          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+        for (const auto & pair_to_remove_it : vec_toRemove)
         {
-          map_GeometricMatches.erase(*iter);
+          map_GeometricMatches.erase(pair_to_remove_it);
         }
       }
       break;

@@ -5,9 +5,15 @@ Build instructions
 ------------------
 
 Required tools:
-* CMake
-* Git
-* C/C++ compiler (GCC, Visual Studio or Clang)
+
+- CMake
+- Git
+- C/C++ compiler (GCC, Visual Studio or Clang)
+
+
+Optional tools:
+
+- QT version >= v5.4
 
 Getting the sources (and the submodules):
 ```shell

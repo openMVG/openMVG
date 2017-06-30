@@ -15,6 +15,8 @@
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/feature_container.hpp>
 #include "openMVG/matching/metric.hpp"
+
+#include <random>
 #include <vector>
 
 namespace openMVG  {
@@ -65,7 +67,7 @@ struct Tracker_fast_dipole : public Abstract_Tracker
         for (int i=0; i < (int)pt_to_track.size(); ++i)
         {
           size_t best_idx = std::numeric_limits<size_t>::infinity();
-          
+
           typedef openMVG::matching::L2<float> metricT;
           metricT metric;
           metricT::ResultType best_distance = 30;//std::numeric_limits<double>::infinity();
@@ -109,6 +111,7 @@ struct Tracker_fast_dipole : public Abstract_Tracker
     const size_t count
   ) const override
   {
+    std::mt19937 gen(std::mt19937::default_seed);
     const std::vector<unsigned char> scores = {30, 20, 10, 5};
     // use a sequence of scores 'in order to deal with lighting change'
     features::PointFeatures feats;
@@ -120,7 +123,7 @@ struct Tracker_fast_dipole : public Abstract_Tracker
       if (feats.size() > count)
       {
         // shuffle to avoid to sample only in one bucket
-        std::random_shuffle(feats.begin(), feats.end());
+        std::shuffle(feats.begin(), feats.end(), gen);
         feats.resize(count); // cut the array to keep only a given count of features
         pt_to_track.swap(feats);
 

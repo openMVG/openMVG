@@ -77,7 +77,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
   std::advance(iter_view_1, 1);
   sfmEngine.setInitialPair(
-    Pair(iter_view_0->second.get()->id_view, iter_view_1->second.get()->id_view));
+    Pair(iter_view_0->second->id_view, iter_view_1->second->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -111,7 +111,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   {
     if (std::distance(sfm_data_2.views.begin(),iterV) > 2)
     {
-      iterV->second.get()->id_intrinsic = UndefinedIndexT;
+      iterV->second->id_intrinsic = UndefinedIndexT;
     }
   }
 
@@ -142,8 +142,8 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
   Views::const_iterator iter_view_2 = sfm_data_2.GetViews().begin();
   std::advance(iter_view_2, 2);
-  sfmEngine.setInitialPair(Pair(iter_view_0->second.get()->id_view,
-    iter_view_2->second.get()->id_view));
+  sfmEngine.setInitialPair(Pair(iter_view_0->second->id_view,
+    iter_view_2->second->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
