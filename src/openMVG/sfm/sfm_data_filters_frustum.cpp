@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,14 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/geometry/half_space_intersection.hpp"
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/types.hpp"
 
-#include <fstream>
-#include <iomanip>
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/stl/stl.hpp"
+
+namespace openMVG { namespace cameras { class Pinhole_Intrinsic; } }
+namespace openMVG { namespace sfm { struct View; } }
+
+#include "third_party/progress/progress.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -57,7 +62,7 @@ void Frustum_Filter::initFrustum
     const Pose3 pose = sfm_data.GetPoseOrDie(view);
 
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
       continue;
 
     if (!_bTruncated) // use infinite frustum
@@ -268,4 +273,3 @@ void Frustum_Filter::init_z_near_z_far_depth
 
 } // namespace sfm
 } // namespace openMVG
-

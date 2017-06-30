@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,6 +9,7 @@
 
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,20 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <string>
 #include <iostream>
+#include <string>
+#include <utility>
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -204,10 +212,10 @@ int main() {
 
       const Vec2 residual0 = intrinsic0.residual(pose0, X, LL.coords().cast<double>());
       const Vec2 residual1 = intrinsic1.residual(pose1, X, RR.coords().cast<double>());
-      vec_residuals.push_back(fabs(residual0(0)));
-      vec_residuals.push_back(fabs(residual0(1)));
-      vec_residuals.push_back(fabs(residual1(0)));
-      vec_residuals.push_back(fabs(residual1(1)));
+      vec_residuals.push_back(std::abs(residual0(0)));
+      vec_residuals.push_back(std::abs(residual0(1)));
+      vec_residuals.push_back(std::abs(residual1(0)));
+      vec_residuals.push_back(std::abs(residual1(1)));
       vec_3DPoints.emplace_back(X);
     }
 

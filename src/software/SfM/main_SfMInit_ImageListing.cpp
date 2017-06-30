@@ -1,28 +1,32 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#include "openMVG/exif/exif_IO_EasyExif.hpp"
 
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/exif/exif_IO_EasyExif.hpp"
 #include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
-#include "openMVG/exif/exif_IO_EasyExif.hpp"
 #include "openMVG/geodesy/geodesy.hpp"
-
-#include "openMVG/image/image.hpp"
-#include "openMVG/stl/split.hpp"
-
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_utils.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
 #include <memory>
 #include <string>
-#include <vector>
+#include <utility>
 
 using namespace openMVG;
 using namespace openMVG::cameras;

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,9 +9,10 @@
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
 
 #include "openMVG/graph/graph.hpp"
+#include "openMVG/types.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/linearProgramming/linearProgramming.hpp"
 #include "openMVG/multiview/essential.hpp"
-#include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
@@ -20,15 +22,11 @@
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
-#include "third_party/histogram/histogram.hpp"
-#include "third_party/progress/progress.hpp"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include <vector>
 
 namespace openMVG{
 namespace sfm{

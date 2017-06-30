@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,11 +9,12 @@
 #ifndef OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
 #define OPENMVG_MATCHING_MATCHER_KDTREE_FLANN_HPP
 
+#include <memory>
+#include <vector>
+
 #include "openMVG/matching/matching_interface.hpp"
 
 #include <flann/flann.hpp>
-
-#include <memory>
 
 namespace openMVG {
 namespace matching  {
@@ -29,7 +32,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
   public:
   using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcher_Kdtree_Flann() = default ;
+  ArrayMatcher_Kdtree_Flann() = default;
 
   virtual ~ArrayMatcher_Kdtree_Flann()
   {

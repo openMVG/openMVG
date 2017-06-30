@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,10 +30,10 @@
 #ifndef OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 
-#include "openMVG/multiview/conditioning.hpp"
-#include "openMVG/numeric/numeric.h"
-
 #include <vector>
+
+#include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
 namespace two_view {

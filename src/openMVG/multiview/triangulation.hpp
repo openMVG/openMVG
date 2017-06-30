@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -8,7 +9,7 @@
 #ifndef OPENMVG_MULTIVIEW_TRIANGULATION_HPP
 #define OPENMVG_MULTIVIEW_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {

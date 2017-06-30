@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013,2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,7 @@
 
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/geometry/half_space_intersection.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
@@ -18,7 +21,7 @@ using namespace std;
 
 TEST(HALF_PLANE, ExistingSubspace) {
 
-  std::vector<Half_plane> vec_hplanes;
+  Half_planes vec_hplanes;
 
   Vec3 a,b,c;
   a << 0,0,0;
@@ -42,7 +45,7 @@ TEST(HALF_PLANE, ExistingSubspace) {
 
 TEST(HALF_PLANE, EmptyIntersection) {
 
-  std::vector<Half_plane> vec_hplanes;
+  Half_planes vec_hplanes;
 
   Vec3 a,b,c;
   a << 0,0,0;
@@ -57,8 +60,8 @@ TEST(HALF_PLANE, EmptyIntersection) {
   /*
       /\
    ___|____ z = 0
-  
-  
+
+
    _______ z = -2
       |
      \/
@@ -83,7 +86,7 @@ TEST(HALF_PLANE, Side)
   /*
       /\
    ___|____ z = 2
-  
+
       /\
    ___|____ z = 0
   */

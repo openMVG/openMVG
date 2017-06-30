@@ -1,25 +1,28 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2017 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/multiview/essential.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/solver_essential_spherical.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/sfm.hpp"
 
 #include "nonFree/sift/SIFT_describer.hpp"
-#include "openMVG_Samples/multiview_robust_essential_spherical/spherical_cam.hpp"
-
-#include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -32,6 +35,9 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -58,15 +64,20 @@ int main(int argc, char **argv) {
     {
       cmd.process(argc, argv);
     }
-  } catch(const std::string& s) {
-
+  } catch(const std::string& s)
+  {
+    std::cout << "Invalid usage of arguments -a IMGA -b IMGB" << std::endl;
+    return EXIT_FAILURE;
   }
 
-  Image<unsigned char> imageL;
+  Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
-
-  Image<unsigned char> imageR;
   ReadImage(jpg_filenameR.c_str(), &imageR);
+
+  // Setup 2 camera intrinsics
+  cameras::Intrinsic_Spherical
+    cameraL(imageL.Width(), imageL.Height()),
+    cameraR(imageR.Width(), imageR.Height());
 
   //--
   // Detect regions thanks to an image_describer
@@ -78,15 +89,17 @@ int main(int argc, char **argv) {
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 
-  const SIFT_Regions* regionsL = dynamic_cast<SIFT_Regions*>(regions_perImage.at(0).get());
-  const SIFT_Regions* regionsR = dynamic_cast<SIFT_Regions*>(regions_perImage.at(1).get());
+  const SIFT_Regions
+   *regionsL = dynamic_cast<const SIFT_Regions*>(regions_perImage.at(0).get()),
+   *regionsR = dynamic_cast<const SIFT_Regions*>(regions_perImage.at(1).get());
 
   const PointFeatures
     featsL = regions_perImage.at(0)->GetRegionsPositions(),
     featsR = regions_perImage.at(1)->GetRegionsPositions();
 
-  std::cout << "Left image SIFT count: " << featsL.size() << std::endl;
-  std::cout << "Right image SIFT count: "<< featsR.size() << std::endl;
+  std::cout
+    << "Left image SIFT count: " << featsL.size() << std::endl
+    << "Right image SIFT count: "<< featsR.size() << std::endl;
 
   // Show both images side by side
   {
@@ -142,8 +155,9 @@ int main(int argc, char **argv) {
   // Essential geometry filtering of putative matches
   {
     //A. get back interest point and send it to the robust estimation framework
-    Mat xL(2, vec_PutativeMatches.size());
-    Mat xR(2, vec_PutativeMatches.size());
+    Mat
+      xL(2, vec_PutativeMatches.size()),
+      xR(2, vec_PutativeMatches.size());
 
     for (size_t k = 0; k < vec_PutativeMatches.size(); ++k)  {
       const PointFeature & imaL = featsL[vec_PutativeMatches[k].i_];
@@ -154,8 +168,11 @@ int main(int argc, char **argv) {
 
     //-- Convert planar to spherical coordinates
     Mat xL_spherical(3,vec_PutativeMatches.size()), xR_spherical(3,vec_PutativeMatches.size());
-    spherical_cam::planarToSpherical(xL, imageL.Width(), imageL.Height(), xL_spherical);
-    spherical_cam::planarToSpherical(xR, imageR.Width(), imageR.Height(), xR_spherical);
+    for (size_t iCol = 0; iCol < vec_PutativeMatches.size(); ++iCol)
+    {
+      xL_spherical.col(iCol) = cameraL(xL.col(iCol));
+      xR_spherical.col(iCol) = cameraR(xR.col(iCol));
+    }
 
     //-- Essential matrix robust estimation from spherical bearing vectors
     {
@@ -196,75 +213,75 @@ int main(int argc, char **argv) {
         bVertical
       );
 
-      if (vec_inliers.size() > 120)
+      if (vec_inliers.size() > 60) // 60 is used to filter solution with few common geometric matches (unstable solution)
       {
-        // If an essential matrix have been found
-        // Extract R|t
-        //  - From the 4 possible solutions extracted from E keep the best
-        //  - (check cheirality of correspondence once triangulation is done)
+        // Decompose the essential matrix and keep the best solution (if any)
+        Mat3 R;
+        Vec3 t;
+        std::vector<uint32_t> inliers_indexes;
+        std::vector<Vec3> inliers_X;
+        if (openMVG::sfm::estimate_Rt_fromE(xL_spherical, xR_spherical, E, vec_inliers,
+                                            &R, &t, &inliers_indexes, &inliers_X))
+        {
+          // Lets make a BA on the scene to check if it relative pose and structure can be refined
 
-        // Accumulator to find the best solution
-        std::vector<uint32_t> f(4, 0);
+          // Setup a SfM scene with two view corresponding the pictures
+          SfM_Data tiny_scene;
+          tiny_scene.views[0].reset(new View("", 0, 0, 0, imageL.Width(), imageL.Height()));
+          tiny_scene.views[1].reset(new View("", 1, 0, 1, imageR.Width(), imageR.Height()));
+          // Setup shared intrinsics camera data
+          tiny_scene.intrinsics[0].reset(new Intrinsic_Spherical(imageR.Width(), imageR.Height()));
 
-        std::vector<Mat3> Es;  // Essential,
-        std::vector<Mat3> Rs;  // Rotation matrix.
-        std::vector<Vec3> ts;  // Translation matrix.
+          // Setup poses camera data
+          const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+          const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = Pose3(R, - R.transpose() * t);
 
-        Es.push_back(E);
-        // Recover best rotation and translation from E.
-        MotionFromEssential(E, &Rs, &ts);
-
-        //-> Test the 4 solutions will all the point
-        Mat34 P1;
-        P_From_KRt(Mat3::Identity(), Mat3::Identity(), Vec3::Zero(), &P1);
-        std::array< std::vector<uint32_t>, 4 > vec_newInliers;
-        std::array< std::vector<Vec3>, 4 > vec_3D;
-
-        for (int kk = 0; kk < 4; ++kk) {
-          const Mat3 &R2 = Rs[kk];
-          const Vec3 &t2 = ts[kk];
-          Mat34 P2;
-          P_From_KRt(Mat3::Identity(), R2, t2, &P2);
-
-          //-- For each inlier:
-          //   - triangulate
-          //   - check chierality
-          for (const uint32_t & inlier_it : vec_inliers)
+          // Add a new landmark (3D point with its image observations)
+          for (int i = 0; i < inliers_indexes.size(); ++i)
           {
-            const Vec3 & x1_ = xL_spherical.col(inlier_it);
-            const Vec3 & x2_ = xR_spherical.col(inlier_it);
+            Landmark landmark;
+            landmark.X = inliers_X[i];
+            landmark.obs[tiny_scene.views[0]->id_view] = Observation(xL.col(inliers_indexes[i]), 0);
+            landmark.obs[tiny_scene.views[1]->id_view] = Observation(xR.col(inliers_indexes[i]), 0);
+            tiny_scene.structure.insert(std::make_pair(tiny_scene.structure.size(), landmark));
+          }
 
-            //Triangulate
-            Vec3 X;
-            TriangulateDLT(P1, x1_, P2, x2_, &X);
+          Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));
 
-            //Check positivity of the depth (sign of the dot product)
-            const Vec3 Mc = R2 * X + t2;
-            if (x2_.dot(Mc) > 0 && x1_.dot(X) > 0)
+          std::vector<double> residuals;
+          // Perform Bundle Adjustment of the scene
+          Bundle_Adjustment_Ceres bundle_adjustment_obj;
+          if (bundle_adjustment_obj.Adjust(tiny_scene,
+            Optimize_Options(
+              Intrinsic_Parameter_Type::NONE,
+              Extrinsic_Parameter_Type::ADJUST_ALL,
+              Structure_Parameter_Type::ADJUST_ALL)))
+          {
+            // Compute reprojection error
+            const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose];
+            const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose];
+
+            for (Landmarks::const_iterator iter = tiny_scene.GetLandmarks().begin();
+              iter != tiny_scene.GetLandmarks().end(); ++iter)
             {
-              ++f[kk];
-              vec_newInliers[kk].push_back(inlier_it);
-              vec_3D[kk].push_back(X);
-            }
-          }
-        }
-        std::cout << std::endl << "estimate_Rt_fromE" << std::endl;
-        std::cout << " #points in front of both cameras for each solution: "
-          << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << std::endl;
+              const IndexT trackId = iter->first;
+              const Landmark & landmark = iter->second;
+              const Observations & obs = landmark.obs;
+              Observations::const_iterator iterObs_xI = obs.find(tiny_scene.views[0]->id_view);
+              Observations::const_iterator iterObs_xJ = obs.find(tiny_scene.views[1]->id_view);
 
-        std::vector<uint32_t>::iterator iter = max_element(f.begin(), f.end());
-        if(*iter != 0)  {
-          const size_t index = std::distance(f.begin(),iter);
-          if (f[index] < 120) {
-            std::cout << "Found solution have too few 3D points." << std::endl;
-          }
-          else  {
-            std::cout << "Export found 3D scene in current directory." << std::endl;
-            vec_inliers.clear();
-            vec_inliers = vec_newInliers[index];
-            std::ostringstream os;
-            os << "./" << "relativePose_Spherical"<< ".ply";
-            plyHelper::exportToPly(vec_3D[index], os.str());
+              const Observation & ob_x0 = iterObs_xI->second;
+              const Observation & ob_x1 = iterObs_xJ->second;
+
+              const Vec2 residual_I = cameraL.residual(pose0, landmark.X, ob_x0.x);
+              const Vec2 residual_J = cameraR.residual(pose1, landmark.X, ob_x1.x);
+              residuals.push_back(residual_I.norm());
+              residuals.push_back(residual_J.norm());
+            }
+            std::cout << "Residual statistics (pixels):" << std::endl;
+            minMaxMeanMedian<double>( residuals.begin(), residuals.end());
+
+            Save(tiny_scene, "EssentialGeometry_refined.ply", ESfM_Data(ALL));
           }
         }
       }

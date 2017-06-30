@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,19 +9,14 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 
-namespace ceres {
-class CostFunction;
-}
+namespace ceres { class CostFunction; }
+namespace openMVG { namespace cameras { struct IntrinsicBase; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
-
-namespace cameras{
-struct IntrinsicBase;
-}
-
 namespace sfm {
 
 /// Create the appropriate cost functor according the provided input camera intrinsic model
@@ -51,7 +48,11 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     BA_Ceres_options ceres_options_;
 
   public:
-  Bundle_Adjustment_Ceres(Bundle_Adjustment_Ceres::BA_Ceres_options options = BA_Ceres_options());
+  Bundle_Adjustment_Ceres
+  (
+    Bundle_Adjustment_Ceres::BA_Ceres_options options =
+    std::move(BA_Ceres_options())
+  );
 
   BA_Ceres_options & ceres_options();
 

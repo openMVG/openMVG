@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -28,7 +30,7 @@
 #ifndef OPENMVG_MULTIVIEW_PROJECTION_HPP
 #define OPENMVG_MULTIVIEW_PROJECTION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 /// Collection of function related to the classic Projection matrix used
 ///  in computer vision. P = K[R|t] with [t]=[-RC] Cf HZ

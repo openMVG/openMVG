@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 openMVG authors.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,14 +9,13 @@
 #ifndef OPENMVG_GRAPH_GRAPH_BUILDER_HPP
 #define OPENMVG_GRAPH_GRAPH_BUILDER_HPP
 
-#include "openMVG/types.hpp"
-
-#include <lemon/list_graph.h>
-
 #include <map>
 #include <memory>
 #include <set>
 
+#include "openMVG/types.hpp"
+
+#include "lemon/list_graph.h"
 
 namespace openMVG
 {

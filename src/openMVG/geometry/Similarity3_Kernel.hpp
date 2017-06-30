@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,8 @@
 
 #ifndef OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
 #define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
+
+#include <vector>
 
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"

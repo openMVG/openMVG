@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,13 +9,16 @@
 #ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
-#include "openMVG/features/features.hpp"
+#include <memory>
+#include <string>
+
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/feature_container.hpp"
+#include "openMVG/features/regions.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/progress/progress.hpp"
-
-#include <memory>
 
 namespace openMVG {
 namespace sfm {

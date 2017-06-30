@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,20 +9,17 @@
 #ifndef OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 
+#include <memory>
+#include <string>
+
 #include "openMVG/features/regions.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <cereal/cereal.hpp> // Serialization
 
-#include <memory>
+namespace openMVG { namespace image { template<typename Type> class Image; } }
 
 namespace openMVG {
-
-namespace image {
-  template<typename Type>
-  class Image;
-}
-
 namespace features {
 
 enum EDESCRIBER_PRESET
@@ -34,8 +32,8 @@ enum EDESCRIBER_PRESET
 class Image_describer
 {
 public:
-  Image_describer() = default ;
-  virtual ~Image_describer() = default ;
+  Image_describer() = default;
+  virtual ~Image_describer() = default;
 
   /**
   @brief Use a preset to control the number of detected regions

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,11 +9,14 @@
 #ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 #define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/indMatch.hpp"
-
+#include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <set>
+#include <vector>
+
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace matching {

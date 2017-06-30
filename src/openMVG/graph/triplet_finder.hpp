@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,13 +9,14 @@
 #ifndef OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 #define OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/types.hpp"
 
 #include "lemon/list_graph.h"
-
-#include <algorithm>
-#include <vector>
 
 namespace openMVG
 {
@@ -96,15 +99,8 @@ struct Triplet
     return os;
   }
 
-  /// First index id
-  IndexT i;
-
-  /// Second index id
-  IndexT j;
-
-  /// Third index id
-  IndexT k;
-
+  /// the three triplet index id
+  IndexT i, j, k;
 };
 
 

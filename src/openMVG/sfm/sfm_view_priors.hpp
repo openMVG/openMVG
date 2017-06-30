@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,9 @@
 
 #ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
 #define OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
+
+#include <string>
+#include <vector>
 
 #include "openMVG/geometry/pose3.hpp"
 

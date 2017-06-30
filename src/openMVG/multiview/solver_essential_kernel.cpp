@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,6 +30,7 @@
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/numeric/nullspace.hpp"
 #include "openMVG/numeric/poly.h"
 
 #include <cassert>
@@ -47,7 +49,7 @@ void EightPointRelativePoseSolver::Solve(const Mat &x1, const Mat &x2, std::vect
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
 
   Vec9 e;
-  Nullspace(&A, &e);
+  Nullspace(A, e);
   Mat3 E = Map<RMat3>(e.data());
 
   // Find the closest essential matrix to E in frobenius norm

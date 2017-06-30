@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017 Kareem Omar, Pierre MOULON.
 
@@ -160,4 +161,3 @@ inline float L2_128_float_AVX2
 #endif
 
 #endif // OPENMVG_MATCHING_METRIC_AVX2_HPP
-

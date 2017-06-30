@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,9 +30,10 @@
 #ifndef OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
 #define OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
 
-#include "openMVG/numeric/numeric.h"
-
+#include <string>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 

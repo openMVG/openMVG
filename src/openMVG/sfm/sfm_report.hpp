@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,11 @@
 
 #ifndef OPENMVG_SFM_SFM_REPORT_HPP
 #define OPENMVG_SFM_SFM_REPORT_HPP
+
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "openMVG/sfm/sfm_data.hpp"
 
@@ -29,7 +36,7 @@ inline bool Generate_SfM_Report
   for ( const auto & iterTracks : sfm_data.GetLandmarks() )
   {
     const Observations & obs = iterTracks.second.obs;
-    for ( const auto & itObs : obs ) 
+    for ( const auto & itObs : obs )
     {
       const View * view = sfm_data.GetViews().at(itObs.first).get();
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);

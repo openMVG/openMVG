@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -32,17 +33,20 @@
 #ifndef OPENMVG_TRACKS_TRACKS_HPP
 #define OPENMVG_TRACKS_TRACKS_HPP
 
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/tracks/flat_pair_map.hpp"
-#include "openMVG/tracks/union_find.hpp"
-
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/tracks/flat_pair_map.hpp"
+#include "openMVG/tracks/union_find.hpp"
 
 namespace openMVG  {
 
@@ -54,7 +58,7 @@ namespace tracks  {
 //  The corresponding image points with their imageId and FeatureId.
 using submapTrack = std::map<uint32_t, uint32_t>;
 // A track is a collection of {trackId, submapTrack}
-using STLMAPTracks = std::map< uint32_t, submapTrack >;
+using STLMAPTracks = std::map< uint32_t, submapTrack>;
 
 struct TracksBuilder
 {
@@ -68,8 +72,7 @@ struct TracksBuilder
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
-    using SetIndexedPair = std::set<indexedFeaturePair>;
-    SetIndexedPair allFeatures;
+    std::set<indexedFeaturePair> allFeatures;
     // For each couple of images list the used features
     for ( const auto & iter : map_pair_wise_matches )
     {
@@ -313,7 +316,7 @@ struct TracksUtilsMap
         find_if(
           map_tracks.begin(), map_tracks.end(),
           [id] (const std::pair<uint32_t, submapTrack > & s) { return (id == s.first); }
-        ) ;
+        );
       // The current track.
       const submapTrack & map_ref = itF->second;
 

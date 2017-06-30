@@ -1,16 +1,22 @@
-// Copyright (c) 2016
-// cDc <cdc.seacave@gmail.com>
-// Pierre MOULON
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2016 cDc <cdc.seacave@gmail.com>, Pierre MOULON
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #define _USE_EIGEN
 #include "InterfaceMVS.h"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/progress/progress.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -18,14 +24,8 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <cmath>
-#include <iterator>
-#include <iomanip>
+#include <cstdlib>
+#include <string>
 
 bool exportToOpenMVS(
   const SfM_Data & sfm_data,
@@ -161,16 +161,16 @@ bool exportToOpenMVS(
       MVS::Interface::Image* pImage(NULL);
       for (MVS::Interface::Image& image: scene.images)
       {
-	      if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
-	      {
-		      pImage = &image;
-		      break;
-	      }
+        if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
+        {
+          pImage = &image;
+          break;
+        }
       }
       if (pImage == NULL)
       {
-	      std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
-	      continue;
+        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
+        continue;
       }
       // read image meta-data
       ImageHeader imageHeader;

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -12,7 +13,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <mutex>
+#include <string>
 #include <thread>
 
 namespace openMVG {
@@ -66,7 +69,7 @@ public:
   }
 
   // Initialize the regions_provider_cache
-  virtual bool load
+  bool load
   (
     const SfM_Data & sfm_data,
     const std::string & feat_directory,

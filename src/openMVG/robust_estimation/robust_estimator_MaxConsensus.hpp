@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,10 +9,11 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 #define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-
+#include <numeric>
 #include <limits>
 #include <vector>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
 
 namespace openMVG {
 namespace robust{

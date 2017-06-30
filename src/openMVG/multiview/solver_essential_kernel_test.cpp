@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -30,9 +31,11 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 
+#include <numeric>
 using namespace openMVG;
 
 /// Check that the E matrix fit the Essential Matrix properties
@@ -85,7 +88,7 @@ TEST(EightPointsRelativePose, EightPointsRelativePose_Kernel_IdFocal) {
       // Check that E holds the essential matrix constraints.
       EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[nModel], 1e-8);
 
-      // Check that we find the correct relative orientation.
+      // Check that we find the correct relative orientation.c
       if (FrobeniusDistance(R, Rs[nModel]) < 1e-3
         && (t / t.norm() - ts[nModel] / ts[nModel].norm()).norm() < 1e-3 ) {
           bsolution_found = true;

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,13 +9,14 @@
 #ifndef OPENMVG_MATCHING_MATCHER_CASCADE_HASHING_HPP
 #define OPENMVG_MATCHING_MATCHER_CASCADE_HASHING_HPP
 
-#include "openMVG/matching/cascade_hasher.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/matching_interface.hpp"
-
 #include <cmath>
 #include <memory>
 #include <random>
+#include <vector>
+
+#include "openMVG/matching/cascade_hasher.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/matching_interface.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -36,7 +39,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
   public:
   using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcherCascadeHashing() = default ;
+  ArrayMatcherCascadeHashing() = default;
   virtual ~ArrayMatcherCascadeHashing() {
     memMapping.reset();
   }
@@ -65,7 +68,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
       *memMapping, zero_mean_descriptor_);
 
     return true;
-  };
+  }
 
   /**
    * Search the nearest Neighbor of the scalar array query.
@@ -104,7 +107,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     size_t NN
   )
   {
-    if (memMapping.get() == NULL)  {
+    if (memMapping.get() == nullptr)  {
       return false;
     }
 

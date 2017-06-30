@@ -15,9 +15,10 @@
 #ifndef PROGRESS
 #define PROGRESS
 
+#include <algorithm>
+#include <atomic>
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 /**
   * @brief C_Progress manage the appropriate count_step of progress
@@ -41,12 +42,12 @@ class C_Progress
     { restart ( ulExpected_count ); }
 
     ///Destructor
-    ~C_Progress() {};
+    ~C_Progress() = default;
 
     /** @brief Initializer of the C_Progress class
      * @param expected_count The number of step of the process
      **/
-    virtual void           restart ( unsigned long ulExpected_count )
+    virtual void restart ( unsigned long ulExpected_count )
     //  Effects: display appropriate scale
     //  Postconditions: count()==0, expected_count()==expected_count
     {
@@ -61,7 +62,7 @@ class C_Progress
      * @param increment the number of step that we want to increment the internal step counter
      * @return the value of the internal count => count()
      **/
-    unsigned long  operator+= ( unsigned long ulIncrement )
+    unsigned long operator+= ( unsigned long ulIncrement )
     //  Effects: Increment appropriate progress tic if needed.
     //  Postconditions: count()== original count() + increment
     //  Returns: count().
@@ -119,8 +120,8 @@ class C_Progress
 
   protected:
     /// Internal data to _count the number of step (the _count can go to the _expected_count value).
-    unsigned long _count, _expected_count, _next_tic_count;
-    unsigned int  _tic;
+    std::atomic<unsigned long> _count, _expected_count, _next_tic_count;
+    std::atomic<unsigned int> _tic;
 
   private:
     virtual void inc_tic()
@@ -169,7 +170,7 @@ class C_Progress_display : public C_Progress
     /** @brief Initializer of the C_Progress_display class
      * @param expected_count The number of step of the process
      **/
-    void restart ( unsigned long ulExpected_count )
+    void restart ( unsigned long ulExpected_count ) override
     //  Effects: display appropriate scale
     //  Postconditions: count()==0, expected_count()==expected_count
     {
@@ -189,7 +190,7 @@ class C_Progress_display : public C_Progress
 
     /** @brief Function that check if we have to append an * in the progress bar function
     **/
-    void inc_tic()
+    void inc_tic() override
     {
       // use of floating point ensures that both large and small counts
       // work correctly.  static_cast<>() is also used several places

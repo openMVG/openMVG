@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,10 +9,11 @@
 #ifndef OPENMVG_MATCHING_KVLD_DRAW_H
 #define OPENMVG_MATCHING_KVLD_DRAW_H
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/feature.hpp"
+#include <algorithm>
 #include <vector>
 
+#include "openMVG/image/image_drawing.hpp"
+#include "openMVG/features/feature.hpp"
 namespace openMVG {
 
 //-- A slow but accurate way to draw K-VLD lines
