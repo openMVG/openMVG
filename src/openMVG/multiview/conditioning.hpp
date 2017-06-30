@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -27,7 +29,7 @@
 #ifndef OPENMVG_MULTIVIEW_CONDITIONNING_HPP
 #define OPENMVG_MULTIVIEW_CONDITIONNING_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 //-- Implementation of normalized coordinates.
 // Normalization improve accuracy of results and provide benefits
@@ -70,13 +72,13 @@ void NormalizePoints( const Mat &points,
 * @param width First range upper bound
 * @param height Second range upper bound
 * @param[out] Transformation matrix
-* @note Transformation compress input range to [ -sqrt(2) ; sqrt(2)]
+* @note Transformation compress input range to [ -sqrt(2); sqrt(2)]
 * @note Range is [0;width]x[0;height]
 */
 void PreconditionerFromPoints( int width, int height, Mat3 *T );
 
 /**
-* @brief Normalize point rom image coordinates to [- sqrt(2) , sqrt(2) ]
+* @brief Normalize point row image coordinates to [- sqrt(2); sqrt(2) ]
 * @param points Input points
 * @param[out] normalized_points Normalized points
 * @param[out] T Normalization matrix used to normalize points

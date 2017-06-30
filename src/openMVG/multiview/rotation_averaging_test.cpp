@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
 using namespace openMVG;
@@ -179,7 +182,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
   //- Solve the global rotation estimation problem :
   Matrix3x3Arr vec_globalR(3);
   const size_t nMainViewID = 0;
-  EXPECT_TRUE(GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, NULL));
+  EXPECT_TRUE(GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, nullptr));
 
   // Check that the loop is closing
   EXPECT_MATRIX_NEAR(Mat3::Identity(), (vec_globalR[0]*vec_globalR[1]*vec_globalR[2]), 1e-4);
@@ -234,7 +237,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph)
   //- Solve the global rotation estimation problem :
   Matrix3x3Arr vec_globalR(iNviews);
   size_t nMainViewID = 0;
-  const bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, NULL);
+  const bool bTest = GlobalRotationsRobust(vec_relativeRotEstimate, vec_globalR, nMainViewID, 0.0f, nullptr);
   EXPECT_TRUE(bTest);
 
   // Check that the loop is closing
@@ -377,4 +380,3 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

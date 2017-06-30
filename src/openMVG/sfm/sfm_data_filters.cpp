@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/tracks/union_find.hpp"
 
-#include <iterator>
+#include <utility>
 
 namespace openMVG {
 namespace sfm {
@@ -388,4 +389,3 @@ void KeepLargestViewCCTracks
 
 } // namespace sfm
 } // namespace openMVG
-

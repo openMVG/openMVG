@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,8 +13,12 @@
 
 // Qt4 headers
 #include <QtGui>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QGraphicsLineItem>
 #include <QGraphicsItem>
+#include <QAction>
+#include <QMessageBox>
 #include <memory>
 #include <QPen>
 #include <QInputDialog>

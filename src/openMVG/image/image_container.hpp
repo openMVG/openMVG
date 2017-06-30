@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,7 +9,7 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 #define OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "Eigen/Dense"
 
 namespace openMVG
 {
@@ -90,10 +92,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     /**
     * @brief destructor
     */
-    virtual inline ~Image() {};
-    //-- Image construction method
-    //------------------------------
-
+    virtual inline ~Image() = default;
 
     /**
     * @brief Change geometry of image
@@ -215,7 +214,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @note Images must have the same size
     */
     template< typename T1>
-    friend Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB ) ;
+    friend Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB );
 
     /**
     * @brief Pixelwise subtraction of two images
@@ -225,7 +224,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @note Images must have the same size
     */
     template< typename T1>
-    friend Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB ) ;
+    friend Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB );
 
 
   protected :
@@ -242,7 +241,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
 template< typename T1 >
 Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB )
 {
-  return Image<T1>( imgA.Image<T1>::operator+( imgB ) ) ;
+  return Image<T1>( imgA.Image<T1>::operator+( imgB ) );
 }
 
 /**
@@ -255,7 +254,7 @@ Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB )
 template< typename T1>
 Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB )
 {
-  return Image<T1>( imgA.Image<T1>::operator-( imgB ) ) ;
+  return Image<T1>( imgA.Image<T1>::operator-( imgB ) );
 }
 
 } // namespace image

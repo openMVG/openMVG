@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013-2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,14 +9,14 @@
 #ifndef OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
 #define OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
 
-#include "openMVG/exif/exif_IO.hpp"
-
-#include "third_party/easyexif/exif.h"
-
 #include <fstream>
 #include <limits>
 #include <sstream>
+#include <string>
 #include <vector>
+
+#include "openMVG/exif/exif_IO.hpp"
+#include "third_party/easyexif/exif.h"
 
 namespace openMVG
 {

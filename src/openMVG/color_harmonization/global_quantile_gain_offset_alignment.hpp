@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013, 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #ifndef OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
 #define OPENMVG_COLOR_HARMONIZATION_GLOBAL_QUANTILE_GAIN_OFFSET_ALIGNMENT_HPP
-
 
 //------------------
 //-- Bibliography --
@@ -15,12 +16,15 @@
 //- Date: November 2013.
 //- Conference: CVMP.
 
-//-- Linear programming
+#include <numeric>
+#include <limits>
+#include <set>
+#include <utility>
+#include <vector>
+
 #include "openMVG/linearProgramming/bisectionLP.hpp"
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
-
-#include <set>
 
 namespace openMVG {
 namespace lInfinity {
@@ -30,7 +34,7 @@ struct relativeColorHistogramEdge
   size_t I,J;
   std::vector<size_t> histoI, histoJ;
 
-  relativeColorHistogramEdge() = default ;
+  relativeColorHistogramEdge() = default;
 
   relativeColorHistogramEdge(
     size_t i, size_t j,
@@ -96,8 +100,9 @@ static void Encode_histo_relation(
 
   // By default set free variable:
   vec_bounds = std::vector< std::pair<double,double> >(NVar);
-  fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair((double)-1e+30, (double)1e+30));
+  std::fill( vec_bounds.begin(), vec_bounds.end(),
+    std::make_pair(std::numeric_limits<double>::lowest(),
+                   std::numeric_limits<double>::max()));
 
   // Set gain as positive values
   for (size_t i = 0; i < Nima; ++i)
@@ -123,7 +128,7 @@ static void Encode_histo_relation(
   //--
 
   size_t rowPos = 0;
-  double incrementPourcentile = 1./(double) nbQuantile;
+  double incrementPourcentile = 1./ static_cast<double>(nbQuantile);
 
   for (size_t i = 0; i < Nrelative; ++i)
   {

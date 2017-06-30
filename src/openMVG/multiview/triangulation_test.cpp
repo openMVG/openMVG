@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,6 +30,7 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 

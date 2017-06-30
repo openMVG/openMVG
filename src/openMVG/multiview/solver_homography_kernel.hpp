@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -30,6 +31,7 @@
 #define OPENMVG_MULTIVIEW_SOLVER_HOMOGRAPHY_KERNEL_HPP
 
 #include <vector>
+
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
 

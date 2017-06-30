@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,12 +8,13 @@
 
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 
-#include "openMVG/multiview/projection.hpp"
+#include <array>
+
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include <array>
 
 namespace openMVG {
 namespace sfm {
@@ -31,7 +33,7 @@ bool estimate_Rt_fromE
 )
 {
   // Accumulator to find the best solution
-  std::array<uint32_t, 4> f {{0, 0, 0, 0}};
+  std::array<uint32_t, 4> f{0, 0, 0, 0};
 
   // Recover plausible rotation and translation from E.
   std::vector<Mat3> Rs;  // Rotation matrix.

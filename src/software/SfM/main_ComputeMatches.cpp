@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2016 Pierre MOULON.
 
@@ -5,35 +6,37 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
-
-/// Generic Image Collection image matching
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
-#include "openMVG/graph/graph.hpp"
-#include "openMVG/stl/stl.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
-#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
-using namespace openMVG::cameras;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
@@ -234,7 +237,10 @@ int main(int argc, char **argv)
     regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
   }
 
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -355,7 +361,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -396,7 +402,7 @@ int main(int argc, char **argv)
   if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+    const double d_distance_ratio = 0.6;
 
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
@@ -406,41 +412,39 @@ int main(int argc, char **argv)
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
           map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6);
+          bGeometric_only_guided_matching ? -1.0 : d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
-        for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
-          iterMap != map_GeometricMatches.end(); ++iterMap)
+        for (const auto & pairwisematches_it : map_GeometricMatches)
         {
-          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          const size_t putativeGeometricCount = iterMap->second.size();
-          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          const size_t putativePhotometricCount = map_PutativesMatches.find(pairwisematches_it.first)->second.size();
+          const size_t putativeGeometricCount = pairwisematches_it.second.size();
+          const float ratio = putativeGeometricCount / static_cast<float>(putativePhotometricCount);
           if (putativeGeometricCount < 50 || ratio < .3f)  {
             // the pair will be removed
-            vec_toRemove.push_back(iterMap->first);
+            vec_toRemove.push_back(pairwisematches_it.first);
           }
         }
         //-- remove discarded pairs
-        for (std::vector<PairWiseMatches::key_type>::const_iterator
-          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+        for (const auto & pair_to_remove_it : vec_toRemove)
         {
-          map_GeometricMatches.erase(*iter);
+          map_GeometricMatches.erase(pair_to_remove_it);
         }
       }
       break;

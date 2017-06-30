@@ -6,7 +6,7 @@ add_library(openMVG_linearProgramming
   linearProgrammingOSI_X.hpp
   linearProgramming.hpp)
 
-set_property(TARGET openMVG_linearProgramming PROPERTY FOLDER OpenMVG)
+set_property(TARGET openMVG_linearProgramming PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_linearProgramming DESTINATION lib EXPORT openMVG-targets)
 set_target_properties(openMVG_linearProgramming PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 

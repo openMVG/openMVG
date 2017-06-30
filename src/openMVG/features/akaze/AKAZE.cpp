@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Romuald PERROT, Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,6 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/akaze/AKAZE.hpp"
+#include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_filtering.hpp"
+#include "openMVG/image/image_diffusion.hpp"
+#include "openMVG/image/image_resampling.hpp"
 
 #include <cmath>
 
@@ -28,25 +34,25 @@ const float gauss25[7][7] = {
 static inline float Sigma( const float sigma0 , const int p , const int q , const int Q )
 {
   if( p == 0 && q == 0 )
-    return sigma0 ;
+    return sigma0;
   else
-    return sigma0 * powf( 2.f , p + static_cast<float>( q ) / static_cast<float>( Q ) ) ;
+    return sigma0 * powf( 2.f , p + static_cast<float>( q ) / static_cast<float>( Q ) );
 }
 
 float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const float percentile )
 {
-  const size_t nb_bin = 300 ;
-  const int height = src.Height() ;
-  const int width = src.Width() ;
+  const size_t nb_bin = 300;
+  const int height = src.Height();
+  const int width = src.Width();
 
   // Smooth the image
-  Image<float> smoothed ;
-  ImageGaussianFilter( src , 1.f , smoothed , 0, 0) ;
+  Image<float> smoothed;
+  ImageGaussianFilter( src , 1.f , smoothed , 0, 0);
 
   // Compute gradient
-  Image<float> Lx, Ly ;
-  ImageScharrXDerivative( smoothed , Lx , false ) ;
-  ImageScharrYDerivative( smoothed , Ly , false ) ;
+  Image<float> Lx, Ly;
+  ImageScharrXDerivative( smoothed , Lx , false );
+  ImageScharrYDerivative( smoothed , Ly , false );
 
   Image<float> & grad = smoothed; // reuse smoothed to avoid new allocation
   // grad = sqrt(Lx^2 + Ly^2)
@@ -54,45 +60,45 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
   const float grad_max = grad.maxCoeff();
 
   // Compute histogram
-  std::vector< size_t > histo( nb_bin, 0 ) ;
+  std::vector< size_t > histo( nb_bin, 0 );
 
-  int nb_value = 0 ;
+  int nb_value = 0;
 
-  for( int i = 1 ; i < height - 1 ; ++i )
+  for( int i = 1; i < height - 1; ++i )
   {
-    for( int j = 1 ; j < width - 1 ; ++j )
+    for( int j = 1; j < width - 1; ++j )
     {
-      const float val = grad( i , j ) ;
+      const float val = grad( i , j );
 
       if( val > 0 )
       {
-        int bin_id = floor( (val / grad_max ) * static_cast<float>(nb_bin) ) ;
+        int bin_id = floor( (val / grad_max ) * static_cast<float>(nb_bin) );
 
         // Handle overflow (need to do it in a cleaner way)
         if( bin_id == nb_bin )
-          --bin_id ;
+          --bin_id;
 
         // Accumulate
-        ++histo[ bin_id ] ;
-        ++nb_value ;
+        ++histo[ bin_id ];
+        ++nb_value;
       }
     }
   }
 
-  const size_t search_id = percentile * static_cast<float>(nb_value) ;
+  const size_t search_id = percentile * static_cast<float>(nb_value);
 
-  size_t id_bin = 0 ;
-  size_t acc = 0 ;
+  size_t id_bin = 0;
+  size_t acc = 0;
   while( acc < search_id && id_bin < nb_bin )
   {
-    acc  += histo[ id_bin ] ;
-    ++id_bin ;
+    acc  += histo[ id_bin ];
+    ++id_bin;
   }
 
   // Handle 0 bin search
   if( acc < search_id )
   {
-    return 0.03f ; // Only empiric value
+    return 0.03f; // Only empiric value
   }
   else
   {
@@ -118,47 +124,47 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   if( p == 0 && q == 0 )
   {
     // Compute new image
-    ImageGaussianFilter( src , sigma0 , Li, 0, 0) ;
+    ImageGaussianFilter( src , sigma0 , Li, 0, 0);
   }
   else
   {
     // general case
-    Image<float> in ;
+    Image<float> in;
     if( q == 0 )  {
-      ImageHalfSample( src , in ) ;
+      ImageHalfSample( src , in );
     }
     else {
-      in = src ;
+      in = src;
     }
 
-    const float sigma_prev = ( q == 0 ) ? Sigma( sigma0 , p - 1 , nbSlice - 1 , nbSlice ) : Sigma( sigma0 , p , q - 1 , nbSlice ) ;
+    const float sigma_prev = ( q == 0 ) ? Sigma( sigma0 , p - 1 , nbSlice - 1 , nbSlice ) : Sigma( sigma0 , p , q - 1 , nbSlice );
 
     // Compute non linear timing between two consecutive slices
-    const float t_prev = 0.5f * ( sigma_prev * sigma_prev ) ;
-    const float t_cur  = 0.5f * ( sigma_cur * sigma_cur ) ;
-    const float total_cycle_time = t_cur - t_prev ;
+    const float t_prev = 0.5f * ( sigma_prev * sigma_prev );
+    const float t_cur  = 0.5f * ( sigma_cur * sigma_cur );
+    const float total_cycle_time = t_cur - t_prev;
 
     // Compute first derivatives (Scharr scale 1, non normalized) for diffusion coef
-    ImageGaussianFilter( in , 1.f , smoothed, 0, 0 ) ;
+    ImageGaussianFilter( in , 1.f , smoothed, 0, 0 );
 
-    ImageScharrXDerivative( smoothed , Lx , false ) ;
-    ImageScharrYDerivative( smoothed , Ly , false ) ;
+    ImageScharrXDerivative( smoothed , Lx , false );
+    ImageScharrYDerivative( smoothed , Ly , false );
 
     // Compute diffusion coefficient
     Image<float> & diff = smoothed; // diffusivity image (reuse existing memory)
-    ImagePeronaMalikG2DiffusionCoef( Lx , Ly , contrast_factor , diff ) ;
+    ImagePeronaMalikG2DiffusionCoef( Lx , Ly , contrast_factor , diff );
 
     // Compute FED cycles
-    std::vector< float > tau ;
-    FEDCycleTimings( total_cycle_time , 0.25f , tau ) ;
-    ImageFEDCycle( in , diff , tau ) ;
-    Li = in ; // evolution image
+    std::vector< float > tau;
+    FEDCycleTimings( total_cycle_time , 0.25f , tau );
+    ImageFEDCycle( in , diff , tau );
+    Li = in; // evolution image
   }
 
   // Compute Hessian response
   if( p == 0 && q == 0 )
   {
-    smoothed = Li ;
+    smoothed = Li;
   }
   else
   {
@@ -167,17 +173,17 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   }
 
   // Compute true first derivatives
-  ImageScaledScharrXDerivative( smoothed , Lx , sigma_scale ) ;
-  ImageScaledScharrYDerivative( smoothed , Ly , sigma_scale ) ;
+  ImageScaledScharrXDerivative( smoothed , Lx , sigma_scale );
+  ImageScaledScharrYDerivative( smoothed , Ly , sigma_scale );
 
   // Second order spatial derivatives
   Image<float> Lxx, Lyy, Lxy;
-  ImageScaledScharrXDerivative( Lx , Lxx , sigma_scale ) ;
-  ImageScaledScharrYDerivative( Lx , Lxy , sigma_scale ) ;
-  ImageScaledScharrYDerivative( Ly , Lyy , sigma_scale ) ;
+  ImageScaledScharrXDerivative( Lx , Lxx , sigma_scale );
+  ImageScaledScharrYDerivative( Lx , Lxy , sigma_scale );
+  ImageScaledScharrYDerivative( Ly , Lyy , sigma_scale );
 
-  Lx *= static_cast<float>( sigma_scale ) ;
-  Ly *= static_cast<float>( sigma_scale ) ;
+  Lx *= static_cast<float>( sigma_scale );
+  Ly *= static_cast<float>( sigma_scale );
 
   // Compute Determinant of the Hessian
   Lhess.resize(Li.Width(), Li.Height());
@@ -208,17 +214,17 @@ AKAZE::AKAZE
 }
 
 /// Compute the AKAZE non linear diffusion scale space per slice
-void AKAZE::Compute_AKAZEScaleSpace(void)
+void AKAZE::Compute_AKAZEScaleSpace()
 {
-  float contrast_factor = ComputeAutomaticContrastFactor( in_, 0.7f ) ;
+  float contrast_factor = ComputeAutomaticContrastFactor( in_, 0.7f );
   Image<float> input = in_;
 
   // Octave computation
-  for( int p = 0 ; p < options_.iNbOctave ; ++p )
+  for( int p = 0; p < options_.iNbOctave; ++p )
   {
     contrast_factor *= (p == 0) ? 1.f : 0.75f;
 
-    for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
+    for( int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
       evolution_.emplace_back(TEvolution());
       TEvolution & evo = evolution_.back();
@@ -231,12 +237,12 @@ void AKAZE::Compute_AKAZEScaleSpace(void)
 
       // DEBUG octave image
 #if DEBUG_OCTAVE
-      std::stringstream str ;
-      str << "./" << "_oct_" << p << "_" << q << ".png" ;
+      std::stringstream str;
+      str << "./" << "_oct_" << p << "_" << q << ".png";
       Image<float> tmp = evo.cur;
       convert_scale(tmp);
       Image< unsigned char > tmp2 ((tmp*255).cast<unsigned char>());
-      WriteImage( str.str().c_str() , tmp2 ) ;
+      WriteImage( str.str().c_str() , tmp2 );
 #endif // DEBUG_OCTAVE
     }
   }
@@ -274,13 +280,13 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for( int p = 0 ; p < options_.iNbOctave ; ++p )
+  for( int p = 0; p < options_.iNbOctave; ++p )
   {
     const float ratio = (float) (1 << p);
 
-    for( int q = 0 ; q < options_.iNbSlicePerOctave ; ++q )
+    for( int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
-      const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave ) ;
+      const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave );
       const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
@@ -304,9 +310,9 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
           value > LDetHess(jx+1, ix+1))
         {
           AKAZEKeypoint point;
-          point.size = sigma_cur * fderivative_factor ;
+          point.size = sigma_cur * fderivative_factor;
           point.octave = p;
-          point.response = fabs(value);
+          point.response = std::abs(value);
           point.x = ix * ratio + 0.5 * (ratio-1);
           point.y = jx * ratio + 0.5 * (ratio-1);
           point.angle = 0.0f;
@@ -359,7 +365,7 @@ bool AKAZE::Do_Subpixel_Refinement( AKAZEKeypoint & kpt, const Image<float> & Ld
 
   const Vec2 dst = A.fullPivLu().solve(b);
 
-  if (fabs(dst(0)) <= 1.0 && fabs(dst(1)) <= 1.0) {
+  if (std::abs(dst(0)) <= 1.0 && std::abs(dst(1)) <= 1.0) {
     kpt.x += dst(0) * ratio + 0.5 * (ratio-1);
     kpt.y += dst(1) * ratio + 0.5 * (ratio-1);
     return true;
@@ -477,4 +483,3 @@ void AKAZE::Compute_Main_Orientation(
 
 } // namespace features
 } // namespace openMVG
-

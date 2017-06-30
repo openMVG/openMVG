@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// The <cereal/archives> headers are special and must be included first.
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/portable_binary.hpp>
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
@@ -12,7 +17,7 @@
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/stl/stlMap.hpp"
-
+#include "openMVG/types.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
@@ -41,8 +46,8 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
   {
     // If a pose is defined, at least the intrinsic must be valid,
     // In order to generate a valid camera.
-    const IndexT id_pose = iter->second.get()->id_pose;
-    const IndexT id_intrinsic = iter->second.get()->id_intrinsic;
+    const IndexT id_pose = iter->second->id_pose;
+    const IndexT id_intrinsic = iter->second->id_intrinsic;
 
     if (set_id_extrinsics.count(id_pose))
       reallyDefined_id_extrinsics.insert(id_pose); //at least it exists

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -11,6 +12,7 @@
 #include "openMVG/matching/metric_avx2.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
+#include <cstdint>
 
 namespace openMVG {
 namespace matching {
@@ -62,7 +64,7 @@ struct L2<uint8_t>
     #ifdef OPENMVG_USE_AVX2
     if (size == 128)
     {
-      return L2_128_uint8_t_AVX2(a, b, size);
+      return L2_AVX2(a, b, size);
     }
     #endif
 
@@ -103,7 +105,7 @@ struct L2<float>
     #ifdef OPENMVG_USE_AVX2
     if (size == 128)
     {
-      return L2_128_float_AVX2(a, b, size);
+      return L2_AVX2(a, b, size);
     }
     #endif
 

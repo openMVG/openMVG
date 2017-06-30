@@ -19,12 +19,14 @@ list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 target_link_libraries(
   openMVG_sfm
-  openMVG_multiview
-  stlplus
-  ${CERES_LIBRARIES}
-  openMVG_lInftyComputerVision
-  openMVG_system
-  openMVG_matching
+  PRIVATE
+    openMVG_geometry
+    openMVG_multiview
+    stlplus
+    ${CERES_LIBRARIES}
+    openMVG_lInftyComputerVision
+    openMVG_system
+    openMVG_matching
 )
 target_include_directories(
   openMVG_sfm

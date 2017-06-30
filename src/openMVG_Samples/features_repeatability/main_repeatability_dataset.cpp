@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
-#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/cmdLine/cmdLine.h"
@@ -299,8 +301,8 @@ int main(int argc, char **argv)
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
-        image_describer.reset(new AKAZE_Image_describer
-          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF)));
+        image_describer = AKAZE_Image_describer::create
+          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF));
       }
 
       if (!image_describer)

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -8,8 +10,9 @@
 #define OPENMVG_GEOMETRY_SIMILARITY3_KERNEL_HPP
 
 #include "openMVG/geometry/Similarity3.hpp"
-#include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+
+#include <vector>
 
 namespace openMVG
 {
@@ -37,21 +40,7 @@ struct Similarity3Solver
     const Mat &x,
     const Mat &y,
     std::vector<Similarity3> *sims
-  )
-  {
-    assert(3 == x.rows());
-    assert(x.rows() == y.rows());
-    assert(x.cols() == y.cols());
-
-    double S;
-    Vec3 t;
-    Mat3 R;
-    if ( FindRTS(x, y, &S, &t, &R) )
-    {
-      // Emplace back the Similarity3
-      sims->emplace_back(geometry::Pose3(R, -R.transpose()* t/S), S);
-    }
-  }
+  );
 };
 
 struct Similarity3ErrorSquaredMetric
@@ -62,10 +51,7 @@ struct Similarity3ErrorSquaredMetric
     const Similarity3 &S,
     const Mat3X &x1,
     const Mat3X &x2
-  )
-  {
-    return (x2 - S(x1)).colwise().squaredNorm();
-  }
+  );
 
   // Return the Squared error between the point x2 and the transformed point S(x1)
   static double Error
@@ -73,10 +59,7 @@ struct Similarity3ErrorSquaredMetric
     const Similarity3 &S,
     const Vec3 &x1,
     const Vec3 &x2
-  )
-  {
-    return (x2 - S(x1)).squaredNorm();
-  }
+  );
 };
 
 // Define a Kernel to solve a robust 3D similarity between point cloud

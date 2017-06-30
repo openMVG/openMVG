@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
 
@@ -8,18 +9,20 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
 
+#include <limits>
+#include <utility>
+#include <vector>
 
-#include "openMVG/types.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
-#include <limits>
-
-#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 
@@ -36,7 +39,7 @@ struct GeometricFilter_EMatrix_AC
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_E(Mat3::Identity()),
-      m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
+      m_dPrecision_robust(std::numeric_limits<double>::infinity()){}
 
   /// Robust fitting of the ESSENTIAL matrix
   template<typename Regions_or_Features_ProviderT>

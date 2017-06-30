@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,6 +9,7 @@
 #include "openMVG/linearProgramming/lInfinityCV/resection_kernel.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
@@ -41,7 +44,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(2*Square(0.6));
-    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, nullptr, 128);
 
     // Check that Projection matrix is near to the GT :
     const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
@@ -58,7 +61,7 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
 
     //CHeck matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-2 );
-    Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
+    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
     EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-2);
   }
 }
@@ -95,7 +98,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
     const Mat & pt3D = d2._X;
     KernelType kernel(pt2D, pt3D);
     ScorerEvaluator<KernelType> scorer(Square(0.1)); //Highly intolerant for the test
-    const Mat34 P = MaxConsensus(kernel, scorer, NULL, 128);
+    const Mat34 P = MaxConsensus(kernel, scorer, nullptr, 128);
 
     // Check that Projection matrix is near to the GT :
     const Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array()
@@ -112,7 +115,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
     //CHeck matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-3 );
-    Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
+    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
     EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-1);
   }
   d2.ExportToPLY("test_After_Infinity.ply");

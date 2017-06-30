@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -130,7 +131,8 @@ bool readGt(
   std::string suffix,
   std::vector<std::string> & vec_filenames,
   std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
-  std::map< size_t, PinholeCamera> & map_camerasGT)
+  std::map< size_t, PinholeCamera, std::less<size_t>,
+         Eigen::aligned_allocator<std::pair<size_t, PinholeCamera>>> & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
@@ -141,7 +143,7 @@ bool readGt(
   {
     std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
     // Load GT
-    std::map< std::string, Mat3 > map_R_gt;
+    std::map< std::string, Mat3, Eigen::aligned_allocator<Mat3> > map_R_gt;
     //Try to read .suffix camera (parse camera names)
     std::vector<std::string> vec_camfilenames =
       stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
@@ -154,8 +156,8 @@ bool readGt(
         if (fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), cam))
         {
           vec_filenames.push_back(stlplus::create_filespec(sGTPath, *iter));
-          map_Rt_gt[ stlplus::basename_part(*iter) ] = std::make_pair(cam._R, cam._t);
-          map_camerasGT[ std::distance(std::vector<std::string>::const_iterator(vec_camfilenames.begin()),iter)] = cam;
+          map_Rt_gt.insert({stlplus::basename_part(*iter), {cam._R, cam._t}});
+          map_camerasGT.insert({std::distance(vec_camfilenames.cbegin(), iter), cam});
         }
         else
           return false;

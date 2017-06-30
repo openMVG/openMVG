@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,12 +9,13 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_LMEDS_HPP
 #define OPENMVG_ROBUST_ESTIMATION_LMEDS_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-#include "openMVG/robust_estimation/robust_ransac_tools.hpp"
-
 #include <algorithm>
+#include <numeric>
 #include <limits>
 #include <vector>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
+#include "openMVG/robust_estimation/robust_ransac_tools.hpp"
 
 namespace openMVG {
 namespace robust{
@@ -49,22 +51,26 @@ template <typename Kernel>
   std::vector<uint32_t> all_samples(total_samples);
   std::iota(all_samples.begin(), all_samples.end(), 0);
 
+  //--
+  // Random number generation
+  std::mt19937 random_generator(std::mt19937::default_seed);
+
   for (uint32_t i=0; i < N; i++)
   {
     // Get Samples indexes
-    UniformSample(min_samples, &all_samples, &vec_sample);
+    UniformSample(min_samples, random_generator, &all_samples, &vec_sample);
 
     // Estimate parameters: the solutions are stored in a vector
     std::vector<typename Kernel::Model> models;
     kernel.Fit(vec_sample, &models);
 
     // Now test the solutions on the whole data
-    for (uint32_t k = 0; k < models.size(); ++k)
+    for (const auto& model_it : models)
     {
       //Compute Residuals :
       for (uint32_t l = 0; l < total_samples; ++l)
       {
-        residuals[l] = kernel.Error(l, models[k]);
+        residuals[l] = kernel.Error(l, model_it);
       }
 
       // Compute median
@@ -77,7 +83,7 @@ template <typename Kernel>
       if (median < dBestMedian)
       {
         dBestMedian = median;
-        if (model) (*model) = models[k];
+        if (model) (*model) = model_it;
       }
     }
   }

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 cDc and Pierre MOULON.
 
@@ -34,10 +35,7 @@ using namespace lemon;
 #include <Eigen/Cholesky>
 #include <Eigen/SparseCholesky>
 
-#include <cstdint>
-#include <map>
 #include <queue>
-
 
 namespace openMVG   {
 namespace rotation_averaging  {
@@ -163,7 +161,7 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   minGraph.resize(nViews);
 
   //E-- Export compute MST
-  for(size_t i= 0 ; i < tree_edge_vec.size(); i++)
+  for(size_t i= 0; i < tree_edge_vec.size(); i++)
   {
     minGraph[g.id(g.u(tree_edge_vec[i]))].edges.push_back(g.id(g.v(tree_edge_vec[i])));
     minGraph[g.id(g.v(tree_edge_vec[i]))].edges.push_back(g.id(g.u(tree_edge_vec[i])));

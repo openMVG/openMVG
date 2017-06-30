@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -27,13 +28,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include "openMVG/numeric/nullspace.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/poly.h"
 
 namespace openMVG {
 namespace fundamental {
 namespace kernel {
 
-void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F) {
+void SevenPointSolver::Solve
+(
+  const Mat &x1, const Mat &x2, std::vector<Mat3> *F
+)
+{
   assert(2 == x1.rows());
   assert(7 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -48,14 +55,14 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F)
     Mat9 A = Mat::Zero(9,9);
     EncodeEpipolarEquation(x1, x2, &A);
     // Find the two F matrices in the nullspace of A.
-    Nullspace2(&A, &f1, &f2);
+    Nullspace2(A, f1, f2);
   }
   else  {
     // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
     Mat A(x1.cols(), 9);
     EncodeEpipolarEquation(x1, x2, &A);
     // Find the two F matrices in the nullspace of A.
-    Nullspace2(&A, &f1, &f2);
+    Nullspace2(A, f1, f2);
   }
 
   const Mat3 F1 = Map<RMat3>(f1.data());
@@ -93,7 +100,11 @@ void SevenPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F)
   }
 }
 
-void EightPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs) {
+void EightPointSolver::Solve
+(
+  const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs
+)
+{
   assert(2 == x1.rows());
   assert(8 <= x1.cols());
   assert(x1.rows() == x2.rows());
@@ -106,12 +117,12 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs
     //  compiler doing the maximum of optimization.
     Mat9 A = Mat::Zero(9,9);
     EncodeEpipolarEquation(x1, x2, &A);
-    Nullspace(&A, &f);
+    Nullspace(A, f);
   }
   else  {
     MatX9 A(x1.cols(), 9);
     EncodeEpipolarEquation(x1, x2, &A);
-    Nullspace(&A, &f);
+    Nullspace(A, f);
   }
 
   Mat3 F = Map<RMat3>(f.data());
@@ -125,6 +136,44 @@ void EightPointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs
     F = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
   }
   Fs->push_back(F);
+}
+
+double SampsonError::Error
+(
+  const Mat3 &F, const Vec2 &x, const Vec2 &y
+)
+{
+  // See page 287 equation (11.9) of HZ.
+  const Vec3 F_x = F * x.homogeneous();
+  const Vec3 Ft_y = F.transpose() * y.homogeneous();
+  return Square(y.homogeneous().dot(F_x)) / (  F_x.head<2>().squaredNorm()
+                              + Ft_y.head<2>().squaredNorm());
+}
+
+double SymmetricEpipolarDistanceError::Error
+(
+  const Mat3 &F, const Vec2 &x, const Vec2 &y
+)
+{
+  // See page 288 equation (11.10) of HZ.
+  const Vec3 F_x = F * x.homogeneous();
+  const Vec3 Ft_y = F.transpose() * y.homogeneous();
+  return Square(y.homogeneous().dot(F_x)) *
+    ( 1.0 / F_x.head<2>().squaredNorm()
+      + 1.0 / Ft_y.head<2>().squaredNorm())
+    / 4.0;  // The divide by 4 is to make this match the Sampson distance.
+}
+
+
+double EpipolarDistanceError::Error
+(
+  const Mat3 &F, const Vec2 &x, const Vec2 &y
+)
+{
+  // Transfer error in image 2
+  // See page 287 equation (11.9) of HZ.
+  const Vec3 F_x = F * x.homogeneous();
+  return Square(F_x.dot(y.homogeneous())) /  F_x.head<2>().squaredNorm();
 }
 
 }  // namespace kernel

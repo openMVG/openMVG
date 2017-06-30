@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,16 +9,16 @@
 #ifndef OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 #define OPENMVG_SFM_SFM_DATA_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include <set>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
 
-#include <set>
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace sfm {
-
-struct SfM_Data;
 
 /// Generic basis struct for triangulation of track data contained
 ///  in the SfM_Data scene structure.
@@ -44,12 +46,14 @@ struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computati
 /// Triangulation of track data contained in the structure of a SfM_Data scene.
 // Use a robust estimation:
 // - Triangulate tracks using a RANSAC scheme
-// - Check cheirality and a pixel residual error (TODO: make it a parameter)
+// - Check cheirality and a pixel residual error
 struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computation_Basis
 {
-  SfM_Data_Structure_Computation_Robust
+  explicit SfM_Data_Structure_Computation_Robust
   (
     const double max_reprojection_error = 4, // pixels
+    const IndexT min_required_inliers = 3,
+    const IndexT min_sample_index = 3,
     bool bConsoleVerbose = false
   );
 
@@ -65,19 +69,15 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
   bool robust_triangulation(
     const SfM_Data & sfm_data,
     const Observations & obs,
-    Landmark & landmark,
-    const IndexT min_required_inliers = 3,
-    const IndexT min_sample_index = 3) const;
+    Landmark & landmark) const;
 
 private:
-  /// Triangulate a given track from a selection of observations
-  Vec3 track_sample_triangulation(
-    const SfM_Data & sfm_data,
-    const Observations & obs,
-    const std::set<IndexT> & samples) const;
 
   // -- DATA
   double max_reprojection_error_;
+  const IndexT min_required_inliers_;
+  const IndexT min_sample_index_;
+  
 };
 
 } // namespace sfm

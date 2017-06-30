@@ -25,6 +25,8 @@
 //  of the authors and should not be interpreted as representing official policies,
 //  either expressed or implied, of the FreeBSD Project.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,12 +36,13 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 
-#include <ceres/ceres.h>
-
 #include <ctime>
-#include <map>
-#include <set>
-#include <vector>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
+#include <ceres/ceres.h>
 
 namespace openMVG {
 
@@ -88,7 +91,7 @@ bool solve_translations_problem_l2_chordal
 )
 {
   // seed the random number generator
-  std::srand( std::time( NULL ) );
+  std::srand( std::time( nullptr ) );
 
   // re index the edges to be a sequential set
   std::vector<int> reindexed_edges(edges, edges+2*num_edges);
@@ -114,7 +117,7 @@ bool solve_translations_problem_l2_chordal
 
     if (loss_width == 0.0) {
       // No robust loss function
-      problem.AddResidualBlock(cost_function, NULL, &x[3*reindexed_edges[2*i+0]], &x[3*reindexed_edges[2*i+1]]);
+      problem.AddResidualBlock(cost_function, nullptr, &x[3*reindexed_edges[2*i+0]], &x[3*reindexed_edges[2*i+1]]);
     } else {
       problem.AddResidualBlock(cost_function, new ceres::HuberLoss(loss_width), &x[3*reindexed_edges[2*i+0]], &x[3*reindexed_edges[2*i+1]]);
     }
@@ -135,7 +138,7 @@ bool solve_translations_problem_l2_chordal
   options.max_num_iterations = max_iterations;
   options.function_tolerance = function_tolerance;
   options.parameter_tolerance = parameter_tolerance;
-  
+
   // Since the problem is sparse, use a sparse solver iff available
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {

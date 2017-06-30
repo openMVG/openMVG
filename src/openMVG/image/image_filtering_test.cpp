@@ -1,10 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_filtering.hpp"
 
 #include "testing/testing.h"
 
@@ -32,7 +35,7 @@ TEST(Image, Convolution)
 
   EXPECT_TRUE(WriteImage("in.png", in));
   EXPECT_TRUE(WriteImage("outfilter.png", outFiltered));
-    
+
   // Check that gaussian filtering have smooth at border of the white random square
   EXPECT_TRUE(outFiltered(5,5)>0);
   EXPECT_TRUE(outFiltered(250-5,250-5)>0);
@@ -74,7 +77,7 @@ TEST(Image, Convolution_Scharr_X_Y)
   EXPECT_EQ(0.f, outFiltered(30,20));
   // Check it exist a vertical black band
   EXPECT_EQ(0.f, outFiltered.block(0,10+3,40,20-2*3).array().abs().sum());
-  
+
   EXPECT_TRUE(WriteImage("in_Scharr.png", Image<unsigned char>(in.cast<unsigned char>())));
   EXPECT_TRUE(WriteImage("out_ScharrX.png", Image<unsigned char>(outFiltered.cast<unsigned char>())));
 

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,10 +9,12 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 #define OPENMVG_ROBUST_ESTIMATION_MAX_CONSENSUS_HPP
 
-#include "openMVG/robust_estimation/rand_sampling.hpp"
-
+#include <numeric>
 #include <limits>
+#include <random>
 #include <vector>
+
+#include "openMVG/robust_estimation/rand_sampling.hpp"
 
 namespace openMVG {
 namespace robust{
@@ -59,21 +62,24 @@ typename Kernel::Model MaxConsensus
   std::vector<uint32_t> all_samples(total_samples);
   std::iota(all_samples.begin(), all_samples.end(), 0);
 
+  // Random number generator configuration
+  std::mt19937 random_generator(std::mt19937::default_seed);
+
   std::vector<uint32_t> sample;
   for (uint32_t iteration = 0;  iteration < max_iteration; ++iteration) {
-    UniformSample(min_samples, &all_samples, &sample);
+    UniformSample(min_samples, random_generator, &all_samples, &sample);
 
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);
 
       // Compute costs for each fit.
-      for (size_t i = 0; i < models.size(); ++i) {
+      for (const auto& model_it : models) {
         std::vector<uint32_t> inliers;
-        scorer.Score(kernel, models[i], all_samples, &inliers);
+        scorer.Score(kernel, model_it, all_samples, &inliers);
 
         if (best_num_inliers < inliers.size()) {
           best_num_inliers = inliers.size();
-          best_model = models[i];
+          best_model = model_it;
           if (best_inliers) {
             best_inliers->swap(inliers);
           }

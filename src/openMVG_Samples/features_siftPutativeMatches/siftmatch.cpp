@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,14 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-
+//
 #include "nonFree/sift/SIFT_describer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#include <cstdlib>
 #include <string>
 #include <iostream>
 

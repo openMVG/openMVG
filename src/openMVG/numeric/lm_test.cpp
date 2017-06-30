@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -10,6 +11,9 @@
 
 #include "testing/testing.h"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
+
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
 #include <fstream>
 #include <iostream>

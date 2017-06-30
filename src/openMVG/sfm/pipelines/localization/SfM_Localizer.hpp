@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,28 +9,20 @@
 #ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 #define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include <limits>
+#include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/types.hpp"
 
+namespace openMVG { namespace cameras { struct IntrinsicBase; } }
+namespace openMVG { namespace features { class Regions; } }
+namespace openMVG { namespace geometry { class Pose3; } }
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
+
 namespace openMVG {
-
-namespace features {
-  class Regions;
-} // namespace features
-
-namespace geometry {
-  class Pose3;
-} // namespace geometry
-
-
-namespace cameras {
-  struct IntrinsicBase;
-} // namespace cameras 
-
 namespace sfm {
-
-struct SfM_Data;
-struct Regions_Provider;
 
 struct Image_Localizer_Match_Data
 {
@@ -45,7 +38,7 @@ struct Image_Localizer_Match_Data
 class SfM_Localizer
 {
 public:
-  virtual ~SfM_Localizer() {}
+  virtual ~SfM_Localizer() = default;
 
   /**
   * @brief Build the retrieval database (3D points descriptors)

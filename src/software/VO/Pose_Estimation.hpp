@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -8,7 +9,7 @@
 #ifndef POSE_ESTIMATION_VO_HPP
 #define POSE_ESTIMATION_VO_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"

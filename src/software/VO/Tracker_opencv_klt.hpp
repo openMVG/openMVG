@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -87,7 +88,8 @@ struct Tracker_opencv_KLT : public Abstract_Tracker
     if (m_nextKeypoints.size() >= count)
     {
       // shuffle to avoid to sample only in one bucket
-      std::random_shuffle(m_nextKeypoints.begin(), m_nextKeypoints.end());
+      std::mt19937 gen(std::mt19937::default_seed);
+      std::shuffle(m_nextKeypoints.begin(), m_nextKeypoints.end(), gen);
     }
     const size_t kept_kp_count =  std::min(m_nextKeypoints.size(), count);
     m_nextKeypoints.resize(kept_kp_count);

@@ -1,14 +1,16 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_IO.hpp"
-
-#include "openMVG/cameras/cameras.hpp"
+// The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
-#include <cereal/cereal.hpp>
+
+#include "openMVG/cameras/Camera_IO.hpp"
+#include "openMVG/cameras/cameras_io.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -45,8 +47,8 @@ TEST(Camera_IO_ceral, SaveRead) {
 
   for (const auto cam_type : vec_camera_model_type)
   {
-    std::shared_ptr<IntrinsicBase> intrinsic(NULL);
-    
+    std::shared_ptr<IntrinsicBase> intrinsic(nullptr);
+
     const int width = 200;
     const int height = 200;
     const double ppx = width / 2.0;

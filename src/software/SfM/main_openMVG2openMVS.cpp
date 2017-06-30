@@ -1,16 +1,23 @@
-// Copyright (c) 2016
-// cDc <cdc.seacave@gmail.com>
-// Pierre MOULON
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2016 cDc <cdc.seacave@gmail.com>, Pierre MOULON
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #define _USE_EIGEN
 #include "InterfaceMVS.h"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -18,14 +25,8 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress.hpp"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <cmath>
-#include <iterator>
-#include <iomanip>
+#include <cstdlib>
+#include <string>
 
 bool exportToOpenMVS(
   const SfM_Data & sfm_data,
@@ -57,7 +58,7 @@ bool exportToOpenMVS(
   // define a platform with all the intrinsic group
   for (const auto& intrinsic: sfm_data.GetIntrinsics())
   {
-    if (isPinhole(intrinsic.second.get()->getType()))
+    if (isPinhole(intrinsic.second->getType()))
     {
       const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
       if (map_intrinsic.count(intrinsic.first) == 0)
@@ -117,7 +118,7 @@ bool exportToOpenMVS(
       // just copy the image
       stlplus::file_copy(srcImage, image.name);
     }
-    scene.images.push_back(image);
+    scene.images.emplace_back(image);
     ++my_progress_bar;
   }
 
@@ -161,16 +162,16 @@ bool exportToOpenMVS(
       MVS::Interface::Image* pImage(NULL);
       for (MVS::Interface::Image& image: scene.images)
       {
-	      if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
-	      {
-		      pImage = &image;
-		      break;
-	      }
+        if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
+        {
+          pImage = &image;
+          break;
+        }
       }
       if (pImage == NULL)
       {
-	      std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
-	      continue;
+        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
+        continue;
       }
       // read image meta-data
       ImageHeader imageHeader;
@@ -184,7 +185,7 @@ bool exportToOpenMVS(
   }
 
   // write OpenMVS data
-  if (!ARCHIVE::SerializeSave(scene, sOutFile))
+  if (!MVS::ARCHIVE::SerializeSave(scene, sOutFile))
     return false;
 
   std::cout
@@ -219,6 +220,13 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
   }
 
+  if (stlplus::extension_part(sOutFile) != "mvs") {
+    std::cerr << std::endl
+      << "Invalid output file extension: " << sOutFile << std::endl
+      << "You must use a filename with a .mvs extension." << std::endl;
+      return EXIT_FAILURE;
+  }
+
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
@@ -227,9 +235,11 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  if (exportToOpenMVS(sfm_data, sOutFile, sOutDir))
+  if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir))
   {
-    return EXIT_SUCCESS;
+    std::cerr << std::endl
+      << "The output openMVS scene file cannot be written" << std::endl;
+    return EXIT_FAILURE;
   }
-  return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }

@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -83,8 +85,6 @@ class Bundle_Adjustment
     // tell which parameter needs to be adjusted
     const Optimize_Options options
   ) = 0;
-
-  // TODO: Use filter to say wich parameter is const or not (allow to refine only a subpart of the intrinsics or the poses)
 };
 
 } // namespace sfm

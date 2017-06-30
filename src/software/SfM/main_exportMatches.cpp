@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,12 +9,15 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <cstdlib>
 #include <string>

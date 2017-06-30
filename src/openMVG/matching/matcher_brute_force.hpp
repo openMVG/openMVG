@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,14 +9,16 @@
 #ifndef OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 #define OPENMVG_MATCHING_MATCHER_BRUTE_FORCE_HPP
 
+#include <algorithm>
+#include <memory>
+#include <future>
+#include <thread>
+#include <vector>
+
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/stl/indexed_sort.hpp"
-
-#include <memory>
-#include <future>
-#include <thread>
 
 namespace openMVG {
 namespace matching {
@@ -26,11 +30,8 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
   public:
   using DistanceType = typename Metric::ResultType;
 
-  ArrayMatcherBruteForce() = default ;
-  virtual ~ArrayMatcherBruteForce()
-  {
-    memMapping.reset();
-  }
+  ArrayMatcherBruteForce() = default;
+  virtual ~ArrayMatcherBruteForce()= default;
 
   /**
    * Build the matching structure
@@ -53,7 +54,7 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
       memMapping.reset(nullptr);
       return false;
     }
-    memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension) );
+    memMapping.reset(new Eigen::Map<BaseMat>( (Scalar*)dataset, nbRows, dimension));
     return true;
   };
 
@@ -74,7 +75,7 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
     DistanceType * distance
   ) override
   {
-    if (memMapping.get() == nullptr || memMapping->rows() < 1)
+    if (!memMapping || memMapping->rows() < 1)
       return false;
 
     IndMatches vec_index(1);
@@ -104,8 +105,8 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
     size_t NN
   ) override
   {
-    if (memMapping.get() == nullptr ||
-        NN > (*memMapping).rows() ||
+    if (!memMapping ||
+        NN > memMapping->rows() ||
         nbQuery < 1)
     {
       return false;
@@ -116,11 +117,11 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
 
     const int nb_thread = static_cast<int>(std::thread::hardware_concurrency());
     // Compute ranges
-    std::vector< int > range;
-    SplitRange( (int)0 , (int)nbQuery , nb_thread , range );
+    std::vector<int> range;
+    SplitRange((int)0 , (int)nbQuery , nb_thread , range);
 
     std::vector<std::future<void>> fut;
-    for ( size_t i = 1 ; i < range.size() ; ++i )
+    for (size_t i = 1; i < range.size(); ++i)
     {
       fut.push_back(
         std::async(
@@ -132,12 +133,12 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
           range[i],
           pvec_indices,
           pvec_distances,
-          NN ));
+          NN));
     }
 
-    for ( int i = 0; i < fut.size(); ++i )
+    for (const auto & fut_it : fut)
     {
-      fut[i].wait();
+      fut_it.wait();
     }
     return true;
   };
@@ -186,8 +187,8 @@ private:
       }
 
       // Find the N minimum distances
-      const int maxMinFound = (int) std::min( size_t(NN), vec_distance.size());
-      std::vector< stl::indexed_sort::sort_index_packet_ascend< DistanceType, int> > packet_vec(vec_distance.size());
+      const int maxMinFound = static_cast<int>(std::min(size_t(NN), vec_distance.size()));
+      std::vector<stl::indexed_sort::sort_index_packet_ascend<DistanceType, int>> packet_vec(vec_distance.size());
       stl::indexed_sort::sort_index_helper(packet_vec, &vec_distance[0], maxMinFound);
 
       for (int i = 0; i < maxMinFound; ++i)

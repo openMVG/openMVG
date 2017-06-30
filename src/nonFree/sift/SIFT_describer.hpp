@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,12 +9,13 @@
 #ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 #define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
-#include <cereal/cereal.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"
@@ -45,6 +48,8 @@ class SIFT_Image_describer : public Image_describer
 {
 public:
 
+  using Regions_type = SIFT_Regions;
+
   struct Params
   {
     Params(
@@ -63,16 +68,7 @@ public:
       _root_sift(root_sift) {}
 
     template<class Archive>
-    void serialize( Archive & ar )
-    {
-      ar(
-        cereal::make_nvp("first_octave", _first_octave),
-        cereal::make_nvp("num_octaves",_num_octaves),
-        cereal::make_nvp("num_scales",_num_scales),
-        cereal::make_nvp("edge_threshold",_edge_threshold),
-        cereal::make_nvp("peak_threshold",_peak_threshold),
-        cereal::make_nvp("root_sift",_root_sift));
-    }
+    inline void serialize( Archive & ar );
 
     // Parameters
     int _first_octave;      // Use original image, or perform an upscale if == -1
@@ -123,16 +119,29 @@ public:
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
-  @param regions The detected regions and attributes (the caller must delete the allocated data)
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  bool Describe
-  (
+  std::unique_ptr<Regions> Describe(
     const image::Image<unsigned char>& image,
-    std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = nullptr
+    const image::Image<unsigned char>* mask = nullptr
   ) override
+  {
+    return DescribeSIFT(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> DescribeSIFT(
+      const image::Image<unsigned char>& image,
+      const image::Image<unsigned char>* mask = nullptr
+  )
   {
     const int w = image.Width(), h = image.Height();
     //Convert to float
@@ -151,13 +160,12 @@ public:
     // Process SIFT computation
     vl_sift_process_first_octave(filt, If.data());
 
-    Allocate(regions);
-
     // Build alias to cached data
-    SIFT_Regions * regionsCasted = dynamic_cast<SIFT_Regions*>(regions.get());
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
+
     // reserve some memory for faster keypoint saving
-    regionsCasted->Features().reserve(2000);
-    regionsCasted->Descriptors().reserve(2000);
+    regions->Features().reserve(2000);
+    regions->Descriptors().reserve(2000);
 
     while (true) {
       vl_sift_detect(filt);
@@ -198,8 +206,8 @@ public:
           #pragma omp critical
           #endif
           {
-            regionsCasted->Descriptors().push_back(descriptor);
-            regionsCasted->Features().push_back(fp);
+            regions->Descriptors().push_back(descriptor);
+            regions->Features().push_back(fp);
           }
         }
       }
@@ -208,22 +216,16 @@ public:
     }
     vl_sift_delete(filt);
 
-    return true;
-  };
+    return regions;
+  }
 
-  /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const override
+  std::unique_ptr<Regions> Allocate() const override
   {
-    regions.reset( new SIFT_Regions );
+    return std::unique_ptr<Regions_type>(new Regions_type);
   }
 
   template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(
-     cereal::make_nvp("params", _params),
-     cereal::make_nvp("bOrientation", _bOrientation));
-  }
+  inline void serialize( Archive & ar );
 
 private:
   Params _params;
@@ -232,10 +234,5 @@ private:
 
 } // namespace features
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::SIFT_Image_describer)
 
 #endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP

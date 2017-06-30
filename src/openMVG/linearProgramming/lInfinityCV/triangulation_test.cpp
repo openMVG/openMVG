@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,7 +13,6 @@
 
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
 

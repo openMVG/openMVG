@@ -34,6 +34,7 @@
 #include <cstdint>
 #include <stdio.h>
 #include <limits>
+#include <memory>
 #include <vector>
 
 using std::string;

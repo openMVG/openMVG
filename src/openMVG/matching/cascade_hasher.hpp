@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -59,14 +61,16 @@
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
 
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/metric.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/stl/dynamic_bitset.hpp"
-
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <utility>
+#include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/metric.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/stl/dynamic_bitset.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -112,14 +116,15 @@ private:
   int nb_buckets_per_group_;
 
 public:
-  CascadeHasher() {}
+  CascadeHasher() = default;
 
   // Creates the hashing projections (cascade of two level of hash codes)
   bool Init
   (
     const uint8_t nb_hash_code = 128,
     const uint8_t nb_bucket_groups = 6,
-    const uint8_t nb_bits_per_bucket = 10)
+    const uint8_t nb_bits_per_bucket = 10,
+    const unsigned random_seed = std::mt19937::default_seed)
   {
     nb_bucket_groups_= nb_bucket_groups;
     nb_hash_code_ = nb_hash_code;
@@ -130,8 +135,7 @@ public:
     // Box Muller transform is used in the original paper to get fast random number
     // from a normal distribution with <mean = 0> and <variance = 1>.
     // Here we use C++11 normal distribution random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(random_seed);
     std::normal_distribution<> d(0,1);
 
     primary_hash_projection_.resize(nb_hash_code, nb_hash_code);

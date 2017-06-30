@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -8,13 +10,11 @@
 #define OPENMVG_GEOMETRY_POSE3_HPP
 
 #include "openMVG/multiview/projection.hpp"
-#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG
 {
 namespace geometry
 {
-
 
 /**
 * @brief Defines a pose in 3d space
@@ -33,21 +33,17 @@ class Pose3
   public:
 
     /**
-    * @brief Default constructor
-    * @note This defines a Null transform (aligned with cartesian frame, centered at origin)
-    */
-    Pose3()
-      : rotation_( Mat3::Identity() ),
-        center_( Vec3::Zero() )
-    {
-
-    }
-    /**
     * @brief Constructor
     * @param r Rotation
     * @param c Center
+    * @note Default (without args) defines an Identity pose.
     */
-    Pose3( const Mat3& r, const Vec3& c ) : rotation_( r ), center_( c ) {}
+    Pose3
+    (
+      const Mat3& r = std::move(Mat3::Identity()),
+      const Vec3& c = std::move(Vec3::Zero())
+    )
+    : rotation_( r ), center_( c ) {}
 
     /**
     * @brief Get Rotation matrix
@@ -143,39 +139,14 @@ class Pose3
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      const std::vector<std::vector<double>> mat =
-      {
-        { rotation_( 0, 0 ), rotation_( 0, 1 ), rotation_( 0, 2 ) },
-        { rotation_( 1, 0 ), rotation_( 1, 1 ), rotation_( 1, 2 ) },
-        { rotation_( 2, 0 ), rotation_( 2, 1 ), rotation_( 2, 2 ) }
-      };
-
-      ar( cereal::make_nvp( "rotation", mat ) );
-
-      const std::vector<double> vec = { center_( 0 ), center_( 1 ), center_( 2 ) };
-      ar( cereal::make_nvp( "center", vec ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      std::vector<std::vector<double>> mat( 3, std::vector<double>( 3 ) );
-      ar( cereal::make_nvp( "rotation", mat ) );
-      // copy back to the rotation
-      rotation_.row( 0 ) = Eigen::Map<const Vec3>( &( mat[0][0] ) );
-      rotation_.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
-      rotation_.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
-
-      std::vector<double> vec( 3 );
-      ar( cereal::make_nvp( "center", vec ) );
-      center_ = Eigen::Map<const Vec3>( &vec[0] );
-    }
+    inline void load( Archive & ar );
 };
 } // namespace geometry
 } // namespace openMVG

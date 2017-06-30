@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
@@ -8,15 +9,18 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/features/feature.hpp"
 #include "openMVG/tracks/tracks.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -107,6 +111,7 @@ int main(int argc, char ** argv)
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks);
   }
+  openMVG::tracks::SharedTrackVisibilityHelper track_visibility_helper(map_tracks);
 
   // ------------
   // For each pair, export the matches
@@ -122,18 +127,17 @@ int main(int argc, char ** argv)
   {
     for (uint32_t J = I+1; J < viewCount; ++J, ++my_progress_bar)
     {
+      const View
+        *view_I = sfm_data.GetViews().at(I).get(),
+        *view_J = sfm_data.GetViews().at(J).get();
 
-      const View * view_I = sfm_data.GetViews().at(I).get();
-      const std::string sView_I= stlplus::create_filespec(sfm_data.s_root_path,
-        view_I->s_Img_path);
-      const View * view_J = sfm_data.GetViews().at(J).get();
-      const std::string sView_J= stlplus::create_filespec(sfm_data.s_root_path,
-        view_J->s_Img_path);
+      const std::string
+        sView_I = stlplus::create_filespec(sfm_data.s_root_path, view_I->s_Img_path),
+        sView_J = stlplus::create_filespec(sfm_data.s_root_path, view_J->s_Img_path);
 
       // Get common tracks between view I and J
       tracks::STLMAPTracks map_tracksCommon;
-      const std::set<uint32_t> set_imageIndex = {I,J};
-      TracksUtilsMap::GetTracksInImages(set_imageIndex, map_tracks, map_tracksCommon);
+      track_visibility_helper.GetTracksInImages({I,J}, map_tracksCommon);
 
       if (!map_tracksCommon.empty())
       {
@@ -147,7 +151,7 @@ int main(int argc, char ** argv)
           const IndexT j = iter->second;
           matches.emplace_back(i, j);
         }
-        
+
         // Draw corresponding features
         const bool bVertical = false;
         std::ostringstream os;

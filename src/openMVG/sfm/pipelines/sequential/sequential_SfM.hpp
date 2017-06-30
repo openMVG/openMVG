@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,11 +9,16 @@
 #ifndef OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
 #define OPENMVG_SFM_LOCALIZATION_SEQUENTIAL_SFM_HPP
 
+#include <set>
+#include <string>
+#include <vector>
+
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
-#include "third_party/htmlDoc/htmlDoc.hpp"
-#include "third_party/histogram/histogram.hpp"
+namespace htmlDocument { class htmlDocumentStream; }
+namespace { template <typename T> class Histogram; }
 
 namespace openMVG {
 namespace sfm {
@@ -30,12 +36,12 @@ public:
     const std::string & soutDirectory,
     const std::string & loggingFile = "");
 
-  ~SequentialSfMReconstructionEngine();
+  ~SequentialSfMReconstructionEngine() override;
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
 
-  virtual bool Process();
+  virtual bool Process() override;
 
   void setInitialPair(const Pair & initialPair)
   {
@@ -103,6 +109,10 @@ private:
 
   // Temporary data
   openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
+
+  // Helper to compute if some image have some track in common
+  std::unique_ptr<openMVG::tracks::SharedTrackVisibilityHelper> shared_track_visibility_helper_;
+
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
   std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection

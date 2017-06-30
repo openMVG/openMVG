@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 #include "testing/testing.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

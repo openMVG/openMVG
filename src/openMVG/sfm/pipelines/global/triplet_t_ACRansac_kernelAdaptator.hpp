@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -7,6 +8,8 @@
 
 #ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
 #define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
+
+#include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/numeric/numeric.h"

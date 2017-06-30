@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,19 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/matching/matching_filters.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/svg_features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/cmdLine/cmdLine.h"
-
 #include "nonFree/sift/SIFT_describer.hpp"
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/cmdLine/cmdLine.h"
+#include <memory>
 #include <string>
-#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -55,21 +56,21 @@ int main(int argc, char **argv) {
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
+  assert(imageL.data() && imageR.data());
 
   // Call Keypoint extractor
   using namespace openMVG::features;
-  std::shared_ptr<Image_describer> image_describer;
+  std::unique_ptr<Image_describer> image_describer;
   if (sImage_describer_type == "SIFT")
-    image_describer = std::make_shared<SIFT_Image_describer>
-      (SIFT_Image_describer::Params());
+    image_describer.reset(new SIFT_Image_describer(SIFT_Image_describer::Params()));
   else if (sImage_describer_type == "AKAZE")
-    image_describer = std::make_shared<AKAZE_Image_describer>
+    image_describer = AKAZE_Image_describer::create
       (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF));
   else if (sImage_describer_type == "AKAZE_MLDB")
-    image_describer = std::make_shared<AKAZE_Image_describer>
+    image_describer = AKAZE_Image_describer::create
       (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB));
 
-  if (image_describer.use_count()==0)
+  if (image_describer == nullptr)
   {
     std::cerr << "Invalid Image_describer type" << std::endl;
     return EXIT_FAILURE;

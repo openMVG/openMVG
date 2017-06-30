@@ -1,5 +1,4 @@
-// This is an adaptation of the Fisheye distortion model implemented in OpenCV
-// https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Romain Janvier <romain.janvier~AT~univ-orleans.fr> for the given adaptation
 
@@ -7,14 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// This is an adaptation of the Fisheye distortion model implemented in OpenCV
+// https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
+
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
+
+#include <vector>
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/numeric/numeric.h"
-
-#include <vector>
 
 namespace openMVG
 {
@@ -224,22 +226,14 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
-      ar( cereal::make_nvp( "fisheye", params_ ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief  Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      ar(cereal::base_class<Pinhole_Intrinsic>(this));
-      ar( cereal::make_nvp( "fisheye", params_ ) );
-    }
+    inline void load( Archive & ar );
 
     /**
     * @brief Clone the object
@@ -254,11 +248,5 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 
 } // namespace cameras
 } // namespace openMVG
-
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye" );
-CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Fisheye)
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
