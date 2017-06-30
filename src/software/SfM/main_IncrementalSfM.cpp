@@ -195,6 +195,41 @@ int main(int argc, char **argv)
     }
   }
 
+  
+  // If we use motion priors we take care that we remove offset for processing
+  Vec3 scene_center(0,0,0);
+  if (cmd.used('P'))
+  {
+    size_t n_usable_priors=0;
+    // Loop through priors and get average
+    for (auto & view : sfm_data.GetViews())
+    {
+      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+      {
+        if (prior->b_use_pose_center_)
+        {
+            scene_center += prior->pose_center_;
+            n_usable_priors++;
+        }
+      }
+    }
+    scene_center/=n_usable_priors;
+    
+    std::cout<<"Scene center: "<<scene_center<<"\n";
+    
+    // Apply translation to all priors
+    for (auto & view : sfm_data.GetViews())
+    {
+      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+      {
+        if (prior->b_use_pose_center_)
+        {
+            prior->pose_center_ -= scene_center;
+        }
+      }
+    }
+  }
+
   //---------------------------------------
   // Sequential reconstruction process
   //---------------------------------------
@@ -215,6 +250,7 @@ int main(int argc, char **argv)
   b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
 
+
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
@@ -231,6 +267,47 @@ int main(int argc, char **argv)
   if (sfmEngine.Process())
   {
     std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
+
+
+    // If priors were used we move the model back to original coordinate system
+    if (cmd.used('P'))
+    {
+      std::cout << "...Applying reverse prior translation" << std::endl;
+      // Apply translation to all priors
+      for (auto & view : sfm_data.GetViews())
+      {
+        if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
+        {
+          if (prior->b_use_pose_center_)
+          {
+              prior->pose_center_ += scene_center;
+          }
+        }
+      }
+      
+      // Apply translation to poses
+      for (Poses::iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
+      {
+        Pose3 & pose = itPose->second;   
+        pose = Pose3(pose.rotation(), pose.center()+scene_center);
+      }
+      
+      // Apply translation to landmarks
+      for (Landmarks::iterator itLandmark = sfm_data.structure.begin();
+        itLandmark != sfm_data.structure.end(); ++itLandmark)
+      {
+        Landmark &landmark = itLandmark->second;
+        landmark.X = landmark.X + scene_center;
+      }
+      
+      // Apply translation to control points
+      for (Landmarks::iterator iterGCPTracks = sfm_data.control_points.begin();
+        iterGCPTracks!= sfm_data.control_points.end(); ++iterGCPTracks)
+      {
+        Landmark &landmark = iterGCPTracks->second;
+        landmark.X = landmark.X + scene_center;
+      }
+    }
 
     std::cout << "...Generating SfM_Report.html" << std::endl;
     Generate_SfM_Report(sfmEngine.Get_SfM_Data(),

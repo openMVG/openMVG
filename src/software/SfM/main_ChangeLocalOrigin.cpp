@@ -33,10 +33,12 @@ int main(int argc, char **argv)
     sLocalFrameOrigin;
     
   Vec3 local_Frame_Origin;
+  bool b_first_frame_origin;
 
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('o', sOutDir, "output_dir"));
   cmd.add(make_option('l', sLocalFrameOrigin, "local_frame_origin"));
+  cmd.add( make_switch('f', "first_frame_origin") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -46,39 +48,11 @@ int main(int argc, char **argv)
         << "[-i|--input_file] path to the input SfM_Data scene\n"
         << "[-o|--output_dir] path to the output SfM_Data scene (in local frame)\n"
         << "[-l|--local_frame_origin] \"x;y;z\" of local frame origin\n"
+        << "[-f|--first_frame_origin] use position of first frame as origin\n"
         << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
-  }
-
-  if (sLocalFrameOrigin.empty())
-  {
-    std::cerr << std::endl
-      << "No local frame origin specified." << std::endl;
-    return EXIT_FAILURE;
-  }
-  else
-  {
-    std::vector<std::string> vec_str;
-    stl::split(sLocalFrameOrigin, ';', vec_str);
-    if (vec_str.size() != 3)
-    {
-      std::cerr << "\n Missing ';' character in local frame origin" << std::endl;
-      return false;
-    }
-    // Check that all local frame origin values are valid numbers
-    for (size_t i = 0; i < vec_str.size(); ++i)
-    {
-      double readvalue = 0.0;
-      std::stringstream ss;
-      ss.str(vec_str[i]);
-      if (! (ss >> readvalue) )  {
-        std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
-        return false;
-      }
-      local_Frame_Origin[i] = readvalue;
-    }
   }
 
   if (sOutDir.empty())
@@ -96,6 +70,46 @@ int main(int argc, char **argv)
     std::cerr << std::endl
       << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
+  }
+  
+  // Local origin
+  b_first_frame_origin = cmd.used('f');
+  
+  if (sLocalFrameOrigin.empty() && !b_first_frame_origin)
+  {
+    std::cerr << std::endl
+      << "No local frame origin specified." << std::endl;
+    return EXIT_FAILURE;
+  }
+  else
+  {
+    if (b_first_frame_origin)
+    {
+      local_Frame_Origin =  (sfm_data.poses.begin()->second).center();
+      std::cout<<"Using frame origin: "<<local_Frame_Origin<<"\n";
+    }
+    else
+    {
+      std::vector<std::string> vec_str;
+      stl::split(sLocalFrameOrigin, ';', vec_str);
+      if (vec_str.size() != 3)
+      {
+        std::cerr << "\n Missing ';' character in local frame origin" << std::endl;
+        return false;
+      }
+      // Check that all local frame origin values are valid numbers
+      for (size_t i = 0; i < vec_str.size(); ++i)
+      {
+        double readvalue = 0.0;
+        std::stringstream ss;
+        ss.str(vec_str[i]);
+        if (! (ss >> readvalue) )  {
+          std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
+          return false;
+        }
+        local_Frame_Origin[i] = readvalue;
+      }
+    }
   }
   
   // Move poses
