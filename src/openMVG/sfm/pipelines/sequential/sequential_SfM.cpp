@@ -99,46 +99,6 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  //-------------------
-  //-- Normalize priors
-  //-------------------
-  Vec3 scene_normalization_ (0,0,0);
-  if (this->b_use_motion_prior_)
-  {
-    // If we use motion priors we take care that we remove offset for processing
-    size_t n_usable_priors=0;
-    // Loop through priors and get average
-    for (auto & view : sfm_data_.GetViews())
-    {
-      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
-      {
-        if (prior->b_use_pose_center_)
-        {
-            scene_normalization_ += prior->pose_center_;
-            n_usable_priors++;
-        }
-      }
-    }
-    scene_normalization_/=n_usable_priors;
-    
-    //-- Display normalization statistics
-    std::cout << "\n\n-------------------------------" << "\n"
-      << "-- Scene center for normalization: "<<scene_normalization_(0)<<", "<<scene_normalization_(1)<<", "<<scene_normalization_(2)
-      << "\n-------------------------------" << "\n";
-    
-    // Apply translation to all priors
-    for (auto & view : sfm_data_.GetViews())
-    {
-      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
-      {
-        if (prior->b_use_pose_center_)
-        {
-            prior->pose_center_ -= scene_normalization_;
-        }
-      }
-    }
-  }
-
   // Initial pair choice
   if (initial_pair_ == Pair(0,0))
   {
@@ -192,51 +152,6 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (badTrackRejector(4.0, 0))
   {
     eraseUnstablePosesAndObservations(sfm_data_);
-  }
-
-  //-- Denormalize scene
-  if (this->b_use_motion_prior_)
-  {
-    std::cout << "\n\n-------------------------------" << "\n";
-    // Poses
-    std::cout << "...Denormalize poses..." << std::endl;
-    for (Poses::iterator itPose = sfm_data_.poses.begin(); itPose != sfm_data_.poses.end(); ++itPose)
-    {
-      Pose3 & pose = itPose->second;   
-      pose = Pose3(pose.rotation(), pose.center()+scene_normalization_);
-    }
-    
-    // Priors
-    std::cout << "...Denormalize priors..." << std::endl;
-    for (auto & view : sfm_data_.GetViews())
-    {
-      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
-      {
-        if (prior->b_use_pose_center_)
-        {
-          prior->pose_center_ += scene_normalization_;
-        }
-      }
-    }
-    
-    // Landmarks
-    std::cout << "...Denormalize landmarks..." << std::endl;
-    for (Landmarks::iterator itLandmark = sfm_data_.structure.begin();
-      itLandmark != sfm_data_.structure.end(); ++itLandmark)
-    {
-      Landmark &landmark = itLandmark->second;
-      landmark.X = landmark.X + scene_normalization_;
-    }
-    
-    // Control points
-    std::cout << "...Denormalize control points..." << std::endl;
-    for (Landmarks::iterator iterGCPTracks = sfm_data_.control_points.begin();
-      iterGCPTracks!= sfm_data_.control_points.end(); ++iterGCPTracks)
-    {
-      Landmark &landmark = iterGCPTracks->second;
-      landmark.X = landmark.X + scene_normalization_;
-    }
-    std::cout << "-------------------------------" << "\n";
   }
   
   //-- Reconstruction done.
