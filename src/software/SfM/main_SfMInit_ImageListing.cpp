@@ -99,6 +99,37 @@ std::pair<bool, Vec3> checkGPS
 }
 
 
+/// Check string of prior weights
+std::pair<bool, Vec3> checkPriorWeightsString
+(
+  const std::string &sWeights
+)
+{
+  std::pair<bool, Vec3> val(true, Vec3::Zero());
+  std::vector<std::string> vec_str;
+  stl::split(sWeights, ';', vec_str);
+  if (vec_str.size() != 3)
+  {
+    std::cerr << "\n Missing ';' character in prior weights" << std::endl;
+    val.first = false;
+  }
+  // Check that all weight values are valid numbers
+  for (size_t i = 0; i < vec_str.size(); ++i)
+  {
+    double readvalue = 0.0;
+    std::stringstream ss;
+    ss.str(vec_str[i]);
+    if (! (ss >> readvalue) )  {
+      std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
+      val.first = false;
+    }
+    val.second[i] = readvalue;
+  }
+  return val;
+}
+
+// GPS TXT
+
 std::pair<bool, Vec3> checkGPS
 (
   const std::string & filename,
@@ -130,36 +161,6 @@ std::pair<bool, Vec3> checkGPS
   }
   return val;
 }
-
-/// Check string of prior weights
-std::pair<bool, Vec3> checkPriorWeightsString
-(
-  const std::string &sWeights
-)
-{
-  std::pair<bool, Vec3> val(true, Vec3::Zero());
-  std::vector<std::string> vec_str;
-  stl::split(sWeights, ';', vec_str);
-  if (vec_str.size() != 3)
-  {
-    std::cerr << "\n Missing ';' character in prior weights" << std::endl;
-    val.first = false;
-  }
-  // Check that all weight values are valid numbers
-  for (size_t i = 0; i < vec_str.size(); ++i)
-  {
-    double readvalue = 0.0;
-    std::stringstream ss;
-    ss.str(vec_str[i]);
-    if (! (ss >> readvalue) )  {
-      std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
-      val.first = false;
-    }
-    val.second[i] = readvalue;
-  }
-  return val;
-}
-
 
 /// Parse txt file consisting of img_name;x;y;z;
 Hash_Map<std::string,Vec3> parseGPSfile(std::string & sGPSfile)
@@ -491,7 +492,8 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = ( cmd.used('G') && !map_GPS_data.empty() ) ? checkGPS(*iter_image, map_GPS_data, i_GPS_XYZ_method) : checkGPS(sImageFilename, i_GPS_XYZ_method);
+    //const std::pair<bool, Vec3> gps_info = ( cmd.used('G') && !map_GPS_data.empty() ) ? checkGPS(*iter_image, map_GPS_data, i_GPS_XYZ_method) : checkGPS(sImageFilename, i_GPS_XYZ_method);
+    const std::pair<bool, Vec3> gps_info = std::make_pair<bool, Vec3>(true,Vec3(1,1,1));
     if (gps_info.first && ( cmd.used('P') || cmd.used('G') ) )
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
