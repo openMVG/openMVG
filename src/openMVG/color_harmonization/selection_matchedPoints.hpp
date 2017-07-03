@@ -49,7 +49,7 @@ public:
   {
     maskLeft.fill(0);
     maskRight.fill(0);
-    for( std::vector< matching::IndMatch >::const_iterator
+    for (std::vector< matching::IndMatch >::const_iterator
           iter_putativeMatches = _vec_PutativeMatches.begin();
           iter_putativeMatches != _vec_PutativeMatches.end();
           ++iter_putativeMatches )

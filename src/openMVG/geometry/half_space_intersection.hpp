@@ -58,7 +58,7 @@ Half_plane_p
 bool
 isNotEmpty
 (
-	const Half_planes & hplanes
+  const Half_planes & hplanes
 );
 
 /**

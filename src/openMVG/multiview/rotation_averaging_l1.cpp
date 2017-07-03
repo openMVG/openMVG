@@ -161,7 +161,7 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   minGraph.resize(nViews);
 
   //E-- Export compute MST
-  for(size_t i= 0; i < tree_edge_vec.size(); i++)
+  for (size_t i= 0; i < tree_edge_vec.size(); i++)
   {
     minGraph[g.id(g.u(tree_edge_vec[i]))].edges.push_back(g.id(g.v(tree_edge_vec[i])));
     minGraph[g.id(g.v(tree_edge_vec[i]))].edges.push_back(g.id(g.u(tree_edge_vec[i])));
@@ -231,7 +231,7 @@ double RelRotationAvgError
       boost::accumulators::tag::mean,
       boost::accumulators::tag::max> > acc;
 
-  for(int i=0; i < RelRs.size(); ++i) {
+  for (int i=0; i < RelRs.size(); ++i) {
     const RelativeRotation& relR = RelRs[i];
     acc(openMVG::FrobeniusNorm(relR.Rij  - (Rs[relR.j]*Rs[relR.i].transpose())));
   }
@@ -284,7 +284,7 @@ void InitRotationsMST
     const Link& link = stack.front();
     const Node& node = minGraph[link.ID];
 
-    for(Node::InternalType::const_iterator pEdge = node.edges.begin();
+    for (Node::InternalType::const_iterator pEdge = node.edges.begin();
       pEdge != node.edges.end(); ++pEdge) {
         const size_t edge = *pEdge;
         if (edge == link.parentID) {

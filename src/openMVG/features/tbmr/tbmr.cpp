@@ -280,7 +280,7 @@ namespace tbmr
       const double i11 = imaAttribute[p].sum_xy - imaAttribute[p].area*x*y;
       const double n = i20*i02 - i11*i11;
 
-      if(n != 0)
+      if (n != 0)
       {
         const double a = i02/n * (imaAttribute[p].area-1)/4;
         const double b = -i11/n * (imaAttribute[p].area-1)/4;
@@ -288,7 +288,7 @@ namespace tbmr
 
         const features::AffinePointFeature affineFP (x, y, a, b, c);
 
-        // Check feature validity	(avoid tiny and thick ellipses)
+        // Check feature validity  (avoid tiny and thick ellipses)
         const double lMin = std::min(affineFP.l1(), affineFP.l2());
         if (lMin < 1.5)
           continue;

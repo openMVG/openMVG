@@ -20,8 +20,8 @@ using namespace std;
 TEST(Image, Convolution)
 {
   Image<unsigned char> in(250,250);
-  for( int i = 10; i < 250-10; i++)
-    for( int j = 10; j < 250-10; j++)
+  for (int i = 10; i < 250-10; i++)
+    for (int j = 10; j < 250-10; j++)
     {
       in(j,i) = rand()%127+127;
     }

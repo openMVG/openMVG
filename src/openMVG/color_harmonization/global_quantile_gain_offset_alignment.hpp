@@ -54,7 +54,7 @@ static void normalizeHisto(const std::vector<T> & vec_df, std::vector<double> & 
 {
   double totalCount = static_cast<double>(std::accumulate(vec_df.begin(), vec_df.end(), 0));
   vec_normalized_df.resize(vec_df.size(), 0.0);
-  for(size_t i=0; i<vec_df.size(); i++)
+  for (size_t i=0; i<vec_df.size(); i++)
     vec_normalized_df[i] = vec_df[i] / totalCount;
 }
 
@@ -63,7 +63,7 @@ template<typename T>
 static void cdf(const std::vector<T> & vec_df, std::vector<T> & vec_cdf)
 {
   vec_cdf = vec_df;
-  for(size_t i=1; i<vec_cdf.size(); i++)
+  for (size_t i=1; i<vec_cdf.size(); i++)
       vec_cdf[i] = vec_cdf[i] + vec_cdf[i-1];
 }
 
@@ -163,7 +163,7 @@ static void Encode_histo_relation(
 
     std::vector<double>::const_iterator cdf_I_IterBegin = cdf_I.begin();
     std::vector<double>::const_iterator cdf_J_IterBegin = cdf_J.begin();
-    while( currentPourcentile < 1.0)
+    while (currentPourcentile < 1.0)
     {
       std::vector<double>::const_iterator iterFI = std::lower_bound(cdf_I.begin(), cdf_I.end(), currentPourcentile);
       const size_t positionI = std::distance(cdf_I_IterBegin, iterFI);
@@ -181,7 +181,7 @@ static void Encode_histo_relation(
     // pos * ga + offa - pos * gb - offb <= gamma
     // pos * ga + offa - pos * gb - offb >= - gamma
 
-    for(size_t k = 0; k < vec_pourcentilePositionI.size(); ++k)
+    for (size_t k = 0; k < vec_pourcentilePositionI.size(); ++k)
     {
       A.coeffRef(rowPos, GVAR(edge.I)) = vec_pourcentilePositionI[k];
       A.coeffRef(rowPos, OFFSETVAR(edge.I)) = 1.0;

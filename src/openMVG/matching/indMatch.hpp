@@ -50,7 +50,7 @@ struct IndMatch
 
   // Serialization
   template <class Archive>
-  void serialize( Archive & ar ) ;
+  void serialize( Archive & ar );
 
   IndexT i_, j_;  // Left, right index
 };

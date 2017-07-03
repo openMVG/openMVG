@@ -233,7 +233,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
           + m_logc_n[cumulative_count]
           + m_logc_k[cumulative_count], residual_val[bin]);
         // Keep the best NFA iff it is meaningful ( NFA < 0 ) and better than the existing one
-        if(current_nfa.first < current_best_nfa.first && current_nfa.first < 0)
+        if (current_nfa.first < current_best_nfa.first && current_nfa.first < 0)
           current_best_nfa = current_nfa;
       }
     }
@@ -270,7 +270,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     using nfa_indexT = std::pair<double, uint32_t>;
     nfa_indexT current_best_nfa(std::numeric_limits<double>::infinity(), Kernel::MINIMUM_SAMPLES);
     const size_t n = m_kernel.NumSamples();
-    for(size_t k=Kernel::MINIMUM_SAMPLES+1;
+    for (size_t k=Kernel::MINIMUM_SAMPLES+1;
         k<=n && m_sorted_residuals[k-1].first<=m_max_threshold;
         ++k) // Compute the NFA for all k in [minimal_sample+1,n]
     {
@@ -282,7 +282,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
         + m_logc_n[k]
         + m_logc_k[k], k);
 
-      if(current_nfa.first < current_best_nfa.first)
+      if (current_nfa.first < current_best_nfa.first)
         current_best_nfa = current_nfa;
     }
 
@@ -423,9 +423,9 @@ std::pair<double, double> ACRANSAC
           better = true;
           minNFA = nfa_threshold.first;
           errorMax = nfa_threshold.second;
-          if(model) *model = model_it;
+          if (model) *model = model_it;
 
-          if(bVerbose)
+          if (bVerbose)
           {
             std::cout << "  nfa=" << minNFA
               << " inliers=" << vec_inliers.size() << "/" << nData
@@ -462,7 +462,7 @@ std::pair<double, double> ACRANSAC
       {
         // ACRANSAC optimization: draw samples among best set of inliers so far
         vec_index = vec_inliers;
-        if(nIterReserve) {
+        if (nIterReserve) {
             // reduce the number of iteration
             // next iterations will be dedicated to local optimization
             nIter = iter + 1 + nIterReserve;
@@ -472,7 +472,7 @@ std::pair<double, double> ACRANSAC
     }
   }
 
-  if(minNFA >= 0) // no meaningful model found so far
+  if (minNFA >= 0) // no meaningful model found so far
     vec_inliers.clear();
 
   if (!vec_inliers.empty())

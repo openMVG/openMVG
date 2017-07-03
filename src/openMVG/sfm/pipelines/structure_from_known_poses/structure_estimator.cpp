@@ -12,7 +12,6 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/geometry/pose3.hpp"
-//#include "openMVG/matching/defines.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
@@ -30,7 +29,7 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::features;
 using namespace openMVG::geometry;
-
+using namespace openMVG::matching;
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)

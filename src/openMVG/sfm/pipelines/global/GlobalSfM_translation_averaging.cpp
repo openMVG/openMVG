@@ -38,6 +38,7 @@ namespace sfm{
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
+using namespace openMVG::matching;
 
 /// Use features in normalized camera frames
 bool GlobalSfM_Translation_AveragingSolver::Run
@@ -127,7 +128,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
 
     openMVG::system::Timer timerLP_translation;
 
-    switch(eTranslationAveragingMethod)
+    switch (eTranslationAveragingMethod)
     {
       case TRANSLATION_AVERAGING_L1:
       {
@@ -256,7 +257,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         const double loss_width = 0.0; // No loss in order to compare with TRANSLATION_AVERAGING_L1
 
         std::vector<double> X(iNview*3, 0.0);
-        if(!solve_translations_problem_l2_chordal(
+        if (!solve_translations_problem_l2_chordal(
           &vec_edges[0],
           &vec_poses[0],
           &vec_weights[0],

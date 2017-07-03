@@ -22,8 +22,8 @@ namespace linearProgramming  {
 /// OSI_Clp wrapper for the LP_Solver
 class OSI_X_SolverWrapper : public LP_Solver
 {
-public :
-  OSI_X_SolverWrapper(int nbParams);
+public:
+  explicit OSI_X_SolverWrapper(int nbParams);
 
   //--
   // Inherited functions:
@@ -36,7 +36,7 @@ public :
 
   bool getSolution(std::vector<double> & estimatedParams) override;
 
-private :
+private:
   std::shared_ptr<OsiClpSolverInterface> si;
 };
 

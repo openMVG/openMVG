@@ -66,7 +66,7 @@ public:
     NormalizePoints(x2, &x2_, &N2_, w2, h2);
 
     // LogAlpha0 is used to make error data scale invariant
-    if(bPointToLine)  {
+    if (bPointToLine)  {
       // Ratio of containing diagonal image rectangle over image area
       double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
       double A = w2*(double)h2; // area

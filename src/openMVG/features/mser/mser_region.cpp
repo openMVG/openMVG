@@ -83,7 +83,7 @@ namespace openMVG
         const double i11 = m_moment_xy - static_cast<double>( m_area ) * ell_x * ell_y;
         const double n = i20*i02 - i11*i11;
 
-        if(n != 0)
+        if (n != 0)
         {
           a = i02/n * (m_area-1)/4.;
           b = -i11/n * (m_area-1)/4.;
@@ -142,7 +142,7 @@ namespace openMVG
         ell_minor_length = std::sqrt( e1 );
 
         // Check if ellipse is axis aligned or not
-        if( std::abs( b ) < 0.0001 )
+        if (std::abs( b ) < 0.0001 )
         {
           // Axis aligned
           ell_major_x = 1.0;
@@ -172,7 +172,7 @@ namespace openMVG
         }
 
         // Ensure correct ordering on axis
-        if( ell_minor_length > ell_major_length )
+        if (ell_minor_length > ell_major_length )
         {
           std::swap( ell_minor_length , ell_major_length );
           std::swap( ell_major_x , ell_minor_x );
@@ -237,7 +237,7 @@ namespace openMVG
         // Found the upmost region with region no more than delta (ie: reference for stability)
         MSERRegion * ref = this;
 
-        while( ref->m_parent && ( ref->m_parent->m_level <= ( m_level + delta ) ) )
+        while (ref->m_parent && ( ref->m_parent->m_level <= ( m_level + delta ) ))
         {
           ref = ref->m_parent; // Climb hierarchy
         }
@@ -254,9 +254,9 @@ namespace openMVG
 
         // Process the children and check at least one child is stable
         MSERRegion * cur_child = m_child;
-        if( ! cur_child )
+        if (! cur_child )
         {
-          if( stable )
+          if (stable )
           {
             m_is_stable = true;
           }
@@ -264,12 +264,12 @@ namespace openMVG
         else
         {
           // Process child list
-          while( cur_child != nullptr )
+          while (cur_child != nullptr)
           {
             cur_child->ComputeStability( delta , minimumArea , maximumArea , maxVariation );
 
             // At least one child is stable -> the region is stable
-            if( stable && ( m_variation < cur_child->m_variation ) )
+            if (stable && ( m_variation < cur_child->m_variation ))
             {
               m_is_stable = true;
             }
@@ -288,21 +288,21 @@ namespace openMVG
       bool MSERRegion::CheckCriteria( const double variation , const int area ) const
       {
         // Has minimum area -> that's enough to decide
-        if( m_area <= area )
+        if (m_area <= area )
         {
           return true;
         }
 
         // It's stable and with enough variation
-        if( m_is_stable && ( m_variation < variation ) )
+        if (m_is_stable && ( m_variation < variation ) )
         {
           return false;
         }
 
         MSERRegion * cur_child = m_child;
-        while( cur_child != nullptr )
+        while (cur_child != nullptr)
         {
-          if( ! cur_child->CheckCriteria( variation , area ) )
+          if (! cur_child->CheckCriteria( variation , area ) )
           {
             return false;
           }
@@ -333,7 +333,7 @@ namespace openMVG
       void MSERRegion::Export( const double minDiversity , std::vector< MSERRegion > & regions )
       {
         // Only export if it's stable
-        if( m_is_stable )
+        if (m_is_stable )
         {
           // But don't export only if it's stable !
           // Need to check the hierarchy if parent is more stable than this region
@@ -342,13 +342,13 @@ namespace openMVG
           const int minimum_parent_area = static_cast<int>( static_cast<double>( m_area ) / ( 1.0 - minDiversity ) + 0.5 );
 
           MSERRegion * cur_parent = this;
-          while( cur_parent->m_parent != nullptr && ( cur_parent->m_parent->m_area < minimum_parent_area ) )
+          while (cur_parent->m_parent != nullptr && ( cur_parent->m_parent->m_area < minimum_parent_area ))
           {
             cur_parent = cur_parent->m_parent;
 
             // 2 - Parent must have move diversity than it's children
             // If not it's more stable than this region
-            if( cur_parent->m_is_stable && ( cur_parent->m_variation <= m_variation ) )
+            if (cur_parent->m_is_stable && ( cur_parent->m_variation <= m_variation ) )
             {
               m_is_stable = false;
               break;
@@ -356,10 +356,10 @@ namespace openMVG
           }
 
           // If it's still stable, check children area
-          if( m_is_stable )
+          if (m_is_stable )
           {
             const int max_children_area = static_cast<int>( static_cast<double>( m_area ) * ( 1.0 - minDiversity ) + 0.5 );
-            if( ! CheckCriteria( m_variation , max_children_area ) )
+            if (! CheckCriteria( m_variation , max_children_area ) )
             {
               // Does'nt pass stability criteria
               m_is_stable = false;
@@ -367,7 +367,7 @@ namespace openMVG
           }
 
           // If it successfully pass all the test, add the region
-          if( m_is_stable )
+          if (m_is_stable )
           {
             // Make a copy
             regions.push_back( *this );
@@ -377,7 +377,7 @@ namespace openMVG
 
         // Try to export the child regions
         MSERRegion * cur_child = m_child;
-        while( cur_child != nullptr )
+        while (cur_child != nullptr)
         {
           cur_child->Export( minDiversity , regions );
           cur_child = cur_child->m_sister;

@@ -5,12 +5,12 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
 
   find_package( Qt5Widgets )
 
-  if( Qt5Widgets_FOUND )
+  if (Qt5Widgets_FOUND )
 
     set( ALTERNATIVE_VO_SOURCES main.cpp ControlButtonsPanel.cpp MainWindow.cpp VOFolderProcessor.cpp VOViewerPanel.cpp VOViewerDrawableElements.cpp )
     set( ALTERNATIVE_VO_HEADERS ControlButtonsPanel.hpp MainWindow.hpp VOFolderProcessor.hpp VOViewerPanel.hpp VOViewerDrawableElements.hpp )
 
-    if( APPLE )
+    if (APPLE )
       add_executable( openMVG_main_AlternativeVO MACOSX_BUNDLE ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS} )  
     else( APPLE )
       if ( WIN32 )
@@ -22,7 +22,7 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
 
     target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features stlplus )
 
-    if( OpenMVG_USE_OPENCV )
+    if (OpenMVG_USE_OPENCV )
       target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )
     endif( OpenMVG_USE_OPENCV )
 

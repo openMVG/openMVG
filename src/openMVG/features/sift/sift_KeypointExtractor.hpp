@@ -102,7 +102,7 @@ protected:
     m_Dogs.octave_level = octave.octave_level;
     m_Dogs.delta = octave.delta;
     m_Dogs.sigmas = octave.sigmas;
-    for(int s = 0; s < m_Dogs.slices.size(); ++s)
+    for (int s = 0; s < m_Dogs.slices.size(); ++s)
     {
       const image::Image<float> &P = octave.slices[s+1];
       const image::Image<float> &M = octave.slices[s];
@@ -206,11 +206,11 @@ protected:
     const int w = m_Dogs.slices[0].Width();
 
     // Loop through the slices of the image stack (one octave)
-    for(int s = 1; s < ns-1; ++s)
+    for (int s = 1; s < ns-1; ++s)
     {
-      for(int id_row = 1; id_row < h-1; ++id_row )
+      for (int id_row = 1; id_row < h-1; ++id_row )
       {
-        for(int id_col = 1; id_col < w-1; ++id_col )
+        for (int id_col = 1; id_col < w-1; ++id_col )
         {
           const float pix_val = m_Dogs.slices[s](id_row, id_col);
           if (std::abs(pix_val) > m_peak_threshold * percent)
@@ -384,14 +384,14 @@ protected:
         {
           // let's explore the neighbourhood in
           // space...
-          if( ofstX > +ofstMax && (ic+1) < (w-1) ) {++ic;}
-          if( ofstX < -ofstMax && (ic-1) >  0    ) {--ic;}
-          if( ofstY > +ofstMax && (jc+1) < (h-1) ) {++jc;}
-          if( ofstY < -ofstMax && (jc-1) >  0    ) {--jc;}
+          if (ofstX > +ofstMax && (ic+1) < (w-1) ) {++ic;}
+          if (ofstX < -ofstMax && (ic-1) >  0    ) {--ic;}
+          if (ofstY > +ofstMax && (jc+1) < (h-1) ) {++jc;}
+          if (ofstY < -ofstMax && (jc-1) >  0    ) {--jc;}
           // ... and scale.
           /*
-          if( ofstS > +ofstMax && (sc+1) < (ns-1)) {++sc;}
-          if( ofstS < -ofstMax && (sc-1) >    0  ) {--sc;}
+          if (ofstS > +ofstMax && (sc+1) < (ns-1)) {++sc;}
+          if (ofstS < -ofstMax && (sc-1) >    0  ) {--sc;}
           */
         }
       }

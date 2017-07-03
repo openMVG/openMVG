@@ -24,7 +24,7 @@ template<typename IterableIndexTSequence>
 inline std::set<IndexT> getIndexes(const IterableIndexTSequence & seq)
 {
   std::set<IndexT> setOut;
-  for(typename IterableIndexTSequence::const_iterator it = seq.begin(); it != seq.end(); ++it)
+  for (typename IterableIndexTSequence::const_iterator it = seq.begin(); it != seq.end(); ++it)
     setOut.insert(it->first);
   return setOut;
 }

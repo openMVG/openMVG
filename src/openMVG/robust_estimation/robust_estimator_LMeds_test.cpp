@@ -110,7 +110,7 @@ TEST(LMedsLineFitter, RealisticCase) {
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
-  for(int i = 0; i < NbPoints; ++i)  {
+  for (int i = 0; i < NbPoints; ++i)  {
     xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
   }
 
@@ -118,7 +118,7 @@ TEST(LMedsLineFitter, RealisticCase) {
   const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
   std::vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
-  for(const auto index : vec_samples)
+  for (const auto index : vec_samples)
   {
     //Additive random noise
     xy.col(index) << xy.col(index)(0)+rand()%2-3,

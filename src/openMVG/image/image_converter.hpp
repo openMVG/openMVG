@@ -83,8 +83,8 @@ void ConvertPixelType( const ImageIn& imaIn, ImageOut *imaOut )
 {
   ( *imaOut ) = ImageOut( imaIn.Width(), imaIn.Height() );
   // Convert each input pixel to destination pixel
-  for( int j = 0; j < imaIn.Height(); ++j )
-    for( int i = 0; i < imaIn.Width(); ++i )
+  for (int j = 0; j < imaIn.Height(); ++j )
+    for (int i = 0; i < imaIn.Width(); ++i )
     {
       Convert( imaIn( j, i ), ( *imaOut )( j, i ) );
     }
@@ -110,7 +110,7 @@ inline void convertRGB2Float(
   Tout& valOut,
   float factor = 1.0f / 255.f )
 {
-  for( int channel = 0; channel < 3; ++channel )
+  for (int channel = 0; channel < 3; ++channel )
   {
     valOut( channel ) = ( float )( ( int )( valIn( channel ) ) * factor );
   }
@@ -131,8 +131,8 @@ void rgb2Float( const ImageIn& imaIn,
   assert( imaIn.Depth() == 3 );
   ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
   // Convert each int RGB to float RGB values
-  for( int j = 0; j < imaIn.Height(); ++j )
-    for( int i = 0; i < imaIn.Width(); ++i )
+  for (int j = 0; j < imaIn.Height(); ++j )
+    for (int i = 0; i < imaIn.Width(); ++i )
     {
       convertRGB2Float( imaIn( j, i ), ( *imaOut )( j, i ), factor );
     }
@@ -156,7 +156,7 @@ void convertFloatToInt
   float factor = 255.f
 )
 {
-  for( int channel = 0; channel < 3; ++channel )
+  for (int channel = 0; channel < 3; ++channel )
   {
     valOut( channel ) = ( int )( valIn( channel ) * factor );
   }
@@ -176,9 +176,9 @@ inline void rgbFloat2rgbInt(
   assert( imaIn.Depth() == 3 );
   ( *imaOut ).resize( imaIn.Width(), imaIn.Height() );
   // Convert each int RGB to float RGB values
-  for( int j = 0; j < imaIn.Height(); ++j )
+  for (int j = 0; j < imaIn.Height(); ++j )
   {
-    for( int i = 0; i < imaIn.Width(); ++i )
+    for (int i = 0; i < imaIn.Width(); ++i )
     {
       convertFloatToInt( imaIn( j, i ), ( *imaOut )( j, i ), factor  );
     }

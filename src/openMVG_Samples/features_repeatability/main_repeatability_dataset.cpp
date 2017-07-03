@@ -149,7 +149,7 @@ void PointsToMat(
   m0.resize(2, matches.size());
   m1.resize(2, matches.size());
 
-  for( size_t i = 0; i < matches.size(); ++i)
+  for (size_t i = 0; i < matches.size(); ++i)
   {
     const ValueT & feat0 = vec_feats0[matches[i].i_];
     m0.col(i) << feat0.x(), feat0.y();
@@ -168,7 +168,7 @@ struct RepeatabilityResults_Matching
 
     if( ! ofs.good() )
     {
-        return false ;
+        return false;
     }
 
     ofs << sdatasetName << "\n";
@@ -182,7 +182,7 @@ struct RepeatabilityResults_Matching
     }
     ofs.close();
 
-    return true ;
+    return true;
   }
 };
 

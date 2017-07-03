@@ -112,7 +112,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
     double xsum = 0.0;
     for (size_t i = 0; i < d2._n; ++i) {
         std::cout << "\nCamera : " << i << " \t:";
-        for(int k = 0; k < d._x[0].cols(); ++k)
+        for (int k = 0; k < d._x[0].cols(); ++k)
         {
           xk = Project(d2.P(i),  Vec3(d2._X.col(k)));
           double residual = (xk - d2._x[i].col(k)).norm();

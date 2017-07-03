@@ -18,7 +18,7 @@
 
 using namespace openMVG;
 using namespace openMVG::sfm;
-
+using namespace openMVG::matching;
 
 // Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
 //  - for each view store the observations point as PointFeatures
@@ -73,12 +73,12 @@ static double RMSE(const SfM_Data & sfm_data)
 {
   // Compute residuals for each observation
   std::vector<double> vec;
-  for(Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
+  for (Landmarks::const_iterator iterTracks = sfm_data.GetLandmarks().begin();
       iterTracks != sfm_data.GetLandmarks().end();
       ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
-    for(Observations::const_iterator itObs = obs.begin();
+    for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data.GetViews().find(itObs->first)->second.get();

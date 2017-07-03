@@ -49,7 +49,7 @@ namespace tbmr
   * @param[in] maximumRelativeSize minimum area of a region to be detected relative to image area
   * @param cmp ordering (std::less => BRIGHT features; or std::greater => DARK features)
   */
-  template <typename Ordering = std::less<unsigned char> >
+  template <typename Ordering = std::less<unsigned char>>
   void Extract_tbmr
   (
     const image::Image<unsigned char> & ima,

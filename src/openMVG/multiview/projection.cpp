@@ -119,7 +119,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   Eigen::PartialPivLU<Mat3> lu(K);
   Vec3 t = lu.solve(P.col(3));
 
-  if(R.determinant()<0) {
+  if (R.determinant()<0) {
     R = -R;
     t = -t;
   }

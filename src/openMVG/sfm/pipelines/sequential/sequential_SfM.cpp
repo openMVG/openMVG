@@ -38,8 +38,9 @@
 namespace openMVG {
 namespace sfm {
 
-using namespace openMVG::geometry;
 using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::matching;
 
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,
@@ -217,7 +218,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
       it != sfm_data_.GetViews().end(); ++it)
     {
       const View * v = it->second.get();
-      if( sfm_data_.GetIntrinsics().find(v->id_intrinsic) != sfm_data_.GetIntrinsics().end())
+      if (sfm_data_.GetIntrinsics().find(v->id_intrinsic) != sfm_data_.GetIntrinsics().end())
         valid_views.insert(v->id_view);
     }
 
@@ -704,11 +705,11 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
   vec_residuals.reserve(sfm_data_.structure.size());
-  for(Landmarks::const_iterator iterTracks = sfm_data_.GetLandmarks().begin();
+  for (Landmarks::const_iterator iterTracks = sfm_data_.GetLandmarks().begin();
       iterTracks != sfm_data_.GetLandmarks().end(); ++iterTracks)
   {
     const Observations & obs = iterTracks->second.obs;
-    for(Observations::const_iterator itObs = obs.begin();
+    for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
       const View * view = sfm_data_.GetViews().find(itObs->first)->second.get();
@@ -1026,7 +1027,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     }
     const bool b_refine_pose = true;
     const bool b_refine_intrinsics = false;
-    if(!sfm::SfM_Localizer::RefinePose(
+    if (!sfm::SfM_Localizer::RefinePose(
         optional_intrinsic.get(), pose,
         resection_data, b_refine_pose, b_refine_intrinsics))
     {

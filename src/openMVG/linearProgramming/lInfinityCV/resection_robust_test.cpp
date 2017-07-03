@@ -59,10 +59,9 @@ TEST(Resection_L_Infinity, Robust_OutlierFree) {
     d2._R[nResectionCameraIndex] = R;
     d2._t[nResectionCameraIndex] = t;
 
-    //CHeck matrix to GT, and residual
+    //Check matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-2 );
-    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
-    EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-2);
+    EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt3D.colwise().homogeneous(), COMPUTED_ProjectionMatrix), 1e-2);
   }
 }
 
@@ -113,10 +112,9 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
     d2._R[nResectionCameraIndex] = R;
     d2._t[nResectionCameraIndex] = t;
 
-    //CHeck matrix to GT, and residual
+    //Check matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-3 );
-    const Mat pt4D = VStack(pt3D, Mat(Vec::Ones(pt3D.cols()).transpose()));
-    EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt4D, COMPUTED_ProjectionMatrix), 1e-1);
+    EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt3D.colwise().homogeneous(), COMPUTED_ProjectionMatrix), 1e-1);
   }
   d2.ExportToPLY("test_After_Infinity.ply");
 }

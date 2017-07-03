@@ -67,7 +67,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
   if ( R == 0 && Q == 0 )
   {
     // Tripple root in one place.
-    *x0 = *x1 = *x2 = -a / 3 ;
+    *x0 = *x1 = *x2 = -a / 3;
     return 3;
 
   }
@@ -123,7 +123,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
   }
   const Real sgnR = ( R >= 0 ? 1 : -1 );
   const Real A = -sgnR * pow ( std::abs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
-  const Real B = Q / A ;
+  const Real B = Q / A;
   *x0 = A + B - a / 3;
   return 1;
 }

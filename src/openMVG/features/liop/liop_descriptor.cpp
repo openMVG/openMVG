@@ -58,19 +58,19 @@ bool BilinearInterpolation_BorderCheck(
   const image::Image<unsigned char> & flagImage)
 {
   val = 0.0f;
-  if(!(x >= 0 && y >= 0 && x<=image.Width()-1 && y<=image.Height()-1))
+  if (!(x >= 0 && y >= 0 && x<=image.Width()-1 && y<=image.Height()-1))
     return false;
 
   const int x1 = (int)x;
   const int y1 = (int)y;
 
   int x2, y2;
-  if( x1 == image.Width()-1)
+  if (x1 == image.Width()-1)
     x2  = x1;
   else
     x2 = x1+1;
 
-  if(y1 == image.Height()-1 )
+  if (y1 == image.Height()-1 )
     y2 = y1;
   else
     y2 = y1+1;
@@ -81,7 +81,7 @@ bool BilinearInterpolation_BorderCheck(
   const int flag_step = flagImage.Width();
   const unsigned char* flag_data = flagImage.data();
 
-  if(flag_data[y1*flag_step+x1] == 0 ||
+  if (flag_data[y1*flag_step+x1] == 0 ||
      flag_data[y1*flag_step+x2] == 0 ||
      flag_data[y2*flag_step+x1] == 0 ||
      flag_data[y2*flag_step+x2] == 0)
@@ -203,7 +203,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
     for (int x=-inRadius; x<=inRadius; ++x)
     {
       float dis2 = (float)(x*x + y*y);
-      if(dis2 > inRadius2)
+      if (dis2 > inRadius2)
         continue;
 
       const float cur_gray = out_data [(y+outRadius)*out_step +x+outRadius];
@@ -262,7 +262,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
     }
   }
 
-  std::sort(pixel, pixel+pixelCount, fGrayComp);	//sort by gray
+  std::sort(pixel, pixel+pixelCount, fGrayComp);  //sort by gray
 
   const int l_patternWidth = LIOP_NUM == 3 ? 6 : 24;
   const int dim = l_patternWidth*REGION_NUM;
@@ -293,7 +293,7 @@ void Liop_Descriptor_Extractor::CreateLIOP_GOrder(
 
       while (true)
       {
-        if(curId==pixelCount || pixel[curId].f_gray>fenceGray)
+        if (curId==pixelCount || pixel[curId].f_gray>fenceGray)
           break;
 
         const int id = regionId*l_patternWidth+pixel[curId].l_pattern;
@@ -330,20 +330,20 @@ void Liop_Descriptor_Extractor::extract(
   unsigned char * flagPatch_data = flagPatch.data();
   float * outPatch_data = outPatch.data();
 
-  for(int y=-outRadius; y<=outRadius; ++y)
+  for (int y=-outRadius; y<=outRadius; ++y)
   {
     const float ys = y*scale+feat.y();
-    if(ys<0 || ys>I.Height()-1)
+    if (ys<0 || ys>I.Height()-1)
       continue;
 
-    for(int x=-outRadius; x<=outRadius; ++x)
+    for (int x=-outRadius; x<=outRadius; ++x)
     {
       const float dis2 = (float)(x*x + y*y);
-      if(dis2 > outRadius2)
+      if (dis2 > outRadius2)
         continue;
 
       const float xs = x*scale+feat.x();
-      if(xs<0 || xs>I.Width()-1)
+      if (xs<0 || xs>I.Width()-1)
         continue;
 
       outPatch_data[(y+outRadius)*outPatchWidth+x+outRadius] = sampler(I, ys, xs);

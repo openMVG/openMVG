@@ -205,7 +205,7 @@ const
     }
   }
   of.flush();
-  bool bOk = of.good();
+  const bool bOk = of.good();
   of.close();
   return bOk;
 }

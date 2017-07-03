@@ -21,6 +21,7 @@
 
 using namespace openMVG;
 using namespace openMVG::sfm;
+using namespace openMVG::cameras;
 
 int main(int argc, char **argv)
 {

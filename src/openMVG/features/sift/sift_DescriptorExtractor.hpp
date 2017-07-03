@@ -139,7 +139,7 @@ protected:
     m_ygradient.delta = octave.delta;
     m_xgradient.octave_level = octave.octave_level;
     m_ygradient.octave_level = octave.octave_level;
-    for(int s = 1; s < nSca-1; ++s)
+    for (int s = 1; s < nSca-1; ++s)
     {
       // only in range [1; n-1] (since first and last images were only used for non max suppression)
       image::ImageXDerivative( octave.slices[s], m_xgradient.slices[s]);
@@ -152,7 +152,7 @@ protected:
   static inline float modulus(float x, float y)
   {
     float z = x;
-    if(z < 0)
+    if (z < 0)
     {
       z += ((int)( -z / y) + 1) * y;
     }
@@ -209,9 +209,9 @@ protected:
     const int sjMax = std::min((int)(y + R + 0.5), h-1);
 
     // For each pixel neighbourhood patch
-    for(int si = siMin; si <= siMax; ++si)
+    for (int si = siMin; si <= siMax; ++si)
     {
-      for(int sj = sjMin; sj <= sjMax; ++sj)
+      for (int sj = sjMin; sj <= sjMax; ++sj)
       {
         // gradient orientation (theta)
         const float dx = xgradient(sj, si);
@@ -248,9 +248,9 @@ protected:
     openMVG::Vecf tmp = orientation_histogram;
     const int nbins = tmp.rows();
     // Convolution with box filters
-    for(; niter > 0; --niter){
+    for (; niter > 0; --niter){
       tmp = orientation_histogram;
-      for(i = 0; i < nbins; ++i){
+      for (i = 0; i < nbins; ++i){
         i_prev = (i-1+nbins)%nbins;
         i_next = (i+1)%nbins;
         orientation_histogram[i] = (tmp[i_prev]/4+tmp[i]/2+tmp[i_next]/4);
@@ -292,7 +292,7 @@ protected:
     const float max_value = orientation_histogram.maxCoeff();
     // Search for local extrema in the histogram
     const int nbins = orientation_histogram.rows();
-    for(int i = 0; i < nbins; ++i){
+    for (int i = 0; i < nbins; ++i){
       const int i_prev = (i-1+nbins)%nbins;
       const int i_next = (i+1)%nbins;
       if ( (orientation_histogram[i] > m_percentage_keep * max_value)
@@ -339,7 +339,7 @@ protected:
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
 #endif
-      for(int n = 0; n < n_prOri; ++n)
+      for (int n = 0; n < n_prOri; ++n)
       {
         Keypoint kp = key;
         kp.theta = principal_orientations[n];
@@ -450,9 +450,9 @@ protected:
           // a loop with 1 or two elements
           const int i0 = std::floor(alpha);
           const int j0 = std::floor(beta);
-          for(int i = std::max(0,i0); i <= std::min(i0+1,m_nb_split2d-1); ++i)
+          for (int i = std::max(0,i0); i <= std::min(i0+1,m_nb_split2d-1); ++i)
           {
-            for(int j = std::max(0,j0); j <= std::min(j0+1,m_nb_split2d-1); ++j)
+            for (int j = std::max(0,j0); j <= std::min(j0+1,m_nb_split2d-1); ++j)
             { // looping through all surrounding histograms.
 
               const int index = i*m_nb_split2d*m_nb_split_angle+j*m_nb_split_angle;
@@ -501,7 +501,7 @@ protected:
       // Threshold bins
       float norm = (m_b_root_sift ? key.descr.lpNorm<1>() : key.descr.lpNorm<2>())
         + std::numeric_limits<float>::epsilon();
-      for(int i = 0; i < key.descr.rows(); ++i){
+      for (int i = 0; i < key.descr.rows(); ++i){
         key.descr[i] = std::min(key.descr[i], m_clip_value * norm);
       }
       // Quantization

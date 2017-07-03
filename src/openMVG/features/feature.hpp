@@ -191,7 +191,7 @@ void PointsToMat(
   using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
-  for( typename FeaturesT::const_iterator iter = vec_feats.begin();
+  for (typename FeaturesT::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
     const ValueT & feat = *iter;

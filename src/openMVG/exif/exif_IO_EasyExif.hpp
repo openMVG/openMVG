@@ -29,7 +29,7 @@ namespace exif
 */
 inline std::string trim_copy( const std::string& s )
 {
-  if( s.empty() )
+  if (s.empty() )
   {
     return s;
   }
@@ -61,7 +61,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Constructor using a file
     * @param sFileName path of the image to analyze
     */
-    Exif_IO_EasyExif( const std::string & sFileName ): bHaveExifInfo_( false )
+    explicit Exif_IO_EasyExif( const std::string & sFileName ): bHaveExifInfo_( false )
     {
       open( sFileName );
     }

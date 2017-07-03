@@ -96,7 +96,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   if( !ReadInputData() )
     return false;
-  if( _map_Matches.size() == 0 )
+  if (_map_Matches.size() == 0 )
   {
     std::cout << std::endl << "Matches file is empty" <<std:: endl;
     return false;
@@ -138,12 +138,12 @@ bool ColorHarmonizationEngineGlobal::Process()
   //-------------------
 
   //Choose image reference
-  if( _imgRef == -1 )
+  if (_imgRef == -1 )
   {
     do
     {
       std::cout << "Choose your reference image:\n";
-      for( size_t i = 0; i < _vec_fileNames.size(); ++i )
+      for (size_t i = 0; i < _vec_fileNames.size(); ++i)
       {
         std::cout << "id: " << i << "\t" << _vec_fileNames[ i ] << std::endl;
       }
@@ -155,13 +155,13 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
 
   //Choose selection method
-  if( _selectionMethod == -1 )
+  if (_selectionMethod == -1 )
   {
     std::cout << "Choose your selection method:\n"
       << "- FullFrame: 0\n"
       << "- Matched Points: 1\n"
       << "- VLD Segment: 2\n";
-    while( ! ( std::cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
+    while (! ( std::cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2)
     {
       std::cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
     }
@@ -409,7 +409,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     const  double g_b = vec_solution_b[nodeIndex*2];
     const double offset_b = vec_solution_b[nodeIndex*2+1];
 
-    for( size_t k = 0; k < 256; ++k)
+    for (size_t k = 0; k < 256; ++k)
     {
       vec_map_lut[0][k] = clamp( k * g_r + offset_r, 0., 255. );
       vec_map_lut[1][k] = clamp( k * g_g + offset_g, 0., 255. );
@@ -422,9 +422,9 @@ bool ColorHarmonizationEngineGlobal::Process()
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for( int j = 0; j < image_c.Height(); ++j )
+    for (int j = 0; j < image_c.Height(); ++j)
     {
-      for( int i = 0; i < image_c.Width(); ++i )
+      for (int i = 0; i < image_c.Width(); ++i)
       {
         image_c(j, i)[0] = clamp(vec_map_lut[0][image_c(j, i)[0]], 0., 255.);
         image_c(j, i)[1] = clamp(vec_map_lut[1][image_c(j, i)[1]], 0., 255.);
@@ -568,14 +568,14 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
           const IndexT Idu = (*putativeGraph.node_map_id)[putativeGraph.g.target(e)];
           const IndexT Idv = (*putativeGraph.node_map_id)[putativeGraph.g.source(e)];
           matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
-          if( iterM != _map_Matches.end())
+          if (iterM != _map_Matches.end())
           {
             _map_Matches.erase(iterM);
           }
           else // Try to find the opposite directed edge
           {
             iterM = _map_Matches.find(std::make_pair(Idv,Idu));
-            if( iterM != _map_Matches.end())
+            if (iterM != _map_Matches.end())
               _map_Matches.erase(iterM);
           }
         }

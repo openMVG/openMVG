@@ -42,7 +42,7 @@ void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , cons
   const int width = Lx.Width();
   const int height = Lx.Height();
 
-  if( width != out.Width() || height != out.Height() )
+  if (width != out.Width() || height != out.Height())
   {
     out.resize( width , height );
   }
@@ -69,9 +69,9 @@ void ImageFEDCentral( const Image & src , const Image & diff , const typename Im
   Real n_diff[4];
   Real n_src[4];
   // Compute FED step on general range
-  for( int i = row_start; i < row_end; ++i )
+  for (int i = row_start; i < row_end; ++i)
   {
-    for( int j = 1; j < width - 1; ++j )
+    for (int j = 1; j < width - 1; ++j)
     {
       // Retrieve neighbors : TODO check if we need a cache efficient version ?
       n_diff[0] = diff( i , j + 1 );
@@ -119,7 +119,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for( int i = 1; i < static_cast<int>( range.size() ); ++i )
+  for (int i = 1; i < static_cast<int>( range.size() ); ++i)
   {
     ImageFEDCentral( src, diff, half_t, out, range[i - 1] , range[i] );
   }
@@ -139,7 +139,7 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
   const int width = src.Width();
   const int height = src.Height();
   const Real half_t = t * static_cast<Real>( 0.5 );
-  if( out.Width() != width || out.Height() != height )
+  if (out.Width() != width || out.Height() != height)
   {
     out.resize( width , height );
   }
@@ -154,7 +154,7 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
   // - first/last col
 
   // Compute FED step on first row
-  for( int j = 1; j < width - 1; ++j )
+  for (int j = 1; j < width - 1; ++j)
   {
     n_diff[0] = diff( 0 , j + 1 );
     n_diff[2] = diff( 0 , j - 1 );
@@ -174,7 +174,7 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
   }
 
   // Compute FED step on last row
-  for( int j = 1; j < width - 1; ++j )
+  for (int j = 1; j < width - 1; ++j)
   {
     n_diff[0] = diff( height - 1 , j + 1 );
     n_diff[1] = diff( height - 2 , j );
@@ -194,7 +194,7 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
   }
 
   // Compute FED step on first col
-  for( int i = 1; i < height - 1; ++i )
+  for (int i = 1; i < height - 1; ++i)
   {
     n_diff[0] = diff( i , 1 );
     n_diff[1] = diff( i - 1 , 0 );
@@ -214,7 +214,7 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
   }
 
   // Compute FED step on last col
-  for( int i = 1; i < height - 1; ++i )
+  for (int i = 1; i < height - 1; ++i)
   {
     n_diff[1] = diff( i - 1 , width - 1 );
     n_diff[2] = diff( i , width - 2 );
@@ -244,7 +244,7 @@ template< typename Image >
 void ImageFEDCycle( Image & self , const Image & diff , const std::vector< typename Image::Tpixel > & tau )
 {
   Image tmp;
-  for( int i = 0; i < tau.size(); ++i )
+  for (int i = 0; i < tau.size(); ++i)
   {
     ImageFED( self , diff , tau[i] , tmp );
     self.array() += tmp.array();
@@ -260,24 +260,24 @@ void ImageFEDCycle( Image & self , const Image & diff , const std::vector< typen
 */
 inline bool IsPrime( const int i )
 {
-  if( i == 1 )
+  if (i == 1)
   {
     return false;
   }
-  if( i == 2 || i == 3 )
+  if (i == 2 || i == 3)
   {
     return true;
   }
-  if ( i % 2 == 0 )
+  if (i % 2 == 0)
   {
     return false;
   }
 
   const size_t i_root = static_cast<int>( sqrt( static_cast<double>( i + 1 ) ) );
 
-  for ( size_t cur = 3; cur <= i_root; cur += 2 )
+  for (size_t cur = 3; cur <= i_root; cur += 2)
   {
-    if( i % cur == 0 )
+    if (i % cur == 0)
     {
       return false;
     }
@@ -292,7 +292,7 @@ inline bool IsPrime( const int i )
 */
 inline int NextPrimeGreaterOrEqualTo( const int i )
 {
-  if( IsPrime( i ) )
+  if (IsPrime( i ))
   {
     return i;
   }
@@ -300,7 +300,7 @@ inline int NextPrimeGreaterOrEqualTo( const int i )
   {
     int cur = i + 1;
 
-    while( ! IsPrime( cur ) )
+    while (!IsPrime( cur ))
     {
       ++cur;
     }
@@ -330,7 +330,7 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
 
   // Compute cycle timings
   tau.resize( n );
-  for( int j = 0; j < n; ++j )
+  for (int j = 0; j < n; ++j)
   {
     const Real cos_j = cos( M_PI * ( static_cast<Real>( 2 * j + 1 ) ) * cos_fact );
     tau[ j ] = glo_fact / ( cos_j * cos_j );
@@ -343,11 +343,11 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
 
   // Store new positions
   std::vector< Real > tmp( n );
-  for( int i = 0 , k = 0; i < n; ++i , ++k )
+  for (int i = 0 , k = 0; i < n; ++i , ++k)
   {
     // Search new index
     int index = n;
-    while( ( index = ( ( k + 1 ) * kappa ) % p - 1 ) >= n )
+    while (( index = ( ( k + 1 ) * kappa ) % p - 1 ) >= n)
     {
       ++k;
     }

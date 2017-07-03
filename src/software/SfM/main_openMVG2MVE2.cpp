@@ -73,7 +73,7 @@ bool exportToMVE2Format(
   if (!bOk)
   {
     std::cerr << "Cannot access one of the desired output directories" << std::endl;
-	  return false;
+    return false;
   }
 
   // Export the SfM_Data scene to the MVE2 format
@@ -351,13 +351,13 @@ create_thumbnail
   // Generation of the sampling grid
   std::vector< std::pair<float,float> > sampling_grid;
   sampling_grid.reserve(rescale_height * rescale_width);
-  for ( int i = 0 ; i < rescale_height ; ++i )
+  for ( int i = 0; i < rescale_height; ++i )
   {
-    for ( int j = 0 ; j < rescale_width ; ++j )
+    for ( int j = 0; j < rescale_width; ++j )
     {
       const float dx = static_cast<float>(j) * width / rescale_width;
       const float dy = static_cast<float>(i) * height / rescale_height;
-      sampling_grid.push_back( std::make_pair( dy , dx ) ) ;
+      sampling_grid.push_back( std::make_pair( dy , dx ) );
     }
   }
 

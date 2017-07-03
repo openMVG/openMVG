@@ -14,13 +14,13 @@ namespace alternative_vo
 {
 VOViewerPanel::VOViewerPanel( QWidget * parent )
 {
-  BuildInterface() ;
-  MakeConnections() ;
+  BuildInterface();
+  MakeConnections();
 }
 
 void VOViewerPanel::SetImage( QImage & img )
 {
-  m_image_view->setPixmap( QPixmap::fromImage( img ) ) ;
+  m_image_view->setPixmap( QPixmap::fromImage( img ) );
 }
 
 /**
@@ -29,27 +29,27 @@ void VOViewerPanel::SetImage( QImage & img )
 */
 void VOViewerPanel::SetImage( QImage & img , const std::vector< VOViewerLine > & lines , const std::vector< VOViewerPoint > & points )
 {
-  QPixmap pmap = QPixmap::fromImage( img ) ;
+  QPixmap pmap = QPixmap::fromImage( img );
 
-  QPainter p( & pmap ) ;
+  QPainter p( & pmap );
 
   // Draw lines
-  for( size_t i = 0 ; i < lines.size() ; ++i )
+  for (size_t i = 0; i < lines.size(); ++i )
   {
-    p.setPen( lines[i].m_color ) ;
+    p.setPen( lines[i].m_color );
 
-    const VOViewerLine & cur_line = lines[ i ] ;
+    const VOViewerLine & cur_line = lines[ i ];
 
-    if( cur_line.m_pts.size() > 0 )
+    if (cur_line.m_pts.size() > 0 )
     {
-      openMVG::Vec2f prev_pt = cur_line.m_pts[ 0 ] ;
-      for( size_t id_point = 1 ; id_point < cur_line.m_pts.size() ; ++id_point )
+      openMVG::Vec2f prev_pt = cur_line.m_pts[ 0 ];
+      for (size_t id_point = 1; id_point < cur_line.m_pts.size(); ++id_point )
       {
-        openMVG::Vec2f cur_pt = cur_line.m_pts[ id_point ] ;
+        openMVG::Vec2f cur_pt = cur_line.m_pts[ id_point ];
 
-        p.drawLine( QPoint( prev_pt( 0 ) , prev_pt( 1 ) ) , QPoint( cur_pt( 0 ) , cur_pt( 1 ) ) ) ;
+        p.drawLine( QPoint( prev_pt( 0 ) , prev_pt( 1 ) ) , QPoint( cur_pt( 0 ) , cur_pt( 1 ) ) );
 
-        prev_pt = cur_pt ;
+        prev_pt = cur_pt;
       }
     }
 
@@ -57,27 +57,27 @@ void VOViewerPanel::SetImage( QImage & img , const std::vector< VOViewerLine > &
   }
 
   // Draw points
-  for( size_t i = 0 ; i < points.size() ; ++i )
+  for (size_t i = 0; i < points.size(); ++i )
   {
-    const VOViewerPoint & cur_pt = points[ i ] ;
-    p.setPen( cur_pt.m_color ) ;
-    p.drawPoint( QPoint( cur_pt.m_pt( 0 ) , cur_pt.m_pt( 1 ) ) ) ;
+    const VOViewerPoint & cur_pt = points[ i ];
+    p.setPen( cur_pt.m_color );
+    p.drawPoint( QPoint( cur_pt.m_pt( 0 ) , cur_pt.m_pt( 1 ) ) );
   }
 
-  m_image_view->setPixmap( pmap ) ;
+  m_image_view->setPixmap( pmap );
 
 }
 
 
 void VOViewerPanel::BuildInterface( void )
 {
-  QHBoxLayout * mainLayout = new QHBoxLayout ;
+  QHBoxLayout * mainLayout = new QHBoxLayout;
 
-  m_image_view = new QLabel( this ) ;
+  m_image_view = new QLabel( this );
 
-  mainLayout->addWidget( m_image_view ) ;
+  mainLayout->addWidget( m_image_view );
 
-  setLayout( mainLayout ) ;
+  setLayout( mainLayout );
 }
 
 void VOViewerPanel::MakeConnections( void )

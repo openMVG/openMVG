@@ -7,14 +7,14 @@
 /* Main webgl object : contains the gl context, the shaders and the current view and projection matrices */
 RenderContext = function( canvas )
 {
-  this.m_canvas = canvas ; 
-  this.m_current_cam = undefined ; 
+  this.m_canvas = canvas; 
+  this.m_current_cam = undefined; 
 
-  this.initGLContext() ;
-  this.initShaders() ; 
+  this.initGLContext();
+  this.initShaders(); 
 
-  this.m_backface_culling_active = true ; 
-  this.m_view_dependent_point_size_active = true ; 
+  this.m_backface_culling_active = true; 
+  this.m_view_dependent_point_size_active = true; 
 }
 
 // Add your prefix here.
@@ -41,7 +41,7 @@ RenderContext.prototype.initGLContext = function( )
   console.log("coucou"); 
   try
   {
-    this.m_gl = this.m_canvas.getContext( "webgl") || this.m_canvas.getContext( "experimental-webgl" ) ;
+    this.m_gl = this.m_canvas.getContext( "webgl") || this.m_canvas.getContext( "experimental-webgl" );
   }
   catch(e)
   {
@@ -50,11 +50,11 @@ RenderContext.prototype.initGLContext = function( )
 
   if( ! this.m_gl )
   {
-    alert( "Error Initialization of the gl context" ) ; 
+    alert( "Error Initialization of the gl context" ); 
   }
-  var ext = getExtensionWithKnownPrefixes( this.m_gl , "EXT_frag_depth" ) ; 
+  var ext = getExtensionWithKnownPrefixes( this.m_gl , "EXT_frag_depth" ); 
 
-  this.setClearColor( 0.0 , 0.0 , 0.0 , 1.0 ) ; 
+  this.setClearColor( 0.0 , 0.0 , 0.0 , 1.0 ); 
   this.m_gl.enable(this.m_gl.DEPTH_TEST);
 }
 
@@ -62,69 +62,69 @@ RenderContext.prototype.initGLContext = function( )
 RenderContext.prototype.initShaders = function()
 {
   // Load shaders 
-  var trackballVertexShaderElemID    = document.getElementById( "line_v_shad" ) ;
-  var trackballVertexShaderContent   = trackballVertexShaderElemID.text ; 
+  var trackballVertexShaderElemID    = document.getElementById( "line_v_shad" );
+  var trackballVertexShaderContent   = trackballVertexShaderElemID.text; 
 
-  var trackballFragmentShaderElemID  = document.getElementById( "line_f_shad" ) ;
-  var trackballFragmentShaderContent = trackballFragmentShaderElemID.text ;
+  var trackballFragmentShaderElemID  = document.getElementById( "line_f_shad" );
+  var trackballFragmentShaderContent = trackballFragmentShaderElemID.text;
 
-  this.m_trackball_shad = new Shader( trackballVertexShaderContent , trackballFragmentShaderContent , this ) ; 
+  this.m_trackball_shad = new Shader( trackballVertexShaderContent , trackballFragmentShaderContent , this ); 
 
 
-  var pointVertexShaderElemID = document.getElementById( "point_v_shad" ) ;
-  var pointVertexShaderContent = pointVertexShaderElemID.text ;
+  var pointVertexShaderElemID = document.getElementById( "point_v_shad" );
+  var pointVertexShaderContent = pointVertexShaderElemID.text;
 
-  var pointFragmentShaderElemID = document.getElementById( "point_f_shad" ) ;
-  var pointFragmentShaderContent = pointFragmentShaderElemID.text ; 
+  var pointFragmentShaderElemID = document.getElementById( "point_f_shad" );
+  var pointFragmentShaderContent = pointFragmentShaderElemID.text; 
 
-  this.m_point_shad = new Shader( pointVertexShaderContent , pointFragmentShaderContent , this ) ; 
+  this.m_point_shad = new Shader( pointVertexShaderContent , pointFragmentShaderContent , this ); 
 }
 
 /* Set clear color */
 RenderContext.prototype.setClearColor = function( aR , aG , aB , aA )
 {
-  this.m_gl.clearColor( aR , aG , aB , aA ) ; 
+  this.m_gl.clearColor( aR , aG , aB , aA ); 
 }
 
 /* Get the webgl context */
 RenderContext.prototype.getGLContext = function()
 {
-  return this.m_gl ;
+  return this.m_gl;
 }
 
 /* Get the trackball shader */
 RenderContext.prototype.getTrackballShader = function()
 {
-  return this.m_trackball_shad ;
+  return this.m_trackball_shad;
 }
 
 RenderContext.prototype.getPointcloudShader = function()
 {
-  return this.m_point_shad ; 
+  return this.m_point_shad; 
 }
 
 /* Set the current view matrix */
 RenderContext.prototype.setCurrentViewMatrix = function( aViewMat )
 {
-  this.m_view_mat = aViewMat ;
+  this.m_view_mat = aViewMat;
 }
 
 /* Set the current projection matrix */
 RenderContext.prototype.setCurrentProjectionMatrix = function( aProjMat )
 {
-  this.m_proj_mat = aProjMat ; 
+  this.m_proj_mat = aProjMat; 
 }
 
 /* Get the current view matrix */
 RenderContext.prototype.getCurrentViewMatrix = function( )
 {
-  return this.m_view_mat ;
+  return this.m_view_mat;
 }
 
 /* Get the current projection matrix */
 RenderContext.prototype.getCurrentProjectionMatrix = function()
 {
-  return this.m_proj_mat ; 
+  return this.m_proj_mat; 
 }
 
 /**
@@ -133,7 +133,7 @@ RenderContext.prototype.getCurrentProjectionMatrix = function()
  */
 RenderContext.prototype.setCurrentCamera = function( aCam )
 {
-  this.m_current_cam = aCam ; 
+  this.m_current_cam = aCam; 
 }
 
 /**
@@ -142,7 +142,7 @@ RenderContext.prototype.setCurrentCamera = function( aCam )
  */
 RenderContext.prototype.getCurrentCamera = function()
 {
-  return this.m_current_cam ; 
+  return this.m_current_cam; 
 }
 
 
@@ -153,7 +153,7 @@ RenderContext.prototype.getCurrentCamera = function()
  */
 RenderContext.prototype.isBackfaceCullingActive = function()
 {
-  return this.m_backface_culling_active ;
+  return this.m_backface_culling_active;
 }
 
 /**
@@ -163,7 +163,7 @@ RenderContext.prototype.isBackfaceCullingActive = function()
  */
 RenderContext.prototype.backfaceCullingState = function()
 {
-  return this.m_backface_culling_active ;
+  return this.m_backface_culling_active;
 }
 
 /**
@@ -172,7 +172,7 @@ RenderContext.prototype.backfaceCullingState = function()
  */
 RenderContext.prototype.setBackFaceCulling = function( aValue )
 {
-  this.m_backface_culling_active = aValue ; 
+  this.m_backface_culling_active = aValue; 
 }
 
 /**
@@ -180,18 +180,18 @@ RenderContext.prototype.setBackFaceCulling = function( aValue )
  */
 RenderContext.prototype.getScreenSize = function( aValue )
 {
-  var res = new Common.INT_ARRAY_TYPE(2) ;
-  res[0] = this.m_current_cam.m_width ;
-  res[1] = this.m_current_cam.m_height ; 
-  return res ; 
+  var res = new Common.INT_ARRAY_TYPE(2);
+  res[0] = this.m_current_cam.m_width;
+  res[1] = this.m_current_cam.m_height; 
+  return res; 
 }
 
 RenderContext.prototype.isViewDependentPointSizeActive = function( aValue )
 {
-  return this.m_view_dependent_point_size_active ; 
+  return this.m_view_dependent_point_size_active; 
 }
 
 RenderContext.prototype.setViewDependentPointSize = function( aValue )
 {
-  this.m_view_dependent_point_size_active = aValue ; 
+  this.m_view_dependent_point_size_active = aValue; 
 }

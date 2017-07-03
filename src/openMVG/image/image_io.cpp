@@ -70,7 +70,7 @@ int ReadImage(const char *filename,
       return ReadPng(filename, ptr, w, h, depth);
     case Jpg:
       return ReadJpg(filename, ptr, w, h, depth);
-  	case Tiff:
+    case Tiff:
       return ReadTiff(filename, ptr, w, h, depth);
     default:
       return 0;
@@ -225,10 +225,7 @@ int WriteJpgStream(FILE *file,
   JSAMPLE *row = new JSAMPLE[row_bytes];
 
   while (cinfo.next_scanline < cinfo.image_height) {
-    std::memcpy(&row[0], &ptr[0], row_bytes*sizeof(unsigned char));
-    //int i;
-    //for (i = 0; i < row_bytes; ++i)
-    //	row[i] = ptr[i];
+    std::memcpy(&row[0], &ptr[0], row_bytes * sizeof(unsigned char));
     jpeg_write_scanlines(&cinfo, &row, 1);
     ptr += row_bytes;
   }
@@ -396,7 +393,7 @@ int WritePngStream(FILE * file,
 
   // color types are defined at png.h:841+.
   char colour;
-  switch(depth)
+  switch (depth)
   {
     case 4: colour = PNG_COLOR_TYPE_RGBA;
       break;
@@ -644,7 +641,7 @@ bool ReadImageHeader(const char * filename, ImageHeader * imgheader)
       return Read_PNG_ImageHeader(filename, imgheader);
     case Jpg:
       return Read_JPG_ImageHeader(filename, imgheader);
-  	case Tiff:
+    case Tiff:
       return Read_TIFF_ImageHeader(filename, imgheader);
     default:
       return false;

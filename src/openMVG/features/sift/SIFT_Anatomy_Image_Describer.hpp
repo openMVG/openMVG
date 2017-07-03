@@ -109,7 +109,7 @@ public:
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
-    switch(preset)
+    switch (preset)
     {
     case NORMAL_PRESET:
       params_.peak_threshold_ = 0.04f;

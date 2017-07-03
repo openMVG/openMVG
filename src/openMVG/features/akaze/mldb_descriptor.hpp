@@ -54,9 +54,9 @@ namespace features {
     const int max_w = samples_Li.cols();
     const int max_h = samples_Li.rows();
 
-    for( int i = 0; i < nb_subdiv; ++i )
+    for (int i = 0; i < nb_subdiv; ++i )
     {
-      for( int j = 0; j < nb_subdiv; ++j )
+      for (int j = 0; j < nb_subdiv; ++j )
       {
         // Compute subdivision extend
         const int min_x = j * subdiv_size;
@@ -68,9 +68,9 @@ namespace features {
         mean_Li( i , j ) = mean_Lx( i , j ) = mean_Ly( i , j ) = 0;
 
         size_t nb_elt = 0;
-        for( int ii = min_y; ii < max_y; ++ii )
+        for (int ii = min_y; ii < max_y; ++ii )
         {
-          for( int jj = min_x; jj < max_x; ++jj )
+          for (int jj = min_x; jj < max_x; ++jj )
           {
             mean_Li( i , j ) += samples_Li( ii , jj );
 
@@ -116,9 +116,9 @@ namespace features {
     DescriptorType & desc )
   {
     // Binary comparisons (ie (0,0) with (0,1), (O,0) with (0,2), ... )
-    for( int i = 0; i < ( nb_subdiv * nb_subdiv ); ++i )
+    for (int i = 0; i < ( nb_subdiv * nb_subdiv ); ++i )
     {
-      for( int j = i + 1; j < ( nb_subdiv * nb_subdiv ); ++j )
+      for (int j = i + 1; j < ( nb_subdiv * nb_subdiv ); ++j )
       {
         const int src_i = i / nb_subdiv;
         const int src_j = i % nb_subdiv;
@@ -176,9 +176,9 @@ namespace features {
     const Real cur_y = ipt.y() * inv_octave_scale;
 
     // Retrieve samples in oriented pattern
-    for( int i = - pattern_size; i <= pattern_size; ++i )
+    for (int i = - pattern_size; i <= pattern_size; ++i )
     {
-      for( int j = - pattern_size; j <= pattern_size; ++j )
+      for (int j = - pattern_size; j <= pattern_size; ++j )
       {
         // sample_y = yf + (l*scale*co + k*scale*si);
         // sample_x = xf + (-l*scale*si + k*scale*co);

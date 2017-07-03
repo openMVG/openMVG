@@ -29,7 +29,7 @@ struct RelativeRotation
   (
     IndexT i_ = 0,
     IndexT j_ = 0,
-    const	Mat3 & Rij_ = Mat3::Identity(),
+    const  Mat3 & Rij_ = Mat3::Identity(),
     float weight_ = 1.0f
   ): i(i_), j(j_), Rij(Rij_), weight(weight_)
   {}
@@ -42,7 +42,7 @@ using RelativeRotations_map = std::map<Pair, RelativeRotation>;
 inline Pair_Set getPairs(const RelativeRotations & relRots)
 {
   Pair_Set pairs;
-  for( const auto & cur_rotation : relRots )
+  for (const auto & cur_rotation : relRots )
     pairs.insert(std::make_pair(cur_rotation.i, cur_rotation.j));
   return pairs;
 }
@@ -51,7 +51,7 @@ inline Pair_Set getPairs(const RelativeRotations & relRots)
 inline RelativeRotations_map getMap(const RelativeRotations & relRots)
 {
   RelativeRotations_map map_rots;
-  for( const auto & cur_rotation : relRots )
+  for (const auto & cur_rotation : relRots )
     map_rots[std::make_pair(cur_rotation.i, cur_rotation.j)] = cur_rotation;
   return map_rots;
 }

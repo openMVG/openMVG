@@ -40,8 +40,6 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::trifocal::kerne
 
 namespace openMVG{
 
-using namespace openMVG::trifocal::kernel;
-
 /// Solve the translations and the structure of a view-triplet that have known rotations
 struct translations_Triplet_Solver {
   enum { MINIMUM_SAMPLES = 4 };
@@ -54,14 +52,14 @@ struct translations_Triplet_Solver {
     const Mat & pt1,
     const Mat & pt2,
     const std::vector<Mat3> & vec_KR,
-    std::vector<TrifocalTensorModel> *P,
+    std::vector<trifocal::kernel::TrifocalTensorModel> *P,
     const double ThresholdUpperBound
   );
 
   // Compute the residual of reprojections
   static double Error
   (
-    const TrifocalTensorModel & Tensor,
+    const trifocal::kernel::TrifocalTensorModel & Tensor,
     const Vec2 & pt0,
     const Vec2 & pt1,
     const Vec2 & pt2

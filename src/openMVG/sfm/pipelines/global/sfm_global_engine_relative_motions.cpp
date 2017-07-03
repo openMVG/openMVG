@@ -116,7 +116,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   {
     const Pair_Set pairs = matches_provider_->getPairs();
     const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
-    if(set_remainingIds.empty())
+    if (set_remainingIds.empty())
     {
       std::cout << "Invalid input image graph for global SfM" << std::endl;
       return false;
@@ -180,7 +180,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
   Hash_Map<IndexT, Mat3> & global_rotations
 )
 {
-  if(relatives_R.empty())
+  if (relatives_R.empty())
     return false;
   // Log statistics about the relative rotation graph
   {

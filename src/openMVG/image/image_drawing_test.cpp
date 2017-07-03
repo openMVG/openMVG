@@ -29,7 +29,7 @@ TEST(ImageDrawing, Scanlines) {
   //  |_________|
   const int y = 5;
   DrawLine( 0, y, w-1, y, 255, &image);
-  for(int i=0; i < w; ++i)
+  for (int i=0; i < w; ++i)
     EXPECT_EQ( image(y,i), 255);
 
   image.fill(0);
@@ -60,7 +60,7 @@ TEST(ImageDrawing, Scanlines_RGB) {
   //  |_________|
   const int y = 5;
   DrawLine( 0, y, w-1, y, RGBColor(GREEN), &image);
-  for(int i=0; i < w; ++i)
+  for (int i=0; i < w; ++i)
     EXPECT_EQ( image(y,i), RGBColor(GREEN));
 
   image.fill(RGBColor(BLACK));

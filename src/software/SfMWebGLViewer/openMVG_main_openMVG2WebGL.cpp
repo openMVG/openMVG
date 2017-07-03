@@ -233,10 +233,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model points
   file << "modelPos=[" << std::endl;
-  for( size_t id_point = 0; id_point < vec_3dPoints.size(); ++id_point )
+  for (size_t id_point = 0; id_point < vec_3dPoints.size(); ++id_point)
   {
     file << vec_3dPoints[id_point](0) << " , " << vec_3dPoints[id_point](1) << " , " << vec_3dPoints[id_point](2);
-    if( id_point +1 != vec_3dPoints.size() )
+    if (id_point +1 != vec_3dPoints.size() )
     {
       file << " , ";
     }
@@ -245,10 +245,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model normal
   file << "modelNor=[" << std::endl;
-  for( size_t id_nor = 0; id_nor < vec_normals.size(); ++id_nor )
+  for (size_t id_nor = 0; id_nor < vec_normals.size(); ++id_nor)
   {
     file << vec_normals[ id_nor ](0) << " , " << vec_normals[ id_nor ](1) << " , " << vec_normals[ id_nor ](2);
-    if( id_nor + 1 != vec_normals.size() )
+    if (id_nor + 1 != vec_normals.size() )
     {
       file << " , ";
     }
@@ -257,10 +257,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model color
   file << "modelCol=[" << std::endl;
-  for( size_t id_point = 0; id_point < vec_tracksColor.size();  ++id_point )
+  for (size_t id_point = 0; id_point < vec_tracksColor.size();  ++id_point)
   {
     file << vec_tracksColor[id_point](0) << " , " << vec_tracksColor[id_point](1) << " , " << vec_tracksColor[id_point](2);
-    if( id_point + 1 != vec_tracksColor.size() )
+    if (id_point + 1 != vec_tracksColor.size() )
     {
       file << " , ";
     }
@@ -269,7 +269,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Camera positions
   file << "cameraPos=[" << std::endl;
-  for( auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end(); )
+  for (auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end();)
   {
     const View * view = sfm_data.GetViews().at(it->first).get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -311,7 +311,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Camera image planes
   file << "cameraImagePlanes=[" << std::endl;
-  for( auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end(); )
+  for (auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end();)
   {
     const View * view = sfm_data.GetViews().at(it->first).get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -369,7 +369,7 @@ bool CopyFile( const std::string & inputFolder , const std::string & inputName ,
                const std::string & outputSubFolder , const std::string & outputName )
 {
   std::string outputFilename;
-  if( outputSubFolder.length() > 0 )
+  if (outputSubFolder.length() > 0 )
   {
     outputFilename = stlplus::create_filespec( stlplus::folder_append_separator( outputFolder ) + outputSubFolder , outputName );
   }
@@ -480,7 +480,7 @@ bool ExportToWebGL( const std::string & sSfM_Data_Filename , const std::string &
   };
 
   // Copy the js files
-  for( int id_file = 0; id_file < StaticArraySize( files_to_copy ) / 5; ++id_file )
+  for (int id_file = 0; id_file < StaticArraySize( files_to_copy ) / 5; ++id_file)
   {
     const std::string & input_folder = files_to_copy[ 5 * id_file ];
     const std::string & input_name   = files_to_copy[ 5 * id_file + 1 ];

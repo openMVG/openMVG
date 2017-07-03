@@ -266,7 +266,7 @@ void AbsoluteOrientation(const Mat3X &X,
 
   // Normalize the two point sets.
   Mat3X Xn(3, num_points), Xpn(3, num_points);
-  for( int i = 0; i < num_points; ++i ){
+  for (int i = 0; i < num_points; ++i ){
     Xn.col(i)  = X.col(i) - C;
     Xpn.col(i) = Xp.col(i) - Cp;
   }

@@ -49,15 +49,6 @@ TEST(Split, stringSplit3part)
   EXPECT_EQ( 3, vec_str.size() );
 }
 
-TEST(Split, ontheSameString)
-{
-  const char sDelimiter = ';';
-  std::vector<std::string> vec_str = {"foo;"};
-  EXPECT_TRUE( stl::split(vec_str[0], sDelimiter, vec_str));
-  EXPECT_EQ( 1, vec_str.size() );
-}
-
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

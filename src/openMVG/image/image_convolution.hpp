@@ -49,15 +49,15 @@ void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 
   out.resize( img.Width() , img.Height() );
 
-  for( int row = 0; row < img.rows(); ++row )
+  for (int row = 0; row < img.rows(); ++row )
   {
-    for( int col = 0; col < img.cols(); ++col )
+    for (int col = 0; col < img.cols(); ++col )
     {
       acc_pix_t sum = acc_pix_t( );
 
-      for( int i = 0; i < kernel_height; ++i )
+      for (int i = 0; i < kernel_height; ++i )
       {
-        for( int j = 0; j < kernel_width; ++j )
+        for (int j = 0; j < kernel_width; ++j )
         {
           int idy = row + i - kernel_height / 2;
           int idx = col + j - kernel_width / 2;
@@ -96,17 +96,17 @@ void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel
 
   std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( cols + kernel_width );
 
-  for( int row = 0; row < rows; ++row )
+  for (int row = 0; row < rows; ++row )
   {
     // Copy line
     const pix_t start_pix = img.coeffRef( row , 0 );
-    for( int k = 0; k < half_kernel_width; ++k ) // pad before
+    for (int k = 0; k < half_kernel_width; ++k ) // pad before
     {
       line[ k ] = start_pix;
     }
     std::memcpy( &line[0] + half_kernel_width, img.data() + row * cols, sizeof( pix_t ) * cols );
     const pix_t end_pix = img.coeffRef( row , cols - 1 );
-    for( int k = 0; k < half_kernel_width; ++k ) // pad after
+    for (int k = 0; k < half_kernel_width; ++k ) // pad after
     {
       line[ k + half_kernel_width + cols ] = end_pix;
     }
@@ -140,18 +140,18 @@ void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel ,
 
   std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( rows + kernel_width );
 
-  for( int col = 0; col < cols; ++col )
+  for (int col = 0; col < cols; ++col )
   {
     // Copy column
-    for( int k = 0; k < half_kernel_width; ++k )
+    for (int k = 0; k < half_kernel_width; ++k )
     {
       line[ k ] = img.coeffRef( 0 , col );
     }
-    for( int k = 0; k < rows; ++k )
+    for (int k = 0; k < rows; ++k )
     {
       line[ k + half_kernel_width ] = img.coeffRef( k , col );
     }
-    for( int k = 0; k < half_kernel_width; ++k )
+    for (int k = 0; k < half_kernel_width; ++k )
     {
       line[ k + half_kernel_width + rows ] = img.coeffRef( rows - 1 , col );
     }
@@ -159,7 +159,7 @@ void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel ,
     // Apply convolution
     conv_buffer_( &line[0] , kernel.data() , rows , kernel_width );
 
-    for( int row = 0; row < rows; ++row )
+    for (int row = 0; row < rows; ++row )
     {
       out.coeffRef( row , col ) = line[row];
     }

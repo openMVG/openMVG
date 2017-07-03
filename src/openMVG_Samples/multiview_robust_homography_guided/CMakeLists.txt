@@ -1,6 +1,4 @@
 
-add_definitions(-DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
 add_executable(openMVG_sample_multiview_robustHomography_guided robust_homography_guided.cpp)
 target_link_libraries(openMVG_sample_multiview_robustHomography_guided
   openMVG_image
@@ -9,5 +7,6 @@ target_link_libraries(openMVG_sample_multiview_robustHomography_guided
   openMVG_matching
   vlsift
   stlplus)
-
+target_compile_definitions(openMVG_sample_multiview_robustHomography_guided
+  PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 set_property(TARGET openMVG_sample_multiview_robustHomography_guided PROPERTY FOLDER OpenMVG/Samples)

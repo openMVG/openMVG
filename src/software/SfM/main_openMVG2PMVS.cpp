@@ -221,8 +221,8 @@ bool exportToBundlerFormat(
   const std::string & sOutFile, //Output Bundle.rd.out file
   const std::string & sOutListFile)  //Output Bundler list.txt file
 {
-  std::ofstream os(sOutFile.c_str()	);
-  std::ofstream osList(sOutListFile.c_str()	);
+  std::ofstream os(sOutFile.c_str());
+  std::ofstream osList(sOutListFile.c_str());
   if (! os.is_open() || ! osList.is_open())
   {
     return false;

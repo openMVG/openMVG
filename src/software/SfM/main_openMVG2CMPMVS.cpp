@@ -42,11 +42,11 @@ bool exportToCMPMVSFormat(
   if (!bOk)
   {
     std::cerr << "Cannot access to one of the desired output directory" << std::endl;
-	return false;
+    return false;
   }
   else
   {
-    // Export data :
+    // Export data:
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
 
@@ -138,85 +138,85 @@ bool exportToCMPMVSFormat(
     // Write the mvs_firstRun script
     std::ostringstream os;
     os << "[global]" << os.widen('\n')
-    << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
-    << "prefix=\"\"" << os.widen('\n')
-    << "imgExt=\"jpg\"" << os.widen('\n')
-    << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
-    << "width=" << w_h_image_size.first << os.widen('\n')
-    << "height=" << w_h_image_size.second << os.widen('\n')
-    << "scale=2" << os.widen('\n')
-    << "workDirName=\"_tmp_fast\"" << os.widen('\n')
-    << "doPrepareData=TRUE" << os.widen('\n')
-    << "doPrematchSifts=TRUE" << os.widen('\n')
-    << "doPlaneSweepingSGM=TRUE"  << os.widen('\n')
-    << "doFuse=TRUE" << os.widen('\n')
-    << "nTimesSimplify=10" << os.widen('\n')
-    << os.widen('\n')
-    << "[prematching]" << os.widen('\n')
-    << "minAngle=3.0" << os.widen('\n')
-    << os.widen('\n')
-    << "[grow]" << os.widen('\n')
-    << "minNumOfConsistentCams=6" << os.widen('\n')
-    << os.widen('\n')
-    << "[filter]" << os.widen('\n')
-    << "minNumOfConsistentCams=2" << os.widen('\n')
-    << os.widen('\n')
-    << "#do not erase empy lines after this comment otherwise it will crash ... bug" << os.widen('\n')
-    << os.widen('\n')
-    << os.widen('\n');
+      << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
+      << "prefix=\"\"" << os.widen('\n')
+      << "imgExt=\"jpg\"" << os.widen('\n')
+      << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
+      << "width=" << w_h_image_size.first << os.widen('\n')
+      << "height=" << w_h_image_size.second << os.widen('\n')
+      << "scale=2" << os.widen('\n')
+      << "workDirName=\"_tmp_fast\"" << os.widen('\n')
+      << "doPrepareData=TRUE" << os.widen('\n')
+      << "doPrematchSifts=TRUE" << os.widen('\n')
+      << "doPlaneSweepingSGM=TRUE"  << os.widen('\n')
+      << "doFuse=TRUE" << os.widen('\n')
+      << "nTimesSimplify=10" << os.widen('\n')
+      << os.widen('\n')
+      << "[prematching]" << os.widen('\n')
+      << "minAngle=3.0" << os.widen('\n')
+      << os.widen('\n')
+      << "[grow]" << os.widen('\n')
+      << "minNumOfConsistentCams=6" << os.widen('\n')
+      << os.widen('\n')
+      << "[filter]" << os.widen('\n')
+      << "minNumOfConsistentCams=2" << os.widen('\n')
+      << os.widen('\n')
+      << "#do not erase empy lines after this comment otherwise it will crash ... bug" << os.widen('\n')
+      << os.widen('\n')
+      << os.widen('\n');
 
     std::ofstream file(
-	    stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
-	    "01_mvs_firstRun" ,"ini").c_str());
+      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
+      "01_mvs_firstRun" ,"ini").c_str());
     file << os.str();
     file.close();
 
     // limitedScale
     os.str("");
     os << "[global]" << os.widen('\n')
-    << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
-    << "prefix=\"\"" << os.widen('\n')
-    << "imgExt=\"jpg\"" << os.widen('\n')
-    << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
-    << "width=" << w_h_image_size.first << os.widen('\n')
-    << "height=" << w_h_image_size.second << os.widen('\n')
-    << "scale=2" << os.widen('\n')
-    << "workDirName=\"_tmp_fast\"" << os.widen('\n')
-    << "doPrepareData=FALSE" << os.widen('\n')
-    << "doPrematchSifts=FALSE" << os.widen('\n')
-    << "doPlaneSweepingSGM=FALSE"  << os.widen('\n')
-    << "doFuse=FALSE" << os.widen('\n')
-    << os.widen('\n')
-    << "[uvatlas]" << os.widen('\n')
-    << "texSide=1024" << os.widen('\n')
-    << "scale=1" << os.widen('\n')
-    << os.widen('\n')
-    << "[delanuaycut]" << os.widen('\n')
-    << "saveMeshTextured=FALSE" << os.widen('\n')
-    << os.widen('\n')
-    << "[hallucinationsFiltering]" << os.widen('\n')
-    << "useSkyPrior=FALSE" << os.widen('\n')
-    << "doLeaveLargestFullSegmentOnly=FALSE" << os.widen('\n')
-    << "doRemoveHugeTriangles=TRUE" << os.widen('\n')
-    << os.widen('\n')
-    << "[largeScale]" << os.widen('\n')
-    << "doGenerateAndReconstructSpaceMaxPts=TRUE" << os.widen('\n')
-    << "doGenerateSpace=TRUE" << os.widen('\n')
-    << "planMaxPts=3000000" << os.widen('\n')
-    << "doComputeDEMandOrtoPhoto=FALSE" << os.widen('\n')
-    << "doGenerateVideoFrames=FALSE" << os.widen('\n')
-    << os.widen('\n')
-    << "[meshEnergyOpt]" << os.widen('\n')
-    << "doOptimizeOrSmoothMesh=FALSE" << os.widen('\n')
-    << os.widen('\n')
-    << os.widen('\n')
-    << "#EOF" << os.widen('\n')
-    << os.widen('\n')
-    << os.widen('\n');
+      << "dirName=\"" << stlplus::folder_append_separator(sOutDirectory) <<"\"" << os.widen('\n')
+      << "prefix=\"\"" << os.widen('\n')
+      << "imgExt=\"jpg\"" << os.widen('\n')
+      << "ncams=" << map_viewIdToContiguous.size() << os.widen('\n')
+      << "width=" << w_h_image_size.first << os.widen('\n')
+      << "height=" << w_h_image_size.second << os.widen('\n')
+      << "scale=2" << os.widen('\n')
+      << "workDirName=\"_tmp_fast\"" << os.widen('\n')
+      << "doPrepareData=FALSE" << os.widen('\n')
+      << "doPrematchSifts=FALSE" << os.widen('\n')
+      << "doPlaneSweepingSGM=FALSE"  << os.widen('\n')
+      << "doFuse=FALSE" << os.widen('\n')
+      << os.widen('\n')
+      << "[uvatlas]" << os.widen('\n')
+      << "texSide=1024" << os.widen('\n')
+      << "scale=1" << os.widen('\n')
+      << os.widen('\n')
+      << "[delanuaycut]" << os.widen('\n')
+      << "saveMeshTextured=FALSE" << os.widen('\n')
+      << os.widen('\n')
+      << "[hallucinationsFiltering]" << os.widen('\n')
+      << "useSkyPrior=FALSE" << os.widen('\n')
+      << "doLeaveLargestFullSegmentOnly=FALSE" << os.widen('\n')
+      << "doRemoveHugeTriangles=TRUE" << os.widen('\n')
+      << os.widen('\n')
+      << "[largeScale]" << os.widen('\n')
+      << "doGenerateAndReconstructSpaceMaxPts=TRUE" << os.widen('\n')
+      << "doGenerateSpace=TRUE" << os.widen('\n')
+      << "planMaxPts=3000000" << os.widen('\n')
+      << "doComputeDEMandOrtoPhoto=FALSE" << os.widen('\n')
+      << "doGenerateVideoFrames=FALSE" << os.widen('\n')
+      << os.widen('\n')
+      << "[meshEnergyOpt]" << os.widen('\n')
+      << "doOptimizeOrSmoothMesh=FALSE" << os.widen('\n')
+      << os.widen('\n')
+      << os.widen('\n')
+      << "#EOF" << os.widen('\n')
+      << os.widen('\n')
+      << os.widen('\n');
 
     std::ofstream file2(
-	    stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
-	    "02_mvs_limitedScale" ,"ini").c_str());
+      stlplus::create_filespec(stlplus::folder_append_separator(sOutDirectory),
+      "02_mvs_limitedScale" ,"ini").c_str());
     file2 << os.str();
     file2.close();
   }

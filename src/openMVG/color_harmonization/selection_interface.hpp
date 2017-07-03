@@ -33,7 +33,7 @@ public:
    * \param[out] maskLeft Mask of the left image (initialized to corresponding image size).
    * \param[out] maskRight  Mask of the right image (initialized to corresponding image size).
    *
-   * \return True if(mask not empty).
+   * \return True if (mask not empty).
    */
   virtual bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) = 0;
 
@@ -53,11 +53,11 @@ public:
     size_t channelIndex,
     const image::Image< ImageType >& image )
   {
-    for( int j = 0; j < mask.Height(); ++j )
+    for (int j = 0; j < mask.Height(); ++j )
     {
-      for( int i = 0; i < mask.Width(); ++i )
+      for (int i = 0; i < mask.Width(); ++i )
       {
-        if( ( int )mask( j, i ) != 0 )
+        if (( int )mask( j, i ) != 0 )
         {
           histo.Add( image( j, i )( channelIndex ) );
         }

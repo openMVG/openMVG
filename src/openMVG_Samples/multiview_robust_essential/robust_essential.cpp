@@ -286,7 +286,7 @@ bool exportToPly(const std::vector<Vec3> & vec_points,
       << " 0 255 0" << "\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }

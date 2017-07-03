@@ -222,5 +222,3 @@ bool TiXi_withNoise_L1_ConstraintBuilder::Build
 
 } // namespace lInfinityCV
 } // namespace openMVG
-
-

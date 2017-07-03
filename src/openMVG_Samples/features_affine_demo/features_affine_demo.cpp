@@ -48,23 +48,23 @@ void NormalizePatch
        feat.b(), feat.c();
 
   // Inverse square root
-  A = A.pow( -0.5 ) ;
+  A = A.pow( -0.5 );
 
   const float sc = 2.f * 3.f / static_cast<float>(patch_size);
-  A = A * sc ;
+  A = A * sc;
 
-  const float half_width = static_cast<float>( patch_size ) / 2.f ;
+  const float half_width = static_cast<float>( patch_size ) / 2.f;
 
   // Compute sampling grid
-  std::vector< std::pair<float,float> > sampling_grid ;
+  std::vector< std::pair<float,float> > sampling_grid;
   sampling_grid.reserve(patch_size*patch_size);
-  for( int i = 0 ; i < patch_size ; ++i )
+  for (int i = 0; i < patch_size; ++i )
   {
-    for( int j = 0 ; j < patch_size ; ++j )
+    for (int j = 0; j < patch_size; ++j )
     {
       // Apply transformation relative to the center of the patch (assume origin at 0,0 then map to (x,y) )
       Vec2 pos;
-      pos << static_cast<float>( j ) - half_width, static_cast<float>( i ) - half_width ;
+      pos << static_cast<float>( j ) - half_width, static_cast<float>( i ) - half_width;
       // Map (ie: ellipse transform)
       const Vec2 affineAdapted = A * pos;
 
@@ -72,14 +72,14 @@ void NormalizePatch
     }
   }
 
-  Sampler2d< SamplerLinear > sampler ;
+  Sampler2d< SamplerLinear > sampler;
 
   // Sample input image to generate patch
   GenericRessample(
     src_img , sampling_grid ,
     patch_size , patch_size ,
     sampler ,
-    out_patch ) ;
+    out_patch );
 }
 
 void Extract_MSER
@@ -96,9 +96,9 @@ void Extract_MSER
     // Inverted image
     Image<unsigned char> image4( 255 - img.array() );
     std::vector< MSERRegion > regs;
-    MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY ) ;
-    extr4.Extract( image4 , regs ) ;
-    for( size_t i = 0 ; i < regs.size() ; ++i )
+    MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
+    extr4.Extract( image4 , regs );
+    for (size_t i = 0; i < regs.size(); ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );
@@ -111,9 +111,9 @@ void Extract_MSER
   //-- Extract Dark MSER
   {
     std::vector< MSERRegion > regs;
-    MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY ) ;
-    extr8.Extract( img , regs ) ;
-    for( size_t i = 0 ; i < regs.size() ; ++i )
+    MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY );
+    extr8.Extract( img , regs );
+    for (size_t i = 0; i < regs.size(); ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 
     // Display extracted Region ellipses:
     Image<unsigned char> Icpy (image);
-    for( size_t i = 0; i < feats_bright.size(); ++i)
+    for (size_t i = 0; i < feats_bright.size(); ++i)
     {
       const AffinePointFeature & fp = feats_bright[i];
       DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
 
     // Display extracted Region ellipses:
     Icpy = image;
-    for( size_t i = 0; i < feats_dark.size(); ++i)
+    for (size_t i = 0; i < feats_dark.size(); ++i)
     {
       const AffinePointFeature & fp = feats_dark[i];
       DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());

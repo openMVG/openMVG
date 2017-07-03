@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     const IntrinsicBase * cam = iterIntrinsic->second.get();
     Mat34 P = cam->get_projective_equivalent(pose);
 
-    for ( int i = 1; i < 3 ; ++i)
+    for ( int i = 1; i < 3; ++i)
       for ( int j = 0; j < 4; ++j)
         P(i, j) *= -1.;
 

@@ -53,7 +53,7 @@ void l1SixPointResectionSolver::Solve
   std::vector<double> vec_solution(11);
   OSI_CLP_SolverWrapper wrapperLpSolve(vec_solution.size());
   Resection_L1_ConstraintBuilder cstBuilder(pt2D, XPoints);
-  if(
+  if (
     (BisectionLP<Resection_L1_ConstraintBuilder, LP_Constraints_Sparse>(
     wrapperLpSolve,
     cstBuilder,

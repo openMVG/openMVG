@@ -23,7 +23,7 @@ class SfM_Data_Structure_Estimation_From_Known_Poses
 {
 public:
 
-  SfM_Data_Structure_Estimation_From_Known_Poses
+  explicit SfM_Data_Structure_Estimation_From_Known_Poses
   (
     double max_reprojection_error // pixels
   );

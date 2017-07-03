@@ -42,7 +42,7 @@ void ImageXDerivative( const Image & img , Image & out , const bool normalize = 
 {
   Vec3 kernel( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel *= 0.5;
   }
@@ -62,7 +62,7 @@ void ImageYDerivative( const Image & img , Image & out , const bool normalize = 
 {
   Vec3 kernel( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel *= 0.5;
   }
@@ -82,14 +82,14 @@ void ImageSobelXDerivative( const Image & img , Image & out , const bool normali
 {
   Vec3 kernel_horiz( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_horiz *= 0.5;
   }
 
   Vec3 kernel_vert( 1.0, 2.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_vert *= 0.25;
   }
@@ -109,14 +109,14 @@ void ImageSobelYDerivative( const Image & img , Image & out , const bool normali
 {
   Vec3 kernel_horiz( 1.0, 2.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_horiz *= 0.25;
   }
 
   Vec3 kernel_vert( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_vert *= 0.5;
   }
@@ -135,14 +135,14 @@ void ImageScharrXDerivative( const Image & img , Image & out , const bool normal
 {
   Vec3 kernel_horiz( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_horiz *= 0.5;
   }
 
   Vec3 kernel_vert( 3.0, 10.0, 3.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_vert *= 1.0 / 16.0;
   }
@@ -161,14 +161,14 @@ void ImageScharrYDerivative( const Image & img , Image & out , const bool normal
 {
   Vec3 kernel_horiz( 3.0, 10.0, 3.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_horiz *= 1.0 / 16.0;
   }
 
   Vec3 kernel_vert( -1.0, 0.0, 1.0 );
 
-  if( normalize )
+  if (normalize )
   {
     kernel_vert *= 0.5;
   }
@@ -212,7 +212,7 @@ void ImageScaledScharrXDerivative( const Image & img , Image & out , const int s
   kernel_vert( kernel_size / 2 ) = w;
   kernel_vert( kernel_size - 1 ) = 1.0;
 
-  if( bNormalize )
+  if (bNormalize )
   {
     kernel_vert *= 1.0 / ( 2.0 * scale * ( w + 2.0 ) );
   }
@@ -253,7 +253,7 @@ void ImageScaledScharrYDerivative( const Image & img , Image & out , const int s
   kernel_horiz( kernel_size / 2 ) = w;
   kernel_horiz( kernel_size - 1 ) = 1.0;
 
-  if( bNormalize )
+  if (bNormalize )
   {
     kernel_horiz *= 1.0 / ( 2.0 * scale * ( w + 2.0 ) );
   }
@@ -288,7 +288,7 @@ void ImageGaussianFilter( const Image & img , const double sigma , Image & out ,
   Vec kernel_horiz( k_size );
 
   double sum = 0;
-  for( int i = 0; i < k_size; ++i )
+  for (int i = 0; i < k_size; ++i )
   {
     const double dx = ( i - half_k_size );
     kernel_horiz( i ) = exp( - dx * dx * exp_scale );
@@ -297,7 +297,7 @@ void ImageGaussianFilter( const Image & img , const double sigma , Image & out ,
 
   // Normalize kernel (to have \sum_i kernel_horiz( i ) = 1 and avoid energy loss)
   const double inv = 1.0 / sum;
-  for( int i = 0; i < k_size; ++i )
+  for (int i = 0; i < k_size; ++i )
   {
     kernel_horiz( i ) *= inv;
   }
@@ -329,7 +329,7 @@ inline Vec ComputeGaussianKernel( const size_t size , const double sigma )
 
   // Compute unnormalized kernel
   double sum = 0.0;
-  for( size_t i = 0; i < k_size; ++i )
+  for (size_t i = 0; i < k_size; ++i )
   {
     const double dx = ( static_cast<double>( i ) - static_cast<double>( half_k_size ) );
     res( i ) = exp( - dx * dx * exp_scale );
@@ -338,7 +338,7 @@ inline Vec ComputeGaussianKernel( const size_t size , const double sigma )
 
   // Normalize kernel
   const double inv = 1.0 / sum;
-  for( size_t i = 0; i < k_size; ++i )
+  for (size_t i = 0; i < k_size; ++i )
   {
     res( i ) *= inv;
   }

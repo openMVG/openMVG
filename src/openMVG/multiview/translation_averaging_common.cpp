@@ -18,7 +18,7 @@ namespace openMVG {
 Pair_Set getPairs(const RelativeInfo_Vec & vec_relative)
 {
   Pair_Set pair_set;
-  for( const auto & rel : vec_relative )
+  for (const auto & rel : vec_relative )
   {
     pair_set.insert(Pair(rel.first.first, rel.first.second));
   }

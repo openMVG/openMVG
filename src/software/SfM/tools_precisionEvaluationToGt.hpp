@@ -92,7 +92,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
       << " 255 255 0" << "\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }

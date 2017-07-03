@@ -43,10 +43,10 @@ TEST( GaussianScaleSpace , OctaveGeneration )
 
   std::cerr << "Octave computation started" << std::endl;
   uint8_t octave_id = 0;
-  while( octave_gen.NextOctave( octave ) )
+  while (octave_gen.NextOctave( octave ))
   {
     std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl;
-    for( int i = 0; i < octave.slices.size(); ++i )
+    for (int i = 0; i < octave.slices.size(); ++i )
     {
       std::stringstream str;
       str << "gaussian_octave_" << std::to_string(octave_id) << "_" << i << ".png";
@@ -81,7 +81,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
   keypoints.reserve(5000);
   std::cerr << "Octave computation started" << std::endl;
   uint8_t octave_id = 0;
-  while( octave_gen.NextOctave( octave ) )
+  while (octave_gen.NextOctave( octave ))
   {
     std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl;
     std::vector< Keypoint > keys;

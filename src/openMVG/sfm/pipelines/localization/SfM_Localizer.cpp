@@ -172,7 +172,7 @@ namespace sfm {
     if (b_BA_Status)
     {
       pose = sfm_data.poses[0];
-      if(b_refine_intrinsic)
+      if (b_refine_intrinsic)
         *intrinsics = *shared_intrinsics;
     }
 
