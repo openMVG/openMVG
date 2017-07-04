@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
-#define OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
+#ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_IO_HPP
+#define OPENMVG_SFM_SFM_VIEW_PRIORS_IO_HPP
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/polymorphic.hpp>
 
-#include "openMVG/sfm/sfm_view_priors_io.hpp"
+#include "openMVG/sfm/sfm_view_priors.hpp"
 
 template <class Archive>
 void openMVG::sfm::ViewPriors::save( Archive & ar ) const
@@ -91,4 +91,4 @@ void openMVG::sfm::ViewPriors::load( Archive & ar )
 CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::sfm::ViewPriors, "view_priors" );
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::sfm::View, openMVG::sfm::ViewPriors);
 
-#endif // OPENMVG_SFM_SFM_VIEW_PRIORS_HPP
+#endif // OPENMVG_SFM_SFM_VIEW_PRIORS_IO_HPP

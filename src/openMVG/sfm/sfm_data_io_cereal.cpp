@@ -19,6 +19,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_landmark_io.hpp"
 #include "openMVG/sfm/sfm_view_io.hpp"
+#include "openMVG/sfm/sfm_view_priors_io.hpp"
 #include "openMVG/types.hpp"
 
 #include <fstream>
