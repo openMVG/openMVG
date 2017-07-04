@@ -32,6 +32,13 @@ void openMVG::features::AKAZE_Image_describer::serialize(Archive & ar)
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer, "AKAZE_Image_describer");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::AKAZE_Image_describer)
 
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer_SURF, "AKAZE_Image_describer_SURF");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::AKAZE_Image_describer_SURF)
+
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer_LIOP, "AKAZE_Image_describer_LIOP");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::AKAZE_Image_describer_LIOP)
+
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Image_describer_MLDB, "AKAZE_Image_describer_MLDB");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, openMVG::features::AKAZE_Image_describer_MLDB)
+
 #endif // OPENMVG_FEATURES_AKAZE_IMAGE_DESCRIBER_IO_HPP
-
-

@@ -52,7 +52,6 @@ public:
     const std::string& sfileNameFeats,
     const std::string& sfileNameDescs) override
   {
-    std::cout << "Im here - binary" << std::endl;
     return loadFeatsFromFile(sfileNameFeats, vec_feats_)
           & loadDescsFromBinFile(sfileNameDescs, vec_descs_);
   }
