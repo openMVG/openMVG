@@ -11,7 +11,7 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
     set( ALTERNATIVE_VO_HEADERS ControlButtonsPanel.hpp MainWindow.hpp VOFolderProcessor.hpp VOViewerPanel.hpp VOViewerDrawableElements.hpp )
 
     if (APPLE )
-      add_executable( openMVG_main_AlternativeVO MACOSX_BUNDLE ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS} )  
+      add_executable( openMVG_main_AlternativeVO MACOSX_BUNDLE ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS} )
     else( APPLE )
       if ( WIN32 )
         add_executable( openMVG_main_AlternativeVO WIN32 ${ALTERNATIVE_VO_SOURCES} ${ALTERNATIVE_VO_HEADERS}  )
@@ -24,6 +24,8 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
 
     if (OpenMVG_USE_OPENCV )
       target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )
+      target_include_directories( openMVG_main_AlternativeVO PRIVATE ${OpenCV_INCLUDE_DIRS} )
+      target_compile_definitions( openMVG_main_AlternativeVO PRIVATE HAVE_OPENCV )
     endif( OpenMVG_USE_OPENCV )
 
     set_property( TARGET openMVG_main_AlternativeVO PROPERTY CXX_STANDARD 11 )
