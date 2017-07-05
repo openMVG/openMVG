@@ -35,8 +35,3 @@ UNIT_TEST(openMVG image_drawing "openMVG_image")
 UNIT_TEST(openMVG image_io "openMVG_image")
 UNIT_TEST(openMVG image_filtering "openMVG_image")
 UNIT_TEST(openMVG image_resampling "openMVG_image")
-
-target_compile_definitions(openMVG_test_image_io
-  PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_definitions(openMVG_test_image_resampling
-    PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
