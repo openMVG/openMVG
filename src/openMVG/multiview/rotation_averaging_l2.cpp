@@ -155,7 +155,7 @@ bool L2RotationAveraging
     std::vector<std::pair<double, Vec> > eigs(AtA.cols());
     for (Mat::Index i = 0; i < AtA.cols(); ++i)
     {
-      eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+      eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};
     }
     std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
 

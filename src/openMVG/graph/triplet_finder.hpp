@@ -71,8 +71,8 @@ struct Triplet
   */
   friend bool operator==( const Triplet& m1, const Triplet& m2 )
   {
-    return m1.contain( std::make_pair( m2.i, m2.j ) )
-           && m1.contain( std::make_pair( m2.i, m2.k ) );
+    return m1.contain( {m2.i, m2.j} )
+           && m1.contain( {m2.i, m2.k} );
   }
 
   /**

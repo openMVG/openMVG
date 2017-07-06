@@ -142,7 +142,7 @@ namespace sfm {
     // Setup a tiny SfM scene with the corresponding 2D-3D data
     SfM_Data sfm_data;
     // view
-    sfm_data.views.insert(std::make_pair(0, std::make_shared<View>("",0, 0, 0)));
+    sfm_data.views.insert({0, std::make_shared<View>("",0, 0, 0)});
     // pose
     sfm_data.poses[0] = pose;
     // intrinsic

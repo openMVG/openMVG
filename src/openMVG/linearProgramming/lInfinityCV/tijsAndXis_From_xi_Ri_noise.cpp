@@ -88,10 +88,8 @@ void EncodeTiXi_withNoise
   }
 
   // By default set free variable:
-  vec_bounds = std::vector< std::pair<double,double> >(3 * (Ncam + N3D + Nobs));
-  std::fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair(std::numeric_limits<double>::lowest(),
-                   std::numeric_limits<double>::max()));
+  vec_bounds.assign( 3 * (Ncam + N3D + Nobs),
+    {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()});
   // Change the offset to be positive
   for (size_t k = 0; k < 3*Nobs; ++k)
     vec_bounds[offsetStart + k].first = 0;

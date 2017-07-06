@@ -424,7 +424,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
           if (robustRelativePose(
             cam_I->K(), cam_J->K(),
             xI, xJ, relativePose_info,
-            std::make_pair(cam_I->w(), cam_I->h()), std::make_pair(cam_J->w(), cam_J->h()),
+            {cam_I->w(), cam_I->h()}, {cam_J->w(), cam_J->h()},
             256) && relativePose_info.vec_inliers.size() > iMin_inliers_count)
           {
             // Triangulate inliers & compute angle between bearing vectors
@@ -610,8 +610,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
     // Save computed data
     const Pose3 pose_I = sfm_data_.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
     const Pose3 pose_J = sfm_data_.poses[view_J->id_pose] = tiny_scene.poses[view_J->id_pose];
-    map_ACThreshold_.insert(std::make_pair(I, relativePose_info.found_residual_precision));
-    map_ACThreshold_.insert(std::make_pair(J, relativePose_info.found_residual_precision));
+    map_ACThreshold_.insert({I, relativePose_info.found_residual_precision});
+    map_ACThreshold_.insert({J, relativePose_info.found_residual_precision});
     set_remaining_view_id_.erase(view_I->id_view);
     set_remaining_view_id_.erase(view_J->id_view);
 
@@ -1038,7 +1038,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     // - the new found camera pose
     sfm_data_.poses[view_I->id_pose] = pose;
     // - track the view's AContrario robust estimation found threshold
-    map_ACThreshold_.insert(std::make_pair(viewIndex, resection_data.error_max));
+    map_ACThreshold_.insert({viewIndex, resection_data.error_max});
     // - intrinsic parameters (if the view has no intrinsic group add a new one)
     if (b_new_intrinsic)
     {

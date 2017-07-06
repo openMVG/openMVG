@@ -43,7 +43,7 @@ inline Pair_Set getPairs(const RelativeRotations & relRots)
 {
   Pair_Set pairs;
   for (const auto & cur_rotation : relRots )
-    pairs.insert(std::make_pair(cur_rotation.i, cur_rotation.j));
+    pairs.insert({cur_rotation.i, cur_rotation.j});
   return pairs;
 }
 

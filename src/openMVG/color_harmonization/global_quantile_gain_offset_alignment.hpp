@@ -99,10 +99,8 @@ static void Encode_histo_relation(
   vec_sign.resize(Nconstraint);
 
   // By default set free variable:
-  vec_bounds = std::vector< std::pair<double,double> >(NVar);
-  std::fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair(std::numeric_limits<double>::lowest(),
-                   std::numeric_limits<double>::max()));
+  vec_bounds.assign(NVar,
+    {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()});
 
   // Set gain as positive values
   for (size_t i = 0; i < Nima; ++i)

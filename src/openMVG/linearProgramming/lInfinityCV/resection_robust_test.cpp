@@ -82,7 +82,7 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
   d2._t[nResectionCameraIndex].fill(0.0);
 
   // Set 20% of the 3D point as outlier
-  const int nbOutlier = nbPoints*0.2;
+  const int nbOutlier = nbPoints * 0.2;
   for (int i=0; i < nbOutlier; ++i)
   {
     d2._X.col(i)(0) += 120.0;
@@ -114,7 +114,12 @@ TEST(Resection_L_Infinity, Robust_OneOutlier) {
 
     //Check matrix to GT, and residual
     EXPECT_NEAR( 0.0, FrobeniusDistance(GT_ProjectionMatrix, COMPUTED_ProjectionMatrix), 1e-3 );
-    EXPECT_NEAR( 0.0, RootMeanSquareError(pt2D, pt3D.colwise().homogeneous(), COMPUTED_ProjectionMatrix), 1e-1);
+    // Check that all the inlier have a very small residual reprojection error
+    EXPECT_NEAR( 0.0, RootMeanSquareError(
+                        pt2D.rightCols(nbPoints - nbOutlier) ,
+                        pt3D.colwise().homogeneous().rightCols(nbPoints - nbOutlier),
+                        COMPUTED_ProjectionMatrix),
+                 1e-1);
   }
   d2.ExportToPLY("test_After_Infinity.ply");
 }

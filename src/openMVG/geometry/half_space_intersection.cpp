@@ -39,10 +39,9 @@ bool isNotEmpty
   LP_Constraints cstraint;
   {
     cstraint.nbParams_ = 3; // {X,Y,Z}
-    cstraint.vec_bounds_.resize( cstraint.nbParams_ );
-    std::fill( cstraint.vec_bounds_.begin(), cstraint.vec_bounds_.end(),
-               std::make_pair( std::numeric_limits<double>::lowest(),
-                               std::numeric_limits<double>::max() )); // [X,Y,Z] => -inf, +inf
+    cstraint.vec_bounds_.assign( cstraint.nbParams_,
+      {std::numeric_limits<double>::lowest(),
+      std::numeric_limits<double>::max()}); // [X,Y,Z] => -inf, +inf
     cstraint.bminimize_ = true;
 
     // Configure constraints

@@ -337,7 +337,7 @@ std::pair<double, double> ACRANSAC
   const unsigned int sizeSample = Kernel::MINIMUM_SAMPLES;
   const unsigned int nData = kernel.NumSamples();
   if (nData <= sizeSample)
-    return std::make_pair(0.0,0.0);
+    return {0.0, 0.0};
 
   //--
   // Sampling:
@@ -483,7 +483,7 @@ std::pair<double, double> ACRANSAC
     errorMax = kernel.unormalizeError(errorMax);
   }
 
-  return std::make_pair(errorMax, minNFA);
+  return {errorMax, minNFA};
 }
 
 } // namespace robust

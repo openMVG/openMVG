@@ -404,7 +404,7 @@ void Liop_Descriptor_Extractor::GeneratePatternMap(
     p[i] = i + 1;
     key += p[i]*pos_weight[n-i-1];
   }
-  pattern_map.insert(std::make_pair(key,count));
+  pattern_map.insert({key,count});
   ++count;
 
   while(NextPermutation(p, n))
@@ -414,7 +414,7 @@ void Liop_Descriptor_Extractor::GeneratePatternMap(
     {
       key += p[i]*pos_weight[n-i-1];
     }
-    pattern_map.insert(std::make_pair(key, count));
+    pattern_map.insert({key, count});
     ++count;
   }
 }

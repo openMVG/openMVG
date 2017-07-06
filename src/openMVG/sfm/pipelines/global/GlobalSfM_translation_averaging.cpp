@@ -372,9 +372,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     for (size_t i = 0; i < vec_triplets.size(); ++i)
     {
       const graph::Triplet & triplet = vec_triplets[i];
-      map_tripletIds_perEdge[std::make_pair(triplet.i, triplet.j)].push_back(i);
-      map_tripletIds_perEdge[std::make_pair(triplet.i, triplet.k)].push_back(i);
-      map_tripletIds_perEdge[std::make_pair(triplet.j, triplet.k)].push_back(i);
+      map_tripletIds_perEdge[{triplet.i, triplet.j}].push_back(i);
+      map_tripletIds_perEdge[{triplet.i, triplet.k}].push_back(i);
+      map_tripletIds_perEdge[{triplet.j, triplet.k}].push_back(i);
     }
 
     //-- precompute the visibility count per triplets (sum of their 2 view matches)
@@ -490,9 +490,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               #pragma omp critical
             #endif
             {
-              m_mutexSet.insert(std::make_pair(triplet.i, triplet.j));
-              m_mutexSet.insert(std::make_pair(triplet.j, triplet.k));
-              m_mutexSet.insert(std::make_pair(triplet.i, triplet.k));
+              m_mutexSet.insert({triplet.i, triplet.j});
+              m_mutexSet.insert({triplet.j, triplet.k});
+              m_mutexSet.insert({triplet.i, triplet.k});
             }
 
             // Compute the triplet relative motions (IJ, JK, IK)
@@ -525,12 +525,12 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               #endif
 
               RelativeInfo_Vec triplet_relative_motion;
-              triplet_relative_motion.emplace_back(
-                std::make_pair(triplet.i, triplet.j), std::make_pair(Rij, tij));
-              triplet_relative_motion.emplace_back(
-                std::make_pair(triplet.j, triplet.k), std::make_pair(Rjk, tjk));
-              triplet_relative_motion.emplace_back(
-                std::make_pair(triplet.i, triplet.k), std::make_pair(Rik, tik));
+              triplet_relative_motion.push_back(
+                {{triplet.i, triplet.j}, {Rij, tij}});
+              triplet_relative_motion.push_back(
+                {{triplet.j, triplet.k}, {Rjk, tjk}});
+              triplet_relative_motion.push_back(
+                {{triplet.i, triplet.k}, {Rik, tik}});
 
               initial_estimates[thread_id].emplace_back(triplet_relative_motion);
 

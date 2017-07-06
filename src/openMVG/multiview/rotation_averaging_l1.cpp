@@ -63,7 +63,7 @@ ComputeX84Threshold(const TYPE* const values, uint32_t size, TYPE mul=TYPE(5.2))
   for (size_t i=0; i<size; ++i)
     data[i] = std::abs(values[i]-median);
   std::nth_element(data.begin(), mid, data.end());
-  return std::make_pair(median, mul*(*mid));
+  return {median, mul*(*mid)};
 } // ComputeX84Threshold
 
 
@@ -108,8 +108,8 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
     boost::add_edge(relR.i, relR.j, - relR.weight, g);
-    mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
-    mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
+    mapIJ2R[{relR.i, relR.j}] = relR.Rij;
+    mapIJ2R[{relR.j, relR.i}] = relR.Rij.transpose();
   }
   // find the minimum spanning tree
   const size_t nViews = boost::num_vertices(g);
@@ -145,8 +145,8 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   map_EdgeMap map_edgeMap(g);
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
-    mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
-    mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
+    mapIJ2R[{relR.i, relR.j}] = relR.Rij;
+    mapIJ2R[{relR.j, relR.i}] = relR.Rij.transpose();
 
     // add edge to the graph
     graph_t::Edge edge =  g.addEdge(map_index_to_node[relR.i], map_index_to_node[relR.j]);
@@ -290,7 +290,7 @@ void InitRotationsMST
         if (edge == link.parentID) {
           // compute the global rotation for the current node
           assert(mapIJ2R.find(std::make_pair(link.parentID, link.ID)) != mapIJ2R.end());
-          const Matrix3x3& Rij = mapIJ2R[std::make_pair(link.parentID, link.ID)];
+          const Matrix3x3& Rij = mapIJ2R[{link.parentID, link.ID}];
           Rs[link.ID] = Rij * Rs[link.parentID];
         } else {
           // add edge to the processing queue

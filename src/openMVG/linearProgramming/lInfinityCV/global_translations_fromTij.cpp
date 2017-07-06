@@ -72,10 +72,8 @@ void EncodeTi_from_tij
   vec_sign.resize(Nconstraint);
 
   // By default set free variables:
-  vec_bounds = std::vector< std::pair<double,double> >(NVar);
-  std::fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair(std::numeric_limits<double>::lowest(),
-                   std::numeric_limits<double>::max()));
+  vec_bounds.assign(NVar,
+    {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()});
   //  Make first camera at origin (translation ambiguity)
   vec_bounds[TVAR(0,0)].first = vec_bounds[TVAR(0,0)].second = 0;
   vec_bounds[TVAR(0,1)].first = vec_bounds[TVAR(0,1)].second = 0;
