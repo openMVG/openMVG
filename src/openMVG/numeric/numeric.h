@@ -280,7 +280,7 @@ VStack ( const Eigen::MatrixBase<Derived1>& lhs, const Eigen::MatrixBase<Derived
 template<typename TMat>
 inline double FrobeniusNorm( const TMat &A )
 {
-  return sqrt( A.array().abs2().sum() );
+  return A.norm();
 }
 
 /**
