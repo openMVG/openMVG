@@ -51,7 +51,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   // Header
   std::ofstream file( filename );
 
-  if( ! file )
+  if ( ! file )
   {
     std::cerr << "Cannot write file" << filename << std::endl;
     return false;
@@ -259,7 +259,7 @@ bool exportToNVM( const SfM_Data & sfm_data , const std::string & sOutDirectory 
     return false;
   }
   const std::string sFilename = stlplus::create_filespec( sOutDirectory , "scene.nvm" );
-  if( ! CreateNVMFile( sfm_data , sOutDirectory , sFilename ) )
+  if ( ! CreateNVMFile( sfm_data , sOutDirectory , sFilename ) )
   {
     std::cerr << "There was an error exporting project" << std::endl;
     return false;
@@ -330,7 +330,7 @@ int main( int argc , char ** argv )
     return EXIT_FAILURE;
   }
 
-  if( ! exportToNVM( sfm_data , sOutDir ) )
+  if ( ! exportToNVM( sfm_data , sOutDir ) )
   {
     std::cerr << "There was an error during export of the file" << std::endl;
     exit( EXIT_FAILURE );

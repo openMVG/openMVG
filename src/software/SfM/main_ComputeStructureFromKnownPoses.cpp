@@ -277,7 +277,7 @@ int main(int argc, char **argv)
     {
       if (!sPairFile.empty() && sMatchFile.empty())
       {
-        if(!loadPairs(sfm_data.GetViews().size(), sPairFile, pairs))
+        if (!loadPairs(sfm_data.GetViews().size(), sPairFile, pairs))
         {
           std::cerr << "Unable to read the pair file." << std::endl;
           return EXIT_FAILURE;

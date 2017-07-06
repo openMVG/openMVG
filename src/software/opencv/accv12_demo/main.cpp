@@ -81,7 +81,7 @@ int main(int, char**)
   cap.set(CV_CAP_PROP_FRAME_WIDTH, w);
   cap.set(CV_CAP_PROP_FRAME_HEIGHT, h);
 
-  if(!cap.isOpened() )  // check if we succeeded
+  if (!cap.isOpened() )  // check if we succeeded
   {
       std::cerr << "ERROR: Could not open cameras." << std::endl;
       return -1;
@@ -133,7 +133,7 @@ int main(int, char**)
   boost::circular_buffer<double> cb_RANSAC_inlierPourcent(100,0);
 
   cv::namedWindow("WEBCAM STREAM",CV_WINDOW_AUTOSIZE);
-  for(;;)
+  for (;;)
   {
       bool isValid = true;
 

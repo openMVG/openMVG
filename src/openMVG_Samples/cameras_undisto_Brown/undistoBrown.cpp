@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
     if (res == 1)
     {
-      switch(depth)
+      switch (depth)
       {
         case 1: //Greyscale
           {

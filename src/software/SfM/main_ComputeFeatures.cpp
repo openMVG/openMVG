@@ -269,9 +269,9 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
+    #pragma omp parallel for schedule(dynamic) if (iNumThreads > 0) private(imageGray)
 #endif
-    for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
+    for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);

@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
         << f / largerDim << " 0 0 1 " << pp(0) / w << " " << pp(1) / h;
     outfile.close();
 
-    if(cam->have_disto())
+    if (cam->have_disto())
       bOneHaveDisto = true;
   }
 

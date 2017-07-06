@@ -55,8 +55,8 @@ bool exportToCMPMVSFormat(
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
     // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -83,8 +83,8 @@ bool exportToCMPMVSFormat(
     // Export (calibrated) views as undistorted images
     std::pair<unsigned int, unsigned int> w_h_image_size;
     Image<RGBColor> image, image_ud;
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))

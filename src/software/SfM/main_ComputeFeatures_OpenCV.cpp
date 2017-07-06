@@ -98,7 +98,7 @@ public:
     cv::eigen2cv(image.GetMat(), img);
 
     cv::Mat m_mask;
-    if(mask != nullptr) {
+    if (mask != nullptr) {
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
 
@@ -119,7 +119,7 @@ public:
       using DescriptorT = Descriptor<float, 64>;
       DescriptorT descriptor;
       int cpt = 0;
-      for(auto i_keypoint = vec_keypoints.begin(); i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
+      for (auto i_keypoint = vec_keypoints.begin(); i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
         SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
         regions->Features().push_back(feat);
 
@@ -200,7 +200,7 @@ public:
 
     // Convert mask image into cv::Mat
     cv::Mat m_mask;
-    if(mask != nullptr) {
+    if (mask != nullptr) {
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
 
@@ -224,7 +224,7 @@ public:
 
     // Copy keypoints and descriptors in the regions
     int cpt = 0;
-    for(auto i_kp = v_keypoints.begin();
+    for (auto i_kp = v_keypoints.begin();
         i_kp != v_keypoints.end();
         ++i_kp, ++cpt)
     {
@@ -232,7 +232,7 @@ public:
       regions->Features().push_back(feat);
 
       Descriptor<unsigned char, 128> desc;
-      for(int j = 0; j < 128; j++)
+      for (int j = 0; j < 128; j++)
       {
         desc[j] = static_cast<unsigned char>(512.0*sqrt(m_desc.at<float>(cpt, j)/m_siftsum.at<float>(cpt, 0)));
       }
@@ -399,12 +399,12 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray, globalMask, imageMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if(stlplus::file_exists(sGlobalMask_filename))
+    if (stlplus::file_exists(sGlobalMask_filename))
       ReadImage(sGlobalMask_filename.c_str(), &globalMask);
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(auto iterViews = sfm_data.views.cbegin();
+    for (auto iterViews = sfm_data.views.cbegin();
         iterViews != sfm_data.views.cend();
         ++iterViews, ++my_progress_bar)
     {
@@ -426,14 +426,14 @@ int main(int argc, char **argv)
           stlplus::create_filespec(sfm_data.s_root_path,
             stlplus::basename_part(sView_filename) + "_mask", "png");
 
-        if(stlplus::file_exists(sImageMask_filename))
+        if (stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
         // The mask point to the globalMask, if a valid one exists for the current image
-        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
+        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
           mask = &globalMask;
         // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files

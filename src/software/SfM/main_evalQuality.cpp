@@ -143,7 +143,7 @@ int main(int argc, char **argv)
   Poses::const_iterator iter_loaded_poses = sfm_data.GetPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
+  for (std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
     iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
   {
     // GT

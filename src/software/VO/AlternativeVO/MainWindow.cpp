@@ -36,7 +36,7 @@ MainWindow::MainWindow( )
 void MainWindow::onMenuOpenImageFolder( void )
 {
   QString folder = QFileDialog::getExistingDirectory( this , "Select Input image folder" , QDir::homePath() );
-  if( ! ( folder.isNull() || folder.isEmpty() ) )
+  if ( ! ( folder.isNull() || folder.isEmpty() ) )
   {
     m_vo_processor = std::make_shared< VOFolderProcessor >( folder.toStdString() );
 
@@ -198,7 +198,7 @@ void MainWindow::MakeConnections()
 
 void MainWindow::onTimerTick()
 {
-  if( ! m_vo_processor )
+  if ( ! m_vo_processor )
   {
     if (m_timer )
     {

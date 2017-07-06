@@ -65,7 +65,7 @@ struct RelativeTranslationError
 // Cost penalizing scales smaller than 1.
 struct SmallScaleError
 {
-  SmallScaleError
+  explicit SmallScaleError
   (
     double weight = 1.0
   )

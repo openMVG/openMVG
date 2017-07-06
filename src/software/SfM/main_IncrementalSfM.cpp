@@ -219,7 +219,7 @@ int main(int argc, char **argv)
   if (!initialPairString.first.empty() && !initialPairString.second.empty())
   {
     Pair initialPairIndex;
-    if(!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
+    if (!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
     {
         std::cerr << "Could not find the initial pairs <" << initialPairString.first
           <<  ", " << initialPairString.second << ">!\n";

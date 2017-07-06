@@ -391,7 +391,7 @@ int main(int argc, char **argv)
     total_num_images++;
 
     View v(*iter_image, views.size(), views.size(), views.size(), imageGray.Width(), imageGray.Height());
-    if(bSuccessfulLocalization)
+    if (bSuccessfulLocalization)
     {
       vec_found_poses.push_back(pose.center());
       // Build the view corresponding to the image
@@ -422,7 +422,7 @@ int main(int argc, char **argv)
 
   // Export found camera poses along with original reconstruction in a new sfm_data file
   ESfM_Data flag_save;
-  if(bExportStructure)
+  if (bExportStructure)
   {
     flag_save = ESfM_Data(ALL);
   }

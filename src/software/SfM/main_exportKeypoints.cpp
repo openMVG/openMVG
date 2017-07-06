@@ -96,9 +96,9 @@ int main(int argc, char ** argv)
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export extracted keypoints for all images" << std::endl;
   C_Progress_display my_progress_bar( sfm_data.views.size() );
-  for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
-        ++iterViews, ++my_progress_bar)
+  for (Views::const_iterator iterViews = sfm_data.views.begin();
+      iterViews != sfm_data.views.end();
+      ++iterViews, ++my_progress_bar)
   {
     const View * view = iterViews->second.get();
     const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,

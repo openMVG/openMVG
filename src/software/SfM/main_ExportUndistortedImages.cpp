@@ -94,12 +94,12 @@ int main(int argc, char *argv[]) {
 
 #ifdef OPENMVG_USE_OPENMP
     omp_set_num_threads(iNumThreads);
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(image, image_ud, image_gray, image_gray_ud)
+    #pragma omp parallel for schedule(dynamic) if (iNumThreads > 0) private(image, image_ud, image_gray, image_gray_ud)
 #endif
     for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
 #ifdef OPENMVG_USE_OPENMP
-      if(iNumThreads == 0) omp_set_num_threads(nb_max_thread);
+      if (iNumThreads == 0) omp_set_num_threads(nb_max_thread);
 #endif
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);

@@ -82,7 +82,7 @@ std::pair<bool, Vec3> checkGPS
       {
         // Add ECEF or UTM XYZ position to the GPS position array
         val.first = true;
-        switch(GPS_to_XYZ_method)
+        switch (GPS_to_XYZ_method)
         {
           case 1:
             val.second = lla_to_utm( latitude, longitude, altitude );
@@ -294,7 +294,7 @@ int main(int argc, char **argv)
       continue; // image cannot be opened
     }
 
-    if(sImFilenamePart.find("mask.png") != std::string::npos
+    if (sImFilenamePart.find("mask.png") != std::string::npos
        || sImFilenamePart.find("_mask.png") != std::string::npos)
     {
       error_report_stream
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
     if (focal > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
       // Create the desired camera type
-      switch(e_User_camera_model)
+      switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>

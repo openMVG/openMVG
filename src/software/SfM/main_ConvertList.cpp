@@ -143,7 +143,7 @@ int main(int argc, char **argv)
       ppy = camIntrinsic.m_K(1,2);
       focal = camIntrinsic.m_focal;
       // Create the user defined camera model corresponding to the intrinsic loaded data
-      switch(e_User_camera_model)
+      switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>(width, height, focal, ppx, ppy);

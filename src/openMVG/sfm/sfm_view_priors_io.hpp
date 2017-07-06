@@ -61,7 +61,7 @@ void openMVG::sfm::ViewPriors::load( Archive & ar )
     ar( cereal::make_nvp( "center", vec ) );
     pose_center_ = Eigen::Map<const Vec3>( &vec[0] );
   }
-  catch( cereal::Exception e )
+  catch ( cereal::Exception & e )
   {
     // if it fails just use a default settings
     b_use_pose_center_ = false;
@@ -80,7 +80,7 @@ void openMVG::sfm::ViewPriors::load( Archive & ar )
     pose_rotation_.row( 1 ) = Eigen::Map<const Vec3>( &( mat[1][0] ) );
     pose_rotation_.row( 2 ) = Eigen::Map<const Vec3>( &( mat[2][0] ) );
   }
-  catch( const cereal::Exception & e )
+  catch ( const cereal::Exception & e )
   {
     // if it fails just use a default settings
     b_use_pose_rotation_ = false;

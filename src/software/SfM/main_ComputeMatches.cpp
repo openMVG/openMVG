@@ -168,7 +168,7 @@ int main(int argc, char **argv)
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
   std::string sGeometricMatchesFilename = "";
-  switch(sGeometricModel[0])
+  switch (sGeometricModel[0])
   {
     case 'f': case 'F':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
-          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
+          if (!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
           {
               return EXIT_FAILURE;
           }

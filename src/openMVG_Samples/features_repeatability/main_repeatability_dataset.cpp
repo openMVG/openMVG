@@ -166,7 +166,7 @@ struct RepeatabilityResults_Matching
   {
     std::ofstream ofs(sFile, std::ofstream::out | std::ofstream::app);
 
-    if( ! ofs.good() )
+    if ( ! ofs.good() )
     {
         return false;
     }
@@ -189,7 +189,7 @@ struct RepeatabilityResults_Matching
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
+  if (sPreset == "NORMAL")
     preset = features::NORMAL_PRESET;
   else
   if (sPreset == "HIGH")

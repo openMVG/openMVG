@@ -75,8 +75,8 @@ bool exportToPMVSFormat(
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
     // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -234,8 +234,8 @@ bool exportToBundlerFormat(
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
     // Count the number of valid cameras and re-index the viewIds
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -250,8 +250,8 @@ bool exportToBundlerFormat(
       << map_viewIdToContiguous.size()  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
 
     // Export camera properties & image filenames
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))

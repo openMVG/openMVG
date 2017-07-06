@@ -66,7 +66,7 @@ ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
   _sMatchesPath(sMatchesPath),
   _sOutDirectory(sOutDirectory)
 {
-  if( !stlplus::folder_exists( sOutDirectory ) )
+  if ( !stlplus::folder_exists( sOutDirectory ) )
   {
     stlplus::folder_create( sOutDirectory );
   }
@@ -94,7 +94,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   // Load data
   //-------------------
 
-  if( !ReadInputData() )
+  if ( !ReadInputData() )
     return false;
   if (_map_Matches.size() == 0 )
   {
@@ -226,7 +226,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     Image< unsigned char > maskI ( _vec_imageSize[ I ].first, _vec_imageSize[ I ].second );
     Image< unsigned char > maskJ ( _vec_imageSize[ J ].first, _vec_imageSize[ J ].second );
 
-    switch(_selectionMethod)
+    switch (_selectionMethod)
     {
       enum EHistogramSelectionMethod
       {
@@ -279,7 +279,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     {
       std::string sEdge = _vec_fileNames[ I ] + "_" + _vec_fileNames[ J ];
       sEdge = stlplus::create_filespec( _sOutDirectory, sEdge );
-      if( !stlplus::folder_exists( sEdge ) )
+      if ( !stlplus::folder_exists( sEdge ) )
         stlplus::folder_create( sEdge );
 
       std::string out_filename_I = "00_mask_I.png";
@@ -434,7 +434,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
     const std::string out_folder = stlplus::create_filespec( _sOutDirectory,
       vec_selectionMethod[ _selectionMethod ] + "_" + vec_harmonizeMethod[ harmonizeMethod ]);
-    if( !stlplus::folder_exists( out_folder ) )
+    if ( !stlplus::folder_exists( out_folder ) )
       stlplus::folder_create( out_folder );
     const std::string out_filename = stlplus::create_filespec( out_folder, stlplus::filename_part(_vec_fileNames[ imaNum ]) );
 
@@ -540,7 +540,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
       openMVG::graph::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter->second.size() > count)  {
@@ -551,7 +551,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     }
 
     //-- Remove all nodes that are not listed in the largest CC
-    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC) // Skip this CC since it's the one we want to keep
