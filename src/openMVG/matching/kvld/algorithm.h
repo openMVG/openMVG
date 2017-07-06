@@ -1,4 +1,4 @@
-﻿#ifndef OPENMVG_MATCHING_KVLD_ALGORITHM_H
+#ifndef OPENMVG_MATCHING_KVLD_ALGORITHM_H
 #define OPENMVG_MATCHING_KVLD_ALGORITHM_H
 
 /** @basic structures implementation
