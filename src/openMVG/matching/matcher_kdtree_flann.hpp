@@ -38,11 +38,7 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   ArrayMatcher_Kdtree_Flann() = default;
 
-  virtual ~ArrayMatcher_Kdtree_Flann()
-  {
-    datasetM_.reset();
-    index_.reset();
-  }
+  virtual ~ArrayMatcher_Kdtree_Flann() = default;
 
   /**
    * Build the matching structure
