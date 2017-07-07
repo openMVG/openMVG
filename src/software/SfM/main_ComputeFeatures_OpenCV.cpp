@@ -285,7 +285,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir] path \n"

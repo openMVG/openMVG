@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--sfmdata filename, the SfM_Data file to read]\n"
     << std::endl;
@@ -391,7 +391,7 @@ int main(int argc, char *argv[]) {
 
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
 
-  window = glfwCreateWindow( 1000, 600, "SfmViewer", NULL, NULL );
+  window = glfwCreateWindow( 1000, 600, "SfmViewer", nullptr, nullptr );
   if (!window)
   {
     fprintf( stderr, "Failed to open GLFW window\n" );

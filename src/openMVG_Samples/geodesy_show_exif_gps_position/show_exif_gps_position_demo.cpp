@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   }
-  catch(const std::string& s)
+  catch (const std::string& s)
   {
     std::cout
     << "Geodesy demo:\n"

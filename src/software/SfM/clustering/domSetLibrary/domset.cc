@@ -164,9 +164,9 @@ void Domset::voxelGridFilter( const float &sizeX, const float &sizeY, const floa
   }
 
   // finding the number of voxels reqired
-  size_t numVoxelX = static_cast<size_t>( ceil( maxPt.pos( 0 ) - minPt.pos( 0 ) ) / sizeX );
-  size_t numVoxelY = static_cast<size_t>( ceil( maxPt.pos( 1 ) - minPt.pos( 1 ) ) / sizeY );
-  size_t numVoxelZ = static_cast<size_t>( ceil( maxPt.pos( 2 ) - minPt.pos( 2 ) ) / sizeZ );
+  //size_t numVoxelX = static_cast<size_t>( ceil( maxPt.pos( 0 ) - minPt.pos( 0 ) ) / sizeX );
+  const size_t numVoxelY = static_cast<size_t>( ceil( maxPt.pos( 1 ) - minPt.pos( 1 ) ) / sizeY );
+  const size_t numVoxelZ = static_cast<size_t>( ceil( maxPt.pos( 2 ) - minPt.pos( 2 ) ) / sizeZ );
   /*
   std::cout << "Max = " << maxPt.pos.transpose() << std::endl;
   std::cout << "Min = " << minPt.pos.transpose() << std::endl;

@@ -289,7 +289,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
     // Force a pinhole ? (TODO : need to work with another type of camera)
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
     {
       ++it;
       continue;
@@ -331,7 +331,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
     // Force a pinhole ? (TODO : need to work with another type of camera)
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
     {
       ++it;
       continue;
@@ -516,7 +516,7 @@ int main( int argc , char ** argv )
       }
       cmd.process(argc, argv);
   }
-  catch(const std::string& s)
+  catch (const std::string& s)
   {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"

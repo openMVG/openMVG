@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr
       << "Export undistorted images related to a sfm_data file.\n"
       << "Usage: " << argv[0] << '\n'

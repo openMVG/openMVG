@@ -35,9 +35,9 @@ namespace robust{
 template <class RandomGeneratorT, typename SamplingType>
 inline void UniformSample
 (
-  uint32_t num_samples,
-  uint32_t total_samples,
-  RandomGeneratorT &&random_generator,
+  const uint32_t num_samples,
+  const uint32_t total_samples,
+  RandomGeneratorT &random_generator,
   std::vector<SamplingType> *samples
 )
 {
@@ -72,7 +72,7 @@ template<typename T, class RandomGeneratorT, typename SamplingType = uint32_t>
 bool UniformSample
 (
   const size_t num_samples,
-  RandomGeneratorT &&random_generator,
+  RandomGeneratorT &random_generator,
   std::vector<T> * vec_index, // the array that provide the index (will be shuffled)
   std::vector<T> * samples // output found indices
 )

@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     {
       cmd.process(argc, argv);
     }
-  } catch(const std::string& s)
+  } catch (const std::string& s)
   {
     std::cout << "Invalid usage of arguments -a IMGA -b IMGB" << std::endl;
     return EXIT_FAILURE;

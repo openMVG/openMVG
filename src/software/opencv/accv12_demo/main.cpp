@@ -149,7 +149,7 @@ int main(int, char**)
         extractor->compute( grayFrame, kptsStream, descriptorsStream );
         //std::cout << "KpFound : \t" << kptsStream.size() << std::endl;
       }
-      catch( cv::Exception& e )
+      catch ( cv::Exception& e )
       {
         std::cout << "An exception occurred. Ignoring frame. " << e.err << std::endl;
         isValid = false;

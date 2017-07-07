@@ -137,7 +137,7 @@ public:
     m_max_threshold(dmaxThreshold)
   {
     // Precompute log combi
-    m_loge0 = log10((double)Kernel::MAX_MODELS * (kernel.NumSamples()-Kernel::MINIMUM_SAMPLES));
+    m_loge0 = log10((double)Kernel::MAX_MODELS * (kernel.NumSamples() - Kernel::MINIMUM_SAMPLES));
     makelogcombi(Kernel::MINIMUM_SAMPLES, kernel.NumSamples(), m_logc_k, m_logc_n);
   };
 
@@ -171,7 +171,7 @@ private:
   /// residual array
   std::vector<double> m_residuals;
   /// [residual,index] array -> used in the exhaustive nfa computation mode
-  std::vector<std::pair<double,uint32_t> > m_sorted_residuals;
+  std::vector<std::pair<double,uint32_t>> m_sorted_residuals;
 
   /// Combinatorial log
   std::vector<float> m_logc_n, m_logc_k;
@@ -270,8 +270,8 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     using nfa_indexT = std::pair<double, uint32_t>;
     nfa_indexT current_best_nfa(std::numeric_limits<double>::infinity(), Kernel::MINIMUM_SAMPLES);
     const size_t n = m_kernel.NumSamples();
-    for (size_t k=Kernel::MINIMUM_SAMPLES+1;
-        k<=n && m_sorted_residuals[k-1].first<=m_max_threshold;
+    for (size_t k = Kernel::MINIMUM_SAMPLES + 1;
+        k <= n && m_sorted_residuals[k-1].first <= m_max_threshold;
         ++k) // Compute the NFA for all k in [minimal_sample+1,n]
     {
       const double logalpha = m_kernel.logalpha0()
@@ -294,7 +294,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
       nfa_threshold.second = m_sorted_residuals[current_best_nfa.second-1].first;
 
       inliers.resize(current_best_nfa.second);
-      for (size_t i=0; i<current_best_nfa.second; ++i)
+      for (size_t i =0; i < current_best_nfa.second; ++i)
       {
         inliers[i] = m_sorted_residuals[i].second;
       }
@@ -347,14 +347,14 @@ std::pair<double, double> ACRANSAC
   // Sample indices (used for model evaluation)
   std::vector<uint32_t> vec_sample(sizeSample);
 
-  const double maxThreshold = (precision==std::numeric_limits<double>::infinity()) ?
+  const double maxThreshold = (precision == std::numeric_limits<double>::infinity()) ?
     std::numeric_limits<double>::infinity() :
     precision * kernel.normalizer2()(0,0) * kernel.normalizer2()(0,0);
 
   // Initialize the NFA computation interface
   // (quantified NFA computation is used if a valid upper bound is provided)
   acransac_nfa_internal::NFA_Interface<Kernel> nfa_interface
-    (kernel, maxThreshold, (precision!=std::numeric_limits<double>::infinity()));
+    (kernel, maxThreshold, (precision != std::numeric_limits<double>::infinity()));
 
   // Output parameters
   double minNFA = std::numeric_limits<double>::infinity();
@@ -363,7 +363,7 @@ std::pair<double, double> ACRANSAC
   //--
   // Local optimization:
   // Reserve 10% of iterations for focused sampling
-  int nIterReserve = num_max_iteration/10;
+  int nIterReserve = num_max_iteration / 10;
   unsigned int nIter = num_max_iteration - nIterReserve;
 
   //--
@@ -379,7 +379,7 @@ std::pair<double, double> ACRANSAC
 
   //--
   // Main estimation loop.
-  for (unsigned int iter=0; iter < nIter && iter < num_max_iteration; ++iter)
+  for (unsigned int iter = 0; iter < nIter && iter < num_max_iteration; ++iter)
   {
     // Get random samples
     if (bACRansacMode)
@@ -450,7 +450,7 @@ std::pair<double, double> ACRANSAC
     }
 
     // ACRANSAC optimization: draw samples among best set of inliers so far
-    if (bACRansacMode && ((better && minNFA<0) || (iter+1==nIter && nIterReserve > 0)))
+    if (bACRansacMode && ((better && minNFA < 0) || ((iter + 1) == nIter && nIterReserve > 0)))
     {
       if (vec_inliers.empty())
       {

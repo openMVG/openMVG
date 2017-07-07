@@ -217,8 +217,8 @@ int main() {
       geometry_aware::GuidedMatching
         <Mat3, openMVG::homography::kernel::AsymmetricError>(
         H,
-        NULL, *regions_perImage.at(0), // Null since no Intrinsic is defined
-        NULL, *regions_perImage.at(1), // Null since no Intrinsic is defined
+        nullptr, *regions_perImage.at(0), // nullptr since no Intrinsic is defined
+        nullptr, *regions_perImage.at(1), // nullptr since no Intrinsic is defined
         Square(thresholdH), Square(0.8),
         vec_corresponding_indexes[1]);
 

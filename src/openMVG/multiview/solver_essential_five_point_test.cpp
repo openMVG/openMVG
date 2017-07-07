@@ -84,7 +84,7 @@ TestData SomeTestData() {
 
 TEST(FivePointsNullspaceBasis, SatisfyEpipolarConstraint) {
 
-  TestData d = SomeTestData();
+  const TestData d = SomeTestData();
 
   Mat E_basis = FivePointsNullspaceBasis(d.x1, d.x2);
 

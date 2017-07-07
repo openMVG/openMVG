@@ -165,7 +165,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
     }
 
     // Build intrinsic parameter related to the view
-    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
+    std::shared_ptr<IntrinsicBase> intrinsic;
 
     if (focal > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
@@ -402,7 +402,7 @@ int main(int argc, char **argv)
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == NULL)
+      if (intrinsic == nullptr)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
       View v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == NULL)
+      if (intrinsic == nullptr)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)

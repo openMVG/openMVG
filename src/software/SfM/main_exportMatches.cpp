@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Export pairwise matches.\nUsage: " << argv[0] << "\n"
       << "[-i|--input_file file] path to a SfM_Data scene\n"
       << "[-d|--matchdir path]\n"

@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
   try {
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
