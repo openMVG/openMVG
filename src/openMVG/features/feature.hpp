@@ -185,7 +185,7 @@ static bool saveFeatsToFile(
 template< typename FeaturesT>
 void PointsToMat(
   const FeaturesT & vec_feats,
-  Eigen::Ref<Mat> m)
+  Mat& m)
 {
   m.resize(2, vec_feats.size());
   using ValueT = typename FeaturesT::value_type; // Container type

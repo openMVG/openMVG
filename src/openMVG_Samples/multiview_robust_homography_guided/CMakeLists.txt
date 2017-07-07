@@ -5,7 +5,6 @@ target_link_libraries(openMVG_sample_multiview_robustHomography_guided
   openMVG_multiview
   openMVG_features
   openMVG_matching
-  vlsift
   stlplus)
 target_compile_definitions(openMVG_sample_multiview_robustHomography_guided
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
