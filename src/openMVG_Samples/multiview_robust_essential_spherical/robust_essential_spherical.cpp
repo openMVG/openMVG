@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
   {
     // Find corresponding points
     matching::DistanceRatioMatch(
-      0.8, matching::ANN_L2,
+      0.8, matching::BRUTE_FORCE_L2,
       *regions_perImage.at(0).get(),
       *regions_perImage.at(1).get(),
       vec_PutativeMatches);
