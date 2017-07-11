@@ -244,7 +244,7 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray, globalMask;
+    Image<unsigned char> globalMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
     if (stlplus::file_exists(sGlobalMask_filename))
@@ -284,6 +284,7 @@ int main(int argc, char **argv)
       //If features or descriptors file are missing, compute them
       if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
       {
+        Image<unsigned char> imageGray;
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
