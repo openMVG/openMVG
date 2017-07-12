@@ -15,7 +15,7 @@ All the features and modules are unit tested. This test driven development ensur
 Building
 --------
 
-See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
+See [BUILD](https://github.com/openMVG/openMVG/blob/master/BUILD.md) text file
 
 Continuous integration:
  - linux 64 bits, GCC/CLANG (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
