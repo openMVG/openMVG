@@ -426,7 +426,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
 #if OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for ( size_t i = 0; i < numX; i++ )
+    for_parallel( i, numX )
     {
       Y( i ) = AS.row( i ).maxCoeff( &I[ i ] );
       AS( i, I[ i ] ) = minFloat;
@@ -437,7 +437,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
 #if OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for ( size_t i = 0; i < numX; i++ )
+    for_parallel( i, numX )
     {
       Y2( i ) = AS.row( i ).maxCoeff( &I2[ i ] );
     }
@@ -451,13 +451,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
     Eigen::MatrixXf Aold = A;
 
     Eigen::MatrixXf Rp = ( R.array() > 0 ).select( R, 0 );
-#if OPENMVG_USE_OPENMP
-#pragma omp parallel for
-#endif
-    for ( size_t i = 0; i < numX; i++ )
-    {
-      Rp( i, i ) = R( i, i );
-    }
+    Rp.diagonal() = R.diagonal();
 
     Eigen::VectorXf sumRp = Rp.colwise().sum();
 
@@ -465,13 +459,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
     Eigen::VectorXf dA = A.diagonal();
 
     A = ( A.array() < 0 ).select( A, 0 );
-#if OPENMVG_USE_OPENMP
-#pragma omp parallel for
-#endif
-    for ( size_t i = 0; i < numX; i++ )
-    {
-      A( i, i ) = dA( i );
-    }
+    A.diagonal() = dA;
 
     A = ( ( 1 - lambda ) * A.array() ) + ( lambda * Aold.array() );
   }
