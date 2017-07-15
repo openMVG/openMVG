@@ -82,18 +82,12 @@ struct EightPointSolver {
 template<typename TMatX, typename TMatA>
 inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
   for (typename TMatX::Index i = 0; i < x1.cols(); ++i) {
-    const Vec2 xx1 = x1.col(i);
-    const Vec2 xx2 = x2.col(i);
+    const auto xx1 = x1.col(i).homogeneous().transpose();
+    const auto xx2 = x2.col(i).homogeneous().transpose();
     A->row(i) <<
-      xx2(0) * xx1(0),  // 0 represents x coords,
-      xx2(0) * xx1(1),  // 1 represents y coords.
-      xx2(0),
-      xx2(1) * xx1(0),
-      xx2(1) * xx1(1),
-      xx2(1),
-      xx1(0),
-      xx1(1),
-      1.0;
+      xx2(0) * xx1,
+      xx2(1) * xx1,
+      xx1;
   }
 }
 
