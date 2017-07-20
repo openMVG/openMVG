@@ -1,15 +1,10 @@
-/** @Main KVLD algorithm implementation
- ** @Containing scale image pyramid, VLD structure and KVLD algorithm
- ** @author Zhe Liu
- **/
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-/*
-Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
-All rights reserved.
+//Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
 
-This file is part of the KVLD library and is made available under
-the terms of the BSD license ( see the COPYING file).
-*/
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/image/image_container.hpp"

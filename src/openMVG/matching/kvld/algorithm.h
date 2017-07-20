@@ -1,17 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+//Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef OPENMVG_MATCHING_KVLD_ALGORITHM_H
 #define OPENMVG_MATCHING_KVLD_ALGORITHM_H
-
-/** @basic structures implementation
- ** @author Zhe Liu
- **/
-
-/*
-Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
-All rights reserved.
-
-This file is part of the KVLD library and is made available under
-the terms of the BSD license (see the COPYING file).
-*/
 
 #include <algorithm>
 #include <cmath>
