@@ -9,7 +9,6 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 #define OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 namespace openMVG
