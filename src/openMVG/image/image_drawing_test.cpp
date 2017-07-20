@@ -10,6 +10,8 @@
 #include "openMVG/image/image_drawing.hpp"
 #include "testing/testing.h"
 
+#include <cmath>
+
 using namespace openMVG;
 using namespace openMVG::image;
 
@@ -121,7 +123,7 @@ TEST(ImageDrawing, Circle) {
   for ( int j = 0; j < image.Height(); ++j)
   for ( int i = 0; i < image.Width(); ++i) {
     if (image(j, i) == 255)  {
-      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
+      const float distance =  std::hypot((float)(j-y), (float)(i-x));
       EXPECT_NEAR(radius, distance, 1.0f);
       // Due to discretisation we cannot expect better precision
     }
@@ -145,7 +147,7 @@ TEST(ImageDrawing, Ellipse) {
   for ( int j = 0; j < image.Height(); ++j)
   for ( int i = 0; i < image.Width(); ++i) {
     if (image(j, i) == 255)  {
-      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
+      const float distance =  std::hypot((float)(j-y), (float)(i-x));
       EXPECT_NEAR(radius, distance, 1.0f);
       // Due to discretisation we cannot expect better precision
     }
@@ -169,7 +171,7 @@ TEST(ImageDrawing, RotatedEllipse) {
   for ( int j = 0; j < image.Height(); ++j)
   for ( int i = 0; i < image.Width(); ++i) {
     if (image(j, i) == 255)  {
-      const float distance =  sqrt((float)((j-y)*(j-y) + (i-x)*(i-x)));
+      const float distance =  std::hypot((float)(j-y), (float)(i-x));
       EXPECT_EQ( radius+1 >= distance && radius/2.0-1 <= distance, true);
       // Due to discretization we cannot expect better precision
       // Use +-1 to avoid rasterization error.

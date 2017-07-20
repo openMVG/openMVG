@@ -161,8 +161,8 @@ namespace openMVG
           ell_minor_y = b;
 
           // Normalize axis
-          const double inv_norm_major = 1.0 / std::sqrt( ell_major_x * ell_major_x + ell_major_y * ell_major_y );
-          const double inv_norm_minor = 1.0 / std::sqrt( ell_minor_x * ell_minor_x + ell_minor_y * ell_minor_y );
+          const double inv_norm_major = 1.0 / std::hypot( ell_major_x, ell_major_y );
+          const double inv_norm_minor = 1.0 / std::hypot( ell_minor_x, ell_minor_y );
 
           ell_major_x *= inv_norm_major;
           ell_major_y *= inv_norm_major;

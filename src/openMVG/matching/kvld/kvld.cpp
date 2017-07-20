@@ -78,7 +78,7 @@ void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Im
 
       if (!anglefrom( gx, gy, angle( y, x ) ) )
         angle( y, x ) = -1;
-      m( y, x ) = sqrt( gx * gx + gy * gy );
+      m( y, x ) = std::hypot( gx, gy );
     }
   }
 }
@@ -116,7 +116,7 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
   const float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
   const float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
-  distance = sqrt( dy * dy + dx * dx );
+  distance = std::hypot( dy, dx );
 
   if (distance == 0 )
     std::cerr<<"Two SIFT points have the same coordinate"<< std::endl;

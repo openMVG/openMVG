@@ -49,7 +49,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(2,1) != 0) {
     double c = -K(2,2);
     double s = K(2,1);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qx;
     Qx << 1, 0, 0,
@@ -62,7 +62,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(2,0) != 0) {
     double c = K(2,2);
     double s = K(2,0);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qy;
     Qy << c, 0, s,
@@ -75,7 +75,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(1,0) != 0) {
     double c = -K(1,1);
     double s = K(1,0);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qz;
     Qz << c,-s, 0,

@@ -83,15 +83,13 @@ std::ifstream& readDetector( std::ifstream& in, openMVG::features::SIOPointFeatu
 template < typename T >
 inline T point_distance( const T x1, const T y1, const T x2, const T y2 )
 {//distance of points
-  float a = x1 - x2;
-  float b = y1 - y2;
-  return sqrt( a * a + b * b );
+  return std::hypot( x1 - x2, y1 - y2);
 }
 
 template < typename T >
 inline float point_distance( const T& P1, const T& P2 )
 {//distance of points
-     return point_distance< float >( P1.x(), P1.y(), P2.x(), P2.y() );
+  return point_distance< float >( P1.x(), P1.y(), P2.x(), P2.y() );
 }
 
 inline bool inside( int w, int h, int x,int y, double radius )
@@ -175,16 +173,16 @@ inline float consistent( const T& a1, const T& a2, const T& b1, const T& b2 )
   ax1 *= float( b1.scale() / a1.scale() );
   float ay1 = sin( angle1 ) * ax + cos( angle1 ) * ay;
   ay1 *= float( b1.scale() / a1.scale() );
-  float d1 = sqrt( ax1 * ax1 + ay1 * ay1 );
-  float d1_error = sqrt( ( ax1 - bx ) * ( ax1 - bx ) + ( ay1 - by ) * ( ay1 - by ) );
+  float d1 = std::hypot( ax1, ay1 );
+  float d1_error = std::hypot( ax1 - bx, ay1 - by );
 
   float ax2 = float( cos( angle2 ) * ax - sin( angle2 ) * ay );
   ax2 *= float( b2.scale() / a2.scale() );
 
   float ay2 = float( sin( angle2 ) * ax + cos( angle2 ) * ay );
   ay2 *= float( b2.scale() / a2.scale() );
-  float d2 = sqrt( ax2 * ax2 + ay2 * ay2 );
-  float d2_error = sqrt( ( ax2 - bx ) * ( ax2 - bx ) + ( ay2 - by ) * ( ay2 - by ) );
+  float d2 = std::hypot( ax2, ay2 );
+  float d2_error = std::hypot( ax2 - bx, ay2 - by );
   float d = std::min( d1_error / std::min( d1, point_distance( b1, b2 ) ), d2_error / std::min( d2, point_distance( b1, b2 ) ) );
   return d;
 }

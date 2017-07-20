@@ -88,17 +88,17 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     {
       const double eps = 1e-8;
       const double k1 = params_[0], k2 = params_[1], k3 = params_[2], k4 = params_[3];
-      const double r = std::sqrt( p( 0 ) * p( 0 ) + p( 1 ) * p( 1 ) );
+      const double r = std::hypot( p(0), p(1) );
       const double theta = std::atan( r );
       const double
-      theta2 = theta * theta,
-      theta3 = theta2 * theta,
-      theta4 = theta2 * theta2,
-      theta5 = theta4 * theta,
-      theta6 = theta3 * theta3,
-      theta7 = theta6 * theta,
-      theta8 = theta4 * theta4,
-      theta9 = theta8 * theta;
+        theta2 = theta * theta,
+        theta3 = theta2 * theta,
+        theta4 = theta2 * theta2,
+        theta5 = theta4 * theta,
+        theta6 = theta3 * theta3,
+        theta7 = theta6 * theta,
+        theta8 = theta4 * theta4,
+        theta9 = theta8 * theta;
       const double theta_dist = theta + k1 * theta3 + k2 * theta5 + k3 * theta7 + k4 * theta9;
       const double inv_r = r > eps ? 1.0 / r : 1.0;
       const double cdist = r > eps ? theta_dist * inv_r : 1.0;
@@ -114,7 +114,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     {
       const double eps = 1e-8;
       double scale = 1.0;
-      const double theta_dist = std::sqrt( p[0] * p[0] + p[1] * p[1] );
+      const double theta_dist = std::hypot( p(0), p(1) );
       if ( theta_dist > eps )
       {
         double theta = theta_dist;
