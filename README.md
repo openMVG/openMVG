@@ -25,7 +25,7 @@ Continuous integration:
 License
 -------
 
-See [LICENSE MPL2](https://github.com/openMVG/openMVG/raw/master/license.openMVG) text file
+See [LICENSE MPL2](https://raw.githubusercontent.com/openMVG/openMVG/master/LICENSE) text file
 
 Authors
 -------
