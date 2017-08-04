@@ -11,7 +11,8 @@ To use OpenMVG scene in OpenMVS you can:
 **Importation/Exportation**
 
 .. code-block:: c++
-
+  # Use openMVG_main_ExportUndistortedImages to generate Undistorted Images
+  $ openMVG_main_ExportUndistortedImages -i Dataset/out_Reconstruction/sfm_data.json -o Dataset/out_Reconstruction/undistortedImages
   # Export the OpenMVG scene to the OpenMVS data format
   $ openMVG_main_openMVG2openMVS -i PATH/sfm_data.(json/xml/bin) -d OUTPUT_PATH -o OUTPUT_PATH/Scene
   
