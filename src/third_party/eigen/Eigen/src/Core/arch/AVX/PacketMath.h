@@ -395,14 +395,11 @@ template<> EIGEN_STRONG_INLINE Packet4d preduxp<Packet4d>(const Packet4d* vecs)
 
 template<> EIGEN_STRONG_INLINE float predux<Packet8f>(const Packet8f& a)
 {
-  Packet8f tmp0 = _mm256_hadd_ps(a,_mm256_permute2f128_ps(a,a,1));
-  tmp0 = _mm256_hadd_ps(tmp0,tmp0);
-  return pfirst(_mm256_hadd_ps(tmp0, tmp0));
+  return predux(Packet4f(_mm_add_ps(_mm256_castps256_ps128(a),_mm256_extractf128_ps(a,1))));
 }
 template<> EIGEN_STRONG_INLINE double predux<Packet4d>(const Packet4d& a)
 {
-  Packet4d tmp0 = _mm256_hadd_pd(a,_mm256_permute2f128_pd(a,a,1));
-  return pfirst(_mm256_hadd_pd(tmp0,tmp0));
+  return predux(Packet2d(_mm_add_pd(_mm256_castpd256_pd128(a),_mm256_extractf128_pd(a,1))));
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f predux_downto4<Packet8f>(const Packet8f& a)
