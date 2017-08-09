@@ -266,6 +266,74 @@ private:
   Mat3 K1_, K2_;      // Intrinsic camera parameter
 };
 
+/// Essential Ortho matrix Kernel adaptor for the A contrario model estimator
+template <typename SolverArg,
+        typename ErrorArg,
+        typename ModelArg = Mat3>
+class ACKernelAdaptorEssentialOrtho
+{
+public:
+    using Solver = SolverArg;
+    using Model = ModelArg;
+    using ErrorT = ErrorArg;
+
+    ACKernelAdaptorEssentialOrtho(
+            const Mat &x1, int w1, int h1,
+            const Mat &x2, int w2, int h2,
+            const Mat3 & K1, const Mat3 & K2)
+            : x1_(x1), x2_(x2),
+              N1_(Mat3::Identity()), N2_(Mat3::Identity()), logalpha0_(0.0),
+              K1_(K1), K2_(K2)
+    {
+      assert(2 == x1_.rows());
+      assert(x1_.rows() == x2_.rows());
+      assert(x1_.cols() == x2_.cols());
+
+      x1k_ = (K1_.inverse() * x1_.colwise().homogeneous()).colwise().hnormalized();
+      x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
+
+      //Point to line probability (line is the epipolar line)
+      const double D = std::hypot(w2, h2); // diameter
+      const double A = w2*(double)h2; // area
+      logalpha0_ = log10(2.0*D/A * .5);
+    }
+
+    enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
+    enum { MAX_MODELS = Solver::MAX_MODELS };
+
+    void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
+      const Mat x1 = ExtractColumns(x1k_, samples);
+      const Mat x2 = ExtractColumns(x2k_, samples);
+      Solver::Solve(x1, x2, models);
+    }
+
+    double Error(uint32_t sample, const Model &model) const {
+      return ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
+    }
+
+    void Errors(const Model & model, std::vector<double> & vec_errors) const
+    {
+      vec_errors.resize(x1_.cols());
+      for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
+        vec_errors[sample] = ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
+    }
+
+    size_t NumSamples() const { return x1_.cols(); }
+    void Unnormalize(Model * model) const {}
+    double logalpha0() const {return logalpha0_;}
+    double multError() const {return 0.5;} // point to line error
+    Mat3 normalizer1() const {return N1_;}
+    Mat3 normalizer2() const {return N2_;}
+    double unormalizeError(double val) const { return val; }
+
+private:
+    Mat x1_, x2_, x1k_, x2k_; // image point and camera plane point.
+    Mat3 N1_, N2_;      // Matrix used to normalize data
+    double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
+    Mat3 K1_, K2_;      // Intrinsic camera parameter
+};
+
+
 /// Two view Kernel adapter for the A contrario model estimator.
 /// Specialization to handle radian angular residual error.
 template <typename SolverArg,
