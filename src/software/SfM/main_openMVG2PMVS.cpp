@@ -75,8 +75,8 @@ bool exportToPMVSFormat(
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
     // Export valid views as Projective Cameras:
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -221,8 +221,8 @@ bool exportToBundlerFormat(
   const std::string & sOutFile, //Output Bundle.rd.out file
   const std::string & sOutListFile)  //Output Bundler list.txt file
 {
-  std::ofstream os(sOutFile.c_str()	);
-  std::ofstream osList(sOutListFile.c_str()	);
+  std::ofstream os(sOutFile.c_str());
+  std::ofstream osList(sOutListFile.c_str());
   if (! os.is_open() || ! osList.is_open())
   {
     return false;
@@ -234,8 +234,8 @@ bool exportToBundlerFormat(
     Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
 
     // Count the number of valid cameras and re-index the viewIds
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -250,8 +250,8 @@ bool exportToBundlerFormat(
       << map_viewIdToContiguous.size()  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
 
     // Export camera properties & image filenames
-    for(Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter)
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+        iter != sfm_data.GetViews().end(); ++iter)
     {
       const View * view = iter->second.get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -333,7 +333,7 @@ int main(int argc, char *argv[]) {
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"

@@ -9,9 +9,9 @@
 
 namespace alternative_vo
 {
-const QColor VOViewerLine::DEFAULT_LINE_COLOR = Qt::green ;
+const QColor VOViewerLine::DEFAULT_LINE_COLOR = Qt::green;
 
-const QColor VOViewerPoint::DEFAULT_TRACKED_POINT_COLOR = Qt::yellow ;
+const QColor VOViewerPoint::DEFAULT_TRACKED_POINT_COLOR = Qt::yellow;
 
-const QColor VOViewerPoint::DEFAULT_NEW_POINT_COLOR = Qt::blue ;
+const QColor VOViewerPoint::DEFAULT_NEW_POINT_COLOR = Qt::blue;
 }

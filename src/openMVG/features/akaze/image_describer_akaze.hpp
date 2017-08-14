@@ -59,7 +59,7 @@ public:
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
-    switch(preset)
+    switch (preset)
     {
     case NORMAL_PRESET:
       params_.options_.fThreshold = features::AKAZE::Params().fThreshold;

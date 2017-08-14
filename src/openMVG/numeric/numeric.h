@@ -280,7 +280,7 @@ VStack ( const Eigen::MatrixBase<Derived1>& lhs, const Eigen::MatrixBase<Derived
 template<typename TMat>
 inline double FrobeniusNorm( const TMat &A )
 {
-  return sqrt( A.array().abs2().sum() );
+  return A.norm();
 }
 
 /**
@@ -364,7 +364,7 @@ template <typename Type, typename DataInputIterator>
 bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
                        Type & min, Type & max, Type & mean, Type & median )
 {
-  if( std::distance( begin, end ) < 1 )
+  if (std::distance( begin, end ) < 1 )
   {
     return false;
   }
@@ -398,8 +398,8 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end )
 }
 
 /**
- ** Split a range [ a ; b [ into a set of n ranges :
- [ a ; c1 [ U [ c1 ; c2 [ U ... U [ c(n-1) ; b [
+ ** Split a range [ a; b [ into a set of n ranges :
+ [ a; c1 [ U [ c1; c2 [ U ... U [ c(n-1); b [
   **
   Output range vector only store [ a , c1 , c2 , ... , b ]
 
@@ -414,22 +414,22 @@ template < typename T >
 void SplitRange( const T range_start , const T range_end , const int nb_split ,
                  std::vector< T > & d_range )
 {
-  const T range_length = range_end - range_start ;
-  if( range_length < nb_split )
+  const T range_length = range_end - range_start;
+  if (range_length < nb_split )
   {
-    d_range.push_back( range_start ) ;
-    d_range.push_back( range_end ) ;
+    d_range.push_back( range_start );
+    d_range.push_back( range_end );
   }
   else
   {
-    const T delta_range = range_length / nb_split ;
+    const T delta_range = range_length / nb_split;
 
-    d_range.push_back( range_start ) ;
-    for( int i = 1 ; i < nb_split ; ++i )
+    d_range.push_back( range_start );
+    for (int i = 1; i < nb_split; ++i )
     {
-      d_range.push_back( range_start + i * delta_range ) ;
+      d_range.push_back( range_start + i * delta_range );
     }
-    d_range.push_back( range_end ) ;
+    d_range.push_back( range_end );
   }
 }
 

@@ -28,9 +28,9 @@ struct PinholeCamera
     P_From_KRt(_K, _R, _t, &_P);
   }
 
-  PinholeCamera(const Mat34 & P)
+  explicit PinholeCamera(const Mat34 & P)
+  : _P(P)
   {
-    _P = P;
     KRt_From_P(_P, &_K, &_R, &_t);
     _C = -_R.transpose() * _t;
   }

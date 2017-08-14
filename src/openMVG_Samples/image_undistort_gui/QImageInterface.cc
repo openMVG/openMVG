@@ -17,10 +17,10 @@ namespace image_undistort_gui
 {
 
 /**
-  * @brief Build a QImage from an openMVG (RGB) image 
-  * @param img Input image 
-  * @return a QImage corresponding to the input image 
-  * @note this makes a deep copy of the image 
+  * @brief Build a QImage from an openMVG (RGB) image
+  * @param img Input image
+  * @return a QImage corresponding to the input image
+  * @note this makes a deep copy of the image
   */
 QImage openMVGImageToQImage( const openMVG::image::Image<openMVG::image::RGBColor> &img )
 {
@@ -32,32 +32,31 @@ QImage openMVGImageToQImage( const openMVG::image::Image<openMVG::image::RGBColo
 }
 
 /**
-  * @brief Build a QImage from an openMVG (grayscale) image 
-  * @param img Input image 
-  * @return a QImage corresponding to the input image 
-  * @note this makes a deep copy of the image 
+  * @brief Build a QImage from an openMVG (grayscale) image
+  * @param img Input image
+  * @return a QImage corresponding to the input image
+  * @note this makes a deep copy of the image
   */
 QImage openMVGImageToQImage( const openMVG::image::Image<unsigned char> &img )
 {
-  const int bytePerRow = img.Width() * sizeof( unsigned char );
   QImage tmp( reinterpret_cast<const unsigned char *>( img.data() ), img.Width(), img.Height(), QImage::Format_Indexed8 );
   QVector<QRgb> colors( 256 );
   for ( int i = 0; i < 256; ++i )
   {
-    colors[ i ] = qRgb( i, i, i );
+    colors[ i ] = qRgb(i, i, i);
   }
   tmp.setColorCount( 256 );
   tmp.setColorTable( colors );
 
   // Make a deep copy
-  return tmp.copy();
+  return std::move(tmp);
 }
 
 /**
-  * @brief Convert a QImage to an openMVG image 
-  * @param img Input image 
-  * @return openMVG image corresponding to this image 
-  * @note this makes a deep copy 
+  * @brief Convert a QImage to an openMVG image
+  * @param img Input image
+  * @return openMVG image corresponding to this image
+  * @note this makes a deep copy
   */
 openMVG::image::Image<openMVG::image::RGBColor> QImageToOpenMVGImage( const QImage &img )
 {
@@ -65,7 +64,7 @@ openMVG::image::Image<openMVG::image::RGBColor> QImageToOpenMVGImage( const QIma
 
   const QImage tmp = img.convertToFormat( QImage::Format_RGB888 );
 
-  // Make a deep copy 
+  // Make a deep copy
   std::copy( tmp.bits(), tmp.bits() + tmp.byteCount(), reinterpret_cast<unsigned char *>( res.data() ) );
 
   return res;

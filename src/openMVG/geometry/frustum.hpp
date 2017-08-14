@@ -135,8 +135,8 @@ struct Frustum : public HalfPlaneObject
   */
   static bool export_Ply
   (
-	  const Frustum & frustum,
-	  const std::string & filename
+    const Frustum & frustum,
+    const std::string & filename
   );
 
 }; // struct Frustum

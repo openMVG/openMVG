@@ -152,8 +152,8 @@ public:
     svgStream << "<polyline points=\"";
 
     DataInputIteratorY itery = yStart;
-    for(DataInputIteratorX iterx = xStart;
-     iterx != xEnd; std::advance(iterx, 1), std::advance(itery, 1))
+    for (DataInputIteratorX iterx = xStart;
+        iterx != xEnd; std::advance(iterx, 1), std::advance(itery, 1))
     {
       svgStream << *iterx << ',' << *itery << ' ';
     }

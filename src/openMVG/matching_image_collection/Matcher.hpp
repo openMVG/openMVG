@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "openMVG/matching/indMatch.hpp"
 

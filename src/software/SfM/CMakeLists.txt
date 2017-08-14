@@ -129,7 +129,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeSfM_DataColor
   openMVG_sfm
   stlplus
   )
-  
+
 ADD_EXECUTABLE(openMVG_main_PointsFiltering main_PointsFiltering.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_PointsFiltering
   openMVG_system
@@ -255,7 +255,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2CMPMVS
 # - Export a SfM openMVG scene to MVE(v2) format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2 
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MVE2
   openMVG_system
   openMVG_image
   openMVG_features
@@ -295,7 +295,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ExportCameraFrustums
   stlplus
   )
 
-# - Export SfM openMVG scene to NVM (N-View Match) file 
+# - Export SfM openMVG scene to NVM (N-View Match) file
 ADD_EXECUTABLE(openMVG_main_openMVG2NVM main_openMVG2NVM.cpp)
 TARGET_LINK_LIBRARIES( openMVG_main_openMVG2NVM
   openMVG_system
@@ -322,23 +322,24 @@ INSTALL(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
 
-
 # -
 # Use openCV Feature detector to describe the images
 # -
 IF(OpenMVG_USE_OPENCV)
   ADD_EXECUTABLE(openMVG_main_ComputeFeatures_OpenCV
-      main_ComputeFeatures_OpenCV.cpp)
+    main_ComputeFeatures_OpenCV.cpp)
   TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures_OpenCV
-      openMVG_system
-      openMVG_image
-      openMVG_features
-      openMVG_multiview
-      openMVG_sfm
-      stlplus
-      vlsift
-      ${OpenCV_LIBS})
-
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_multiview
+    openMVG_sfm
+    stlplus
+    vlsift
+    ${OpenCV_LIBS})
+  target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
+  target_compile_definitions(openMVG_main_ComputeFeatures PRIVATE USE_OCVSIFT)
+  
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
   INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
@@ -384,3 +385,4 @@ SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_SequentialPipeline.p
 CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_SequentialPipeline.py" @ONLY)
 
+add_subdirectory(clustering)

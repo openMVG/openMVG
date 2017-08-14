@@ -87,7 +87,7 @@ ceres::CostFunction * IntrinsicsToCostFunction
   const double weight
 )
 {
-  switch(intrinsic->getType())
+  switch (intrinsic->getType())
   {
     case PINHOLE_CAMERA:
       return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
@@ -171,7 +171,7 @@ Bundle_Adjustment_Ceres::ceres_options()
 bool Bundle_Adjustment_Ceres::Adjust
 (
   SfM_Data & sfm_data,     // the SfM scene to refine
-  const Optimize_Options options
+  const Optimize_Options & options
 )
 {
   //----------

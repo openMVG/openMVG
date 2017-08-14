@@ -194,7 +194,7 @@ std::set<IndexT> KeepLargestCC_Nodes
       for (const unsigned int parent_id_it : parent_id)
       {
         if (uf.m_cc_size[parent_id_it] > max_cc.second) // Update the component parent id and size
-          max_cc = std::make_pair(parent_id_it, uf.m_cc_size[parent_id_it]);
+          max_cc = {parent_id_it, uf.m_cc_size[parent_id_it]};
       }
     }
     if (max_cc.first != UndefinedIndexT)

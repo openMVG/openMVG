@@ -57,7 +57,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
 
     std::vector< Pair > matchesFiltered, matchesPair;
 
-    for( std::vector< matching::IndMatch >::const_iterator iter_match = _vec_PutativeMatches.begin();
+    for (std::vector< matching::IndMatch >::const_iterator iter_match = _vec_PutativeMatches.begin();
           iter_match != _vec_PutativeMatches.end();
           ++iter_match )
     {
@@ -90,7 +90,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
     }
 
     bool bOk = false;
-    if( !matchesPair.empty())
+    if (!matchesPair.empty())
     {
       // Get mask
       getKVLDMask(

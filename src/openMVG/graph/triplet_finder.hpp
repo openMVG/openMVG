@@ -71,8 +71,8 @@ struct Triplet
   */
   friend bool operator==( const Triplet& m1, const Triplet& m2 )
   {
-    return m1.contain( std::make_pair( m2.i, m2.j ) )
-           && m1.contain( std::make_pair( m2.i, m2.k ) );
+    return m1.contain( {m2.i, m2.j} )
+           && m1.contain( {m2.i, m2.k} );
   }
 
   /**
@@ -151,10 +151,10 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
     }
 
     // For all tuples look of ends of edges are linked
-    while( vec_edges.size() > 1 )
+    while (vec_edges.size() > 1)
     {
       OutArcIt itPrev = vec_edges[0]; // For all tuple (0,Inth)
-      for( size_t i = 1; i < vec_edges.size(); ++i )
+      for (size_t i = 1; i < vec_edges.size(); ++i )
       {
         // Check if the extremity is linked
         typename GraphT::Arc cycleEdge = findArc( g, g.target( itPrev ), g.target( vec_edges[i] ) );

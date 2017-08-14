@@ -26,7 +26,7 @@ struct SfM_Data_Structure_Computation_Basis
 {
   bool bConsole_verbose_;
 
-  SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose = false);
+  explicit SfM_Data_Structure_Computation_Basis(bool bConsoleVerbose = false);
 
   virtual void triangulate(SfM_Data & sfm_data) const = 0;
 };
@@ -38,7 +38,7 @@ struct SfM_Data_Structure_Computation_Basis
 // - Inlier/Outlier classification is done by a cheirality test
 struct SfM_Data_Structure_Computation_Blind: public SfM_Data_Structure_Computation_Basis
 {
-  SfM_Data_Structure_Computation_Blind(bool bConsoleVerbose = false);
+  explicit SfM_Data_Structure_Computation_Blind(bool bConsoleVerbose = false);
 
   void triangulate(SfM_Data & sfm_data) const override;
 };
@@ -77,7 +77,7 @@ private:
   double max_reprojection_error_;
   const IndexT min_required_inliers_;
   const IndexT min_sample_index_;
-  
+
 };
 
 } // namespace sfm

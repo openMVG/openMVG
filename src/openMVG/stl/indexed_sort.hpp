@@ -50,7 +50,7 @@ namespace indexed_sort
                       const eT* in_mem, int NN = -1)  {
     const size_t n_elem = packet_vec.size();
 
-    for(size_t i=0; i<n_elem; ++i)  {
+    for (size_t i=0; i<n_elem; ++i)  {
       packet_vec[i].val   = in_mem[i];
       packet_vec[i].index = i;
     }

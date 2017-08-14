@@ -66,12 +66,10 @@ void EncodeTiXi
 # define XVAR(j, el) (pointStart + 3*(j) + (el))
 
   // By default set free variable:
-  vec_bounds = std::vector< std::pair<double,double> >(3 * (N3D + Ncam));
-  std::fill( vec_bounds.begin(), vec_bounds.end(),
-    std::make_pair(std::numeric_limits<double>::lowest(),
-                   std::numeric_limits<double>::max()));
+  vec_bounds.assign(3 * (N3D + Ncam),
+    {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()});
   // Fix the translation ambiguity. (set first cam at (0,0,0))
-  vec_bounds[0] = vec_bounds[1] = vec_bounds[2] = std::make_pair(0,0);
+  vec_bounds[0] = vec_bounds[1] = vec_bounds[2] = {0,0};
 
   size_t rowPos = 0;
   // Add the cheirality conditions (R_i*X_j + T_i)_3 >= 1

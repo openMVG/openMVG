@@ -67,8 +67,8 @@ void UndistortImage(
 * @param cam Input intrinsic parameter used to undistort image
 * @param[out] image_ud Output undistorted image
 * @param fillcolor color used to fill pixels where no input pixel is found
-* @param max_ud_width Maximum width of the undistorted image 
-* @param max_ud_height Maximum height of the undistorted image 
+* @param max_ud_width Maximum width of the undistorted image
+* @param max_ud_height Maximum height of the undistorted image
 * @note This function produces an image with size that try to fit the image plane
 */
 template <typename Image>
@@ -92,9 +92,9 @@ void UndistortImageResized(
     int max_x = std::numeric_limits<int>::lowest();
     int max_y = std::numeric_limits<int>::lowest();
 
-    for( int id_row = 0 ; id_row < imageIn.Height() ; ++id_row )
+    for (int id_row = 0; id_row < imageIn.Height(); ++id_row )
     {
-      for( int id_col = 0 ; id_col < imageIn.Width() ; ++id_col )
+      for (int id_col = 0; id_col < imageIn.Width(); ++id_col )
       {
         const Vec2 dist_pix( id_col , id_row );
         const Vec2 undist_pix = cam->get_ud_pixel( dist_pix );
@@ -116,17 +116,17 @@ void UndistortImageResized(
     // Compute real size (ensure we do not have infinite size)
     const uint32_t real_size_x = std::min( max_ud_width , (uint32_t)computed_size_x );
     const uint32_t real_size_y = std::min( max_ud_height , (uint32_t)computed_size_y );
-    
-    // 2 - Compute inverse projection to fill the output image 
+
+    // 2 - Compute inverse projection to fill the output image
     image_ud.resize( real_size_x , real_size_y , true, fillcolor );
     const image::Sampler2d<image::SamplerLinear> sampler;
-  
+
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
 #endif
     for ( int j = 0; j < real_size_y; ++j )
-      for ( int i = 0; i < real_size_x ; ++i )
-      { 
+      for ( int i = 0; i < real_size_x; ++i )
+      {
         const Vec2 undisto_pix( i + min_x , j + min_y );
         // compute coordinates with distortion
         const Vec2 disto_pix = cam->get_d_pixel( undisto_pix );
@@ -149,4 +149,3 @@ void UndistortImageResized(
 } // namespace openMVG
 
 #endif // #ifndef OPENMVG_CAMERAS_CAMERA_UNDISTORT_IMAGE_HPP
-

@@ -100,7 +100,7 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
   {
     const double sigma_extra =
       sqrt(Square(m_params.sigma_min) - Square(m_params.sigma_in)) / m_params.delta_min;
-    if(m_params.delta_min == 1.0f)
+    if (m_params.delta_min == 1.0f)
     {
       image::ImageGaussianFilter(img, sigma_extra, m_cur_base_octave_image);
     }
@@ -151,7 +151,7 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
       // init the "blur"/sigma scale spaces values
       octave.slices.resize(m_nb_slice + m_params.supplementary_levels);
       octave.sigmas.resize(m_nb_slice + m_params.supplementary_levels);
-      for(int s = 0; s < m_nb_slice  + m_params.supplementary_levels; ++s)
+      for (int s = 0; s < m_nb_slice  + m_params.supplementary_levels; ++s)
       {
         octave.sigmas[s] =
           octave.delta / m_params.delta_min * m_params.sigma_min * pow(2.0,(float)s/(float)m_nb_slice);
@@ -159,7 +159,7 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
 
       // Build the octave iteratively
       octave.slices[0] = m_cur_base_octave_image;
-      for(int s = 1; s < octave.sigmas.size(); ++s)
+      for (int s = 1; s < octave.sigmas.size(); ++s)
       {
         // Iterative blurring the previous image
         const image::Image<float> & im_prev = octave.slices[s-1];
@@ -172,7 +172,7 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
       }
       /*
       // Debug: Export DoG scale space on disk
-      for(int s = 0; s < octave.sigmas.size(); ++s)
+      for (int s = 0; s < octave.sigmas.size(); ++s)
       {
         std::stringstream os;
         os << "DoG_out_00" << m_cur_octave_id << "_s" << "00" << s << ".png";

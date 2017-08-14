@@ -104,7 +104,7 @@ bool L2RotationAveraging
   tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
   sMat::Index cpt = 0;
-  for(RelativeRotations::const_iterator
+  for (RelativeRotations::const_iterator
     iter = vec_relativeRot.begin();
     iter != vec_relativeRot.end();
     iter++, cpt++)
@@ -155,7 +155,7 @@ bool L2RotationAveraging
     std::vector<std::pair<double, Vec> > eigs(AtA.cols());
     for (Mat::Index i = 0; i < AtA.cols(); ++i)
     {
-      eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+      eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};
     }
     std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
 
@@ -171,7 +171,7 @@ bool L2RotationAveraging
     //--
     global_rotations.clear();
     global_rotations.reserve(nCamera);
-    for(size_t i=0; i < nCamera; ++i)
+    for (size_t i=0; i < nCamera; ++i)
     {
       Mat3 Rotation;
       Rotation << NullspaceVector0.segment(3 * i, 3),
@@ -183,7 +183,7 @@ bool L2RotationAveraging
     }
     // Force R0 to be Identity
     const Mat3 R0T = global_rotations[0].transpose();
-    for(size_t i = 0; i < nCamera; ++i) {
+    for (size_t i = 0; i < nCamera; ++i) {
       global_rotations[i] *= R0T;
     }
   }

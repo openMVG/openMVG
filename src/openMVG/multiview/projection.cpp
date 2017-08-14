@@ -49,7 +49,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(2,1) != 0) {
     double c = -K(2,2);
     double s = K(2,1);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qx;
     Qx << 1, 0, 0,
@@ -62,7 +62,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(2,0) != 0) {
     double c = K(2,2);
     double s = K(2,0);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qy;
     Qy << c, 0, s,
@@ -75,7 +75,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   if (K(1,0) != 0) {
     double c = -K(1,1);
     double s = K(1,0);
-    double l = sqrt(c * c + s * s);
+    double l = std::hypot(c, s);
     c /= l; s /= l;
     Mat3 Qz;
     Qz << c,-s, 0,
@@ -119,7 +119,7 @@ void KRt_From_P(const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp) {
   Eigen::PartialPivLU<Mat3> lu(K);
   Vec3 t = lu.solve(P.col(3));
 
-  if(R.determinant()<0) {
+  if (R.determinant()<0) {
     R = -R;
     t = -t;
   }
@@ -254,9 +254,9 @@ void HomogeneousToNormalizedCamera(const Mat3X &x, const Mat3 &K, Mat2X *n) {
 double RootMeanSquareError(const Mat2X &x_image,
   const Mat4X &X_world,
   const Mat34 &P) {
-    size_t num_points = x_image.cols();
-    Mat2X dx = Project(P, X_world) - x_image;
-    return dx.norm() / num_points;
+    const Mat2X::Index num_points = x_image.cols();
+    const Mat2X dx = Project(P, X_world) - x_image;
+    return std::sqrt(dx.squaredNorm() / num_points);
 }
 
 /// Estimates the root mean square error (2D)
@@ -267,9 +267,7 @@ double RootMeanSquareError(const Mat2X &x_image,
   const Vec3 &t) {
     Mat34 P;
     P_From_KRt(K, R, t, &P);
-    size_t num_points = x_image.cols();
-    Mat2X dx = Project(P, X_world) - x_image;
-    return dx.norm() / num_points;
+    return RootMeanSquareError(x_image, X_world.colwise().homogeneous(), P);
 }
 
 } // namespace openMVG

@@ -111,7 +111,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
          intrinsicCamInfo.m_sCameraModel = vec_str[4];
       }
       break;
-      case  6 : // a camera with exif data found in the database
+      case 6 : // a camera with exif data found in the database
       {
          oss.clear(); oss.str(vec_str[3]);
          float focal;
@@ -158,7 +158,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
         intrinsicCamInfo.m_focal = static_cast<float>(K(0,0)); // unknown sensor size;
       }
       break;
-      default :
+      default:
       {
         std::cerr << "Invalid image list line: wrong number of arguments" << std::endl;
         in.close();

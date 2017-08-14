@@ -62,13 +62,13 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_64BITS)
   const int COUNT = 4;
   std::bitset<64> tab[COUNT];
   // Zeros
-  for(int i = 0; i < 64; ++i) {  tab[0][i] = 0;  }
+  for (int i = 0; i < 64; ++i) {  tab[0][i] = 0;  }
   // 0101 ...
-  for(int i = 0; i < 64; ++i) {  tab[1][i] = i%2 == 0;  }
+  for (int i = 0; i < 64; ++i) {  tab[1][i] = i%2 == 0;  }
   // 00110011...
-  for(int i = 0; i < 64; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
+  for (int i = 0; i < 64; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
   // 000111000111...
-  for(int i = 0; i < 64; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
+  for (int i = 0; i < 64; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
 
   // ground truth hamming distances between bit array
   const double gtDist[] =
@@ -98,13 +98,13 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
   const int COUNT = 4;
   std::bitset<32> tab[COUNT];
   // Zeros
-  for(int i = 0; i < 32; ++i) {  tab[0][i] = 0;  }
+  for (int i = 0; i < 32; ++i) {  tab[0][i] = 0;  }
   // 0101 ...
-  for(int i = 0; i < 32; ++i) {  tab[1][i] = i%2 == 0;  }
+  for (int i = 0; i < 32; ++i) {  tab[1][i] = i%2 == 0;  }
   // 00110011...
-  for(int i = 0; i < 32; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
+  for (int i = 0; i < 32; ++i) {  tab[2][i] = (i/2)%2 == 0;  }
   // 000111000111...
-  for(int i = 0; i < 32; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
+  for (int i = 0; i < 32; ++i) {  tab[3][i] = (i/3)%2 == 0;  }
 
   // ground truth hamming distances between bit array
   const double gtDist[] =

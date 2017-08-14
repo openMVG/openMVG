@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_concat.hpp"
@@ -17,8 +18,6 @@
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-
-#include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -50,7 +49,7 @@ int main() {
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer);
+  std::unique_ptr<Image_describer> image_describer(new SIFT_Anatomy_Image_describer);
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);

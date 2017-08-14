@@ -156,7 +156,7 @@ inline bool compute_P3P_Poses
 
   // Reinforce that f3[2] > 0 for having theta in [0;pi]
 
-  if( f3[2] > 0 )
+  if (f3[2] > 0 )
   {
     f1 = featureVectors.col(1);
     f2 = featureVectors.col(0);
@@ -262,7 +262,7 @@ inline bool compute_P3P_Poses
 
   // Backsubstitution of each solution
 
-  for(int i=0; i<4; ++i)
+  for (int i=0; i<4; ++i)
   {
     double cot_alpha = (-f_1*p_1/f_2-realRoots[i]*p_2+d_12*b)/(-f_1*realRoots[i]*p_2/f_2+p_1-d_12);
 
@@ -352,7 +352,7 @@ P3P_ResectionKernel_K::P3P_ResectionKernel_K
   Mat3X x_image_h;
   EuclideanToHomogeneous(x_image_, &x_image_h);
   x_camera_ = K_.inverse() * x_image_h;
-  for(Mat2X::Index i = 0; i < x_camera_.cols(); ++i)
+  for (Mat2X::Index i = 0; i < x_camera_.cols(); ++i)
     x_camera_.col(i).normalize();
 }
 

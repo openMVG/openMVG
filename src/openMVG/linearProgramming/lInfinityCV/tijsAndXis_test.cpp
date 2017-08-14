@@ -95,7 +95,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER) {
     // Compute residuals L2 from estimated parameter values :
     Vec2 xk, xsum(0.0,0.0);
     for (size_t i = 0; i < d2._n; ++i) {
-      for(Mat2X::Index k = 0; k < d._x[0].cols(); ++k)
+      for (Mat2X::Index k = 0; k < d._x[0].cols(); ++k)
       {
         xk = Project(d2.P(i), Vec3(d2._X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));
@@ -183,7 +183,7 @@ TEST(Translation_Structure_L_Infinity, OSICLP_SOLVER_K) {
     // Compute residuals L2 from estimated parameter values :
     Vec2 xk, xsum(0.0,0.0);
     for (size_t i = 0; i < d2._n; ++i) {
-      for(size_t k = 0; k < (size_t)d._x[0].cols(); ++k)
+      for (size_t k = 0; k < (size_t)d._x[0].cols(); ++k)
       {
         xk = Project(d2.P(i), Vec3(d2._X.col(k)));
         xsum += Vec2(( xk - d2._x[i].col(k)).array().pow(2));

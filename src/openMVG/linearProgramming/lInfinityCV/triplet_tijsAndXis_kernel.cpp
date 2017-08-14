@@ -53,6 +53,8 @@ double TrifocalTensorModel::Error
 
 namespace openMVG{
 
+using openMVG::trifocal::kernel::TrifocalTensorModel;
+
 /// Solve the computation of the "tensor".
 void translations_Triplet_Solver::Solve
 (
@@ -122,4 +124,3 @@ double translations_Triplet_Solver::Error
 }
 
 } // namespace openMVG
-

@@ -20,7 +20,7 @@ VOFolderProcessor::VOFolderProcessor( const std::string & inputFolder )
   : m_input_folder( inputFolder ) ,
     m_current_file_ID( 0 )
 {
-  m_input_files = stlplus::folder_files( m_input_folder ) ;
+  m_input_files = stlplus::folder_files( m_input_folder );
   // clean invalid image file
   {
     std::vector<std::string> vec_image_;
@@ -36,8 +36,8 @@ VOFolderProcessor::VOFolderProcessor( const std::string & inputFolder )
   std::sort( m_input_files.begin(), m_input_files.end() );
 
   // Initialize the Visual Odometry interface
-  m_tracker.reset( new openMVG::VO::Tracker_fast_dipole ) ;
-  m_monocular_vo.reset( new openMVG::VO::VO_Monocular( m_tracker.get(), 1500 ) ) ;
+  m_tracker.reset( new openMVG::VO::Tracker_fast_dipole );
+  m_monocular_vo.reset( new openMVG::VO::VO_Monocular( m_tracker.get(), 1500 ) );
 }
 
 /**
@@ -45,7 +45,7 @@ VOFolderProcessor::VOFolderProcessor( const std::string & inputFolder )
 */
 void VOFolderProcessor::Reset( void )
 {
-  m_current_file_ID = 0 ;
+  m_current_file_ID = 0;
 }
 
 /**
@@ -53,7 +53,7 @@ void VOFolderProcessor::Reset( void )
 */
 std::string VOFolderProcessor::CurrentFileName( void )
 {
-  return m_input_files[ m_current_file_ID ] ;
+  return m_input_files[ m_current_file_ID ];
 }
 
 /**
@@ -63,13 +63,13 @@ std::string VOFolderProcessor::CurrentFileName( void )
 */
 std::string VOFolderProcessor::FullFileName( const size_t id )
 {
-  if( id >= m_input_files.size() )
+  if (id >= m_input_files.size() )
   {
-    return "" ;
+    return "";
   }
   else
   {
-    return stlplus::create_filespec( m_input_folder, m_input_files[ id ] ) ;
+    return stlplus::create_filespec( m_input_folder, m_input_files[ id ] );
   }
 }
 
@@ -79,7 +79,7 @@ std::string VOFolderProcessor::FullFileName( const size_t id )
 */
 size_t VOFolderProcessor::NbFrame( void )
 {
-  return m_input_files.size() ;
+  return m_input_files.size();
 }
 
 
@@ -88,7 +88,7 @@ size_t VOFolderProcessor::NbFrame( void )
  */
 size_t VOFolderProcessor::CurrentFrameID( void )
 {
-  return m_current_file_ID ;
+  return m_current_file_ID;
 }
 
 
@@ -99,9 +99,9 @@ size_t VOFolderProcessor::CurrentFrameID( void )
 */
 bool VOFolderProcessor::StepForward( void )
 {
-  if( m_current_file_ID + 1 >= m_input_files.size() )
+  if (m_current_file_ID + 1 >= m_input_files.size() )
   {
-    return false ;
+    return false;
   }
   else
   {
@@ -111,11 +111,11 @@ bool VOFolderProcessor::StepForward( void )
 
     if ( openMVG::image::ReadImage( sImageFilename.c_str(), &currentImage ) )
     {
-      m_monocular_vo->nextFrame( currentImage , m_current_file_ID ) ;
+      m_monocular_vo->nextFrame( currentImage , m_current_file_ID );
     }
 
-    ++m_current_file_ID ;
-    return true ;
+    ++m_current_file_ID;
+    return true;
   }
 }
 
@@ -124,7 +124,7 @@ bool VOFolderProcessor::StepForward( void )
 */
 std::vector< VOViewerPoint > VOFolderProcessor::GetCurrentTrackedPoints( void ) const
 {
-  std::vector< VOViewerPoint > res ;
+  std::vector< VOViewerPoint > res;
   res.reserve(m_monocular_vo->landmark_.size());
 
   for ( size_t idx = 0; idx < m_monocular_vo->landmark_.size(); ++idx )
@@ -144,14 +144,14 @@ std::vector< VOViewerPoint > VOFolderProcessor::GetCurrentTrackedPoints( void ) 
       // draw the current tracked point
       {
         std::deque<openMVG::VO::Measurement>::const_reverse_iterator iter = obs.rbegin();
-        VOViewerPoint cur_tracked ;
-        cur_tracked.m_color = VOViewerPoint::DEFAULT_TRACKED_POINT_COLOR ;
-        cur_tracked.m_pt = iter->pos_ ;
-        res.push_back( cur_tracked ) ;
+        VOViewerPoint cur_tracked;
+        cur_tracked.m_color = VOViewerPoint::DEFAULT_TRACKED_POINT_COLOR;
+        cur_tracked.m_pt = iter->pos_;
+        res.push_back( cur_tracked );
       }
     }
   }
-  return res ;
+  return res;
 }
 
 /**
@@ -159,7 +159,7 @@ std::vector< VOViewerPoint > VOFolderProcessor::GetCurrentTrackedPoints( void ) 
 */
 std::vector< VOViewerPoint > VOFolderProcessor::GetCreatedPoints( void ) const
 {
-  std::vector< VOViewerPoint > res ;
+  std::vector< VOViewerPoint > res;
   res.reserve(m_monocular_vo->landmark_.size());
 
   for ( size_t idx = 0; idx < m_monocular_vo->landmark_.size(); ++idx )
@@ -183,14 +183,14 @@ std::vector< VOViewerPoint > VOFolderProcessor::GetCreatedPoints( void ) const
         const std::deque<openMVG::VO::Measurement> & obs = landmark.obs_;
         std::deque<openMVG::VO::Measurement>::const_iterator iter = obs.begin();
 
-        VOViewerPoint cur_created ;
-        cur_created.m_color = VOViewerPoint::DEFAULT_NEW_POINT_COLOR ;
-        cur_created.m_pt = iter->pos_ ;
-        res.push_back( cur_created ) ;
+        VOViewerPoint cur_created;
+        cur_created.m_color = VOViewerPoint::DEFAULT_NEW_POINT_COLOR;
+        cur_created.m_pt = iter->pos_;
+        res.push_back( cur_created );
       }
     }
   }
-  return res ;
+  return res;
 }
 
 /**
@@ -198,7 +198,7 @@ std::vector< VOViewerPoint > VOFolderProcessor::GetCreatedPoints( void ) const
 */
 std::vector< VOViewerLine > VOFolderProcessor::GetCurrentTrackTrajectories( void ) const
 {
-  std::vector< VOViewerLine > res ;
+  std::vector< VOViewerLine > res;
   res.reserve(m_monocular_vo->landmark_.size());
 
   for ( size_t idx = 0; idx < m_monocular_vo->landmark_.size(); ++idx )
@@ -218,19 +218,19 @@ std::vector< VOViewerLine > VOFolderProcessor::GetCurrentTrackTrajectories( void
       std::deque<openMVG::VO::Measurement>::const_reverse_iterator iter = obs.rbegin();
       std::deque<openMVG::VO::Measurement>::const_reverse_iterator iterEnd = obs.rend();
 
-      VOViewerLine cur_traj ;
-      cur_traj.m_color = VOViewerLine::DEFAULT_LINE_COLOR ;
+      VOViewerLine cur_traj;
+      cur_traj.m_color = VOViewerLine::DEFAULT_LINE_COLOR;
       /* Trajectories */
       int limit = 10;
-      for ( ; iter != iterEnd && limit >= 0; ++iter, --limit )
+      for (; iter != iterEnd && limit >= 0; ++iter, --limit )
       {
         const openMVG::Vec2f & p0 = iter->pos_;
-        cur_traj.m_pts.push_back( p0 ) ;
+        cur_traj.m_pts.push_back( p0 );
       }
-      res.push_back( cur_traj ) ;
+      res.push_back( cur_traj );
     }
   }
-  return res ;
+  return res;
 }
 
 

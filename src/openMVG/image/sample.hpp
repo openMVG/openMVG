@@ -104,7 +104,7 @@ struct SamplerCubic
      ** @note sharpnedd_coef must be between -0.75 to -0.5
      ** -0.5 gives better mathematically result (ie: approximation at 3 order precision)
      **/
-    SamplerCubic( const double sharpness_coef = -0.5 )
+    explicit SamplerCubic( const double sharpness_coef = -0.5 )
       : sharpness_( sharpness_coef )
     {
 
@@ -477,7 +477,7 @@ struct RealPixel< Rgba<T> >
 template< typename SamplerFunc>
 struct Sampler2d
 {
-    Sampler2d( const SamplerFunc & sampler = SamplerFunc() )
+    explicit Sampler2d( const SamplerFunc & sampler = SamplerFunc() )
       : sampler_( sampler ) ,
         half_width_( SamplerFunc::neighbor_width / 2 )
     {
@@ -517,26 +517,26 @@ struct Sampler2d
 
       // Sample a grid around specified grid point
       double total_weight = 0.0;
-      for( int i = 0; i < SamplerFunc::neighbor_width; ++i )
+      for (int i = 0; i < SamplerFunc::neighbor_width; ++i )
       {
         // Get current i value
         // +1 for correct scheme (draw it to be conviced)
         const int cur_i = grid_y + 1 + i - half_width_;
 
         // handle out of range
-        if( cur_i < 0 || cur_i >= im_height )
+        if (cur_i < 0 || cur_i >= im_height )
         {
           continue;
         }
 
-        for( int j = 0; j < SamplerFunc::neighbor_width; ++j )
+        for (int j = 0; j < SamplerFunc::neighbor_width; ++j )
         {
           // Get current j value
           // +1 for the same reason
           const int cur_j = grid_x + 1 + j - half_width_;
 
           // handle out of range
-          if( cur_j < 0 || cur_j >= im_width )
+          if (cur_j < 0 || cur_j >= im_width )
           {
             continue;
           }
@@ -553,12 +553,12 @@ struct Sampler2d
       }
 
       // If value too small, it should be so instable, so return the sampled value
-      if( total_weight <= 0.2 )
+      if (total_weight <= 0.2 )
       {
         return T();
       }
 
-      if( total_weight != 1.0 )
+      if (total_weight != 1.0 )
       {
         res /= total_weight;
       }

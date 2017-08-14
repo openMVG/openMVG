@@ -48,7 +48,7 @@ inline bool Generate_SfM_Report
       ++residualCount;
     }
   }
-  using namespace htmlDocument;
+
   // extract directory from htmlFilename
   const std::string sTableBegin = "<table border=\"1\">",
     sTableEnd = "</table>",
@@ -65,10 +65,10 @@ inline bool Generate_SfM_Report
 
   std::ostringstream os;
   os << " #views: " << sfm_data.GetViews().size() << sNewLine
-  << " #poses: " << sfm_data.GetPoses().size() << sNewLine
-  << " #intrinsics: " << sfm_data.GetIntrinsics().size() << sNewLine
-  << " #tracks: " << sfm_data.GetLandmarks().size() << sNewLine
-  << " #residuals: " << residualCount << sNewLine;
+    << " #poses: " << sfm_data.GetPoses().size() << sNewLine
+    << " #intrinsics: " << sfm_data.GetIntrinsics().size() << sNewLine
+    << " #tracks: " << sfm_data.GetLandmarks().size() << sNewLine
+    << " #residuals: " << residualCount << sNewLine;
 
   htmlDocStream.pushInfo( os.str() );
   htmlDocStream.pushInfo( sFullLine );
@@ -86,7 +86,7 @@ inline bool Generate_SfM_Report
     << sRowEnd;
   htmlDocStream.pushInfo( os.str() );
 
-  for (const auto & iterV : sfm_data.GetViews() )
+  for (const auto & iterV : sfm_data.GetViews())
   {
     const View * v = iterV.second.get();
     const IndexT id_view = v->id_view;
@@ -99,7 +99,7 @@ inline bool Generate_SfM_Report
     // IdView | basename | #Observations | residuals min | residual median | residual max
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
-      if( residuals_per_view.find(id_view) != residuals_per_view.end() )
+      if (residuals_per_view.find(id_view) != residuals_per_view.end())
       {
         const std::vector<double> & residuals = residuals_per_view.at(id_view);
         if (!residuals.empty())
@@ -124,25 +124,19 @@ inline bool Generate_SfM_Report
   // export the SVG histogram
   {
     IndexT residualCount = 0;
-    for (Hash_Map< IndexT, std::vector<double> >::const_iterator
-      it = residuals_per_view.begin();
-      it != residuals_per_view.end();
-      ++it)
+    for (const auto & residual_per_view_it : residuals_per_view)
     {
-      residualCount += it->second.size();
+      residualCount += residual_per_view_it.second.size();
     }
     // Concat per view residual values into one vector
     std::vector<double> residuals(residualCount);
     residualCount = 0;
-    for (Hash_Map< IndexT, std::vector<double> >::const_iterator
-      it = residuals_per_view.begin();
-      it != residuals_per_view.end();
-      ++it)
+    for (const auto & residual_per_view_it : residuals_per_view)
     {
-      std::copy(it->second.begin(),
-        it->second.begin()+it->second.size(),
-        residuals.begin()+residualCount);
-      residualCount += it->second.size();
+      std::copy(residual_per_view_it.second.begin(),
+        residual_per_view_it.second.end(),
+        residuals.begin() + residualCount);
+      residualCount += residual_per_view_it.second.size();
     }
     if (!residuals.empty())
     {
@@ -173,8 +167,7 @@ inline bool Generate_SfM_Report
 
   std::ofstream htmlFileStream(htmlFilename.c_str());
   htmlFileStream << htmlDocStream.getDoc();
-  const bool bOk = !htmlFileStream.bad();
-  return bOk;
+  return !htmlFileStream.good();
 }
 
 } // namespace sfm

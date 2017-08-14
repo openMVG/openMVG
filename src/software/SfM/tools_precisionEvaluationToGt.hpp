@@ -19,7 +19,7 @@
 
 namespace openMVG
 {
-/// Compute a 5DOF rigid transform between the two camera trajectories
+/// Compute a 7DOF rigid transform between the two camera trajectories
 bool computeSimilarity(
   const std::vector<Vec3> & vec_camPosGT,
   const std::vector<Vec3> & vec_camPosComputed,
@@ -92,12 +92,12 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
       << " 255 255 0" << "\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }
 
-/// Compare two camera path (translation and rotation residual after a 5DOF rigid registration)
+/// Compare two camera path (translation and rotation residual after a 7DOF rigid registration)
 /// Export computed statistics to a HTLM stream
 void EvaluteToGT(
   const std::vector<Vec3> & vec_camPosGT,

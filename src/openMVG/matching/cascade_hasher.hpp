@@ -352,7 +352,7 @@ public:
       for (int j = 0; j < candidate_hamming_distances.cols() &&
         (candidate_euclidean_distances.size() < kNumTopCandidates); ++j)
       {
-        for(int k = 0; k < num_descriptors_with_hamming_distance(j) &&
+        for (int k = 0; k < num_descriptors_with_hamming_distance(j) &&
           (candidate_euclidean_distances.size() < kNumTopCandidates); ++k)
         {
           const int candidate_id = candidate_hamming_distances(k, j);

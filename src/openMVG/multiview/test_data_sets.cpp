@@ -115,19 +115,19 @@ void NViewDataSet::ExportToPLY(
      << std::endl << "end_header" << std::endl;
 
     //-- Export 3D point cloud
-    for(Mat3X::Index i = 0; i < _X.cols(); ++i) {
+    for (Mat3X::Index i = 0; i < _X.cols(); ++i) {
       // Exports the point position and point color
       outfile << _X.col(i).transpose()
         << " " << "255 255 255" << std::endl;
     }
 
     //-- Export 3D camera position t = -RC
-    for(size_t i = 0; i < _t.size(); ++i) {
+    for (size_t i = 0; i < _t.size(); ++i) {
       // Exports the camera position and camera color
       outfile << (-_R[i].transpose()*_t[i]).transpose()
         << " " << "0 255 0" << std::endl;
     }
-    for(size_t i = 0; i < _t.size(); ++i) {
+    for (size_t i = 0; i < _t.size(); ++i) {
       Vec3 test;
       test << 0, 0 , 0.4;
       // Exports the camera normal

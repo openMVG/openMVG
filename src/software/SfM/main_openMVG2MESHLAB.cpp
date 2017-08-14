@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 
   outfile <<  " <RasterGroup>" << outfile.widen('\n');
 
-  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     const IntrinsicBase * cam = iterIntrinsic->second.get();
     Mat34 P = cam->get_projective_equivalent(pose);
 
-    for ( int i = 1; i < 3 ; ++i)
+    for ( int i = 1; i < 3; ++i)
       for ( int j = 0; j < 4; ++j)
         P(i, j) *= -1.;
 

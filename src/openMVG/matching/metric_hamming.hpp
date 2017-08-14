@@ -111,21 +111,21 @@ struct Hamming
 // Windows & generic platforms:
 
 #ifdef PLATFORM_64_BIT
-    if(size%sizeof(uint64_t) == 0)
+    if (size%sizeof(uint64_t) == 0)
     {
       const uint64_t* pa = reinterpret_cast<const uint64_t*>(a);
       const uint64_t* pb = reinterpret_cast<const uint64_t*>(b);
       size /= (sizeof(uint64_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt64(*pa ^ *pb);
       }
     }
-    else if(size%sizeof(uint32_t) == 0)
+    else if (size%sizeof(uint32_t) == 0)
     {
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt32(*pa ^ *pb);
       }
     }
@@ -139,12 +139,12 @@ struct Hamming
       }
     }
 #else // PLATFORM_64_BIT
-    if(size%sizeof(uint32_t) == 0)
+    if (size%sizeof(uint32_t) == 0)
     {
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt32(*pa ^ *pb);
       }
     }

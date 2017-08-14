@@ -49,11 +49,8 @@ static std::vector<IndexT> vec_cameras;
 struct GLWImage {
     int width, height;
     GLuint texture;
-    double opacity;
-    int camera;
  };
 
-//static GLWImage m_cur_image;
 static std::vector< GLWImage > m_image_vector;
 
 /* close callback */
@@ -74,7 +71,7 @@ void load_textures()
 
   std::vector<unsigned char> img;
   int w,h,depth;
-  if (ReadImage(srcImage.c_str(),	&img,	&w,	&h,	&depth)) {
+  if (ReadImage(srcImage.c_str(), &img, &w, &h, &depth)) {
     glEnable(GL_TEXTURE_2D);
     //std::cout << "Read image : " << sImageName << "\n" << std::endl;
     glDeleteTextures(1, &m_image_vector[i_cam].texture);
@@ -113,7 +110,7 @@ void reshape( GLFWwindow* window, int width, int height )
 
 void key(GLFWwindow* window, int k, int scancode, int action, int mod)
 {
-  if( action != GLFW_PRESS ) {
+  if (action != GLFW_PRESS ) {
     return;
   }
 
@@ -348,7 +345,7 @@ int main(int argc, char *argv[]) {
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--sfmdata filename, the SfM_Data file to read]\n"
     << std::endl;
@@ -376,7 +373,7 @@ int main(int argc, char *argv[]) {
   }
 
   current_cam = 0;
-  std::cout << "Press left or right key to navigate between cameras ;-)" << std::endl
+  std::cout << "Press left or right key to navigate between cameras." << std::endl
     << "Move viewpoint with Q,W,E,A,S,D" << std::endl
     << "Change Normalized focal (camera cones size) with '+' and '-'" << std::endl
     << "Reset viewpoint position with R" << std::endl
@@ -386,7 +383,7 @@ int main(int argc, char *argv[]) {
   GLFWwindow* window;
   int width, height;
 
-  if( !glfwInit() )
+  if ( !glfwInit() )
   {
     fprintf( stderr, "Failed to initialize GLFW\n" );
     exit( EXIT_FAILURE );
@@ -394,7 +391,7 @@ int main(int argc, char *argv[]) {
 
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
 
-  window = glfwCreateWindow( 1000, 600, "SfmViewer", NULL, NULL );
+  window = glfwCreateWindow( 1000, 600, "SfmViewer", nullptr, nullptr );
   if (!window)
   {
     fprintf( stderr, "Failed to open GLFW window\n" );
@@ -416,7 +413,7 @@ int main(int argc, char *argv[]) {
   load_textures();
 
   // Main loop
-  while( running )
+  while (running)
   {
     // Draw SfM Scene
     draw();

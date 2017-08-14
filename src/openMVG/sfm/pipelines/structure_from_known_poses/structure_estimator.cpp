@@ -12,7 +12,6 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/geometry/pose3.hpp"
-//#include "openMVG/matching/defines.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
@@ -30,7 +29,7 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::features;
 using namespace openMVG::geometry;
-
+using namespace openMVG::matching;
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
@@ -199,14 +198,14 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
       openMVG::tracks::TracksBuilder tracksBuilder;
       {
         PairWiseMatches map_matchesIJK;
-        if (putatives_matches.count(std::make_pair(I,J)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,J)));
+        if (putatives_matches.count({I,J}))
+          map_matchesIJK.insert(*putatives_matches.find({I,J}));
 
-        if (putatives_matches.count(std::make_pair(I,K)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,K)));
+        if (putatives_matches.count({I,K}))
+          map_matchesIJK.insert(*putatives_matches.find({I,K}));
 
-        if (putatives_matches.count(std::make_pair(J,K)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(J,K)));
+        if (putatives_matches.count({J,K}))
+          map_matchesIJK.insert(*putatives_matches.find({J,K}));
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
@@ -247,8 +246,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
               std::advance(iterJ,1);
               std::advance(iterK,2);
 
-              triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
-              triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
+              triplets_matches[{I,J}].emplace_back(iterI->second, iterJ->second);
+              triplets_matches[{J,K}].emplace_back(iterJ->second, iterK->second);
             }
           }
         }

@@ -37,7 +37,7 @@ TEST( MSER , Extraction )
 
   // Export ellipse
   outimg = image;
-  for( size_t i = 0; i < regs.size(); ++i )
+  for (size_t i = 0; i < regs.size(); ++i )
   {
     double ex , ey;
     double Mx, My;
@@ -45,12 +45,12 @@ TEST( MSER , Extraction )
     double Ml , ml;
     regs[i].FitEllipse( ex , ey , Mx , My , mx , my , Ml , ml );
 
-    for( double t = 0; t < 2.0 * 3.141592; t += 0.001 )
+    for (double t = 0; t < 2.0 * 3.141592; t += 0.001 )
     {
       const int x = ex + ( cos( t ) * Mx * Ml + sin( t ) * mx * ml ) * 2.0 + 0.5;
       const int y = ey + ( cos( t ) * My * Ml + sin( t ) * my * ml ) * 2.0 + 0.5;
 
-      if( x >= 0 && y >= 0 && x < image.Width() && y < image.Height() )
+      if (x >= 0 && y >= 0 && x < image.Width() && y < image.Height() )
       {
         outimg( y , x ) = 255;
       }

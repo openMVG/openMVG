@@ -159,7 +159,7 @@ bool exportToOpenMVS(
     for (size_t c=0; c<platform.cameras.size(); ++c) {
       MVS::Interface::Platform::Camera& camera = platform.cameras[c];
       // find one image using this camera
-      MVS::Interface::Image* pImage(NULL);
+      MVS::Interface::Image* pImage(nullptr);
       for (MVS::Interface::Image& image: scene.images)
       {
         if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
@@ -168,7 +168,7 @@ bool exportToOpenMVS(
           break;
         }
       }
-      if (pImage == NULL)
+      if (pImage == nullptr)
       {
         std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
         continue;
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outfile] OpenMVS scene file\n"

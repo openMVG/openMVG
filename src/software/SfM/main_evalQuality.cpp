@@ -21,6 +21,7 @@
 
 using namespace openMVG;
 using namespace openMVG::sfm;
+using namespace openMVG::cameras;
 
 int main(int argc, char **argv)
 {
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--gt] path (where ground truth camera trajectory are saved)\n"
       << "[-c|--computed] path (openMVG SfM_Output directory)\n"
@@ -142,7 +143,7 @@ int main(int argc, char **argv)
   Poses::const_iterator iter_loaded_poses = sfm_data.GetPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
+  for (std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
     iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
   {
     // GT

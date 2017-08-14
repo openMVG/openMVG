@@ -13,7 +13,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -99,9 +98,10 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
       int w = 0, int h = 0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
+      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+        params_({k1})
     {
-      params_ = {k1};
+
     }
 
     ~Pinhole_Intrinsic_Radial_K1() override = default;
@@ -309,9 +309,9 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
       int w = 0, int h = 0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
+      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+        params_({k1, k2, k3})
     {
-      params_ = {k1, k2, k3};
     }
 
     ~Pinhole_Intrinsic_Radial_K3() override = default;

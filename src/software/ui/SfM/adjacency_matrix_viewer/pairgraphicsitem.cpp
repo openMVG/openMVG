@@ -80,7 +80,7 @@ void PairGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->setFont(font);
         painter->save();
         painter->scale(0.8, 0.8);
-        painter->drawText(10, 20, QString("Pair:     %1 ; %2").arg(x).arg(y));
+        painter->drawText(10, 20, QString("Pair:     %1; %2").arg(x).arg(y));
         painter->drawText(10, 60, QString("#Matches: %1").arg(matches_count));
         painter->restore();
     }

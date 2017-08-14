@@ -63,7 +63,7 @@ ComputeX84Threshold(const TYPE* const values, uint32_t size, TYPE mul=TYPE(5.2))
   for (size_t i=0; i<size; ++i)
     data[i] = std::abs(values[i]-median);
   std::nth_element(data.begin(), mid, data.end());
-  return std::make_pair(median, mul*(*mid));
+  return {median, mul*(*mid)};
 } // ComputeX84Threshold
 
 
@@ -108,8 +108,8 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
     boost::add_edge(relR.i, relR.j, - relR.weight, g);
-    mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
-    mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
+    mapIJ2R[{relR.i, relR.j}] = relR.Rij;
+    mapIJ2R[{relR.j, relR.i}] = relR.Rij.transpose();
   }
   // find the minimum spanning tree
   const size_t nViews = boost::num_vertices(g);
@@ -145,8 +145,8 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   map_EdgeMap map_edgeMap(g);
   for (size_t p = 0; p < RelRs.size(); ++p) {
     const RelativeRotation& relR = RelRs[p];
-    mapIJ2R[std::make_pair(relR.i, relR.j)] = relR.Rij;
-    mapIJ2R[std::make_pair(relR.j, relR.i)] = relR.Rij.transpose();
+    mapIJ2R[{relR.i, relR.j}] = relR.Rij;
+    mapIJ2R[{relR.j, relR.i}] = relR.Rij.transpose();
 
     // add edge to the graph
     graph_t::Edge edge =  g.addEdge(map_index_to_node[relR.i], map_index_to_node[relR.j]);
@@ -161,7 +161,7 @@ uint32_t FindMaximumSpanningTree(const RelativeRotations& RelRs, graph_t& g, Map
   minGraph.resize(nViews);
 
   //E-- Export compute MST
-  for(size_t i= 0; i < tree_edge_vec.size(); i++)
+  for (size_t i= 0; i < tree_edge_vec.size(); i++)
   {
     minGraph[g.id(g.u(tree_edge_vec[i]))].edges.push_back(g.id(g.v(tree_edge_vec[i])));
     minGraph[g.id(g.v(tree_edge_vec[i]))].edges.push_back(g.id(g.u(tree_edge_vec[i])));
@@ -231,7 +231,7 @@ double RelRotationAvgError
       boost::accumulators::tag::mean,
       boost::accumulators::tag::max> > acc;
 
-  for(int i=0; i < RelRs.size(); ++i) {
+  for (int i=0; i < RelRs.size(); ++i) {
     const RelativeRotation& relR = RelRs[i];
     acc(openMVG::FrobeniusNorm(relR.Rij  - (Rs[relR.j]*Rs[relR.i].transpose())));
   }
@@ -284,13 +284,13 @@ void InitRotationsMST
     const Link& link = stack.front();
     const Node& node = minGraph[link.ID];
 
-    for(Node::InternalType::const_iterator pEdge = node.edges.begin();
+    for (Node::InternalType::const_iterator pEdge = node.edges.begin();
       pEdge != node.edges.end(); ++pEdge) {
         const size_t edge = *pEdge;
         if (edge == link.parentID) {
           // compute the global rotation for the current node
           assert(mapIJ2R.find(std::make_pair(link.parentID, link.ID)) != mapIJ2R.end());
-          const Matrix3x3& Rij = mapIJ2R[std::make_pair(link.parentID, link.ID)];
+          const Matrix3x3& Rij = mapIJ2R[{link.parentID, link.ID}];
           Rs[link.ID] = Rij * Rs[link.parentID];
         } else {
           // add edge to the processing queue

@@ -86,7 +86,7 @@ inline std::ostream& printT(std::ostream& os, T *tab, uint32_t N)
 template<>
 inline std::ostream& printT<unsigned char>(std::ostream& os, unsigned char *tab, uint32_t N)
 {
-  for(uint32_t i=0; i < N; ++i)
+  for (uint32_t i=0; i < N; ++i)
     os << static_cast<int>(tab[i]) << " ";
   return os;
 }
@@ -94,7 +94,7 @@ inline std::ostream& printT<unsigned char>(std::ostream& os, unsigned char *tab,
 template<typename T>
 inline std::istream& readT(std::istream& is, T *tab, uint32_t N)
 {
-  for(uint32_t i=0; i<N; ++i)
+  for (uint32_t i=0; i<N; ++i)
     is >> tab[i];
   return is;
 }
@@ -103,7 +103,7 @@ template<>
 inline std::istream& readT<unsigned char>(std::istream& is, unsigned char *tab, uint32_t N)
 {
   int temp = -1;
-  for(uint32_t i=0; i < N; ++i){
+  for (uint32_t i=0; i < N; ++i){
     is >> temp; tab[i] = static_cast<unsigned char>(temp);
   }
   return is;

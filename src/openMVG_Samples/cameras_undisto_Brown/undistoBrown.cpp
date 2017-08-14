@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
       << "[-i|--imadir - Input path]\n"
       << "[-o|--outdir - path for the undistorted JPG files]\n"
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
     if (res == 1)
     {
-      switch(depth)
+      switch (depth)
       {
         case 1: //Greyscale
           {

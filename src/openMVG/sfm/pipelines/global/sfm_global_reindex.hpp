@@ -25,7 +25,7 @@ void reindex
 {
   // get a unique set of Ids
   std::set<size_t> unique_id;
-  for(typename IterablePairs::const_iterator iter = pairs.begin();
+  for (typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
     unique_id.insert(iter->first);
@@ -33,7 +33,7 @@ void reindex
   }
 
   // Build the Forward and Backward mapping
-  for(typename IterablePairs::const_iterator iter = pairs.begin();
+  for (typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
     if (reindex_forward.find(iter->first) == reindex_forward.end())

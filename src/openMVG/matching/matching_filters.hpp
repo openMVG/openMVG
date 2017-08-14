@@ -50,7 +50,7 @@ inline void NNdistanceRatio
   vec_ratioOkIndex.clear();
   vec_ratioOkIndex.reserve(n/NN);
   DataInputIterator iter = first;
-  for(size_t i=0; i < n/NN; ++i, std::advance(iter, NN))
+  for (size_t i=0; i < n/NN; ++i, std::advance(iter, NN))
   {
     DataInputIterator iter2 = iter;
     std::advance(iter2, 1);
@@ -206,7 +206,7 @@ inline void Filter
   {
     std::sort(vec_outIndex.begin(), vec_outIndex.end());
     auto end = std::unique(vec_outIndex.begin(), vec_outIndex.end());
-    if(end != vec_outIndex.end()) {
+    if (end != vec_outIndex.end()) {
       vec_outIndex.erase(end, vec_outIndex.end());
     }
   }

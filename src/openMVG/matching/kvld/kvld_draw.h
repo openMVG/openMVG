@@ -26,11 +26,11 @@ void getKVLDMask(
   const std::vector< bool >& vec_valide,
   const openMVG::Mat& mat_E)
 {
-  for( size_t it1 = 0; it1 < vec_matches.size() - 1; it1++ )
+  for (size_t it1 = 0; it1 < vec_matches.size() - 1; it1++ )
   {
-    for( size_t it2 = it1 + 1; it2 < vec_matches.size(); it2++ )
+    for (size_t it2 = it1 + 1; it2 < vec_matches.size(); it2++ )
     {
-      if( vec_valide[ it1 ] && vec_valide[ it2 ] && mat_E( it1, it2 ) >= 0 )
+      if (vec_valide[ it1 ] && vec_valide[ it2 ] && mat_E( it1, it2 ) >= 0 )
       {
         const features::SIOPointFeature & l1 = vec_F1[ vec_matches[ it1 ].first ];
         const features::SIOPointFeature & l2 = vec_F1[ vec_matches[ it2 ].first ];

@@ -17,8 +17,6 @@
 namespace openMVG{
 namespace sfm{
 
-using namespace openMVG::trifocal::kernel;
-
 /// AContrario Kernel to solve a translation triplet & structure problem
 template <typename SolverArg,
           typename ErrorArg,
@@ -61,8 +59,7 @@ public:
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
 
     // Create a model from the points
-    Solver::Solve(
-                  ExtractColumns(x1n_, samples),
+    Solver::Solve(ExtractColumns(x1n_, samples),
                   ExtractColumns(x2n_, samples),
                   ExtractColumns(x3n_, samples),
                   vec_KR_, models, ThresholdUpperBound_);

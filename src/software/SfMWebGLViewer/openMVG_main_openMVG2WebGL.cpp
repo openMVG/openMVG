@@ -220,7 +220,7 @@ bool ColorizeTracks(
 bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 {
   std::ofstream file( sOutFile );
-  if( ! file )
+  if ( ! file )
   {
     std::cerr << std::endl;
     std::cerr << "Could not create : " << sOutFile << std::endl;
@@ -233,10 +233,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model points
   file << "modelPos=[" << std::endl;
-  for( size_t id_point = 0; id_point < vec_3dPoints.size(); ++id_point )
+  for (size_t id_point = 0; id_point < vec_3dPoints.size(); ++id_point)
   {
     file << vec_3dPoints[id_point](0) << " , " << vec_3dPoints[id_point](1) << " , " << vec_3dPoints[id_point](2);
-    if( id_point +1 != vec_3dPoints.size() )
+    if (id_point +1 != vec_3dPoints.size() )
     {
       file << " , ";
     }
@@ -245,10 +245,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model normal
   file << "modelNor=[" << std::endl;
-  for( size_t id_nor = 0; id_nor < vec_normals.size(); ++id_nor )
+  for (size_t id_nor = 0; id_nor < vec_normals.size(); ++id_nor)
   {
     file << vec_normals[ id_nor ](0) << " , " << vec_normals[ id_nor ](1) << " , " << vec_normals[ id_nor ](2);
-    if( id_nor + 1 != vec_normals.size() )
+    if (id_nor + 1 != vec_normals.size() )
     {
       file << " , ";
     }
@@ -257,10 +257,10 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Model color
   file << "modelCol=[" << std::endl;
-  for( size_t id_point = 0; id_point < vec_tracksColor.size();  ++id_point )
+  for (size_t id_point = 0; id_point < vec_tracksColor.size();  ++id_point)
   {
     file << vec_tracksColor[id_point](0) << " , " << vec_tracksColor[id_point](1) << " , " << vec_tracksColor[id_point](2);
-    if( id_point + 1 != vec_tracksColor.size() )
+    if (id_point + 1 != vec_tracksColor.size() )
     {
       file << " , ";
     }
@@ -269,7 +269,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Camera positions
   file << "cameraPos=[" << std::endl;
-  for( auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end(); )
+  for (auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end();)
   {
     const View * view = sfm_data.GetViews().at(it->first).get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -289,7 +289,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
     // Force a pinhole ? (TODO : need to work with another type of camera)
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
     {
       ++it;
       continue;
@@ -301,7 +301,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
     const Vec3 pos = f.cones[0];
     file << "[" << pos[0] << "," << pos[1] << "," << pos[2] << "]";
 
-    if( ++it != sfm_data.GetViews().end() )
+    if ( ++it != sfm_data.GetViews().end() )
     {
       file << ",";
     }
@@ -311,7 +311,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
   // Camera image planes
   file << "cameraImagePlanes=[" << std::endl;
-  for( auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end(); )
+  for (auto it = sfm_data.GetViews().begin(); it != sfm_data.GetViews().end();)
   {
     const View * view = sfm_data.GetViews().at(it->first).get();
     if (!sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -331,7 +331,7 @@ bool ExportSceneData( const SfM_Data & sfm_data, const std::string & sOutFile )
 
     // Force a pinhole ? (TODO : need to work with another type of camera)
     const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-    if (cam == NULL)
+    if (cam == nullptr)
     {
       ++it;
       continue;
@@ -369,7 +369,7 @@ bool CopyFile( const std::string & inputFolder , const std::string & inputName ,
                const std::string & outputSubFolder , const std::string & outputName )
 {
   std::string outputFilename;
-  if( outputSubFolder.length() > 0 )
+  if (outputSubFolder.length() > 0 )
   {
     outputFilename = stlplus::create_filespec( stlplus::folder_append_separator( outputFolder ) + outputSubFolder , outputName );
   }
@@ -383,12 +383,12 @@ bool CopyFile( const std::string & inputFolder , const std::string & inputName ,
 
   // Prefer Build path
   std::string usablePath = inputFilename1;
-  if( ! stlplus::file_exists( inputFilename1 ) )
+  if ( ! stlplus::file_exists( inputFilename1 ) )
   {
     usablePath = inputFilename2;
   }
 
-  if( ! stlplus::file_copy( usablePath , outputFilename ) )
+  if ( ! stlplus::file_copy( usablePath , outputFilename ) )
   {
     std::cerr << "Error copying " << inputName << " file" << std::endl;
     return false;
@@ -440,13 +440,13 @@ bool ExportToWebGL( const std::string & sSfM_Data_Filename , const std::string &
   stlplus::folder_create( stlplus::folder_append_separator(sOutDir) + "style" );
   stlplus::folder_create( stlplus::folder_append_separator(sOutDir) + "model" );
 
-  if( ! stlplus::is_folder( stlplus::folder_append_separator(sOutDir) + "common") ||
+  if (! stlplus::is_folder( stlplus::folder_append_separator(sOutDir) + "common") ||
       ! stlplus::is_folder( stlplus::folder_append_separator(sOutDir) + "style") ||
       ! stlplus::is_folder( stlplus::folder_append_separator(sOutDir) + "model" ) )
   {
     bOk = false;
   }
-  if( ! bOk )
+  if ( ! bOk )
   {
     std::cerr << "Could not create directory structure : \"" << sOutDir << "\"" << std::endl;
     return false;
@@ -480,7 +480,7 @@ bool ExportToWebGL( const std::string & sSfM_Data_Filename , const std::string &
   };
 
   // Copy the js files
-  for( int id_file = 0; id_file < StaticArraySize( files_to_copy ) / 5; ++id_file )
+  for (int id_file = 0; id_file < StaticArraySize( files_to_copy ) / 5; ++id_file)
   {
     const std::string & input_folder = files_to_copy[ 5 * id_file ];
     const std::string & input_name   = files_to_copy[ 5 * id_file + 1 ];
@@ -488,7 +488,7 @@ bool ExportToWebGL( const std::string & sSfM_Data_Filename , const std::string &
     const std::string & output_subfolder = files_to_copy[ 5 * id_file + 3 ];
     const std::string & output_name = files_to_copy[ 5 * id_file + 4 ];
 
-    if( ! CopyFile( input_folder , input_name , output_folder , output_subfolder , output_name ) )
+    if ( ! CopyFile( input_folder , input_name , output_folder , output_subfolder , output_name ) )
     {
       return false;
     }
@@ -516,7 +516,7 @@ int main( int argc , char ** argv )
       }
       cmd.process(argc, argv);
   }
-  catch(const std::string& s)
+  catch (const std::string& s)
   {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
@@ -531,7 +531,7 @@ int main( int argc , char ** argv )
   std::cout << "Input file : " << sSfM_Data_Filename << std::endl;
   std::cout << "Output dir : " << sOutDir << std::endl;
 
-  if( ! ExportToWebGL( sSfM_Data_Filename , sOutDir ) )
+  if ( ! ExportToWebGL( sSfM_Data_Filename , sOutDir ) )
   {
     std::cerr << "There was an error during export" << std::endl;
     exit( EXIT_FAILURE );
