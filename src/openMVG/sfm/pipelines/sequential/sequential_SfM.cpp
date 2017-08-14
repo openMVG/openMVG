@@ -154,7 +154,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   {
     eraseUnstablePosesAndObservations(sfm_data_);
   }
-  
+
   //-- Reconstruction done.
   //-- Display some statistics
   std::cout << "\n\n-------------------------------" << "\n"
