@@ -36,7 +36,7 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     * @param green value
     * @param blue value
     */
-    inline Rgb( T red, T green, T blue )
+    explicit inline Rgb( T red, T green, T blue )
       : Base( red, green, blue )
     {
 
@@ -142,7 +142,7 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     friend std::ostream& operator<<( std::ostream& os, const Rgb& col )
     {
       os << " {";
-      for( int i = 0; i < 2; ++i )
+      for (int i = 0; i < 2; ++i )
       {
         os << col( i ) << ",";
       }
@@ -207,7 +207,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     * @param blue component value
     * @param alpha component value
     */
-    inline Rgba( const T red, const T green, const T blue, const T alpha = static_cast<T>( 1 ) )
+    inline explicit Rgba( const T red, const T green, const T blue, const T alpha = static_cast<T>( 1 ) )
       : Base( red, green, blue, alpha )
     {
 
@@ -238,7 +238,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     * @brief Copy constructor
     * @param val Source RGBA value
     */
-    inline Rgba( const RGBColor & val )
+    explicit inline Rgba( const RGBColor & val )
       : Base( val.r(), val.g(), val.b(), static_cast<T>( 1 ) )
     {
 
@@ -332,7 +332,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     friend std::ostream& operator<<( std::ostream& os, const Rgba& col )
     {
       os << " {";
-      for( int i = 0; i < 3; ++i )
+      for (int i = 0; i < 3; ++i )
       {
         os << col( i ) << ",";
       }

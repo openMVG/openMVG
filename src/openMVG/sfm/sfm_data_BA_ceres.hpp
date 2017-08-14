@@ -48,7 +48,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     BA_Ceres_options ceres_options_;
 
   public:
-  Bundle_Adjustment_Ceres
+  explicit Bundle_Adjustment_Ceres
   (
     Bundle_Adjustment_Ceres::BA_Ceres_options options =
     std::move(BA_Ceres_options())
@@ -61,7 +61,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     // the SfM scene to refine
     sfm::SfM_Data & sfm_data,
     // tell which parameter needs to be adjusted
-    const Optimize_Options options
+    const Optimize_Options & options
   ) override;
 };
 

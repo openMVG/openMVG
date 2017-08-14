@@ -9,6 +9,7 @@
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -23,8 +24,6 @@
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
-
-#include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -67,7 +66,7 @@ int main() {
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer);
+  std::unique_ptr<Image_describer> image_describer(new SIFT_Anatomy_Image_describer);
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
@@ -273,7 +272,7 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K)
   // Load the K matrix
   ifstream in;
   in.open( fileName.c_str(), ifstream::in);
-  if(in.is_open())  {
+  if (in.is_open())  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)
         in >> K(j,i);

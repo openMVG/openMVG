@@ -50,7 +50,7 @@ namespace openMVG
       */
       static inline PixelNeighborsDirection NextDirection( const PixelNeighborsDirection dir , const int neighboring_type )
       {
-        if( neighboring_type == MSERExtractor::MSER_4_CONNECTIVITY )
+        if (neighboring_type == MSERExtractor::MSER_4_CONNECTIVITY )
         {
           // Assuming dir is even
           return PixelNeighborsDirection( ( static_cast<int>( dir ) + 2 ) );
@@ -96,7 +96,7 @@ namespace openMVG
         nx = x;
         ny = y;
 
-        switch( dir )
+        switch (dir)
         {
         case PIXEL_TOP_LEFT :
         {
@@ -142,14 +142,14 @@ namespace openMVG
           ny += 1;
           break;
         }
-        default :
+        default:
         {
           std::cerr << "Unhandled pixel direction" << std::endl;
           return false;
         }
         }
 
-        if( ! ValidPixel( nx , ny , img_width , img_height ) )
+        if (! ValidPixel( nx , ny , img_width , img_height ) )
         {
           nx = -1;
           ny = -1;
@@ -209,7 +209,7 @@ namespace openMVG
         // List of processed pixels (maybe we can use a more efficient structure)
         std::vector< std::vector< bool > > processed;
         processed.resize( img.Width() );
-        for( int i = 0; i < img.Width(); ++i )
+        for (int i = 0; i < img.Width(); ++i )
         {
           processed[ i ].resize( img.Height() );
           std::fill( processed[ i ].begin() , processed[ i ].end() , false );
@@ -238,12 +238,12 @@ namespace openMVG
         int priority = 256;
 
         // Start process
-        while( 1 )
+        while (1)
         {
           bool restart = false;
 
           // Process neighboring to see if there's something to search with lower grayscale level
-          for(  PixelNeighborsDirection curDir = cur_pix.edge_index;
+          for ( PixelNeighborsDirection curDir = cur_pix.edge_index;
                 curDir <= PIXEL_BOTTOM_RIGHT;
                 curDir = NextDirection( curDir , m_connectivity ) )
           {
@@ -251,7 +251,7 @@ namespace openMVG
             GetNeighbor( cur_pix.pix_x , cur_pix.pix_y , curDir , img.Width() , img.Height() , nx , ny );
 
             // Pixel was not processed before
-            if( ValidPixel( nx , ny , img.Width() , img.Height() ) && ! processed[ nx ][ ny ] )
+            if (ValidPixel( nx , ny , img.Width() , img.Height() ) && ! processed[ nx ][ ny ] )
             {
               const int nLevel = img( ny , nx );
               processed[ nx ][ ny ] = true;
@@ -264,7 +264,7 @@ namespace openMVG
               n_elt.edge_index = PIXEL_RIGHT;
 
               // Now look from which pixel do we have to continue
-              if( nLevel >= cur_pix.pix_level )
+              if (nLevel >= cur_pix.pix_level )
               {
                 // Continue from the same pixel
                 boundary[ nLevel ].push_back( n_elt );
@@ -289,7 +289,7 @@ namespace openMVG
             }
           }
           // Do we have to restart from a new pixel ?
-          if( restart )
+          if (restart )
           {
             // If so it's that because we found a lower grayscale value so let's start a new region
             regionStack.push_back( new MSERRegion( cur_pix.pix_level , cur_pix.pix_x , cur_pix.pix_y ) );
@@ -301,7 +301,7 @@ namespace openMVG
           regionStack.back()->AppendPixel( cur_pix.pix_x , cur_pix.pix_y );
 
           // End of the process : we have no boundary region, compute MSER from graph
-          if( priority == 256 )
+          if (priority == 256 )
           {
             regionStack.back()->ComputeMSER( m_delta , minRegArea , maxRegArea , m_max_variation , m_min_diversity , regions );
             break;
@@ -311,16 +311,16 @@ namespace openMVG
           boundary[ priority ].pop_back();
 
           // Get the next pixel level
-          while( boundary[ priority ].empty() && ( priority < 256 ) )
+          while (boundary[ priority ].empty() && ( priority < 256 ))
           {
             ++priority;
           }
 
           // Clear the stack
-          int newLevel = next_pix.pix_level;
+          const int newLevel = next_pix.pix_level;
 
           // Process the current stack of pixels if the next processing pixel is not at the same curent level
-          if( newLevel != cur_pix.pix_level )
+          if (newLevel != cur_pix.pix_level )
           {
             // Try to merge the regions to fomr a tree
             ProcessStack( newLevel , next_pix.pix_x , next_pix.pix_y , regionStack );
@@ -331,7 +331,7 @@ namespace openMVG
         }
 
         // Clear region stack created so far
-        for( size_t i = 0; i < regionStack.size(); ++i )
+        for (size_t i = 0; i < regionStack.size(); ++i )
         {
           delete regionStack[ i ];
         }
@@ -350,7 +350,7 @@ namespace openMVG
           MSERRegion * top = regionStack.back();
           regionStack.pop_back();
 
-          if( nextLevel < regionStack.back()->m_level )
+          if (nextLevel < regionStack.back()->m_level )
           {
             regionStack.push_back( new MSERRegion( nextLevel , pixel_x , pixel_y ) );
 
@@ -362,7 +362,7 @@ namespace openMVG
 
 
         }
-        while( nextLevel > regionStack.back()->m_level );
+        while (nextLevel > regionStack.back()->m_level);
       }
 
 

@@ -50,7 +50,7 @@ void EncodeTi_from_tij
 //-  of relative motions is kept and colinear motion is supported).
 struct Tifromtij_ConstraintBuilder
 {
-  Tifromtij_ConstraintBuilder
+  explicit Tifromtij_ConstraintBuilder
   (
     const std::vector< openMVG::RelativeInfo_Vec > & vec_relative
   );

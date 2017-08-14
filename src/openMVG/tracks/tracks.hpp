@@ -51,8 +51,6 @@
 
 namespace openMVG  {
 
-using namespace openMVG::matching;
-
 namespace tracks  {
 
 // Data structure to store a track: collection of {ImageId,FeatureId}
@@ -69,7 +67,7 @@ struct TracksBuilder
   UnionFind uf_tree;
 
   /// Build tracks for a given series of pairWise matches
-  void Build( const PairWiseMatches &  map_pair_wise_matches)
+  void Build( const matching::PairWiseMatches &  map_pair_wise_matches)
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
@@ -79,7 +77,7 @@ struct TracksBuilder
     {
       const auto & I = iter.first.first;
       const auto & J = iter.first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
+      const std::vector<matching::IndMatch> & vec_FilteredMatches = iter.second;
 
       // Retrieve all shared features and add them to a set
       for ( const auto & cur_filtered_match : vec_FilteredMatches )
@@ -111,8 +109,8 @@ struct TracksBuilder
     {
       const auto & I = iter.first.first;
       const auto & J = iter.first.second;
-      const std::vector<IndMatch> & vec_FilteredMatches = iter.second;
-      for (const IndMatch & match : vec_FilteredMatches)
+      const std::vector<matching::IndMatch> & vec_FilteredMatches = iter.second;
+      for (const matching::IndMatch & match : vec_FilteredMatches)
       {
         const indexedFeaturePair pairI(I, match.i_);
         const indexedFeaturePair pairJ(J, match.j_);
@@ -222,7 +220,7 @@ struct SharedTrackVisibilityHelper
 
 public:
 
-  SharedTrackVisibilityHelper
+  explicit SharedTrackVisibilityHelper
   (
     const STLMAPTracks & tracks
   ): tracks_(tracks)
@@ -405,10 +403,10 @@ struct TracksUtilsMap
   (
     const STLMAPTracks & map_tracks,
     const std::vector<IndexT> & vec_filterIndex,
-    std::vector<IndMatch> * pvec_index
+    std::vector<matching::IndMatch> * pvec_index
   )
   {
-    std::vector<IndMatch> & vec_indexref = *pvec_index;
+    std::vector<matching::IndMatch> & vec_indexref = *pvec_index;
     vec_indexref.clear();
     for ( const auto & id : vec_filterIndex )
     {

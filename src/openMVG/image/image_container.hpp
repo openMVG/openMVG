@@ -17,13 +17,13 @@ namespace image
 {
 
 /**
-* @brief Generic image class
+* @brief Generic image class,
+* Image data are stored by inheritance of an Eigen matrix.
 * @tparam T Pixel type
 */
 template <typename T>
 class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
 {
-
   public:
 
     /// Pixel data type
@@ -72,7 +72,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @brief Move constructor
     * @param src Source image
     */
-    inline Image( Base && src )
+    explicit inline Image( Base && src )
       : Base( std::move( src ) )
     {
 
@@ -225,10 +225,6 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     */
     template< typename T1>
     friend Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB );
-
-
-  protected :
-    //-- Image data are stored by inheritance of a matrix
 };
 
 /**

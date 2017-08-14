@@ -43,7 +43,7 @@ void visibleCamPosToSVGSurface
 )
 {
   openMVG::Mat points(3, vec_Ci.size());
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
+  for (size_t i = 0; i  < vec_Ci.size(); ++i)
   {
     points.col(i) = vec_Ci[i];
   }
@@ -55,7 +55,7 @@ void visibleCamPosToSVGSurface
   const double yfactor = sqrt(2.0 / variance(2));
 
   std::vector<openMVG::Vec3> out = vec_Ci;
-  for(size_t i = 0; i  < vec_Ci.size(); ++i)
+  for (size_t i = 0; i  < vec_Ci.size(); ++i)
   {
     out[i](0) = ((out[i](0) * xfactor) + -xfactor * mean(0)) * 30 + 100;
     out[i](2) = ((out[i](2) * yfactor) + -yfactor * mean(2)) * 30 + 100;
@@ -65,7 +65,7 @@ void visibleCamPosToSVGSurface
   {
     const double size = 200;
     svg::svgDrawer svgSurface_GT(size,size);
-    for(size_t i = 0; i  < vec_Ci.size(); ++i)
+    for (size_t i = 0; i  < vec_Ci.size(); ++i)
     {
       svgSurface_GT.drawCircle(out[i](0), out[i](2),
                                3,svg::svgStyle().stroke("black",0.2).fill("red"));

@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-o|--output_file] PLY file to store the camera frustums as triangle meshes.\n"
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
   // Assert that we can create the output directory/file
   if (!stlplus::folder_exists( stlplus::folder_part(sOutFile) ))
-    if(!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
+    if (!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
       return EXIT_FAILURE;
 
   // If sfm_data have not structure, cameras are displayed as tiny normalized cones

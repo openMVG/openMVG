@@ -26,6 +26,7 @@
 
 #include <cereal/details/helpers.hpp>
 
+#include <atomic>
 #include <cstdlib>
 #include <fstream>
 #include <string>
@@ -43,7 +44,7 @@ using namespace std;
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
+  if (sPreset == "NORMAL")
     preset = features::NORMAL_PRESET;
   else
   if (sPreset == "HIGH")
@@ -88,7 +89,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file \n"
       << "[-o|--outdir path] \n"
@@ -244,22 +245,13 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray, globalMask;
+    Image<unsigned char> imageGray;
 
-    const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if (stlplus::file_exists(sGlobalMask_filename))
-    {
-      if (ReadImage(sGlobalMask_filename.c_str(), &globalMask))
-      {
-        std::cout
-          << "Feature extraction will use a GLOBAL MASK:\n"
-          << sGlobalMask_filename << std::endl;
-      }
-    }
-
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
+    C_Progress_display my_progress_bar(sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
 
+    // Use a boolean to track if we must stop feature extraction
+    std::atomic<bool> preemptive_exit(false);
 #ifdef OPENMVG_USE_OPENMP
     const unsigned int nb_max_thread = omp_get_max_threads();
 
@@ -269,9 +261,9 @@ int main(int argc, char **argv)
         omp_set_num_threads(nb_max_thread);
     }
 
-    #pragma omp parallel for schedule(dynamic) if(iNumThreads > 0) private(imageGray)
+    #pragma omp parallel for schedule(dynamic) if (iNumThreads > 0) private(imageGray)
 #endif
-    for(int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
+    for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
     {
       Views::const_iterator iterViews = sfm_data.views.begin();
       std::advance(iterViews, i);
@@ -281,32 +273,65 @@ int main(int argc, char **argv)
         sFeat = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "feat"),
         sDesc = stlplus::create_filespec(sOutDir, stlplus::basename_part(sView_filename), "desc");
 
-      //If features or descriptors file are missing, compute them
-      if (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc))
+      // If features or descriptors file are missing, compute them
+      if (!preemptive_exit && (bForce || !stlplus::file_exists(sFeat) || !stlplus::file_exists(sDesc)))
       {
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
+        //
+        // Look if there is occlusion feature mask
+        //
         Image<unsigned char> * mask = nullptr; // The mask is null by default
 
-        const std::string sImageMask_filename =
-          stlplus::create_filespec(sfm_data.s_root_path,
-            stlplus::basename_part(sView_filename) + "_mask", "png");
+        const std::string
+          mask_filename_local =
+            stlplus::create_filespec(sfm_data.s_root_path,
+              stlplus::basename_part(sView_filename) + "_mask", "png"),
+          mask__filename_global =
+            stlplus::create_filespec(sfm_data.s_root_path, "mask", "png");
 
         Image<unsigned char> imageMask;
-        if (stlplus::file_exists(sImageMask_filename))
-          ReadImage(sImageMask_filename.c_str(), &imageMask);
-
-        // The mask point to the globalMask, if a valid one exists for the current image
-        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
-          mask = &globalMask;
-        // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
-          mask = &imageMask;
+        // Try to read the local mask
+        if (stlplus::file_exists(mask_filename_local))
+        {
+          if (!ReadImage(mask_filename_local.c_str(), &imageMask))
+          {
+            std::cerr << "Invalid mask: " << mask_filename_local << std::endl
+                      << "Stopping feature extraction." << std::endl;
+            preemptive_exit = true;
+            continue;
+          }
+          // Use the local mask only if it fits the current image size
+          if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+            mask = &imageMask;
+        }
+        else
+        {
+          // Try to read the global mask
+          if (stlplus::file_exists(mask__filename_global))
+          {
+            if (!ReadImage(mask__filename_global.c_str(), &imageMask))
+            {
+              std::cerr << "Invalid mask: " << mask__filename_global << std::endl
+                        << "Stopping feature extraction." << std::endl;
+              preemptive_exit = true;
+              continue;
+            }
+            // Use the global mask only if it fits the current image size
+            if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+              mask = &imageMask;
+          }
+        }
 
         // Compute features and descriptors and export them to files
         auto regions = image_describer->Describe(imageGray, mask);
-        image_describer->Save(regions.get(), sFeat, sDesc);
+        if (regions && !image_describer->Save(regions.get(), sFeat, sDesc)) {
+          std::cerr << "Cannot save regions for images: " << sView_filename << std::endl
+                    << "Stopping feature extraction." << std::endl;
+          preemptive_exit = true;
+          continue;
+        }
       }
       ++my_progress_bar;
     }

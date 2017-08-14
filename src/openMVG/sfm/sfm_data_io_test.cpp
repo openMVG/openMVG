@@ -28,7 +28,7 @@ SfM_Data create_test_scene(IndexT viewsCount, bool bSharedIntrinsic)
   SfM_Data sfm_data;
   sfm_data.s_root_path = "./";
 
-  for(IndexT i = 0; i < viewsCount; ++i)
+  for (IndexT i = 0; i < viewsCount; ++i)
   {
     // Add views
     std::ostringstream os;

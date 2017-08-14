@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir] path.\n"
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
       iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();
@@ -103,13 +103,13 @@ int main(int argc, char **argv)
         << f / largerDim << " 0 0 1 " << pp(0) / w << " " << pp(1) / h;
     outfile.close();
 
-    if(cam->have_disto())
+    if (cam->have_disto())
       bOneHaveDisto = true;
   }
 
   const std::string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
   const std::string sQuitMsg = std::string("Your SfM_Data file was succesfully converted!\n") +
-	  "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
+    "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
   std::cout << sQuitMsg << std::endl;
   return EXIT_SUCCESS;
 }

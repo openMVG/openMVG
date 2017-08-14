@@ -318,9 +318,9 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   // (use a smaller weight since those rotations are less accurate)
   for (size_t i = 0; i < vec_relativeRotEstimate.size(); ++i)
   {
-    if( vec_relativeRotEstimate[i].i == 0 && vec_relativeRotEstimate[i].j == 1)
+    if (vec_relativeRotEstimate[i].i == 0 && vec_relativeRotEstimate[i].j == 1)
       vec_relativeRotEstimate[i] = RelativeRotation(0, 1, RotationAroundX(D2R(0.1)), 0.5);
-    if( vec_relativeRotEstimate[i].i == 2 && vec_relativeRotEstimate[i].j == 3)
+    if (vec_relativeRotEstimate[i].i == 2 && vec_relativeRotEstimate[i].j == 3)
       vec_relativeRotEstimate[i] = RelativeRotation(2, 3, RotationAroundX(D2R(0.6)), 0.5);
   }
 
@@ -346,7 +346,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
   RelativeRotations vec_relativeRotEstimateTemp;
   for (size_t i = 0; i < vec_inliers.size(); ++i)
   {
-    if( vec_inliers[i] == 1)
+    if (vec_inliers[i] == 1)
       vec_relativeRotEstimateTemp.push_back(vec_relativeRotEstimate[i]);
   }
   vec_relativeRotEstimate.swap(vec_relativeRotEstimateTemp);

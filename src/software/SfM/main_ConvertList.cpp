@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-o|--outputDirectory]\n"
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     // Expected properties for each image
     double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
 
-    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
+    std::shared_ptr<IntrinsicBase> intrinsic;
 
     const openMVG::SfMIO::IntrinsicCameraInfo & camIntrinsic = vec_intrinsicGroups[camInfo.m_intrinsicId];
     width = camIntrinsic.m_w;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
       ppy = camIntrinsic.m_K(1,2);
       focal = camIntrinsic.m_focal;
       // Create the user defined camera model corresponding to the intrinsic loaded data
-      switch(e_User_camera_model)
+      switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>(width, height, focal, ppx, ppy);
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
     views[v.id_view] = std::make_shared<View>(v);
 
     // Add intrinsic related to the image (if any)
-    if (intrinsic == NULL)
+    if (intrinsic == nullptr)
     {
       //Since the view have invalid intrinsic data
       // (export the view, with an invalid intrinsic field value)

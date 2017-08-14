@@ -9,6 +9,7 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_concat.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/svg_matches.hpp"
@@ -30,9 +31,6 @@
 //- ACRANSAC
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-
-// Include to an Image Describer (SIFT)
-#include "nonFree/sift/SIFT_describer.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -80,7 +78,7 @@ int main() {
   // Detect regions thanks to an image_describer
   //--
   std::unique_ptr<Image_describer> image_describer
-    (new SIFT_Image_describer(SIFT_Image_describer::Params(-1)));
+    (new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params(-1)));
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);

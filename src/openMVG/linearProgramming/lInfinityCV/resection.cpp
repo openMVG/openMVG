@@ -167,8 +167,8 @@ bool Resection_L1_ConstraintBuilder::Build
   const int NParams = 4 * 2 + 3;
 
   constraint.nbParams_ = NParams;
-  constraint.vec_bounds_ = { std::make_pair(std::numeric_limits<double>::lowest(),
-                                            std::numeric_limits<double>::max()) };
+  constraint.vec_bounds_ = { {std::numeric_limits<double>::lowest(),
+                              std::numeric_limits<double>::max()} };
   // Constraint sign are all LESS or equal (<=)
   constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
   std::fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),

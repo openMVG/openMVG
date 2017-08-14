@@ -70,7 +70,7 @@ void Matcher_Regions::Match(
     matching::Matcher_Regions_Database matcher(eMatcherType_, *regionsI.get());
 
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for schedule(dynamic) if(b_multithreaded_pair_search)
+    #pragma omp parallel for schedule(dynamic) if (b_multithreaded_pair_search)
 #endif
     for (int j = 0; j < (int)indexToCompare.size(); ++j)
     {

@@ -154,7 +154,7 @@ public:
   bool saveMatch(const char* nameFile) const
   {
     std::ofstream f(nameFile);
-    if( f.is_open() ) {
+    if (f.is_open() ) {
       std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
         std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
     }
@@ -166,7 +166,7 @@ public:
     return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
   }
 
-private :
+private:
   std::vector<IndMatch> vec_matches_;
   std::vector<IndMatchDecoratorStruct> vecDecoredMatches_;
 };

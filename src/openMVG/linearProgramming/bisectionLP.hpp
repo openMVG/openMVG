@@ -61,7 +61,7 @@ bool BisectionLP(
       solver.getSolution(*parameters);
       bModelFound = true;
 
-      if(bVerbose)
+      if (bVerbose)
         std::cout << "\n" << k<<"/"<<maxIteration
           << "\t gamma " << gamma
           << "\t gammaUp-gammaLow " << gammaUp-gammaLow << std::endl;
@@ -69,7 +69,7 @@ bool BisectionLP(
     else
     {
       gammaLow = gamma;
-      if(bVerbose)
+      if (bVerbose)
         std::cout << "\nNot feasible with gamma: " << gamma << std::endl;
     }
   } while (k < maxIteration && gammaUp - gammaLow > eps);

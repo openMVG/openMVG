@@ -21,19 +21,19 @@ using namespace openMVG::image;
 
 /// Lookup table for 2d gaussian (sigma = 2.5) where (0,0) is top left and (6,6) is bottom right
 const float gauss25[7][7] = {
-  {0.02546481f,	0.02350698f,	0.01849125f,	0.01239505f,	0.00708017f,	0.00344629f,	0.00142946f},
-  {0.02350698f,	0.02169968f,	0.01706957f,	0.01144208f,	0.00653582f,	0.00318132f,	0.00131956f},
-  {0.01849125f,	0.01706957f,	0.01342740f,	0.00900066f,	0.00514126f,	0.00250252f,	0.00103800f},
-  {0.01239505f,	0.01144208f,	0.00900066f,	0.00603332f,	0.00344629f,	0.00167749f,	0.00069579f},
-  {0.00708017f,	0.00653582f,	0.00514126f,	0.00344629f,	0.00196855f,	0.00095820f,	0.00039744f},
-  {0.00344629f,	0.00318132f,	0.00250252f,	0.00167749f,	0.00095820f,	0.00046640f,	0.00019346f},
-  {0.00142946f,	0.00131956f,	0.00103800f,	0.00069579f,	0.00039744f,	0.00019346f,	0.00008024f}
+  {0.02546481f,  0.02350698f,  0.01849125f,  0.01239505f,  0.00708017f,  0.00344629f,  0.00142946f},
+  {0.02350698f,  0.02169968f,  0.01706957f,  0.01144208f,  0.00653582f,  0.00318132f,  0.00131956f},
+  {0.01849125f,  0.01706957f,  0.01342740f,  0.00900066f,  0.00514126f,  0.00250252f,  0.00103800f},
+  {0.01239505f,  0.01144208f,  0.00900066f,  0.00603332f,  0.00344629f,  0.00167749f,  0.00069579f},
+  {0.00708017f,  0.00653582f,  0.00514126f,  0.00344629f,  0.00196855f,  0.00095820f,  0.00039744f},
+  {0.00344629f,  0.00318132f,  0.00250252f,  0.00167749f,  0.00095820f,  0.00046640f,  0.00019346f},
+  {0.00142946f,  0.00131956f,  0.00103800f,  0.00069579f,  0.00039744f,  0.00019346f,  0.00008024f}
 };
 
 // Compute slice scale
 static inline float Sigma( const float sigma0 , const int p , const int q , const int Q )
 {
-  if( p == 0 && q == 0 )
+  if (p == 0 && q == 0 )
     return sigma0;
   else
     return sigma0 * powf( 2.f , p + static_cast<float>( q ) / static_cast<float>( Q ) );
@@ -64,18 +64,18 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
 
   int nb_value = 0;
 
-  for( int i = 1; i < height - 1; ++i )
+  for (int i = 1; i < height - 1; ++i )
   {
-    for( int j = 1; j < width - 1; ++j )
+    for (int j = 1; j < width - 1; ++j )
     {
       const float val = grad( i , j );
 
-      if( val > 0 )
+      if (val > 0 )
       {
         int bin_id = floor( (val / grad_max ) * static_cast<float>(nb_bin) );
 
         // Handle overflow (need to do it in a cleaner way)
-        if( bin_id == nb_bin )
+        if (bin_id == nb_bin )
           --bin_id;
 
         // Accumulate
@@ -89,14 +89,14 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
 
   size_t id_bin = 0;
   size_t acc = 0;
-  while( acc < search_id && id_bin < nb_bin )
+  while (acc < search_id && id_bin < nb_bin)
   {
     acc  += histo[ id_bin ];
     ++id_bin;
   }
 
   // Handle 0 bin search
-  if( acc < search_id )
+  if (acc < search_id )
   {
     return 0.03f; // Only empiric value
   }
@@ -121,7 +121,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   const int sigma_scale = std::round(sigma_cur * fderivative_factor / ratio);
 
   Image<float> smoothed;
-  if( p == 0 && q == 0 )
+  if (p == 0 && q == 0 )
   {
     // Compute new image
     ImageGaussianFilter( src , sigma0 , Li, 0, 0);
@@ -130,7 +130,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   {
     // general case
     Image<float> in;
-    if( q == 0 )  {
+    if (q == 0 )  {
       ImageHalfSample( src , in );
     }
     else {
@@ -162,7 +162,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
   }
 
   // Compute Hessian response
-  if( p == 0 && q == 0 )
+  if (p == 0 && q == 0 )
   {
     smoothed = Li;
   }
@@ -220,11 +220,11 @@ void AKAZE::Compute_AKAZEScaleSpace()
   Image<float> input = in_;
 
   // Octave computation
-  for( int p = 0; p < options_.iNbOctave; ++p )
+  for (int p = 0; p < options_.iNbOctave; ++p )
   {
     contrast_factor *= (p == 0) ? 1.f : 0.75f;
 
-    for( int q = 0; q < options_.iNbSlicePerOctave; ++q )
+    for (int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
       evolution_.emplace_back(TEvolution());
       TEvolution & evo = evolution_.back();
@@ -253,20 +253,20 @@ void detectDuplicates(
   std::vector<std::pair<AKAZEKeypoint, bool> > & current)
 {
   // mark duplicates - using a full search algorithm
-  for(std::vector<std::pair<AKAZEKeypoint, bool> >::iterator p1=previous.begin(); p1<previous.end(); ++p1)
+  for (std::pair<AKAZEKeypoint, bool> & p1 : previous)
   {
-    for(std::vector<std::pair<AKAZEKeypoint, bool> >::iterator p2 = current.begin(); p2<current.end(); ++p2)
+    for (std::pair<AKAZEKeypoint, bool> & p2 : current)
     {
-      if (p2->second == true) continue;
+      if (p2.second == true) continue;
 
       // Check spatial distance
-      const float dist = Square(p1->first.x-p2->first.x)+Square(p1->first.y-p2->first.y);
-      if (dist <= Square(p1->first.size) && dist != 0.f)
+      const float dist = Square(p1.first.x - p2.first.x) + Square(p1.first.y - p2.first.y);
+      if (dist <= Square(p1.first.size) && dist != 0.f)
       {
-        if (p1->first.response < p2->first.response)
-          p1->second = true; // mark as duplicate key point
+        if (p1.first.response < p2.first.response)
+          p1.second = true; // mark as duplicate key point
         else
-          p2->second = true; // mark as duplicate key point
+          p2.second = true; // mark as duplicate key point
         break; // no other point can be so close, so skip to the next iteration
       }
     }
@@ -280,11 +280,11 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for( int p = 0; p < options_.iNbOctave; ++p )
+  for (int p = 0; p < options_.iNbOctave; ++p )
   {
     const float ratio = (float) (1 << p);
 
-    for( int q = 0; q < options_.iNbSlicePerOctave; ++q )
+    for (int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave );
       const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;

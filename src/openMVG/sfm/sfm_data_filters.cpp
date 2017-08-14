@@ -355,7 +355,7 @@ void KeepLargestViewCCTracks
       {
         if (uf_tree.m_cc_size[parent_id_it] > max_cc.second) // Update the component parent id and size
         {
-          max_cc = std::make_pair(parent_id_it, uf_tree.m_cc_size[parent_id_it]);
+          max_cc = {parent_id_it, uf_tree.m_cc_size[parent_id_it]};
         }
       }
     }

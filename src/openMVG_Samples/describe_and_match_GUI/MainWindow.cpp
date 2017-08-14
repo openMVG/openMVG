@@ -612,15 +612,15 @@ void MainWindow::ClearFeaturesandMatch()
   */
 void MainWindow::ClearFeaturesAndMatchItems()
 {
-  for( auto item : m_ellipsesFeat1 )
-  {
-    m_scn->removeItem( item ) ;
-  }
-  for( auto item : m_ellipsesFeat2 )
+  for (auto item : m_ellipsesFeat1 )
   {
     m_scn->removeItem( item );
   }
-  for( auto item : m_lineMatch )
+  for (auto item : m_ellipsesFeat2 )
+  {
+    m_scn->removeItem( item );
+  }
+  for (auto item : m_lineMatch )
   {
     m_scn->removeItem( item );
   }

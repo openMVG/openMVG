@@ -31,7 +31,7 @@ struct Measurement
     const Vec2f & p
   ): frameId_(frameId), pos_(p)
   { }
-  Measurement( const Measurement & src ) = default ;
+  Measurement( const Measurement & src ) = default;
 
   uint32_t frameId_;
   Vec2f pos_;
@@ -59,7 +59,7 @@ struct VO_Monocular
 
   // Tracking
   Abstract_Tracker * tracker_;
-  uint32_t maxTrackedFeatures_ ;
+  uint32_t maxTrackedFeatures_;
   std::vector<features::PointFeature> pt_to_track_, pt_tracked_;
   std::vector<bool> tracking_status_;
 

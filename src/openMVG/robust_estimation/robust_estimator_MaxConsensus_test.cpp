@@ -100,7 +100,7 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
-  for(int i = 0; i < NbPoints; ++i)  {
+  for (int i = 0; i < NbPoints; ++i)  {
     xy.col(i) << i, static_cast<double>(i)*GTModel[1] + GTModel[0];
   }
 
@@ -109,10 +109,10 @@ TEST(MaxConsensusLineFitter, RealisticCase) {
   std::vector<uint32_t> vec_samples; // fit with unique random index
   std::mt19937 random_generator(std::mt19937::default_seed);
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
-  
+
   std::uniform_int_distribution<int> d0(-3, 2);
   std::uniform_int_distribution<int> d1(-6, 8);
-  for(const auto index : vec_samples) {
+  for (const auto index : vec_samples) {
     // additive random noise
     xy.col(index) << xy.col(index)(0) + static_cast<double>(d0(random_generator)),
                      xy.col(index)(1) + static_cast<double>(d1(random_generator));

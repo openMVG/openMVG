@@ -172,7 +172,7 @@ TEST(RansacLineFitter, RealisticCase) {
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
-  for(int i = 0; i < NbPoints; ++i) {
+  for (int i = 0; i < NbPoints; ++i) {
     xy.col(i) << i, static_cast<double>(i)*GTModel[1] + GTModel[0];
   }
 
@@ -184,7 +184,7 @@ TEST(RansacLineFitter, RealisticCase) {
   constexpr auto nbPtToNoise = static_cast<uint32_t>(NbPoints*inlierRatio);
   vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
-  for(size_t i = 0; i <vec_samples.size(); ++i)
+  for (size_t i = 0; i <vec_samples.size(); ++i)
   {
     const size_t randomIndex = vec_samples[i];
     // Start from a outlier point (0,0)
@@ -296,7 +296,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
       std::sort(vec_match.begin(), vec_match.end());
       std::vector<IndMatchd>::iterator end = std::unique(vec_match.begin(), vec_match.end());
-      if(end != vec_match.end()) {
+      if (end != vec_match.end()) {
         std::cout << "Remove " << std::distance(end, vec_match.end())
           << "/" << vec_match.size() << " duplicate matches, "
           << " keeping " << std::distance(vec_match.begin(), end) <<std::endl;

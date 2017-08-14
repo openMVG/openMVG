@@ -125,7 +125,7 @@ void ControlPointTableView::keyReleaseEvent
   QKeyEvent* event
 )
 {
-  if(event->key() == Qt::Key_Delete)
+  if (event->key() == Qt::Key_Delete)
   {
     QItemSelection selection( table_->selectionModel()->selection() );
 

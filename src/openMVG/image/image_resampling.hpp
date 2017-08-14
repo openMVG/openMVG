@@ -33,9 +33,9 @@ void ImageHalfSample( const Image & src , Image & out )
 
   const Sampler2d<SamplerLinear> sampler;
 
-  for( int i = 0; i < new_height; ++i )
+  for (int i = 0; i < new_height; ++i )
   {
-    for( int j = 0; j < new_width; ++j )
+    for (int j = 0; j < new_width; ++j )
     {
       // Use .5f offset to ensure mid pixel and correct bilinear sampling
       out( i , j ) =  sampler( src, 2.f * ( i + .5f ), 2.f * ( j + .5f ) );
@@ -76,9 +76,9 @@ void ImageUpsample( const Image & src , Image & out )
 
   const Sampler2d<SamplerLinear> sampler;
 
-  for( int i = 0; i < new_height; ++i )
+  for (int i = 0; i < new_height; ++i )
   {
-    for( int j = 0; j < new_width; ++j )
+    for (int j = 0; j < new_width; ++j )
     {
       out( i , j ) =  sampler( src, i / 2.f, j / 2.f );
 
@@ -110,9 +110,9 @@ void GenericRessample( const Image & src ,
 
   std::vector< std::pair< float , float > >::const_iterator it_pos = sampling_pos.begin();
 
-  for( int i = 0; i < output_height; ++i )
+  for (int i = 0; i < output_height; ++i )
   {
-    for( int j = 0; j < output_width; ++j , ++it_pos )
+    for (int j = 0; j < output_width; ++j , ++it_pos )
     {
       const float input_x = it_pos->second;
       const float input_y = it_pos->first;

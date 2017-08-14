@@ -28,9 +28,9 @@ TEST(Ressampling,SampleSamePosition)
   // Build sampling grid
   std::vector< std::pair< float , float > > sampling_grid;
   sampling_grid.reserve(image.Width()*image.Height());
-  for( int i = 0; i < image.Height(); ++i )
+  for (int i = 0; i < image.Height(); ++i )
   {
-    for( int j = 0; j < image.Width(); ++j )
+    for (int j = 0; j < image.Width(); ++j )
     {
       sampling_grid.emplace_back( i , j );
     }
@@ -65,7 +65,7 @@ bool ImageRotation(
   const float middle_y = image.Height() / 2.0;
 
   // Rotate image then set starting image as source
-  for( int id_rot = 0; id_rot < nb_rot; ++id_rot )
+  for (int id_rot = 0; id_rot < nb_rot; ++id_rot )
   {
     // angle of rotation (negative because it's inverse transformation)
     const float cur_angle = delta;
@@ -76,9 +76,9 @@ bool ImageRotation(
     std::vector< std::pair<float,float> > sampling_grid;
     sampling_grid.reserve(image.Width()*image.Height());
     // Compute sampling grid
-    for( int i = 0; i < image.Height(); ++i )
+    for (int i = 0; i < image.Height(); ++i )
     {
-      for( int j = 0; j < image.Width(); ++j )
+      for (int j = 0; j < image.Width(); ++j )
       {
         // Compute rotation of pixel (i,j) around center of image
 

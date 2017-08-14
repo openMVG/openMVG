@@ -185,13 +185,13 @@ static bool saveFeatsToFile(
 template< typename FeaturesT>
 void PointsToMat(
   const FeaturesT & vec_feats,
-  Eigen::Ref<Mat> m)
+  Mat& m)
 {
   m.resize(2, vec_feats.size());
   using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
-  for( typename FeaturesT::const_iterator iter = vec_feats.begin();
+  for (typename FeaturesT::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
     const ValueT & feat = *iter;

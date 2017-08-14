@@ -141,7 +141,7 @@ Vec3 ecef_to_lla
 {
   const double b = sqrt(WGS84_A*WGS84_A*(1-WGS84_E*WGS84_E));
   const double ep = sqrt((WGS84_A*WGS84_A-b*b)/(b*b));
-  const double p = sqrt(x*x+y*y);
+  const double p = hypot(x, y);
   const double th = atan2(WGS84_A*z,b*p);
   const double lon = atan2(y,x);
   const double lat = atan2((z+ep*ep*b* pow(sin(th),3)),(p-WGS84_E*WGS84_E*WGS84_A*pow(cos(th),3)));

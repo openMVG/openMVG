@@ -125,7 +125,7 @@ class L1Solver {
   )
   {
     // Since constructor was called before we check Compute status
-    if(linear_solver_.info() != Eigen::Success)
+    if (linear_solver_.info() != Eigen::Success)
     {
       std::cerr << "Cannot compute the matrix factorization" << std::endl;
       return false;
