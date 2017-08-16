@@ -27,8 +27,11 @@ struct Regions_Provider_Cache : public Regions_Provider
 {
 public:
 
-  Regions_Provider_Cache (const unsigned int max_cache_size)
-    : Regions_Provider(), max_cache_size_(max_cache_size)
+  explicit Regions_Provider_Cache
+  (
+    const unsigned int max_cache_size
+  ): Regions_Provider(),
+     max_cache_size_(max_cache_size)
   {
   }
 
@@ -74,7 +77,7 @@ public:
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type,
-    C_Progress * 
+    C_Progress *
   ) override
   {
     std::cout << "Initialization of the Regions_Provider_Cache. #Elements in the cache: "<< max_cache_size_ << std::endl;

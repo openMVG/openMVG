@@ -166,11 +166,9 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstra
          cstraints.vec_sign_[i] == LP_Constraints::LP_GREATER_OR_EQUAL )
     {
       const int coef = -1;
-      for ( std::vector<double>::iterator iter_val = vec_value.begin();
-        iter_val != vec_value.end();
-        iter_val++)
+      for (auto &  iter_val : vec_value)
       {
-        *iter_val *= coef;
+        iter_val *= coef;
       }
       row_ub[rowindex] = coef * cstraints.constraint_objective_(i);
       matrix->appendRow( vec_colno.size(),

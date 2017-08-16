@@ -1,4 +1,3 @@
-
 // Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,7 +43,7 @@ nViewDatasetConfigurator::nViewDatasetConfigurator(int fx, int fy,
 {}
 
 NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
-                                   const nViewDatasetConfigurator config)
+                                   const nViewDatasetConfigurator & config)
 {
   //-- Setup a camera circle rig.
   NViewDataSet d;
@@ -140,7 +139,7 @@ void NViewDataSet::ExportToPLY(
 }
 
 NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
-                                        const nViewDatasetConfigurator config)
+                                        const nViewDatasetConfigurator & config)
 {
   //-- Setup a camera circle rig.
   NViewDataSet d;

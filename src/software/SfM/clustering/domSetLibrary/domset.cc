@@ -16,7 +16,7 @@
 #include <random>
 #include <set>
 
-#define for_parallel(i, nIters) for(int i = 0; i < static_cast<int>(nIters); ++i)
+#define for_parallel(i, nIters) for (int i = 0; i < static_cast<int>(nIters); ++i)
 
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 using namespace openMVG::matching;
@@ -40,7 +40,6 @@ void Domset::normalizePointCloud()
   ArrayMatcher_Kdtree_Flann<float> matcher;
   matcher.Build(points_cpy[0].data(), points_cpy.size(), 3);
 
-  const size_t numResults( 1 );
   const size_t numPoints( points.size() );
   float totalDist = 0;
   pcCentre.pos << 0, 0, 0;
@@ -386,7 +385,7 @@ const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
   for_parallel( p, numCP )
   {
     const auto pId = commonPoints[ p ];
-    //for( const auto pId : commonPoints ){
+    //for ( const auto pId : commonPoints ){
     const Eigen::Vector3f c1 = (v1.trans - points[ pId ].pos).normalized();
     const Eigen::Vector3f c2 = (v2.trans - points[ pId ].pos).normalized();
     const float angle    = acos( c1.dot( c2 ) );
@@ -604,7 +603,6 @@ void Domset::clusterViews( std::map<size_t, size_t> &xId2vId, const size_t &minC
                            const size_t &maxClusterSize )
 {
 //  std::cout << "[ Clustering Views ] " << std::endl;
-  const size_t umC = views.size();
   kMinClusterSize  = minClusterSize;
   kMaxClusterSize  = maxClusterSize;
 

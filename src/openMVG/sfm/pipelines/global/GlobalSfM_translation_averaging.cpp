@@ -740,9 +740,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       const uint32_t viewIndex = it->first;
       const uint32_t featIndex = it->second;
 
-      // initialize view and get intrinsics
-      const View * view = sfm_data.GetViews().at(viewIndex).get();
-
       // get feature
       const features::PointFeature & pt = features_provider->getFeatures(viewIndex)[featIndex];
       obs[viewIndex] = Observation(pt.coords().cast<double>(), featIndex);

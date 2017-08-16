@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2011, Laurent Kneip, ETH Zurich
  * All rights reserved.
@@ -398,4 +397,3 @@ size_t P3P_ResectionKernel_K::NumSamples() const
 
 }  // namespace euclidean_resection
 }  // namespace openMVG
-

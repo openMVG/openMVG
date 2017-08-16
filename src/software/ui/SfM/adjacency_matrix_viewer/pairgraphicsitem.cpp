@@ -57,7 +57,7 @@ void PairGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
   {
     const QBrush b = painter->brush();
 
-    painter->setBrush(QBrush(fillColor.dark(option->state & QStyle::State_Sunken ? 120 : 100)));
+    painter->setBrush(QBrush(fillColor.dark(option->state & (QStyle::State_Sunken ? 120 : 100))));
     painter->drawRect(QRect(0, 0, 100, 100));
     painter->setBrush(b);
 

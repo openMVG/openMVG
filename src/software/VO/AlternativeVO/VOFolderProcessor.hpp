@@ -32,7 +32,7 @@ class VOFolderProcessor
 {
   public:
 
-    VOFolderProcessor( const std::string & inputFolder );
+    explicit VOFolderProcessor( const std::string & inputFolder );
 
     /**
     * @brief Reset processing to the begining
