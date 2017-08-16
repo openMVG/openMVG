@@ -1,9 +1,6 @@
 /**
- * This file contains interfaces to the hypergraph partitioning libraries
+ * This file contains interfaces to the SCOTCH hypergraph partitioning library
  * that we use for hypersfm. 
- * contains : 
- *  - interface to scotch lib
- *  - interface to hmetis lib
  */
 
 #pragma once
@@ -25,153 +22,9 @@ std::set<std::pair<unsigned,unsigned>> getPermutations(const std::set<unsigned> 
 }
 
 /**
- * @note Alternative to ScotchPartitionHyperGraph function which cause no memory leak. Here we don't
- * build a mesh (hypergraph) but directly a graph for scotch to partition SHIT RESULTS THO
- * @brief Use the scotch library to partition a hypergraph made of view_id nodes and tracks set hyperedges 
- * into two sets of nodes (view ids in that case)
- * @param hyper_graph The hypergraph to be partitioned, defined as a map of <view_ids,tracks_ids>. 
- * @param view_id_partitions The returned partition, in the shape of a pair of view_ids sets.
- * @retval true If partitioning succeeded
- * @retval false If partitioning failed
- */
-inline bool ScotchPartitionHyperGraphNoMesh(
-    const std::map<std::set<openMVG::IndexT>, std::set<size_t>> & hyper_graph,
-    std::pair<std::set<openMVG::IndexT>, std::set<openMVG::IndexT>> & view_id_partitions)
-{
-  // check hyper graph has been computed
-  if (hyper_graph.size() == 0)
-  {
-    std::cerr << "empty hyper graph ! " << std::endl;
-    return false;
-  }
-
-  // regroup all view indices of the hypergraph
-  std::set<openMVG::IndexT> view_ids_all;
-  for (const auto & h_edge : hyper_graph)
-  {
-    view_ids_all.insert(h_edge.first.begin(), h_edge.first.end());
-  }
-
-  std::set<std::pair<unsigned,unsigned>> all_edges;
-  for (const auto & h_edge : hyper_graph)
-  {
-    std::set<std::pair<unsigned,unsigned>> new_perms = getPermutations(h_edge.first);
-    all_edges.insert(new_perms.begin(), new_perms.end());
-  }
-  std::cout << " LKAJDSLKSAJF " << all_edges.size() << std::endl;
-
-
-  SCOTCH_Graph grafdat;
-  SCOTCH_graphInit(&grafdat);
-
-  SCOTCH_Num baseval = 0; // array base number
-  SCOTCH_Num vertnbr = view_ids_all.size(); // number of vertices
-  SCOTCH_Num verttab[vertnbr + 1]; // adjacency index array
-  SCOTCH_Num * vendtab = verttab + 1;// end thing
-  SCOTCH_Num velotab[vertnbr];// vertex load array (TODO we don't use this ?)
-  SCOTCH_Num edgenbr = 2*all_edges.size();//TODO compute edge_tot // number of arcs
-  SCOTCH_Num edgetab[edgenbr]; // adjacency array
-  SCOTCH_Num edlotab[edgenbr];// arc load array
-
-  // fill load arrays with zeros
-  std::fill(edlotab, edlotab + edgenbr, 0);
-  std::fill(velotab, velotab + vertnbr, 0);
-
-  int node_id(baseval);
-  std::map<openMVG::IndexT, int> map_view_id_node_id;
-  std::map<int, openMVG::IndexT> map_node_id_view_id;
-  for ( const auto & view_id : view_ids_all)
-  {
-    map_view_id_node_id[view_id] = node_id;
-    map_node_id_view_id[node_id] = view_id;
-    node_id++;
-  }
-
-  int k(0), l(0);
-  for (const auto & view_id : view_ids_all)
-  {
-    verttab[l] = k;
-    std::set<int> paired_indices;
-    velotab[l] += 1;
-    std::map<int, int> edge_loads;
-    for (const auto & h_edge : hyper_graph)
-    {
-      // if view is not in hyper edge-> try next
-      if (h_edge.first.count(view_id) == 0)
-        continue;
-
-      for (const auto & id : h_edge.first)
-      {
-        if (id != view_id)
-        {
-          const auto & n_id = map_view_id_node_id.at(id);
-          paired_indices.insert(n_id);
-          if (edge_loads.find(n_id) == edge_loads.end())
-            edge_loads[n_id] = 1;
-          else
-            edge_loads[n_id] += 1;
-        }
-      }
-    }
-    for (const auto & ind : paired_indices)
-    {
-      edgetab[k] = ind;
-      //edlotab[k] += 1;
-      edlotab[k] = edge_loads.at(ind);
-      k++;
-    }
-    l++;
-  }
-  verttab[l] = edgenbr;
-  velotab[l] += 1;
-
-  //SCOTCH_graphBuild(&grafdat, baseval, vertnbr, verttab, vendtab, velotab, vlbltab, edgenbr, edgetab, edlotab);
-  //SCOTCH_graphBuild(&grafdat, baseval, vertnbr, verttab, vendtab, velotab, NULL, edgenbr, edgetab, edlotab);
-  SCOTCH_graphBuild(&grafdat, baseval, vertnbr, verttab, vendtab, velotab, NULL, edgenbr, edgetab, NULL);
-  std::cout << "check grafdat  : " << SCOTCH_graphCheck(&grafdat) << std::endl;
-
-  SCOTCH_Num nvert, nedges;
-  SCOTCH_graphSize(&grafdat, &nvert, &nedges);
-  std::cout << "graph size : " << std::endl
-    << "vertices : " << nvert << std::endl
-    << "edges : " << nedges << std::endl;
-
-  // define default strategy for partitioning
-  SCOTCH_Strat * stratptr = SCOTCH_stratAlloc();
-  SCOTCH_stratInit(stratptr);
-
-  // array for partitioned data
-  SCOTCH_Num parttab[edgenbr]; 
-  for (auto & part_element : parttab)
-    part_element = -1;
-
-  // partition in 2
-  if (SCOTCH_graphPart(&grafdat, 2, stratptr, parttab) == 0)
-    std::cout << "graph partitioned !" << std::endl;
-
-  // partition data the view ids
-  int current_node_id(baseval);
-  for (const auto & part_element : parttab)
-  {
-    if (part_element == 0)
-      view_id_partitions.first.insert(map_node_id_view_id.at(current_node_id));
-    if (part_element == 1)
-      view_id_partitions.second.insert(map_node_id_view_id.at(current_node_id));
-    current_node_id++;
-  }
-  
-  // free memory
-  SCOTCH_graphExit(&grafdat);
-  SCOTCH_stratExit(stratptr);
-  SCOTCH_memFree(stratptr);
-
-  return true;
-}
-
-/**
- * @note WARNING : this function USED TO create a memory leak (the incriminated part is SCOTCH_meshGraph())
- * you have to use our version of the scotch library which corrects this memory leak (in third_party/scotch_6.0.4).
- * otherwise, use the ScotchPartitionHyperGraphNoMesh function 
+ * @note WARNING : this function USED TO create a memory leak (the incriminated part is SCOTCH_meshGraph() in
+ * the scotch library)
+ * you have to use our version of the scotch library which corrects this memory leak (in third_party/scotch_6.0.4). 
  * @brief Use the scotch library to partition a hypergraph made of view_id nodes and tracks set hyperedges 
  * into two sets of nodes (view ids in that case)
  * @param hyper_graph The hypergraph to be partitioned, defined as a map of <view_ids,tracks_ids>. 
