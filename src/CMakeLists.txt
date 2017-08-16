@@ -393,6 +393,9 @@ set(OpenMVG_INCLUDE_DIRS
 
 include_directories(${OpenMVG_INCLUDE_DIRS})
 
+# scotch cannot be included in the list above for some reason ?!
+INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIRS})
+
 # ==============================================================================
 # openMVG modules
 # ==============================================================================

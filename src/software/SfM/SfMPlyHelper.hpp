@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <set>
 
 namespace openMVG{
 namespace plyHelper{
@@ -115,6 +116,147 @@ inline bool exportToPly
   return bOk;
 }
 
+
+/// Export 3D point vector and camera position to PLY format
+//  Highlights selected points in red (other points stay white)
+inline
+bool
+exportToPly_Highlight
+(
+  const std::vector<Vec3> & vec_points,
+  const std::vector<Vec3> & vec_camPos,
+  const std::string & sFileName,
+  const std::set<size_t> highlighted_points_indices,
+  const std::set<size_t> highlighted_camera_indices
+)
+{
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
+
+  outfile << "ply"
+    << '\n' << "format ascii 1.0"
+    << '\n' << "element vertex " << vec_points.size()+vec_camPos.size()
+    << '\n' << "property double x"
+    << '\n' << "property double y"
+    << '\n' << "property double z"
+    << '\n' << "property uchar red"
+    << '\n' << "property uchar green"
+    << '\n' << "property uchar blue"
+    << '\n' << "end_header" << std::endl;
+
+  outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
+  for (size_t i=0; i < vec_points.size(); ++i)  {
+    if (highlighted_points_indices.count(i) > 0)
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << "255 0 0" << "\n";
+    else
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << "255 255 255" << "\n";
+  }
+
+  for (size_t i=0; i < vec_camPos.size(); ++i)  {
+    if (highlighted_camera_indices.find(i) != highlighted_camera_indices.end())
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 0 255" << "\n";
+    else
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 255 0\n";
+  }
+  outfile.flush();
+  const bool bOk = outfile.good();
+  outfile.close();
+  return bOk;
+}
+
+// Export 3D point vector and camera position to PLY format
+//  Highlights selected points in different colors (other points stay white)
+inline
+bool
+exportToPly_MultiHighlight
+(
+  const std::vector<Vec3> & vec_points,
+  const std::vector<Vec3> & vec_camPos,
+  const std::string & sFileName,
+  const std::vector<std::set<size_t>> highlighted_points_indices_sets,
+  std::set<size_t> highlighted_camera_indices
+)
+{
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
+
+  outfile << "ply"
+    << '\n' << "format ascii 1.0"
+    << '\n' << "element vertex " << vec_points.size()+vec_camPos.size()
+    << '\n' << "property float x"
+    << '\n' << "property float y"
+    << '\n' << "property float z"
+    << '\n' << "property uchar red"
+    << '\n' << "property uchar green"
+    << '\n' << "property uchar blue"
+    << '\n' << "end_header" << std::endl;
+
+  std::vector<std::string> colors = {"255 0 0", "0 0 255", "255 255 0", "0 255 255", "255 0 255"};
+  assert(highlighted_points_indices_sets.size() <= colors.size());
+
+  for (size_t i=0; i < vec_points.size(); ++i)  
+  {
+    int color_id(0);
+    bool highlighted_point = false;
+    for (const auto & highlighted_points_indices : highlighted_points_indices_sets) 
+    {
+      if (highlighted_points_indices.count(i) > 0)
+      {
+        outfile
+          << vec_points[i](0) << ' '
+          << vec_points[i](1) << ' '
+          << vec_points[i](2) << ' '
+          << colors[color_id] << "\n";
+        highlighted_point = true;
+      }
+      color_id++;
+    }
+    if (!highlighted_point)
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << "255 255 255" << "\n";
+  }
+
+  for (size_t i=0; i < vec_camPos.size(); ++i)  {
+    if (highlighted_camera_indices.find(i) != highlighted_camera_indices.end())
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 0 255" << "\n";
+    else
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 255 0" << "\n";
+  }
+  outfile.flush();
+  const bool bOk = outfile.good();
+  outfile.close();
+  return bOk;
+}
 } // namespace plyHelper
 } // namespace openMVG
 

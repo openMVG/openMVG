@@ -27,6 +27,8 @@ target_link_libraries(
     openMVG_lInftyComputerVision
     openMVG_system
     openMVG_matching
+    scotch
+    scotcherr
 )
 target_include_directories(
   openMVG_sfm

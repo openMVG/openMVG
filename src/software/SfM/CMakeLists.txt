@@ -73,6 +73,7 @@ INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
 # SfM Pipelines
 # - Incremental/Sequential
 # - Global
+# - Hierarchical HyperSfM
 ###
 # - Convert SfM_Data format (from one to another)
 # - Pair filtering (from frustum)
@@ -92,6 +93,14 @@ ADD_EXECUTABLE(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   openMVG_system
   openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
+ADD_EXECUTABLE(openMVG_main_HyperSfM main_HyperSfM.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_HyperSfM
+  openMVG_system
   openMVG_features
   openMVG_sfm
   stlplus
@@ -142,6 +151,8 @@ SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_HyperSfM PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_HyperSfM DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)

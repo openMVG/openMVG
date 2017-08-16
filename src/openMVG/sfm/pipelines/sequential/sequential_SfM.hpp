@@ -49,7 +49,7 @@ public:
   }
 
   /// Initialize tracks
-  bool InitLandmarkTracks();
+  virtual bool InitLandmarkTracks();
 
   /// Select a candidate initial pair
   bool ChooseInitialPair(Pair & initialPairIndex) const;
@@ -72,9 +72,6 @@ public:
   }
 
 protected:
-
-
-private:
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo);
