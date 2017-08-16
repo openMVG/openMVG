@@ -1,0 +1,6 @@
+This copy of the Scotch 6.0 distribution is licensed to you under the
+terms of the CeCILL-C free/libre software license.
+
+A copy of this license is available in subdirectory "doc", in file
+named "CeCILL-C_V1-en.txt". Please read its terms carefully. Only if
+you accept them can you use this copy of the Scotch 6.0 distribution.

@@ -120,3 +120,36 @@ install(
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
 endforeach(inDirectory)
+
+##
+# SCOTCH library for hypergraph partitioning
+##
+#URL http://gforge.inria.fr/frs/download.php/zip/9109/scotch-6.0.4.zip
+#URL ${CMAKE_CURRENT_SOURCE_DIR}/scotch/scotch_6.0.4.tar.gz
+
+SET(scotch_out_dir ${PROJECT_BINARY_DIR}/third_party/scotch_6.0.4)
+SET(SCOTCH_INCLUDE_DIR ${scotch_out_dir}/include PARENT_SCOPE)
+
+IF (UNIX AND NOT APPLE)
+  SET(SCOTCH_CONFIGURE_COMMAND cp ${scotch_out_dir}/src/Make.inc/Makefile.inc.x86-64_pc_linux2 ${scotch_out_dir}/src/Makefile.inc)
+ELSEIF(APPLE)
+  SET(SCOTCH_CONFIGURE_COMMAND cp ${scotch_out_dir}/src/Make.inc/Makefile.inc.i686_mac_darwin10 ${scotch_out_dir}/src/Makefile.inc)
+ENDIF()
+
+include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+ExternalProject_Add(PROJECT_SCOTCH
+  PREFIX ${scotch_out_dir}
+  DOWNLOAD_COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/scotch_6.0.4 ${scotch_out_dir}/..
+  UPDATE_COMMAND ""
+  BINARY_DIR ${scotch_out_dir}/src
+  CONFIGURE_COMMAND pwd COMMAND ${SCOTCH_CONFIGURE_COMMAND}
+  BUILD_COMMAND make 
+  INSTALL_COMMAND ""
+)
+
+add_library(scotch STATIC IMPORTED GLOBAL)
+set_property(TARGET scotch PROPERTY IMPORTED_LOCATION ${scotch_out_dir}/lib/libscotch.a)
+add_library(scotcherr STATIC IMPORTED GLOBAL)
+set_property(TARGET scotcherr PROPERTY IMPORTED_LOCATION ${scotch_out_dir}/lib/libscotcherr.a)
+add_dependencies(scotch PROJECT_SCOTCH)
+add_dependencies(scotcherr PROJECT_SCOTCH)

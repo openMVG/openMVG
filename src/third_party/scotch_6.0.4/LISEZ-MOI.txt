@@ -1,0 +1,8 @@
+Les clauses selon lesquelles cette copie de la distribution logicielle
+Scotch 6.0 est mise à votre disposition sont définies dans le fichier
+"LICENCE_fr.txt", situé dans le même répertoire que le présent
+fichier.
+
+Si vous les acceptez, veuillez vous référer au fichier "INSTALL.txt",
+également situé dans ce répertoire, pour consulter les instructions
+d'installation.

@@ -1,0 +1,21 @@
+EXE		=
+LIB		= .a
+OBJ		= .o
+
+MAKE		= gmake
+AR		= ar
+ARFLAGS		= -X64 -ruv
+CAT		= cat
+CCS		= xlc_r
+CCP		= mpcc_r
+CCD		= xlc_r -I/usr/lpp/ppe.poe/include
+CFLAGS		= -ma -q64 -qarch=auto -O3 -qstrict -qtune=pwr6 -qlanglvl=extc99 -s -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_PTHREAD -DSCOTCH_RENAME -D_ALL_SOURCE
+CLIBFLAGS	=
+LDFLAGS		= -lpthread -lm
+CP		= cp
+LEX		= lex
+LN		= ln
+MKDIR		= mkdir
+MV		= mv
+RANLIB		= ranlib
+YACC		= yacc

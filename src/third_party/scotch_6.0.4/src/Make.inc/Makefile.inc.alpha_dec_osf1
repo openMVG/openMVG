@@ -1,0 +1,21 @@
+EXE		=
+LIB		= .a
+OBJ		= .o
+
+MAKE		= gmake
+AR		= ar
+ARFLAGS		= ruv
+CAT		= cat
+CCS		= cc
+CCP		= mpicc
+CCD		= mpicc
+CFLAGS		= -v -O3 -omp -ansi_alias -ansi_args -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_PTHREAD -DSCOTCH_RENAME
+CLIBFLAGS	=
+LDFLAGS		= -lm
+CP		= cp
+LEX		= lex
+LN		= ln
+MKDIR		= mkdir
+MV		= mv
+RANLIB		= ranlib
+YACC		= yacc

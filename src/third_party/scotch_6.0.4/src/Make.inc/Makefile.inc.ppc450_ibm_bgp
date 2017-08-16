@@ -1,0 +1,21 @@
+EXE		=
+LIB		= .a
+OBJ		= .o
+
+MAKE		= gmake
+AR		= ar
+ARFLAGS		= -ruv
+CAT		= cat
+CCS		= /bgsys/drivers/ppcfloor/comm/bin/mpixlc_r
+CCP		= /bgsys/drivers/ppcfloor/comm/bin/mpixlc_r
+CCD		= xlc_r -I/bgsys/drivers/ppcfloor/comm/include
+CFLAGS		= -O3 -qstrict -qlanglvl=extc99 -qarch=450d -qtune=450 -s -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_DETERMINISTIC -D_ALL_SOURCE
+CLIBFLAGS	=
+LDFLAGS		= -lpthread -lm
+CP		= cp
+LEX		= lex
+LN		= ln
+MKDIR		= mkdir
+MV		= mv
+RANLIB		= ranlib
+YACC		= yacc
