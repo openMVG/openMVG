@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2017 nomoko AG, Sebastien Chappuis<sebastien@nomoko.camera>, Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include <iostream>
 #include "ceres/rotation.h"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/hypercluster.hpp"
