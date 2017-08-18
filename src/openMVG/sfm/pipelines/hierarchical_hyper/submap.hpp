@@ -9,10 +9,6 @@
 #pragma once
 
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io_cereal.hpp"
-
-#include <cereal/types/set.hpp>
-#include <cereal/types/memory.hpp>
 
 #include <set>
 
@@ -38,16 +34,7 @@ struct HsfmSubmap
   * @param ar Archive
   */
   template <class Archive>
-  void serialize ( Archive & ar )
-  {
-    ar(cereal::make_nvp("track_ids", track_ids),
-       cereal::make_nvp("is_parent", is_parent),
-       cereal::make_nvp("separator", separator),
-       cereal::make_nvp("children_submaps_first", children_submaps.first),
-       cereal::make_nvp("children_submaps_second", children_submaps.second),
-       cereal::make_nvp("parent_id", parent_id),
-       cereal::make_nvp("sfm_data", sfm_data));
-  }
+  inline void serialize ( Archive & ar );
 };
 
 using HsfmSubmaps = std::map<openMVG::IndexT, openMVG::sfm::HsfmSubmap>;
