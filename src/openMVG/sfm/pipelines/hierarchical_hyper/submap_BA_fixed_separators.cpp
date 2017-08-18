@@ -16,12 +16,12 @@ namespace sfm{
 
   Bundle_Adjustment_Fixed_Separators::Bundle_Adjustment_Fixed_Separators
 (
-  Bundle_Adjustment_Ceres::BA_Ceres_options options
+  const Bundle_Adjustment_Ceres::BA_Ceres_options & options
 )
 : ceres_options_(options)
 {}
 
-void Bundle_Adjustment_Fixed_Separators::configureProblem(ceres::Problem & problem, SfM_Data& sfm_data, const std::set<size_t>& separator_tracks_ids, Hash_Map<IndexT, std::vector<double> > & map_intrinsics, Hash_Map<IndexT, std::vector<double> > & map_poses)
+void Bundle_Adjustment_Fixed_Separators::configureProblem(ceres::Problem & problem, SfM_Data& sfm_data, const std::set<IndexT>& separator_tracks_ids, Hash_Map<IndexT, std::vector<double> > & map_intrinsics, Hash_Map<IndexT, std::vector<double> > & map_poses)
 {
   for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
   {
@@ -103,7 +103,7 @@ void Bundle_Adjustment_Fixed_Separators::configureProblem(ceres::Problem & probl
 // and where we fix the position of the separator landmarks
 bool Bundle_Adjustment_Fixed_Separators::Adjust(
    SfM_Data & sfm_data, // scene to refine
-   const std::set<size_t> & separator_tracks_ids)
+   const std::set<IndexT> & separator_tracks_ids)
 {
   //----------
   // Add camera parameters

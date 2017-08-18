@@ -162,10 +162,10 @@ bool MergeScenesUsingCommonTracks
   destination_sfm_data.structure = sfm_data_first.structure;
 
   // initialize the transformation parameters
-  std::vector<double> second_base_node_pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::vector<double> second_base_node_pose(6, 0.0);
   double scaling_factor(1.0);
 
-  bool alignment_successful =
+  const bool alignment_successful =
       smap_aligner->computeTransformAndDestinationSeparators(
         destination_sfm_data, sfm_data_first, sfm_data_second,
         second_base_node_pose, scaling_factor, common_track_ids);
@@ -176,7 +176,7 @@ bool MergeScenesUsingCommonTracks
     Mat3 second_base_node_RMat;
     ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
 
-    std::cout << " new base node coords : \n"
+    std::cout << " new aligned base node coords : \n"
     << second_base_node_t << std::endl
     << second_base_node_RMat << std::endl
     << " scale : " << scaling_factor << std::endl;
@@ -194,7 +194,7 @@ bool MergeScenesUsingCommonTracks
 }
 
 /**
- * @brief transforms the content of a sfmdata scene into another using a
+ * @brief transforms the content of a sfm data scene into another using a
  * rotation, a translation, and a scale factor
  * @param the original sfm data scene
  * @return the destination sfm data scene
@@ -217,8 +217,8 @@ void transformSfMDataScene(
   for (const auto & pose : original_poses)
   {
     geometry::Pose3 new_pose = pose.second;
-    Vec3 original_position = new_pose.center();
-    Mat3 original_rotation = new_pose.rotation();
+    const Vec3 original_position = new_pose.center();
+    const Mat3 original_rotation = new_pose.rotation();
 
     new_pose = geometry::Pose3(original_rotation * rotation.transpose(),
         (rotation * ((1.0/scaling_factor)*original_position) + translation));
@@ -232,7 +232,7 @@ void transformSfMDataScene(
   Landmarks & destination_landmarks = destination_sfm_data.structure;
   for (const auto & landmark : original_landmarks)
   {
-    Vec3 original_position = landmark.second.X;
+    const Vec3 original_position = landmark.second.X;
 
     Landmark new_landmark = landmark.second;
     new_landmark.X = rotation * ((1.0/scaling_factor) * original_position) + translation;

@@ -28,9 +28,9 @@ namespace sfm {
 struct HsfmSubmap
 {
   SfM_Data sfm_data;
-  std::set<size_t> track_ids;
+  std::set<IndexT> track_ids;
   bool is_parent = false;
-  std::set<size_t> separator;// set of track ids in the separator (if parent)
+  std::set<IndexT> separator;// set of track ids in the separator (if parent)
   std::pair<IndexT, IndexT> children_submaps = {0,0}; // pair of submaps index for children (if any)
   IndexT parent_id = 0;
 

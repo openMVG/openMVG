@@ -71,7 +71,7 @@ inline openMVG::sfm::Poses generateRandomPoses(const int n_poses)
 
 // we use an eigen matrix as return value in order to be able
 // to use the EXPECT_MATRIX_NEAR macro during the test
-inline Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> computeDistances(const openMVG::sfm::SfM_Data & sfm_data)
+inline openMVG::Mat computeDistances(const openMVG::sfm::SfM_Data & sfm_data)
 {
   // put all positions of all poses and landmarks in a single vector
   std::vector<openMVG::Vec3> positions;
@@ -84,7 +84,7 @@ inline Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> computeDistances(co
   // compute distances between all poses and landmarks
   const int n_total = positions.size();
 
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> distances(n_total, n_total);
+  openMVG::Mat distances(n_total, n_total);
   for (int i(0); i < n_total; i++)
   {
     for (int j(0); j < n_total; j++)

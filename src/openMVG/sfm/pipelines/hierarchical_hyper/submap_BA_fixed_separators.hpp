@@ -27,21 +27,21 @@ class Bundle_Adjustment_Fixed_Separators
     Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
 
   public:
-  Bundle_Adjustment_Fixed_Separators(Bundle_Adjustment_Ceres::BA_Ceres_options options = Bundle_Adjustment_Ceres::BA_Ceres_options());
+  Bundle_Adjustment_Fixed_Separators(const Bundle_Adjustment_Ceres::BA_Ceres_options & options = Bundle_Adjustment_Ceres::BA_Ceres_options());
 
   Bundle_Adjustment_Ceres::BA_Ceres_options & ceres_options(){return ceres_options_;}
 
   bool Adjust
   (
    SfM_Data & sfm_data, // scene to refine
-   const std::set<size_t> & separator_tracks_ids
+   const std::set<IndexT> & separator_tracks_ids
   );
 
 protected:
   virtual void configureProblem(
       ceres::Problem & problem,
       SfM_Data & sfm_data,
-      const std::set<size_t>& separator_tracks_ids,
+      const std::set<IndexT>& separator_tracks_ids,
       Hash_Map<IndexT, std::vector<double> > & map_intrinsics,
       Hash_Map<IndexT, std::vector<double> > & map_poses);
 };

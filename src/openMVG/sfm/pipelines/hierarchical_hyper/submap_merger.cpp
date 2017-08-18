@@ -102,7 +102,7 @@ bool SubmapMerger::MergeSubmapPair(const IndexT parent_id, const std::string &de
 
   // find all common reconstructed tracks in both submaps
   // (note that this is a subset of the separator tracks)
-  std::vector<size_t> common_track_ids = findCommonReconstructedSeparatorTracks(parent_submap, first_sfm_data, second_sfm_data);
+  const std::vector<size_t> common_track_ids = findCommonReconstructedSeparatorTracks(parent_submap, first_sfm_data, second_sfm_data);
 
   // --- OPTIMIZATION OF THE BASE NODE POSES + SEPARATOR LANDMARKS POSITIONS ---
   //

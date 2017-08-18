@@ -176,9 +176,9 @@ eSubmapDiagnostic CheckSingleSubmap(const HsfmSubmaps & submaps, const IndexT & 
   // *******************************************
   
   const IndexT parent_id = submap.parent_id;
-  const std::set<size_t> & separator_tracks = submaps.at(parent_id).separator;
+  const std::set<IndexT> & separator_tracks = submaps.at(parent_id).separator;
   const int n_total_separators = separator_tracks.size();
-  std::set<size_t> reconstructed_separators;
+  std::set<IndexT> reconstructed_separators;
 
   // count reconstructed separators
   for (const auto & landmark : sfm_data.GetLandmarks())

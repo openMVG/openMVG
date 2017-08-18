@@ -34,7 +34,7 @@ TEST(Bundle_Adjustment_Fixed_Separators, effectiveMinimization)
 
   const double dResidual_before = RMSE(sfm_data);
 
-  const std::set<size_t> separator_tracks_ids{0,1};
+  const std::set<IndexT> separator_tracks_ids{0,1};
 
   Bundle_Adjustment_Fixed_Separators bundle_adjustment_obj;
 
@@ -55,7 +55,7 @@ TEST(Bundle_Adjustment_Fixed_Separators, leavesSeparatorTracksConstant)
   // Convert the input dataset to a SfM_Data scene
   SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA_RADIAL3);
 
-  const std::set<size_t> separator_tracks_ids = {0,1};
+  const std::set<IndexT> separator_tracks_ids = {0,1};
 
   const Landmarks landmarks_before = sfm_data.GetLandmarks();
 

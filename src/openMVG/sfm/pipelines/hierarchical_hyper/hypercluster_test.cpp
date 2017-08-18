@@ -68,11 +68,11 @@ TEST(HYPERCLUSTER, simple_partitioning_successful)
         smap.track_ids.size());
 
     // check that siblings submaps are made of ALL the tracks from the parent submap
-    std::set<size_t> union_siblings_track_ids;
+    std::set<openMVG::IndexT> union_siblings_track_ids;
     std::set_union(submaps.at(first_child_id).track_ids.begin(), submaps.at(first_child_id).track_ids.end(),
         submaps.at(second_child_id).track_ids.begin(), submaps.at(second_child_id).track_ids.end(), std::inserter(union_siblings_track_ids, union_siblings_track_ids.begin()));
 
-    const std::set<size_t> & parent_track_ids = smap.track_ids;
+    const std::set<openMVG::IndexT> & parent_track_ids = smap.track_ids;
 
     CHECK(union_siblings_track_ids == parent_track_ids);
   }
@@ -97,7 +97,7 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
   {
     openMVG::tracks::submapTrack s_track;
     // generate random submaptrack
-    int n_views_in_track = rand() % n_views;
+    const int n_views_in_track = rand() % n_views;
     std::set<openMVG::IndexT> remaining_view_ids = all_view_ids;
     auto it = remaining_view_ids.begin();
     for (int j(0); j<n_views_in_track; j++)

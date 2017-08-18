@@ -16,10 +16,12 @@
 #include "openMVG/tracks/tracks.hpp"
 
 /*
- *
  * clustering tracks sfm
  * inspired by paper :
- * [1] HyperSFM (2012)
+ * "HyperSFM", Kai Ni and Frank Dellaert,
+ * International Conference on 3D Imaging, Modeling, Processing, Visualization and Transmission (3DIMPVT), 2012
+ *
+ * http://kaini.org/assets/Ni12_3dimpvt.pdf HyperSFM (2012)
  *
  */
 
@@ -32,13 +34,13 @@ class HyperCluster
 {
 
 public:
-  HyperCluster(const sfm::SfM_Data & sfm_data, tracks::STLMAPTracks map_tracks, const int threshold_submap_tracksize);
+  HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize);
 
   // create clustering tree by recursively partitioning submaps into smaller ones
   bool recursivePartitioning();
 
   // visualization using graphviz
-  bool exportTreeGraph(std::string filename);
+  bool exportTreeGraph(const std::string & filename) const;
 
   // accessors
   HsfmSubmaps getSubMaps() const {return submaps_;}

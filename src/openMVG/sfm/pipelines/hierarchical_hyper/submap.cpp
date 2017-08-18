@@ -32,10 +32,10 @@ bool ExportSubmapData(const HsfmSubmaps & submaps, const IndexT submap_id, const
   const IndexT parent_submap_id = submaps.at(submap_id).parent_id;
 
   // find separator tracks
-  const std::set<size_t> & separator_tracks_indices = submaps.at(parent_submap_id).separator;
+  const std::set<IndexT> & separator_tracks_indices = submaps.at(parent_submap_id).separator;
 
-  std::set<size_t> separator_points_indices;
-  std::set<size_t> separator_camera_indices = {};// TODO < fill this ?
+  std::set<IndexT> separator_points_indices;
+  std::set<IndexT> separator_camera_indices = {};// TODO < fill this ?
 
   // find 3d points and camera positions
   std::vector<Vec3> points, cam_pos;
@@ -53,7 +53,7 @@ bool ExportSubmapData(const HsfmSubmaps & submaps, const IndexT submap_id, const
   }
 
   // find coordinates of separator points also reconstructed in sibling submap
-  std::set<size_t> common_separator_points_indices;
+  std::set<IndexT> common_separator_points_indices;
   const IndexT sibling_submap_id = getSiblingSubmapId(submaps, submap_id);
   for (const auto & landmark : submaps.at(sibling_submap_id).sfm_data.GetLandmarks())
   {
@@ -68,7 +68,7 @@ bool ExportSubmapData(const HsfmSubmaps & submaps, const IndexT submap_id, const
       cam_pos.push_back(smap.sfm_data.GetPoseOrDie(view.second.get()).center());
   }
 
-  std::set<size_t> non_common_separator_points_indices;
+  std::set<IndexT> non_common_separator_points_indices;
   std::set_difference(separator_points_indices.begin(), separator_points_indices.end(),
       common_separator_points_indices.begin(), common_separator_points_indices.end(),
       std::inserter(non_common_separator_points_indices, non_common_separator_points_indices.begin()));

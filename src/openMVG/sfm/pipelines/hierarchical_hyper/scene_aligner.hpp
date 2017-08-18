@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
 namespace ceres {

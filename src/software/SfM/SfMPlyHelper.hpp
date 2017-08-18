@@ -10,6 +10,7 @@
 #define OPENMVG_SFM_PLY_HELPER_H
 
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/types.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -126,8 +127,8 @@ exportToPly_Highlight
   const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::set<size_t> highlighted_points_indices,
-  const std::set<size_t> highlighted_camera_indices
+  const std::set<IndexT> highlighted_points_indices,
+  const std::set<IndexT> highlighted_camera_indices
 )
 {
   std::ofstream outfile(sFileName.c_str());
@@ -191,8 +192,8 @@ exportToPly_MultiHighlight
   const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::vector<std::set<size_t>> highlighted_points_indices_sets,
-  std::set<size_t> highlighted_camera_indices
+  const std::vector<std::set<IndexT>> highlighted_points_indices_sets,
+  std::set<IndexT> highlighted_camera_indices
 )
 {
   std::ofstream outfile(sFileName.c_str());

@@ -105,6 +105,7 @@ struct ResidualErrorFunctor_BaseNode_Separators
           <ResidualErrorFunctor_BaseNode_Separators, 6, 6, 3, 1>(
             new ResidualErrorFunctor_BaseNode_Separators(measurement_A.data(), measurement_B.data())));
     }
+    else return nullptr;
   }
 
   const double * m_pos_3dmeasurement_A; // the 3d measurement in the first submap

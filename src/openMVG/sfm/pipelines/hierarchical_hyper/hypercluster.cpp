@@ -52,7 +52,7 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
   return out_sfm_data;
 }
 
-HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, tracks::STLMAPTracks map_tracks, const int threshold_submap_tracksize) : 
+HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize) : 
   root_sfm_data_(sfm_data), map_tracks_(map_tracks),
   threshold_submap_tracksize_(threshold_submap_tracksize)
 {
@@ -118,7 +118,7 @@ bool HyperCluster::recursivePartitioning()
   return true;
 }
 
-bool HyperCluster::exportTreeGraph(std::string filename)
+bool HyperCluster::exportTreeGraph(const std::string & filename) const
 {
   // Export the graph as a DOT (graph description language) file
   std::ofstream file(filename.c_str());
@@ -250,7 +250,7 @@ std::map<std::set<IndexT>, std::set<size_t>> HyperCluster::createSubHyperGraph(I
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel 
 #endif
-  for (std::set<size_t>::const_iterator track_id = submaps_.at(submap_id).track_ids.begin();
+  for (std::set<IndexT>::const_iterator track_id = submaps_.at(submap_id).track_ids.begin();
       track_id != submaps_.at(submap_id).track_ids.end(); track_id++)
   {
 #ifdef OPENMVG_USE_OPENMP

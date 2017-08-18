@@ -25,15 +25,11 @@ public:
       const std::string & soutDirectory,
       const std::string & sloggingFile);
 
-  ~SubmapSfMReconstructionEngine();
+  ~SubmapSfMReconstructionEngine() = default;
 
   bool InitLandmarkTracks();
 
 private:
-  // Anonymous namespace (in Histogram) -> we have to redefine
-  // this function.
-  /// Return MSE (Mean Square Error) and a histogram of residual values.
-  double ComputeResidualsHistogramRedefined(Histogram<double> * histo);
 };
 
 }
