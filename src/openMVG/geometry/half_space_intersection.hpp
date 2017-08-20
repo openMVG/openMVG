@@ -11,6 +11,7 @@
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(Eigen::Hyperplane<double, 3>)
 
 namespace openMVG
 {
@@ -23,8 +24,7 @@ namespace halfPlane
 using Half_plane = Eigen::Hyperplane<double, 3>;
 
 /// Define a collection of Half_plane
-using Half_planes = std::vector<Half_plane, Eigen::aligned_allocator<Half_plane>>;
-
+using Half_planes = std::vector<Half_plane>;
 
 /**
 * @brief Define a plane passing through the points (p, q, r).
