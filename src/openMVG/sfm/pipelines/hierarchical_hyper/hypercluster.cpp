@@ -148,7 +148,9 @@ bool HyperCluster::exportTreeGraph(const std::string & filename) const
 
   // convert to svg with dot
   const std::string dotcommand = "dot -Tsvg -O -Goverlap=scale -Gsplines=false -v " + filename;
-  std::system(dotcommand.c_str());
+  if (std::system(nullptr) != 0){
+    std::system(dotcommand.c_str());
+  }
   std::cout << "done!" << std::endl;
   return true; 
 }
