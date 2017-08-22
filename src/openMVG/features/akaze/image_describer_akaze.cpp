@@ -31,6 +31,7 @@ AKAZE_Image_describer_SURF::Describe_AKAZE_SURF
                             [&](const AKAZEKeypoint & pt)
                             {
                               if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
                             }),
              kpts.end());
 
@@ -84,6 +85,7 @@ AKAZE_Image_describer_LIOP::Describe_AKAZE_LIOP
                             [&](const AKAZEKeypoint & pt)
                             {
                               if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
                             }),
              kpts.end());
 
@@ -148,6 +150,7 @@ AKAZE_Image_describer_MLDB::Describe_AKAZE_MLDB
                             [&](const AKAZEKeypoint & pt)
                             {
                               if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
                             }),
              kpts.end());
 
