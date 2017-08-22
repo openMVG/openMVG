@@ -36,6 +36,9 @@ SubmapSfMReconstructionEngine::SubmapSfMReconstructionEngine(const HsfmSubmap & 
 // In this class, map tracks is defined at construction
 bool SubmapSfMReconstructionEngine::InitLandmarkTracks()
 {
+  // Initialize the shared track visibility helper
+  shared_track_visibility_helper_.reset(new openMVG::tracks::SharedTrackVisibilityHelper(map_tracks_));
+
   return true;
 }
 
