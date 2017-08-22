@@ -1,13 +1,19 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   sfm_files_header
   *.hpp
+  pipelines/*.hpp
+  pipelines/localization/*.hpp
+  pipelines/structure_from_known_poses/*.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   sfm_files_cpp
   *.cpp
+  pipelines/*.cpp
+  pipelines/localization/*.cpp
+  pipelines/structure_from_known_poses/*.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
@@ -27,8 +33,6 @@ target_link_libraries(
     openMVG_lInftyComputerVision
     openMVG_system
     openMVG_matching
-    scotch
-    scotcherr
     lemon
 )
 target_include_directories(
