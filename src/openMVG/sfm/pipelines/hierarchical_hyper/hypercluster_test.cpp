@@ -8,6 +8,8 @@
 
 #include "openMVG/sfm/pipelines/hierarchical_hyper/hypercluster.hpp" // what we're testing
 
+#include "openMVG/test_utility_functions.hpp"
+
 #include "openMVG/sfm/sfm.hpp"
 #include "testing/testing.h"
 
@@ -97,15 +99,15 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
   {
     openMVG::tracks::submapTrack s_track;
     // generate random submaptrack
-    const int n_views_in_track = rand() % n_views;
+    const int n_views_in_track = randomPositiveInteger(n_views);
     std::set<openMVG::IndexT> remaining_view_ids = all_view_ids;
     auto it = remaining_view_ids.begin();
     for (int j(0); j<n_views_in_track; j++)
     {
       it = remaining_view_ids.begin();
-      int next_id = rand() % remaining_view_ids.size();
+      int next_id = randomPositiveInteger(remaining_view_ids.size() - 1);
       std::advance(it, next_id);
-      s_track[*it] = rand()%RAND_MAX;// complete random feature id...it is not used anyway TODO < true ?
+      s_track[*it] = randomPositiveInteger(RAND_MAX);// complete random feature id...it is not used anyway TODO < true ?
       it = remaining_view_ids.erase(it);
     }
     map_tracks[i] = s_track;

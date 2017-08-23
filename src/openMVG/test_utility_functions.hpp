@@ -3,6 +3,14 @@
 #include "third_party/ceres-solver/include/ceres/rotation.h"
 #include "openMVG/sfm/sfm_data.hpp"
 
+inline int randomPositiveInteger(int boundary = 100)
+{
+  std::random_device rd;
+  std::mt19937 eng(rd());
+  std::uniform_int_distribution<> distr(0, boundary);
+  return distr(eng);
+}
+
 inline double randomPositiveDouble(double boundary = 100.0)
 {
   std::random_device rd;
