@@ -128,6 +128,53 @@ TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationW
   EXPECT_NEAR(scaling_factor_gt, scaling_factor, 1e-3);
 }
 
+TEST(SceneAligner, twoScenesWithNoCommonTracks_returnFalse)
+{
+  TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(10);
+
+  // remove common tracks from each scene
+  for (std::vector<size_t>::iterator track_id = two_scenes.common_track_ids.begin(); !two_scenes.common_track_ids.empty();)
+  {
+    two_scenes.sfm_data_A.structure.erase(*track_id);
+    two_scenes.sfm_data_B.structure.erase(*track_id);
+    track_id = two_scenes.common_track_ids.erase(track_id);
+  }
+
+  std::unique_ptr<SceneAligner> smap_aligner =
+      std::unique_ptr<SceneAligner>(new SceneAligner);
+
+  SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  std::vector<double> second_base_node_pose(6, 0.0);
+  double scaling_factor(1.0);
+
+  EXPECT_FALSE(smap_aligner->computeTransformAndDestinationSeparators(
+      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+      second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
+}
+
+TEST(SceneAligner, twoScenesWithNoCommonRECONSTRUCTEDTracks_returnFalse)
+{
+  TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(10);
+
+  // remove common tracks from each scene but not from common tracks !
+  for (const auto & track_id : two_scenes.common_track_ids)
+  {
+    two_scenes.sfm_data_A.structure.erase(track_id);
+    two_scenes.sfm_data_B.structure.erase(track_id);
+  }
+
+  std::unique_ptr<SceneAligner> smap_aligner =
+      std::unique_ptr<SceneAligner>(new SceneAligner);
+
+  SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  std::vector<double> second_base_node_pose(6, 0.0);
+  double scaling_factor(1.0);
+
+  EXPECT_FALSE(smap_aligner->computeTransformAndDestinationSeparators(
+      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+      second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
+}
+
 // checks that distances are conserved (up to a scale) when
 // transforming a sfm data scene
 TEST(transformSfMDataScene, genericScene_transformationLeavesDistancesConserved)

@@ -23,6 +23,22 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
+bool scenesAreAlignable(const SfM_Data & sfm_data_first, const SfM_Data & sfm_data_second, const std::vector<size_t> & common_track_ids)
+{
+  if (common_track_ids.empty())
+    return false;
+
+  for (const auto & track_id : common_track_ids)
+  {
+    if (sfm_data_first.structure.count(track_id) == 0
+        || sfm_data_second.structure.count(track_id) == 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 SceneAligner::SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options)
   : ceres_options_(options)
@@ -36,6 +52,12 @@ bool SceneAligner::computeTransformAndDestinationSeparators(
     double &scaling_factor,
     const std::vector<size_t> & common_track_ids)
 {
+  // check precondition for function to run normally
+  if (!scenesAreAlignable(sfm_data_first, sfm_data_second, common_track_ids))
+  {
+    return false;
+  }
+
   ceres::Problem problem;
 
   // note : configureProblem is a virtual method !
