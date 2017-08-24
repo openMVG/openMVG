@@ -17,18 +17,6 @@
 #include <scotch.h>
 #include <fstream>
 
-// get all permutations between the values of a set, as a set of pairs <x1,x2>, where x2 > x1
-std::set<std::pair<unsigned,unsigned>> getPermutations(const std::set<unsigned> & id_set)
-{
-  std::set<std::pair<unsigned,unsigned>> permutations_set;
-  for (std::set<unsigned>::const_iterator id = id_set.begin(); id != id_set.end(); id++)
-  {
-    for (std::set<unsigned>::const_iterator id_2 = std::next(id,1); id_2 != id_set.end(); id_2++)
-      permutations_set.insert(std::make_pair(*id, *id_2));
-  }
-  return permutations_set;
-}
-
 /**
  * @note WARNING : this function USED TO create a memory leak (the incriminated part is SCOTCH_meshGraph() in
  * the scotch library)
@@ -74,8 +62,8 @@ inline bool ScotchPartitionHyperGraph(
   SCOTCH_Num * vendtab = verttab + 1; // this points to verttab + 1
   SCOTCH_Num * velotab = new SCOTCH_Num[velmnbr]; // element weights
   //SCOTCH_Num vnlotab[vnodnbr]; // node weights NOTE : not used because no weights on the nodes in our case
-  //SCOTCH_Num vlbltab[velmnbr + vnodnbr]; // vertex label array ... do we use this ?
-  SCOTCH_Num edgenbr = 2*edge_number_total; // to fill, should be 2*number of edges (multiple edge per h_edge) TODO : << THIS !!  
+  //SCOTCH_Num vlbltab[velmnbr + vnodnbr]; // vertex label array ... we don't use this
+  SCOTCH_Num edgenbr = 2*edge_number_total; // should be 2*number of edges
   SCOTCH_Num * edgetab = new SCOTCH_Num[edgenbr]; // adjacency array
 
   // map hyper edges with element ids
