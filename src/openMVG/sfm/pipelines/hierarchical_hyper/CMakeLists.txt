@@ -18,6 +18,7 @@ target_link_libraries(
   openMVG_pipeline_hierarchical_hyper
   PRIVATE
     openMVG_sfm
+    openMVG_pipeline_sequential
     scotch
     scotcherr
     )
@@ -32,7 +33,7 @@ set_target_properties(openMVG_pipeline_hierarchical_hyper PROPERTIES SOVERSION $
 install(TARGETS openMVG_pipeline_hierarchical_hyper DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG scene_aligner
-  "openMVG_features;openMVG_multiview_test_data;openMVG_sfm")
-UNIT_TEST(openMVG sfm_data_BA_fixed_points
-  "openMVG_features;openMVG_multiview_test_data;openMVG_sfm")
-UNIT_TEST(openMVG hypercluster "openMVG_sfm")
+  "openMVG_features;openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG submap_BA_fixed_separators
+  "openMVG_features;openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG hypercluster "openMVG_pipeline_hierarchical_hyper")

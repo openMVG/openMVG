@@ -29,5 +29,5 @@ set_target_properties(openMVG_pipeline_sequential PROPERTIES SOVERSION ${OPENMVG
 install(TARGETS openMVG_pipeline_sequential DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sequential_SfM
-  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_sfm;openMVG_system;stlplus")
+  "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_pipeline_sequential;openMVG_system;stlplus")
 

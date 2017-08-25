@@ -86,7 +86,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
   openMVG_system
   openMVG_image
   openMVG_features
-  openMVG_sfm
+  openMVG_pipeline_sequential
   stlplus
   )
 
@@ -95,7 +95,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   openMVG_system
   openMVG_image
   openMVG_features
-  openMVG_sfm
+  openMVG_pipeline_global
   stlplus
   )
 
@@ -103,7 +103,7 @@ ADD_EXECUTABLE(openMVG_main_HyperSfM main_HyperSfM.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_HyperSfM
   openMVG_system
   openMVG_features
-  openMVG_sfm
+  openMVG_pipeline_hierarchical_hyper
   stlplus
   )
 
