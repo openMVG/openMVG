@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
   openMVG::system::Timer timer;
 
-  // create tracks 
+  // create tracks
   tracks::STLMAPTracks map_tracks;
   // Compute tracks from matches
   tracks::TracksBuilder tracksBuilder;
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     submap.sfm_data = sfmEngine.Get_SfM_Data();
 
     // save submap
-    ExportSubmapData(submaps, submap_id, 
+    ExportSubmapData(submaps, submap_id,
         stlplus::create_filespec(sOutDir, "sfm_data_" + std::to_string(submap_id)));
   }
 
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   {
     // leaf submaps have already been saved a few lines back
     if (smap.second.is_parent)
-      ExportSubmapData(submaps, smap.first, 
+      ExportSubmapData(submaps, smap.first,
           stlplus::create_filespec(sOutDir, "sfm_data_" + std::to_string(smap.first)));
   }
 

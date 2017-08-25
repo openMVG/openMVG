@@ -127,8 +127,8 @@ exportToPly_Highlight
   const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::set<IndexT> highlighted_points_indices,
-  const std::set<IndexT> highlighted_camera_indices
+  const std::set<IndexT> & highlighted_points_indices,
+  const std::set<IndexT> & highlighted_camera_indices
 )
 {
   std::ofstream outfile(sFileName.c_str());
@@ -192,8 +192,8 @@ exportToPly_MultiHighlight
   const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::vector<std::set<IndexT>> highlighted_points_indices_sets,
-  std::set<IndexT> highlighted_camera_indices
+  const std::vector<std::set<IndexT>> & highlighted_points_indices_sets,
+  const std::set<IndexT> & highlighted_camera_indices
 )
 {
   std::ofstream outfile(sFileName.c_str());
@@ -214,11 +214,11 @@ exportToPly_MultiHighlight
   std::vector<std::string> colors = {"255 0 0", "0 0 255", "255 255 0", "0 255 255", "255 0 255"};
   assert(highlighted_points_indices_sets.size() <= colors.size());
 
-  for (size_t i=0; i < vec_points.size(); ++i)  
+  for (size_t i=0; i < vec_points.size(); ++i)
   {
     int color_id(0);
     bool highlighted_point = false;
-    for (const auto & highlighted_points_indices : highlighted_points_indices_sets) 
+    for (const auto & highlighted_points_indices : highlighted_points_indices_sets)
     {
       if (highlighted_points_indices.count(i) > 0)
       {

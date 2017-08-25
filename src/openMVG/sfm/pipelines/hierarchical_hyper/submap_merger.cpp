@@ -71,7 +71,7 @@ bool SubmapMerger::Merge(const std::string & debug_out_dir)
       // check that sister submap is in the "to merge" list. if not, continue to next submap.
       if (submaps_to_merge.find(sister_smap_id) == submaps_to_merge.end())
       {
-        smap_id++;
+        ++smap_id;
         continue;
       }
 

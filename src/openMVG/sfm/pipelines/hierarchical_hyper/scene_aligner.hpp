@@ -35,7 +35,7 @@ public:
     const std::vector<size_t> & common_track_ids // which tracks id are commonly reconstructed in both submaps
   );
 
-  SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options = Bundle_Adjustment_Ceres::BA_Ceres_options());
+  explicit SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options = Bundle_Adjustment_Ceres::BA_Ceres_options());
 
 protected:
   Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
@@ -64,4 +64,3 @@ void transformSfMDataScene(SfM_Data & destination_sfm_data,
 
 } // namespace sfm
 } // namespace openMVG
-

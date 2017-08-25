@@ -26,7 +26,7 @@ TEST(HYPERCLUSTER, Basis)
   // create some input sfm data and tracks
   generate_sfm_data_and_tracks(sfm_data, map_tracks, n_views, n_tracks);
 
-  // test constructor  
+  // test constructor
   openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, n_tracks);
 }
 
@@ -63,7 +63,7 @@ TEST(HYPERCLUSTER, simple_partitioning_successful)
         + submaps.at(second_child_id).sfm_data.GetViews().size(),
         smap.sfm_data.GetViews().size());
 
-    // the sum of the tracks of the children submaps should be equal to their parent's number of tracks 
+    // the sum of the tracks of the children submaps should be equal to their parent's number of tracks
     // (we have to subtrackt once the separator tracks otherwise they are counted twice)
     EXPECT_EQ(submaps.at(first_child_id).track_ids.size()
         + submaps.at(second_child_id).track_ids.size() - smap.separator.size(),
@@ -87,7 +87,7 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
 
   // Views
   std::set<openMVG::IndexT> all_view_ids;
-  for(int i(0); i < n_views; i++)
+  for (int i(0); i < n_views; i++)
   {
     const openMVG::IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
     sfm_data.views[i] = std::make_shared<openMVG::sfm::View>("", id_view, id_intrinsic, id_pose, 2000, 2000);

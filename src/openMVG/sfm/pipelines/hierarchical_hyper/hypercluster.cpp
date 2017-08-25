@@ -20,12 +20,12 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
   for (sfm::Views::iterator view_it = out_sfm_data.views.begin();
       view_it != out_sfm_data.views.end();)
   {
-    if(view_ids.find(view_it->second->id_view) == view_ids.end())
+    if (view_ids.find(view_it->second->id_view) == view_ids.end())
     {
       view_it = out_sfm_data.views.erase(view_it);
       continue;
     }
-    view_it++;
+    ++view_it;
   }
 
   // remove unused intrinsics
@@ -47,14 +47,13 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
     if (!found_intrinsic)
       intrinsic_it = out_sfm_data.intrinsics.erase(intrinsic_it);
     else
-      intrinsic_it++;
+      ++intrinsic_it;
   }
   return out_sfm_data;
 }
 
-HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize) : 
-  root_sfm_data_(sfm_data), map_tracks_(map_tracks),
-  threshold_submap_tracksize_(threshold_submap_tracksize)
+HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize)
+  : root_sfm_data_(sfm_data), map_tracks_(map_tracks), threshold_submap_tracksize_(threshold_submap_tracksize)
 {
   root_sfm_data_.structure.clear();
   root_sfm_data_.poses.clear();
@@ -104,7 +103,7 @@ bool HyperCluster::recursivePartitioning()
         // determine id for children submaps
         submap.children_submaps = {next_index, next_index + 1};
 
-        // add the two newly created submaps to the new submaps list 
+        // add the two newly created submaps to the new submaps list
         new_submaps[next_index] = new_submap_pair[0];
         new_submaps[next_index + 1] = new_submap_pair[1];
         next_index += 2;
@@ -137,7 +136,7 @@ bool HyperCluster::exportTreeGraph(const std::string & filename) const
     else
     {
       // link to view and track number!
-      file << smap.first << " -- v_" << smap.second.sfm_data.GetViews().size() 
+      file << smap.first << " -- v_" << smap.second.sfm_data.GetViews().size()
         << "_t_" << smap.second.track_ids.size() << "\n";
     }
   }
@@ -167,7 +166,7 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
   // use external library to partition the submap
   std::pair<std::set<IndexT>, std::set<IndexT>> view_id_partitions;
 
-  if(!ScotchPartitionHyperGraph(sub_hyper_edges_and_tracks, view_id_partitions))
+  if (!ScotchPartitionHyperGraph(sub_hyper_edges_and_tracks, view_id_partitions))
   {
     std::cerr << "SCOTCH could not partition hyper graph for submap " << submap_id << std::endl;
     return false;
@@ -199,11 +198,11 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
       bool is_separator = true;
       for (auto & smap : partitioned_pair)
       {
-        std::set<IndexT> view_ids; 
+        std::set<IndexT> view_ids;
         for (const auto & view : smap.sfm_data.GetViews())
           view_ids.insert(view.first);
 
-        if (std::includes(view_ids.begin(), view_ids.end(), 
+        if (std::includes(view_ids.begin(), view_ids.end(),
               hyper_edge.first.begin(), hyper_edge.first.end()))
         {
           is_separator = false;
@@ -247,16 +246,16 @@ std::map<std::set<IndexT>, std::set<size_t>> HyperCluster::createSubHyperGraph(I
     submap_viewids.insert(view.first);
 
   // count tracks by view_ids sequences, sort result.
-  // ex : the number of tracks that cover views 1,2 and 4 will 
+  // ex : the number of tracks that cover views 1,2 and 4 will
   // be the weight of the hyper edge {1,2,4}
 #ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel 
+  #pragma omp parallel
 #endif
   for (std::set<IndexT>::const_iterator track_id = submaps_.at(submap_id).track_ids.begin();
-      track_id != submaps_.at(submap_id).track_ids.end(); track_id++)
+      track_id != submaps_.at(submap_id).track_ids.end(); ++track_id)
   {
 #ifdef OPENMVG_USE_OPENMP
-  #pragma omp single nowait 
+  #pragma omp single nowait
 #endif
     {
       const auto & track = map_tracks_.at(*track_id);
@@ -268,7 +267,7 @@ std::map<std::set<IndexT>, std::set<size_t>> HyperCluster::createSubHyperGraph(I
       {
         // we don't want to add view ids that are not in the submap
         // (basically this condition is for dealing with separator tracks) TODO < do we want to deal with it this way ??
-        if (submap_viewids.find(track_part.first) != submap_viewids.end())           
+        if (submap_viewids.find(track_part.first) != submap_viewids.end())
           view_ids.insert(track_part.first);
       }
 

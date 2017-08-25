@@ -38,16 +38,14 @@ struct TwoScenesConfig
 
 inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_poses = 0)
 {
-  using namespace openMVG::sfm;
-
   TwoScenesConfig two_scenes;
 
-  Landmarks & landmarks_A = two_scenes.sfm_data_A.structure;
-  Landmarks & landmarks_B = two_scenes.sfm_data_B.structure;
-  Landmarks & landmarks_parent = two_scenes.parent_sfm_data.structure;
-  Poses & poses_A = two_scenes.sfm_data_A.poses;
-  Poses & poses_B = two_scenes.sfm_data_B.poses;
-  Poses & poses_parent = two_scenes.parent_sfm_data.poses;
+  openMVG::sfm::Landmarks & landmarks_A = two_scenes.sfm_data_A.structure;
+  openMVG::sfm::Landmarks & landmarks_B = two_scenes.sfm_data_B.structure;
+  openMVG::sfm::Landmarks & landmarks_parent = two_scenes.parent_sfm_data.structure;
+  openMVG::sfm::Poses & poses_A = two_scenes.sfm_data_A.poses;
+  openMVG::sfm::Poses & poses_B = two_scenes.sfm_data_B.poses;
+  openMVG::sfm::Poses & poses_parent = two_scenes.parent_sfm_data.poses;
 
   if (n_poses != 0)
   {

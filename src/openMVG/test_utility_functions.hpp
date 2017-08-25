@@ -57,6 +57,7 @@ inline std::vector<double> randomQuaternion()
   std::random_device rd;
   std::mt19937 eng(rd());
   std::uniform_real_distribution<double> distr(-2*M_PI, 2*M_PI);
+  rotation_axis *= distr(eng);
 
   // create quaternion from angle axis
   std::vector<double> quaternion(4);

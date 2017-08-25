@@ -8,7 +8,7 @@
 
 /**
  * This file contains interfaces to the SCOTCH hypergraph partitioning library
- * that we use for hypersfm. 
+ * that we use for hypersfm.
  */
 
 #pragma once
@@ -20,10 +20,10 @@
 /**
  * @note WARNING : this function USED TO create a memory leak (the incriminated part is SCOTCH_meshGraph() in
  * the scotch library)
- * you have to use our version of the scotch library which corrects this memory leak (in third_party/scotch_6.0.4). 
- * @brief Use the scotch library to partition a hypergraph made of view_id nodes and tracks set hyperedges 
+ * you have to use our version of the scotch library which corrects this memory leak (in third_party/scotch_6.0.4).
+ * @brief Use the scotch library to partition a hypergraph made of view_id nodes and tracks set hyperedges
  * into two sets of nodes (view ids in that case)
- * @param hyper_graph The hypergraph to be partitioned, defined as a map of <view_ids,tracks_ids>. 
+ * @param hyper_graph The hypergraph to be partitioned, defined as a map of <view_ids,tracks_ids>.
  * @param view_id_partitions The returned partition, in the shape of a pair of view_ids sets.
  * @retval true If partitioning succeeded
  * @retval false If partitioning failed
@@ -49,10 +49,10 @@ inline bool ScotchPartitionHyperGraph(
   for (const auto & h_edge : hyper_graph)
     edge_number_total += h_edge.first.size();
 
-  // the mesh data container 
+  // the mesh data container
   SCOTCH_Mesh meshdat;
 
-  // note : SCOTCH_Num is just an int 
+  // note : SCOTCH_Num is just an int
   // note2 : these obscure variable names come from the scotch documentation...
   SCOTCH_Num velmbas = 0;
   SCOTCH_Num vnodbas = velmbas + hyper_graph.size();
@@ -72,7 +72,7 @@ inline bool ScotchPartitionHyperGraph(
   for (const auto & h_edge : hyper_graph)
   {
     map_el_id_h_edge[el_id] = h_edge.first;
-    el_id++; 
+    el_id++;
   }
 
   // map view ids with node ids
@@ -108,7 +108,7 @@ inline bool ScotchPartitionHyperGraph(
   {
     const int current_node_id = map_view_id_node_id[view_id];
 
-    verttab[current_node_id] = i; 
+    verttab[current_node_id] = i;
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif
@@ -168,7 +168,7 @@ inline bool ScotchPartitionHyperGraph(
   SCOTCH_stratInit(stratptr);
 
   // array for partitioned data
-  SCOTCH_Num parttab[vnodnbr]; 
+  SCOTCH_Num parttab[vnodnbr];
   for (auto & part_element : parttab)
     part_element = -1;
 
@@ -192,9 +192,9 @@ inline bool ScotchPartitionHyperGraph(
   SCOTCH_memFree(stratptr);
 
   // cannot free those before since they are used by meshdat
-  delete edgetab;
-  delete verttab;
-  delete velotab;
+  delete[] edgetab;
+  delete[] verttab;
+  delete[] velotab;
 
   // partition data the view ids
   int current_node_id(vnodbas);

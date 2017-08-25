@@ -27,7 +27,7 @@ class Bundle_Adjustment_Fixed_Separators
     Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
 
   public:
-  Bundle_Adjustment_Fixed_Separators(const Bundle_Adjustment_Ceres::BA_Ceres_options & options = Bundle_Adjustment_Ceres::BA_Ceres_options());
+  explicit Bundle_Adjustment_Fixed_Separators(const Bundle_Adjustment_Ceres::BA_Ceres_options & options = Bundle_Adjustment_Ceres::BA_Ceres_options());
 
   Bundle_Adjustment_Ceres::BA_Ceres_options & ceres_options(){return ceres_options_;}
 

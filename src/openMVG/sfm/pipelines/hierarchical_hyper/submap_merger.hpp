@@ -19,7 +19,7 @@ class SceneAligner;
 class SubmapMerger
 {
 public:
-  SubmapMerger(const HsfmSubmaps &submaps);
+  explicit SubmapMerger(const HsfmSubmaps &submaps);
 
   bool Merge(const std::string &debug_out_dir = "");
 

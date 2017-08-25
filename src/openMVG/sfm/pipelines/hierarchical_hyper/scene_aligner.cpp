@@ -266,4 +266,3 @@ void transformSfMDataScene(
 
 } // namespace sfm
 } // namespace openMVG
-

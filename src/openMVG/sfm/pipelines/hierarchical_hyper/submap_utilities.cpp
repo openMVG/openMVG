@@ -165,15 +165,15 @@ eSubmapDiagnostic CheckSingleSubmap(const HsfmSubmaps & submaps, const IndexT & 
     Diagnostic = NO_RECONSTRUCTION;
     return Diagnostic;
   }
-  else if (n_poses/(double)n_views < 0.3) // TODO : change this value to a parameter ! 
+  else if (n_poses/(double)n_views < 0.3) // TODO : change this value to a parameter !
   {
     Diagnostic = BAD_RECONSTRUCTION;
     return Diagnostic;
   }
 
   // *******************************************
-  // if reconstruction is ok, check that we 
-  // have enough reconstructed separators 
+  // if reconstruction is ok, check that we
+  // have enough reconstructed separators
   // *******************************************
   
   const IndexT parent_id = submap.parent_id;
@@ -204,7 +204,7 @@ eSubmapDiagnostic CheckSingleSubmap(const HsfmSubmaps & submaps, const IndexT & 
   // TODO : add a NOT_ENOUGH_RECONSTRUCTED_SEPARATORS thing ? whats the threshold there ? :/
 
   // *******************************************
-  // now check that siblings submaps have 
+  // now check that siblings submaps have
   // enough common reconstructed separators for
   // a clean merging.
   // *******************************************
@@ -223,13 +223,13 @@ eSubmapDiagnostic CheckSingleSubmap(const HsfmSubmaps & submaps, const IndexT & 
   }
   
   const int n_common_reconstructed_separators = common_reconstructed_separators.size();
-  std::cout << "number of common reconstructed separators with sister submap : " 
+  std::cout << "number of common reconstructed separators with sister submap : "
     << n_common_reconstructed_separators << std::endl;
-  std::cout << "total number of common separators with sister submap :         " 
+  std::cout << "total number of common separators with sister submap :         "
     << n_total_separators << std::endl;
-  std::cout << "part of total n of separators :                                " 
+  std::cout << "part of total n of separators :                                "
     << 100*(n_common_reconstructed_separators/(double)n_total_separators) << "%" << std::endl;
-  std::cout << "part of reconstructed n of separators :                        " 
+  std::cout << "part of reconstructed n of separators :                        "
     << 100*(n_common_reconstructed_separators/(double)n_reconstructed_separators) << "%" << std::endl;
   std::cout << std::endl;
 
