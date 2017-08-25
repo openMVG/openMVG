@@ -1,7 +1,3 @@
-INCLUDE_DIRECTORIES(
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_BINARY_DIR}
-)
 
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
@@ -56,9 +52,16 @@ ENDIF()
 
 ADD_LIBRARY(lemon ${LEMON_SOURCES})
 IF(UNIX)
-#  SET_TARGET_PROPERTIES(lemon PROPERTIES OUTPUT_NAME emon)
   SET_TARGET_PROPERTIES(lemon PROPERTIES OUTPUT_NAME lemon)
 ENDIF()
+
+target_include_directories(lemon PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include/openMVG/third_party/lemon>
+  # Configure include path for lemon/config.h
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+  $<INSTALL_INTERFACE:include/openMVG/third_party>)
+
 
 INSTALL(
   TARGETS lemon
@@ -96,4 +99,3 @@ INSTALL(
 #  FILES ${CMAKE_CURRENT_BINARY_DIR}/lemon.pc
 #  DESTINATION lib/pkgconfig
 #)
-

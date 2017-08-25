@@ -29,6 +29,7 @@ target_link_libraries(
     openMVG_matching
     scotch
     scotcherr
+    lemon
 )
 target_include_directories(
   openMVG_sfm
