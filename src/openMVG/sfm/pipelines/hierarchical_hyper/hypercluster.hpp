@@ -16,13 +16,16 @@
 #include "openMVG/tracks/tracks.hpp"
 
 /*
- * clustering tracks sfm
- * inspired by paper :
+ * Inspired by paper :
  * "HyperSFM", Kai Ni and Frank Dellaert,
  * International Conference on 3D Imaging, Modeling, Processing, Visualization and Transmission (3DIMPVT), 2012
+ * link : http://kaini.org/assets/Ni12_3dimpvt.pdf HyperSFM (2012)
  *
- * http://kaini.org/assets/Ni12_3dimpvt.pdf HyperSFM (2012)
- *
+ * Robert Maier's Master thesis was also of great help in order
+ * to help implement hyperSFM :
+ * "Out-of-Core Bundle Adjustment for 3D Workpiece Reconstruction"
+ * in particular , paragraphs 2.2.4 and 4.5
+ * link : https://vision.in.tum.de/_media/spezial/bib/maier2013thesis.pdf
  */
 
 namespace openMVG {
