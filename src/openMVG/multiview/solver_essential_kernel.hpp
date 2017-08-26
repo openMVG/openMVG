@@ -66,14 +66,18 @@ struct ThreePointSolver {
  * Specialized Error functor for Ortho Essential
  * x et y must be normalized
  */
-struct OrthographicEpipolarDistanceError {
-  static double Error(const Mat3 &E, const Vec2 &x, const Vec2 &y)
-  {
-    return std::abs( E(2,2) + x(0) * E(0,2) + x(1) * E(1,2) + y(0) * E(2,0) + y(1) * E(2,1) );
-  }
+struct OrthographicSymmetricEpipolarDistanceError {
+    static double Error(const Mat3 &E, const Vec2 &x, const Vec2 &y)
+    {
+      return std::abs( E(2,2)
+                       + x(0) * E(0,2)
+                       + x(1) * E(1,2)
+                       + y(0) * E(2,0)
+                       + y(1) * E(2,1) );
+    }
 };
 
-//-- Generic Solver for the Essential Matrix Estimation.
+//-- Generic Solver for the 5pt Essential Matrix Estimation.
 //-- Need a new Class that inherit of two_view::kernel::kernel.
 //    Error must be overwrite in order to compute F from E and K's.
 //-- Fitting must normalize image values to camera values.
@@ -173,7 +177,7 @@ using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
 
 //-- Solver kernel for the 3pt Orthographic Essential Matrix Estimation
 using ThreePointKernel = essential::kernel::EssentialOrthoKernel<ThreePointSolver,
-  essential::kernel::OrthographicEpipolarDistanceError, Mat3>;
+        essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
 
 }  // namespace kernel
 }  // namespace essential

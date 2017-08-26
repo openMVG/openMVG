@@ -79,29 +79,44 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat
-      x1 = ExtractColumns(x1_, samples),
-      x2 = ExtractColumns(x2_, samples);
+  void Fit
+  (
+    const std::vector<uint32_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
+    const Mat x1 = ExtractColumns(x1_, samples);
+    const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(uint32_t sample, const Model &model) const {
+  double Error
+  (
+    uint32_t sample,
+    const Model &model
+  ) const
+  {
     return ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
-  void Errors(const Model & model, std::vector<double> & vec_errors) const
+  void Errors
+  (
+    const Model & model,
+    std::vector<double> & vec_errors
+  ) const
   {
     vec_errors.resize(x1_.cols());
     for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = ErrorT::Error(model, x1_.col(sample), x2_.col(sample));
   }
 
-  size_t NumSamples() const {
+  size_t NumSamples() const
+  {
     return static_cast<size_t>(x1_.cols());
   }
 
-  void Unnormalize(Model * model) const {
+  void Unnormalize(Model * model) const
+  {
     // Unnormalize model from the computed conditioning.
     UnnormalizerArg::Unnormalize(N1_, N2_, model);
   }
@@ -139,9 +154,17 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
 
-  ACKernelAdaptorResection(const Mat &x2d, int w, int h, const Mat &x3D)
-    : x2d_(x2d.rows(), x2d.cols()), x3D_(x3D),
-    N1_(3,3), logalpha0_(log10(M_PI))
+  ACKernelAdaptorResection
+  (
+    const Mat &x2d,
+    int w,
+    int h,
+    const Mat &x3D
+  ):
+    x2d_(x2d.rows(), x2d.cols()),
+    x3D_(x3D),
+    N1_(3,3),
+    logalpha0_(log10(M_PI))
   {
     assert(2 == x2d_.rows());
     assert(3 == x3D_.rows());
@@ -153,18 +176,27 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat
-      x1 = ExtractColumns(x2d_, samples),
-      x2 = ExtractColumns(x3D_, samples);
+  void Fit
+  (
+    const std::vector<uint32_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
+    const Mat x1 = ExtractColumns(x2d_, samples);
+    const Mat x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(uint32_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const
+  {
     return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
   }
 
-  void Errors(const Model & model, std::vector<double> & vec_errors) const
+  void Errors
+  (
+    const Model & model,
+    std::vector<double> & vec_errors
+  ) const
   {
     vec_errors.resize(x2d_.cols());
     for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
@@ -187,7 +219,7 @@ public:
 private:
   Mat x2d_;
   const Mat & x3D_;
-  Mat3 N1_;      // Matrix used to normalize data
+  Mat3 N1_;          // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
 };
 
@@ -228,20 +260,33 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat
-      x1 = ExtractColumns(bearing1_, samples),
-      x2 = ExtractColumns(bearing2_, samples);
+  void Fit
+  (
+    const std::vector<uint32_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
+    const Mat x1 = ExtractColumns(bearing1_, samples);
+    const Mat x2 = ExtractColumns(bearing2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(uint32_t sample, const Model &model) const {
+  double Error
+  (
+    uint32_t sample,
+    const Model &model
+  ) const
+  {
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
     return ErrorT::Error(F, this->x1_.col(sample), this->x2_.col(sample));
   }
 
-  void Errors(const Model & model, std::vector<double> & vec_errors) const
+  void Errors
+  (
+    const Model & model,
+    std::vector<double> & vec_errors
+  ) const
   {
     Mat3 F;
     FundamentalFromEssential(model, K1_, K2_, &F);
@@ -259,86 +304,106 @@ public:
   double unormalizeError(double val) const { return val; }
 
 private:
-  Mat2X x1_, x2_;       // image points
-  Mat3X bearing1_, bearing2_;   // bearing vectors
-  Mat3 N1_, N2_;      // Matrix used to normalize data
-  double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
-  Mat3 K1_, K2_;      // Intrinsic camera parameter
+  Mat2X x1_, x2_;             // image points
+  Mat3X bearing1_, bearing2_; // bearing vectors
+  Mat3 N1_, N2_;              // Matrix used to normalize data
+  double logalpha0_;          // Alpha0 is used to make the error adaptive to the image size
+  Mat3 K1_, K2_;              // Intrinsic camera parameter
 };
 
 /// Essential Ortho matrix Kernel adaptor for the A contrario model estimator
-template <typename SolverArg,
-        typename ErrorArg,
-        typename ModelArg = Mat3>
+template <
+  typename SolverArg,
+  typename ErrorArg,
+  typename ModelArg = Mat3>
 class ACKernelAdaptorEssentialOrtho
 {
 public:
-    using Solver = SolverArg;
-    using Model = ModelArg;
-    using ErrorT = ErrorArg;
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
 
-    ACKernelAdaptorEssentialOrtho(
-            const Mat &x1, int w1, int h1,
-            const Mat &x2, int w2, int h2,
-            const Mat3 & K1, const Mat3 & K2)
-            : x1_(x1), x2_(x2),
-              N1_(Mat3::Identity()), N2_(Mat3::Identity()), logalpha0_(0.0),
-              K1_(K1), K2_(K2)
-    {
-      assert(2 == x1_.rows());
-      assert(x1_.rows() == x2_.rows());
-      assert(x1_.cols() == x2_.cols());
+  ACKernelAdaptorEssentialOrtho
+  (
+    const Mat &x1, int w1, int h1,
+    const Mat &x2, int w2, int h2,
+    const Mat3 & K1, const Mat3 & K2
+  ):
+    x1_(x1), x2_(x2),
+    N1_(Mat3::Identity()),
+    N2_(Mat3::Identity()),
+    logalpha0_(0.0),
+    K1_(K1), K2_(K2)
+  {
+    assert(2 == x1_.rows());
+    assert(x1_.rows() == x2_.rows());
+    assert(x1_.cols() == x2_.cols());
 
-      x1k_ = (K1_.inverse() * x1_.colwise().homogeneous()).colwise().hnormalized();
-      x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
+    x1k_ = (K1_.inverse() * x1_.colwise().homogeneous()).colwise().hnormalized();
+    x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
 
-      //Point to line probability (line is the epipolar line)
-      const double D = std::hypot(w2, h2); // diameter
-      const double A = w2*(double)h2; // area
-      logalpha0_ = log10(2.0*D/A * .5);
-    }
+    //Point to line probability (line is the epipolar line)
+    const double D = std::hypot(w2, h2); // diameter
+    const double A = w2*(double)h2; // area
+    logalpha0_ = log10(2.0*D/A * .5);
+  }
 
-    enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
-    enum { MAX_MODELS = Solver::MAX_MODELS };
+  enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
+  enum { MAX_MODELS = Solver::MAX_MODELS };
 
-    void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-      const Mat x1 = ExtractColumns(x1k_, samples);
-      const Mat x2 = ExtractColumns(x2k_, samples);
-      Solver::Solve(x1, x2, models);
-    }
+  void Fit
+  (
+    const std::vector<uint32_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
+    const Mat x1 = ExtractColumns(x1k_, samples);
+    const Mat x2 = ExtractColumns(x2k_, samples);
+    Solver::Solve(x1, x2, models);
+  }
 
-    double Error(uint32_t sample, const Model &model) const {
-      return ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
-    }
+  double Error
+  (
+    uint32_t sample,
+    const Model &model
+  ) const
+  {
+    return ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
+  }
 
-    void Errors(const Model & model, std::vector<double> & vec_errors) const
-    {
-      vec_errors.resize(x1_.cols());
-      for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
-        vec_errors[sample] = ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
-    }
+  void Errors
+  (
+    const Model & model,
+    std::vector<double> & vec_errors
+  ) const
+  {
+    vec_errors.resize(x1_.cols());
+    for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
+      vec_errors[sample] = ErrorT::Error(model, this->x1k_.col(sample), this->x2k_.col(sample));
+  }
 
-    size_t NumSamples() const { return x1_.cols(); }
-    void Unnormalize(Model * model) const {}
-    double logalpha0() const {return logalpha0_;}
-    double multError() const {return 0.5;} // point to line error
-    Mat3 normalizer1() const {return N1_;}
-    Mat3 normalizer2() const {return N2_;}
-    double unormalizeError(double val) const { return val; }
+  size_t NumSamples() const { return x1_.cols(); }
+  void Unnormalize(Model * model) const {}
+  double logalpha0() const {return logalpha0_;}
+  double multError() const {return 0.5;} // point to line error
+  Mat3 normalizer1() const {return N1_;}
+  Mat3 normalizer2() const {return N2_;}
+  double unormalizeError(double val) const { return val; }
 
 private:
-    Mat x1_, x2_, x1k_, x2k_; // image point and camera plane point.
-    Mat3 N1_, N2_;      // Matrix used to normalize data
-    double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
-    Mat3 K1_, K2_;      // Intrinsic camera parameter
+  Mat x1_, x2_, x1k_, x2k_; // image point and camera plane point.
+  Mat3 N1_, N2_;            // Matrix used to normalize data
+  double logalpha0_;        // Alpha0 is used to make the error adaptive to the image size
+  Mat3 K1_, K2_;            // Intrinsic camera parameter
 };
 
 
 /// Two view Kernel adapter for the A contrario model estimator.
 /// Specialization to handle radian angular residual error.
-template <typename SolverArg,
-          typename ErrorArg,
-          typename ModelArg = Mat3>
+template <
+  typename SolverArg,
+  typename ErrorArg,
+  typename ModelArg = Mat3>
 class ACKernelAdaptor_AngularRadianError
 {
 public:
@@ -346,9 +411,11 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
 
-  ACKernelAdaptor_AngularRadianError(
+  ACKernelAdaptor_AngularRadianError
+  (
     const Mat & xA,
-    const Mat & xB):
+    const Mat & xB
+  ):
     x1_(xA), x2_(xB),
     logalpha0_(log10(1.0/2.0))
   {
@@ -360,25 +427,39 @@ public:
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat
-      x1 = ExtractColumns(x1_, samples),
-      x2 = ExtractColumns(x2_, samples);
+  void Fit
+  (
+    const std::vector<uint32_t> &samples,
+    std::vector<Model> *models
+  ) const
+  {
+    const Mat x1 = ExtractColumns(x1_, samples);
+    const Mat x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
-  double Error(uint32_t sample, const Model &model) const {
+  double Error
+  (
+    uint32_t sample,
+    const Model &model
+  ) const
+  {
     return Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 
-  void Errors(const Model & model, std::vector<double> & vec_errors) const
+  void Errors
+  (
+    const Model & model,
+    std::vector<double> & vec_errors
+  ) const
   {
     vec_errors.resize(x1_.cols());
     for (uint32_t sample = 0; sample < x1_.cols(); ++sample)
       vec_errors[sample] = Square(ErrorT::Error(model, x1_.col(sample), x2_.col(sample)));
   }
 
-  size_t NumSamples() const {
+  size_t NumSamples() const
+  {
     return static_cast<size_t>(x1_.cols());
   }
 
@@ -395,8 +476,8 @@ public:
   double unormalizeError(double val) const {return sqrt(val);}
 
 private:
-  Mat x1_, x2_;      // Normalized input data
-  double logalpha0_; // Alpha0 is used to make the error scale invariant
+  Mat x1_, x2_;       // Normalized input data
+  double logalpha0_;  // Alpha0 is used to make the error scale invariant
 };
 
 } // namespace robust
