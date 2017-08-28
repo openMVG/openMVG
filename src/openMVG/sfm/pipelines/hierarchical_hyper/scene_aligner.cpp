@@ -111,6 +111,7 @@ bool SceneAligner::computeTransformAndDestinationSeparators(
         << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
     }
+    return true;
   }
 }
 
