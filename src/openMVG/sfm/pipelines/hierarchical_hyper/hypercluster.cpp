@@ -151,7 +151,7 @@ bool HyperCluster::exportTreeGraph(const std::string & filename) const
     std::system(dotcommand.c_str());
   }
   std::cout << "done!" << std::endl;
-  return true; 
+  return true;
 }
 
 bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::HsfmSubmap> & partitioned_pair)

@@ -81,7 +81,9 @@ int main(int argc, char **argv)
 
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if // Try to read the two matches file formats
+
+  // Try to read the two matches file formats
+  if
   (
     !(matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.f.txt")) ||
       matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.f.bin")))

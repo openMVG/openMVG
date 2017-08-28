@@ -262,4 +262,3 @@ exportToPly_MultiHighlight
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_PLY_HELPER_H
-

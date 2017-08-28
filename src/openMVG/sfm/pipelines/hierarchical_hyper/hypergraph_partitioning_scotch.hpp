@@ -192,9 +192,9 @@ inline bool ScotchPartitionHyperGraph(
   SCOTCH_memFree(stratptr);
 
   // cannot free those before since they are used by meshdat
-  delete[] edgetab;
-  delete[] verttab;
-  delete[] velotab;
+  delete [] edgetab;
+  delete [] verttab;
+  delete [] velotab;
 
   // partition data the view ids
   int current_node_id(vnodbas);
