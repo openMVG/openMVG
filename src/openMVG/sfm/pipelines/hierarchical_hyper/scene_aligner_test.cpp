@@ -22,6 +22,17 @@ using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 using namespace std;
 
+// return an angle axis vector that corresponds to the same rotation but with a
+// norm bound by 2pi
+Vec3 rescaleAngleAxis(const Vec3 & angle_axis_rot)
+{
+  Vec3 rescaled_rot = angle_axis_rot;
+  while (rescaled_rot.norm() > 2*M_PI)
+  {
+    rescaled_rot = rescaled_rot - 2*M_PI*rescaled_rot/rescaled_rot.norm();
+  }
+  return rescaled_rot;
+}
 
 TEST(MergeScenesUsingCommonTracks, normalScene_destinationSceneContainsEverything)
 {
@@ -91,7 +102,7 @@ TEST(SceneAligner, sceneWithLandmarksOnly_SubmapAlignmentWorks)
   EXPECT_NEAR(modulo_rotation, Rotation_gt.norm(), 1e-2);
   Vec3 inverse_Rotation_gt = -Rotation_gt;
   Vec3 inverse_translation_gt = -Translation_gt;
-  EXPECT_MATRIX_NEAR(base_node_R, inverse_Rotation_gt, 1e-2);
+  EXPECT_MATRIX_NEAR(rescaleAngleAxis(base_node_R), rescaleAngleAxis(inverse_Rotation_gt), 1e-2);
   EXPECT_MATRIX_NEAR(base_node_t, inverse_translation_gt, 1e-2);
 }
 
@@ -124,7 +135,7 @@ TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationW
   const double modulo_rotation = fmod(base_node_R.norm(), M_PI);
   EXPECT_NEAR(modulo_rotation, Rotation_gt.norm(), 1e-2);
   EXPECT_MATRIX_NEAR(base_node_t, inverse_translation_gt, 1e-3);
-  EXPECT_MATRIX_NEAR(base_node_R, inverse_Rotation_gt, 1e-3);
+  EXPECT_MATRIX_NEAR(rescaleAngleAxis(base_node_R), rescaleAngleAxis(inverse_Rotation_gt), 1e-3);
   EXPECT_NEAR(scaling_factor_gt, scaling_factor, 1e-3);
 }
 
