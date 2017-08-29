@@ -97,7 +97,7 @@ inline openMVG::Mat computeDistancesBetweenPosesAndLandmarks(const openMVG::sfm:
   {
     const openMVG::IndexT & pose_id = pose.first;
     positions.push_back(pose.second.center());
-    indices.push_back(std::make_pair(pose_id, pPose));
+    indices.emplace_back(pose_id, pPose);
     max_pose_id = std::max((int)pose_id, max_pose_id);
   }
 
@@ -106,7 +106,7 @@ inline openMVG::Mat computeDistancesBetweenPosesAndLandmarks(const openMVG::sfm:
   {
     const openMVG::IndexT & landmark_id = landmark.first;
     positions.push_back(landmark.second.X);
-    indices.push_back(std::make_pair(landmark.first, pLandmark));
+    indices.emplace_back(landmark.first, pLandmark);
     max_landmark_id = std::max((int)landmark_id, max_landmark_id);
   }
 
