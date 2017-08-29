@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap.hpp"
-#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_BA_fixed_separators.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_utilities.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"

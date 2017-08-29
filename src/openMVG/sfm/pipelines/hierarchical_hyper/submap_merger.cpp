@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "submap_merger.hpp"
-#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_BA_fixed_separators.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_utilities.hpp"
 
 #include "ceres/types.h"
@@ -164,8 +164,8 @@ bool SubmapMerger::BundleAdjustment_FixedSeparators(const IndexT smap_id)
   {
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
   }
-  const std::unique_ptr<Bundle_Adjustment_Fixed_Separators> bundle_adjustment_ptr =
-      std::unique_ptr<Bundle_Adjustment_Fixed_Separators>(new Bundle_Adjustment_Fixed_Separators(options));
+  const std::unique_ptr<Bundle_Adjustment_Fixed_Points> bundle_adjustment_ptr =
+      std::unique_ptr<Bundle_Adjustment_Fixed_Points>(new Bundle_Adjustment_Fixed_Points(options));
   return bundle_adjustment_ptr->Adjust(sfm_data, submap.separator);
 }
 

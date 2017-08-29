@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_BA_fixed_separators.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
@@ -14,14 +14,14 @@
 namespace openMVG{
 namespace sfm{
 
-  Bundle_Adjustment_Fixed_Separators::Bundle_Adjustment_Fixed_Separators
+  Bundle_Adjustment_Fixed_Points::Bundle_Adjustment_Fixed_Points
 (
   const Bundle_Adjustment_Ceres::BA_Ceres_options & options
 )
 : ceres_options_(options)
 {}
 
-void Bundle_Adjustment_Fixed_Separators::configureProblem(ceres::Problem & problem, SfM_Data& sfm_data, const std::set<IndexT>& separator_tracks_ids, Hash_Map<IndexT, std::vector<double> > & map_intrinsics, Hash_Map<IndexT, std::vector<double> > & map_poses)
+void Bundle_Adjustment_Fixed_Points::configureProblem(ceres::Problem & problem, SfM_Data& sfm_data, const std::set<IndexT>& fixed_tracks_ids, Hash_Map<IndexT, std::vector<double> > & map_intrinsics, Hash_Map<IndexT, std::vector<double> > & map_poses)
 {
   for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
   {
@@ -92,18 +92,14 @@ void Bundle_Adjustment_Fixed_Separators::configureProblem(ceres::Problem & probl
           &map_poses[view->id_pose][0],
           iterTracks->second.X.data());
     }
-    // if this is a separator track, we keep it fixed !
-    if (separator_tracks_ids.count(iterTracks->first) != 0)
+    // if this is a fixed track, we keep it fixed !
+    if (fixed_tracks_ids.count(iterTracks->first) != 0)
       problem.SetParameterBlockConstant(iterTracks->second.X.data());
   }
 }
 
-// Modified version of Bundle_Adjustment_Ceres::Adjust where we
-// don't take any options as input (TODO should we though ??)
-// and where we fix the position of the separator landmarks
-bool Bundle_Adjustment_Fixed_Separators::Adjust(
-   SfM_Data & sfm_data, // scene to refine
-   const std::set<IndexT> & separator_tracks_ids)
+bool Bundle_Adjustment_Fixed_Points::Adjust(SfM_Data & sfm_data, // scene to refine
+   const std::set<IndexT> & fixed_tracks_ids)
 {
   //----------
   // Add camera parameters
@@ -119,7 +115,7 @@ bool Bundle_Adjustment_Fixed_Separators::Adjust(
   Hash_Map<IndexT, std::vector<double> > map_intrinsics;
   Hash_Map<IndexT, std::vector<double> > map_poses;
 
-  configureProblem(problem, sfm_data, separator_tracks_ids, map_intrinsics, map_poses);
+  configureProblem(problem, sfm_data, fixed_tracks_ids, map_intrinsics, map_poses);
 
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.

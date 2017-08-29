@@ -23,13 +23,13 @@ namespace sfm{
  * @brief This class performs a "classic" bundle adjustment except that some 3d points
  * are kept fixed
  */
-class Bundle_Adjustment_Fixed_Separators
+class Bundle_Adjustment_Fixed_Points
 {
   protected:
     Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
 
   public:
-  explicit Bundle_Adjustment_Fixed_Separators(const Bundle_Adjustment_Ceres::BA_Ceres_options & options = Bundle_Adjustment_Ceres::BA_Ceres_options());
+  explicit Bundle_Adjustment_Fixed_Points(const Bundle_Adjustment_Ceres::BA_Ceres_options & options = Bundle_Adjustment_Ceres::BA_Ceres_options());
 
   Bundle_Adjustment_Ceres::BA_Ceres_options & ceres_options(){return ceres_options_;}
 
@@ -42,14 +42,14 @@ class Bundle_Adjustment_Fixed_Separators
   bool Adjust
   (
    SfM_Data & sfm_data, // scene to refine
-   const std::set<IndexT> & separator_tracks_ids
+   const std::set<IndexT> & fixed_tracks_ids
   );
 
 protected:
   virtual void configureProblem(
       ceres::Problem & problem,
       SfM_Data & sfm_data,
-      const std::set<IndexT>& separator_tracks_ids,
+      const std::set<IndexT>& fixed_tracks_ids,
       Hash_Map<IndexT, std::vector<double> > & map_intrinsics,
       Hash_Map<IndexT, std::vector<double> > & map_poses);
 };

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_BA_fixed_separators.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/cameras/cameras.hpp"
 
@@ -21,7 +21,7 @@ using namespace std;
 SfM_Data getInputScene(const NViewDataSet & data, const nViewDatasetConfigurator & config, EINTRINSIC eintrinsic);
 double RMSE(const SfM_Data & sfm_data);
 
-TEST(Bundle_Adjustment_Fixed_Separators, effectiveMinimization)
+TEST(Bundle_Adjustment_Fixed_Points, effectiveMinimization)
 {
   // create a scene
   const int nviews = 3;
@@ -34,17 +34,17 @@ TEST(Bundle_Adjustment_Fixed_Separators, effectiveMinimization)
 
   const double dResidual_before = RMSE(sfm_data);
 
-  const std::set<IndexT> separator_tracks_ids{0,1};
+  const std::set<IndexT> fixed_tracks_ids{0,1};
 
-  Bundle_Adjustment_Fixed_Separators bundle_adjustment_obj;
+  Bundle_Adjustment_Fixed_Points bundle_adjustment_obj;
 
-  bundle_adjustment_obj.Adjust(sfm_data, separator_tracks_ids);
+  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids);
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
 }
 
-TEST(Bundle_Adjustment_Fixed_Separators, leavesSeparatorTracksConstant)
+TEST(Bundle_Adjustment_Fixed_Points, leavesFixedTracksConstant)
 {
   // create a scene
   const int nviews = 3;
@@ -55,13 +55,13 @@ TEST(Bundle_Adjustment_Fixed_Separators, leavesSeparatorTracksConstant)
   // Convert the input dataset to a SfM_Data scene
   SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA_RADIAL3);
 
-  const std::set<IndexT> separator_tracks_ids = {0,1};
+  const std::set<IndexT> fixed_tracks_ids = {0,1};
 
   const Landmarks landmarks_before = sfm_data.GetLandmarks();
 
-  Bundle_Adjustment_Fixed_Separators bundle_adjustment_obj;
+  Bundle_Adjustment_Fixed_Points bundle_adjustment_obj;
 
-  bundle_adjustment_obj.Adjust(sfm_data, separator_tracks_ids);
+  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids);
 
   const Landmarks landmarks_after = sfm_data.GetLandmarks();
 
