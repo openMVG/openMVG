@@ -194,16 +194,16 @@ TEST(transformSfMDataScene, genericScene_transformationLeavesDistancesConserved)
   const openMVG::Vec3 translation = randomVector();
   const double scaling_factor = randomPositiveDouble();
 
-  const double n_poses(20), n_landmarks(1000);
+  const openMVG::IndexT n_poses(20), n_landmarks(1000);
   const openMVG::sfm::SfM_Data original_sfm_data = generate_random_poses_and_landmarks_in_scene(n_poses, n_landmarks);
   openMVG::sfm::SfM_Data destination_sfm_data;
 
-  const openMVG::Mat distances_before = computeDistances(original_sfm_data);
+  const openMVG::Mat distances_before = computeDistancesBetweenPosesAndLandmarks(original_sfm_data);
 
   openMVG::sfm::transformSfMDataScene(destination_sfm_data, original_sfm_data,
       rotation, translation, scaling_factor);
 
-  openMVG::Mat distances_after = computeDistances(destination_sfm_data);
+  openMVG::Mat distances_after = computeDistancesBetweenPosesAndLandmarks(destination_sfm_data);
 
   std::cout << scaling_factor << std::endl;
   distances_after *= scaling_factor;

@@ -80,25 +80,48 @@ inline openMVG::sfm::Poses generateRandomPoses(const int n_poses)
 
 // we use an eigen matrix as return value in order to be able
 // to use the EXPECT_MATRIX_NEAR macro during the test
-inline openMVG::Mat computeDistances(const openMVG::sfm::SfM_Data & sfm_data)
+inline openMVG::Mat computeDistancesBetweenPosesAndLandmarks(const openMVG::sfm::SfM_Data & sfm_data)
 {
+  enum EPointType
+  {
+    pLandmark, pPose
+  };
+
   // put all positions of all poses and landmarks in a single vector
   std::vector<openMVG::Vec3> positions;
+  // store indices and point type in a second vector
+  std::vector<std::pair<openMVG::IndexT, EPointType>> indices;
 
+  int max_pose_id(-1);
   for (const auto & pose : sfm_data.poses)
+  {
+    const openMVG::IndexT & pose_id = pose.first;
     positions.push_back(pose.second.center());
-  for (const auto & landmark : sfm_data.GetLandmarks())
+    indices.push_back(std::make_pair(pose_id, pPose));
+    max_pose_id = std::max((int)pose_id, max_pose_id);
+  }
+
+  int max_landmark_id(-1);
+  for (const auto & landmark : sfm_data.structure)
+  {
+    const openMVG::IndexT & landmark_id = landmark.first;
     positions.push_back(landmark.second.X);
+    indices.push_back(std::make_pair(landmark.first, pLandmark));
+    max_landmark_id = std::max((int)landmark_id, max_landmark_id);
+  }
 
   // compute distances between all poses and landmarks
   const int n_total = positions.size();
-
-  openMVG::Mat distances(n_total, n_total);
+  openMVG::Mat distances(max_landmark_id + max_pose_id + 2, max_landmark_id + max_pose_id + 2);
   for (int i(0); i < n_total; i++)
   {
     for (int j(0); j < n_total; j++)
     {
-      distances(i,j) = (positions[j] - positions[i]).norm();
+      const std::pair<openMVG::IndexT, EPointType> corresponding_index_pair_i = indices.at(i);
+      const std::pair<openMVG::IndexT, EPointType> corresponding_index_pair_j = indices.at(j);
+      openMVG::IndexT corresponding_i = corresponding_index_pair_i.second == pPose ? corresponding_index_pair_i.first : corresponding_index_pair_i.first + max_pose_id + 1;
+      openMVG::IndexT corresponding_j = corresponding_index_pair_j.second == pPose ? corresponding_index_pair_j.first : corresponding_index_pair_j.first + max_pose_id + 1;
+      distances(corresponding_i,corresponding_j) = (positions[i] - positions[j]).norm();
     }
   }
   return distances;
@@ -108,7 +131,7 @@ inline openMVG::sfm::SfM_Data generate_random_poses_and_landmarks_in_scene(const
 {
   openMVG::sfm::SfM_Data sfm_data;
 
-  for (int i(0); i < n_poses;i++)
+  for (openMVG::IndexT i(0); i < n_poses;i++)
   {
     // random orientation
     openMVG::Mat3 orientation = randomRotationMatrix();
@@ -118,7 +141,7 @@ inline openMVG::sfm::SfM_Data generate_random_poses_and_landmarks_in_scene(const
     sfm_data.poses[i] = pose;
   }
 
-  for (int i(0); i < n_landmarks; i++)
+  for (openMVG::IndexT i(0); i < n_landmarks; i++)
   {
     openMVG::sfm::Landmark landmark;
     openMVG::Vec3 position = randomVector();
