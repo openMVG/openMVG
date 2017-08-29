@@ -23,11 +23,36 @@ namespace sfm {
 
 struct SfM_Data;
 
+class SceneAligner;
+
+/**
+ * @brief merges two scenes together using the common 3d points of those scenes
+ * @param destination_sfm_data where the merged scenes are written
+ * @param sfm_data_first the first scene to be merged
+ * @param sfm_data_second the second scene to be merged
+ * @param common_track_ids the ids of the tracks that are commonly reconstructed in both scenes
+ * @param smap_aligner a SceneAligner pointer to choose with which method the scenes should be aligned
+ * @return
+ */
+bool MergeScenesUsingCommonTracks(SfM_Data & destination_sfm_data,
+    const SfM_Data & sfm_data_first, // first submap scene
+    const SfM_Data & sfm_data_second, // second submap scene
+    const std::vector<size_t> & common_track_ids, // which tracks id are commonly reconstructed in both submaps
+    SceneAligner *smap_aligner);
+
+/**
+ * @brief The SceneAligner class, used to find the transformation between two sfm_data scenes
+ * using their common reconstructed 3D points.
+ * @note This class does not merge scenes together ! It only finds the transformation between
+ * two scenes and the optimized position of the separator landmarks
+ */
 class SceneAligner
 {
 public:
+
   bool computeTransformAndDestinationSeparators
-  (SfM_Data & destination_sfm_data,
+  (
+    SfM_Data & destination_sfm_data,
     const SfM_Data & sfm_data_first, // first submap scene
     const SfM_Data & sfm_data_second, // second submap scene
     std::vector<double> & second_base_node_pose, // second base node pose with respect to the first base node (what we're looking for)
@@ -50,12 +75,17 @@ protected:
     );
 };
 
-bool MergeScenesUsingCommonTracks(SfM_Data & destination_sfm_data,
-    const SfM_Data & sfm_data_first, // first submap scene
-    const SfM_Data & sfm_data_second, // second submap scene
-    const std::vector<size_t> & common_track_ids, // which tracks id are commonly reconstructed in both submaps
-    SceneAligner *smap_aligner);
-
+/**
+ * @brief transforms the content of a sfm data scene into another using a
+ * rotation, a translation, and a scale factor
+ * @param the original sfm data scene
+ * @return the destination sfm data scene
+ * @param the rotation matrix
+ * @param a translation vector
+ * @param a scale factor
+ * @note both poses and landmarks are transformed, note that they will be overwritten
+ * into the destination scene !
+ */
 void transformSfMDataScene(SfM_Data & destination_sfm_data,
     const SfM_Data & original_sfm_data,
     const Mat3 & rotation,

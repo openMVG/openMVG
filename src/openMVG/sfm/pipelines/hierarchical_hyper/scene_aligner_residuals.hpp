@@ -17,8 +17,19 @@ namespace sfm {
 void printResiduals(const ceres::Problem & problem, const std::vector<ceres::ResidualBlockId> & residuals_vector);
 
 
-// !! \\ WHEN CONSTRUCTING : by default the first submap is the one with the fixed base node. We will only modify
-//  the position of the second submap's basenode ! TODO : make this less error-prone somehow
+/**
+ * @brief Ceres functor used to find the 3D transformation between two scenes using their common 3d points.
+ *
+ * Data parameter blocks are the following <6,6,3,1>
+ * - 6 => dimention of the residuals, (3d errors in 2 scenes).
+ * - 6 => the relative pose between the two scenes (3 rot, 3 translation).
+ * - 3 => a 3d point data block.
+ * - 1 => the scaling factor between the two scenes
+ *
+ * @note WHEN CONSTRUCTING : by default the first submap is the one with the fixed base node. We will only modify
+ * the position of the second submap's basenode ! TODO : make this less error-prone somehow
+ *
+ */
 struct ResidualErrorFunctor_BaseNode_Separators
 {
   ResidualErrorFunctor_BaseNode_Separators(const double * const pos_3dmeasurement_fixed_submap, const double * const pos_3dmeasurement_moving_submap)

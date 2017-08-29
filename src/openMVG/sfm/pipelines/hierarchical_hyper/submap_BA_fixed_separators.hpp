@@ -19,8 +19,10 @@ namespace ceres {
 namespace openMVG{
 namespace sfm{
 
-// Normal bundle adjustment but with separator landmarks
-// positions fixed !
+  /**
+ * @brief This class performs a "classic" bundle adjustment except that some 3d points
+ * are kept fixed
+ */
 class Bundle_Adjustment_Fixed_Separators
 {
   protected:
@@ -31,6 +33,12 @@ class Bundle_Adjustment_Fixed_Separators
 
   Bundle_Adjustment_Ceres::BA_Ceres_options & ceres_options(){return ceres_options_;}
 
+  /**
+   * @brief Runs the bundle adjustment
+   * @param the scene on which to run the BA
+   * @param a set of 3d points ids that we want to stay fixed during the bundle adjustment
+   * @return
+   */
   bool Adjust
   (
    SfM_Data & sfm_data, // scene to refine

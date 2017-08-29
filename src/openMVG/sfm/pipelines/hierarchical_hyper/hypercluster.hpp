@@ -31,18 +31,26 @@
 namespace openMVG {
 namespace sfm {
 
-// Class for clustering sfm data using hypergraph partitioning
-// (HyperSfM method)
+/**
+ * @brief The HyperCluster class, can cluster a sfm_data into multiple submaps.
+ */
 class HyperCluster
 {
 
 public:
   HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize);
 
-  // create clustering tree by recursively partitioning submaps into smaller ones
+  /**
+   * @brief cluster the scene into a binary tree by recursively partitioning submaps
+   * @return [bool] success flag
+   */
   bool recursivePartitioning();
 
-  // visualization using graphviz
+  /**
+   * @brief exportTreeGraph visualization of the clustering (uses graphviz)
+   * @param filename where the graph is to be saved
+   * @return bool success flag
+   */
   bool exportTreeGraph(const std::string & filename) const;
 
   // accessors

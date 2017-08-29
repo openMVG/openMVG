@@ -23,6 +23,57 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
+bool MergeScenesUsingCommonTracks
+(
+  SfM_Data & destination_sfm_data,
+  const SfM_Data & sfm_data_first, // first submap scene
+  const SfM_Data & sfm_data_second, // second submap scene
+  const std::vector<size_t> & common_track_ids,
+  SceneAligner *smap_aligner
+)
+{
+  // initialize destination sfm data
+  destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
+  for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
+  {
+    if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
+      destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
+  }
+  destination_sfm_data.poses = sfm_data_first.poses;
+  destination_sfm_data.structure = sfm_data_first.structure;
+
+  // initialize the transformation parameters
+  std::vector<double> second_base_node_pose(6, 0.0);
+  double scaling_factor(1.0);
+
+  const bool alignment_successful =
+      smap_aligner->computeTransformAndDestinationSeparators(
+        destination_sfm_data, sfm_data_first, sfm_data_second,
+        second_base_node_pose, scaling_factor, common_track_ids);
+
+  if (alignment_successful)
+  {
+    Vec3 second_base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
+    Mat3 second_base_node_RMat;
+    ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
+
+    std::cout << " new aligned base node coords : \n"
+    << second_base_node_t << std::endl
+    << second_base_node_RMat << std::endl
+    << " scale : " << scaling_factor << std::endl;
+
+    // update the landmarks and poses from the second
+    // scene transformed into the destination scene.
+    transformSfMDataScene(destination_sfm_data, sfm_data_second,
+                          second_base_node_RMat, second_base_node_t, scaling_factor);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 bool scenesAreAlignable(const SfM_Data & sfm_data_first, const SfM_Data & sfm_data_second, const std::vector<size_t> & common_track_ids)
 {
   if (common_track_ids.empty())
@@ -166,67 +217,6 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
   }
 }
 
-bool MergeScenesUsingCommonTracks
-(SfM_Data & destination_sfm_data,
-  const SfM_Data & sfm_data_first, // first submap scene
-  const SfM_Data & sfm_data_second, // second submap scene
-  const std::vector<size_t> & common_track_ids,
-  SceneAligner *smap_aligner
-)
-{
-  // initialize destination sfm data
-  destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
-  for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
-  {
-    if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
-      destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
-  }
-  destination_sfm_data.poses = sfm_data_first.poses;
-  destination_sfm_data.structure = sfm_data_first.structure;
-
-  // initialize the transformation parameters
-  std::vector<double> second_base_node_pose(6, 0.0);
-  double scaling_factor(1.0);
-
-  const bool alignment_successful =
-      smap_aligner->computeTransformAndDestinationSeparators(
-        destination_sfm_data, sfm_data_first, sfm_data_second,
-        second_base_node_pose, scaling_factor, common_track_ids);
-
-  if (alignment_successful)
-  {
-    Vec3 second_base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
-    Mat3 second_base_node_RMat;
-    ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
-
-    std::cout << " new aligned base node coords : \n"
-    << second_base_node_t << std::endl
-    << second_base_node_RMat << std::endl
-    << " scale : " << scaling_factor << std::endl;
-
-    // update the landmarks and poses from the second
-    // scene transformed into the destination scene.
-    transformSfMDataScene(destination_sfm_data, sfm_data_second,
-                          second_base_node_RMat, second_base_node_t, scaling_factor);
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
-/**
- * @brief transforms the content of a sfm data scene into another using a
- * rotation, a translation, and a scale factor
- * @param the original sfm data scene
- * @return the destination sfm data scene
- * @param the rotation matrix
- * @param a translation vector
- * @param a scale factor
- * @note both poses and landmarks are transformed, note that they will be overwritten
- * into the destination scene !
- */
 void transformSfMDataScene(
     SfM_Data & destination_sfm_data,
     const SfM_Data & original_sfm_data,

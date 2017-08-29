@@ -16,6 +16,9 @@ namespace sfm{
 
 class SceneAligner;
 
+/**
+ * @brief This class is used to merge a set of hypersfm submaps back together
+ */
 class SubmapMerger
 {
 public:

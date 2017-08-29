@@ -16,6 +16,11 @@ namespace sfm {
 
 struct HsfmSubmap;
 
+/**
+ * @brief The submap sfm reconstruction engine class. Inherits
+ * from a sequential sfm engine. The only difference with sequential is that
+ * here the tracks are given to it and not computed during the reconstruction
+ */
 class SubmapSfMReconstructionEngine : public SequentialSfMReconstructionEngine
 {
 public:

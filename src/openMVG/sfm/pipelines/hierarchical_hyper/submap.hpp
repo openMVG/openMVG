@@ -15,12 +15,18 @@
 namespace openMVG {
 namespace sfm {
 
-// struct used to store the submaps created by clustering.
-// A HsfmSubmap can be a parent, if it has been clustered into two
-// children submaps.
-// It stores a sfm_data, and the tracks ids corresponding to the landmarks contained in the submap.
-// If it is a parent it also stores the ids of the separator tracks (which are tracks contained in
-// both children submaps), and the submap id of its children.
+/**
+ * @brief The HsfmSubmap struct, a data structure for clustered data.
+ * A HsfmSubmap contains a sfm_data representing the subscene,
+ * a set of track_ids corresponding to the landmarks contained in the submap.
+ * It contains a flag to signify if it is a parent (i.e. if it has itself been clustered
+ * into two children submaps).
+ * for a parent submap :
+ * 	- It stores the ids of the separator tracks (the tracks contained in both
+ * 		children submaps).
+ * 	- It contains the submap indices of its children
+ * It also stores the index of its own parent.
+ */
 struct HsfmSubmap
 {
   SfM_Data sfm_data;
