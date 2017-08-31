@@ -176,7 +176,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   //  - keep valid one
 
   using Triplets = std::vector< graph::Triplet >;
-  const Triplets triplets = graph::tripletListing(pairs);
+  const Triplets triplets = graph::TripletListing(pairs);
 
   C_Progress_display my_progress_bar( triplets.size(), std::cout,
     "Per triplet tracks validation (discard spurious correspondences):\n" );
