@@ -50,9 +50,8 @@ class SceneAligner
 {
 public:
 
-  bool computeTransformAndDestinationSeparators
-  (
-    SfM_Data & destination_sfm_data,
+  bool computeTransformAndCommonLandmarks
+  (Landmarks &destination_landmarks,
     const SfM_Data & sfm_data_first, // first submap scene
     const SfM_Data & sfm_data_second, // second submap scene
     std::vector<double> & second_base_node_pose, // second base node pose with respect to the first base node (what we're looking for)
@@ -66,7 +65,7 @@ protected:
   Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
 
   virtual void configureProblem(ceres::Problem & problem,
-    SfM_Data &destination_sfm_data,
+    Landmarks &destination_landmarks,
     const SfM_Data &sfm_data_first,
     const SfM_Data & sfm_data_second,
     std::vector<double> & second_base_node_pose,

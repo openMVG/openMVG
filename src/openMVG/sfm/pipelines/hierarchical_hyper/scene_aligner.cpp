@@ -32,27 +32,28 @@ bool MergeScenesUsingCommonTracks
   SceneAligner *smap_aligner
 )
 {
-  // initialize destination sfm data
-  destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
-  for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
-  {
-    if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
-      destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
-  }
-  destination_sfm_data.poses = sfm_data_first.poses;
-  destination_sfm_data.structure = sfm_data_first.structure;
-
-  // initialize the transformation parameters
+  // 1. Find separator landmarks and transformation between two scenes
   std::vector<double> second_base_node_pose(6, 0.0);
   double scaling_factor(1.0);
-
+  Landmarks separator_landmarks = sfm_data_first.structure;
   const bool alignment_successful =
-      smap_aligner->computeTransformAndDestinationSeparators(
-        destination_sfm_data, sfm_data_first, sfm_data_second,
+      smap_aligner->computeTransformAndCommonLandmarks(
+        separator_landmarks, sfm_data_first, sfm_data_second,
         second_base_node_pose, scaling_factor, common_track_ids);
 
+  // 2. transform second scene and merge it with first scene
   if (alignment_successful)
   {
+    // initialize destination sfm data
+    destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
+    for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
+    {
+      if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
+        destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
+    }
+    destination_sfm_data.poses = sfm_data_first.poses;
+    destination_sfm_data.structure = separator_landmarks;
+
     Vec3 second_base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
     Mat3 second_base_node_RMat;
     ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
@@ -95,8 +96,8 @@ SceneAligner::SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options)
   : ceres_options_(options)
 {}
 
-bool SceneAligner::computeTransformAndDestinationSeparators(
-    SfM_Data &destination_sfm_data,
+bool SceneAligner::computeTransformAndCommonLandmarks(
+    Landmarks &destination_landmarks,
     const SfM_Data &sfm_data_first,
     const SfM_Data &sfm_data_second,
     std::vector<double> &second_base_node_pose,
@@ -114,7 +115,7 @@ bool SceneAligner::computeTransformAndDestinationSeparators(
   // note : configureProblem is a virtual method !
   configureProblem(
     problem,
-    destination_sfm_data,
+    destination_landmarks,
     sfm_data_first,
     sfm_data_second,
     second_base_node_pose,
@@ -167,7 +168,7 @@ bool SceneAligner::computeTransformAndDestinationSeparators(
 }
 
 void SceneAligner::configureProblem(ceres::Problem & problem,
-    SfM_Data &destination_sfm_data,
+    Landmarks &destination_landmarks,
     const SfM_Data & sfm_data_first,
     const SfM_Data & sfm_data_second,
     std::vector<double> & second_base_node_pose,
@@ -177,7 +178,6 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
 {
   const Landmarks & landmarks_first = sfm_data_first.structure;
   const Landmarks & landmarks_second = sfm_data_second.structure;
-  Landmarks & destination_landmarks = destination_sfm_data.structure;
 
   // Add scaling as a parameter
   problem.AddParameterBlock(&scaling_factor, 1);

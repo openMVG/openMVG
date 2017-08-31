@@ -83,12 +83,13 @@ TEST(SceneAligner, sceneWithLandmarksOnly_SubmapAlignmentWorks)
   double scaling_factor(1.0);
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  Landmarks & destination_landmarks = destination_sfm_data.structure;
 
   cout << " Bundle Adjustment ... " << endl;
   std::unique_ptr<SceneAligner> smap_aligner =
       std::unique_ptr<SceneAligner>(new SceneAligner);
-  smap_aligner->computeTransformAndDestinationSeparators(
-      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+  smap_aligner->computeTransformAndCommonLandmarks(
+      destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
       base_node_coords, scaling_factor, two_scenes.common_track_ids);
 
   const Vec3 base_node_R = Vec3(base_node_coords[0],base_node_coords[1],base_node_coords[2]);
@@ -110,6 +111,7 @@ TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationW
 {
   TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(3);
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  Landmarks & destination_landmarks = destination_sfm_data.structure;
   const double scaling_factor_gt = two_scenes.scaling_factor_;
   const Vec3 Rotation_gt = two_scenes.Rotation;
   const Vec3 Translation_gt = two_scenes.Translation;
@@ -120,8 +122,8 @@ TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationW
   std::unique_ptr<SceneAligner> smap_aligner =
       std::unique_ptr<SceneAligner>(new SceneAligner);
 
-  smap_aligner->computeTransformAndDestinationSeparators(
-      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+  smap_aligner->computeTransformAndCommonLandmarks(
+      destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
       second_base_node_pose, scaling_factor, two_scenes.common_track_ids);
 
   const Vec3 base_node_R = Vec3(second_base_node_pose[0],second_base_node_pose[1],second_base_node_pose[2]);
@@ -155,11 +157,12 @@ TEST(SceneAligner, twoScenesWithNoCommonTracks_returnFalse)
       std::unique_ptr<SceneAligner>(new SceneAligner);
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  Landmarks & destination_landmarks = destination_sfm_data.structure;
   std::vector<double> second_base_node_pose(6, 0.0);
   double scaling_factor(1.0);
 
-  EXPECT_FALSE(smap_aligner->computeTransformAndDestinationSeparators(
-      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+  EXPECT_FALSE(smap_aligner->computeTransformAndCommonLandmarks(
+      destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
       second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
 }
 
@@ -178,11 +181,12 @@ TEST(SceneAligner, twoScenesWithNoCommonRECONSTRUCTEDTracks_returnFalse)
       std::unique_ptr<SceneAligner>(new SceneAligner);
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
+  Landmarks & destination_landmarks = destination_sfm_data.structure;
   std::vector<double> second_base_node_pose(6, 0.0);
   double scaling_factor(1.0);
 
-  EXPECT_FALSE(smap_aligner->computeTransformAndDestinationSeparators(
-      destination_sfm_data, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
+  EXPECT_FALSE(smap_aligner->computeTransformAndCommonLandmarks(
+      destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
       second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
 }
 
