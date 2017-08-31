@@ -17,12 +17,14 @@ add_library(openMVG_pipeline_global ${global_headers} ${global_cpp})
 target_link_libraries(
   openMVG_pipeline_global
   PRIVATE
-    openMVG_sfm)
+    openMVG_sfm
+    )
 
 target_include_directories(
   openMVG_pipeline_global
   PRIVATE
-  ${CERES_INCLUDE_DIRS})
+  ${CERES_INCLUDE_DIRS}
+  ${LEMON_INCLUDE_DIRS})
 
 set_target_properties(openMVG_pipeline_global PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
