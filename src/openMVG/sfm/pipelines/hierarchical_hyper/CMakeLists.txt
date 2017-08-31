@@ -17,7 +17,6 @@ add_library(openMVG_pipeline_hierarchical_hyper ${hierarchical_hyper_headers} ${
 target_link_libraries(
   openMVG_pipeline_hierarchical_hyper
   PRIVATE
-    openMVG_sfm
     openMVG_pipeline_sequential
     scotch
     scotcherr
