@@ -18,8 +18,7 @@ target_link_libraries(
   openMVG_pipeline_hierarchical_hyper
   PRIVATE
     openMVG_pipeline_sequential
-    scotch
-    scotcherr
+    myScotch
     )
 
 target_include_directories(

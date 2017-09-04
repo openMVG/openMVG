@@ -14,7 +14,7 @@
 #pragma once
 
 // scotch library for hypergraph partitioning
-#include <scotch.h>
+#include "scotch.h"
 #include <fstream>
 
 /**
