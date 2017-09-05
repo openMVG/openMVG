@@ -136,9 +136,22 @@ include_directories(src/libscotch)
 
 add_library(myScotch STATIC GLOBAL)
 set_property(TARGET myScotch PROPERTY SOURCES ${myScotch_headers} ${myScotch_sources})
+
+# these compile flags come from the scotch make.inc files...
+set(linux_compile_flags "-O3;-DCOMMON_FILE_COMPRESS_GZ;-DCOMMON_PTHREAD;-DCOMMON_RANDOM_FIXED_SEED;-DSCOTCH_RENAME;-DSCOTCH_PTHREAD;-Drestrict=__restrict")
+set(osx_compile_flags "-O3;-Drestrict=__restrict;-DCOMMON_FILE_COMPRESS_GZ;-DCOMMON_PTHREAD;-DCOMMON_PTHREAD_BARRIER;-DCOMMON_RANDOM_FIXED_SEED;-DCOMMON_TIMING_OLD;-DSCOTCH_PTHREAD;-DSCOTCH_RENAME;-fPIC")
+if (UNIX AND NOT APPLE)
+  set(scotch_compile_flags ${linux_compile_flags})
+elseif(APPLE)
+  set(scotch_compile_flags ${osx_compile_flags})
+endif()
+
 target_compile_options(
   myScotch PRIVATE
-  "-DSCOTCH_PTHREAD")
+  ${scotch_compile_flags})
+target_compile_options(
+  dummysize PRIVATE
+  ${scotch_compile_flags})
 
 if (NOT ALREADY_GENERATED)
   add_custom_target(dummysize_run
