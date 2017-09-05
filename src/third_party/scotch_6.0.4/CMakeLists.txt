@@ -66,75 +66,86 @@ target_compile_options(
   "-DSCOTCH_PATCHLEVEL=4"
   )
 
-file(MAKE_DIRECTORY ${scotch_out_dir}/include)
-file(MAKE_DIRECTORY ${scotch_out_dir}/src)
-file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
+SET(outParserYYFile ${scotch_out_dir}/src/libscotch/parser_yy.c)
+SET(outParserLLFile ${scotch_out_dir}/src/libscotch/parser_ll.c)
+SET(outParserLYFile ${scotch_out_dir}/src/libscotch/parser_ly.h)
+SET(outScotchHFile ${scotch_out_dir}/include/scotch.h)
 
-# parser stuff (generated with yacc and lex)
+if(EXISTS ${outScotchHFile}
+    AND EXISTS ${outParserYYFile}
+    AND EXISTS ${outParserLYFile}
+    AND EXISTS ${outParserLLFile})
+  SET(ALREADY_GENERATED TRUE)
+else()
+  SET(ALREADY_GENERATED FALSE)
+
+  message("generate empty header files to prevent cmake error")
+  file(WRITE ${outScotchHFile} "//writing empty scotch.h for cmake")
+  file(WRITE ${outParserLYFile} "//writing empty parser_ly.h for cmake")
+endif()
+
 SET(USE_YACC FALSE)
-if(USE_YACC)
-  SET(YaccOutputFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.c)
-  SET(YaccOutputHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ly.h)
+if(NOT ALREADY_GENERATED)
 
-  FIND_PACKAGE(BISON REQUIRED)
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${YaccOutputFile}
-    COMMAND ${BISON_EXECUTABLE}
-      --output=${YaccOutputFile}
-      --defines=${YaccOutputHeaderFile}
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
-    COMMENT "YACC creating parser.c"
-    )
+  file(MAKE_DIRECTORY ${scotch_out_dir}/include)
+  file(MAKE_DIRECTORY ${scotch_out_dir}/src)
+  file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
 
-  SET(LexOutputFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.c)
-  FIND_PACKAGE(FLEX REQUIRED)
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${LexOutputFile}
-    COMMAND ${FLEX_EXECUTABLE}
-      --outfile=${LexOutputFile}
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
-    COMMENT "LEX creating parser.c"
-    )
+  if(USE_YACC)
+    FIND_PACKAGE(BISON REQUIRED)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${outParserYYFile}
+      COMMAND ${BISON_EXECUTABLE}
+        --output=${outParserYYFile}
+        --defines=${outParserLYFile}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
+      COMMENT "YACC creating parser_yy.c and parser_ly.h"
+      )
 
-  list(APPEND myScotch_sources ${YaccOutputFile})
-  list(APPEND myScotch_sources ${LexOutputFile})
-else(USE_YACC)
-  SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
-  SET(parserFileCopy ${scotch_out_dir}/src/libscotch/parser_yy.c)
-  SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
-  SET(parserLLFileCopy ${scotch_out_dir}/src/libscotch/parser_ll.c)
-  SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
-  SET(parserHeaderFileCopy ${scotch_out_dir}/src/libscotch/parser_ly.h)
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${parserFileCopy}
-    COMMAND cp
-      ${parserFile}
-      ${parserFileCopy}
-    COMMENT "copying parser_yy.c"
-    )
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${parserHeaderFileCopy}
-    COMMAND cp
-      ${parserHeaderFile}
-      ${parserHeaderFileCopy}
-    COMMENT "copying parser_ly.h"
-    )
-  ADD_CUSTOM_COMMAND(
-    OUTPUT ${parserLLFileCopy}
-    COMMAND cp
-      ${parserLLFile}
-      ${parserLLFileCopy}
-    COMMENT "copying parser_ly.h"
-    )
-  list(APPEND myScotch_sources ${parserFileCopy} ${parserLLFileCopy})
-  list(APPEND myScotch_headers ${parserHeaderFileCopy})
-endif(USE_YACC)
+    FIND_PACKAGE(FLEX REQUIRED)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${outParserLLFile}
+      COMMAND ${FLEX_EXECUTABLE}
+        --outfile=${outParserLLFile}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
+      COMMENT "LEX creating parser_ll.c"
+      )
+
+  else(USE_YACC)
+    SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
+    SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
+    SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${outParserYYFile}
+      COMMAND cp
+        ${parserFile}
+        ${outParserYYFile}
+      COMMENT "copying parser_yy.c"
+      )
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${outParserLYFile}
+      COMMAND cp
+        ${parserHeaderFile}
+        ${outParserLYFile}
+      COMMENT "copying parser_ly.h"
+      )
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${outParserLLFile}
+      COMMAND cp
+        ${parserLLFile}
+        ${outParserLLFile}
+      COMMENT "copying parser_ll.c"
+      )
+  endif(USE_YACC)
+endif(NOT ALREADY_GENERATED)
+
+list(APPEND myScotch_sources ${outParserYYFile} ${outParserLLFile})
+list(APPEND myScotch_headers ${outParserLYFile})
 
 include_directories(${scotch_out_dir}/include)
 include_directories(src/libscotch)
 
-file(WRITE ${scotch_out_dir}/include/scotch.h "#writing empty scotch.h for cmake")
-list(APPEND myScotch_headers ${scotch_out_dir}/include/scotch.h)
+list(APPEND myScotch_headers ${outScotchHFile})
 
 add_library(myScotch STATIC GLOBAL)
 set_property(TARGET myScotch PROPERTY SOURCES ${myScotch_headers} ${myScotch_sources})
@@ -142,12 +153,15 @@ target_compile_options(
   myScotch PRIVATE
   "-DSCOTCH_PTHREAD")
 
-add_custom_target(dummysize_run
-  COMMAND dummysize src/libscotch/library.h ${scotch_out_dir}/include/scotch.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "run dummysize to generate scotch.h"
-  SOURCES src/libscotch/dummysizes.c)
-
-add_dependencies(myScotch dummysize_run)
+if (NOT ALREADY_GENERATED)
+  add_custom_target(dummysize_run
+    COMMAND dummysize src/libscotch/library.h ${outScotchHFile}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "run dummysize to generate scotch.h"
+    SOURCES src/libscotch/dummysizes.c)
+  add_dependencies(myScotch dummysize_run)
+endif(NOT ALREADY_GENERATED)
 
 install(TARGETS myScotch DESTINATION lib EXPORT openMVG-targets)
+
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${outParserYYFile};${outParserLLFile};${outParserLYFile};${outScotchHFile}")
