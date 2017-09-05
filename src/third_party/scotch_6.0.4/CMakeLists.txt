@@ -86,6 +86,11 @@ endif()
 
 FIND_PACKAGE(BISON)
 FIND_PACKAGE(FLEX)
+
+# do without bison/flex for now (does not work yet)
+SET(BISON_FOUND FALSE)
+SET(FLEX_FOUND FALSE)
+
 if(NOT ALREADY_GENERATED)
 
   file(MAKE_DIRECTORY ${scotch_out_dir}/include)
@@ -103,7 +108,6 @@ if(NOT ALREADY_GENERATED)
       COMMENT "YACC creating parser_yy.c and parser_ly.h"
       )
 
-    FIND_PACKAGE(FLEX REQUIRED)
     ADD_CUSTOM_COMMAND(
       OUTPUT ${outParserLLFile}
       COMMAND ${FLEX_EXECUTABLE}
@@ -113,33 +117,13 @@ if(NOT ALREADY_GENERATED)
       )
 
   else(BISON_FOUND AND FLEX_FOUND)
+    # if lex and yacc are not found we use the files provided by scotch in the last_resort dir
     SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
     SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
     SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
-    ADD_CUSTOM_COMMAND(
-      OUTPUT ${outParserYYFile}
-      COMMAND cp
-        ${parserFile}
-        ${outParserYYFile}
-      COMMENT "copying parser_yy.c"
-      )
-
-    # need to remove the "fake" file at that point so that the copy command can work...
-    file(REMOVE ${outParserLYFile})
-    ADD_CUSTOM_COMMAND(
-      OUTPUT ${outParserLYFile}
-      COMMAND cp
-        ${parserHeaderFile}
-        ${outParserLYFile}
-      COMMENT "copying parser_ly.h"
-      )
-    ADD_CUSTOM_COMMAND(
-      OUTPUT ${outParserLLFile}
-      COMMAND cp
-        ${parserLLFile}
-        ${outParserLLFile}
-      COMMENT "copying parser_ll.c"
-      )
+    file(COPY ${parserFile} DESTINATION ${scotch_out_dir}/src/libscotch)
+    file(COPY ${parserHeaderFile} DESTINATION ${scotch_out_dir}/src/libscotch)
+    file(COPY ${parserLLFile} DESTINATION ${scotch_out_dir}/src/libscotch)
   endif(BISON_FOUND AND FLEX_FOUND)
 endif(NOT ALREADY_GENERATED)
 
