@@ -84,15 +84,16 @@ else()
   file(WRITE ${outParserLYFile} "//writing empty parser_ly.h for cmake")
 endif()
 
-SET(USE_YACC FALSE)
+FIND_PACKAGE(BISON)
+FIND_PACKAGE(FLEX)
 if(NOT ALREADY_GENERATED)
 
   file(MAKE_DIRECTORY ${scotch_out_dir}/include)
   file(MAKE_DIRECTORY ${scotch_out_dir}/src)
   file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
 
-  if(USE_YACC)
-    FIND_PACKAGE(BISON REQUIRED)
+  if(BISON_FOUND AND FLEX_FOUND)
+    message("Bison/yacc and Flex/lex found ! use them for file generation")
     ADD_CUSTOM_COMMAND(
       OUTPUT ${outParserYYFile}
       COMMAND ${BISON_EXECUTABLE}
@@ -111,7 +112,7 @@ if(NOT ALREADY_GENERATED)
       COMMENT "LEX creating parser_ll.c"
       )
 
-  else(USE_YACC)
+  else(BISON_FOUND AND FLEX_FOUND)
     SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
     SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
     SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
@@ -122,6 +123,9 @@ if(NOT ALREADY_GENERATED)
         ${outParserYYFile}
       COMMENT "copying parser_yy.c"
       )
+
+    # need to remove the "fake" file at that point so that the copy command can work...
+    file(REMOVE ${outParserLYFile})
     ADD_CUSTOM_COMMAND(
       OUTPUT ${outParserLYFile}
       COMMAND cp
@@ -136,16 +140,15 @@ if(NOT ALREADY_GENERATED)
         ${outParserLLFile}
       COMMENT "copying parser_ll.c"
       )
-  endif(USE_YACC)
+  endif(BISON_FOUND AND FLEX_FOUND)
 endif(NOT ALREADY_GENERATED)
 
 list(APPEND myScotch_sources ${outParserYYFile} ${outParserLLFile})
 list(APPEND myScotch_headers ${outParserLYFile})
+list(APPEND myScotch_headers ${outScotchHFile})
 
 include_directories(${scotch_out_dir}/include)
 include_directories(src/libscotch)
-
-list(APPEND myScotch_headers ${outScotchHFile})
 
 add_library(myScotch STATIC GLOBAL)
 set_property(TARGET myScotch PROPERTY SOURCES ${myScotch_headers} ${myScotch_sources})
