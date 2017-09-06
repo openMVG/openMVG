@@ -22,9 +22,9 @@ namespace sfm {
  * It contains a flag to signify if it is a parent (i.e. if it has itself been clustered
  * into two children submaps).
  * for a parent submap :
- * 	- It stores the ids of the separator tracks (the tracks contained in both
- * 		children submaps).
- * 	- It contains the submap indices of its children
+ * - It stores the ids of the separator tracks (the tracks contained in both
+ *   children submaps).
+ * - It contains the submap indices of its children
  * It also stores the index of its own parent.
  */
 struct HsfmSubmap
