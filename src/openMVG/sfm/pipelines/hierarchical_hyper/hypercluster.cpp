@@ -53,10 +53,25 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
 }
 
 HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize)
-  : root_sfm_data_(sfm_data), map_tracks_(map_tracks), threshold_submap_tracksize_(threshold_submap_tracksize)
+  : root_sfm_data_(sfm_data), map_tracks_(map_tracks), threshold_submap_tracksize_(threshold_submap_tracksize), MIN_NUMBER_VIEWS_PER_SUBMAPS_(2)
 {
   root_sfm_data_.structure.clear();
   root_sfm_data_.poses.clear();
+}
+
+bool HyperCluster::submapsAreLeftToBePartitioned(const std::set<openMVG::IndexT> & non_partitionable_smap_ids)
+{
+  // a partitionable submap should have the following requirements :
+  // - not a parent
+  // - not flagged at "non partitionable" (see input param)
+  // - be above the clustering threshold
+
+  return
+    std::any_of(submaps_.begin(), submaps_.end(),
+       [=](std::pair<IndexT, HsfmSubmap> a)
+       {return ((!a.second.is_parent)
+                && non_partitionable_smap_ids.count(a.first) == 0
+                && (a.second.track_ids.size() > threshold_submap_tracksize_));});
 }
 
 bool HyperCluster::recursivePartitioning()
@@ -70,10 +85,9 @@ bool HyperCluster::recursivePartitioning()
   }
   submaps_[0].sfm_data = root_sfm_data_;
 
-  // while there are still submaps bigger than the threshold, keep partitioning
-  while (std::any_of(submaps_.begin(), submaps_.end(),
-        [=](std::pair<IndexT, HsfmSubmap> a)
-        {return ((!a.second.is_parent) && (a.second.track_ids.size() > threshold_submap_tracksize_));}))
+  std::set<openMVG::IndexT> non_partitionable_submap_ids;
+
+  while (submapsAreLeftToBePartitioned(non_partitionable_submap_ids))
   {
     std::cout << "some submaps are still too big ! >> keep clustering !" << std::endl;
 
@@ -91,11 +105,18 @@ bool HyperCluster::recursivePartitioning()
     for (auto & smap : submaps_)
     {
       HsfmSubmap & submap = smap.second;
+      const openMVG::IndexT & submap_id = smap.first;
+
       if (!submap.is_parent && submap.track_ids.size() > threshold_submap_tracksize_)
       {
         // partition the current submap
-        std::vector<HsfmSubmap> new_submap_pair;
-        PartitionSubmap(smap.first, new_submap_pair);
+        std::vector<HsfmSubmap> new_submap_pair(2);
+        if(!PartitionSubmap(submap_id, new_submap_pair))
+        {
+          std::cout << "stop partitioning for submap nb " << submap_id << std::endl;
+          non_partitionable_submap_ids.insert(submap_id);
+          continue;
+        }
 
         // submap becomes parent
         submap.is_parent = true;
@@ -172,6 +193,12 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
     return false;
   }
 
+  if (view_id_partitions.first.size() < MIN_NUMBER_VIEWS_PER_SUBMAPS_)
+  {
+    std::cerr << "returned partition is too small ! (only " << view_id_partitions.first.size() << " views." << std::endl;
+    return false;
+  }
+
   // create the children submaps and fill the view ids
   // with the partitioned views
   HsfmSubmap first_submap, second_submap;
@@ -181,7 +208,7 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
   second_submap.parent_id = submap_id;
   partitioned_pair.push_back(first_submap);
   partitioned_pair.push_back(second_submap);
-  
+
   // deduce separator (set of hyperedges that are contained in both submaps.)
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
@@ -213,7 +240,7 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
           break;
         }
       }
-      
+
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif

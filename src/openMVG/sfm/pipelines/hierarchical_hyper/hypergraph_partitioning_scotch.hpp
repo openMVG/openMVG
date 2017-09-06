@@ -13,9 +13,12 @@
 
 #pragma once
 
+#include "openMVG/types.hpp"
+#include <fstream>
+#include <iostream>
+
 // scotch library for hypergraph partitioning
 #include "scotch.h"
-#include <fstream>
 
 /**
  * @note WARNING : this function USED TO create a memory leak (the incriminated part is SCOTCH_meshGraph() in

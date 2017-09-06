@@ -31,6 +31,7 @@
 namespace openMVG {
 namespace sfm {
 
+
 /**
  * @brief The HyperCluster class, can cluster a sfm_data into multiple submaps.
  */
@@ -64,6 +65,8 @@ private:
 
   std::map<std::set<IndexT>, std::set<size_t>> createSubHyperGraph(IndexT submap_id);
 
+  bool submapsAreLeftToBePartitioned(const std::set<openMVG::IndexT> & non_partitionable_smap_ids = {});
+
   // input sfm data
   sfm::SfM_Data root_sfm_data_;
 
@@ -74,6 +77,8 @@ private:
   HsfmSubmaps submaps_;
 
   int threshold_submap_tracksize_;
+
+  int MIN_NUMBER_VIEWS_PER_SUBMAPS_;
 };
 
 } // namespace sfm
