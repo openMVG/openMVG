@@ -88,8 +88,8 @@ FIND_PACKAGE(BISON)
 FIND_PACKAGE(FLEX)
 
 # do without bison/flex for now (does not work yet)
-SET(BISON_FOUND FALSE)
-SET(FLEX_FOUND FALSE)
+#SET(BISON_FOUND FALSE)
+#SET(FLEX_FOUND FALSE)
 
 if(NOT ALREADY_GENERATED)
 
@@ -98,23 +98,36 @@ if(NOT ALREADY_GENERATED)
   file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
 
   if(BISON_FOUND AND FLEX_FOUND)
-    message("Bison/yacc and Flex/lex found ! use them for file generation")
-    ADD_CUSTOM_COMMAND(
-      OUTPUT ${outParserYYFile}
-      COMMAND ${BISON_EXECUTABLE}
-        --output=${outParserYYFile}
-        --defines=${outParserLYFile}
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
-      COMMENT "YACC creating parser_yy.c and parser_ly.h"
-      )
+    SET(linux_yacc_flags "--defines=${outParserLYFile} -pscotchyy -y -b y -v")
 
-    ADD_CUSTOM_COMMAND(
-      OUTPUT ${outParserLLFile}
-      COMMAND ${FLEX_EXECUTABLE}
-        --outfile=${outParserLLFile}
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
-      COMMENT "LEX creating parser_ll.c"
-      )
+    message("Bison/yacc and Flex/lex found ! use them for file generation")
+    BISON_TARGET(YaccParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y ${outParserYYFile} COMPILE_FLAGS ${linux_yacc_flags})
+    #ADD_CUSTOM_COMMAND(
+    #  OUTPUT ${outParserYYFile}
+    #  COMMAND ${BISON_EXECUTABLE}
+    #    ${linux_yacc_flags} -d -v
+    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
+    #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
+    #  )
+    #ADD_CUSTOM_COMMAND(
+    #  OUTPUT ${outParserYYFile}
+    #  COMMAND ${BISON_EXECUTABLE}
+    #    --output=${outParserYYFile}
+    #    --defines=${outParserLYFile}
+    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
+    #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
+    #  )
+
+    SET(linux_lex_flags "-Pscotchyy -olex.yy.c")
+    FLEX_TARGET(LexParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l ${outParserLLFile} COMPILE_FLAGS ${linux_lex_flags})
+    #ADD_CUSTOM_COMMAND(
+    #  OUTPUT ${outParserLLFile}
+    #  COMMAND ${FLEX_EXECUTABLE}
+    #    ${linux_lex_flags}
+    #    #--outfile=${outParserLLFile}
+    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
+    #  COMMENT "LEX creating parser_ll.c"
+    #  )
 
   else(BISON_FOUND AND FLEX_FOUND)
     # if lex and yacc are not found we use the files provided by scotch in the last_resort dir
