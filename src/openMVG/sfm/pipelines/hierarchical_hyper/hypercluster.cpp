@@ -68,7 +68,7 @@ bool HyperCluster::submapsAreLeftToBePartitioned(const std::set<openMVG::IndexT>
 
   return
     std::any_of(submaps_.begin(), submaps_.end(),
-       [=](std::pair<IndexT, HsfmSubmap> a)
+       [=](const std::pair<IndexT, HsfmSubmap> & a)
        {return ((!a.second.is_parent)
                 && non_partitionable_smap_ids.count(a.first) == 0
                 && (a.second.track_ids.size() > threshold_submap_tracksize_));});
@@ -113,8 +113,8 @@ bool HyperCluster::recursivePartitioning()
         std::vector<HsfmSubmap> new_submap_pair(2);
         if(!PartitionSubmap(submap_id, new_submap_pair))
         {
-          std::cout << "stop partitioning for submap nb " << submap_id << std::endl;
-          non_partitionable_submap_ids.insert(submap_id);
+          std::cout << "can not partitition further for submap nb " << submap_id << std::endl;
+          non_partitionable_submap_ids.insert(submap_id); // flag the submap to stop partitioning it
           continue;
         }
 
