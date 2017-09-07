@@ -57,6 +57,8 @@ file(GLOB_RECURSE REMOVENONSOURCEDOTCFILES
   )
 list(REMOVE_ITEM myScotch_sources ${REMOVENONSOURCEDOTCFILES})
 
+add_library(myScotch STATIC GLOBAL)
+
 # generate scotch.h stuff
 add_executable(dummysize src/libscotch/dummysizes.c)
 target_compile_options(
@@ -71,83 +73,95 @@ SET(outParserLLFile ${scotch_out_dir}/src/libscotch/parser_ll.c)
 SET(outParserLYFile ${scotch_out_dir}/src/libscotch/parser_ly.h)
 SET(outScotchHFile ${scotch_out_dir}/include/scotch.h)
 
-if(EXISTS ${outScotchHFile}
-    AND EXISTS ${outParserYYFile}
-    AND EXISTS ${outParserLYFile}
-    AND EXISTS ${outParserLLFile})
-  SET(ALREADY_GENERATED TRUE)
-else()
-  SET(ALREADY_GENERATED FALSE)
-
-  message("generate empty header files to prevent cmake error")
-  file(WRITE ${outScotchHFile} "//writing empty scotch.h for cmake")
-  file(WRITE ${outParserLYFile} "//writing empty parser_ly.h for cmake")
-endif()
-
 FIND_PACKAGE(BISON)
 FIND_PACKAGE(FLEX)
 
 # do without bison/flex for now (does not work yet)
-#SET(BISON_FOUND FALSE)
-#SET(FLEX_FOUND FALSE)
+SET(BISON_FOUND FALSE)
+SET(FLEX_FOUND FALSE)
 
-if(NOT ALREADY_GENERATED)
+file(MAKE_DIRECTORY ${scotch_out_dir}/include)
+file(MAKE_DIRECTORY ${scotch_out_dir}/src)
+file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
 
-  file(MAKE_DIRECTORY ${scotch_out_dir}/include)
-  file(MAKE_DIRECTORY ${scotch_out_dir}/src)
-  file(MAKE_DIRECTORY ${scotch_out_dir}/src/libscotch)
+if(BISON_FOUND AND FLEX_FOUND)
+  SET(linux_yacc_flags "--defines=${outParserLYFile} -pscotchyy -y -b y -v")
 
-  if(BISON_FOUND AND FLEX_FOUND)
-    SET(linux_yacc_flags "--defines=${outParserLYFile} -pscotchyy -y -b y -v")
+  message("Bison/yacc and Flex/lex found ! use them for file generation")
+  BISON_TARGET(YaccParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y ${outParserYYFile} COMPILE_FLAGS ${linux_yacc_flags})
+  #ADD_CUSTOM_COMMAND(
+  #  OUTPUT ${outParserYYFile}
+  #  COMMAND ${BISON_EXECUTABLE}
+  #    ${linux_yacc_flags} -d -v
+  #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
+  #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
+  #  )
+  #ADD_CUSTOM_COMMAND(
+  #  OUTPUT ${outParserYYFile}
+  #  COMMAND ${BISON_EXECUTABLE}
+  #    --output=${outParserYYFile}
+  #    --defines=${outParserLYFile}
+  #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
+  #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
+  #  )
 
-    message("Bison/yacc and Flex/lex found ! use them for file generation")
-    BISON_TARGET(YaccParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y ${outParserYYFile} COMPILE_FLAGS ${linux_yacc_flags})
-    #ADD_CUSTOM_COMMAND(
-    #  OUTPUT ${outParserYYFile}
-    #  COMMAND ${BISON_EXECUTABLE}
-    #    ${linux_yacc_flags} -d -v
-    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
-    #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
-    #  )
-    #ADD_CUSTOM_COMMAND(
-    #  OUTPUT ${outParserYYFile}
-    #  COMMAND ${BISON_EXECUTABLE}
-    #    --output=${outParserYYFile}
-    #    --defines=${outParserLYFile}
-    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_yy.y
-    #  COMMENT "YACC creating parser_yy.c and parser_ly.h"
-    #  )
+  SET(linux_lex_flags "-Pscotchyy -olex.yy.c")
+  FLEX_TARGET(LexParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l ${outParserLLFile} COMPILE_FLAGS ${linux_lex_flags})
+  #ADD_CUSTOM_COMMAND(
+  #  OUTPUT ${outParserLLFile}
+  #  COMMAND ${FLEX_EXECUTABLE}
+  #    ${linux_lex_flags}
+  #    #--outfile=${outParserLLFile}
+  #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
+  #  COMMENT "LEX creating parser_ll.c"
+  #  )
 
-    SET(linux_lex_flags "-Pscotchyy -olex.yy.c")
-    FLEX_TARGET(LexParser ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l ${outParserLLFile} COMPILE_FLAGS ${linux_lex_flags})
-    #ADD_CUSTOM_COMMAND(
-    #  OUTPUT ${outParserLLFile}
-    #  COMMAND ${FLEX_EXECUTABLE}
-    #    ${linux_lex_flags}
-    #    #--outfile=${outParserLLFile}
-    #    ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/parser_ll.l
-    #  COMMENT "LEX creating parser_ll.c"
-    #  )
+else(BISON_FOUND AND FLEX_FOUND)
+  # if lex and yacc are not found we use the files provided by scotch in the last_resort dir
+  SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
+  SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
+  SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
 
-  else(BISON_FOUND AND FLEX_FOUND)
-    # if lex and yacc are not found we use the files provided by scotch in the last_resort dir
-    SET(parserFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_yy.c)
-    SET(parserLLFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ll.c)
-    SET(parserHeaderFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/last_resort/parser_ly.h)
-    file(COPY ${parserFile} DESTINATION ${scotch_out_dir}/src/libscotch)
-    file(COPY ${parserHeaderFile} DESTINATION ${scotch_out_dir}/src/libscotch)
-    file(COPY ${parserLLFile} DESTINATION ${scotch_out_dir}/src/libscotch)
-  endif(BISON_FOUND AND FLEX_FOUND)
-endif(NOT ALREADY_GENERATED)
+  # first time cmake is run we need to copy the files so that it
+  # finds them when adding them to the myScotch target...
+  file(COPY ${parserFile} DESTINATION ${scotch_out_dir}/src/libscotch)
+  file(COPY ${parserHeaderFile} DESTINATION ${scotch_out_dir}/src/libscotch)
+  file(COPY ${parserLLFile} DESTINATION ${scotch_out_dir}/src/libscotch)
+  add_custom_command(
+    OUTPUT ${outParserYYFile}
+    COMMAND ${CMAKE_COMMAND} -E copy ${parserFile} ${outParserYYFile}
+    DEPENDS ${parserFile}
+    COMMENT "copy parser_yy.c from libscotch/last_resort/"
+    )
+  add_custom_target(copyParserYYDone
+    DEPENDS ${outParserYYFile}
+    COMMENT "check if re-copying parser_yy.c is required")
+  add_custom_command(
+    OUTPUT ${outParserLYFile}
+    COMMAND ${CMAKE_COMMAND} -E copy ${parserHeaderFile} ${outParserLYFile}
+    DEPENDS ${parserHeaderFile}
+    COMMENT "copy parser_ly.h from libscotch/last_resort/"
+    )
+  add_custom_target(copyParserLYDone
+    DEPENDS ${outParserLYFile}
+    COMMENT "check if re-copying parser_ly.h is required")
+  add_custom_command(
+    OUTPUT ${outParserLLFile}
+    COMMAND ${CMAKE_COMMAND} -E copy ${parserLLFile} ${outParserLLFile}
+    DEPENDS ${parserLLFile}
+    COMMENT "copy parser_ll.c from libscotch/last_resort/"
+    )
+  add_custom_target(copyParserLLDone
+    DEPENDS ${outParserLLFile}
+    COMMENT "check if re-copying parser_ll.c is required")
+  add_dependencies(myScotch copyParserYYDone copyParserLYDone copyParserLLDone)
+endif(BISON_FOUND AND FLEX_FOUND)
 
 list(APPEND myScotch_sources ${outParserYYFile} ${outParserLLFile})
-list(APPEND myScotch_headers ${outParserLYFile})
-list(APPEND myScotch_headers ${outScotchHFile})
 
 include_directories(${scotch_out_dir}/include)
 include_directories(src/libscotch)
 
-add_library(myScotch STATIC GLOBAL)
 set_property(TARGET myScotch PROPERTY SOURCES ${myScotch_headers} ${myScotch_sources})
 
 # these compile flags come from the scotch make.inc files...
@@ -166,14 +180,20 @@ target_compile_options(
   dummysize PRIVATE
   ${scotch_compile_flags})
 
-if (NOT ALREADY_GENERATED)
-  add_custom_target(dummysize_run
-    COMMAND dummysize src/libscotch/library.h ${outScotchHFile}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "run dummysize to generate scotch.h"
-    SOURCES src/libscotch/dummysizes.c)
-  add_dependencies(myScotch dummysize_run)
-endif(NOT ALREADY_GENERATED)
+set(inScotchHFile ${CMAKE_CURRENT_SOURCE_DIR}/src/libscotch/library.h)
+
+add_custom_command(
+  OUTPUT ${outScotchHFile}
+  COMMAND dummysize ${inScotchHFile} ${outScotchHFile}
+  DEPENDS dummysize ${inScotchHFile}
+  COMMENT "run dummysize to generate scotch.h"
+  )
+
+add_custom_target(dummysize_run
+  DEPENDS ${outScotchHFile}
+  COMMENT "check if re-generation of scotch.h is required")
+
+add_dependencies(myScotch dummysize_run)
 
 install(TARGETS myScotch DESTINATION lib EXPORT openMVG-targets)
 
