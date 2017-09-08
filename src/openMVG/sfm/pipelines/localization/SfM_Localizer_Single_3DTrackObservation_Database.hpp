@@ -27,7 +27,7 @@ namespace sfm {
 // Implementation of a naive method:
 // - init the database of descriptor from the structure and the observations.
 // - create a large array with all the used descriptors and init a Matcher with it
-// - to localize an input image compare it's regions to the database and robust estimate
+// - to localize an input image compare its regions to the database and robust estimate
 //   the pose from found 2d-3D correspondences
 
 class SfM_Localization_Single_3DTrackObservation_Database : public SfM_Localizer

@@ -310,7 +310,7 @@ protected:
   }
 
   /**
-  * @brief Tell if a keypoint is close to the border according it's scale
+  * @brief Tell if a keypoint is close to the border according its scale
   * @param key The list of found extrema as Keypoints
   * @param w Slice image width
   * @param h Slice image height

@@ -38,7 +38,7 @@ The implementation is based on
         http://www.ipol.im/pub/algo/rd_anatomy_sift/
 
 Changes are:
-- The hierarchical scale space code can be run on it's own,
+- The hierarchical scale space code can be run on its own,
 - Keypoint detection and description is split in two separate modules,
 - the code can run per Octave (less memory consuming),
 - some computation can be run in parallel.

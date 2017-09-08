@@ -343,7 +343,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
-  // select a pair that have the largest baseline (mean angle between it's bearing vectors).
+  // select a pair that have the largest baseline (mean angle between its bearing vectors).
 
   const unsigned iMin_inliers_count = 100;
   const float fRequired_min_angle = 3.0f;

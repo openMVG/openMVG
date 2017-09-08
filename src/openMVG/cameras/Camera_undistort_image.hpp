@@ -22,7 +22,7 @@ namespace cameras
 {
 
 /**
-* @brief  Undistort an image according a given camera & it's distortion model
+* @brief  Undistort an image according a given camera & its distortion model
 * @param imageIn Input image
 * @param cam Input intrinsic parameter used to undistort image
 * @param[out] image_ud Output undistorted image
@@ -62,7 +62,7 @@ void UndistortImage(
 }
 
 /**
-* @brief  Undistort an image according a given camera & it's distortion model
+* @brief  Undistort an image according a given camera & its distortion model
 * @param imageIn Input image
 * @param cam Input intrinsic parameter used to undistort image
 * @param[out] image_ud Output undistorted image
