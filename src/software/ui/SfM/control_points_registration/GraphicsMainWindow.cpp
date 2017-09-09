@@ -29,14 +29,20 @@
 
 namespace control_point_GUI
 {
-
   using namespace std;
+  
   // =========================================================================
   // Public methods
   // =========================================================================
+  GraphicsView::GraphicsView(QGraphicsScene * scene)
+    : QGraphicsView(scene)
+  {
+  }
+
+
   GraphicsMainWindow::GraphicsMainWindow(Document & doc, QWidget * parent)
     : QMainWindow(parent), scene(new QGraphicsScene),
-    view(new QGraphicsView(scene)), _doc(doc), _current_view_id(UndefinedIndexT)
+    view(new GraphicsView(scene)), _doc(doc), _current_view_id(UndefinedIndexT)
   {
     // The OpenGL rendering does not seem to work with too big images.
     //view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
@@ -55,12 +61,13 @@ namespace control_point_GUI
     resize(800, 600);
   }
 
-  void GraphicsMainWindow::zoomIn() {
-    view->scale(1.25, 1.25); update();
+  void GraphicsView::zoomIn()
+  {
+    scale(1.25, 1.25); update();
   }
 
-  void GraphicsMainWindow::zoomOut() { view->scale(0.8, .8); update();}
-  void GraphicsMainWindow::normalSize() {view->resetTransform();  update();}
+  void GraphicsView::zoomOut() { scale(0.8, .8); update(); }
+  void GraphicsView::normalSize() { resetTransform();  update(); }
 
   // =========================================================================
   // Protected methods
@@ -116,7 +123,7 @@ namespace control_point_GUI
     }
   }
 
-  void GraphicsMainWindow::wheelEvent ( QWheelEvent * e)
+  void GraphicsView::wheelEvent ( QWheelEvent * e)
   {
     if (e->modifiers().testFlag(Qt::ControlModifier))
     // zoom only when CTRL key is pressed
@@ -135,14 +142,14 @@ namespace control_point_GUI
     }
     else
     {
-      QMainWindow::wheelEvent(e);
+      QGraphicsView::wheelEvent(e);
     }
   }
 
-  void GraphicsMainWindow::zoom(qreal factor, QPointF centerPoint)
+  void GraphicsView::zoom(qreal factor, QPointF centerPoint)
   {
-    view->scale(factor, factor);
-    //view->centerOn(centerPoint);
+    scale(factor, factor);
+    //centerOn(centerPoint);
   }
 
   // =========================================================================
@@ -153,17 +160,17 @@ namespace control_point_GUI
     zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomInAct->setEnabled(false);
-    connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
+    connect(zoomInAct, SIGNAL(triggered()), view, SLOT(zoomIn()));
 
     zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setEnabled(false);
-    connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
+    connect(zoomOutAct, SIGNAL(triggered()), view, SLOT(zoomOut()));
 
     normalSizeAct = new QAction(tr("&Normal Size"), this);
     normalSizeAct->setShortcut(tr("Ctrl+S"));
     normalSizeAct->setEnabled(false);
-    connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
+    connect(normalSizeAct, SIGNAL(triggered()), view, SLOT(normalSize()));
   }
 
   void GraphicsMainWindow::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)

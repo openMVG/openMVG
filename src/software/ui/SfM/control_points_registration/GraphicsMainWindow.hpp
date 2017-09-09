@@ -11,13 +11,13 @@
 // Qt4 headers
 #include <QMainWindow>
 #include <QPointer>
+#include <QGraphicsView>
 
 #include "document.hpp"
 
 class QAction;
 class QGraphicsPixmapItem;
 class QGraphicsScene;
-class QGraphicsView;
 class QLabel;
 class QScrollArea;
 class QMenu;
@@ -26,6 +26,24 @@ class QGraphicsRectItem;
 class QGraphicsItem;
 
 namespace control_point_GUI {
+
+  class GraphicsView : public QGraphicsView
+  {
+    Q_OBJECT
+
+  public:
+    GraphicsView(QGraphicsScene *scene);
+
+  protected:
+    void wheelEvent ( QWheelEvent * event );
+
+    void zoom(qreal factor, QPointF centerPoint);
+
+  private slots:
+    void zoomIn();
+    void zoomOut();
+    void normalSize();
+  };
 
   class GraphicsMainWindow : public QMainWindow
   {
@@ -46,13 +64,6 @@ namespace control_point_GUI {
     void drawBackground(QPainter * painter, const QRectF &rect);
 
     void mousePressEvent (QMouseEvent* e );
-    void wheelEvent ( QWheelEvent * event );
-    void zoom(qreal factor, QPointF centerPoint);
-
-  private slots:
-    void zoomIn();
-    void zoomOut();
-    void normalSize();
 
   private: /* methods */
     // Interface construction methods
@@ -61,7 +72,7 @@ namespace control_point_GUI {
   private: /* data members */
     // The graphics view machinery.
     QGraphicsScene * scene;
-    QGraphicsView * view;
+    GraphicsView * view;
 
     // Action
     QAction * open_images_action_;
