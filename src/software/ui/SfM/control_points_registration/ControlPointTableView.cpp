@@ -87,7 +87,7 @@ ControlPointTableView::ControlPointTableView
 }
 
 /// Update control points X,Y,Z data (if valid datum is provided)
-void ControlPointTableView::update_control_points
+void ControlPointTableView::updateControlPoints
 (
   Landmarks & control_points
 )
