@@ -473,7 +473,7 @@ void MainWindow::createActions()
 void MainWindow::createConnections()
 {
   connect (m_treeView_Images
-    ,SIGNAL(doubleClicked(const QModelIndex &))
+    ,SIGNAL(activated(const QModelIndex &))
     ,this
     ,SLOT(doubleClickImageList())
     );
