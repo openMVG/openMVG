@@ -65,6 +65,9 @@ namespace control_point_GUI {
 
     void mousePressEvent (QMouseEvent* e );
 
+  private slots:
+    void removeControlPoint();
+
   private: /* methods */
     // Interface construction methods
     void createActions();
@@ -79,6 +82,7 @@ namespace control_point_GUI {
     QAction * zoomInAct;
     QAction * zoomOutAct;
     QAction * normalSizeAct;
+    QAction * removeControlPointAct;
 
     // Document
     Document & _doc;

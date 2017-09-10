@@ -69,6 +69,33 @@ namespace control_point_GUI
   void GraphicsView::zoomOut() { scale(0.8, .8); update(); }
   void GraphicsView::normalSize() { resetTransform();  update(); }
 
+  void GraphicsMainWindow::removeControlPoint()
+  {
+    auto items = scene->selectedItems();
+
+    foreach (auto item, items)
+    {
+      auto cp = dynamic_cast<control_point_2DNode *>(item);
+
+      if (!cp)
+        continue;
+
+      auto i = _doc._sfm_data.control_points.find(cp->id_control_point());
+
+      if (i!=_doc._sfm_data.control_points.end())
+      {
+        Landmark & landmark = i->second;
+
+        landmark.obs.erase(_current_view_id);
+        
+        if (landmark.obs.empty())
+          _doc._sfm_data.control_points.erase(i);
+      }
+
+      delete cp;
+    }
+  }
+
   // =========================================================================
   // Protected methods
   // =========================================================================
@@ -171,6 +198,11 @@ namespace control_point_GUI
     normalSizeAct->setShortcut(tr("Ctrl+S"));
     normalSizeAct->setEnabled(false);
     connect(normalSizeAct, SIGNAL(triggered()), view, SLOT(normalSize()));
+
+    removeControlPointAct = new QAction(tr("&Remove Control Point"), this);
+    removeControlPointAct->setShortcut(tr("Del"));
+    removeControlPointAct->setEnabled(false);
+    connect(removeControlPointAct, SIGNAL(triggered()), this, SLOT(removeControlPoint()));
   }
 
   void GraphicsMainWindow::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
@@ -196,6 +228,7 @@ namespace control_point_GUI
       zoomInAct->setEnabled(true);
       zoomOutAct->setEnabled(true);
       normalSizeAct->setEnabled(true);
+      removeControlPointAct->setEnabled(true);
 
       const QFileInfo fi(qs_filename);
       const QString name = fi.fileName();

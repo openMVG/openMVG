@@ -33,6 +33,11 @@ control_point_2DNode::control_point_2DNode
   setPos(pos);
 }
 
+size_t control_point_2DNode::id_control_point() const
+{
+  return _id_control_point;
+}
+
 QRectF control_point_2DNode::boundingRect() const
 {
   return QRectF(QPointF(-10,-10),QSize(20,20));
