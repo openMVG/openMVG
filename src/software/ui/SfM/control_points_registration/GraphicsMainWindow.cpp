@@ -188,21 +188,24 @@ namespace control_point_GUI
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomInAct->setEnabled(false);
     connect(zoomInAct, SIGNAL(triggered()), view, SLOT(zoomIn()));
+    addAction(zoomInAct);
 
     zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setEnabled(false);
     connect(zoomOutAct, SIGNAL(triggered()), view, SLOT(zoomOut()));
+    addAction(zoomOutAct);
 
     normalSizeAct = new QAction(tr("&Normal Size"), this);
     normalSizeAct->setShortcut(tr("Ctrl+S"));
     normalSizeAct->setEnabled(false);
     connect(normalSizeAct, SIGNAL(triggered()), view, SLOT(normalSize()));
+    addAction(normalSizeAct);
 
     removeControlPointAct = new QAction(tr("&Remove Control Point"), this);
     removeControlPointAct->setShortcut(tr("Del"));
-    removeControlPointAct->setEnabled(false);
     connect(removeControlPointAct, SIGNAL(triggered()), this, SLOT(removeControlPoint()));
+    addAction(removeControlPointAct);
   }
 
   void GraphicsMainWindow::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
@@ -228,7 +231,6 @@ namespace control_point_GUI
       zoomInAct->setEnabled(true);
       zoomOutAct->setEnabled(true);
       normalSizeAct->setEnabled(true);
-      removeControlPointAct->setEnabled(true);
 
       const QFileInfo fi(qs_filename);
       const QString name = fi.fileName();
