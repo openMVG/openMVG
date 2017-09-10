@@ -111,6 +111,11 @@ namespace control_point_GUI
       return;
     }
 
+    if (e->button()!=Qt::LeftButton)
+    {
+      return;
+    }
+
     const QPointF pos =  this->view->mapToScene(e->pos());
 
     int index = -1;
