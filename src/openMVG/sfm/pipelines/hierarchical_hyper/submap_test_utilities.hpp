@@ -10,6 +10,7 @@
 
 #include "openMVG/test_utility_functions.hpp"
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/submap.hpp"
 
 void printBaseNodeCoords(const openMVG::Vec3 Translation_gt, openMVG::Vec3 base_node_R, openMVG::Vec3 base_node_t, const openMVG::Vec3 Rotation_gt, double scaling_factor, const double scaling_factor_gt)
 {
