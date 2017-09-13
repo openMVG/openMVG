@@ -402,11 +402,23 @@ bool Bundle_Adjustment_Ceres::Adjust
             options.control_point_opt.weight);
 
         if (cost_function)
-          problem.AddResidualBlock(cost_function,
-            nullptr,
-            &map_intrinsics[view->id_intrinsic][0],
-            &map_poses[view->id_pose][0],
-            gcp_landmark_it.second.X.data());
+        {
+          if (!map_intrinsics[view->id_intrinsic].empty())
+          {
+            problem.AddResidualBlock(cost_function,
+                                     nullptr,
+                                     &map_intrinsics[view->id_intrinsic][0],
+                                     &map_poses[view->id_pose][0],
+                                     gcp_landmark_it.second.X.data());
+          }
+          else
+          {
+            problem.AddResidualBlock(cost_function,
+                                     nullptr,
+                                     &map_poses[view->id_pose][0],
+                                     gcp_landmark_it.second.X.data());
+          }
+        }
       }
       if (obs.empty())
       {
