@@ -13,6 +13,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_threshold_checker.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 /*
@@ -39,7 +40,7 @@ class HyperCluster
 {
 
 public:
-  HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize);
+  HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, std::unique_ptr<SubmapThresholdChecker> threshold_checker);
 
   /**
    * @brief cluster the scene into a binary tree by recursively partitioning submaps
@@ -97,17 +98,7 @@ private:
    */
   HsfmSubmaps submaps_;
 
-  /**
-   * @brief the maximum number of tracks we want in a submap
-   */
-  int threshold_submap_tracksize_;
-
-  /**
-   * @brief the minimum amount of views we want in a submap
-   * @note this should be AT LEAST 2 if you want to be able to do
-   * any reconstruction with the submaps later on
-   */
-  int MIN_NUMBER_VIEWS_PER_SUBMAPS_;
+  std::unique_ptr<SubmapThresholdChecker> is_partitionable_;
 };
 
 } // namespace sfm

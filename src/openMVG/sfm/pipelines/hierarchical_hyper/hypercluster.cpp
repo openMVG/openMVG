@@ -52,26 +52,26 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
   return out_sfm_data;
 }
 
-HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const int threshold_submap_tracksize)
-  : root_sfm_data_(sfm_data), map_tracks_(map_tracks), threshold_submap_tracksize_(threshold_submap_tracksize), MIN_NUMBER_VIEWS_PER_SUBMAPS_(2)
+HyperCluster::HyperCluster(const sfm::SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, std::unique_ptr<SubmapThresholdChecker> threshold_checker)
+  : root_sfm_data_(sfm_data), map_tracks_(map_tracks), is_partitionable_(std::move(threshold_checker))
 {
   root_sfm_data_.structure.clear();
   root_sfm_data_.poses.clear();
 }
 
+
 bool HyperCluster::submapsAreLeftToBePartitioned(const std::set<openMVG::IndexT> & non_partitionable_smap_ids)
 {
   // a partitionable submap should have the following requirements :
   // - not a parent
-  // - not flagged at "non partitionable" (see input param)
+  // - not flagged as "non partitionable" (see input param)
   // - be above the clustering threshold
 
   return
     std::any_of(submaps_.begin(), submaps_.end(),
-       [=](const std::pair<IndexT, HsfmSubmap> & a)
-       {return ((!a.second.is_parent)
-                && non_partitionable_smap_ids.count(a.first) == 0
-                && (a.second.track_ids.size() > threshold_submap_tracksize_));});
+       [=](const std::pair<IndexT, HsfmSubmap> & smap)
+       {return ((*is_partitionable_)(smap)
+                && non_partitionable_smap_ids.count(smap.first) == 0);});
 }
 
 bool HyperCluster::recursivePartitioning()
@@ -107,7 +107,7 @@ bool HyperCluster::recursivePartitioning()
       HsfmSubmap & submap = smap.second;
       const openMVG::IndexT & submap_id = smap.first;
 
-      if (!submap.is_parent && submap.track_ids.size() > threshold_submap_tracksize_)
+      if ((*is_partitionable_)(smap))
       {
         // partition the current submap
         std::vector<HsfmSubmap> new_submap_pair(2);
@@ -193,9 +193,10 @@ bool HyperCluster::PartitionSubmap(const IndexT submap_id, std::vector<sfm::Hsfm
     return false;
   }
 
-  if (view_id_partitions.first.size() < MIN_NUMBER_VIEWS_PER_SUBMAPS_)
+  if (view_id_partitions.first.size() < VIEWS_PER_SUBMAP_LOWER_BOUND
+      || view_id_partitions.second.size() < VIEWS_PER_SUBMAP_LOWER_BOUND)
   {
-    std::cerr << "returned partition is too small ! (only " << view_id_partitions.first.size() << " views." << std::endl;
+    std::cerr << "partition returns a submap too small !" << std::endl;
     return false;
   }
 

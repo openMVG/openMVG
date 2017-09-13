@@ -9,15 +9,11 @@ namespace sfm{
 class SubmapThresholdChecker
 {
 public:
-  SubmapThresholdChecker(int min_number_views_per_submap);
+  SubmapThresholdChecker();
 
   virtual bool operator()(const HsfmSubmap & smap) const = 0;
 
   virtual bool operator()(const std::pair<openMVG::IndexT, HsfmSubmap> & smap) const = 0;
-
-protected:
-
-  int min_number_views_per_submap_;
 
 };
 

@@ -16,6 +16,16 @@ namespace openMVG {
 namespace sfm {
 
 /**
+ * @brief the minimum amount of views we want in a submap
+ * @note this should be AT LEAST 2 if we want to be able to do
+ * any reconstruction with the submaps later on ! Note also that in
+ * the end, the actual number of views in a submap is determined at clustering time
+ * by the threshold in hypercluster. This acts as a lower bound
+ * to avoid impossible situations.
+ */
+static const int VIEWS_PER_SUBMAP_LOWER_BOUND = 2;
+
+/**
  * @brief The HsfmSubmap struct, a data structure for clustered data.
  * A HsfmSubmap contains a sfm_data representing the subscene,
  * a set of track_ids corresponding to the landmarks contained in the submap.

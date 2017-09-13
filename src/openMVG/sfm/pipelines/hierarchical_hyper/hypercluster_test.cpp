@@ -27,7 +27,9 @@ TEST(HYPERCLUSTER, Basis)
   generate_sfm_data_and_tracks(sfm_data, map_tracks, n_views, n_tracks);
 
   // test constructor
-  openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, n_tracks);
+  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker =
+      std::unique_ptr<openMVG::sfm::SubmapThresholdChecker>(new openMVG::sfm::SubmapTracksThresholdChecker(n_tracks));
+  openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, std::move(threshold_checker));
 }
 
 // test partitioning
@@ -42,7 +44,9 @@ TEST(HYPERCLUSTER, simple_partitioning_successful)
   generate_sfm_data_and_tracks(sfm_data, map_tracks, n_views, n_tracks);
 
   // create clusterer
-  openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, 3*n_tracks/4);
+  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker =
+      std::unique_ptr<openMVG::sfm::SubmapThresholdChecker>(new openMVG::sfm::SubmapTracksThresholdChecker(3*n_tracks/4));
+  openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, std::move(threshold_checker));
 
   // test recursive partitioning
   EXPECT_TRUE(hyper_cluster.recursivePartitioning());
