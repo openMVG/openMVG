@@ -32,9 +32,10 @@ if (UNIX AND AVX2_FOUND)
 endif(UNIX AND AVX2_FOUND)
 install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
 
+UNIT_TEST(openMVG indMatch "openMVG_matching")
+UNIT_TEST(openMVG indMatchDecoratorXY "openMVG_matching")
 UNIT_TEST(openMVG matching "openMVG_matching")
 UNIT_TEST(openMVG matching_filters "openMVG_matching")
-UNIT_TEST(openMVG indMatch "openMVG_matching")
 UNIT_TEST(openMVG metric "openMVG_matching")
 
 add_subdirectory(kvld)

@@ -36,7 +36,13 @@ struct IndMatch
 
   // Lexicographical ordering of matches. Used to remove duplicates
   friend bool operator<(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
+    if (m1.i_ < m2.i_)
+      return true;
+
+    if (m1.i_ > m2.i_)
+     return false;
+
+    return m1.j_ < m2.j_;
   }
 
   /// Remove duplicates ((i_, j_) that appears multiple times)
