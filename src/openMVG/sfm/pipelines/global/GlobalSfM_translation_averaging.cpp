@@ -358,7 +358,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   }
   // List putative triplets (from global rotations Ids)
   const std::vector< graph::Triplet > vec_triplets =
-    graph::tripletListing(rotation_pose_id_graph);
+    graph::TripletListing(rotation_pose_id_graph);
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
   {
