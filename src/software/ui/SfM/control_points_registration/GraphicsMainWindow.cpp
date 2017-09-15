@@ -202,7 +202,7 @@ namespace control_point_GUI
     addAction(zoomOutAct);
 
     normalSizeAct = new QAction(tr("&Normal Size"), this);
-    normalSizeAct->setShortcut(tr("Ctrl+S"));
+    normalSizeAct->setShortcut(tr("Ctrl+1"));
     normalSizeAct->setEnabled(false);
     connect(normalSizeAct, SIGNAL(triggered()), view, SLOT(normalSize()));
     addAction(normalSizeAct);
