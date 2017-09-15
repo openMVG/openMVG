@@ -29,30 +29,12 @@ namespace control_point_GUI {
 
   class GraphicsView : public QGraphicsView
   {
-    Q_OBJECT
-
-  public:
-    GraphicsView(QGraphicsScene *scene);
-
-  protected:
-    void wheelEvent ( QWheelEvent * event );
-
-    void zoom(qreal factor, QPointF centerPoint);
-
-  private slots:
-    void zoomIn();
-    void zoomOut();
-    void normalSize();
-  };
-
-  class GraphicsMainWindow : public QMainWindow
-  {
     Q_OBJECT // mandatory for signals and slots
 
   private: /* static const variables */
 
   public: /* methods */
-    GraphicsMainWindow(Document & doc, QWidget * parent = 0);
+    GraphicsView(Document & doc, QWidget * parent = 0);
 
     void AddImage(const QString & qs_filename, float xpos=0.f, float ypos=0.f, bool bClear = false);
 
@@ -64,9 +46,15 @@ namespace control_point_GUI {
     void drawBackground(QPainter * painter, const QRectF &rect);
 
     void mousePressEvent (QMouseEvent* e );
+    void wheelEvent ( QWheelEvent * event );
+
+    void zoom(qreal factor, QPointF centerPoint);
 
   private slots:
     void removeControlPoint();
+    void zoomIn();
+    void zoomOut();
+    void normalSize();
 
   private: /* methods */
     // Interface construction methods
@@ -75,7 +63,6 @@ namespace control_point_GUI {
   private: /* data members */
     // The graphics view machinery.
     QGraphicsScene * scene;
-    GraphicsView * view;
 
     // Action
     QAction * open_images_action_;

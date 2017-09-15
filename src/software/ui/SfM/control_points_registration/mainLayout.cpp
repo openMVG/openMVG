@@ -385,7 +385,7 @@ void MainWindow::createPanel()
   //-- Create left panel
   m_tabWidget = new QTabWidget;
   //-- Create right panel
-  m_widget = new control_point_GUI::GraphicsMainWindow(m_doc, this);
+  m_widget = new control_point_GUI::GraphicsView(m_doc, this);
   splitter->addWidget(m_tabWidget);
   splitter->addWidget(m_widget);
   splitter->setStretchFactor(0, 0);

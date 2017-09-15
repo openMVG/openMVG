@@ -22,14 +22,14 @@ if(Qt5Widgets_FOUND)
   SET(SourceFiles
   main.cpp
   mainLayout.cpp
-  GraphicsMainWindow.cpp
+  GraphicsView.cpp
   ControlPointTableView.cpp
   node.cpp)
 
   # All non moc header files here
   SET(HeaderFiles
   mainLayout.hpp
-  GraphicsMainWindow.hpp
+  GraphicsView.hpp
   node.hpp
   document.hpp)
 

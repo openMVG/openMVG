@@ -12,7 +12,7 @@
 #include <QTreeView>
 #include <string>
 
-#include "GraphicsMainWindow.hpp"
+#include "GraphicsView.hpp"
 #include "document.hpp"
 
 class MainWindow : public QMainWindow
@@ -44,7 +44,7 @@ private:
   // -- END DOCUMENT
 
   // -- VIEW
-  control_point_GUI::GraphicsMainWindow * m_widget;
+  control_point_GUI::GraphicsView * m_widget;
   // -- END VIEW
 
   private slots:

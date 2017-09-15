@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "GraphicsMainWindow.hpp"
+#include "GraphicsView.hpp"
 #include "node.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -34,27 +34,21 @@ namespace control_point_GUI
   // =========================================================================
   // Public methods
   // =========================================================================
-  GraphicsView::GraphicsView(QGraphicsScene * scene)
-    : QGraphicsView(scene)
+  GraphicsView::GraphicsView(Document & doc, QWidget * parent)
+    : QGraphicsView(parent), scene(new QGraphicsScene),
+    _doc(doc), _current_view_id(UndefinedIndexT)
   {
-  }
+    setScene(scene);
 
-
-  GraphicsMainWindow::GraphicsMainWindow(Document & doc, QWidget * parent)
-    : QMainWindow(parent), scene(new QGraphicsScene),
-    view(new GraphicsView(scene)), _doc(doc), _current_view_id(UndefinedIndexT)
-  {
     // The OpenGL rendering does not seem to work with too big images.
-    //view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-    view->setBackgroundRole(QPalette::Dark);
-    view->setAlignment(Qt::AlignCenter);
-    view->setCacheMode(QGraphicsView::CacheBackground);
-    view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    //setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+    setBackgroundRole(QPalette::Dark);
+    setAlignment(Qt::AlignCenter);
+    setCacheMode(QGraphicsView::CacheBackground);
+    setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
-    setCentralWidget(view);
-
-    view->setMouseTracking(true);
+    setMouseTracking(true);
 
     createActions();
 
@@ -69,7 +63,7 @@ namespace control_point_GUI
   void GraphicsView::zoomOut() { scale(0.8, .8); update(); }
   void GraphicsView::normalSize() { resetTransform();  update(); }
 
-  void GraphicsMainWindow::removeControlPoint()
+  void GraphicsView::removeControlPoint()
   {
     auto items = scene->selectedItems();
 
@@ -99,24 +93,26 @@ namespace control_point_GUI
   // =========================================================================
   // Protected methods
   // =========================================================================
-  void GraphicsMainWindow::drawBackground(QPainter *painter,
+  void GraphicsView::drawBackground(QPainter *painter,
     const QRectF &rect)
   {
   }
 
-  void GraphicsMainWindow::mousePressEvent (QMouseEvent* e )
+  void GraphicsView::mousePressEvent (QMouseEvent* e )
   {
-    if (_doc._sfm_data.GetViews().empty())
+    QGraphicsView::mousePressEvent(e);
+
+    if (e->isAccepted())
+      return; // QGraphicsView handled this event
+
+    if (_doc._sfm_data.GetViews().empty() || e->button()!=Qt::LeftButton)
     {
       return;
     }
 
-    if (e->button()!=Qt::LeftButton)
-    {
-      return;
-    }
+    e->accept(); // We handled this event
 
-    const QPointF pos =  this->view->mapToScene(e->pos());
+    const QPointF pos =  this->mapToScene(e->pos());
 
     int index = -1;
     QInputDialog input;
@@ -187,33 +183,34 @@ namespace control_point_GUI
   // =========================================================================
   // Private methods
   // =========================================================================
-  void GraphicsMainWindow::createActions()
+  void GraphicsView::createActions()
   {
     zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomInAct->setEnabled(false);
-    connect(zoomInAct, SIGNAL(triggered()), view, SLOT(zoomIn()));
+    connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
     addAction(zoomInAct);
 
     zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setEnabled(false);
-    connect(zoomOutAct, SIGNAL(triggered()), view, SLOT(zoomOut()));
+    connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
     addAction(zoomOutAct);
 
     normalSizeAct = new QAction(tr("&Normal Size"), this);
     normalSizeAct->setShortcut(tr("Ctrl+1"));
     normalSizeAct->setEnabled(false);
-    connect(normalSizeAct, SIGNAL(triggered()), view, SLOT(normalSize()));
+    connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
     addAction(normalSizeAct);
 
     removeControlPointAct = new QAction(tr("&Remove Control Point"), this);
     removeControlPointAct->setShortcut(tr("Del"));
+    removeControlPointAct->setEnabled(false);
     connect(removeControlPointAct, SIGNAL(triggered()), this, SLOT(removeControlPoint()));
     addAction(removeControlPointAct);
   }
 
-  void GraphicsMainWindow::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
+  void GraphicsView::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
   {
     if (bClear) {
       scene->clear();
@@ -236,6 +233,7 @@ namespace control_point_GUI
       zoomInAct->setEnabled(true);
       zoomOutAct->setEnabled(true);
       normalSizeAct->setEnabled(true);
+      removeControlPointAct->setEnabled(true);
 
       const QFileInfo fi(qs_filename);
       const QString name = fi.fileName();
@@ -243,7 +241,7 @@ namespace control_point_GUI
     }
   }
 
-  void GraphicsMainWindow::AddNode(QGraphicsItem* it)
+  void GraphicsView::AddNode(QGraphicsItem* it)
   {
       scene->addItem(it);
   }
