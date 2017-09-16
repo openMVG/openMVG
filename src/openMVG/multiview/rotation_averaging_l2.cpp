@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -6,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/rotation_averaging_l2.hpp"
-#include <vector>
-#include <map>
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
 
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
@@ -53,7 +56,7 @@ Mat3 ClosestSVDRotationMatrix
 // <eigenvalue, eigenvector> pair comparator
 bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
 {
- return fabs(x.first) < fabs(y.first);
+ return std::abs(x.first) < std::abs(y.first);
 }
 
 //-- Solve the Global Rotation matrix registration for each camera given a list
@@ -101,13 +104,11 @@ bool L2RotationAveraging
   tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
   sMat::Index cpt = 0;
-  for(RelativeRotations::const_iterator
+  for (RelativeRotations::const_iterator
     iter = vec_relativeRot.begin();
     iter != vec_relativeRot.end();
     iter++, cpt++)
   {
-    const RelativeRotation & Elem = *iter;
-
     //-- Encode weight * ( rj - Rij * ri ) = 0
     const sMat::Index i = iter->i;
     const sMat::Index j = iter->j;
@@ -141,14 +142,6 @@ bool L2RotationAveraging
     AtA = Mat(AtAsparse); // convert to dense
   }
 
-  // You can use either SVD or eigen solver (eigen solver will be faster) to solve Ax=0
-
-  // Solve Ax=0 => SVD
-  //Eigen::JacobiSVD<Mat> svd(A,Eigen::ComputeFullV);
-  //const Vec & NullspaceVector0 = svd.matrixV().col(A.cols()-1);
-  //const Vec & NullspaceVector1 = svd.matrixV().col(A.cols()-2);
-  //const Vec & NullspaceVector2 = svd.matrixV().col(A.cols()-3);
-
   // Solve Ax=0 => eigen vectors
   Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
 
@@ -156,13 +149,13 @@ bool L2RotationAveraging
   {
     return false;
   }
-  else
+  // else
   {
     // Sort abs(eigenvalues)
     std::vector<std::pair<double, Vec> > eigs(AtA.cols());
-    for (size_t i = 0; i < AtA.cols(); ++i)
+    for (Mat::Index i = 0; i < AtA.cols(); ++i)
     {
-      eigs[i] = std::make_pair(es.eigenvalues()[i], es.eigenvectors().col(i));
+      eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};
     }
     std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
 
@@ -178,7 +171,7 @@ bool L2RotationAveraging
     //--
     global_rotations.clear();
     global_rotations.reserve(nCamera);
-    for(size_t i=0; i < nCamera; ++i)
+    for (size_t i=0; i < nCamera; ++i)
     {
       Mat3 Rotation;
       Rotation << NullspaceVector0.segment(3 * i, 3),
@@ -190,7 +183,7 @@ bool L2RotationAveraging
     }
     // Force R0 to be Identity
     const Mat3 R0T = global_rotations[0].transpose();
-    for(size_t i = 0; i < nCamera; ++i) {
+    for (size_t i = 0; i < nCamera; ++i) {
       global_rotations[i] *= R0T;
     }
   }
@@ -253,7 +246,7 @@ bool L2RotationAveraging_Refine
 
   // Convert global rotation to AngleAxis representation
   std::vector<openMVG::Vec3> vec_Rot_AngleAxis(vec_ApprRotMatrix.size());
-  for (int i=0; i < vec_ApprRotMatrix.size(); ++i)
+  for (size_t i=0; i < vec_ApprRotMatrix.size(); ++i)
   {
     ceres::RotationMatrixToAngleAxis((const double*)vec_ApprRotMatrix[i].data(), vec_Rot_AngleAxis[i].data());
   }
@@ -317,7 +310,7 @@ bool L2RotationAveraging_Refine
   if (summary.IsSolutionUsable())
   {
     // Convert back the AngleAxis rotations to rotations matrices
-    for (int i=0; i < vec_ApprRotMatrix.size(); ++i)
+    for (size_t i=0; i < vec_ApprRotMatrix.size(); ++i)
     {
       ceres::AngleAxisToRotationMatrix(
         vec_Rot_AngleAxis[i].data(), vec_ApprRotMatrix[i].data());
@@ -329,5 +322,3 @@ bool L2RotationAveraging_Refine
 } // namespace l2
 } // namespace rotation_averaging
 } // namespace openMVG
-
-

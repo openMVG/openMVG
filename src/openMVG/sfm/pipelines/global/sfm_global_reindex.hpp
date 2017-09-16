@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -7,20 +9,23 @@
 #ifndef OPENMVG_SFM_GLOBAL_REINDEX_HPP
 #define OPENMVG_SFM_GLOBAL_REINDEX_HPP
 
+#include <set>
+
 namespace openMVG {
 namespace sfm{
 
 /// Association of Ids to a contiguous set of Ids
 template<typename IterablePairs, typename PairValueType>
-void reindex(
+void reindex
+(
   const IterablePairs& pairs,
   Hash_Map<PairValueType, PairValueType> & reindex_forward,
-  Hash_Map<PairValueType, PairValueType> & reindex_backward)
+  Hash_Map<PairValueType, PairValueType> & reindex_backward
+)
 {
-  typedef std::pair<PairValueType,PairValueType> PairT;
-  // get an unique set of Ids
+  // get a unique set of Ids
   std::set<size_t> unique_id;
-  for(typename IterablePairs::const_iterator iter = pairs.begin();
+  for (typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
     unique_id.insert(iter->first);
@@ -28,7 +33,7 @@ void reindex(
   }
 
   // Build the Forward and Backward mapping
-  for(typename IterablePairs::const_iterator iter = pairs.begin();
+  for (typename IterablePairs::const_iterator iter = pairs.begin();
         iter != pairs.end(); ++iter)
   {
     if (reindex_forward.find(iter->first) == reindex_forward.end())

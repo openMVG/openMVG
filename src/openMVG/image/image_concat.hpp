@@ -1,13 +1,15 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_IMAGE_CONCAT_H_
-#define OPENMVG_IMAGE_IMAGE_CONCAT_H_
+#ifndef OPENMVG_IMAGE_IMAGE_CONCAT_HPP
+#define OPENMVG_IMAGE_IMAGE_CONCAT_HPP
 
-#include "openMVG/image/image_container.hpp"
+#include <algorithm>
 
 namespace openMVG
 {
@@ -49,7 +51,7 @@ void ConcatV( const Image & imageA, const Image & imageB, Image & Out )
   // |imgA|
   // |imgB|
   int hh = imageA.Height() + imageB.Height();
-  Out.resize( max( imageA.Width(), imageB.Width() ), hh );
+  Out.resize( std::max( imageA.Width(), imageB.Width() ), hh );
 
   // Copy the first image
   // |imgA|
@@ -64,4 +66,4 @@ void ConcatV( const Image & imageA, const Image & imageB, Image & Out )
 } // namespace image
 } // namespace openMVG
 
-#endif // OPENMVG_IMAGE_IMAGE_CONCAT_H_
+#endif // OPENMVG_IMAGE_IMAGE_CONCAT_HPP

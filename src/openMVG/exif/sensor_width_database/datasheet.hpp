@@ -1,22 +1,24 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013 Pierre Moulon, Bruno Duisit.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef DATASHEET_HPP
-#define DATASHEET_HPP
-
-#include "openMVG/stl/split.hpp"
+#ifndef OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
+#define OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP
 
 #include <algorithm>
 #include <string>
+#include <vector>
+
+#include "openMVG/stl/split.hpp"
 
 // Database structure to store camera model and sensor size
 struct Datasheet
 {
-  Datasheet()
-  {}
+  Datasheet() = default;
 
   Datasheet
   (
@@ -51,13 +53,26 @@ struct Datasheet
 
     if (this_maker.compare(rhs_maker) == 0)
     {
-      // Search for digit substring and if there is a match
+      // Extract digit substring from database entry
+      std::vector<std::string> vec_db_model;
+      stl::split(this_model, ' ', vec_db_model);
+      std::string db_model_digit_substring = "";
+      for (const std::string & db_sub_model : vec_db_model)
+      {
+        if ( std::find_if(db_sub_model.begin(), db_sub_model.end(), isdigit) != db_sub_model.end() )
+        {
+          db_model_digit_substring = db_sub_model;
+          break;
+        }
+      }
+
+      // Search for digit substring in image camera model and if there is a match
 
       const bool has_digit =
         std::find_if(rhs_model.begin(), rhs_model.end(), isdigit) != rhs_model.end();
-      if (!has_digit)
+      if (!has_digit || db_model_digit_substring.empty() )
       {
-        // If there is no digit compare the full model string
+        // If there is no digit in either the db entry or the image camera then compare the full model string
         return (this_model.compare(rhs_model) == 0);
       }
       else
@@ -71,7 +86,7 @@ struct Datasheet
           const bool sub_has_digit =
             std::find_if(rhs_sub_model.begin(), rhs_sub_model.end(), isdigit) != rhs_sub_model.end();
           // Check that substring containing the camera digit model is corresponding
-          if (sub_has_digit && this_model.find(rhs_sub_model) != std::string::npos)
+          if (sub_has_digit && ( db_model_digit_substring == rhs_sub_model ) )
           {
             return true; // substring that contains digit got a match
           }
@@ -86,5 +101,4 @@ struct Datasheet
 };
 
 
-#endif // DATASHEET_HPP
-
+#endif // OPENMVG_EXIF_SENSOR_WIDTH_DATABASE_DATASHEET_HPP

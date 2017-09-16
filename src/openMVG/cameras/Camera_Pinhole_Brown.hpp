@@ -1,17 +1,19 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2015 Sida Li.
+// Copyright (c) 2015 Sida Li, Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
-#define OPENMVG_CAMERA_PINHOLE_BROWN_HPP
-
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/cameras/Camera_Common.hpp"
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 
 #include <vector>
+
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -25,7 +27,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Brown_T2 class_type;
+  using class_type = Pinhole_Intrinsic_Brown_T2;
 
   protected:
 
@@ -70,7 +72,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Does the camera model handle a distortion field?
     * @retval true
     */
-    virtual bool have_disto() const override
+    bool have_disto() const override
     {
       return true;
     }
@@ -80,7 +82,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param p Point before distortion computation (in normalized camera frame)
     * @return point with distortion
     */
-    virtual Vec2 add_disto( const Vec2 & p ) const override
+    Vec2 add_disto( const Vec2 & p ) const override
     {
       return ( p + distoFunction( params_, p ) );
     }
@@ -93,14 +95,16 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
     * IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
     */
-    virtual Vec2 remove_disto( const Vec2 & p ) const override
+    Vec2 remove_disto( const Vec2 & p ) const override
     {
-      const double epsilon = 1e-8; //criteria to stop the iteration
+      const double epsilon = 1e-10; //criteria to stop the iteration
       Vec2 p_u = p;
 
-      while( ( add_disto( p_u ) - p ).lpNorm<1>() > epsilon ) //manhattan distance between the two points
+      Vec2 d = distoFunction(params_, p_u);
+      while ((p_u + d - p).lpNorm<1>() > epsilon) //manhattan distance between the two points
       {
-        p_u = p - distoFunction( params_, p_u );
+        p_u = p - d;
+        d = distoFunction(params_, p_u);
       }
 
       return p_u;
@@ -110,14 +114,10 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Data wrapper for non linear optimization (get data)
     * @return vector of parameter of this intrinsic
     */
-    virtual std::vector<double> getParams() const override
+    std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
-      params.push_back( params_[1] );
-      params.push_back( params_[2] );
-      params.push_back( params_[3] );
-      params.push_back( params_[4] );
+      params.insert(params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -127,7 +127,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @retval true if update is correct
     * @retval false if there was an error during update
     */
-    virtual bool updateFromParams( const std::vector<double> & params ) override
+    bool updateFromParams( const std::vector<double> & params ) override
     {
       if ( params.size() == 8 )
       {
@@ -148,7 +148,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Return the list of parameter indexes that must be held constant
     * @param parametrization The given parametrization
     */
-    virtual std::vector<int> subsetParameterization
+    std::vector<int> subsetParameterization
     (
       const Intrinsic_Parameter_Type & parametrization) const override
     {
@@ -202,28 +202,20 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "disto_t2", params_ ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief  Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      Pinhole_Intrinsic::load( ar );
-      ar( cereal::make_nvp( "disto_t2", params_ ) );
-    }
+    inline void load( Archive & ar );
 
     /**
     * @brief Clone the object
     * @return A clone (copy of the stored object)
     */
-    virtual IntrinsicBase * clone( void ) const override
+    IntrinsicBase * clone( void ) const override
     {
       return new class_type( *this );
     }
@@ -255,9 +247,4 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
 } // namespace cameras
 } // namespace openMVG
 
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Brown_T2, "pinhole_brown_t2" );
-
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_BROWN_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP

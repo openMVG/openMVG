@@ -57,6 +57,11 @@ template<typename _Scalar> class AlignedVector3
 
     inline Index rows() const { return 3; }
     inline Index cols() const { return 1; }
+    
+    Scalar* data() { return m_coeffs.data(); }
+    const Scalar* data() const { return m_coeffs.data(); }
+    Index innerStride() const { return 1; }
+    Index outerStride() const { return 3; }
 
     inline const Scalar& coeff(Index row, Index col) const
     { return m_coeffs.coeff(row, col); }
@@ -100,7 +105,7 @@ template<typename _Scalar> class AlignedVector3
     };
 
     template<typename Derived>
-    inline explicit AlignedVector3(const MatrixBase<Derived>& other)
+    inline AlignedVector3(const MatrixBase<Derived>& other)
     {
       generic_assign_selector<Derived>::run(*this,other.derived());
     }
@@ -108,6 +113,12 @@ template<typename _Scalar> class AlignedVector3
     inline AlignedVector3& operator=(const AlignedVector3& other)
     { m_coeffs = other.m_coeffs; return *this; }
 
+    template <typename Derived>
+    inline AlignedVector3& operator=(const MatrixBase<Derived>& other)
+    {
+      generic_assign_selector<Derived>::run(*this,other.derived());
+      return *this;
+    }
 
     inline AlignedVector3 operator+(const AlignedVector3& other) const
     { return AlignedVector3(m_coeffs + other.m_coeffs); }
@@ -148,7 +159,7 @@ template<typename _Scalar> class AlignedVector3
       m_coeffs /= norm();
     }
 
-    inline AlignedVector3 normalized()
+    inline AlignedVector3 normalized() const
     {
       return AlignedVector3(m_coeffs / norm());
     }
@@ -181,7 +192,30 @@ template<typename _Scalar> class AlignedVector3
     {
       return m_coeffs.template head<3>().isApprox(other,eps);
     }
+    
+    CoeffType& coeffs() { return m_coeffs; }
+    const CoeffType& coeffs() const { return m_coeffs; }
 };
+
+namespace internal {
+
+template<typename _Scalar>
+struct eval<AlignedVector3<_Scalar>, Dense>
+{
+ typedef const AlignedVector3<_Scalar>& type;
+};
+
+template<typename Scalar>
+struct evaluator<AlignedVector3<Scalar> >
+  : evaluator<Matrix<Scalar,4,1> >
+{
+  typedef AlignedVector3<Scalar> XprType;
+  typedef evaluator<Matrix<Scalar,4,1> > Base;
+  
+  evaluator(const XprType &m) : Base(m.coeffs()) {}  
+};
+
+}
 
 //@}
 

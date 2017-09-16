@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
-#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/multiview/solver_homography_kernel.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 
 #include <string>
@@ -21,9 +22,9 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
-using namespace svg;
 using namespace std;
 
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "nonFree/sift/SIFT_describer.hpp"
 
 // Class to load images and ground truth homography matrices
@@ -49,7 +50,7 @@ public:
 
   const image::Image<RGBColor>& image(size_t i) const { return vec_image_[i]; }
   const Mat3& H(size_t i) const { return vec_H_[i]; }
-  const size_t size() const { return vec_image_.size(); }
+  size_t size() const { return vec_image_.size(); }
 
 private:
   /// Load the images of a directory
@@ -63,7 +64,7 @@ private:
       return false;
     sort(vec_image_basename.begin(), vec_image_basename.end());
     vec_image_.resize(vec_image_basename.size());
-    for (int i = 0; i < vec_image_basename.size(); ++i)
+    for (size_t i = 0; i < vec_image_basename.size(); ++i)
     {
       const std::string path = stlplus::create_filespec(folderPath_, vec_image_basename[i]);
       image::Image<RGBColor> imageRGB;
@@ -143,13 +144,12 @@ void PointsToMat(
   MatT & m0,
   MatT & m1)
 {
-  typedef typename FeaturesT::value_type ValueT; // Container type
-  typedef typename MatT::Scalar Scalar; // Output matrix type
+  using ValueT = typename FeaturesT::value_type; // Container type
 
   m0.resize(2, matches.size());
   m1.resize(2, matches.size());
 
-  for( size_t i = 0; i < matches.size(); ++i)
+  for (size_t i = 0; i < matches.size(); ++i)
   {
     const ValueT & feat0 = vec_feats0[matches[i].i_];
     m0.col(i) << feat0.x(), feat0.y();
@@ -166,9 +166,9 @@ struct RepeatabilityResults_Matching
   {
     std::ofstream ofs(sFile, std::ofstream::out | std::ofstream::app);
 
-    if( ! ofs.good() )
+    if ( ! ofs.good() )
     {
-        return false ;
+        return false;
     }
 
     ofs << sdatasetName << "\n";
@@ -182,14 +182,14 @@ struct RepeatabilityResults_Matching
     }
     ofs.close();
 
-    return true ;
+    return true;
   }
 };
 
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
-  if(sPreset == "NORMAL")
+  if (sPreset == "NORMAL")
     preset = features::NORMAL_PRESET;
   else
   if (sPreset == "HIGH")
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   std::string sFeature_Preset = "NORMAL";
   bool bFeature_Repeatability = false;
-  bool bMatching_Repeatability = false;
+  bool bMatching_Repeatability = true;
   cmd.add( make_option('i', sDataset_Path, "input_dataset") );
   cmd.add( make_option('d', sImage_Describer_Method, "describer_method") );
   cmd.add( make_option('p', sFeature_Preset, "describer_preset") );
@@ -230,13 +230,14 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_dataset] the path to the datasets \n"
       << "\n[Optional]\n"
       << "[-d|--describer_method]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+      << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors.\n"
       << "[-p|--describer_preset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -290,12 +291,18 @@ int main(int argc, char **argv)
       std::unique_ptr<Image_describer> image_describer;
       if (sImage_Describer_Method == "SIFT")
       {
-        image_describer.reset(new SIFT_Image_describer(SiftParams()));
+        image_describer.reset(new SIFT_Image_describer);
+      }
+      else
+      if (sImage_Describer_Method == "SIFT_ANATOMY")
+      {
+        image_describer.reset(new SIFT_Anatomy_Image_describer);
       }
       else
       if (sImage_Describer_Method == "AKAZE_FLOAT")
       {
-        image_describer.reset(new AKAZE_Image_describer(AKAZEParams(AKAZEConfig(), AKAZE_MSURF)));
+        image_describer = AKAZE_Image_describer::create
+          (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MSURF));
       }
 
       if (!image_describer)

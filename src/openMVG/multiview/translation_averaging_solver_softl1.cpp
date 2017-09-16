@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,11 +8,15 @@
 
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/types.hpp"
 
-#include "ceres/ceres.h"
-#include "ceres/rotation.h"
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
 
 #include <vector>
 
@@ -60,7 +65,7 @@ struct RelativeTranslationError
 // Cost penalizing scales smaller than 1.
 struct SmallScaleError
 {
-  SmallScaleError
+  explicit SmallScaleError
   (
     double weight = 1.0
   )

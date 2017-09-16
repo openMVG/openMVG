@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -17,9 +18,7 @@
 namespace openMVG
 {
 
-using namespace openMVG::cameras;
-
-static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam)
+static bool read_openMVG_Camera(const std::string & camName, cameras::PinholeCamera & cam)
 {
   std::vector<double> val;
   if (stlplus::extension_part(camName) == "bin")
@@ -70,11 +69,11 @@ static bool read_openMVG_Camera(const std::string & camName, PinholeCamera & cam
   Mat3 K, R;
   Vec3 t;
   KRt_From_P(P, &K, &R, &t);
-  cam = PinholeCamera(K, R, t);
+  cam = cameras::PinholeCamera(K, R, t);
   return true;
 }
 
-static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam)
+static bool read_Strecha_Camera(const std::string & camName, cameras::PinholeCamera & cam)
 {
   std::ifstream ifs;
   ifs.open( camName.c_str(), std::ifstream::in);
@@ -104,9 +103,9 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
     Vec3 C (val[21], val[22], val[23]);
     // Strecha model is P = K[R^T|-R^T t];
     // My model is P = K[R|t], t = - RC
-    Vec3 t (-R.transpose() * C);
+    const Vec3 t (-R.transpose() * C);
     R.transposeInPlace();
-    cam = PinholeCamera(K, R, t);
+    cam = cameras::PinholeCamera(K, R, t);
   }
   else
   {
@@ -125,12 +124,13 @@ static bool read_Strecha_Camera(const std::string & camName, PinholeCamera & cam
 @param[out] map_camerasGT Map of PinholeCameras.
 **/
 bool readGt(
-  bool (*fcnReadCamPtr)(const std::string &, PinholeCamera &), //pointer to the function reading a camera
-  std::string sGTPath,
-  std::string suffix,
+  bool (*fcnReadCamPtr)(const std::string &, cameras::PinholeCamera &), //pointer to the function reading a camera
+  const std::string & sGTPath,
+  const std::string & suffix,
   std::vector<std::string> & vec_filenames,
   std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
-  std::map< size_t, PinholeCamera> & map_camerasGT)
+  std::map< size_t, cameras::PinholeCamera, std::less<size_t>,
+         Eigen::aligned_allocator<std::pair<size_t, cameras::PinholeCamera>>> & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
@@ -141,22 +141,21 @@ bool readGt(
   {
     std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
     // Load GT
-    std::map< std::string, Mat3 > map_R_gt;
+    std::map< std::string, Mat3, Eigen::aligned_allocator<Mat3> > map_R_gt;
     //Try to read .suffix camera (parse camera names)
     std::vector<std::string> vec_camfilenames =
-      stlplus::folder_wildcard(sGTPath, "*."+suffix, false, true);
+      stlplus::folder_wildcard(sGTPath, "*." + suffix, false, true);
     std::sort(vec_camfilenames.begin(), vec_camfilenames.end());
-    std::vector<std::string>::const_iterator citerBegin = vec_camfilenames.begin();
     if (!vec_camfilenames.empty())
     {
       for (std::vector<std::string>::const_iterator iter = vec_camfilenames.begin();
         iter != vec_camfilenames.end(); ++iter) {
-        PinholeCamera cam;
+        cameras::PinholeCamera cam;
         if (fcnReadCamPtr(stlplus::create_filespec(sGTPath, *iter), cam))
         {
           vec_filenames.push_back(stlplus::create_filespec(sGTPath, *iter));
-          map_Rt_gt[ stlplus::basename_part(*iter) ] = std::make_pair(cam._R, cam._t);
-          map_camerasGT[ std::distance(std::vector<std::string>::const_iterator(vec_camfilenames.begin()),iter)] = cam;
+          map_Rt_gt.insert({stlplus::basename_part(*iter), {cam._R, cam._t}});
+          map_camerasGT.insert({std::distance(vec_camfilenames.cbegin(), iter), cam});
         }
         else
           return false;

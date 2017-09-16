@@ -1,11 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Romuald PERROT, Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_FEATURES_AKAZE_H
-#define OPENMVG_FEATURES_AKAZE_H
+#ifndef OPENMVG_FEATURES_AKAZE_HPP
+#define OPENMVG_FEATURES_AKAZE_HPP
 
 #ifdef _MSC_VER
 #pragma warning(once:4244)
@@ -32,46 +34,12 @@
 //  TrueVision Solutions (2)
 //------
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/numeric/math_trait.hpp"
+#include <vector>
 
-#include "openMVG/features/feature.hpp"
-#include "openMVG/features/descriptor.hpp"
-
-#include <cereal/cereal.hpp>
+#include "openMVG/image/image_container.hpp"
 
 namespace openMVG {
 namespace features {
-
-struct AKAZEConfig
-{
-  AKAZEConfig():
-    iNbOctave(4),
-    iNbSlicePerOctave(4),
-    fSigma0(1.6f),
-    fThreshold(0.0008f),
-    fDesc_factor(1.f)
-  {
-  }
-
-  template<class Archive>
-  void serialize(Archive & ar)
-  {
-    ar(
-      cereal::make_nvp("iNbOctave", iNbOctave),
-      cereal::make_nvp("iNbSlicePerOctave", iNbSlicePerOctave),
-      cereal::make_nvp("fSigma0", fSigma0),
-      cereal::make_nvp("fThreshold", fThreshold),
-      cereal::make_nvp("fDesc_factor", fDesc_factor));
-  }
-
-  int iNbOctave; ///< Octave to process
-  int iNbSlicePerOctave; ///< Levels per octave
-  float fSigma0; ///< Initial sigma offset (used to suppress low level noise)
-  float fThreshold;  ///< Hessian determinant threshold
-  float fDesc_factor;   ///< Magnifier used to describe an interest point
-};
 
 struct AKAZEKeypoint{
 
@@ -104,19 +72,41 @@ struct TEvolution
 // AKAZE Class Declaration
 class AKAZE {
 
+public:
+  struct Params
+  {
+    Params():
+      iNbOctave(4),
+      iNbSlicePerOctave(4),
+      fSigma0(1.6f),
+      fThreshold(0.0008f),
+      fDesc_factor(1.f)
+    {
+    }
+
+    template<class Archive>
+    void serialize(Archive & ar);
+
+    int iNbOctave; ///< Octave to process
+    int iNbSlicePerOctave; ///< Levels per octave
+    float fSigma0; ///< Initial sigma offset (used to suppress low level noise)
+    float fThreshold;  ///< Hessian determinant threshold
+    float fDesc_factor;   ///< Magnifier used to describe an interest point
+  };
+
 private:
 
-  AKAZEConfig options_;               ///< Configuration options for AKAZE
-  std::vector<TEvolution> evolution_;	///< Vector of nonlinear diffusion evolution (Scale Space)
+  Params options_;               ///< Configuration options for AKAZE
+  std::vector<TEvolution> evolution_;  ///< Vector of nonlinear diffusion evolution (Scale Space)
   image::Image<float> in_;            ///< Input image
 
 public:
 
   /// Constructor
-  AKAZE(const image::Image<unsigned char> & in, const AKAZEConfig & options);
+  AKAZE(const image::Image<unsigned char> & in, const Params & options);
 
   /// Compute the AKAZE non linear diffusion scale space per slice
-  void Compute_AKAZEScaleSpace(void);
+  void Compute_AKAZEScaleSpace();
 
   /// Detect AKAZE feature in the AKAZE scale space
   void Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const;
@@ -166,4 +156,4 @@ public:
 } // namespace features
 } // namespace openMVG
 
-#endif //OPENMVG_FEATURES_AKAZE_H
+#endif // OPENMVG_FEATURES_AKAZE_HPP

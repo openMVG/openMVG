@@ -48,10 +48,11 @@ DEFINE_string(test_srcdir, "", "The location of the source code.");
 #if GTEST_OS_WINDOWS_MOBILE
 # include <tchar.h>  // NOLINT
 
-int _tmain(int argc, TCHAR** argv) {
+GTEST_API_ int _tmain(int argc, TCHAR** argv) {
 #else
-int main(int argc, char** argv) {
+GTEST_API_ int main(int argc, char** argv) {
 #endif  // GTEST_OS_WINDOWS_MOBILE
+  std::cout << "Running main() from gmock_main.cc\n";
   google::InitGoogleLogging(argv[0]);
   // Since Google Mock depends on Google Test, InitGoogleMock() is
   // also responsible for initializing Google Test.  Therefore there's

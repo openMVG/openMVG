@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_STL_HASH_H
-#define OPENMVG_STL_HASH_H
+#ifndef OPENMVG_STL_HASH_HPP
+#define OPENMVG_STL_HASH_HPP
 
 #include <functional>
 
@@ -24,4 +25,4 @@ inline void hash_combine(std::size_t& seed, const T& v)
 
 } // namespace stl
 
-#endif  // OPENMVG_STL_HASH_H
+#endif  // OPENMVG_STL_HASH_HPP

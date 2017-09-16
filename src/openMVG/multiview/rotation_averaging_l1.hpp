@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 cDc and Pierre MOULON.
 
@@ -5,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
-#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
+#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
+#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP
 
+#include <vector>
 #include "openMVG/multiview/rotation_averaging_common.hpp"
+#include "openMVG/numeric/numeric.h"
 
 //------------------
 //-- Bibliography --
@@ -23,7 +26,7 @@ namespace rotation_averaging  {
 namespace l1  {
 
 // D E F I N E S ///////////////////////////////////////////////////
-typedef std::vector<openMVG::Mat3> Matrix3x3Arr;
+using Matrix3x3Arr = std::vector<openMVG::Mat3>;
 
 /**
  * @brief Compute an initial estimation of global rotation (chain rotations along a MST).
@@ -36,7 +39,7 @@ void InitRotationsMST
 (
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID
+  const uint32_t nMainViewID
 );
 
 /**
@@ -51,7 +54,7 @@ void InitRotationsMST
 bool GlobalRotationsRobust(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
+  const uint32_t nMainViewID,
   float threshold = 0.f,
   std::vector<bool> * vec_inliers = nullptr );
 
@@ -66,8 +69,8 @@ bool GlobalRotationsRobust(
 bool RefineRotationsAvgL1IRLS(
   const RelativeRotations& RelRs,
   Matrix3x3Arr& Rs,
-  const size_t nMainViewID,
-  const double sigma=openMVG::D2R(5));
+  const uint32_t nMainViewID,
+  const double sigma = openMVG::D2R(5));
 
 /**
  * @brief Sort relative rotation as inlier, outlier rotations.
@@ -87,4 +90,4 @@ unsigned int FilterRelativeRotations(
 } // namespace rotation_averaging
 } // namespace openMVG
 
-#endif // OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_H_
+#endif // OPENMVG_MULTIVIEW_ROTATION_AVERAGING_L1_HPP

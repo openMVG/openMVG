@@ -1,17 +1,21 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013,2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/geometry/half_space_intersection.hpp"
 #include "openMVG/geometry/frustum.hpp"
-
-#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/geometry/half_space_intersection.hpp"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
 
 #include "CppUnitLite/TestHarness.h"
+
 #include "testing/testing.h"
+
 #include <iostream>
 
 using namespace openMVG;

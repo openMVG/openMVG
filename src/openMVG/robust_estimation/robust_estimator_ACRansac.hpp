@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Lionel MOISAN.
 // Copyright (c) 2012, 2013 Pascal MONASSE.
@@ -7,8 +8,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
-#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#ifndef OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
+#define OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP
 
 //-------------------
 // Generic implementation of ACRANSAC
@@ -41,6 +42,8 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <random>
+#include <utility>
 #include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
@@ -52,64 +55,60 @@ namespace robust{
 namespace acransac_nfa_internal {
 
 /// logarithm (base 10) of binomial coefficient
-template <typename T>
-static T logcombi
+static float logcombi
 (
-  size_t k,
-  size_t n,
-  const std::vector<T> & vec_log10 // lookuptable in [0,n+1]
+  uint32_t k,
+  uint32_t n,
+  const std::vector<float> & vec_log10 // lookuptable in [0,n+1]
 )
 {
-  if (k>=n || k<=0) return T(0);
+  if (k>=n || k<=0) return 0.f;
   if (n-k<k) k=n-k;
-  T r(0);
-  for (size_t i = 1; i <= k; ++i)
+  float r(0.f);
+  for (uint32_t i = 1; i <= k; ++i)
     r += vec_log10[n-i+1] - vec_log10[i];
   return r;
 }
 
 /// tabulate logcombi(.,n)
-template<typename Type>
 static void makelogcombi_n
 (
-  size_t n,
-  std::vector<Type> & l,
-  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+  uint32_t n,
+  std::vector<float> & l,
+  std::vector<float> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(n+1);
-  for (size_t k = 0; k <= n; ++k)
-    l[k] = logcombi<Type>(k, n, vec_log10);
+  for (uint32_t k = 0; k <= n; ++k)
+    l[k] = logcombi(k, n, vec_log10);
 }
 
 /// tabulate logcombi(k,.)
-template<typename Type>
 static void makelogcombi_k
 (
-  size_t k,
-  size_t nmax,
-  std::vector<Type> & l,
-  std::vector<Type> & vec_log10 // lookuptable [0,n+1]
+  uint32_t k,
+  uint32_t nmax,
+  std::vector<float> & l,
+  std::vector<float> & vec_log10 // lookuptable [0,n+1]
 )
 {
   l.resize(nmax+1);
-  for (size_t n = 0; n <= nmax; ++n)
-    l[n] = logcombi<Type>(k, n, vec_log10);
+  for (uint32_t n = 0; n <= nmax; ++n)
+    l[n] = logcombi(k, n, vec_log10);
 }
 
-template <typename Type>
 static void makelogcombi
 (
-  size_t k,
-  size_t n,
-  std::vector<Type> & vec_logc_k,
-  std::vector<Type> & vec_logc_n
+  uint32_t k,
+  uint32_t n,
+  std::vector<float> & vec_logc_k,
+  std::vector<float> & vec_logc_n
 )
 {
   // compute a lookuptable of log10 value for the range [0,n+1]
-  std::vector<Type> vec_log10(n + 1);
-  for (size_t k = 0; k <= n; ++k)
-    vec_log10[k] = log10((Type)k);
+  std::vector<float> vec_log10(n + 1);
+  for (uint32_t k = 0; k <= n; ++k)
+    vec_log10[k] = log10(static_cast<float>(k));
 
   makelogcombi_n(n, vec_logc_n, vec_log10);
   makelogcombi_k(k, n, vec_logc_k, vec_log10);
@@ -138,7 +137,7 @@ public:
     m_max_threshold(dmaxThreshold)
   {
     // Precompute log combi
-    m_loge0 = log10((double)Kernel::MAX_MODELS * (kernel.NumSamples()-Kernel::MINIMUM_SAMPLES));
+    m_loge0 = log10((double)Kernel::MAX_MODELS * (kernel.NumSamples() - Kernel::MINIMUM_SAMPLES));
     makelogcombi(Kernel::MINIMUM_SAMPLES, kernel.NumSamples(), m_logc_k, m_logc_n);
   };
 
@@ -163,7 +162,7 @@ public:
    */
   bool ComputeNFA_and_inliers
   (
-    std::vector<size_t> & inliers,
+    std::vector<uint32_t> & inliers,
     std::pair<double,double> & nfa_threshold
   );
 
@@ -172,7 +171,7 @@ private:
   /// residual array
   std::vector<double> m_residuals;
   /// [residual,index] array -> used in the exhaustive nfa computation mode
-  std::vector<std::pair<double,int> > m_sorted_residuals;
+  std::vector<std::pair<double,uint32_t>> m_sorted_residuals;
 
   /// Combinatorial log
   std::vector<float> m_logc_n, m_logc_k;
@@ -191,7 +190,7 @@ template <typename Kernel>
 bool
 NFA_Interface<Kernel>::ComputeNFA_and_inliers
 (
-    std::vector<size_t> & inliers,
+    std::vector<uint32_t> & inliers,
     /// NFA and residual threshold
     std::pair<double,double> & nfa_threshold
 )
@@ -215,7 +214,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
 
     // Compute NFA scoring from the cumulative histogram
 
-    typedef std::pair<double,double> nfa_thresholdT; // NFA and residual threshold
+    using nfa_thresholdT = std::pair<double,double>; // NFA and residual threshold
     nfa_thresholdT current_best_nfa(std::numeric_limits<double>::infinity(), 0.0);
     unsigned int cumulative_count = 0;
     const std::vector<size_t> & frequencies = histo.GetHist();
@@ -234,7 +233,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
           + m_logc_n[cumulative_count]
           + m_logc_k[cumulative_count], residual_val[bin]);
         // Keep the best NFA iff it is meaningful ( NFA < 0 ) and better than the existing one
-        if(current_nfa.first < current_best_nfa.first && current_nfa.first < 0)
+        if (current_nfa.first < current_best_nfa.first && current_nfa.first < 0)
           current_best_nfa = current_nfa;
       }
     }
@@ -246,7 +245,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
       nfa_threshold.second = current_best_nfa.second; // Corresponding threshold
 
       inliers.clear();
-      for (size_t index = 0; index < m_kernel.NumSamples(); ++index)
+      for (uint32_t index = 0; index < m_kernel.NumSamples(); ++index)
       {
         if (m_residuals[index] <= nfa_threshold.second)
           inliers.push_back(index);
@@ -260,7 +259,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     {
       m_sorted_residuals.clear();
       m_sorted_residuals.reserve(m_kernel.NumSamples());
-      for (size_t i = 0; i < m_kernel.NumSamples(); ++i)
+      for (uint32_t i = 0; i < m_kernel.NumSamples(); ++i)
       {
         m_sorted_residuals.emplace_back(m_residuals[i], i);
       }
@@ -268,11 +267,11 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     }
 
     // Find best NFA and its index wrt square error threshold in m_sorted_residuals.
-    typedef std::pair<double,int> nfa_indexT;
+    using nfa_indexT = std::pair<double, uint32_t>;
     nfa_indexT current_best_nfa(std::numeric_limits<double>::infinity(), Kernel::MINIMUM_SAMPLES);
     const size_t n = m_kernel.NumSamples();
-    for(size_t k=Kernel::MINIMUM_SAMPLES+1;
-        k<=n && m_sorted_residuals[k-1].first<=m_max_threshold;
+    for (size_t k = Kernel::MINIMUM_SAMPLES + 1;
+        k <= n && m_sorted_residuals[k-1].first <= m_max_threshold;
         ++k) // Compute the NFA for all k in [minimal_sample+1,n]
     {
       const double logalpha = m_kernel.logalpha0()
@@ -283,7 +282,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
         + m_logc_n[k]
         + m_logc_k[k], k);
 
-      if(current_nfa.first < current_best_nfa.first)
+      if (current_nfa.first < current_best_nfa.first)
         current_best_nfa = current_nfa;
     }
 
@@ -295,7 +294,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
       nfa_threshold.second = m_sorted_residuals[current_best_nfa.second-1].first;
 
       inliers.resize(current_best_nfa.second);
-      for (size_t i=0; i<current_best_nfa.second; ++i)
+      for (size_t i =0; i < current_best_nfa.second; ++i)
       {
         inliers[i] = m_sorted_residuals[i].second;
       }
@@ -305,22 +304,6 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
   return false;
 }
 }  // namespace acransac_nfa_internal
-
-/// Pick n random sample from an array of indices
-/// @param[in] sizeSample The size of the sample.
-/// @param[in] vec_index  The possible data indices (must be unique).
-/// @param[out] sample The random sample of sizeSample indices.
-static void UniformSample
-(
-  int sizeSample,
-  const std::vector<size_t> &vec_index,
-  std::vector<size_t> *sample
-)
-{
-  robust::UniformSample(sizeSample, vec_index.size(), sample);
-  for (int i = 0; i < sizeSample; ++i)
-    (*sample)[i] = vec_index[ (*sample)[i] ];
-}
 
 /**
  * @brief ACRANSAC routine (ErrorThreshold, NFA)
@@ -339,36 +322,39 @@ static void UniformSample
  * @return (errorMax, minNFA)
  */
 template<typename Kernel>
-std::pair<double, double> ACRANSAC(const Kernel &kernel,
-  std::vector<size_t> & vec_inliers,
+std::pair<double, double> ACRANSAC
+(
+  const Kernel &kernel,
+  std::vector<uint32_t> & vec_inliers,
   const unsigned int num_max_iteration = 1024,
-  typename Kernel::Model * model = NULL,
+  typename Kernel::Model * model = nullptr,
   double precision = std::numeric_limits<double>::infinity(),
-  bool bVerbose = false)
+  bool bVerbose = false
+)
 {
   vec_inliers.clear();
 
   const unsigned int sizeSample = Kernel::MINIMUM_SAMPLES;
   const unsigned int nData = kernel.NumSamples();
   if (nData <= sizeSample)
-    return std::make_pair(0.0,0.0);
+    return {0.0, 0.0};
 
   //--
   // Sampling:
   // Possible sampling indices [0,..,nData] (will change in the optimization phase)
-  std::vector<size_t> vec_index(nData);
+  std::vector<uint32_t> vec_index(nData);
   std::iota(vec_index.begin(), vec_index.end(), 0);
   // Sample indices (used for model evaluation)
-  std::vector<size_t> vec_sample(sizeSample);
+  std::vector<uint32_t> vec_sample(sizeSample);
 
-  const double maxThreshold = (precision==std::numeric_limits<double>::infinity()) ?
+  const double maxThreshold = (precision == std::numeric_limits<double>::infinity()) ?
     std::numeric_limits<double>::infinity() :
     precision * kernel.normalizer2()(0,0) * kernel.normalizer2()(0,0);
 
   // Initialize the NFA computation interface
   // (quantified NFA computation is used if a valid upper bound is provided)
   acransac_nfa_internal::NFA_Interface<Kernel> nfa_interface
-    (kernel, maxThreshold, (precision!=std::numeric_limits<double>::infinity()));
+    (kernel, maxThreshold, (precision != std::numeric_limits<double>::infinity()));
 
   // Output parameters
   double minNFA = std::numeric_limits<double>::infinity();
@@ -377,7 +363,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   //--
   // Local optimization:
   // Reserve 10% of iterations for focused sampling
-  int nIterReserve = num_max_iteration/10;
+  int nIterReserve = num_max_iteration / 10;
   unsigned int nIter = num_max_iteration - nIterReserve;
 
   //--
@@ -388,14 +374,18 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
   bool bACRansacMode = (precision == std::numeric_limits<double>::infinity());
 
   //--
+  // Random number generation
+  std::mt19937 random_generator(std::mt19937::default_seed);
+
+  //--
   // Main estimation loop.
-  for (unsigned int iter=0; iter < nIter && iter < num_max_iteration; ++iter)
+  for (unsigned int iter = 0; iter < nIter && iter < num_max_iteration; ++iter)
   {
     // Get random samples
     if (bACRansacMode)
-      UniformSample(sizeSample, vec_index, &vec_sample);
+      UniformSample(sizeSample, random_generator, &vec_index, &vec_sample);
     else
-      UniformSample(sizeSample, nData, &vec_sample);
+      UniformSample(sizeSample, nData, random_generator, &vec_sample);
 
     // Fit model(s). Can find up to Kernel::MAX_MODELS solution(s)
     std::vector<typename Kernel::Model> vec_models;
@@ -403,10 +393,10 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
 
     // Evaluate model(s)
     bool better = false;
-    for (unsigned int k = 0; k < static_cast<unsigned int>(vec_models.size()); ++k)
+    for (const auto& model_it : vec_models)
     {
       // Compute residual values
-      kernel.Errors(vec_models[k], nfa_interface.residuals());
+      kernel.Errors(model_it, nfa_interface.residuals());
 
       if (!bACRansacMode)
       {
@@ -414,19 +404,17 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
         unsigned int nInlier = 0;
         for (size_t i = 0; i < nData; ++i)
         {
-         if (nfa_interface.residuals()[i] <= maxThreshold)
-          ++nInlier;
+          if (nfa_interface.residuals()[i] <= maxThreshold)
+            ++nInlier;
         }
         if (nInlier > 2.5 * sizeSample) // does the model is meaningful
           bACRansacMode = true;
-        if (!bACRansacMode && nIter > nIterReserve*2)
-          nIter = 0;
       }
 
       if (bACRansacMode)
       {
         // NFA evaluation; If better than the previous: update scoring & inliers indices
-        std::pair<double,double> nfa_threshold(minNFA, 0.0);
+        std::pair<double, double> nfa_threshold(minNFA, 0.0);
         const bool b_better_model_found =
           nfa_interface.ComputeNFA_and_inliers(vec_inliers, nfa_threshold);
 
@@ -435,9 +423,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
           better = true;
           minNFA = nfa_threshold.first;
           errorMax = nfa_threshold.second;
-          if(model) *model = vec_models[k];
+          if (model) *model = model_it;
 
-          if(bVerbose)
+          if (bVerbose)
           {
             std::cout << "  nfa=" << minNFA
               << " inliers=" << vec_inliers.size() << "/" << nData
@@ -446,15 +434,23 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
               << " (iter=" << iter
               << " ,sample=";
             std::copy(vec_sample.begin(), vec_sample.end(),
-              std::ostream_iterator<size_t>(std::cout, ","));
+              std::ostream_iterator<uint32_t>(std::cout, ","));
             std::cout << ")" << std::endl;
           }
         }
       }
     }
 
+    // Early exit test -> no meaningful model found so far
+    //  see explanation above
+    if (!bACRansacMode && iter > nIterReserve*2)
+    {
+      nIter = 0; // No more round will be performed
+      continue;
+    }
+
     // ACRANSAC optimization: draw samples among best set of inliers so far
-    if (bACRansacMode && ((better && minNFA<0) || (iter+1==nIter && nIterReserve > 0)))
+    if (bACRansacMode && ((better && minNFA < 0) || ((iter + 1) == nIter && nIterReserve > 0)))
     {
       if (vec_inliers.empty())
       {
@@ -466,7 +462,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
       {
         // ACRANSAC optimization: draw samples among best set of inliers so far
         vec_index = vec_inliers;
-        if(nIterReserve) {
+        if (nIterReserve) {
             // reduce the number of iteration
             // next iterations will be dedicated to local optimization
             nIter = iter + 1 + nIterReserve;
@@ -476,7 +472,7 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     }
   }
 
-  if(minNFA >= 0) // no meaningful model found so far
+  if (minNFA >= 0) // no meaningful model found so far
     vec_inliers.clear();
 
   if (!vec_inliers.empty())
@@ -487,9 +483,9 @@ std::pair<double, double> ACRANSAC(const Kernel &kernel,
     errorMax = kernel.unormalizeError(errorMax);
   }
 
-  return std::make_pair(errorMax, minNFA);
+  return {errorMax, minNFA};
 }
 
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_H_
+#endif // OPENMVG_ROBUST_ESTIMATOR_ACRANSAC_HPP

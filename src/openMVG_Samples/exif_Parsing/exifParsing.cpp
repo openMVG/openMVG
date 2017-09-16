@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2016 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
 using namespace openMVG::exif;
 
@@ -15,7 +23,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
       << "[-i|--imafile path] "
       << std::endl;
@@ -27,7 +35,7 @@ int main(int argc, char **argv)
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imafile " << sInputImage << std::endl;
-  
+
   std::unique_ptr<Exif_IO> exif_io( new Exif_IO_EasyExif( sInputImage ) );
 
   std::cout << "width : " << exif_io->getWidth() << std::endl;
@@ -37,6 +45,3 @@ int main(int argc, char **argv)
   std::cout << "model : " << exif_io->getModel() << std::endl;
   return EXIT_SUCCESS;
 }
-
-
-

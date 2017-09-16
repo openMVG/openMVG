@@ -1,6 +1,14 @@
-#include "testing/testing.h"
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2015 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "split.hpp"
+
+#include "testing/testing.h"
 
 #include <string>
 #include <vector>
@@ -41,15 +49,6 @@ TEST(Split, stringSplit3part)
   EXPECT_EQ( 3, vec_str.size() );
 }
 
-TEST(Split, ontheSameString)
-{
-  const char sDelimiter = ';';
-  std::vector<std::string> vec_str = {"foo;"};
-  EXPECT_TRUE( stl::split(vec_str[0], sDelimiter, vec_str));
-  EXPECT_EQ( 1, vec_str.size() );
-}
-
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

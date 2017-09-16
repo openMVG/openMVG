@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 openMVG authors.
 
@@ -5,8 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_COLORHARMONIZATION_VLDSEGMENT_H
-#define OPENMVG_COLORHARMONIZATION_VLDSEGMENT_H
+#ifndef OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
+#define OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP
+
+#include <string>
+#include <vector>
 
 #include "openMVG/color_harmonization/selection_interface.hpp"
 #include "openMVG/matching/kvld/kvld.h"
@@ -21,14 +25,14 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
   commonDataByPair_VLDSegment( const std::string & sLeftImage,
                                const std::string & sRightImage,
                                const std::vector< matching::IndMatch >& vec_PutativeMatches,
-                               const vector< features::SIOPointFeature >& vec_featsL,
-                               const vector< features::SIOPointFeature >& vec_featsR):
+                               const std::vector< features::SIOPointFeature >& vec_featsL,
+                               const std::vector< features::SIOPointFeature >& vec_featsR):
            commonDataByPair( sLeftImage, sRightImage ),
-           _vec_PutativeMatches( vec_PutativeMatches ),
-           _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR )
+           _vec_featsL( vec_featsL ), _vec_featsR( vec_featsR ),
+           _vec_PutativeMatches( vec_PutativeMatches )
   {}
 
-  ~commonDataByPair_VLDSegment() override = default ; 
+  ~commonDataByPair_VLDSegment() override = default;
 
   /**
    * Put masks to white, images are conserved
@@ -53,7 +57,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
 
     std::vector< Pair > matchesFiltered, matchesPair;
 
-    for( std::vector< matching::IndMatch >::const_iterator iter_match = _vec_PutativeMatches.begin();
+    for (std::vector< matching::IndMatch >::const_iterator iter_match = _vec_PutativeMatches.begin();
           iter_match != _vec_PutativeMatches.end();
           ++iter_match )
     {
@@ -86,7 +90,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
     }
 
     bool bOk = false;
-    if( !matchesPair.empty())
+    if (!matchesPair.empty())
     {
       // Get mask
       getKVLDMask(
@@ -97,7 +101,8 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
         E);
       bOk = true;
     }
-    else{
+    else
+    {
       maskLeft.fill( 0 );
       maskRight.fill( 0 );
     }
@@ -115,4 +120,4 @@ private:
 }  // namespace color_harmonization
 }  // namespace openMVG
 
-#endif  // OPENMVG_COLORHARMONIZATION_VLDSEGMENT_H
+#endif  // OPENMVG_COLOR_HARMONIZATION_SELECTION_VLDSEGMENT_HPP

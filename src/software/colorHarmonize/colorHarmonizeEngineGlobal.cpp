@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2013, 2014 openMVG authors.
 
@@ -8,7 +9,7 @@
 #include "colorHarmonizeEngineGlobal.hpp"
 #include "software/SfM/SfMIOHelper.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 //-- Feature matches
 #include <openMVG/matching/indMatch.hpp>
 #include "openMVG/matching/indMatch_utils.hpp"
@@ -30,7 +31,7 @@
 
 #include "openMVG/system/timer.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 #include <numeric>
 #include <iomanip>
@@ -48,24 +49,24 @@ using namespace openMVG::matching;
 using namespace openMVG::lInfinity;
 using namespace openMVG::sfm;
 
-typedef features::SIOPointFeature FeatureT;
-typedef vector< FeatureT > featsT;
+using FeatureT = features::SIOPointFeature;
+using featsT = std::vector< FeatureT >;
 
 ColorHarmonizationEngineGlobal::ColorHarmonizationEngineGlobal(
-  const string & sSfM_Data_Filename,
-  const string & sMatchesPath,
+  const std::string & sSfM_Data_Filename,
+  const std::string & sMatchesPath,
   const std::string & sMatchesFile,
-  const string & sOutDirectory,
+  const std::string & sOutDirectory,
   const int selectionMethod,
   const int imgRef):
-  _sSfM_Data_Path(sSfM_Data_Filename),
-  _sMatchesPath(sMatchesPath),
-  _sOutDirectory(sOutDirectory),
   _selectionMethod( selectionMethod ),
   _imgRef( imgRef ),
-  _sMatchesFile(sMatchesFile)
+  _sMatchesFile(sMatchesFile),
+  _sSfM_Data_Path(sSfM_Data_Filename),
+  _sMatchesPath(sMatchesPath),
+  _sOutDirectory(sOutDirectory)
 {
-  if( !stlplus::folder_exists( sOutDirectory ) )
+  if ( !stlplus::folder_exists( sOutDirectory ) )
   {
     stlplus::folder_create( sOutDirectory );
   }
@@ -78,7 +79,7 @@ ColorHarmonizationEngineGlobal::~ColorHarmonizationEngineGlobal()
 void pauseProcess()
 {
   unsigned char i;
-  cout << "\nPause : type key and press enter: ";
+  std::cout << "\nPause : type key and press enter: ";
   std::cin >> i;
 }
 
@@ -93,11 +94,11 @@ bool ColorHarmonizationEngineGlobal::Process()
   // Load data
   //-------------------
 
-  if( !ReadInputData() )
+  if ( !ReadInputData() )
     return false;
-  if( _map_Matches.size() == 0 )
+  if (_map_Matches.size() == 0 )
   {
-    cout << endl << "Matches file is empty" << endl;
+    std::cout << std::endl << "Matches file is empty" <<std:: endl;
     return false;
   }
 
@@ -120,7 +121,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     // Save the graph before cleaning:
     graph::exportToGraphvizData(
       stlplus::create_filespec(_sOutDirectory, "input_graph_poor_supportRemoved"),
-      putativeGraph.g);
+      putativeGraph);
   }
 
   //-------------------
@@ -137,28 +138,32 @@ bool ColorHarmonizationEngineGlobal::Process()
   //-------------------
 
   //Choose image reference
-  if( _imgRef == -1 )
+  if (_imgRef == -1 )
   {
     do
     {
-      cout << "Choose your reference image:\n";
-      for( int i = 0; i < _vec_fileNames.size(); ++i )
+      std::cout << "Choose your reference image:\n";
+      for (size_t i = 0; i < _vec_fileNames.size(); ++i)
       {
-        cout << "id: " << i << "\t" << _vec_fileNames[ i ] << endl;
+        std::cout << "id: " << i << "\t" << _vec_fileNames[ i ] << std::endl;
       }
-    }while( !( cin >> _imgRef ) || _imgRef < 0 || _imgRef >= _vec_fileNames.size() );
+    }
+    while (
+      !( std::cin >> _imgRef )
+      || _imgRef < 0
+      || _imgRef >= static_cast<int>(_vec_fileNames.size()) );
   }
 
   //Choose selection method
-  if( _selectionMethod == -1 )
+  if (_selectionMethod == -1 )
   {
-    cout << "Choose your selection method:\n"
+    std::cout << "Choose your selection method:\n"
       << "- FullFrame: 0\n"
       << "- Matched Points: 1\n"
       << "- VLD Segment: 2\n";
-    while( ! ( cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2 )
+    while (! ( std::cin >> _selectionMethod ) || _selectionMethod < 0 || _selectionMethod > 2)
     {
-      cout << _selectionMethod << " is not accepted.\nTo use: \n- FullFrame enter: 0\n- Matched Points enter: 1\n- VLD Segment enter: 2\n";
+      std::cout << _selectionMethod << " is not accepted.\nPlease use a valid method number.\n";
     }
   }
 
@@ -221,7 +226,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     Image< unsigned char > maskI ( _vec_imageSize[ I ].first, _vec_imageSize[ I ].second );
     Image< unsigned char > maskJ ( _vec_imageSize[ J ].first, _vec_imageSize[ J ].second );
 
-    switch(_selectionMethod)
+    switch (_selectionMethod)
     {
       enum EHistogramSelectionMethod
       {
@@ -272,15 +277,15 @@ bool ColorHarmonizationEngineGlobal::Process()
     bool bExportMask = false;
     if (bExportMask)
     {
-      string sEdge = _vec_fileNames[ I ] + "_" + _vec_fileNames[ J ];
+      std::string sEdge = _vec_fileNames[ I ] + "_" + _vec_fileNames[ J ];
       sEdge = stlplus::create_filespec( _sOutDirectory, sEdge );
-      if( !stlplus::folder_exists( sEdge ) )
+      if ( !stlplus::folder_exists( sEdge ) )
         stlplus::folder_create( sEdge );
 
-      string out_filename_I = "00_mask_I.png";
+      std::string out_filename_I = "00_mask_I.png";
       out_filename_I = stlplus::create_filespec( sEdge, out_filename_I );
 
-      string out_filename_J = "00_mask_J.png";
+      std::string out_filename_J = "00_mask_J.png";
       out_filename_J = stlplus::create_filespec( sEdge, out_filename_J );
 
       WriteImage( out_filename_I.c_str(), maskI );
@@ -332,14 +337,9 @@ bool ColorHarmonizationEngineGlobal::Process()
 
   openMVG::system::Timer timer;
 
-  #ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
-  #else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
-  #endif
   // Red channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_r.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_r.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[0], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -350,7 +350,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Green channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_g.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_g.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[1], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -361,7 +361,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   }
   // Blue channel
   {
-    SOLVER_LP_T lpSolver(vec_solution_b.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution_b.size());
 
     ConstraintBuilder_GainOffset cstBuilder(map_relativeHistograms[2], vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -397,7 +397,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     iterSet != set_indeximage.end(); ++iterSet, ++my_progress_bar)
   {
     const size_t imaNum = *iterSet;
-    typedef Eigen::Matrix<double, 256, 1> Vec256;
+    using Vec256 = Eigen::Matrix<double, 256, 1>;
     std::vector< Vec256 > vec_map_lut(3);
 
     const size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);
@@ -409,7 +409,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     const  double g_b = vec_solution_b[nodeIndex*2];
     const double offset_b = vec_solution_b[nodeIndex*2+1];
 
-    for( size_t k = 0; k < 256; ++k)
+    for (size_t k = 0; k < 256; ++k)
     {
       vec_map_lut[0][k] = clamp( k * g_r + offset_r, 0., 255. );
       vec_map_lut[1][k] = clamp( k * g_g + offset_g, 0., 255. );
@@ -422,9 +422,9 @@ bool ColorHarmonizationEngineGlobal::Process()
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for( int j = 0; j < image_c.Height(); ++j )
+    for (int j = 0; j < image_c.Height(); ++j)
     {
-      for( int i = 0; i < image_c.Width(); ++i )
+      for (int i = 0; i < image_c.Width(); ++i)
       {
         image_c(j, i)[0] = clamp(vec_map_lut[0][image_c(j, i)[0]], 0., 255.);
         image_c(j, i)[1] = clamp(vec_map_lut[1][image_c(j, i)[1]], 0., 255.);
@@ -434,7 +434,7 @@ bool ColorHarmonizationEngineGlobal::Process()
 
     const std::string out_folder = stlplus::create_filespec( _sOutDirectory,
       vec_selectionMethod[ _selectionMethod ] + "_" + vec_harmonizeMethod[ harmonizeMethod ]);
-    if( !stlplus::folder_exists( out_folder ) )
+    if ( !stlplus::folder_exists( out_folder ) )
       stlplus::folder_create( out_folder );
     const std::string out_filename = stlplus::create_filespec( out_folder, stlplus::filename_part(_vec_fileNames[ imaNum ]) );
 
@@ -456,13 +456,13 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
     std::cerr << std::endl
-      << "Invalid input sfm_data file: (" << stlplus::basename_part(_sMatchesFile) << ")" << std::endl;
+      << "Invalid input sfm_data file: (" << _sSfM_Data_Path << ")" << std::endl;
     return false;
   }
   if (!stlplus::is_file( _sMatchesFile ))
   {
     std::cerr << std::endl
-      << "Invalid match file: (" << stlplus::basename_part(_sMatchesFile) << ")"<< std::endl;
+      << "Invalid match file: (" << _sMatchesFile << ")"<< std::endl;
     return false;
   }
 
@@ -487,7 +487,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
 
   if ( !matching::Load(_map_Matches, _sMatchesFile) )
   {
-    cerr<< "Unable to read the geometric matrix matches" << endl;
+    std::cerr<< "Unable to read the geometric matrix matches" << std::endl;
     return false;
   }
 
@@ -501,7 +501,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
                                       ".feat" ),
             _map_feats[ camIndex ] ) )
     {
-      cerr << "Bad reading of feature files" << endl;
+      std::cerr << "Bad reading of feature files" << std::endl;
       return false;
     }
   }
@@ -511,7 +511,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
       stlplus::create_filespec( _sOutDirectory, "initialGraph" ),
-      putativeGraph.g );
+      putativeGraph);
 
   return true;
 }
@@ -526,7 +526,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph before cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "initialGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   std::cout << "\n"
@@ -540,7 +540,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
       openMVG::graph::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
     std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter->second.size() > count)  {
@@ -551,7 +551,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     }
 
     //-- Remove all nodes that are not listed in the largest CC
-    for(std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC) // Skip this CC since it's the one we want to keep
@@ -565,17 +565,17 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         for (lemon::ListGraph::OutArcIt e(putativeGraph.g, *iter2); e!=INVALID; ++e)
         {
           putativeGraph.g.erase(e);
-          const IndexT Idu = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.target(e)];
-          const IndexT Idv = (*putativeGraph.map_nodeMapIndex)[putativeGraph.g.source(e)];
+          const IndexT Idu = (*putativeGraph.node_map_id)[putativeGraph.g.target(e)];
+          const IndexT Idv = (*putativeGraph.node_map_id)[putativeGraph.g.source(e)];
           matching::PairWiseMatches::iterator iterM = _map_Matches.find(std::make_pair(Idu,Idv));
-          if( iterM != _map_Matches.end())
+          if (iterM != _map_Matches.end())
           {
             _map_Matches.erase(iterM);
           }
           else // Try to find the opposite directed edge
           {
             iterM = _map_Matches.find(std::make_pair(Idv,Idu));
-            if( iterM != _map_Matches.end())
+            if (iterM != _map_Matches.end())
               _map_Matches.erase(iterM);
           }
         }
@@ -586,7 +586,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   // Save the graph after cleaning:
   graph::exportToGraphvizData(
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
-    putativeGraph.g);
+    putativeGraph);
 
   std::cout << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"

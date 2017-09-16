@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,11 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_IO_BAF_HPP
-#define OPENMVG_SFM_DATA_IO_BAF_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_IO_BAF_HPP
+#define OPENMVG_SFM_SFM_DATA_IO_BAF_HPP
+
+#include <algorithm>
+#include <fstream>
+#include <string>
+#include <vector>
 
 #include "openMVG/sfm/sfm_data_io.hpp"
-#include <fstream>
 
 namespace openMVG {
 namespace sfm {
@@ -46,10 +51,10 @@ inline bool Save_BAF(
       << sfm_data.GetLandmarks().size() << '\n';
 
     const Intrinsics & intrinsics = sfm_data.GetIntrinsics();
-    for (const auto & iterIntrinsic : intrinsics ) 
+    for (const auto & iterIntrinsic : intrinsics )
     {
       //get params
-      const std::vector<double> intrinsicsParams = iterIntrinsic.second.get()->getParams();
+      const std::vector<double> intrinsicsParams = iterIntrinsic.second->getParams();
       std::copy(intrinsicsParams.begin(), intrinsicsParams.end(),
         std::ostream_iterator<double>(stream, " "));
       stream << '\n';
@@ -133,4 +138,4 @@ inline bool Save_BAF(
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_IO_PLY_HPP
+#endif // OPENMVG_SFM_SFM_DATA_IO_BAF_HPP

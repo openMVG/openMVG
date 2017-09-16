@@ -1,11 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013-2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EXIF_IO_HPP
-#define EXIF_IO_HPP
+#ifndef OPENMVG_EXIF_EXIF_IO_HPP
+#define OPENMVG_EXIF_EXIF_IO_HPP
 
 #include <string>
 
@@ -61,7 +63,7 @@ class Exif_IO
     virtual std::string getLensModel() const = 0;
 
     /**
-    * @brief Get an unique identifier for this image
+    * @brief Get a unique identifier for this image
     * @return Unique ID
     */
     virtual std::string getImageUniqueID() const = 0;
@@ -87,9 +89,28 @@ class Exif_IO
     */
     virtual std::string allExifData() const = 0;
 
+    /**
+    * @brief Try to read and save the EXIF GPS latitude
+    * @return If GPS Latitude can be read & exported, return true
+    */
+    virtual bool GPSLatitude(double * latitude) const = 0;
+
+    /**
+    * @brief Try to read and save the EXIF GPS longitude
+    * @return If GPS Longitude can be read & exported, return true
+    */
+    virtual bool GPSLongitude(double * longitude) const = 0;
+
+   /**
+    * @brief Try to read and save the EXIF GPS altitude
+    * @return If GPS Altitude can be read & exported, return true
+    */
+    virtual bool GPSAltitude(double * altitude) const = 0;
+
 };
 
 } // namespace exif
 } // namespace openMVG
-#endif //EXIF_IO_HPP
+
+#endif // OPENMVG_EXIF_EXIF_IO_HPP
 

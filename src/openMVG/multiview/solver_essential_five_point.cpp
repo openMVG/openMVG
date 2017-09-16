@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -27,15 +29,17 @@
 
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+
 #include <iostream>
+
 namespace openMVG {
 
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
   Eigen::Matrix<double,9, 9> A;
   A.setZero();  // Make A square until Eigen supports rectangular SVD.
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
-  Eigen::JacobiSVD<Eigen::Matrix<double,9, 9> > svd(A,Eigen::ComputeFullV);
-  return svd.matrixV().topRightCorner<9,4>();
+  Eigen::JacobiSVD<Eigen::Matrix<double, 9, 9> > svd(A, Eigen::ComputeFullV);
+  return svd.matrixV().topRightCorner<9, 4>();
 }
 
 Vec o1(const Vec &a, const Vec &b) {
@@ -147,14 +151,14 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
 
   // Equation (21).
   Vec (&L)[3][3] = EET;
-  Vec trace  = 0.5 * (EET[0][0] + EET[1][1] + EET[2][2]);
-  for (int i = 0; i < 3; ++i) {
+  const Vec trace  = 0.5 * (EET[0][0] + EET[1][1] + EET[2][2]);
+  for (const int i : {0,1,2}) {
     L[i][i] -= trace;
   }
 
   // Equation (23).
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
+  for (const int i : {0,1,2}) {
+    for (const int j : {0,1,2}) {
       Vec LEij = o2(L[i][0], E[0][j])
                + o2(L[i][1], E[1][j])
                + o2(L[i][2], E[2][j]);
@@ -167,7 +171,7 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
 
 void FivePointsRelativePose(const Mat2X &x1,
                             const Mat2X &x2,
-                            vector<Mat3> *Es) {
+                            std::vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
   const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);
 
@@ -175,7 +179,7 @@ void FivePointsRelativePose(const Mat2X &x1,
   const Eigen::Matrix<double, 10, 20> E_constraints = FivePointsPolynomialConstraints(E_basis);
 
   // Step 3: Gauss-Jordan Elimination (done thanks to a LU decomposition).
-  typedef Eigen::Matrix<double, 10, 10> Mat10;
+  using Mat10 = Eigen::Matrix<double, 10, 10>;
   Eigen::FullPivLU<Mat10> c_lu(E_constraints.block<10, 10>(0, 0));
   const Mat10 M = c_lu.solve(E_constraints.block<10, 10>(0, 10));
 
@@ -210,4 +214,3 @@ void FivePointsRelativePose(const Mat2X &x1,
 }
 
 } // namespace openMVG
-

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,11 +9,13 @@
 #ifndef OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_IMAGE_DESCRIBER_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/features/regions.hpp"
-#include "openMVG/image/image_container.hpp"
 #include <memory>
-#include <cereal/cereal.hpp> // Serialization
+#include <string>
+
+#include "openMVG/features/regions.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+
+namespace openMVG { namespace image { template<typename Type> class Image; } }
 
 namespace openMVG {
 namespace features {
@@ -27,15 +30,18 @@ enum EDESCRIBER_PRESET
 class Image_describer
 {
 public:
-  Image_describer() = default ; 
-  virtual ~Image_describer() = default ; 
+  Image_describer() = default;
+  virtual ~Image_describer() = default;
 
   /**
   @brief Use a preset to control the number of detected regions
   @param preset The preset configuration
   @return True if configuration succeed.
   */
-  virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset) = 0;
+  virtual bool Set_configuration_preset
+  (
+    EDESCRIBER_PRESET preset
+  ) = 0;
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
@@ -44,33 +50,60 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  virtual bool Describe(const image::Image<unsigned char> & image,
+  bool Describe
+  (
+    const image::Image<unsigned char> & image,
     std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = nullptr ) = 0;
+    const image::Image<unsigned char> * mask = nullptr
+  )
+  {
+    regions = Describe(image, mask);
+    return regions != nullptr;
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return The detected regions and attributes
+  */
+  virtual std::unique_ptr<Regions> Describe(
+    const image::Image<unsigned char> & image,
+    const image::Image<unsigned char> * mask = nullptr) = 0;
 
   /// Allocate regions depending of the Image_describer
-  virtual void Allocate(std::unique_ptr<Regions> &regions) const = 0;
+  virtual std::unique_ptr<Regions> Allocate() const = 0;
 
   //--
   // IO - one file for region features, one file for region descriptors
   //--
 
-  virtual bool Load(Regions * regions,
+  virtual bool Load
+  (
+    Regions * regions,
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) const
+    const std::string& sfileNameDescs
+  ) const
   {
     return regions->Load(sfileNameFeats, sfileNameDescs);
   }
 
-  virtual bool Save(const Regions * regions,
+  virtual bool Save
+  (
+    const Regions * regions,
     const std::string& sfileNameFeats,
-    const std::string& sfileNameDescs) const
+    const std::string& sfileNameDescs
+  ) const
   {
     return regions->Save(sfileNameFeats, sfileNameDescs);
   };
 
-  virtual bool LoadFeatures(Regions * regions,
-    const std::string& sfileNameFeats) const
+  virtual bool LoadFeatures
+  (
+    Regions * regions,
+    const std::string& sfileNameFeats
+  ) const
   {
     return regions->LoadFeatures(sfileNameFeats);
   }

@@ -1,32 +1,31 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_DATA_HPP
-#define OPENMVG_SFM_DATA_HPP
+#ifndef OPENMVG_SFM_SFM_DATA_HPP
+#define OPENMVG_SFM_SFM_DATA_HPP
 
-#include "openMVG/types.hpp"
-#include "openMVG/sfm/sfm_view.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include <string>
+
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {
 
-/// Define a collection of View
-typedef Hash_Map<IndexT, std::shared_ptr<View> > Views;
-
 /// Define a collection of Pose (indexed by View::id_pose)
-typedef Hash_Map<IndexT, geometry::Pose3> Poses;
+using Poses = Hash_Map<IndexT, geometry::Pose3>;
 
 /// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
-typedef Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase> > Intrinsics;
-
-/// Define a collection of landmarks are indexed by their TrackId
-typedef Hash_Map<IndexT, Landmark> Landmarks;
+using Intrinsics = Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase>>;
 
 /// Generic SfM data container
 /// Store structure and camera properties:
@@ -76,4 +75,4 @@ struct SfM_Data
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_DATA_HPP
+#endif // OPENMVG_SFM_SFM_DATA_HPP

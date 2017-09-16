@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,16 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_INTRINSICS_H
-#define OPENMVG_CAMERA_INTRINSICS_H
+#ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
+#define OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
-
-#include <cereal/cereal.hpp> // Serialization
-
 
 namespace openMVG
 {
@@ -27,8 +27,8 @@ namespace cameras
 template< typename T>
 struct Clonable
 {
-  virtual T * clone() const = 0 ;
-} ;
+  virtual T * clone() const = 0;
+};
 
 /**
 * @brief Base class used to store common intrinsics parameters
@@ -36,7 +36,7 @@ struct Clonable
 struct IntrinsicBase : public Clonable<IntrinsicBase>
 {
   /// Width of image
-  unsigned int w_ ;
+  unsigned int w_;
   /// Height of image
   unsigned int h_;
 
@@ -61,7 +61,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @brief Get width of the image
   * @return width of the image
   */
-  const unsigned int w() const
+  unsigned int w() const
   {
     return w_;
   }
@@ -70,30 +70,30 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @brief Get height of the image
   * @return height of the image
   */
-  const unsigned int h() const
+  unsigned int h() const
   {
     return h_;
   }
 
   /**
-  * @brief Compute projection of a 3D point into the camera plane
+  * @brief Compute projection of a 3D point into the image plane
   * (Apply pose, disto (if any) and Intrinsics)
   * @param pose Pose used to compute projection
-  * @param pt3D 3D-point to project on camera plane
-  * @return Projected (2D) point on camera plane
+  * @param pt3D 3D-point to project on image plane
+  * @return Projected (2D) point on image plane
   */
-  Vec2 project(
+  virtual Vec2 project(
     const geometry::Pose3 & pose,
     const Vec3 & pt3D ) const
   {
     const Vec3 X = pose( pt3D ); // apply pose
     if ( this->have_disto() ) // apply disto & intrinsics
     {
-      return this->cam2ima( this->add_disto( X.head<2>() / X( 2 ) ) );
+      return this->cam2ima( this->add_disto( X.hnormalized() ) );
     }
     else // apply intrinsics
     {
-      return this->cam2ima( X.head<2>() / X( 2 ) );
+      return this->cam2ima( X.hnormalized() );
     }
   }
 
@@ -215,31 +215,24 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @return Concatenation of intrinsic matrix and extrinsic matrix
   */
   virtual Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const = 0;
-
+  
   /**
   * @brief Serialization out
   * @param ar Archive
   */
   template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void save( Archive & ar ) const;
+
 
   /**
   * @brief  Serialization in
   * @param ar Archive
   */
   template <class Archive>
-  void load( Archive & ar )
-  {
-    ar( cereal::make_nvp( "width", w_ ) );
-    ar( cereal::make_nvp( "height", h_ ) );
-  }
+  void load( Archive & ar );
 
   /**
-  * @brief Generate an unique Hash from the camera parameters (used for grouping)
+  * @brief Generate a unique Hash from the camera parameters (used for grouping)
   * @return Hash value
   */
   virtual std::size_t hashValue() const
@@ -249,7 +242,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     stl::hash_combine( seed, w_ );
     stl::hash_combine( seed, h_ );
     const std::vector<double> params = this->getParams();
-    for ( const auto & param : params ) 
+    for ( const auto & param : params )
       stl::hash_combine( seed , param );
     return seed;
   }
@@ -269,7 +262,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
 *
 * @return Angle (in degree) between the two rays
 */
-static double AngleBetweenRay(
+inline double AngleBetweenRay(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,
@@ -290,5 +283,4 @@ static double AngleBetweenRay(
 } // namespace cameras
 } // namespace openMVG
 
-#endif // #ifndef OPENMVG_CAMERA_INTRINSICS_H
-
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_INTRINSICS_HPP

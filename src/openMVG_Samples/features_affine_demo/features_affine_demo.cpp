@@ -1,24 +1,32 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON, Romuald PERROT.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/mser/mser.hpp"
+#include "openMVG/features/mser/mser_region.hpp"
+#include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_drawing.hpp"
+#include "openMVG/image/image_resampling.hpp"
+#include "openMVG/image/sample.hpp"
+
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 
-#include <string>
-#include <iostream>
 
 #include <unsupported/Eigen/MatrixFunctions>
+
+#include <iostream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
-using namespace svg;
 using namespace std;
 
 /**
@@ -40,23 +48,23 @@ void NormalizePatch
        feat.b(), feat.c();
 
   // Inverse square root
-  A = A.pow( -0.5 ) ;
+  A = A.pow( -0.5 );
 
   const float sc = 2.f * 3.f / static_cast<float>(patch_size);
-  A = A * sc ;
+  A = A * sc;
 
-  const float half_width = static_cast<float>( patch_size ) / 2.f ;
+  const float half_width = static_cast<float>( patch_size ) / 2.f;
 
   // Compute sampling grid
-  std::vector< std::pair<float,float> > sampling_grid ;
+  std::vector< std::pair<float,float> > sampling_grid;
   sampling_grid.reserve(patch_size*patch_size);
-  for( int i = 0 ; i < patch_size ; ++i )
+  for (int i = 0; i < patch_size; ++i )
   {
-    for( int j = 0 ; j < patch_size ; ++j )
+    for (int j = 0; j < patch_size; ++j )
     {
       // Apply transformation relative to the center of the patch (assume origin at 0,0 then map to (x,y) )
       Vec2 pos;
-      pos << static_cast<float>( j ) - half_width, static_cast<float>( i ) - half_width ;
+      pos << static_cast<float>( j ) - half_width, static_cast<float>( i ) - half_width;
       // Map (ie: ellipse transform)
       const Vec2 affineAdapted = A * pos;
 
@@ -64,14 +72,14 @@ void NormalizePatch
     }
   }
 
-  Sampler2d< SamplerLinear > sampler ;
+  Sampler2d< SamplerLinear > sampler;
 
   // Sample input image to generate patch
   GenericRessample(
     src_img , sampling_grid ,
     patch_size , patch_size ,
     sampler ,
-    out_patch ) ;
+    out_patch );
 }
 
 void Extract_MSER
@@ -88,9 +96,9 @@ void Extract_MSER
     // Inverted image
     Image<unsigned char> image4( 255 - img.array() );
     std::vector< MSERRegion > regs;
-    MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY ) ;
-    extr4.Extract( image4 , regs ) ;
-    for( int i = 0 ; i < regs.size() ; ++i )
+    MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
+    extr4.Extract( image4 , regs );
+    for (size_t i = 0; i < regs.size(); ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );
@@ -103,9 +111,9 @@ void Extract_MSER
   //-- Extract Dark MSER
   {
     std::vector< MSERRegion > regs;
-    MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY ) ;
-    extr8.Extract( img , regs ) ;
-    for( int i = 0 ; i < regs.size() ; ++i )
+    MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY );
+    extr8.Extract( img , regs );
+    for (size_t i = 0; i < regs.size(); ++i )
     {
       double a, b, c;
       regs[i].FitEllipse( a, b, c );
@@ -144,7 +152,7 @@ int main(int argc, char **argv)
 
   try {
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
@@ -176,7 +184,7 @@ int main(int argc, char **argv)
 
     // Display extracted Region ellipses:
     Image<unsigned char> Icpy (image);
-    for( size_t i = 0; i < feats_bright.size(); ++i)
+    for (size_t i = 0; i < feats_bright.size(); ++i)
     {
       const AffinePointFeature & fp = feats_bright[i];
       DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
@@ -198,7 +206,7 @@ int main(int argc, char **argv)
 
     // Display extracted Region ellipses:
     Icpy = image;
-    for( size_t i = 0; i < feats_dark.size(); ++i)
+    for (size_t i = 0; i < feats_dark.size(); ++i)
     {
       const AffinePointFeature & fp = feats_dark[i];
       DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
@@ -210,4 +218,3 @@ int main(int argc, char **argv)
 
   return EXIT_SUCCESS;
 }
-

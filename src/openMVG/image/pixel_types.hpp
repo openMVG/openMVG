@@ -1,13 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_PIXELTYPES_HPP
-#define OPENMVG_IMAGE_PIXELTYPES_HPP
-
-#include "openMVG/numeric/numeric.h"
+#ifndef OPENMVG_IMAGE_PIXEL_TYPES_HPP
+#define OPENMVG_IMAGE_PIXEL_TYPES_HPP
 
 namespace openMVG
 {
@@ -22,10 +22,10 @@ template <typename T>
 class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
 {
     /// Full internal type
-    typedef Eigen::Matrix<T, 3, 1, 0, 3, 1> Base;
+    using Base = Eigen::Matrix<T, 3, 1, 0, 3, 1>;
 
     /// Color component type
-    typedef T TBase;
+    using TBase = T;
   public:
 
     //------------------------------
@@ -36,7 +36,7 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     * @param green value
     * @param blue value
     */
-    inline Rgb( T red, T green, T blue )
+    explicit inline Rgb( T red, T green, T blue )
       : Base( red, green, blue )
     {
 
@@ -141,8 +141,8 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgb& col )
     {
-      os << " {" ;
-      for( int i = 0; i < 2; ++i )
+      os << " {";
+      for (int i = 0; i < 2; ++i )
       {
         os << col( i ) << ",";
       }
@@ -180,9 +180,9 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
 };
 
 /// Instantiation for unsigned char color component
-typedef Rgb<unsigned char> RGBColor;
+using RGBColor = Rgb<unsigned char>;
 /// Instantiation for float color component
-typedef Rgb<float> RGBfColor;
+using RGBfColor = Rgb<float>;
 
 /**
 * @brief RGBA templated pixel type
@@ -191,10 +191,10 @@ template <typename T>
 class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
 {
     /// Full internal type
-    typedef Eigen::Matrix<T, 4, 1, 0, 4, 1> Base;
+    using Base = Eigen::Matrix<T, 4, 1, 0, 4, 1>;
 
     /// Color component type
-    typedef T TBase;
+    using TBase = T;
 
   public:
 
@@ -207,7 +207,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     * @param blue component value
     * @param alpha component value
     */
-    inline Rgba( const T red, const T green, const T blue, const T alpha = static_cast<T>( 1 ) )
+    inline explicit Rgba( const T red, const T green, const T blue, const T alpha = static_cast<T>( 1 ) )
       : Base( red, green, blue, alpha )
     {
 
@@ -238,7 +238,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     * @brief Copy constructor
     * @param val Source RGBA value
     */
-    inline Rgba( const RGBColor & val )
+    explicit inline Rgba( const RGBColor & val )
       : Base( val.r(), val.g(), val.b(), static_cast<T>( 1 ) )
     {
 
@@ -331,8 +331,8 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     */
     friend std::ostream& operator<<( std::ostream& os, const Rgba& col )
     {
-      os << " {" ;
-      for( int i = 0; i < 3; ++i )
+      os << " {";
+      for (int i = 0; i < 3; ++i )
       {
         os << col( i ) << ",";
       }
@@ -372,7 +372,7 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
 };
 
 /// Type used to handle RGBA color in unsigned char format for each component
-typedef Rgba<unsigned char> RGBAColor;
+using RGBAColor = Rgba<unsigned char>;
 
 const RGBColor WHITE( 255, 255, 255 );
 const RGBColor BLACK( 0, 0, 0 );
@@ -386,5 +386,4 @@ const RGBColor MAGENTA( 255, 0, 255 );
 } // namespace image
 } // namespace openMVG
 
-#endif // OPENMVG_IMAGE_PIXELTYPES_HPP
-
+#endif // OPENMVG_IMAGE_PIXEL_TYPES_HPP

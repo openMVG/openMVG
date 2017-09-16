@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -6,8 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
+
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+
+using namespace openMVG::matching;
 
 namespace openMVG {
 namespace sfm {
@@ -24,11 +31,6 @@ namespace sfm {
     const Regions_Provider & regions_provider
   )
   {
-    if (regions_provider.regions_per_view.empty())
-    {
-      return false;
-    }
-
     if (sfm_data.GetPoses().empty() || sfm_data.GetLandmarks().empty())
     {
       std::cerr << std::endl
@@ -41,8 +43,7 @@ namespace sfm {
     // - each view observation leads to a new regions
     // - link each observation region to a track id to ease 2D-3D correspondences search
 
-    const features::Regions * regions_type = std::begin(regions_provider.regions_per_view)->second.get();
-    landmark_observations_descriptors_.reset(regions_type->EmptyClone());
+    landmark_observations_descriptors_.reset(regions_provider.getRegionsType()->EmptyClone());
     for (const auto & landmark : sfm_data.GetLandmarks())
     {
       for (const auto & observation : landmark.second.obs)
@@ -50,7 +51,7 @@ namespace sfm {
         if (observation.second.id_feat != UndefinedIndexT)
         {
           // copy the feature/descriptor to landmark_observations_descriptors
-          const features::Regions * view_regions = regions_provider.regions_per_view.at(observation.first).get();
+          std::shared_ptr<features::Regions> view_regions = regions_provider.get(observation.first);
           view_regions->CopyRegion(observation.second.id_feat, landmark_observations_descriptors_.get());
           // link this descriptor to the track Id
           index_to_landmark_id_.push_back(landmark.first);
@@ -60,9 +61,9 @@ namespace sfm {
     std::cout << "Init retrieval database ... " << std::endl;
     matching_interface_.reset(new
       matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_));
-    std::cout << "Retrieval database initialized\n"
-      << "#landmark: " << sfm_data.GetLandmarks().size() << "\n"
-      << "#descriptor initialized: " << landmark_observations_descriptors_->RegionCount() << std::endl;
+    std::cout << "Retrieval database initialized with:\n"
+      << "#landmarks: " << sfm_data.GetLandmarks().size() << "\n"
+      << "#descriptors: " << landmark_observations_descriptors_->RegionCount() << std::endl;
 
     sfm_data_ = &sfm_data;
 

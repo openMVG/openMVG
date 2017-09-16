@@ -18,6 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -25,6 +27,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 
@@ -43,14 +46,14 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
   if (variance(1) < 1e-8)
     yfactor = mean(1) = 1.0;
 
-  *T << xfactor, 0,       -xfactor * mean(0),
-        0,       yfactor, -yfactor * mean(1),
-        0,       0,        1;
+  (*T) << xfactor, 0,       -xfactor * mean(0),
+          0,       yfactor, -yfactor * mean(1),
+          0,       0,        1;
 }
 
 void PreconditionerFromPoints(int width, int height, Mat3 *T) {
   // Build the normalization matrix
-  double dNorm = 1.0 / sqrt( static_cast<double>(width*height) );
+  const double dNorm = 1.0 / sqrt( static_cast<double>(width*height) );
 
   (*T) = Mat3::Identity();
   (*T)(0,0) = (*T)(1,1) = dNorm;
@@ -61,15 +64,7 @@ void PreconditionerFromPoints(int width, int height, Mat3 *T) {
 void ApplyTransformationToPoints(const Mat &points,
                                  const Mat3 &T,
                                  Mat *transformed_points) {
-  const Mat::Index n = points.cols();
-  transformed_points->resize(2,n);
-  for (Mat::Index i = 0; i < n; ++i) {
-    Vec3 in, out;
-    in << points(0, i), points(1, i), 1;
-    out = T * in;
-    (*transformed_points)(0, i) = out(0)/out(2);
-    (*transformed_points)(1, i) = out(1)/out(2);
-  }
+  (*transformed_points) = (T * points.colwise().homogeneous()).colwise().hnormalized();
 }
 
 void NormalizePoints(const Mat &points,

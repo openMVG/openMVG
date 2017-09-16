@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLECAMERA_H
-#define OPENMVG_CAMERA_PINHOLECAMERA_H
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLECAMERA_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLECAMERA_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
 namespace cameras {
@@ -26,10 +27,10 @@ struct PinholeCamera
     _C = -R.transpose() * t;
     P_From_KRt(_K, _R, _t, &_P);
   }
-  
-  PinholeCamera(const Mat34 & P)
+
+  explicit PinholeCamera(const Mat34 & P)
+  : _P(P)
   {
-    _P = P;
     KRt_From_P(_P, &_K, &_R, &_t);
     _C = -_R.transpose() * _t;
   }
@@ -107,5 +108,4 @@ struct PinholeCamera
 } // namespace cameras
 } // namespace openMVG
 
-#endif // #ifndef OPENMVG_CAMERA_PINHOLECAMERA_H
-
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLECAMERA_HPP

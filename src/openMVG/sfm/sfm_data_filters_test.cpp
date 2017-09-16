@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -5,23 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
+
+#include "testing/testing.h"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 
-#include "testing/testing.h"
 
 void init_scene
 (
   SfM_Data &sfm_data,
-  const int viewsCount
+  const IndexT viewsCount
 )
 {
-  for(IndexT i = 0; i < viewsCount; ++i)
+  for (IndexT i = 0; i < viewsCount; ++i)
   {
     // Add views
     std::ostringstream os;

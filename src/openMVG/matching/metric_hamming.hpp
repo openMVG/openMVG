@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014-2015 Pierre MOULON.
 
@@ -5,18 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_METRIC_HAMMING_H
-#define OPENMVG_MATCHING_METRIC_HAMMING_H
+#ifndef OPENMVG_MATCHING_METRIC_HAMMING_HPP
+#define OPENMVG_MATCHING_METRIC_HAMMING_HPP
 
 #include "openMVG/matching/metric.hpp"
+
 #include <bitset>
 
 #ifdef _MSC_VER
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
 #include <intrin.h>
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
 
 #ifdef __ARM_NEON__
@@ -44,8 +44,8 @@ namespace matching {
 template<typename TBitset>
 struct HammingBitSet
 {
-  typedef TBitset ElementType;
-  typedef size_t ResultType;
+  using ElementType = TBitset;
+  using ResultType = size_t;
 
   // Returns the Hamming Distance between two binary descriptors
   template <typename Iterator1, typename Iterator2>
@@ -59,8 +59,8 @@ struct HammingBitSet
 // Lookup table to count the number of common 1 bits on unsigned char values
 static const unsigned char pop_count_LUT[256] =
 {
-#   define B2(n) n,     n+1,     n+1,     n+2
-#   define B4(n) B2(n), B2(n+1), B2(n+1), B2(n+2)
+#   define B2_POPC(n) n,     n+1,     n+1,     n+2
+#   define B4(n) B2_POPC(n), B2_POPC(n+1), B2_POPC(n+1), B2_POPC(n+2)
 #   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
     B6(0), B6(1), B6(1), B6(2)
 };
@@ -70,8 +70,8 @@ static const unsigned char pop_count_LUT[256] =
 template<typename T>
 struct Hamming
 {
-  typedef T ElementType;
-  typedef unsigned int ResultType;
+  using ElementType = T;
+  using ResultType = unsigned int;
 
   /** This is popcount_3() from:
    * http://en.wikipedia.org/wiki/Hamming_weight */
@@ -111,21 +111,21 @@ struct Hamming
 // Windows & generic platforms:
 
 #ifdef PLATFORM_64_BIT
-    if(size%sizeof(uint64_t) == 0)
+    if (size%sizeof(uint64_t) == 0)
     {
       const uint64_t* pa = reinterpret_cast<const uint64_t*>(a);
       const uint64_t* pb = reinterpret_cast<const uint64_t*>(b);
       size /= (sizeof(uint64_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt64(*pa ^ *pb);
       }
     }
-    else if(size%sizeof(uint32_t) == 0)
+    else if (size%sizeof(uint32_t) == 0)
     {
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt32(*pa ^ *pb);
       }
     }
@@ -139,12 +139,12 @@ struct Hamming
       }
     }
 #else // PLATFORM_64_BIT
-    if(size%sizeof(uint32_t) == 0)
+    if (size%sizeof(uint32_t) == 0)
     {
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for(size_t i = 0; i < size; ++i, ++pa, ++pb ) {
+      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
         result += popcnt32(*pa ^ *pb);
       }
     }
@@ -165,4 +165,4 @@ struct Hamming
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_HAMMING_H
+#endif // OPENMVG_MATCHING_METRIC_HAMMING_HPP

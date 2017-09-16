@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,8 +8,10 @@
 
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
+#include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching/metric.hpp"
+#include "openMVG/matching/metric_hamming.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -33,17 +36,13 @@ bool Matcher_Regions_Database::Match
   matching::IndMatches & matches // photometric corresponding points
 )const
 {
-  if (query_regions.RegionCount() == 0)
+  if (query_regions.RegionCount() == 0 || ! matching_interface_)
   {
     return false;
   }
 
-  if (matching_interface_)
-  {
-    matching_interface_->Match(dist_ratio, query_regions, matches);
-    return true;
-  }
-  return false;
+  matching_interface_->Match(dist_ratio, query_regions, matches);
+  return true;
 }
 
 Matcher_Regions_Database::Matcher_Regions_Database():
@@ -74,22 +73,22 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          typedef L2_Vectorized<unsigned char> MetricT;
-          typedef ArrayMatcherBruteForce<unsigned char, MetricT> MatcherT;
+          using MetricT = L2<unsigned char>;
+          using MatcherT = ArrayMatcherBruteForce<unsigned char, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case ANN_L2:
         {
-          typedef flann::L2<unsigned char> MetricT;
-          typedef ArrayMatcher_Kdtree_Flann<unsigned char, MetricT> MatcherT;
+          using MetricT = flann::L2<unsigned char>;
+          using MatcherT = ArrayMatcher_Kdtree_Flann<unsigned char, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case CASCADE_HASHING_L2:
         {
-          typedef L2_Vectorized<unsigned char> MetricT;
-          typedef ArrayMatcherCascadeHashing<unsigned char, MetricT> MatcherT;
+          using MetricT = L2<unsigned char>;
+          using MatcherT = ArrayMatcherCascadeHashing<unsigned char, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
@@ -104,22 +103,22 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          typedef L2_Vectorized<float> MetricT;
-          typedef ArrayMatcherBruteForce<float, MetricT> MatcherT;
+          using MetricT = L2<float>;
+          using MatcherT = ArrayMatcherBruteForce<float, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case ANN_L2:
         {
-          typedef flann::L2<float> MetricT;
-          typedef ArrayMatcher_Kdtree_Flann<float, MetricT> MatcherT;
+          using MetricT = flann::L2<float>;
+          using MatcherT = ArrayMatcher_Kdtree_Flann<float, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case CASCADE_HASHING_L2:
         {
-          typedef L2_Vectorized<float> MetricT;
-          typedef ArrayMatcherCascadeHashing<float, MetricT> MatcherT;
+          using MetricT = L2<float>;
+          using MatcherT = ArrayMatcherCascadeHashing<float, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
@@ -134,21 +133,21 @@ Matcher_Regions_Database::Matcher_Regions_Database
       {
         case BRUTE_FORCE_L2:
         {
-          typedef L2_Vectorized<double> MetricT;
-          typedef ArrayMatcherBruteForce<double, MetricT> MatcherT;
+          using MetricT = L2<double>;
+          using MatcherT = ArrayMatcherBruteForce<double, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case ANN_L2:
         {
-          typedef flann::L2<double> MetricT;
-          typedef ArrayMatcher_Kdtree_Flann<double, MetricT> MatcherT;
+          using MetricT = flann::L2<double>;
+          using MatcherT = ArrayMatcher_Kdtree_Flann<double, MetricT>;
           matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, true));
         }
         break;
         case CASCADE_HASHING_L2:
         {
-          std::cerr << "Not yet implemented" << std::endl;
+          std::cerr << "Not implemented" << std::endl;
         }
         break;
         default:
@@ -162,8 +161,8 @@ Matcher_Regions_Database::Matcher_Regions_Database
     {
       case BRUTE_FORCE_HAMMING:
       {
-        typedef Hamming<unsigned char> Metric;
-        typedef ArrayMatcherBruteForce<unsigned char, Metric> MatcherT;
+        using MetricT = Hamming<unsigned char>;
+        using MatcherT = ArrayMatcherBruteForce<unsigned char, MetricT>;
         matching_interface_.reset(new matching::RegionsMatcherT<MatcherT>(database_regions, false));
       }
       break;

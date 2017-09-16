@@ -1,16 +1,16 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_LM_H_
-#define OPENMVG_NUMERIC_LM_H_
+#ifndef OPENMVG_NUMERIC_LM_HPP
+#define OPENMVG_NUMERIC_LM_HPP
 
-#include "openMVG/numeric/numeric.h"
 // Levenberg Marquardt Non Linear Optimization
-#include <unsupported/Eigen/NonLinearOptimization>
-#include <unsupported/Eigen/NumericalDiff>
+#include <Eigen/Core>
 
 namespace openMVG
 {
@@ -25,19 +25,19 @@ using namespace Eigen;
 template<typename _Scalar, int NX = Dynamic, int NY = Dynamic>
 struct Functor
 {
-  typedef _Scalar Scalar;
+  using Scalar = _Scalar;
   enum
   {
     InputsAtCompileTime = NX,
     ValuesAtCompileTime = NY
   };
-  typedef Matrix<Scalar, InputsAtCompileTime, 1> InputType;
-  typedef Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
-  typedef Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> JacobianType;
+  using InputType = Matrix<Scalar, InputsAtCompileTime, 1>;
+  using ValueType = Matrix<Scalar, ValuesAtCompileTime, 1>;
+  using JacobianType = Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime>;
 
 
   /// Number of values per sample
-  const int m_inputs ;
+  const int m_inputs;
 
   // Number of sample
   const int m_values;
@@ -83,4 +83,4 @@ struct Functor
 
 }; // namespace openMVG
 
-#endif // OPENMVG_NUMERIC_LM_H_
+#endif // OPENMVG_NUMERIC_LM_HPP

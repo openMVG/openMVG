@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2014 Pierre MOULON.
 
@@ -5,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_IO_H
-#define OPENMVG_CAMERA_IO_H
+#ifndef OPENMVG_CAMERAS_CAMERA_IO_HPP
+#define OPENMVG_CAMERAS_CAMERA_IO_HPP
+
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 #include "openMVG/cameras/PinholeCamera.hpp"
-
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-
-#include <iostream>
-#include <fstream>
 
 namespace openMVG
 {
@@ -100,4 +102,4 @@ static bool load(
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERA_IO_H
+#endif // OPENMVG_CAMERAS_CAMERA_IO_HPP

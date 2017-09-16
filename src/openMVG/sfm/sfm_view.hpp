@@ -1,17 +1,19 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_VIEW_HPP
-#define OPENMVG_SFM_VIEW_HPP
+#ifndef OPENMVG_SFM_SFM_VIEW_HPP
+#define OPENMVG_SFM_SFM_VIEW_HPP
+
+#include <string>
 
 #include "openMVG/types.hpp"
 
-
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include <cereal/cereal.hpp> // Serialization
 
 namespace openMVG {
 namespace sfm {
@@ -42,28 +44,27 @@ struct View
     id_pose(pose_id), ui_width(width), ui_height(height)
     {}
 
-  // Serialization
+  virtual ~View() = default;
+
+  /**
+  * Serialization out
+  * @param ar Archive
+  */
   template <class Archive>
-  void serialize( Archive & ar )
-  {
-    //Define a view with two string (base_path & basename)
-    std::string local_path = stlplus::folder_append_separator(
-      stlplus::folder_part(s_Img_path));
-    std::string filename = stlplus::filename_part(s_Img_path);
+  void save( Archive & ar ) const;
 
-    ar(cereal::make_nvp("local_path", local_path),
-       cereal::make_nvp("filename", filename),
-       cereal::make_nvp("width", ui_width),
-       cereal::make_nvp("height", ui_height),
-       cereal::make_nvp("id_view", id_view),
-       cereal::make_nvp("id_intrinsic", id_intrinsic),
-       cereal::make_nvp("id_pose", id_pose));
-
-    s_Img_path = stlplus::create_filespec(local_path, filename);
-  }
+  /**
+  * @brief Serialization in
+  * @param ar Archive
+  */
+  template <class Archive>
+  void load( Archive & ar );
 };
+
+/// Define a collection of View
+using Views = Hash_Map<IndexT, std::shared_ptr<View> >;
 
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_VIEW_HPP
+#endif // OPENMVG_SFM_SFM_VIEW_HPP

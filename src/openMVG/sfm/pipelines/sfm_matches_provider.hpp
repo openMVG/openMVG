@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,12 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_MATCHES_PROVIDER_HPP
-#define OPENMVG_SFM_MATCHES_PROVIDER_HPP
+#ifndef OPENMVG_SFM_SFM_MATCHES_PROVIDER_HPP
+#define OPENMVG_SFM_SFM_MATCHES_PROVIDER_HPP
 
-#include <openMVG/types.hpp>
+#include <string>
+
 #include "openMVG/matching/indMatch.hpp"
-#include <openMVG/matching/indMatch_utils.hpp>
+#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -19,6 +23,8 @@ namespace sfm {
 struct Matches_Provider
 {
   matching::PairWiseMatches pairWise_matches_;
+
+  virtual ~Matches_Provider() = default;
 
   // Load matches from the provided matches file
   virtual bool load(const SfM_Data & sfm_data, const std::string & matchesfile)
@@ -60,4 +66,4 @@ struct Matches_Provider
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_MATCHES_PROVIDER_HPP
+#endif // OPENMVG_SFM_SFM_MATCHES_PROVIDER_HPP

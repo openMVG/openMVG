@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2016 Pierre MOULON.
 
@@ -5,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
-#define OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
+#ifndef OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP
+#define OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP
 
-#include <vector>
 #include <numeric>
+#include <vector>
 
 namespace openMVG  {
 
@@ -55,7 +56,7 @@ struct UnionFind
   // Return the number of nodes that have been initialized in the UF tree
   unsigned int GetNumNodes() const
   {
-    return m_cc_size.size();
+    return static_cast<unsigned int>(m_cc_size.size());
   }
 
   // Return the representative set id of I nth component
@@ -79,7 +80,7 @@ struct UnionFind
   {
     i = Find(i);
     j = Find(j);
-    if (i==j)
+    if (i == j)
     { // Already in the same set. Nothing to do
       return;
     }
@@ -96,7 +97,7 @@ struct UnionFind
     {
       m_cc_parent[j] = i;
       m_cc_size[i] += m_cc_size[j];
-      if (m_cc_rank[i] > m_cc_rank[j])
+      if (m_cc_rank[i] == m_cc_rank[j])
         ++m_cc_rank[i];
     }
   }
@@ -104,4 +105,4 @@ struct UnionFind
 
 } // namespace openMVG
 
-#endif // OPENMVG_UNION_FIND_DISJOINT_SET_HPP_
+#endif // OPENMVG_TRACKS_UNION_FIND_DISJOINT_SET_HPP

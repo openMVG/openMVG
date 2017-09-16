@@ -1,20 +1,21 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013 Pierre Moulon, Bruno Duisit.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef PARSE_DATABASE_HPP
-#define PARSE_DATABASE_HPP
-
-#include "openMVG/stl/split.hpp"
-#include "datasheet.hpp"
+#ifndef OPENMVG_EXIF_SENSOR_WIDTH_PARSE_DATABASE_HPP
+#define OPENMVG_EXIF_SENSOR_WIDTH_PARSE_DATABASE_HPP
 
 #include <algorithm>
 #include <fstream>
-#include <vector>
 #include <string>
+#include <vector>
 
+#include "datasheet.hpp"
+#include "openMVG/stl/split.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 // Parse the database
@@ -73,4 +74,4 @@ bool getInfo
   return existInDatabase;
 }
 
-#endif // PARSE_DATABASE_HPP
+#endif // OPENMVG_EXIF_SENSOR_WIDTH_PARSE_DATABASE_HPP

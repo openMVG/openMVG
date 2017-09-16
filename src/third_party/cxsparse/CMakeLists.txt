@@ -1,34 +1,32 @@
 
 # Author: TheFrenchLeaf https://github.com/TheFrenchLeaf
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+cmake_minimum_required(VERSION 2.6)
 
-PROJECT(CXSparse C)
+project(CXSparse C)
 
-INCLUDE_DIRECTORIES(./
-./Include)
-
-FILE(GLOB CXSparse_SRCS "Source/*.c")
+file(GLOB CXSparse_SRCS "Source/*.c")
 set_source_files_properties(${CXSparse_SRCS} PROPERTIES LANGUAGE C)
-add_definitions(-DNCOMPLEX)
 
-ADD_LIBRARY(cxsparse STATIC ${CXSparse_SRCS})
+add_library(cxsparse STATIC ${CXSparse_SRCS})
+target_compile_definitions(cxsparse PUBLIC NCOMPLEX)
+target_include_directories(cxsparse PRIVATE ./ ./Include)
 if(UNIX)
-  TARGET_LINK_LIBRARIES(cxsparse m)
-  SET_TARGET_PROPERTIES(cxsparse PROPERTIES COMPILE_FLAGS -fPIC)
-ENDIF(UNIX)
+  target_link_libraries(cxsparse m)
+  set_target_properties(cxsparse PROPERTIES COMPILE_FLAGS -fPIC)
+endif(UNIX)
 
-IF(CXSPARSE_INCLUDE_INSTALL_DIR)
-  SET(INCLUDE_INSTALL_DIR ${CXSPARSE_INCLUDE_INSTALL_DIR})
-ELSE()
-  SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/cxsparse")
-ENDIF()
+if(CXSPARSE_INCLUDE_INSTALL_DIR)
+  set(INCLUDE_INSTALL_DIR ${CXSPARSE_INCLUDE_INSTALL_DIR})
+else()
+  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/cxsparse")
+endif()
 
-INSTALL(
+install(
   DIRECTORY ./Include
   DESTINATION ${INCLUDE_INSTALL_DIR}
   COMPONENT headers
   FILES_MATCHING PATTERN "*.h"
 )
-INSTALL(TARGETS cxsparse DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS cxsparse DESTINATION lib EXPORT openMVG-targets)
 

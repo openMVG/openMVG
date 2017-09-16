@@ -1,30 +1,37 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/exif/exif_IO_EasyExif.hpp"
-
 #include "openMVG/exif/sensor_width_database/ParseDatabase.hpp"
-
-#include "openMVG/image/image.hpp"
-#include "openMVG/stl/split.hpp"
-
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/geodesy/geodesy.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_utils.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
 #include <memory>
 #include <string>
-#include <vector>
+#include <utility>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::exif;
+using namespace openMVG::geodesy;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
@@ -54,6 +61,72 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
   return true;
 }
 
+std::pair<bool, Vec3> checkGPS
+(
+  const std::string & filename,
+  const int & GPS_to_XYZ_method = 0
+)
+{
+  std::pair<bool, Vec3> val(false, Vec3::Zero());
+  std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
+  if (exifReader)
+  {
+    // Try to parse EXIF metada & check existence of EXIF data
+    if ( exifReader->open( filename ) && exifReader->doesHaveExifInfo() )
+    {
+      // Check existence of GPS coordinates
+      double latitude, longitude, altitude;
+      if ( exifReader->GPSLatitude( &latitude ) &&
+           exifReader->GPSLongitude( &longitude ) &&
+           exifReader->GPSAltitude( &altitude ) )
+      {
+        // Add ECEF or UTM XYZ position to the GPS position array
+        val.first = true;
+        switch (GPS_to_XYZ_method)
+        {
+          case 1:
+            val.second = lla_to_utm( latitude, longitude, altitude );
+            break;
+          case 0:
+          default:
+            val.second = lla_to_ecef( latitude, longitude, altitude );
+            break;
+        }
+      }
+    }
+  }
+  return val;
+}
+
+
+/// Check string of prior weights
+std::pair<bool, Vec3> checkPriorWeightsString
+(
+  const std::string &sWeights
+)
+{
+  std::pair<bool, Vec3> val(true, Vec3::Zero());
+  std::vector<std::string> vec_str;
+  stl::split(sWeights, ';', vec_str);
+  if (vec_str.size() != 3)
+  {
+    std::cerr << "\n Missing ';' character in prior weights" << std::endl;
+    val.first = false;
+  }
+  // Check that all weight values are valid numbers
+  for (size_t i = 0; i < vec_str.size(); ++i)
+  {
+    double readvalue = 0.0;
+    std::stringstream ss;
+    ss.str(vec_str[i]);
+    if (! (ss >> readvalue) )  {
+      std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
+      val.first = false;
+    }
+    val.second[i] = readvalue;
+  }
+  return val;
+}
 //
 // Create the description of an input image dataset for OpenMVG toolsuite
 // - Export a SfM_Data file with View & Intrinsic data
@@ -67,9 +140,14 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
+  std::string sPriorWeights;
+  std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
+
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   bool b_Group_camera_model = true;
+
+  int i_GPS_XYZ_method = 0;
 
   double focal_pixels = -1.0;
 
@@ -80,11 +158,14 @@ int main(int argc, char **argv)
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
+  cmd.add( make_switch('P', "use_pose_prior") );
+  cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
+  cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
@@ -100,6 +181,12 @@ int main(int argc, char **argv)
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
+      << "\n"
+      << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
+      << "[-W|--prior_weigths] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
+      << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
+      << "\t 0: ECEF (default)\n"
+      << "\t 1: UTM\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -167,6 +254,16 @@ int main(int argc, char **argv)
     }
   }
 
+  // Check if prior weights are given
+  if (cmd.used('P') && !sPriorWeights.empty())
+  {
+    prior_w_info = checkPriorWeightsString(sPriorWeights);
+  }
+  else if (cmd.used('P'))
+  {
+    prior_w_info.first = true;
+  }
+
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
   std::sort(vec_image.begin(), vec_image.end());
 
@@ -197,7 +294,7 @@ int main(int argc, char **argv)
       continue; // image cannot be opened
     }
 
-    if(sImFilenamePart.find("mask.png") != std::string::npos
+    if (sImFilenamePart.find("mask.png") != std::string::npos
        || sImFilenamePart.find("_mask.png") != std::string::npos)
     {
       error_report_stream
@@ -265,12 +362,12 @@ int main(int argc, char **argv)
     }
 
     // Build intrinsic parameter related to the view
-    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
+    std::shared_ptr<IntrinsicBase> intrinsic;
 
     if (focal > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
       // Create the desired camera type
-      switch(e_User_camera_model)
+      switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>
@@ -299,23 +396,55 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    View v(*iter_image, views.size(), views.size(), views.size(), width, height);
-
-    // Add intrinsic related to the image (if any)
-    if (intrinsic == NULL)
+    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename, i_GPS_XYZ_method);
+    if (gps_info.first && cmd.used('P'))
     {
-      //Since the view have invalid intrinsic data
-      // (export the view, with an invalid intrinsic field value)
-      v.id_intrinsic = UndefinedIndexT;
+      ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
+
+      // Add intrinsic related to the image (if any)
+      if (intrinsic == nullptr)
+      {
+        //Since the view have invalid intrinsic data
+        // (export the view, with an invalid intrinsic field value)
+        v.id_intrinsic = UndefinedIndexT;
+      }
+      else
+      {
+        // Add the defined intrinsic to the sfm_container
+        intrinsics[v.id_intrinsic] = intrinsic;
+      }
+
+      v.b_use_pose_center_ = true;
+      v.pose_center_ = gps_info.second;
+      // prior weights
+      if (prior_w_info.first == true)
+      {
+        v.center_weight_ = prior_w_info.second;
+      }
+
+      // Add the view to the sfm_container
+      views[v.id_view] = std::make_shared<ViewPriors>(v);
     }
     else
     {
-      // Add the defined intrinsic to the sfm_container
-      intrinsics[v.id_intrinsic] = intrinsic;
-    }
+      View v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
-    // Add the view to the sfm_container
-    views[v.id_view] = std::make_shared<View>(v);
+      // Add intrinsic related to the image (if any)
+      if (intrinsic == nullptr)
+      {
+        //Since the view have invalid intrinsic data
+        // (export the view, with an invalid intrinsic field value)
+        v.id_intrinsic = UndefinedIndexT;
+      }
+      else
+      {
+        // Add the defined intrinsic to the sfm_container
+        intrinsics[v.id_intrinsic] = intrinsic;
+      }
+
+      // Add the view to the sfm_container
+      views[v.id_view] = std::make_shared<View>(v);
+    }
   }
 
   // Display saved warning & error messages if any.
@@ -344,7 +473,8 @@ int main(int argc, char **argv)
   std::cout << std::endl
     << "SfMInit_ImageListing report:\n"
     << "listed #File(s): " << vec_image.size() << "\n"
-    << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << std::endl;
+    << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << "\n"
+    << "usable #Intrinsic(s) listed in sfm_data: " << sfm_data.GetIntrinsics().size() << std::endl;
 
   return EXIT_SUCCESS;
 }

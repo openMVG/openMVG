@@ -1,0 +1,216 @@
+<!-- 
+  Copyright (c) 2016 Romuald PERROT.
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title> openMVG WebGL viewer</title>
+    
+    <!-- Style -->
+    <link rel="stylesheet" type="text/css" href="style/style.css">
+
+    <!-- Common files -->
+    <script type="text/javascript" src="common/camera.js"> </script>
+    <script type="text/javascript" src="common/camera_gizmo.js"> </script>
+    <script type="text/javascript" src="common/common.js"> </script>
+    <script type="text/javascript" src="common/dual_quaternion.js"> </script>
+    <script type="text/javascript" src="common/matrix3.js"> </script>
+    <script type="text/javascript" src="common/matrix4.js"> </script>
+    <script type="text/javascript" src="common/plane.js"> </script>
+    <script type="text/javascript" src="common/point_cloud.js"> </script>
+    <script type="text/javascript" src="common/quaternion.js"> </script>
+    <script type="text/javascript" src="common/render_context.js"> </script>
+    <script type="text/javascript" src="common/shader.js"> </script>
+    <script type="text/javascript" src="common/trackball.js"> </script>
+    <script type="text/javascript" src="common/vector.js"> </script>
+
+    <!-- Main entry point -->
+    <script type="text/javascript" src="common/main.js"> </script>
+    
+    <!-- Scene dependent files -->
+    <script type="text/javascript" src="model/model.js"> </script>
+
+    <!-- Shaders -->
+    <!-- line shaders -->
+    <script id="line_v_shad" type="x-shader/x-vertex"> 
+    uniform mat4 uModelViewProjMat; 
+
+    attribute vec3 inNor;
+    attribute vec3 inPos;
+    attribute vec3 inCol;
+
+    varying vec4 vColor;
+
+    void main( )
+    {
+      gl_Position = uModelViewProjMat * vec4( inPos , 1.0 );
+      vColor = vec4( inCol , 1.0 );
+    }
+    </script>
+    <script id="line_f_shad" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 vColor;
+
+    void main( )
+    {
+      gl_FragColor = vColor;
+    }
+    </script>
+    <!-- Point shader -->
+    <script id="point_v_shad" type="x-shader/x-vertex">
+    uniform mat4 uModelViewMat; 
+    uniform mat4 uModelViewProjMat; 
+    uniform mat4 uProjMat;
+    uniform mat4 uNormalMat; 
+
+    uniform vec3 uCamPos; 
+    uniform float uPointSize; // Radius of the splat
+    uniform float uFov; // The current fov 
+    uniform int uScreenSize[2]; // (width,height)
+    uniform float uProjFactor; // Precomputation of : float( uScreenSize[1] ) / ( 2.0 * tan( uFov / 2.0 ) ); 
+
+    uniform bool uUseBackfaceCulling; 
+    uniform bool uUsePerspectiveSizeCorrection; 
+
+    attribute vec3 inNor;
+    attribute vec3 inPos;
+    attribute vec3 inCol;
+
+    varying vec4 vPos; 
+    varying vec4 vColor;
+    varying vec3 vNormal; 
+    varying float vRadius; 
+
+    void main( )
+    {
+      /* Normal and position in eye space */
+       vec4 n = uNormalMat * vec4( inNor , 1.0 ); 
+       vPos = uModelViewMat * vec4( inPos , 1.0 ); 
+       
+       /* Compute projection depth value */
+       /* @see High-Quality Point-Based Rendering Using Fast Single-Pass Interpolation */
+       //float projFactor = float( uScreenSize[1] ) / ( 2.0 * tan( uFov / 2.0 ) ); 
+       float projFactor = uProjFactor / - vPos.z; 
+
+      if (uUsePerspectiveSizeCorrection )
+      {
+        gl_PointSize = ( (uPointSize) * 2.0 / (- vPos.z) );
+      }
+      else 
+      {
+        gl_PointSize = uPointSize * 2.0;
+      }
+
+      vColor = vec4( inCol , 1.0 );
+      vNormal = n.xyz; 
+
+      /* Backface culling */
+      if (uUseBackfaceCulling )
+      {
+        if (dot( normalize( vPos.xyz ) , normalize( n.xyz ) ) > 0.0 )
+        {
+          gl_Position = uProjMat * vPos; 
+        }
+      }
+      else 
+      {
+        gl_Position = uProjMat * vPos;
+      }
+
+      vRadius = gl_PointSize / projFactor; 
+    }
+    </script>
+    <script id="point_f_shad" type="x-shader/x-fragment">
+    #extension GL_EXT_frag_depth : enable
+    precision highp float;
+
+    varying vec4 vPos; 
+    varying vec4 vColor;
+    varying vec3 vNormal;
+    varying float vRadius; 
+
+    uniform mat4 uProjMat;
+
+    void main( )
+    {
+      vec2 pt = ( gl_PointCoord * 2.0 ) - vec2(1.0);
+      vec3 n = normalize( vNormal ); 
+
+      /* Compute paraboloid weight */
+      float w1 = dot( pt , pt ); // pt.x * pt.x + pt.y * pt.y;
+      float w = 1.0 - ( w1 ); 
+      /* Update depth */
+      vec4 pos = vPos;
+      pos.z += w * vRadius; 
+      pos = uProjMat * pos; 
+      pos /= pos.w; 
+
+      float dz = n.x / n.z * pt.x - n.y / n.z * pt.y; 
+
+      if (w1 + dz * dz > 1.0 )
+        discard;
+      gl_FragColor = vColor;
+      gl_FragDepthEXT = ( pos.z + 1.0 ) / 2.0;  
+    }
+    </script>
+
+  </head>
+
+  <body onload="init()">
+    <h1 id="title">openMVG WebGL viewer</h1>
+
+    <div id="container">
+
+      <div id="divOptions">
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>General Options</p></div>
+          <div class="button active" id="divShowCam">Show cameras</div>
+          <div class="button active" id="divShowPCloud">Show point cloud</div>
+          <div class="button active" id="divShowTrackball">Show trackball</div>
+          <div class="button active" id="divResetButton">Reset View</div>
+          <div class="divOptionFooter"></div>
+        </div>
+
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>Camera Options</p></div>
+          <div>
+            <label for="cameraScaleSlider">Scale</label>
+            <div class="enclosingRangeDiv">
+              <input id="cameraScaleSlider" type="range" min="0.1" max="5" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="divOptionFooter"></div>
+        </div>
+      
+        <div class="divOptionBloc">
+          <div class="divOptionHeader"><p>Point cloud Options</p></div>
+          <div>
+            <label for="pointSizeSlider">Size</label>
+            <div class="enclosingRangeDiv">
+              <input id="pointSizeSlider" type="range" min="0.1" max="20" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="button active" id="divViewDependendPointSizeBtn">View dependent size</div>
+          <div class="button active" id="divBackFaceCullingButton">Backface Culling</div>
+          <div class="divOptionFooter"></div>       
+        </div>
+      </div>
+
+      <div id="divViewer">
+        <canvas id="viewerCanvas" width="0" height="0"> </canvas>
+      </div>
+      
+      <div id="divHelp">
+        Help
+        <div class="center"> Drag : Rotate </div>
+        <div class="center"> Shift + Drag (Up/Down) : Zoom </div>
+        <div class="center"> Alt + Drag : Pan </div>
+      </div>
+    </div>
+  </body>
+</html>

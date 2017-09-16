@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -19,16 +20,18 @@
 
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
 #include "openMVG/sfm/sfm.hpp"
-using namespace openMVG;
-using namespace openMVG::cameras;
-using namespace openMVG::geometry;
-using namespace openMVG::sfm;
 
 #include "testing/testing.h"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::geometry;
+using namespace openMVG::sfm;
+
 
 // Test a scene where all the camera intrinsics are known
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
@@ -74,7 +77,7 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
   std::advance(iter_view_1, 1);
   sfmEngine.setInitialPair(
-    Pair(iter_view_0->second.get()->id_view, iter_view_1->second.get()->id_view));
+    Pair(iter_view_0->second->id_view, iter_view_1->second->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -101,14 +104,14 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   SfM_Data sfm_data_2 = sfm_data;
   sfm_data_2.poses.clear();
   sfm_data_2.structure.clear();
-  // Only the first two views will have valid intrinsics
+  // Only the first three views will have valid intrinsics
   // Remaining one will have undefined intrinsics
   for (Views::iterator iterV = sfm_data_2.views.begin();
     iterV != sfm_data_2.views.end(); ++iterV)
   {
-    if (std::distance(sfm_data_2.views.begin(),iterV) >1)
+    if (std::distance(sfm_data_2.views.begin(),iterV) > 2)
     {
-      iterV->second.get()->id_intrinsic = UndefinedIndexT;
+      iterV->second->id_intrinsic = UndefinedIndexT;
     }
   }
 
@@ -135,18 +138,18 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Will use view ids (0,1) as the initial pair
+  // Will use view ids (0,2) as the initial pair
   Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
-  Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
-  std::advance(iter_view_1, 1);
-  sfmEngine.setInitialPair(Pair(iter_view_0->second.get()->id_view,
-    iter_view_1->second.get()->id_view));
+  Views::const_iterator iter_view_2 = sfm_data_2.GetViews().begin();
+  std::advance(iter_view_2, 2);
+  sfmEngine.setInitialPair(Pair(iter_view_0->second->id_view,
+    iter_view_2->second->id_view));
 
   EXPECT_TRUE (sfmEngine.Process());
 
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
-  EXPECT_TRUE( dResidual < 0.5);
+  EXPECT_TRUE( dResidual < 0.55);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));

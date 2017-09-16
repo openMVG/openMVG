@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -9,7 +10,7 @@
 #include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.h"
 
 #include "testing/testing.h"
 
@@ -20,12 +21,11 @@ static const double dExpectedPrecision = 1e-9;
 
 template<typename Kernel>
 void EvalInlier(const Kernel & kernel, const typename Kernel::Model & model,
-   double dThreshold, std::vector<size_t> * vec_inliers)
+   double dThreshold, std::vector<uint32_t> * vec_inliers)
 {
   ScorerEvaluator<Kernel> scorer(dThreshold);
-  std::vector<size_t> vec_index(kernel.NumSamples());
-  for (size_t i = 0; i < kernel.NumSamples(); ++i)
-    vec_index[i] = i;
+  std::vector<uint32_t> vec_index(kernel.NumSamples());
+  std::iota(vec_index.begin(), vec_index.end(), 0);
 
   scorer.Score(kernel, model, vec_index, &(*vec_inliers));
 }
@@ -51,7 +51,7 @@ TEST(LMedsLineFitter, OutlierFree) {
   EXPECT_NEAR(0.0, dBestMedian, dExpectedPrecision);
   EXPECT_NEAR(0.0, dThreshold, dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   EvalInlier(kernel, model, dExpectedPrecision, &vec_inliers);
   CHECK_EQUAL(5, vec_inliers.size());
 }
@@ -74,7 +74,7 @@ TEST(LMedsLineFitter, OneOutlier) {
   EXPECT_NEAR(0.0, dBestMedian, dExpectedPrecision);
   EXPECT_NEAR(0.0, dThreshold, dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   EvalInlier(kernel, model, dExpectedPrecision, &vec_inliers);
   CHECK_EQUAL(5, vec_inliers.size());
 }
@@ -110,31 +110,30 @@ TEST(LMedsLineFitter, RealisticCase) {
   GTModel <<  -2.0, 6.3;
 
   //-- Build the point list according the given model
-  for(int i = 0; i < NbPoints; ++i)  {
+  for (int i = 0; i < NbPoints; ++i)  {
     xy.col(i) << i, (double)i*GTModel[1] + GTModel[0];
   }
 
   //-- Add some noise (for the asked percentage amount)
-  int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
-  vector<size_t> vec_samples; // Fit with unique random index
-  UniformSample(nbPtToNoise, NbPoints, &vec_samples);
-  for(size_t i = 0; i <vec_samples.size(); ++i)
+  const int nbPtToNoise = (int) NbPoints*inlierPourcentAmount/100.0;
+  std::vector<uint32_t> vec_samples; // Fit with unique random index
+  UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
+  for (const auto index : vec_samples)
   {
-    const size_t randomIndex = vec_samples[i];
     //Additive random noise
-    xy.col(randomIndex) << xy.col(randomIndex)(0)+rand()%2-3,
-                           xy.col(randomIndex)(1)+rand()%8-6;
+    xy.col(index) << xy.col(index)(0)+rand()%2-3,
+                     xy.col(index)(1)+rand()%8-6;
   }
 
   LineKernel kernel(xy);
 
   Vec2 model;
   double dThreshold = std::numeric_limits<double>::infinity();
-  double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
+  const double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
   EXPECT_NEAR(-2.0, model[0], dExpectedPrecision);
   EXPECT_NEAR(6.3, model[1], dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   EvalInlier(kernel, model, dThreshold, &vec_inliers);
   EXPECT_TRUE(vec_inliers.size()>0);
   CHECK_EQUAL(NbPoints-nbPtToNoise, vec_inliers.size());

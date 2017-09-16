@@ -1,11 +1,15 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERAS_COMMON_HPP
-#define OPENMVG_CAMERAS_COMMON_HPP
+#ifndef OPENMVG_CAMERAS_CAMERA_COMMON_HPP
+#define OPENMVG_CAMERAS_CAMERA_COMMON_HPP
+
+#include <type_traits>
 
 namespace openMVG
 {
@@ -40,20 +44,9 @@ enum EINTRINSIC
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
   PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
-  PINHOLE_CAMERA_END
+  PINHOLE_CAMERA_END = 6,
+  CAMERA_SPHERICAL = PINHOLE_CAMERA_END + 1
 };
-
-
-/**
-* @brief Test if given intrinsic value is valid
-* @param eintrinsic Intrinsic value to test
-* @retval true if parameter is valid
-* @retval false if parameter is invalid
-*/
-static inline bool isValid( EINTRINSIC eintrinsic )
-{
-  return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
-}
 
 /**
 * @brief test if given intrinsic value corresponds to a pinhole
@@ -64,6 +57,22 @@ static inline bool isValid( EINTRINSIC eintrinsic )
 static inline bool isPinhole( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
+static inline bool isSpherical( EINTRINSIC eintrinsic )
+{
+  return eintrinsic == CAMERA_SPHERICAL;
+}
+
+/**
+* @brief Test if given intrinsic value is valid
+* @param eintrinsic Intrinsic value to test
+* @retval true if parameter is valid
+* @retval false if parameter is invalid
+*/
+static inline bool isValid( EINTRINSIC eintrinsic )
+{
+  return isPinhole(eintrinsic) || isSpherical(eintrinsic);
 }
 
 /**
@@ -93,17 +102,19 @@ inline constexpr Intrinsic_Parameter_Type
 operator|(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
-    (static_cast<int>(x) | static_cast<int>(y));
+    (static_cast<std::underlying_type<Intrinsic_Parameter_Type>::type>(x) |
+     static_cast<std::underlying_type<Intrinsic_Parameter_Type>::type>(y));
 }
 
 inline constexpr Intrinsic_Parameter_Type
 operator&(Intrinsic_Parameter_Type x, Intrinsic_Parameter_Type y)
 {
   return static_cast<Intrinsic_Parameter_Type>
-    (static_cast<int>(x) & static_cast<int>(y));
+    (static_cast<std::underlying_type<Intrinsic_Parameter_Type>::type>(x) &
+     static_cast<std::underlying_type<Intrinsic_Parameter_Type>::type>(y));
 }
 
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERAS_COMMON_HPP
+#endif // OPENMVG_CAMERAS_CAMERA_COMMON_HPP

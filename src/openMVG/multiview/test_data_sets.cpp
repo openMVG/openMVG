@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -26,12 +27,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cmath>
-#include <fstream>
-
+#include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
-#include "openMVG/multiview/test_data_sets.hpp"
+
+#include <cmath>
+#include <fstream>
 
 namespace openMVG {
 
@@ -114,19 +115,19 @@ void NViewDataSet::ExportToPLY(
      << std::endl << "end_header" << std::endl;
 
     //-- Export 3D point cloud
-    for(Mat3X::Index i = 0; i < _X.cols(); ++i) {
+    for (Mat3X::Index i = 0; i < _X.cols(); ++i) {
       // Exports the point position and point color
       outfile << _X.col(i).transpose()
         << " " << "255 255 255" << std::endl;
     }
 
     //-- Export 3D camera position t = -RC
-    for(size_t i = 0; i < _t.size(); ++i) {
+    for (size_t i = 0; i < _t.size(); ++i) {
       // Exports the camera position and camera color
       outfile << (-_R[i].transpose()*_t[i]).transpose()
         << " " << "0 255 0" << std::endl;
     }
-    for(size_t i = 0; i < _t.size(); ++i) {
+    for (size_t i = 0; i < _t.size(); ++i) {
       Vec3 test;
       test << 0, 0 , 0.4;
       // Exports the camera normal

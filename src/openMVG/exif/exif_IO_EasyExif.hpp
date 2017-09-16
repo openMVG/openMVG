@@ -1,18 +1,22 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013-2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EXIF_IO_EASYEXIF_HPP
-#define EXIF_IO_EASYEXIF_HPP
+#ifndef OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
+#define OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP
+
+#include <fstream>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "openMVG/exif/exif_IO.hpp"
 #include "third_party/easyexif/exif.h"
-
-#include <fstream>
-#include <sstream>
-#include <vector>
 
 namespace openMVG
 {
@@ -25,7 +29,7 @@ namespace exif
 */
 inline std::string trim_copy( const std::string& s )
 {
-  if( s.empty() )
+  if (s.empty() )
   {
     return s;
   }
@@ -57,7 +61,7 @@ class Exif_IO_EasyExif : public Exif_IO
     * @brief Constructor using a file
     * @param sFileName path of the image to analyze
     */
-    Exif_IO_EasyExif( const std::string & sFileName ): bHaveExifInfo_( false )
+    explicit Exif_IO_EasyExif( const std::string & sFileName ): bHaveExifInfo_( false )
     {
       open( sFileName );
     }
@@ -148,7 +152,7 @@ class Exif_IO_EasyExif : public Exif_IO
     }
 
     /**
-    * @brief Get an unique indentifier for this image
+    * @brief Get a unique indentifier for this image
     * @return Unique ID
     */
     std::string getImageUniqueID() const override
@@ -165,7 +169,6 @@ class Exif_IO_EasyExif : public Exif_IO
     {
       return bHaveExifInfo_;
     }
-
 
     /**
     * @brief Print all data
@@ -222,6 +225,49 @@ class Exif_IO_EasyExif : public Exif_IO
       return os.str();
     }
 
+        /**
+    * @brief Try to read and save the EXIF GPS latitude
+    * @return If GPS Latitude can be read & exported, return true
+    */
+    bool GPSLatitude(double * latitude) const override
+    {
+      if (exifInfo_.GeoLocation.Latitude != std::numeric_limits<double>::infinity())
+      {
+        (*latitude) = exifInfo_.GeoLocation.Latitude;
+        return true;
+      }
+      return false;
+    }
+
+    /**
+    * @brief Try to read and save the EXIF GPS longitude
+    * @return If GPS Longitude can be read & exported, return true
+    */
+    bool GPSLongitude(double * longitude) const override
+    {
+      if (exifInfo_.GeoLocation.Longitude != std::numeric_limits<double>::infinity())
+      {
+        (*longitude) = exifInfo_.GeoLocation.Longitude;
+        return true;
+      }
+      return false;
+    }
+
+   /**
+    * @brief Try to read and save the EXIF GPS altitude
+    * @return If GPS Altitude can be read & exported, return true
+    */
+    bool GPSAltitude(double * altitude) const  override
+    {
+      if (exifInfo_.GeoLocation.Altitude != std::numeric_limits<double>::infinity())
+      {
+        (*altitude) = exifInfo_.GeoLocation.Altitude;
+        return true;
+      }
+      return false;
+    }
+
+
   private:
 
     /// Internal data storing all exif data
@@ -234,4 +280,4 @@ class Exif_IO_EasyExif : public Exif_IO
 } // namespace exif
 } // namespace openMVG
 
-#endif //EXIF_IO_EASYEXIF_HPP
+#endif // OPENMVG_EXIF_EXIF_IO_EASYEXIF_HPP

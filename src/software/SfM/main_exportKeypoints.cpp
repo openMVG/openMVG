@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2015 Pierre MOULON.
 
@@ -5,27 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <cstdlib>
-#include <string>
-#include <vector>
 #include <fstream>
-#include <map>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
-using namespace openMVG::matching;
 using namespace openMVG::sfm;
-using namespace svg;
-
 
 int main(int argc, char ** argv)
 {
@@ -42,7 +40,7 @@ int main(int argc, char ** argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Export pairwise matches.\nUsage: " << argv[0] << "\n"
       << "[-i|--input_file file] path to a SfM_Data scene\n"
       << "[-d|--matchdir path]\n"
@@ -98,38 +96,26 @@ int main(int argc, char ** argv)
   stlplus::folder_create(sOutDir);
   std::cout << "\n Export extracted keypoints for all images" << std::endl;
   C_Progress_display my_progress_bar( sfm_data.views.size() );
-  for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
-        ++iterViews, ++my_progress_bar)
+  for (Views::const_iterator iterViews = sfm_data.views.begin();
+      iterViews != sfm_data.views.end();
+      ++iterViews, ++my_progress_bar)
   {
     const View * view = iterViews->second.get();
     const std::string sView_filename = stlplus::create_filespec(sfm_data.s_root_path,
       view->s_Img_path);
 
-    const std::pair<size_t, size_t>
-      dimImage = std::make_pair(view->ui_width, view->ui_height);
-
-    svgDrawer svgStream( dimImage.first, dimImage.second);
-    svgStream.drawImage(sView_filename,
-      dimImage.first,
-      dimImage.second);
-
-    //-- Draw features
-    const PointFeatures & features = feats_provider->getFeatures(view->id_view);
-    for (size_t i=0; i< features.size(); ++i)  {
-      const PointFeature & feature = features[i];
-      svgStream.drawCircle(feature.x(), feature.y(), 3,
-          svgStyle().stroke("yellow", 2.0));
-    }
-
-    // Write the SVG file
     std::ostringstream os;
     os << stlplus::folder_append_separator(sOutDir)
       << stlplus::basename_part(sView_filename)
-      << "_" << features.size() << "_.svg";
-    std::ofstream svgFile( os.str().c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+      << "_" << feats_provider->getFeatures(view->id_view).size() << "_.svg";
+
+    Features2SVG
+    (
+      sView_filename,
+      {view->ui_width, view->ui_height},
+      feats_provider->getFeatures(view->id_view),
+      os.str()
+    );
   }
   return EXIT_SUCCESS;
 }

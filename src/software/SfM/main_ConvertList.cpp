@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -43,7 +45,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-o|--outputDirectory]\n"
@@ -68,9 +70,6 @@ int main(int argc, char **argv)
             << "--outputDirectory " << sOutputDir << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
-
-  // Expected properties for each image
-  double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
 
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
@@ -127,12 +126,13 @@ int main(int argc, char **argv)
     iter != vec_camImageNames.end(); ++iter)
   {
     const openMVG::SfMIO::CameraInfo & camInfo = *iter;
-    // Find the index of the correponding cameraInfo
+    // Find the index of the corresponding cameraInfo
     const size_t idx = std::distance((std::vector<openMVG::SfMIO::CameraInfo>::const_iterator)vec_camImageNames.begin(), iter);
 
-    double width = height = ppx = ppy = focal = -1.0;
+    // Expected properties for each image
+    double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
 
-    std::shared_ptr<IntrinsicBase> intrinsic (NULL);
+    std::shared_ptr<IntrinsicBase> intrinsic;
 
     const openMVG::SfMIO::IntrinsicCameraInfo & camIntrinsic = vec_intrinsicGroups[camInfo.m_intrinsicId];
     width = camIntrinsic.m_w;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
       ppy = camIntrinsic.m_K(1,2);
       focal = camIntrinsic.m_focal;
       // Create the user defined camera model corresponding to the intrinsic loaded data
-      switch(e_User_camera_model)
+      switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>(width, height, focal, ppx, ppy);
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
     views[v.id_view] = std::make_shared<View>(v);
 
     // Add intrinsic related to the image (if any)
-    if (intrinsic == NULL)
+    if (intrinsic == nullptr)
     {
       //Since the view have invalid intrinsic data
       // (export the view, with an invalid intrinsic field value)
@@ -196,11 +196,11 @@ int main(int argc, char **argv)
 
   // Store SfM_Data views & intrinsic data
   if (Save(
-    sfm_data,
-    stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
-    ESfM_Data(VIEWS|INTRINSICS))
-    )
+      sfm_data,
+      stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
+      ESfM_Data(VIEWS|INTRINSICS)))
+  {
   return EXIT_SUCCESS;
-    else
+  }
   return EXIT_FAILURE;
 }

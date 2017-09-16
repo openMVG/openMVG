@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -26,15 +27,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
-
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_essential_five_point.hpp"
+#include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/numeric/numeric.h"
+
 #include "testing/testing.h"
 
-#include "openMVG/multiview/test_data_sets.hpp"
+#include <iostream>
 
 using namespace openMVG;
 
@@ -83,7 +84,7 @@ TestData SomeTestData() {
 
 TEST(FivePointsNullspaceBasis, SatisfyEpipolarConstraint) {
 
-  TestData d = SomeTestData();
+  const TestData d = SomeTestData();
 
   Mat E_basis = FivePointsNullspaceBasis(d.x1, d.x2);
 
@@ -186,8 +187,8 @@ TEST(o2, Evaluation) {
 ///
 #define EXPECT_ESSENTIAL_MATRIX_PROPERTIES(E, expectedPrecision) { \
   EXPECT_NEAR(0, E.determinant(), expectedPrecision); \
-  Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E; \
-  Mat3 zero3x3 = Mat3::Zero(); \
+  const Mat3 O = 2 * E * E.transpose() * E - (E * E.transpose()).trace() * E; \
+  const Mat3 zero3x3 = Mat3::Zero(); \
   EXPECT_MATRIX_NEAR(zero3x3, O, expectedPrecision);\
 }
 
@@ -195,9 +196,8 @@ TEST(FivePointsRelativePose, Random) {
 
   TestData d = SomeTestData();
 
-  vector<Mat3> Es;
-  vector<Mat3> Rs;
-  vector<Vec3> ts;
+  std::vector<Mat3> Es, Rs;
+  std::vector<Vec3> ts;
   FivePointsRelativePose(d.x1, d.x2, &Es);
 
   // Recover rotation and translation from E
@@ -235,14 +235,14 @@ TEST(FivePointsRelativePose, test_data_sets) {
 
   //-- Setup a circular camera rig and assert that 5PT relative pose works.
   const int iNviews = 5;
-  NViewDataSet d = NRealisticCamerasRing(iNviews, 5,
+  const NViewDataSet d = NRealisticCamerasRing(iNviews, 5,
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
   // Compute pose [R|t] from 0 to [1;..;iNviews]
-  for(int i=1; i <iNviews; ++i)
+  for (int i=1; i <iNviews; ++i)
   {
-    vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    vector<Vec3> ts;      // Translation matrix.
+    std::vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
+    std::vector<Vec3> ts;      // Translation matrix.
     FivePointsRelativePose(d._x[0], d._x[i], &Es);
 
     // Recover rotation and translation from E.
@@ -262,7 +262,7 @@ TEST(FivePointsRelativePose, test_data_sets) {
     }
     //-- Compute Ground Truth motion
     Mat3 R;
-    Vec3 t, t0 = Vec3::Zero(), t1 = Vec3::Zero();
+    Vec3 t;
     RelativeCameraMotion(d._R[0], d._t[0], d._R[i], d._t[i], &R, &t);
 
     // Assert that found relative motion is correct for almost one model.

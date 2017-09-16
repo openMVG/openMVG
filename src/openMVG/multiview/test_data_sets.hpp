@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -26,26 +27,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_TEST_DATA_SETS_H_
-#define OPENMVG_MULTIVIEW_TEST_DATA_SETS_H_
+#ifndef OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
+#define OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
 
-#include "openMVG/numeric/numeric.h"
+#include <string>
 #include <vector>
 
-namespace openMVG {
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
-using namespace std;
+namespace openMVG {
 
 // A N-view metric dataset.
 // All points are seen by all cameras.
 struct NViewDataSet {
-  vector<Mat3> _K;   // Internal parameters (fx, fy, etc).
-  vector<Mat3> _R;   // Rotation.
-  vector<Vec3> _t;   // Translation.
-  vector<Vec3> _C;   // Camera centers.
+  std::vector<Mat3> _K;   // Internal parameters (fx, fy, etc).
+  std::vector<Mat3> _R;   // Rotation.
+  std::vector<Vec3> _t;   // Translation.
+  std::vector<Vec3> _C;   // Camera centers.
   Mat3X _X;          // 3D points.
-  vector<Mat2X> _x;  // Projected points; may have noise added.
-  vector<Vecu>  _x_ids;// Indexes of points corresponding to the projections
+  std::vector<Mat2X> _x;  // Projected points; may have noise added.
+  std::vector<Vecu>  _x_ids;// Indexes of points corresponding to the projections
 
   size_t _n;  // Actual number of cameras.
 
@@ -83,4 +84,4 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
 
 } // namespace openMVG
 
-#endif  // OPENMVG_MULTIVIEW_TEST_DATA_SETS_H_
+#endif  // OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP

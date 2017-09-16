@@ -17,21 +17,21 @@ if(!APPLE)
   add_definitions(-DGLFW_NO_GLU)
 endif()
 
-FIND_FILE(GL3HEADER gl3.h)
+find_file(GL3HEADER gl3.h)
 if(NOT ${GL3HEADER} MATCHES NOTFOUND)
-add_definitions(-DGLFW_INCLUDE_GL3)
+  add_definitions(-DGLFW_INCLUDE_GL3)
 endif()
 
-INCLUDE_DIRECTORIES(
+include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-SET(SOURCES
+set(SOURCES
   main.cpp
 )
 
-ADD_EXECUTABLE(openMVG_main_sfmViewer ${SOURCES} )
-TARGET_LINK_LIBRARIES(openMVG_main_sfmViewer
+add_executable(openMVG_main_sfmViewer ${SOURCES} )
+target_link_libraries(openMVG_main_sfmViewer
   openMVG_image
   openMVG_features
   openMVG_multiview
@@ -40,5 +40,5 @@ TARGET_LINK_LIBRARIES(openMVG_main_sfmViewer
   glfw
   ${GLFW_LIBRARIES})
 
-SET_PROPERTY(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)
-INSTALL(TARGETS openMVG_main_sfmViewer DESTINATION bin/)
+set_property(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_sfmViewer DESTINATION bin/)

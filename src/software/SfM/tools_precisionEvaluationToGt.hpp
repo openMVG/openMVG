@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -48,8 +49,9 @@ bool computeSimilarity(
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
   std::vector<double> vec_residualErrors(vec_camPosGT.size());
-  for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-    Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
+  for (size_t i = 0; i  < vec_camPosGT.size(); ++i)
+  {
+    const Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
     vec_camPosComputed_T[i] = newPos;
     const double dResidual = (newPos - vec_camPosGT[i]).norm();
     vec_residualErrors[i] = dResidual;
@@ -90,7 +92,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
       << " 255 255 0" << "\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }

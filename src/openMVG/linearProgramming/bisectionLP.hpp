@@ -1,16 +1,19 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
-#define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
+#ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
+#define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include <iostream>
 #include <iterator>
 #include <vector>
+
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -40,14 +43,14 @@ bool BisectionLP(
   {
     ++k; // One more iteration
 
-    double gamma = (gammaLow + gammaUp) / 2.0;
+    const double gamma = (gammaLow + gammaUp) / 2.0;
 
     //-- Setup constraint and solver
     cstraintBuilder.Build(gamma, constraint);
-    solver.setup( constraint );
+    solver.setup(constraint);
     //--
     // Solving
-    bool bFeasible = solver.solve();
+    const bool bFeasible = solver.solve();
     //--
 
     if (bFeasible)
@@ -58,7 +61,7 @@ bool BisectionLP(
       solver.getSolution(*parameters);
       bModelFound = true;
 
-      if(bVerbose)
+      if (bVerbose)
         std::cout << "\n" << k<<"/"<<maxIteration
           << "\t gamma " << gamma
           << "\t gammaUp-gammaLow " << gammaUp-gammaLow << std::endl;
@@ -66,7 +69,7 @@ bool BisectionLP(
     else
     {
       gammaLow = gamma;
-      if(bVerbose)
+      if (bVerbose)
         std::cout << "\nNot feasible with gamma: " << gamma << std::endl;
     }
   } while (k < maxIteration && gammaUp - gammaLow > eps);
@@ -78,4 +81,4 @@ bool BisectionLP(
 } // namespace openMVG
 
 
-#endif // OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_H_
+#endif // OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP

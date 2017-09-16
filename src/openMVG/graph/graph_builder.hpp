@@ -1,19 +1,21 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 openMVG authors.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_BUILDER_H_
-#define OPENMVG_GRAPH_BUILDER_H_
+#ifndef OPENMVG_GRAPH_GRAPH_BUILDER_HPP
+#define OPENMVG_GRAPH_GRAPH_BUILDER_HPP
 
-#include "openMVG/types.hpp"
-#include "lemon/list_graph.h"
-
-#include <memory>
 #include <map>
+#include <memory>
 #include <set>
 
+#include "openMVG/types.hpp"
+
+#include "lemon/list_graph.h"
 
 namespace openMVG
 {
@@ -28,23 +30,16 @@ namespace graph
 struct indexedGraph
 {
   /// Type of graph
-  typedef lemon::ListGraph GraphT;
-
-  /// Type of nodes
-  typedef std::map<IndexT, GraphT::Node> map_Size_t_Node;
+  using GraphT = lemon::ListGraph;
 
   /// Type of index of nodes
-  typedef GraphT::NodeMap<IndexT> map_NodeMapIndex;
-
+  using map_NodeMapIndex = GraphT::NodeMap<IndexT>;
 
   /// The graph
   GraphT g;
 
-  /// Original image index to graph node
-  map_Size_t_Node map_size_t_to_node;
-
   /// Association of data to graph Node
-  std::unique_ptr<map_NodeMapIndex> map_nodeMapIndex;
+  std::unique_ptr<map_NodeMapIndex> node_map_id;
 
 
   /**
@@ -54,35 +49,29 @@ struct indexedGraph
   template <typename IterablePairs>
   indexedGraph( const IterablePairs & pairs )
   {
-    map_nodeMapIndex.reset( new map_NodeMapIndex( g ) );
+    node_map_id.reset( new map_NodeMapIndex( g ) );
 
     //A-- Compute the number of node we need
-    std::set<IndexT> setNodes;
-    for ( typename IterablePairs::const_iterator iter = pairs.begin();
-          iter != pairs.end();
-          ++iter )
+    std::set<IndexT> nodes;
+    for (const auto & pair_it : pairs)
     {
-      setNodes.insert( iter->first );
-      setNodes.insert( iter->second );
+      nodes.insert( pair_it.first );
+      nodes.insert( pair_it.second );
     }
 
     //B-- Create a node graph for each element of the set
-    for ( std::set<IndexT>::const_iterator iter = setNodes.begin();
-          iter != setNodes.end();
-          ++iter )
+    std::map<IndexT, GraphT::Node> id_to_node;
+    for ( const auto & node_it : nodes)
     {
-      map_size_t_to_node[*iter] = g.addNode();
-      ( *map_nodeMapIndex ) [map_size_t_to_node.at( *iter )] = *iter;
+      const GraphT::Node n = g.addNode();
+      ( *node_map_id ) [n] = node_it;
+      id_to_node[node_it] = n;
     }
 
     //C-- Add weighted edges from the pairs object
-    for ( typename IterablePairs::const_iterator iter = pairs.begin();
-          iter != pairs.end();
-          ++iter )
+    for (const auto & pair_it : pairs)
     {
-      const IndexT i = iter->first;
-      const IndexT j = iter->second;
-      g.addEdge( map_size_t_to_node.at( i ), map_size_t_to_node.at( j ) );
+      g.addEdge( id_to_node[pair_it.first], id_to_node[pair_it.second] );
     }
   }
 
@@ -95,25 +84,22 @@ struct indexedGraph
   template <typename IterableNodes, typename IterablePairs>
   indexedGraph( const IterableNodes & nodes, const IterablePairs & pairs )
   {
-    map_nodeMapIndex.reset( new map_NodeMapIndex( g ) );
+    node_map_id.reset( new map_NodeMapIndex( g ) );
 
+    std::set<IndexT> node_set (nodes.begin(), nodes.end());
     //A-- Create a node graph for each element of the set
-    for ( typename IterableNodes::const_iterator iter = nodes.begin();
-          iter != nodes.end();
-          ++iter )
+    std::map<IndexT, GraphT::Node> id_to_node;
+    for ( const auto & node_it : node_set)
     {
-      map_size_t_to_node[*iter] = g.addNode();
-      ( *map_nodeMapIndex ) [map_size_t_to_node.at( *iter )] = *iter;
+      const GraphT::Node n = g.addNode();
+      ( *node_map_id ) [n] = node_it;
+      id_to_node[node_it] = n;
     }
 
     //B-- Add weighted edges from the pairs object
-    for ( typename IterablePairs::const_iterator iter = pairs.begin();
-          iter != pairs.end();
-          ++iter )
+    for (const auto & pair_it : pairs)
     {
-      const IndexT i = iter->first;
-      const IndexT j = iter->second;
-      g.addEdge( map_size_t_to_node.at( i ), map_size_t_to_node.at( j ) );
+      g.addEdge( id_to_node[pair_it.first], id_to_node[pair_it.second] );
     }
   }
 };
@@ -121,4 +107,4 @@ struct indexedGraph
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_BUILDER__H_
+#endif // OPENMVG_GRAPH_GRAPH_BUILDER_HPP

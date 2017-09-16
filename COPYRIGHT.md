@@ -34,6 +34,10 @@ This program includes works distributed under the terms of another license(s) an
     Distributed under the [MPL2 license](http://opensource.org/licenses/MPL-2.0).
     Compiled with EIGEN_MPL2_ONLY to ensure MPL2 compatible code.
 
+*   __fast__<br />
+    Copyright (c) 2006, 2008 Edward Rosten
+    Distributed under the [New BSD License](https://opensource.org/licenses/BSD-3-Clause).
+
 *   __flann__<br />
     Copyright (c) 2008-2011  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.
     Copyright (c) 2008-2011  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.
@@ -71,10 +75,6 @@ This program includes works distributed under the terms of another license(s) an
     Copyright (c) 1988-1997 Sam Leffler
     Copyright (c) 1991-1997 Silicon Graphics, Inc.
     Licensed under a BSD-like license.
-
-*   __tinythread__<br />
-    Copyright (c) 2010-2012 Marcus Geelnard.
-    Licensed under the [zlib/libpng license](http://www.opensource.org/licenses/zlib-license.php).
 
 *   __vectorGraphics__<br />
     Copyright (c) Pierre Moulon

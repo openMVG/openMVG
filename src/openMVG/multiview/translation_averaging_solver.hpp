@@ -1,11 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014 Pierre MOULON
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef __TRANS_SOLVER_H__
-#define __TRANS_SOLVER_H__
+#ifndef OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_SOLVER_HPP
+#define OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_SOLVER_HPP
 
 #include "openMVG/multiview/translation_averaging_common.hpp"
 
@@ -66,4 +68,4 @@ solve_translations_problem_softl1
 
 } // namespace openMVG
 
-#endif // __TRANS_SOLVER_H__
+#endif // OPENMVG_MULTIVIEW_TRANSLATION_AVERAGING_SOLVER_HPP

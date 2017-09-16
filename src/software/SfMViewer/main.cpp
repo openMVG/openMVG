@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdio.h>
 #include <cmath>
 #include <iterator>
@@ -22,7 +23,7 @@
 #include <GLFW/glfw3.h>
 
 #include "openMVG/sfm/sfm.hpp"
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "third_party/progress/progress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -48,11 +49,8 @@ static std::vector<IndexT> vec_cameras;
 struct GLWImage {
     int width, height;
     GLuint texture;
-    double opacity;
-    int camera;
  };
 
-//static GLWImage m_cur_image;
 static std::vector< GLWImage > m_image_vector;
 
 /* close callback */
@@ -63,35 +61,34 @@ void window_close_callback(GLFWwindow* window)
 
 void load_textures()
 {
-	const size_t nbCams = vec_cameras.size();
-	m_image_vector.resize(nbCams);
+  const size_t nbCams = vec_cameras.size();
+  m_image_vector.resize(nbCams);
 
-  C_Progress_display my_progress_bar( nbCams, std::cout,
-    "\n", " " , "Textures loading, Please wait...\n" );
-	for ( int i_cam=0; i_cam < nbCams; ++i_cam, ++my_progress_bar) {
+  C_Progress_display my_progress_bar( nbCams, std::cout, "Textures loading, Please wait...\n" );
+  for ( size_t i_cam=0; i_cam < nbCams; ++i_cam, ++my_progress_bar) {
     const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
 
-		std::vector<unsigned char> img;
-		int w,h,depth;
-		if (ReadImage(srcImage.c_str(),	&img,	&w,	&h,	&depth)) {
-			glEnable(GL_TEXTURE_2D);
-			//std::cout << "Read image : " << sImageName << "\n" << std::endl;
-			glDeleteTextures(1, &m_image_vector[i_cam].texture);
+  std::vector<unsigned char> img;
+  int w,h,depth;
+  if (ReadImage(srcImage.c_str(), &img, &w, &h, &depth)) {
+    glEnable(GL_TEXTURE_2D);
+    //std::cout << "Read image : " << sImageName << "\n" << std::endl;
+    glDeleteTextures(1, &m_image_vector[i_cam].texture);
 
-			// Create texture
-			glGenTextures( 1, &m_image_vector[i_cam].texture);
-			// select our current texture
-		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+    // Create texture
+    glGenTextures( 1, &m_image_vector[i_cam].texture);
+    // select our current texture
+    glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
 
-		  m_image_vector[i_cam].width = w;
-		  m_image_vector[i_cam].height = h;
-		  glTexImage2D(GL_TEXTURE_2D, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB,  m_image_vector[i_cam].width,
-		  		m_image_vector[i_cam].height, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB, GL_UNSIGNED_BYTE,
-				  &img[0]);
+    m_image_vector[i_cam].width = w;
+    m_image_vector[i_cam].height = h;
+    glTexImage2D(GL_TEXTURE_2D, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB,  m_image_vector[i_cam].width,
+      m_image_vector[i_cam].height, 0, (depth == 1) ? GL_LUMINANCE : GL_RGB, GL_UNSIGNED_BYTE,
+        &img[0]);
 
-		  glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
-	  }
+    glBindTexture(GL_TEXTURE_2D, m_image_vector[i_cam].texture);
+  }
   }
 }
 
@@ -113,8 +110,8 @@ void reshape( GLFWwindow* window, int width, int height )
 
 void key(GLFWwindow* window, int k, int scancode, int action, int mod)
 {
-  if( action != GLFW_PRESS ) {
-  	return;
+  if (action != GLFW_PRESS ) {
+    return;
   }
 
   switch (k) {
@@ -122,47 +119,47 @@ void key(GLFWwindow* window, int k, int scancode, int action, int mod)
     running = 0;
     break;
   case GLFW_KEY_LEFT:
-  	--current_cam;
+    --current_cam;
     if (current_cam < 0)  {
-    	current_cam = vec_cameras.size()-1;
+      current_cam = vec_cameras.size()-1;
     }
     break;
   case GLFW_KEY_RIGHT:
-  	++current_cam;
-    if (current_cam >= vec_cameras.size())  {
-    	current_cam = 0;
+    ++current_cam;
+    if (current_cam >= static_cast<int>(vec_cameras.size()))  {
+      current_cam = 0;
     }
     break;
   case GLFW_KEY_R:
-  	x_offset = 0.f;
-  	y_offset = 0.f;
-  	z_offset = 0.f;
-  	normalized_focal = 1.f;
-  	break;
+    x_offset = 0.f;
+    y_offset = 0.f;
+    z_offset = 0.f;
+    normalized_focal = 1.f;
+    break;
   case GLFW_KEY_Q:
-  	z_offset -= 0.1f;
-  	break;
+    z_offset -= 0.1f;
+    break;
   case GLFW_KEY_E:
-  	z_offset += 0.1f;
+    z_offset += 0.1f;
     break;
   case GLFW_KEY_W:
-  	y_offset += 0.1f;
-  	break;
+    y_offset += 0.1f;
+    break;
   case GLFW_KEY_S:
-  	y_offset -= 0.1f;
-  	break;
+    y_offset -= 0.1f;
+    break;
   case GLFW_KEY_A:
-  	x_offset += 0.1f;
-  	break;
+    x_offset += 0.1f;
+    break;
   case GLFW_KEY_D:
-  	x_offset -= 0.1f;
-  	break;
+    x_offset -= 0.1f;
+    break;
   case GLFW_KEY_KP_SUBTRACT:
-  	normalized_focal -= 0.1f;
-  	break;
+    normalized_focal -= 0.1f;
+    break;
   case GLFW_KEY_KP_ADD:
-  	normalized_focal += 0.1f;
-  	break;
+    normalized_focal += 0.1f;
+    break;
   default:
     return;
   }
@@ -227,21 +224,18 @@ static void draw(void)
     glDisable(GL_LIGHTING);
 
     //Draw Structure in GREEN (as seen from the current camera)
-    size_t nbPoint = sfm_data.GetLandmarks().size();
-    size_t cpt = 0;
     glBegin(GL_POINTS);
     glColor3f(0.f,1.f,0.f);
-    for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
-      iter != sfm_data.GetLandmarks().end(); ++iter)
+    for (const auto & landmark_iter : sfm_data.GetLandmarks())
     {
-      const Landmark & landmark = iter->second;
+      const Landmark & landmark = landmark_iter.second;
       glVertex3d(landmark.X(0), landmark.X(1), landmark.X(2));
     }
     glEnd();
 
     glDisable(GL_CULL_FACE);
 
-    for (int i_cam=0; i_cam < vec_cameras.size(); ++i_cam)
+    for (int i_cam=0; i_cam < static_cast<int>(vec_cameras.size()); ++i_cam)
     {
       const View * view = sfm_data.GetViews().at(vec_cameras[i_cam]).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
@@ -282,10 +276,10 @@ static void draw(void)
         // use principal point to adjust image center
         const Vec2 pp = camPinhole->principal_point();
 
-        Vec3 c1(    -pp[0]/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
-        Vec3 c2((-pp[0]+w)/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
-        Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
-        Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
+        const Vec3 c1(    -pp[0]/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+        const Vec3 c2((-pp[0]+w)/focal * normalized_focal, (-pp[1]+h)/focal * normalized_focal, normalized_focal);
+        const Vec3 c3((-pp[0]+w)/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
+        const Vec3 c4(    -pp[0]/focal * normalized_focal,     -pp[1]/focal * normalized_focal, normalized_focal);
 
         // 2. Draw thumbnail
         if (i_cam == current_cam)
@@ -351,7 +345,7 @@ int main(int argc, char *argv[]) {
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--sfmdata filename, the SfM_Data file to read]\n"
     << std::endl;
@@ -379,7 +373,7 @@ int main(int argc, char *argv[]) {
   }
 
   current_cam = 0;
-  std::cout << "Press left or right key to navigate between cameras ;-)" << std::endl
+  std::cout << "Press left or right key to navigate between cameras." << std::endl
     << "Move viewpoint with Q,W,E,A,S,D" << std::endl
     << "Change Normalized focal (camera cones size) with '+' and '-'" << std::endl
     << "Reset viewpoint position with R" << std::endl
@@ -389,7 +383,7 @@ int main(int argc, char *argv[]) {
   GLFWwindow* window;
   int width, height;
 
-  if( !glfwInit() )
+  if ( !glfwInit() )
   {
     fprintf( stderr, "Failed to initialize GLFW\n" );
     exit( EXIT_FAILURE );
@@ -397,7 +391,7 @@ int main(int argc, char *argv[]) {
 
   glfwWindowHint(GLFW_DEPTH_BITS, 16);
 
-  window = glfwCreateWindow( 1000, 600, "SfmViewer", NULL, NULL );
+  window = glfwCreateWindow( 1000, 600, "SfmViewer", nullptr, nullptr );
   if (!window)
   {
     fprintf( stderr, "Failed to open GLFW window\n" );
@@ -419,7 +413,7 @@ int main(int argc, char *argv[]) {
   load_textures();
 
   // Main loop
-  while( running )
+  while (running)
   {
     // Draw SfM Scene
     draw();

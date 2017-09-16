@@ -1,5 +1,4 @@
-// This is an adaptation of the Fisheye distortion model implemented in OpenCV
-// https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Romain Janvier <romain.janvier~AT~univ-orleans.fr> for the given adaptation
 
@@ -7,14 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
-#define OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
+// This is an adaptation of the Fisheye distortion model implemented in OpenCV
+// https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/cameras/Camera_Common.hpp"
-#include "openMVG/cameras/Camera_Pinhole.hpp"
+#ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
+#define OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 
 #include <vector>
+
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG
 {
@@ -26,7 +28,7 @@ namespace cameras
 */
 class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 {
-  typedef Pinhole_Intrinsic_Fisheye class_type;
+  using class_type = Pinhole_Intrinsic_Fisheye;
 
   protected:
 
@@ -56,7 +58,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     {
       params_ = {k1, k2, k3, k4};
     }
-    
+
     ~Pinhole_Intrinsic_Fisheye() override = default;
 
     /**
@@ -141,10 +143,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     std::vector<double> getParams() const override
     {
       std::vector<double> params = Pinhole_Intrinsic::getParams();
-      params.push_back( params_[0] );
-      params.push_back( params_[1] );
-      params.push_back( params_[2] );
-      params.push_back( params_[3] );
+      params.insert(params.end(), std::begin(params_), std::end(params_));
       return params;
     }
 
@@ -227,22 +226,14 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @param ar Archive
     */
     template <class Archive>
-    void save( Archive & ar ) const
-    {
-      Pinhole_Intrinsic::save( ar );
-      ar( cereal::make_nvp( "fisheye", params_ ) );
-    }
+    inline void save( Archive & ar ) const;
 
     /**
     * @brief  Serialization in
     * @param ar Archive
     */
     template <class Archive>
-    void load( Archive & ar )
-    {
-      Pinhole_Intrinsic::load( ar );
-      ar( cereal::make_nvp( "fisheye", params_ ) );
-    }
+    inline void load( Archive & ar );
 
     /**
     * @brief Clone the object
@@ -258,9 +249,4 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
 } // namespace cameras
 } // namespace openMVG
 
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/types/vector.hpp>
-
-CEREAL_REGISTER_TYPE_WITH_NAME( openMVG::cameras::Pinhole_Intrinsic_Fisheye, "fisheye" );
-
-#endif // #ifndef OPENMVG_CAMERA_PINHOLE_FISHEYE_HPP
+#endif // #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP

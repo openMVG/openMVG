@@ -1,10 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_drawing.hpp"
 #include "testing/testing.h"
 
 using namespace openMVG;
@@ -26,7 +29,7 @@ TEST(ImageDrawing, Scanlines) {
   //  |_________|
   const int y = 5;
   DrawLine( 0, y, w-1, y, 255, &image);
-  for(int i=0; i < w; ++i)
+  for (int i=0; i < w; ++i)
     EXPECT_EQ( image(y,i), 255);
 
   image.fill(0);
@@ -57,7 +60,7 @@ TEST(ImageDrawing, Scanlines_RGB) {
   //  |_________|
   const int y = 5;
   DrawLine( 0, y, w-1, y, RGBColor(GREEN), &image);
-  for(int i=0; i < w; ++i)
+  for (int i=0; i < w; ++i)
     EXPECT_EQ( image(y,i), RGBColor(GREEN));
 
   image.fill(RGBColor(BLACK));

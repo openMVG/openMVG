@@ -1,13 +1,19 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
-#define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
+#ifndef OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
+#define OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP
 
-#include <cereal/cereal.hpp>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
+#include "openMVG/image/image_container.hpp"
+
+#include <algorithm>
 #include <iostream>
 #include <numeric>
 
@@ -29,7 +35,7 @@ inline void siftDescToUChar(
 {
   if (brootSift)  {
     // rootsift = sqrt( sift / sum(sift) );
-    const float sum = accumulate(descr, descr+128, 0.0f);
+    const float sum = std::accumulate(descr, descr+128, 0.0f);
     for (int k=0;k<128;++k)
       descriptor[k] = static_cast<unsigned char>(512.f*sqrt(descr[k]/sum));
   }
@@ -38,49 +44,49 @@ inline void siftDescToUChar(
     descriptor[k] = static_cast<unsigned char>(512.f*descr[k]);
 }
 
-struct SiftParams
-{
-  SiftParams(
-    int first_octave = 0,
-    int num_octaves = 6,
-    int num_scales = 3,
-    float edge_threshold = 10.0f,
-    float peak_threshold = 0.04f,
-    bool root_sift = true
-  ):
-    _first_octave(first_octave),
-    _num_octaves(num_octaves),
-    _num_scales(num_scales),
-    _edge_threshold(edge_threshold),
-    _peak_threshold(peak_threshold),
-    _root_sift(root_sift) {}
-
-  template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(
-      cereal::make_nvp("first_octave", _first_octave),
-      cereal::make_nvp("num_octaves",_num_octaves),
-      cereal::make_nvp("num_scales",_num_scales),
-      cereal::make_nvp("edge_threshold",_edge_threshold),
-      cereal::make_nvp("peak_threshold",_peak_threshold),
-      cereal::make_nvp("root_sift",_root_sift));
-  }
-
-  // Parameters
-  int _first_octave;      // Use original image, or perform an upscale if == -1
-  int _num_octaves;       // Max octaves count
-  int _num_scales;        // Scales per octave
-  float _edge_threshold;  // Max ratio of Hessian eigenvalues
-  float _peak_threshold;  // Min contrast
-  bool _root_sift;        // see [1]
-};
-
 class SIFT_Image_describer : public Image_describer
 {
 public:
-  SIFT_Image_describer(const SiftParams & params = SiftParams(), bool bOrientation = true)
-    :Image_describer(), _params(params), _bOrientation(bOrientation)
+
+  using Regions_type = SIFT_Regions;
+
+  struct Params
+  {
+    Params(
+      int first_octave = 0,
+      int num_octaves = 6,
+      int num_scales = 3,
+      float edge_threshold = 10.0f,
+      float peak_threshold = 0.04f,
+      bool root_sift = true
+    ):
+      _first_octave(first_octave),
+      _num_octaves(num_octaves),
+      _num_scales(num_scales),
+      _edge_threshold(edge_threshold),
+      _peak_threshold(peak_threshold),
+      _root_sift(root_sift) {}
+
+    template<class Archive>
+    inline void serialize( Archive & ar );
+
+    // Parameters
+    int _first_octave;      // Use original image, or perform an upscale if == -1
+    int _num_octaves;       // Max octaves count
+    int _num_scales;        // Scales per octave
+    float _edge_threshold;  // Max ratio of Hessian eigenvalues
+    float _peak_threshold;  // Min contrast
+    bool _root_sift;        // see [1]
+  };
+
+  //--
+  // Constructor
+  //--
+  SIFT_Image_describer
+  (
+    const Params params = Params(),
+    bool bOrientation = true
+  ):Image_describer(), _params(params), _bOrientation(bOrientation)
   {
     vl_constructor();
   }
@@ -90,9 +96,9 @@ public:
     vl_destructor();
   }
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
-    switch(preset)
+    switch (preset)
     {
     case NORMAL_PRESET:
       _params._peak_threshold = 0.04f;
@@ -113,13 +119,29 @@ public:
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
-  @param regions The detected regions and attributes (the caller must delete the allocated data)
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  bool Describe(const image::Image<unsigned char>& image,
-    std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = NULL)
+  std::unique_ptr<Regions> Describe(
+    const image::Image<unsigned char>& image,
+    const image::Image<unsigned char>* mask = nullptr
+  ) override
+  {
+    return DescribeSIFT(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> DescribeSIFT(
+      const image::Image<unsigned char>& image,
+      const image::Image<unsigned char>* mask = nullptr
+  )
   {
     const int w = image.Width(), h = image.Height();
     //Convert to float
@@ -138,13 +160,12 @@ public:
     // Process SIFT computation
     vl_sift_process_first_octave(filt, If.data());
 
-    Allocate(regions);
-
     // Build alias to cached data
-    SIFT_Regions * regionsCasted = dynamic_cast<SIFT_Regions*>(regions.get());
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
+
     // reserve some memory for faster keypoint saving
-    regionsCasted->Features().reserve(2000);
-    regionsCasted->Descriptors().reserve(2000);
+    regions->Features().reserve(2000);
+    regions->Descriptors().reserve(2000);
 
     while (true) {
       vl_sift_detect(filt);
@@ -185,8 +206,8 @@ public:
           #pragma omp critical
           #endif
           {
-            regionsCasted->Descriptors().push_back(descriptor);
-            regionsCasted->Features().push_back(fp);
+            regions->Descriptors().push_back(descriptor);
+            regions->Features().push_back(fp);
           }
         }
       }
@@ -195,33 +216,23 @@ public:
     }
     vl_sift_delete(filt);
 
-    return true;
-  };
+    return regions;
+  }
 
-  /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
+  std::unique_ptr<Regions> Allocate() const override
   {
-    regions.reset( new SIFT_Regions );
+    return std::unique_ptr<Regions_type>(new Regions_type);
   }
 
   template<class Archive>
-  void serialize( Archive & ar )
-  {
-    ar(
-     cereal::make_nvp("params", _params),
-     cereal::make_nvp("bOrientation", _bOrientation));
-  }
+  inline void serialize( Archive & ar );
 
 private:
-  SiftParams _params;
+  Params _params;
   bool _bOrientation;
 };
 
 } // namespace features
 } // namespace openMVG
 
-#include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
-CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::SIFT_Image_describer, "SIFT_Image_describer");
-
-#endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_H
+#endif // OPENMVG_PATENTED_SIFT_SIFT_DESCRIBER_HPP

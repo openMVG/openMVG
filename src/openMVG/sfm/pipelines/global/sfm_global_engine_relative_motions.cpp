@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -6,16 +7,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
+
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/stl/stl.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/tracks/tracks.hpp"
+#include "openMVG/types.hpp"
+
+#include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
-#include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/connectedComponent.hpp"
-#include "openMVG/system/timer.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/multiview/essential.hpp"
+#include <ceres/types.h>
 
-#include "third_party/progress/progress.hpp"
+#include <iostream>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -32,7 +51,8 @@ GlobalSfMReconstructionEngine_RelativeMotions::GlobalSfMReconstructionEngine_Rel
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
   const std::string & sloggingFile)
-  : ReconstructionEngine(sfm_data, soutDirectory), sLogging_file_(sloggingFile), normalized_features_provider_(NULL) {
+  : ReconstructionEngine(sfm_data, soutDirectory), sLogging_file_(sloggingFile)
+{
 
   if (!sLogging_file_.empty())
   {
@@ -65,33 +85,6 @@ GlobalSfMReconstructionEngine_RelativeMotions::~GlobalSfMReconstructionEngine_Re
 void GlobalSfMReconstructionEngine_RelativeMotions::SetFeaturesProvider(Features_Provider * provider)
 {
   features_provider_ = provider;
-
-  // Copy features and save a normalized version
-  normalized_features_provider_ = std::make_shared<Features_Provider>(*provider);
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel
-#endif
-  for (Hash_Map<IndexT, PointFeatures>::iterator iter = normalized_features_provider_->feats_per_view.begin();
-    iter != normalized_features_provider_->feats_per_view.end(); ++iter)
-  {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp single nowait
-#endif
-    {
-      // get the related view & camera intrinsic and compute the corresponding bearing vectors
-      const View * view = sfm_data_.GetViews().at(iter->first).get();
-      if (sfm_data_.GetIntrinsics().count(view->id_intrinsic))
-      {
-        const std::shared_ptr<IntrinsicBase> cam = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
-        for (PointFeatures::iterator iterPt = iter->second.begin();
-          iterPt != iter->second.end(); ++iterPt)
-        {
-          const Vec3 bearingVector = (*cam)(cam->get_ud_pixel(iterPt->coords().cast<double>()));
-          iterPt->coords() << (bearingVector.head(2) / bearingVector(2)).cast<float>();
-        }
-      }
-    }
-  }
 }
 
 void GlobalSfMReconstructionEngine_RelativeMotions::SetMatchesProvider(Matches_Provider * provider)
@@ -123,7 +116,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   {
     const Pair_Set pairs = matches_provider_->getPairs();
     const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
-    if(set_remainingIds.empty())
+    if (set_remainingIds.empty())
     {
       std::cout << "Invalid input image graph for global SfM" << std::endl;
       return false;
@@ -140,6 +133,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     std::cerr << "GlobalSfM:: Rotation Averaging failure!" << std::endl;
     return false;
   }
+
   matching::PairWiseMatches  tripletWise_matches;
   if (!Compute_Global_Translations(global_rotations, tripletWise_matches))
   {
@@ -186,7 +180,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
   Hash_Map<IndexT, Mat3> & global_rotations
 )
 {
-  if(relatives_R.empty())
+  if (relatives_R.empty())
     return false;
   // Log statistics about the relative rotation graph
   {
@@ -273,7 +267,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
         graph::indexedGraph putativeGraph(set_pose_ids, rotation_averaging_solver.GetUsedPairs());
         graph::exportToGraphvizData(
           stlplus::create_filespec(sOut_directory_, sGraph_name),
-          putativeGraph.g);
+          putativeGraph);
 
         using namespace htmlDocument;
         std::ostringstream os;
@@ -302,7 +296,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Translations
   const bool bTranslationAveraging = translation_averaging_solver.Run(
     eTranslation_averaging_method_,
     sfm_data_,
-    normalized_features_provider_.get(),
+    features_provider_,
     matches_provider_,
     global_rotations,
     tripletWise_matches);
@@ -372,7 +366,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       //-- Display stats:
       //    - number of images
       //    - number of tracks
-      std::set<size_t> set_imagesId;
+      std::set<uint32_t> set_imagesId;
       TracksUtilsMap::ImageIdInTracks(map_selectedTracks, set_imagesId);
       osTrack << "------------------" << "\n"
         << "-- Tracks Stats --" << "\n"
@@ -380,15 +374,14 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         << " Images Id: " << "\n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),
-        std::ostream_iterator<size_t>(osTrack, ", "));
+        std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<size_t, size_t> map_Occurence_TrackLength;
+      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
       TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (std::map<size_t, size_t>::const_iterator iter = map_Occurence_TrackLength.begin();
-        iter != map_Occurence_TrackLength.end(); ++iter)  {
-        osTrack << "\t" << iter->first << "\t" << iter->second << "\n";
+      for (const auto & iter : map_Occurence_TrackLength)  {
+        osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
       std::cout << osTrack.str();
@@ -431,7 +424,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
       Optimize_Options(
         Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
         Extrinsic_Parameter_Type::ADJUST_TRANSLATION, // Rotations are held as constant
-        Structure_Parameter_Type::ADJUST_ALL)
+        Structure_Parameter_Type::ADJUST_ALL,
+        Control_Point_Parameter(),
+        this->b_use_motion_prior_)
     );
   if (b_BA_Status)
   {
@@ -449,7 +444,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -467,7 +464,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
         Optimize_Options(
           ReconstructionEngine::intrinsic_refinement_options_,
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          Structure_Parameter_Type::ADJUST_ALL,
+          Control_Point_Parameter(),
+          this->b_use_motion_prior_)
       );
     if (b_BA_Status && !sLogging_file_.empty())
     {
@@ -514,7 +513,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   const Optimize_Options ba_refine_options(
     ReconstructionEngine::intrinsic_refinement_options_,
     Extrinsic_Parameter_Type::ADJUST_ALL,  // adjust camera motion
-    Structure_Parameter_Type::ADJUST_ALL); // adjust scene structure
+    Structure_Parameter_Type::ADJUST_ALL,  // adjust scene structure
+    Control_Point_Parameter(),
+    this->b_use_motion_prior_);
 
   b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   if (b_BA_Status && !sLogging_file_.empty())
@@ -536,14 +537,13 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Build the Relative pose graph from matches:
   //
   /// pairwise view relation between poseIds
-  typedef std::map< Pair, Pair_Set > PoseWiseMatches;
+  using PoseWiseMatches = std::map< Pair, Pair_Set >;
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;
-  for (PairWiseMatches::const_iterator iterMatches = matches_provider_->pairWise_matches_.begin();
-    iterMatches != matches_provider_->pairWise_matches_.end(); ++iterMatches)
+  for (const auto & iterMatches : matches_provider_->pairWise_matches_)
   {
-    const Pair pair = iterMatches->first;
+    const Pair pair = iterMatches.first;
     const View * v1 = sfm_data_.GetViews().at(pair.first).get();
     const View * v2 = sfm_data_.GetViews().at(pair.second).get();
     poseWiseMatches[Pair(v1->id_pose, v2->id_pose)].insert(pair);
@@ -556,14 +556,9 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   #pragma omp parallel for schedule(dynamic)
 #endif
   // Compute the relative pose from pairwise point matches:
-  for (int i = 0; i < poseWiseMatches.size(); ++i)
+  for (int i = 0; i < static_cast<int>(poseWiseMatches.size()); ++i)
   {
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
-    {
-      ++my_progress_bar;
-    }
+    ++my_progress_bar;
     {
       PoseWiseMatches::const_iterator iter (poseWiseMatches.begin());
       std::advance(iter, i);
@@ -597,6 +592,10 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         sfm_data_.GetIntrinsics().count(view_J->id_intrinsic) == 0)
         continue;
 
+
+      const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
+      const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+
       // Setup corresponding bearing vector
       const matching::IndMatches & matches = matches_provider_->pairWise_matches_.at(pairIterator);
       size_t nbBearing = matches.size();
@@ -604,12 +603,9 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       nbBearing = 0;
       for (const auto & match : matches)
       {
-        x1.col(nbBearing) = normalized_features_provider_->feats_per_view[I][match.i_].coords().cast<double>();
-        x2.col(nbBearing++) = normalized_features_provider_->feats_per_view[J][match.j_].coords().cast<double>();
+        x1.col(nbBearing) = ((*cam_I)(cam_I->get_ud_pixel(features_provider_->feats_per_view[I][match.i_].coords().cast<double>()))).hnormalized();
+        x2.col(nbBearing++) = ((*cam_J)(cam_J->get_ud_pixel(features_provider_->feats_per_view[J][match.j_].coords().cast<double>()))).hnormalized();
       }
-
-      const IntrinsicBase * cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
-      const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
 
       RelativePose_Info relativePose_info;
       // Compute max authorized error as geometric mean of camera plane tolerated residual error
@@ -644,11 +640,12 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         const Mat34 P1 = cam_I->get_projective_equivalent(Pose_I);
         const Mat34 P2 = cam_J->get_projective_equivalent(Pose_J);
         Landmarks & landmarks = tiny_scene.structure;
-        for (size_t k = 0; k < x1.cols(); ++k) {
+        for (Mat::Index k = 0; k < x1.cols(); ++k)
+        {
           const Vec2 x1_ = features_provider_->feats_per_view[I][matches[k].i_].coords().cast<double>();
           const Vec2 x2_ = features_provider_->feats_per_view[J][matches[k].j_].coords().cast<double>();
           Vec3 X;
-          TriangulateDLT(P1, x1_, P2, x2_, &X);
+          TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
           Observations obs;
           obs[view_I->id_view] = Observation(x1_, matches[k].i_);
           obs[view_J->id_view] = Observation(x2_, matches[k].j_);
@@ -690,27 +687,11 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
         using namespace openMVG::rotation_averaging;
           vec_relatives_R.emplace_back(
             relative_pose_pair.first, relative_pose_pair.second,
-            relativePose_info.relativePose.rotation(), relativePose_info.vec_inliers.size());
+            relativePose_info.relativePose.rotation(),
+            1.f);
       }
     }
   } // for all relative pose
-
-  // Re-weight rotation in [0,1]
-  if (vec_relatives_R.size() > 1)
-  {
-    std::vector<double> vec_count;
-    vec_count.reserve(vec_relatives_R.size());
-    for(const auto & relative_rotation_info : vec_relatives_R)
-    {
-      vec_count.push_back(relative_rotation_info.weight);
-    }
-    std::partial_sort(vec_count.begin(), vec_count.begin() + vec_count.size() / 2.0, vec_count.end());
-    const float thTrustPair = vec_count[vec_count.size() / 2.0];
-    for(auto & relative_rotation_info : vec_relatives_R)
-    {
-      relative_rotation_info.weight = std::min(relative_rotation_info.weight, 1.f);
-    }
-  }
 
   // Log input graph to the HTML report
   if (!sLogging_file_.empty() && !sOut_directory_.empty())
@@ -723,7 +704,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(matches_provider_->pairWise_matches_));
       graph::exportToGraphvizData(
         stlplus::create_filespec(sOut_directory_, "global_relative_rotation_view_graph"),
-        putativeGraph.g);
+        putativeGraph);
     }
 
     // Log a relative pose graph
@@ -741,7 +722,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       graph::indexedGraph putativeGraph(set_pose_ids, relative_pose_pairs);
       graph::exportToGraphvizData(
         stlplus::create_filespec(sOut_directory_, sGraph_name),
-        putativeGraph.g);
+        putativeGraph);
       using namespace htmlDocument;
       std::ostringstream os;
 
@@ -757,4 +738,3 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
 
 } // namespace sfm
 } // namespace openMVG
-

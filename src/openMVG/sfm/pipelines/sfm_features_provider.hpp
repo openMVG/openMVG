@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,15 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_FEATURES_PROVIDER_HPP
-#define OPENMVG_SFM_FEATURES_PROVIDER_HPP
-
-#include <openMVG/types.hpp>
-#include <openMVG/sfm/sfm_data.hpp>
-#include <openMVG/features/features.hpp>
-#include "third_party/progress/progress.hpp"
+#ifndef OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
+#define OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP
 
 #include <memory>
+#include <string>
+
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/feature_container.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/types.hpp"
+
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -24,6 +29,8 @@ struct Features_Provider
 {
   /// PointFeature array per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
+
+  virtual ~Features_Provider() = default;
 
   virtual bool load(
     const SfM_Data & sfm_data,
@@ -44,12 +51,12 @@ struct Features_Provider
     #pragma omp single nowait
 #endif
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second.get()->s_Img_path);
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second->s_Img_path);
         const std::string basename = stlplus::basename_part(sImageName);
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
 
         std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
-        if (!regions->LoadFeatures(featFile))
+        if (!stlplus::file_exists(featFile) || !regions->LoadFeatures(featFile))
         {
           std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
 #ifdef OPENMVG_USE_OPENMP
@@ -62,9 +69,9 @@ struct Features_Provider
 #endif
         {
           // save loaded Features as PointFeature
-          feats_per_view[iter->second.get()->id_view] = regions->GetRegionsPositions();
-          ++my_progress_bar;
+          feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
         }
+        ++my_progress_bar;
       }
     }
     return bContinue;
@@ -88,4 +95,4 @@ struct Features_Provider
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_FEATURES_PROVIDER_HPP
+#endif // OPENMVG_SFM_SFM_FEATURES_PROVIDER_HPP

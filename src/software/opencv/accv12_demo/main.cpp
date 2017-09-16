@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -80,7 +81,7 @@ int main(int, char**)
   cap.set(CV_CAP_PROP_FRAME_WIDTH, w);
   cap.set(CV_CAP_PROP_FRAME_HEIGHT, h);
 
-  if(!cap.isOpened() )  // check if we succeeded
+  if (!cap.isOpened() )  // check if we succeeded
   {
       std::cerr << "ERROR: Could not open cameras." << std::endl;
       return -1;
@@ -132,7 +133,7 @@ int main(int, char**)
   boost::circular_buffer<double> cb_RANSAC_inlierPourcent(100,0);
 
   cv::namedWindow("WEBCAM STREAM",CV_WINDOW_AUTOSIZE);
-  for(;;)
+  for (;;)
   {
       bool isValid = true;
 
@@ -148,7 +149,7 @@ int main(int, char**)
         extractor->compute( grayFrame, kptsStream, descriptorsStream );
         //std::cout << "KpFound : \t" << kptsStream.size() << std::endl;
       }
-      catch( cv::Exception& e )
+      catch ( cv::Exception& e )
       {
         std::cout << "An exception occurred. Ignoring frame. " << e.err << std::endl;
         isValid = false;
@@ -188,7 +189,7 @@ int main(int, char**)
           }
 
           //-- Homography robust estimation
-          std::vector<size_t> vec_inliers, vec_inliersRansac;
+          std::vector<uint32_t> vec_inliers, vec_inliersRansac;
           Mat3 H;
           Mat3 Hransac;
           double thresholdransac = 2.0;
@@ -243,14 +244,14 @@ int main(int, char**)
             cb_RANSAC_inlierPourcent.push_back(vec_inliersRansac.size()/float(vec_matches.size()));
             //Draw warp
             Vec2 x0(0,0), x1(imgA.cols, 0), x2(imgA.cols, imgA.rows), x3(0, imgA.rows);
-            Vec3 x00 = Hransac * Vec3(x0(0), x0(1), 1);
-            Vec3 x11 = Hransac * Vec3(x1(0), x1(1), 1);
-            Vec3 x22 = Hransac * Vec3(x2(0), x2(1), 1);
-            Vec3 x33 = Hransac * Vec3(x3(0), x3(1), 1);
-            x0 = x00.head<2>() / x00(2);
-            x1 = x11.head<2>() / x11(2);
-            x2 = x22.head<2>() / x22(2);
-            x3 = x33.head<2>() / x33(2);
+            Vec3 x00 = Hransac * x0.homogeneous();
+            Vec3 x11 = Hransac * x1.homogeneous();
+            Vec3 x22 = Hransac * x2.homogeneous();
+            Vec3 x33 = Hransac * x3.homogeneous();
+            x0 = x00.hnormalized();
+            x1 = x11.hnormalized();
+            x2 = x22.hnormalized();
+            x3 = x33.hnormalized();
 
             line(sidebyside, Point(x0(0)+imgA.cols, x0(1)), Point(x1(0)+imgA.cols, x1(1)), RColor, Lthickness);
             line(sidebyside, Point(x1(0)+imgA.cols, x1(1)), Point(x2(0)+imgA.cols, x2(1)), RColor, Lthickness);

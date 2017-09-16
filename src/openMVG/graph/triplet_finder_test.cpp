@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/triplet_finder.hpp"
-using namespace openMVG::graph;
 
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
@@ -13,9 +14,11 @@ using namespace openMVG::graph;
 #include <iostream>
 #include <vector>
 
+using namespace openMVG::graph;
+
 TEST(TripletFinder, test_no_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   // a_b_c
   Graph ga;
@@ -31,7 +34,7 @@ TEST(TripletFinder, test_no_triplet) {
 
 TEST(TripletFinder, test_one_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -78,7 +81,7 @@ TEST(TripletFinder, test_one_triplet) {
 
 TEST(TripletFinder, test_two_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -155,7 +158,7 @@ TEST(TripletFinder, test_two_triplet) {
 
 TEST(TripletFinder, test_three_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
 
   {
     //
@@ -215,12 +218,13 @@ TEST(TripletFinder, test_three_triplet) {
   }
 
     {
-    //
-    // a---b
-    // |\  |\
-    // | \ | \
-    // |  \|  \
-    // c---d---e
+    /*
+     a---b
+     |\  |\
+     | \ | \
+     |  \|  \
+     c---d---e
+    */
     Graph ga;
     Graph::Node a = ga.addNode(), b = ga.addNode(),
       c = ga.addNode(), d = ga.addNode(),
@@ -242,7 +246,7 @@ TEST(TripletFinder, test_three_triplet) {
 
 TEST(TripletFinder, test_for_triplet) {
 
-  typedef lemon::ListGraph Graph;
+  using Graph = lemon::ListGraph;
  {
     //
     // a__b

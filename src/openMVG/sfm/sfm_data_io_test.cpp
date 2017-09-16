@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,7 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
+
 #include "testing/testing.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -23,7 +28,7 @@ SfM_Data create_test_scene(IndexT viewsCount, bool bSharedIntrinsic)
   SfM_Data sfm_data;
   sfm_data.s_root_path = "./";
 
-  for(IndexT i = 0; i < viewsCount; ++i)
+  for (IndexT i = 0; i < viewsCount; ++i)
   {
     // Add views
     std::ostringstream os;
@@ -60,7 +65,7 @@ TEST(SfM_Data_IO, SAVE_LOAD_JSON) {
 
   const std::vector<std::string> ext_Type = {"json", "bin", "xml"};
 
-  for (int i=0; i < ext_Type.size(); ++i)
+  for (size_t i=0; i < ext_Type.size(); ++i)
   {
     std::ostringstream os;
     os << "SAVE_LOAD" << "." << ext_Type[i];

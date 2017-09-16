@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -15,13 +16,13 @@ using namespace openMVG;
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <vector>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <iterator>
 #include <map>
 #include <string>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <iterator>
+#include <vector>
 
 struct Document
 {
@@ -57,7 +58,7 @@ struct Document
           std::stringstream sStream(temp);
           float pt[3];
           sStream >> pt[0] >> pt[1] >> pt[2];
-          int count;
+          int count = -1;
           sStream >> count;
           size_t imaId, featId;
           for (int i = 0; i < count; ++i)
@@ -86,7 +87,6 @@ struct Document
     // Read cameras
     const std::string sDirectoryCam = stlplus::folder_append_separator(_sDirectory) + "cameras";
 
-    size_t camIndex = 0;
     //Read views file
     {
       std::ifstream iFilein(stlplus::create_filespec(_sDirectory,"views","txt").c_str());
@@ -95,8 +95,9 @@ struct Document
         std::string temp;
         getline(iFilein,temp); //directory name
         getline(iFilein,temp); //directory name
-        size_t nbImages;
+        size_t nbImages = 0;
         iFilein>> nbImages;
+        size_t camIndex = 0; // track inserted image and camera count
         while(iFilein.good())
         {
           getline(iFilein,temp);
@@ -104,7 +105,7 @@ struct Document
           {
             std::stringstream sStream(temp);
             std::string sImageName, sCamName;
-            size_t w,h;
+            size_t w = 0, h = 0;
             float znear, zfar;
             sStream >> sImageName >> w >> h >> sCamName >> znear >> zfar;
             // Read the corresponding camera

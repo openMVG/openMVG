@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,15 +8,20 @@
 
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
 
-#include "openMVG/matching/metric.hpp"
-#include "openMVG/robust_estimation/guided_matching.hpp"
+#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
-#include "openMVG/graph/graph.hpp"
-#include "openMVG/tracks/tracks.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/robust_estimation/guided_matching.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/tracks/tracks.hpp"
 
-#include "third_party/progress/progress.hpp"
+#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -22,15 +29,12 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::features;
 using namespace openMVG::geometry;
-
+using namespace openMVG::matching;
 
 /// Camera pair epipole (Projection of camera center 2 in the image plane 1)
 inline Vec3 epipole_from_P(const Mat34& P1, const Pose3& P2)
 {
-  const Vec3 c = P2.center();
-  Vec4 center;
-  center << c(0), c(1), c(2), 1.0;
-  return P1*center;
+  return P1 * P2.center().homogeneous();
 }
 
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
@@ -42,14 +46,13 @@ void PointsToMat(
   MatT & m)
 {
   m.resize(2, vec_feats.size());
-  typedef typename MatT::Scalar Scalar; // Output matrix type
 
-  size_t i = 0;
-  for( PointFeatures::const_iterator iter = vec_feats.begin();
+  Mat::Index i = 0;
+  for (PointFeatures::const_iterator iter = vec_feats.begin();
     iter != vec_feats.end(); ++iter, ++i)
   {
     if (cam)
-      m.col(i) = cam->get_ud_pixel(Vec2(iter->x(), iter->y()));
+      m.col(i) = cam->get_ud_pixel({iter->x(), iter->y()});
     else
       m.col(i) << iter->x(), iter->y();
   }
@@ -110,11 +113,14 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
         sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
-      const Mat34 P_L = iterIntrinsicL->second.get()->get_projective_equivalent(poseL);
-      const Mat34 P_R = iterIntrinsicR->second.get()->get_projective_equivalent(poseR);
+      const Mat34 P_L = iterIntrinsicL->second->get_projective_equivalent(poseL);
+      const Mat34 P_R = iterIntrinsicR->second->get_projective_equivalent(poseR);
 
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = max_reprojection_error_;
+
+      std::shared_ptr<features::Regions> regionsL = regions_provider->get(it->first);
+      std::shared_ptr<features::Regions> regionsR = regions_provider->get(it->second);
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
@@ -122,25 +128,24 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
         (
           F_lr,
           iterIntrinsicL->second.get(),
-          *regions_provider->regions_per_view.at(it->first),
+          *regionsL.get(),
           iterIntrinsicR->second.get(),
-          *regions_provider->regions_per_view.at(it->second),
+          *regionsR.get(),
           Square(thresholdF), Square(0.8),
           vec_corresponding_indexes
         );
     #else
       const Vec3 epipole2  = epipole_from_P(P_R, poseL);
 
-      const features::Regions * regions = regions_provider->regions_per_view.at(it->first).get();
       geometry_aware::GuidedMatching_Fundamental_Fast
         <openMVG::fundamental::kernel::EpipolarDistanceError>
         (
           F_lr,
           epipole2,
           iterIntrinsicL->second.get(),
-          *regions_provider->regions_per_view.at(it->first),
+          *regionsL.get(),
           iterIntrinsicR->second.get(),
-          *regions_provider->regions_per_view.at(it->second),
+          *regionsR.get(),
           iterIntrinsicR->second->w(), iterIntrinsicR->second->h(),
           Square(thresholdF), Square(0.8),
           vec_corresponding_indexes
@@ -151,10 +156,10 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          ++my_progress_bar;
           putatives_matches[*it].insert(putatives_matches[*it].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
+        ++my_progress_bar;
       }
     }
   }
@@ -170,13 +175,13 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   // Triangulate triplet tracks
   //  - keep valid one
 
-  typedef std::vector< graph::Triplet > Triplets;
+  using Triplets = std::vector< graph::Triplet >;
   const Triplets triplets = graph::tripletListing(pairs);
 
   C_Progress_display my_progress_bar( triplets.size(), std::cout,
     "Per triplet tracks validation (discard spurious correspondences):\n" );
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
+  #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
   for (Triplets::const_iterator it = triplets.begin(); it != triplets.end(); ++it)
   {
@@ -184,10 +189,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
     #pragma omp single nowait
 #endif // OPENMVG_USE_OPENMP
     {
-      #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-      #endif // OPENMVG_USE_OPENMP
-      {++my_progress_bar;}
+      ++my_progress_bar;
 
       const graph::Triplet & triplet = *it;
       const IndexT I = triplet.i, J = triplet.j , K = triplet.k;
@@ -196,20 +198,25 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
       openMVG::tracks::TracksBuilder tracksBuilder;
       {
         PairWiseMatches map_matchesIJK;
-        if (putatives_matches.count(std::make_pair(I,J)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,J)));
+        if (putatives_matches.count({I,J}))
+          map_matchesIJK.insert(*putatives_matches.find({I,J}));
 
-        if (putatives_matches.count(std::make_pair(I,K)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(I,K)));
+        if (putatives_matches.count({I,K}))
+          map_matchesIJK.insert(*putatives_matches.find({I,K}));
 
-        if (putatives_matches.count(std::make_pair(J,K)))
-          map_matchesIJK.insert(*putatives_matches.find(std::make_pair(J,K)));
+        if (putatives_matches.count({J,K}))
+          map_matchesIJK.insert(*putatives_matches.find({J,K}));
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
           tracksBuilder.Filter(3);
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
+
+        std::map<IndexT, std::shared_ptr<openMVG::features::Regions> > regions;
+        regions[I] = regions_provider->get(I);
+        regions[J] = regions_provider->get(J);
+        regions[K] = regions_provider->get(K);
 
         // Triangulate the tracks
         for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
@@ -223,15 +230,15 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
-            const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
+            const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
             trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
           }
-          const Vec3 Xs = trianObj.compute();
+          trianObj.compute();
           if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
-              #pragma omp critical
+            #pragma omp critical
             #endif // OPENMVG_USE_OPENMP
             {
               openMVG::tracks::submapTrack::const_iterator iterI, iterJ, iterK;
@@ -239,8 +246,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
               std::advance(iterJ,1);
               std::advance(iterK,2);
 
-              triplets_matches[std::make_pair(I,J)].emplace_back(iterI->second, iterJ->second);
-              triplets_matches[std::make_pair(J,K)].emplace_back(iterJ->second, iterK->second);
+              triplets_matches[{I,J}].emplace_back(iterI->second, iterJ->second);
+              triplets_matches[{J,K}].emplace_back(iterJ->second, iterK->second);
             }
           }
         }
@@ -266,30 +273,42 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   // Generate new Structure tracks
   sfm_data.structure.clear();
 
+  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_);
+  C_Progress_display my_progress_bar( map_tracksCommon.size(), std::cout,
+    "Tracks to structure conversion:\n" );
   // Fill sfm_data with the computed tracks (no 3D yet)
-  Landmarks & structure = sfm_data.structure;
-  IndexT idx(0);
-  for (tracks::STLMAPTracks::const_iterator itTracks = map_tracksCommon.begin();
-    itTracks != map_tracksCommon.end();
-    ++itTracks, ++idx)
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel for schedule(dynamic)
+#endif // OPENMVG_USE_OPENMP
+  for (int i = 0; i < map_tracksCommon.size(); ++i)
   {
-    const tracks::submapTrack & track = itTracks->second;
-    structure[idx] = Landmark();
-    Observations & obs = structure.at(idx).obs;
-    for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+    ++my_progress_bar;
+
+    tracks::STLMAPTracks::const_iterator itTracks = map_tracksCommon.begin();
+    std::advance(itTracks, i);
     {
-      const size_t imaIndex = it->first;
-      const size_t featIndex = it->second;
-      const Vec2 pt = regions_provider->regions_per_view.at(imaIndex)->GetRegionPosition(featIndex);
-      obs[imaIndex] = Observation(pt, featIndex);
+      const tracks::submapTrack & track = itTracks->second;
+
+      Observations obs;
+      for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+      {
+        const IndexT imaIndex = it->first;
+        const IndexT featIndex = it->second;
+        const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
+        const Vec2 pt = regions->GetRegionPosition(featIndex);
+        obs[imaIndex] = Observation(pt, featIndex);
+      }
+      Landmark landmark;
+      if (structure_estimator.robust_triangulation(sfm_data, obs, landmark))
+      #ifdef OPENMVG_USE_OPENMP
+      #pragma omp critical
+      #endif // OPENMVG_USE_OPENMP
+      {
+        sfm_data.structure[itTracks->first] = landmark;
+      }
     }
   }
-
-  // Triangulate them using a robust triangulation scheme
-  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_, true);
-  structure_estimator.triangulate(sfm_data);
 }
 
 } // namespace sfm
 } // namespace openMVG
-

@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -8,7 +9,7 @@
 #ifndef OPENMVG_SFM_IO_H
 #define OPENMVG_SFM_IO_H
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/stl/split.hpp"
 
 #include <fstream>
@@ -40,7 +41,7 @@ struct IntrinsicCameraInfo
   bool m_bKnownIntrinsic; // true if 11 or 6, else false
   std::string m_sCameraMaker, m_sCameraModel;
 
-  IntrinsicCameraInfo(): m_w(0), m_h(0), m_K(Mat3::Zero()), m_k1(0), m_k2(0), m_k3(0), m_bKnownIntrinsic(false), m_sCameraModel(""), m_sCameraMaker("")
+  IntrinsicCameraInfo(): m_w(0), m_h(0), m_K(Mat3::Zero()), m_k1(0), m_k2(0), m_k3(0), m_bKnownIntrinsic(false), m_sCameraMaker(""), m_sCameraModel("")
   {  }
 
   /// Functor used to tell if two IntrinsicCameraInfo share the same optical properties
@@ -110,7 +111,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
          intrinsicCamInfo.m_sCameraModel = vec_str[4];
       }
       break;
-      case  6 : // a camera with exif data found in the database
+      case 6 : // a camera with exif data found in the database
       {
          oss.clear(); oss.str(vec_str[3]);
          float focal;
@@ -157,7 +158,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
         intrinsicCamInfo.m_focal = static_cast<float>(K(0,0)); // unknown sensor size;
       }
       break;
-      default :
+      default:
       {
         std::cerr << "Invalid image list line: wrong number of arguments" << std::endl;
         in.close();
@@ -189,9 +190,12 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
 }
 
 //-- Load an image list file but only return camera image names
-static bool loadImageList( std::vector<std::string> & vec_camImageName,
-                           const std::string & sListFileName,
-                           bool bVerbose = true )
+inline bool loadImageList
+(
+  std::vector<std::string> & vec_camImageName,
+  const std::string & sListFileName,
+  bool bVerbose = true
+)
 {
   vec_camImageName.clear();
   std::vector<openMVG::SfMIO::CameraInfo> vec_camImageIntrinsicInfo;
@@ -216,4 +220,3 @@ static bool loadImageList( std::vector<std::string> & vec_camImageName,
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_IO_H
-

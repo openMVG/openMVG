@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#include "testing/testing.h"
+
+#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
+
 #include <algorithm>
+#include <limits>
 #include <iostream>
 #include <vector>
-
-#include "testing/testing.h"
-#include "openMVG/linearProgramming/linearProgrammingMOSEK.hpp"
-#include "openMVG/linearProgramming/linearProgrammingOSI_X.hpp"
 
 
 using namespace openMVG;
@@ -49,32 +52,9 @@ void BuildLinearProblem(LP_Constraints & cstraint)
   std::fill_n(cstraint.vec_sign_.begin(), 3, LP_Constraints::LP_LESS_OR_EQUAL);
   std::fill_n(cstraint.vec_sign_.begin()+3, 2, LP_Constraints::LP_GREATER_OR_EQUAL);
 
-  cstraint.vec_bounds_ = std::vector< std::pair<double,double> >(cstraint.nbParams_);
-  fill(cstraint.vec_bounds_.begin(),cstraint.vec_bounds_.end(),
-      std::make_pair((double)-1e+30, (double)1e+30));
+  cstraint.vec_bounds_.assign(cstraint.nbParams_,
+    {std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()});
 }
-
-#ifdef OPENMVG_HAVE_MOSEK
-// LP_Solve website example solving with the HighLevelFramework
-TEST(linearProgramming, MOSEK_dense_sample) {
-
-  LP_Constraints cstraint;
-  BuildLinearProblem(cstraint);
-
-  //Solve
-  std::vector<double> vec_solution(2);
-  MOSEK_SolveWrapper solver(2);
-  solver.setup(cstraint);
-
-  EXPECT_TRUE(solver.solve());
-  solver.getSolution(vec_solution);
-
-  EXPECT_NEAR( 21.875000, vec_solution[0], 1e-6);
-  EXPECT_NEAR( 53.125000, vec_solution[1], 1e-6);
-
-  std::cout << "Solution : " << vec_solution[0] << " " << vec_solution[1] << std::endl;
-}
-#endif // OPENMVG_HAVE_MOSEK
 
 TEST(linearProgramming, osiclp_dense_sample) {
 
@@ -138,9 +118,7 @@ void BuildSparseLinearProblem(LP_Constraints_Sparse & cstraint)
   vec_sign[2] = LP_Constraints::LP_LESS_OR_EQUAL;
 
   // Variable bounds
-  cstraint.vec_bounds_ = std::vector< std::pair<double,double> >(4);
-  fill(cstraint.vec_bounds_.begin(),cstraint.vec_bounds_.end(),
-      std::make_pair(0.0, (double)1e+30));
+  cstraint.vec_bounds_.assign(4, {0.0, std::numeric_limits<double>::max()});
   cstraint.vec_bounds_[1].second = 10;
 
   // Objective to maximize
@@ -151,28 +129,6 @@ void BuildSparseLinearProblem(LP_Constraints_Sparse & cstraint)
   cstraint.vec_cost_[2] = 5;
   cstraint.vec_cost_[3] = 1;
 }
-
-#ifdef OPENMVG_HAVE_MOSEK
-// Unit test on mosek Sparse constraint
-TEST(linearProgramming, mosek_sparse_sample) {
-
-  LP_Constraints_Sparse cstraint;
-  BuildSparseLinearProblem(cstraint);
-
-  //Solve
-  std::vector<double> vec_solution(4);
-  MOSEK_SolveWrapper solver(4);
-  solver.setup(cstraint);
-
-  EXPECT_TRUE(solver.solve());
-  solver.getSolution(vec_solution);
-
-  EXPECT_NEAR( 0.00, vec_solution[0], 1e-2);
-  EXPECT_NEAR( 0.00, vec_solution[1], 1e-2);
-  EXPECT_NEAR( 15, vec_solution[2], 1e-2);
-  EXPECT_NEAR( 8.33, vec_solution[3], 1e-2);
-}
-#endif // #ifdef OPENMVG_HAVE_MOSEK
 
 TEST(linearProgramming, osiclp_sparse_sample) {
 
@@ -192,29 +148,6 @@ TEST(linearProgramming, osiclp_sparse_sample) {
   EXPECT_NEAR( 15, vec_solution[2], 1e-2);
   EXPECT_NEAR( 8.33, vec_solution[3], 1e-2);
 }
-
-#ifdef OPENMVG_HAVE_MOSEK
-TEST(linearProgramming, osi_mosek_sparse_sample) {
-
-  LP_Constraints_Sparse cstraint;
-  BuildSparseLinearProblem(cstraint);
-
-  //Solve
-  std::vector<double> vec_solution(4);
-  OSI_MOSEK_SolverWrapper solver(4);
-  solver.setup(cstraint);
-
-  EXPECT_TRUE(solver.solve());
-  solver.getSolution(vec_solution);
-
-  EXPECT_NEAR( 0.00, vec_solution[0], 1e-2);
-  EXPECT_NEAR( 0.00, vec_solution[1], 1e-2);
-  EXPECT_NEAR( 15, vec_solution[2], 1e-2);
-  EXPECT_NEAR( 8.33, vec_solution[3], 1e-2);
-}
-#endif // #ifdef OPENMVG_HAVE_MOSEK
-
-
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

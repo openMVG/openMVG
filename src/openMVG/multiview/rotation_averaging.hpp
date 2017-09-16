@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_H_
-#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_H_
+#ifndef OPENMVG_MULTIVIEW_ROTATION_AVERAGING_HPP
+#define OPENMVG_MULTIVIEW_ROTATION_AVERAGING_HPP
 
 //--
 //-- Implementation related to rotation averaging.
@@ -25,10 +26,8 @@
 //--
 
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/multiview/rotation_averaging_l2.hpp"
 
-#endif //OPENMVG_MULTIVIEW_ROTATION_AVERAGING_H_
-
+#endif // OPENMVG_MULTIVIEW_ROTATION_AVERAGING_HPP

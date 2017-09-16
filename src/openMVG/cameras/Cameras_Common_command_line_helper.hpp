@@ -1,17 +1,24 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
-#define OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "openMVG/stl/split.hpp"
 
 namespace openMVG
 {
 namespace cameras
 {
-#include "openMVG/stl/split.hpp"
 
 // Allow to initialize an object cameras::Intrinsic_Parameter_Type BA from
 // a string and delimiters('|')
@@ -32,7 +39,7 @@ StringTo_Intrinsic_Parameter_Type
     static_cast<cameras::Intrinsic_Parameter_Type>(0);
 
   // Look for the "STRING KEY" parameters and initialize them
-  for (const string & item : items)
+  for (const std::string & item : items)
   {
     // cameras::Intrinsic_Parameter_Type
     if (item == "NONE")
@@ -60,6 +67,8 @@ StringTo_Intrinsic_Parameter_Type
     else
     {
       std::cerr << "WARNING: Unknow KEY: " << item << std::endl;
+      intrinsics_opt = static_cast<cameras::Intrinsic_Parameter_Type>(0);
+      break;
     }
   }
 
@@ -69,4 +78,4 @@ StringTo_Intrinsic_Parameter_Type
 } // namespace cameras
 } // namespace openMVG
 
-#endif // OPENMVG_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
+#endif // OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP

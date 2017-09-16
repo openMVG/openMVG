@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -8,8 +9,8 @@
 #ifndef OPENMVG_STL_HPP
 #define OPENMVG_STL_HPP
 
-#include "openMVG/stl/stlMap.hpp"
-#include "openMVG/stl/indexed_sort.hpp"
 #include "openMVG/stl/hash.hpp"
+#include "openMVG/stl/indexed_sort.hpp"
+#include "openMVG/stl/stlMap.hpp"
 
-#endif  // OPENMVG_STL_HPP
+#endif // OPENMVG_STL_HPP

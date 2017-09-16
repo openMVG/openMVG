@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -9,12 +11,20 @@
 
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_converter.hpp"
-#include "openMVG/image/pixel_types.hpp"
+
+#include <stdio.h>
+#include <vector>
 
 namespace openMVG
 {
 namespace image
 {
+
+extern template class Image<unsigned char>;
+extern template class Image<float>;
+extern template class Image<double>;
+extern template class Image<RGBColor>;
+extern template class Image<RGBAColor>;
 
 /**
 * @enum Format List of input format handled by IO operations
@@ -367,7 +377,7 @@ inline int ReadImage( const char * path, Image<unsigned char> * im )
   else if ( res == 1 && depth == 3 )
   {
     //-- Must convert RGB to gray
-    RGBColor * ptrCol = reinterpret_cast<RGBColor*>( &ptr[0] ) ;
+    RGBColor * ptrCol = reinterpret_cast<RGBColor*>( &ptr[0] );
     Image<RGBColor> rgbColIm;
     rgbColIm = Eigen::Map<Image<RGBColor>::Base>( ptrCol, h, w );
     //convert RGB to gray
@@ -376,7 +386,7 @@ inline int ReadImage( const char * path, Image<unsigned char> * im )
   else if ( res == 1 && depth == 4 )
   {
     //-- Must convert RGBA to gray
-    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] ) ;
+    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] );
     Image<RGBAColor> rgbaColIm;
     rgbaColIm = Eigen::Map<Image<RGBAColor>::Base>( ptrCol, h, w );
     //convert RGBA to gray
@@ -405,14 +415,14 @@ inline int ReadImage( const char * path, Image<RGBColor> * im )
   const int res = ReadImage( path, &ptr, &w, &h, &depth );
   if ( res == 1 && depth == 3 )
   {
-    RGBColor * ptrCol = reinterpret_cast<RGBColor*>( &ptr[0] ) ;
+    RGBColor * ptrCol = reinterpret_cast<RGBColor*>( &ptr[0] );
     //convert raw array to Image
     ( *im ) = Eigen::Map<Image<RGBColor>::Base>( ptrCol, h, w );
   }
   else if ( res == 1 && depth == 4 )
   {
     //-- Must convert RGBA to RGB
-    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] ) ;
+    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] );
     Image<RGBAColor> rgbaColIm;
     rgbaColIm = Eigen::Map<Image<RGBAColor>::Base>( ptrCol, h, w );
     //convert RGBA to RGB
@@ -444,7 +454,7 @@ inline int ReadImage( const char * path, Image<RGBAColor> * im )
   }
   if ( res == 1 )
   {
-    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] ) ;
+    RGBAColor * ptrCol = reinterpret_cast<RGBAColor*>( &ptr[0] );
     //convert raw array to Image
     ( *im ) = Eigen::Map<Image<RGBAColor>::Base>( ptrCol, h, w );
   }

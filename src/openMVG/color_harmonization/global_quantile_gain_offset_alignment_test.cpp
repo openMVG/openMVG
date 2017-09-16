@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2013,2014 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,7 +16,7 @@
 //-- Color harmonization solver
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
-#include "openMVG/image/image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "testing/testing.h"
 
 #include "third_party/histogram/histogram.hpp"
@@ -67,14 +69,9 @@ TEST(ColorHarmonisation, Simple_offset) {
   //-- First image will be considered as reference and don't move
   std::vector<size_t> vec_indexToFix(1,0);
 
-#ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
-#else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
-#endif
   // Red channel
   {
-    SOLVER_LP_T lpSolver(vec_solution.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution.size());
 
     ConstraintBuilder_GainOffset cstBuilder(vec_relativeHistograms, vec_indexToFix);
     LP_Constraints_Sparse constraint;
@@ -131,14 +128,9 @@ TEST(ColorHarmonisation, Offset_gain) {
   //-- First image will be considered as reference and don't move
   std::vector<size_t> vec_indexToFix(1,0);
 
-#ifdef OPENMVG_HAVE_MOSEK
-  typedef MOSEK_SolveWrapper SOLVER_LP_T;
-#else
-  typedef OSI_CLP_SolverWrapper SOLVER_LP_T;
-#endif
   // Red channel
   {
-    SOLVER_LP_T lpSolver(vec_solution.size());
+    OSI_CLP_SolverWrapper lpSolver(vec_solution.size());
 
     ConstraintBuilder_GainOffset cstBuilder(vec_relativeHistograms, vec_indexToFix);
     LP_Constraints_Sparse constraint;

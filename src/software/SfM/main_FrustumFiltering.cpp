@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <cstdlib>
-
-#include "openMVG/sfm/sfm.hpp"
-#include "openMVG/system/timer.hpp"
+#include "openMVG/geometry/frustum.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -26,7 +29,6 @@ Pair_Set BuildPairsFromStructureObservations(const SfM_Data & sfm_data)
     itL != sfm_data.GetLandmarks().end(); ++itL)
   {
     const Landmark & landmark = itL->second;
-    const Vec3 & X = landmark.X;
     for (Observations::const_iterator iterI = landmark.obs.begin();
       iterI != landmark.obs.end(); ++iterI)
     {
@@ -48,7 +50,7 @@ Pair_Set BuildPairsFromFrustumsIntersections(
   const SfM_Data & sfm_data,
   const double z_near = -1., // default near plane
   const double z_far = -1.,  // default far plane
-  const string & sOutDirectory = "") // output directory to save frustums as PLY
+  const std::string & sOutDirectory = "") // output directory to save frustums as PLY
 {
   const Frustum_Filter frustum_filter(sfm_data, z_near, z_far);
   if (!sOutDirectory.empty())
@@ -82,7 +84,7 @@ int main(int argc, char **argv)
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-o|--output_file] filename of the output pair file\n"
@@ -95,8 +97,8 @@ int main(int argc, char **argv)
   }
 
   // Assert that we can create the output directory
-  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile) ))
-    if(!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
+  if (!stlplus::folder_exists( stlplus::folder_part(sOutFile)) &&
+      !stlplus::folder_create( stlplus::folder_part(sOutFile)))
       return EXIT_FAILURE;
 
   // Load input SfM_Data scene
@@ -120,10 +122,6 @@ int main(int argc, char **argv)
   {
     return EXIT_SUCCESS;
   }
-  else
-  {
-    return EXIT_FAILURE;
-  }
 
-
+  return EXIT_FAILURE;
 }

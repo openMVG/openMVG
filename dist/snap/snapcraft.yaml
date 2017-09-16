@@ -1,0 +1,148 @@
+# This recipe is known to work under Ubuntu 16.04 (yet, the generated .snap
+# file will work on any Linux distribution having snap installed).
+name: openmvg
+version: '1.2-0'
+summary: OpenMVG (open Multiple View Geometry)
+description: |
+  OpenMVG (Multiple View Geometry) "open Multiple View Geometry" is a library
+  for computer-vision scientists and especially targeted to the Multiple View
+  Geometry community. It is designed to provide an easy access to the classical
+  problem solvers in Multiple View Geometry and solve them accurately.
+
+grade: stable
+confinement: strict
+
+apps:
+  ColHarmonize:
+    command: openMVG_main_ColHarmonize
+    plugs: [home]
+  ComputeClusters:
+    command: openMVG_main_ComputeClusters
+    plugs: [home]
+  ComputeFeatures:
+    command: openMVG_main_ComputeFeatures
+    plugs: [home]
+  ComputeMatches:
+    command: openMVG_main_ComputeMatches
+    plugs: [home]
+  ComputeSfM-DataColor:
+    command: openMVG_main_ComputeSfM_DataColor
+    plugs: [home]
+  ComputeStructureFromKnownPoses:
+    command: openMVG_main_ComputeStructureFromKnownPoses
+    plugs: [home]
+  ConvertList:
+    command: openMVG_main_ConvertList
+    plugs: [home]
+  ConvertSfM-DataFormat:
+    command: openMVG_main_ConvertSfM_DataFormat
+    plugs: [home]
+  evalQuality:
+    command: openMVG_main_evalQuality
+    plugs: [home]
+  exif-Parsing:
+    command: openMVG_main_exif_Parsing
+    plugs: [home]
+  ExportCameraFrustums:
+    command: openMVG_main_ExportCameraFrustums
+    plugs: [home]
+  exportKeypoints:
+    command: openMVG_main_exportKeypoints
+    plugs: [home]
+  exportMatches:
+    command: openMVG_main_exportMatches
+    plugs: [home]
+  exportTracks:
+    command: openMVG_main_exportTracks
+    plugs: [home]
+  ExportUndistortedImages:
+    command: openMVG_main_ExportUndistortedImages
+    plugs: [home]
+  FrustumFiltering:
+    command: openMVG_main_FrustumFiltering
+    plugs: [home]
+  geodesy-registration-to-gps-position:
+    command: openMVG_main_geodesy_registration_to_gps_position
+    plugs: [home]
+  GlobalSfM:
+    command: openMVG_main_GlobalSfM
+    plugs: [home]
+  IncrementalSfM:
+    command: openMVG_main_IncrementalSfM
+    plugs: [home]
+  ListMatchingPairs:
+    command: openMVG_main_ListMatchingPairs
+    plugs: [home]
+  openMVG2CMPMVS:
+    command: openMVG_main_openMVG2CMPMVS
+    plugs: [home]
+  openMVG2MESHLAB:
+    command: openMVG_main_openMVG2MESHLAB
+    plugs: [home]
+  openMVG2MVE2:
+    command: openMVG_main_openMVG2MVE2
+    plugs: [home]
+  openMVG2MVSTEXTURING:
+    command: openMVG_main_openMVG2MVSTEXTURING
+    plugs: [home]
+  openMVG2NVM:
+    command: openMVG_main_openMVG2NVM
+    plugs: [home]
+  openMVG2openMVS:
+    command: openMVG_main_openMVG2openMVS
+    plugs: [home]
+  openMVG2PMVS:
+    command: openMVG_main_openMVG2PMVS
+    plugs: [home]
+  SfMInit-ImageListing:
+    command: openMVG_main_SfMInit_ImageListing
+    plugs: [home]
+  SfM-Localization:
+    command: openMVG_main_SfM_Localization
+    plugs: [home]
+  SfM-GlobalPipeline-py:
+    command: python3 $SNAP/bin/SfM_GlobalPipeline.py
+    plugs: [home]
+  SfM-SequentialPipeline-py:
+    command: python3 $SNAP/bin/SfM_SequentialPipeline.py
+    plugs: [home]
+
+parts:
+  openmvg:
+    plugin: cmake
+    source: https://github.com/openMVG/openMVG.git
+    source-tag: v1.2
+    build-packages:
+      - build-essential
+      - libpng12-dev
+      - libjpeg-dev
+      - libtiff5-dev
+      - libxxf86vm1
+      - libxxf86vm-dev
+      - libxi-dev
+      - libxrandr-dev
+    prepare: |
+      sed -i 's|import commands||' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i -e '28iOPENMVG_SFM_BIN = os.environ["SNAP"] + "/bin"' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i -e '28iCAMERA_SENSOR_WIDTH_DIRECTORY = os.environ["SNAP"] + "/data"' src/software/SfM/SfM_GlobalPipeline.py.in
+      sed -i 's|import commands||' src/software/SfM/SfM_SequentialPipeline.py.in
+      sed -i -e '28iOPENMVG_SFM_BIN = os.environ["SNAP"] + "/bin"' src/software/SfM/SfM_SequentialPipeline.py.in
+      sed -i -e '28iCAMERA_SENSOR_WIDTH_DIRECTORY = os.environ["SNAP"] + "/data"' src/software/SfM/SfM_SequentialPipeline.py.in
+    build: |
+      mkdir openMVG_build
+      cd openMVG_build
+      cmake \
+          -DCMAKE_BUILD_TYPE=RELEASE \
+          -DTARGET_ARCHITECTURE=generic \
+          . ../src
+      make -j8
+    install: |
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp openMVG_build/Linux-*-RELEASE/openMVG_main_* $SNAPCRAFT_PART_INSTALL/bin/
+      cp openMVG_build/software/SfM/SfM_*.py $SNAPCRAFT_PART_INSTALL/bin/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/data
+      cp src/openMVG/exif/sensor_width_database/sensor_width_camera_database.txt $SNAPCRAFT_PART_INSTALL/data
+  python:
+    plugin: nil
+    stage-packages:
+      - python3-minimal

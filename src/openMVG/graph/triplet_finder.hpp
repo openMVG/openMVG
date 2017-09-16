@@ -1,20 +1,22 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GRAPH_TRIPLET_FINDER_H
-#define OPENMVG_GRAPH_TRIPLET_FINDER_H
-
-#include "openMVG/types.hpp"
-#include "openMVG/graph/graph.hpp"
-
-#include "lemon/list_graph.h"
-using namespace lemon;
+#ifndef OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
+#define OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 
 #include <algorithm>
+#include <utility>
 #include <vector>
+
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/types.hpp"
+
+#include "lemon/list_graph.h"
 
 namespace openMVG
 {
@@ -69,8 +71,8 @@ struct Triplet
   */
   friend bool operator==( const Triplet& m1, const Triplet& m2 )
   {
-    return m1.contain( std::make_pair( m2.i, m2.j ) )
-           && m1.contain( std::make_pair( m2.i, m2.k ) );
+    return m1.contain( {m2.i, m2.j} )
+           && m1.contain( {m2.i, m2.k} );
   }
 
   /**
@@ -97,15 +99,8 @@ struct Triplet
     return os;
   }
 
-  /// First index id
-  IndexT i;
-
-  /// Second index id
-  IndexT j;
-
-  /// Third index id
-  IndexT k;
-
+  /// the three triplet index id
+  IndexT i, j, k;
 };
 
 
@@ -130,24 +125,24 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
   //          Mark first edge as visited
 
   /// Type of graph iterator
-  typedef typename GraphT::OutArcIt OutArcIt;
+  using OutArcIt = typename GraphT::OutArcIt;
 
   /// Type of node iterator
-  typedef typename GraphT::NodeIt NodeIterator;
+  using NodeIterator = typename GraphT::NodeIt;
 
   /// Type for edge maps
-  typedef typename GraphT::template EdgeMap<bool> BoolEdgeMap;
+  using BoolEdgeMap = typename GraphT::template EdgeMap<bool>;
 
   /// List of visited edge map
   BoolEdgeMap map_edge( g, false ); // Visited edge map
 
   // For each nodes
-  for ( NodeIterator itNode( g ); itNode != INVALID; ++itNode )
+  for ( NodeIterator itNode( g ); itNode != lemon::INVALID; ++itNode )
   {
 
     // For each edges (list the not visited outgoing edges)
     std::vector<OutArcIt> vec_edges;
-    for ( OutArcIt e( g, itNode ); e != INVALID; ++e )
+    for ( OutArcIt e( g, itNode ); e != lemon::INVALID; ++e )
     {
       if ( !map_edge[e] ) // If not visited
       {
@@ -156,14 +151,14 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
     }
 
     // For all tuples look of ends of edges are linked
-    while( vec_edges.size() > 1 )
+    while (vec_edges.size() > 1)
     {
       OutArcIt itPrev = vec_edges[0]; // For all tuple (0,Inth)
-      for( size_t i = 1; i < vec_edges.size(); ++i )
+      for (size_t i = 1; i < vec_edges.size(); ++i )
       {
         // Check if the extremity is linked
         typename GraphT::Arc cycleEdge = findArc( g, g.target( itPrev ), g.target( vec_edges[i] ) );
-        if ( cycleEdge != INVALID && !map_edge[cycleEdge] )
+        if ( cycleEdge != lemon::INVALID && !map_edge[cycleEdge] )
         {
           // Elementary cycle found (make value follow a monotonic ascending serie)
           int triplet[3] =
@@ -173,7 +168,7 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
             g.id( g.target( vec_edges[i] ) )
           };
           std::sort( &triplet[0], &triplet[3] );
-          vec_triplets.push_back( Triplet( triplet[0], triplet[1], triplet[2] ) );
+          vec_triplets.emplace_back( triplet[0], triplet[1], triplet[2] );
         }
       }
       // Mark the current ref edge as visited
@@ -197,18 +192,16 @@ static std::vector< graph::Triplet > tripletListing
   const IterablePairs & pairs
 )
 {
-  std::vector< graph::Triplet > vec_triplets;
-
   indexedGraph putativeGraph( pairs );
-
+  std::vector< graph::Triplet > vec_triplets;
   graph::List_Triplets<indexedGraph::GraphT>( putativeGraph.g, vec_triplets );
 
   //Change triplets to ImageIds
   for ( auto & triplet : vec_triplets )
   {
-    const IndexT I = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.i )];
-    const IndexT J = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.j )];
-    const IndexT K = ( *putativeGraph.map_nodeMapIndex )[putativeGraph.g.nodeFromId( triplet.k )];
+    const IndexT I = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.i )];
+    const IndexT J = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.j )];
+    const IndexT K = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.k )];
     IndexT triplet_[3] = { I, J, K };
     std::sort( &triplet_[0], &triplet_[3] );
     triplet = graph::Triplet( triplet_[0], triplet_[1], triplet_[2] );
@@ -219,4 +212,4 @@ static std::vector< graph::Triplet > tripletListing
 } // namespace graph
 } // namespace openMVG
 
-#endif // OPENMVG_GRAPH_TRIPLET_FINDER_H
+#endif // OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP

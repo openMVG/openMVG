@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
 
@@ -5,21 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
 
 #include "software/SfM/io_readGT.hpp"
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
-#include "third_party/htmlDoc/htmlDoc.hpp"
-
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
+using namespace openMVG::cameras;
 
 int main(int argc, char **argv)
 {
@@ -42,7 +44,7 @@ int main(int argc, char **argv)
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--gt] path (where ground truth camera trajectory are saved)\n"
       << "[-c|--computed] path (openMVG SfM_Output directory)\n"
@@ -110,7 +112,8 @@ int main(int argc, char **argv)
   // Load GT camera rotations & positions [R|C]:
 
   std::map< std::string, std::pair<Mat3, Vec3> > map_Rt_gt;
-  std::map< size_t, PinholeCamera> map_Cam_gt;
+  std::map< size_t, PinholeCamera, std::less<size_t>,
+         Eigen::aligned_allocator<std::pair<size_t, PinholeCamera>>> map_Cam_gt;
   // READ DATA FROM GT
   {
     std::cout << "\nTry to read data from GT";
@@ -140,7 +143,7 @@ int main(int argc, char **argv)
   Poses::const_iterator iter_loaded_poses = sfm_data.GetPoses().begin();
   std::vector<Vec3> vec_camPosGT, vec_C;
   std::vector<Mat3> vec_camRotGT, vec_camRot;
-  for(std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
+  for (std::map< size_t, PinholeCamera>::const_iterator iterGT = map_Cam_gt.begin();
     iterGT != map_Cam_gt.end(); ++iterGT, ++iter_loaded_poses)
   {
     // GT
@@ -166,4 +169,3 @@ int main(int argc, char **argv)
 
   return EXIT_SUCCESS;
 }
-

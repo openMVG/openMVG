@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -5,11 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
+#define OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include <limits>
+#include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/types.hpp"
+
+namespace openMVG { namespace cameras { struct IntrinsicBase; } }
+namespace openMVG { namespace features { class Regions; } }
+namespace openMVG { namespace geometry { class Pose3; } }
+namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 namespace sfm {
@@ -19,16 +29,16 @@ struct Image_Localizer_Match_Data
   Mat34 projection_matrix;
   Mat pt3D;
   Mat pt2D;
-  std::vector<size_t> vec_inliers;
+  std::vector<uint32_t> vec_inliers;
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
-  size_t max_iteration = 4096;
+  uint32_t max_iteration = 4096;
 };
 
 class SfM_Localizer
 {
 public:
-  virtual ~SfM_Localizer() {}
+  virtual ~SfM_Localizer() = default;
 
   /**
   * @brief Build the retrieval database (3D points descriptors)
@@ -39,8 +49,8 @@ public:
   */
   virtual bool Init
   (
-    const SfM_Data & sfm_data,
-    const Regions_Provider & region_provider
+    const sfm::SfM_Data & sfm_data,
+    const sfm::Regions_Provider & region_provider
   ) = 0;
 
   /**
@@ -102,3 +112,5 @@ public:
 
 } // namespace sfm
 } // namespace openMVG
+
+#endif // OPENMVG_SFM_PIPELINES_LOCALIZATION_SFM_LOCALIZER_HPP

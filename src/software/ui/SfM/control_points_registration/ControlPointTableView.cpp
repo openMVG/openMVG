@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -23,8 +25,8 @@ ControlPointTableView::ControlPointTableView
   const SfM_Data * sfm_data,
   QWidget *parent
 )
-: sfm_data_(sfm_data),
-  QDialog(parent)
+: QDialog(parent),
+  sfm_data_(sfm_data)
 {
   if (sfm_data_ == nullptr)
     return;
@@ -123,7 +125,7 @@ void ControlPointTableView::keyReleaseEvent
   QKeyEvent* event
 )
 {
-  if(event->key() == Qt::Key_Delete)
+  if (event->key() == Qt::Key_Delete)
   {
     QItemSelection selection( table_->selectionModel()->selection() );
 

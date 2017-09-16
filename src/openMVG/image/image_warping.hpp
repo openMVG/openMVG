@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_IMAGE_HOMOGRAPHY_WARP
-#define OPENMVG_IMAGE_HOMOGRAPHY_WARP
+#ifndef OPENMVG_IMAGE_IMAGE_WARPING_HPP
+#define OPENMVG_IMAGE_IMAGE_WARPING_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/image/sample.hpp"
 
 namespace openMVG
@@ -25,13 +26,12 @@ namespace image
 * @retval true if H is orientation preserving around the point.
 * @retval false if H is non orientation preserving
 */
-bool ApplyH_AndCheckOrientation( const Mat3 &H, double &x, double &y )
+inline bool ApplyH_AndCheckOrientation( const Mat3 &H, double &x, double &y )
 {
-  Vec3 X( x, y, 1.0 );
-  X = H * X;
-  X /= X( 2 );
-  x = X( 0 );
-  y = X( 1 );
+  const Vec3 X = H * Vec3(x, y, 1.0);
+  const Vec2 x_proj = X.hnormalized();
+  x = x_proj( 0 );
+  y = x_proj( 1 );
   return ( X( 2 ) * H( 2, 2 ) > 0.0 );
 }
 
@@ -64,7 +64,7 @@ void Warp( const Image &im, const Mat3 & H, Image &out )
     }
 }
 
-}; // namespace image
-}; // namespace openMVG
+} // namespace image
+} // namespace openMVG
 
-#endif // OPENMVG_IMAGE_HOMOGRAPHY_WARP
+#endif // OPENMVG_IMAGE_IMAGE_WARPING_HPP

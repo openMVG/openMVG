@@ -5,15 +5,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/cameras/cameras.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/image/image_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
+#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
 
-#include <string>
+#include <cstdlib>
 #include <iostream>
+#include <string>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << ' '
       << "[-i|--imadir - Input path]\n"
       << "[-o|--outdir - path for the undistorted JPG files]\n"
@@ -88,15 +90,15 @@ int main(int argc, char **argv)
     int w,h,depth;
     vector<unsigned char> tmp_vec;
     const string sOutFileName =
-      stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "JPG");
-    const string sInFileName = stlplus::create_filespec(sPath, stlplus::basename_part(vec_fileNames[j]));
+      stlplus::create_filespec(sOutPath, stlplus::basename_part(vec_fileNames[j]), "png");
+    const string sInFileName = stlplus::create_filespec(sPath, stlplus::filename_part(vec_fileNames[j]));
     const int res = ReadImage(sInFileName.c_str(), &tmp_vec, &w, &h, &depth);
 
     const Pinhole_Intrinsic_Radial_K3 cam(w, h, f, c(0), c(1), k(0), k(1), k(2));
 
     if (res == 1)
     {
-      switch(depth)
+      switch (depth)
       {
         case 1: //Greyscale
           {
@@ -129,4 +131,3 @@ int main(int argc, char **argv)
   } //end loop for each file
   return EXIT_SUCCESS;
 }
-

@@ -1,23 +1,4 @@
-
-// Copyright (c) 2007, 2008 libmv authors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -25,20 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
-#define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
+#ifndef OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
+#define OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP
 
+#include <algorithm>
+#include <cstdlib>
 #include <random>
-#include <stdlib.h>
+#include <type_traits>
 #include <vector>
 
 namespace openMVG {
 namespace robust{
-
-namespace
-{
-  std::default_random_engine random_generator;
-}
 
 /**
 * Pick a random subset of the integers [0, total), in random order.
@@ -48,22 +26,27 @@ namespace
 * This uses a quadratic rejection strategy and should only be used for small
 * num_samples.
 *
-* \param num_samples   The number of samples to produce.
-* \param total_samples The number of available samples.
-* \param samples       num_samples of numbers in [0, total_samples) is placed
-*                      here on return.
+* \param[in] num_samples      The number of samples to produce.
+* \param[in] total_samples    The number of available samples.
+* \param[in] random_generator The random number generator.
+* \param[out] samples         num_samples of numbers in [0, total_samples) is placed
+*                             here on return.
 */
+template <class RandomGeneratorT, typename SamplingType>
 inline void UniformSample
 (
-  size_t num_samples,
-  size_t total_samples,
-  std::vector<size_t> *samples
+  const uint32_t num_samples,
+  const uint32_t total_samples,
+  RandomGeneratorT &random_generator,
+  std::vector<SamplingType> *samples
 )
 {
-  std::uniform_int_distribution<unsigned int> distribution(0, total_samples-1);
+  static_assert(std::is_integral<SamplingType>::value, "SamplingType must be an integral type");
+
+  std::uniform_int_distribution<SamplingType> distribution(0, total_samples-1);
   samples->resize(0);
   while (samples->size() < num_samples) {
-    const unsigned int sample = distribution(random_generator);
+    const auto sample = distribution(random_generator);
     bool bFound = false;
     for (size_t j = 0; j < samples->size() && !bFound; ++j) {
       bFound = (*samples)[j] == sample;
@@ -74,6 +57,49 @@ inline void UniformSample
   }
 }
 
+/**
+* Pick n random sample from an array of indices.
+* Use a Fisher Yates sampling (shuffling) to avoid picking the same index many time.
+*
+*
+* \param[in] num_samples The number of randomly picked value in the vec_index array.
+* \param[in] random_generator The random number generator.
+* \param[out] vec_index An array of unique index value. The function shuffle this vector.
+* \param[out] samples Output randomly picked value.
+* \return true if the sampling can be performed
+*/
+template<typename T, class RandomGeneratorT, typename SamplingType = uint32_t>
+bool UniformSample
+(
+  const size_t num_samples,
+  RandomGeneratorT &random_generator,
+  std::vector<T> * vec_index, // the array that provide the index (will be shuffled)
+  std::vector<T> * samples // output found indices
+)
+{
+  static_assert(std::is_integral<SamplingType>::value, "SamplingType must be an integral type");
+
+  if (num_samples > vec_index->size() ||
+      vec_index->size() > static_cast<size_t>(std::numeric_limits<SamplingType>::max()))
+    return false;
+
+  const SamplingType last_idx (vec_index->size() - 1);
+  for (SamplingType i = 0; i < num_samples; ++i)
+  {
+    std::uniform_int_distribution<SamplingType> distribution(i, last_idx);
+    const SamplingType sample = distribution(random_generator);
+
+    std::swap((*vec_index)[i], (*vec_index)[sample]);
+  }
+  samples->resize(num_samples);
+  for (size_t i=0; i < num_samples; ++i)
+  {
+    (*samples)[i] = (*vec_index)[i];
+  }
+  return true;
+}
+
+
 } // namespace robust
 } // namespace openMVG
-#endif // OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_H_
+#endif // OPENMVG_ROBUST_ESTIMATION_RAND_SAMPLING_HPP

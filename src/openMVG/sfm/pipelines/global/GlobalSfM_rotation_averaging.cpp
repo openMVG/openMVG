@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
 
@@ -7,9 +8,10 @@
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 
-#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/multiview/rotation_averaging.hpp"
+#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/stl/stlMap.hpp"
 
 #include "third_party/histogram/histogram.hpp"
@@ -34,11 +36,11 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   RelativeRotations relativeRotations = relativeRot_In;
   // We work on a copy, since inference can remove some relative motions
 
-  switch(eRelativeRotationInferenceMethod)
+  switch (eRelativeRotationInferenceMethod)
   {
-    case(TRIPLET_ROTATION_INFERENCE_NONE):
+    case TRIPLET_ROTATION_INFERENCE_NONE:
     break;
-    case(TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR):
+    case TRIPLET_ROTATION_INFERENCE_COMPOSITION_ERROR:
     {
       //-------------------
       // Triplet inference (test over the composition error)
@@ -50,7 +52,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
 
       pairs = getPairs(relativeRotations);
       const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
-      if(set_remainingIds.empty())
+      if (set_remainingIds.empty())
         return false;
       KeepOnlyReferencedElement(set_remainingIds, relativeRotations);
     }
@@ -68,7 +70,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   Hash_Map<IndexT, IndexT> reindexForward, reindexBackward;
   reindex(pairs, reindexForward, reindexBackward);
 
-  for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
+  for (RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
   {
     RelativeRotation & rel = *iter;
     rel.i = reindexForward[rel.i];
@@ -78,7 +80,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
   //- B. solve global rotation computation
   bool bSuccess = false;
   std::vector<Mat3> vec_globalR(reindexForward.size());
-  switch(eRotationAveragingMethod)
+  switch (eRotationAveragingMethod)
   {
     case ROTATION_AVERAGING_L2:
     {
@@ -94,7 +96,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
           vec_globalR);
 
       // save kept pairs (restore original pose indices using the backward reindexing)
-      for(RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
+      for (RelativeRotations::iterator iter = relativeRotations.begin();  iter != relativeRotations.end(); ++iter)
       {
         RelativeRotation & rel = *iter;
         rel.i = reindexBackward[rel.i];
@@ -248,4 +250,3 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
 
 } // namespace sfm
 } // namespace openMVG
-

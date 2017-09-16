@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,22 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image.hpp"
-#include "openMVG/features/features.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
+#include "openMVG/features/svg_features.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
-
-#include "nonFree/sift/SIFT_describer.hpp"
+#include "openMVG/matching/svg_matches.hpp"
+//
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include "third_party/vectorGraphics/svgDrawer.hpp"
-
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
-using namespace svg;
 using namespace std;
 
 int main() {
@@ -39,7 +41,7 @@ int main() {
   // Detect regions thanks to an image_describer
   //--
   using namespace openMVG::features;
-  std::unique_ptr<Image_describer> image_describer(new SIFT_Image_describer);
+  std::unique_ptr<Image_describer> image_describer(new SIFT_Anatomy_Image_describer);
   std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
@@ -51,7 +53,7 @@ int main() {
   // Show both images side by side
   {
     Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
+    ConcatV(imageL, imageR, concat);
     string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
@@ -61,20 +63,16 @@ int main() {
 
   //- Draw features on the two image (side by side)
   {
-    Image<unsigned char> concat;
-    ConcatH(imageL, imageR, concat);
-
-    //-- Draw features :
-    for (size_t i=0; i < featsL.size(); ++i )  {
-      const SIOPointFeature point = regionsL->Features()[i];
-      DrawCircle(point.x(), point.y(), point.scale(), 255, &concat);
-    }
-    for (size_t i=0; i < featsR.size(); ++i )  {
-      const SIOPointFeature point = regionsR->Features()[i];
-      DrawCircle(point.x()+imageL.Width(), point.y(), point.scale(), 255, &concat);
-    }
-    const std::string out_filename = "01_features.jpg";
-    WriteImage(out_filename.c_str(), concat);
+    Features2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->Features(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->Features(),
+      "01_features.svg"
+    );
   }
 
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
@@ -88,21 +86,19 @@ int main() {
       vec_PutativeMatches);
 
     // Draw correspondences after Nearest Neighbor ratio filter
-    svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
-    for (size_t i = 0; i < vec_PutativeMatches.size(); ++i) {
-      //Get back linked feature, draw a circle and link them by a line
-      const SIOPointFeature L = regionsL->Features()[vec_PutativeMatches[i].i_];
-      const SIOPointFeature R = regionsR->Features()[vec_PutativeMatches[i].j_];
-      svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-      svgStream.drawCircle(L.x(), L.y(), L.scale(), svgStyle().stroke("yellow", 2.0));
-      svgStream.drawCircle(R.x()+imageL.Width(), R.y(), R.scale(),svgStyle().stroke("yellow", 2.0));
-    }
-    string out_filename = "02_siftMatches.svg";
-    ofstream svgFile( out_filename.c_str() );
-    svgFile << svgStream.closeSvgFile().str();
-    svgFile.close();
+    const bool bVertical = true;
+    Matches2SVG
+    (
+      jpg_filenameL,
+      {imageL.Width(), imageL.Height()},
+      regionsL->GetRegionsPositions(),
+      jpg_filenameR,
+      {imageR.Width(), imageR.Height()},
+      regionsR->GetRegionsPositions(),
+      vec_PutativeMatches,
+      "02_Matches.svg",
+      bVertical
+    );
   }
 
   // Display some statistics

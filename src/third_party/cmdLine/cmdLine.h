@@ -2,7 +2,7 @@
  * @file cmdLine.h
  * @brief Command line option parsing
  * @author Pascal Monasse
- * 
+ *
  * Copyright (c) 2012-2014 Pascal Monasse
  * All rights reserved.
  *
@@ -44,7 +44,7 @@ public:
     /// Constructor with short name/long name
     Option(char d, std::string name)
     : c(d), used(false), longName(name) {}
-    virtual ~Option() {}
+    virtual ~Option() = default;
     virtual bool check(int& argc, char* argv[])=0; ///< Option found at argv[0]?
     virtual Option* clone() const=0; ///< Copy
 };
@@ -56,7 +56,7 @@ public:
     OptionSwitch(char c, std::string name="")
     : Option(c,name) {}
     /// Find switch in argv[0]
-    bool check(int& argc, char* argv[]) {
+    bool check(int& argc, char* argv[]) override {
         if(std::string("-")+c==argv[0] ||
            (!longName.empty() && std::string("--")+longName==argv[0])) {
             used = true;
@@ -72,7 +72,7 @@ public:
         return false;
     }
     /// Copy
-    Option* clone() const {
+    Option* clone() const override {
         return new OptionSwitch(c, longName);
     }
 };
@@ -86,7 +86,7 @@ public:
     : Option(c,name), _field(field) {}
     /// Find option in argv[0] and argument in argv[1]. Throw an exception
     /// (type std::string) if the argument cannot be read.
-    bool check(int& argc, char* argv[]) {
+    bool check(int& argc, char* argv[]) override {
         std::string param; int arg=0;
         if(std::string("-")+c==argv[0] ||
            (!longName.empty() && std::string("--")+longName==argv[0])) {
@@ -118,7 +118,7 @@ public:
         return !((str >> _field).fail() || !(str>>unused).fail());
     }
     /// Copy
-    Option* clone() const {
+    Option* clone() const override {
         return new OptionField<T>(c, _field, longName);
     }
 private:

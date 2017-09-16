@@ -1,8 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifndef OPENMVG_MATCHING_CASCADE_HASHER_HPP
+#define OPENMVG_MATCHING_CASCADE_HASHER_HPP
 
 //------------------
 //-- Bibliography --
@@ -55,15 +60,17 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#pragma once
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/matching/metric.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/stl/dynamic_bitset.hpp"
+#include <cmath>
 #include <iostream>
 #include <random>
-#include <cmath>
+#include <utility>
+#include <vector>
+
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/metric.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/stl/dynamic_bitset.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -81,7 +88,7 @@ struct HashedDescriptions{
   // The hash information.
   std::vector<HashedDescription> hashed_desc;
 
-  typedef std::vector<int> Bucket;
+  using Bucket = std::vector<int>;
   // buckets[bucket_group][bucket_id] = bucket (container of description ids).
   std::vector<std::vector<Bucket> > buckets;
 };
@@ -109,14 +116,15 @@ private:
   int nb_buckets_per_group_;
 
 public:
-  CascadeHasher() {}
+  CascadeHasher() = default;
 
   // Creates the hashing projections (cascade of two level of hash codes)
   bool Init
   (
     const uint8_t nb_hash_code = 128,
     const uint8_t nb_bucket_groups = 6,
-    const uint8_t nb_bits_per_bucket = 10)
+    const uint8_t nb_bits_per_bucket = 10,
+    const unsigned random_seed = std::mt19937::default_seed)
   {
     nb_bucket_groups_= nb_bucket_groups;
     nb_hash_code_ = nb_hash_code;
@@ -127,8 +135,7 @@ public:
     // Box Muller transform is used in the original paper to get fast random number
     // from a normal distribution with <mean = 0> and <variance = 1>.
     // Here we use C++11 normal distribution random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(random_seed);
     std::normal_distribution<> d(0,1);
 
     primary_hash_projection_.resize(nb_hash_code, nb_hash_code);
@@ -267,7 +274,7 @@ public:
     const int NN = 2
   ) const
   {
-    typedef L2_Vectorized<typename MatrixT::Scalar> MetricT;
+    using MetricT = L2<typename MatrixT::Scalar>;
     MetricT metric;
 
     static const int kNumTopCandidates = 10;
@@ -292,7 +299,7 @@ public:
     // feature for matching (i.e., prevents duplicates).
     std::vector<bool> used_descriptor(hashed_descriptions2.hashed_desc.size());
 
-    typedef matching::Hamming<stl::dynamic_bitset::BlockType> HammingMetricType;
+    using HammingMetricType = matching::Hamming<stl::dynamic_bitset::BlockType>;
     static const HammingMetricType metricH = {};
     for (int i = 0; i < hashed_descriptions1.hashed_desc.size(); ++i)
     {
@@ -345,7 +352,7 @@ public:
       for (int j = 0; j < candidate_hamming_distances.cols() &&
         (candidate_euclidean_distances.size() < kNumTopCandidates); ++j)
       {
-        for(int k = 0; k < num_descriptors_with_hamming_distance(j) &&
+        for (int k = 0; k < num_descriptors_with_hamming_distance(j) &&
           (candidate_euclidean_distances.size() < kNumTopCandidates); ++k)
         {
           const int candidate_id = candidate_hamming_distances(k, j);
@@ -387,3 +394,4 @@ public:
 }  // namespace matching
 }  // namespace openMVG
 
+#endif // OPENMVG_MATCHING_CASCADE_HASHER_HPP

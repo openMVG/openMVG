@@ -28,144 +28,18 @@
 #ifndef OPENMVG_NUMERIC_NUMERIC_H
 #define OPENMVG_NUMERIC_NUMERIC_H
 
-//--
-// Eigen
-// http://eigen.tuxfamily.org/dox-devel/QuickRefPage.html
-//--
-#include <Eigen/Core>
-#include <Eigen/Eigenvalues>
-#include <Eigen/Geometry>
-#include <Eigen/LU>
-#include <Eigen/QR>
-#include <Eigen/SparseCore>
-#include <Eigen/SVD>
-#include <Eigen/StdVector>
-
+#include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <iterator>
 #include <numeric>
 #include <string>
-#include <iostream>
 #include <vector>
+
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
-
-// Check MSVC
-#if _WIN32 || _WIN64
-  #if _WIN64
-    #define ENV64BIT
-  #else
-    #define ENV32BIT
-  #endif
-#endif
-
-// Check GCC
-#if __GNUC__
-  #if __x86_64__ || __ppc64__ || _LP64
-    #define ENV64BIT
-  #else
-    #define ENV32BIT
-  #endif
-#endif
-
-using Eigen::Map;
-
-/// Trait used for double type
-typedef Eigen::NumTraits<double> EigenDoubleTraits;
-
-/// 3d vector using double internal format
-typedef Eigen::Vector3d Vec3;
-
-/// 2d vector using int internal format
-typedef Eigen::Vector2i Vec2i;
-
-/// 2d vector using float internal format
-typedef Eigen::Vector2f Vec2f;
-
-/// 3d vector using float internal format
-typedef Eigen::Vector3f Vec3f;
-
-/// 9d vector using double internal format
-typedef Eigen::Matrix<double, 9, 1> Vec9;
-
-/// Quaternion type
-typedef Eigen::Quaternion<double> Quaternion;
-
-/// 3x3 matrix using double internal format
-typedef Eigen::Matrix<double, 3, 3> Mat3;
-
-#if defined(ENV32BIT)
-
-  /// 3x4 matrix using double internal format
-  typedef Eigen::Matrix<double, 3, 4, Eigen::DontAlign> Mat34;
-
-  /// 2d vector using double internal format
-  typedef Eigen::Matrix<double, 2, 1, Eigen::DontAlign> Vec2;
-
-  /// 4d vector using double internal format
-  typedef Eigen::Matrix<double, 4, 1, Eigen::DontAlign> Vec4;
-
-  /// 6d vector using double internal format
-  typedef Eigen::Matrix<double, 6, 1, Eigen::DontAlign> Vec6;
-#else // 64 bits compiler
-
-  /// 3x4 matrix using double internal format
-  typedef Eigen::Matrix<double, 3, 4> Mat34;
-
-  /// 2d vector using double internal format
-  typedef Eigen::Vector2d Vec2;
-
-  /// 4d vector using double internal format
-  typedef Eigen::Vector4d Vec4;
-
-  /// 6d vector using double internal format
-  typedef Eigen::Matrix<double, 6, 1> Vec6;
-#endif
-
-
-/// 4x4 matrix using double internal format
-typedef Eigen::Matrix<double, 4, 4> Mat4;
-
-/// generic matrix using unsigned int internal format
-typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> Matu;
-
-/// 3x3 matrix using double internal format with RowMajor storage
-typedef Eigen::Matrix<double, 3, 3, Eigen::RowMajor> RMat3;
-
-//-- General purpose Matrix and Vector
-/// Unconstrained matrix using double internal format
-typedef Eigen::MatrixXd Mat;
-
-/// Unconstrained vector using double internal format
-typedef Eigen::VectorXd Vec;
-
-/// Unconstrained vector using unsigned int internal format
-typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> Vecu;
-
-/// Unconstrained matrix using float internal format
-typedef Eigen::MatrixXf Matf;
-
-/// Unconstrained vector using float internal format
-typedef Eigen::VectorXf Vecf;
-
-/// 2xN matrix using double internal format
-typedef Eigen::Matrix<double, 2, Eigen::Dynamic> Mat2X;
-
-/// 3xN matrix using double internal format
-typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Mat3X;
-
-/// 4xN matrix using double internal format
-typedef Eigen::Matrix<double, 4, Eigen::Dynamic> Mat4X;
-
-/// 9xN matrix using double internal format
-typedef Eigen::Matrix<double, Eigen::Dynamic, 9> MatX9;
-
-//-- Sparse Matrix (Column major, and row major)
-/// Sparse unconstrained matrix using double internal format
-typedef Eigen::SparseMatrix<double> sMat;
-
-/// Sparse unconstrained matrix using double internal format and Row Major storage
-typedef Eigen::SparseMatrix<double, Eigen::RowMajor> sRMat;
 
 //--------------
 //-- Function --
@@ -308,74 +182,6 @@ inline double DistanceLInfinity( const TVec &x, const TVec &y )
 }
 
 /**
-* @brief Solve linear system
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] nullspace result vector containing the solution of the system
-* @return Singular value corresponding to the solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-template <typename TMat, typename TVec>
-double Nullspace( TMat *A, TVec *nullspace )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    ( *nullspace ) = svd.matrixV().col( A->cols() - 1 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace( &A_extended, nullspace );
-}
-
-/**
-* @brief Solve linear system and gives the two best solutions
-*
-* Linear system is given by : \n
-* \f$ A x = 0 \f$
-* Solution is found using the constraint on x : \f$ \| x \| = 1 \f$
-*
-* @param[in,out] A Input matrix storing the system to solve
-* @param[out] x1 result vector containing the best solution of the system
-* @param[out] x2 result vector containing the second best solution of the system
-* @return Singular value corresponding to the best solution of the system
-*
-* @note Computation is made using SVD decomposition of input matrix
-* @note Input matrix A content may be modified during computation
-* @note Input vector nullspace may be resized to store the full result
-*/
-template <typename TMat, typename TVec1, typename TVec2>
-inline double Nullspace2( TMat *A, TVec1 *x1, TVec2 *x2 )
-{
-  if ( A->rows() >= A->cols() )
-  {
-    Eigen::JacobiSVD<TMat> svd( *A, Eigen::ComputeFullV );
-    TMat V = svd.matrixV();
-    *x1 = V.col( A->cols() - 1 );
-    *x2 = V.col( A->cols() - 2 );
-    return svd.singularValues()( A->cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but is
-  // necessary until Eigen supports SVD with more columns than rows.
-  TMat A_extended( A->cols(), A->cols() );
-  A_extended.block( A->rows(), 0, A->cols() - A->rows(), A->cols() ).setZero();
-  A_extended.block( 0, 0, A->rows(), A->cols() ) = ( *A );
-  return Nullspace2( &A_extended, x1, x2 );
-}
-
-
-/**
 * @brief Compute look at matrix
 * Make a rotation matrix such that center becomes the direction of the
 * positive z-axis, and y is oriented close to up by default.
@@ -402,7 +208,7 @@ Mat3 LookAt2( const Vec3 &eyePosition3D,
 template<typename Derived1, typename Derived2>
 struct hstack_return
 {
-  typedef typename Derived1::Scalar Scalar;
+  using Scalar =typename Derived1::Scalar;
   enum
   {
     RowsAtCompileTime = Derived1::RowsAtCompileTime,
@@ -411,12 +217,14 @@ struct hstack_return
     MaxRowsAtCompileTime = Derived1::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = SUM_OR_DYNAMIC( Derived1::MaxColsAtCompileTime, Derived2::MaxColsAtCompileTime )
   };
-  typedef Eigen::Matrix<Scalar,
-          RowsAtCompileTime,
-          ColsAtCompileTime,
-          Options,
-          MaxRowsAtCompileTime,
-          MaxColsAtCompileTime> type;
+  using type =
+    Eigen::Matrix<
+      Scalar,
+      RowsAtCompileTime,
+      ColsAtCompileTime,
+      Options,
+      MaxRowsAtCompileTime,
+      MaxColsAtCompileTime>;
 };
 
 template<typename Derived1, typename Derived2>
@@ -433,7 +241,7 @@ HStack ( const Eigen::MatrixBase<Derived1>& lhs, const Eigen::MatrixBase<Derived
 template<typename Derived1, typename Derived2>
 struct vstack_return
 {
-  typedef typename Derived1::Scalar Scalar;
+  using Scalar =  typename Derived1::Scalar;
   enum
   {
     RowsAtCompileTime = SUM_OR_DYNAMIC( Derived1::RowsAtCompileTime, Derived2::RowsAtCompileTime ),
@@ -442,12 +250,14 @@ struct vstack_return
     MaxRowsAtCompileTime = SUM_OR_DYNAMIC( Derived1::MaxRowsAtCompileTime, Derived2::MaxRowsAtCompileTime ),
     MaxColsAtCompileTime = Derived1::MaxColsAtCompileTime
   };
-  typedef Eigen::Matrix<Scalar,
-          RowsAtCompileTime,
-          ColsAtCompileTime,
-          Options,
-          MaxRowsAtCompileTime,
-          MaxColsAtCompileTime> type;
+  using type =
+    Eigen::Matrix<
+      Scalar,
+      RowsAtCompileTime,
+      ColsAtCompileTime,
+      Options,
+      MaxRowsAtCompileTime,
+      MaxColsAtCompileTime>;
 };
 
 template<typename Derived1, typename Derived2>
@@ -470,7 +280,7 @@ VStack ( const Eigen::MatrixBase<Derived1>& lhs, const Eigen::MatrixBase<Derived
 template<typename TMat>
 inline double FrobeniusNorm( const TMat &A )
 {
-  return sqrt( A.array().abs2().sum() );
+  return A.norm();
 }
 
 /**
@@ -499,26 +309,6 @@ double CosinusBetweenMatrices( const TMat &a, const TMat &b )
   return ( a.array() * b.array() ).sum() /
          FrobeniusNorm( a ) / FrobeniusNorm( b );
 }
-
-/**
-* @brief Extract a submatrix given a list of column
-* @param A Input matrix
-* @param columns A vector of columns index to extract
-* @return Matrix containing a subset of input matrix columns
-* @note columns index start at index 0
-* @note Assuming columns contains a list of valid columns index
-*/
-template <typename TMat, typename TCols>
-TMat ExtractColumns( const TMat &A, const TCols &columns )
-{
-  TMat compressed( A.rows(), columns.size() );
-  for ( size_t i = 0; i < static_cast<size_t>( columns.size() ); ++i )
-  {
-    compressed.col( i ) = A.col( columns[i] );
-  }
-  return compressed;
-}
-
 
 /**
 * @brief Compute per row mean and variance
@@ -574,7 +364,7 @@ template <typename Type, typename DataInputIterator>
 bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
                        Type & min, Type & max, Type & mean, Type & median )
 {
-  if( std::distance( begin, end ) < 1 )
+  if (std::distance( begin, end ) < 1 )
   {
     return false;
   }
@@ -583,8 +373,8 @@ bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
   std::sort( vec_val.begin(), vec_val.end() );
   min = vec_val[0];
   max = vec_val[vec_val.size() - 1];
-  mean = accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
-         / static_cast<Type>( vec_val.size() );
+  mean = std::accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
+    / static_cast<Type>( vec_val.size() );
   median = vec_val[vec_val.size() / 2];
   return true;
 }
@@ -608,8 +398,8 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end )
 }
 
 /**
- ** Split a range [ a ; b [ into a set of n ranges :
- [ a ; c1 [ U [ c1 ; c2 [ U ... U [ c(n-1) ; b [
+ ** Split a range [ a; b [ into a set of n ranges :
+ [ a; c1 [ U [ c1; c2 [ U ... U [ c(n-1); b [
   **
   Output range vector only store [ a , c1 , c2 , ... , b ]
 
@@ -624,22 +414,22 @@ template < typename T >
 void SplitRange( const T range_start , const T range_end , const int nb_split ,
                  std::vector< T > & d_range )
 {
-  const T range_length = range_end - range_start ;
-  if( range_length < nb_split )
+  const T range_length = range_end - range_start;
+  if (range_length < nb_split )
   {
-    d_range.push_back( range_start ) ;
-    d_range.push_back( range_end ) ;
+    d_range.push_back( range_start );
+    d_range.push_back( range_end );
   }
   else
   {
-    const T delta_range = range_length / nb_split ;
+    const T delta_range = range_length / nb_split;
 
-    d_range.push_back( range_start ) ;
-    for( int i = 1 ; i < nb_split ; ++i )
+    d_range.push_back( range_start );
+    for (int i = 1; i < nb_split; ++i )
     {
-      d_range.push_back( range_start + i * delta_range ) ;
+      d_range.push_back( range_start + i * delta_range );
     }
-    d_range.push_back( range_end ) ;
+    d_range.push_back( range_end );
   }
 }
 

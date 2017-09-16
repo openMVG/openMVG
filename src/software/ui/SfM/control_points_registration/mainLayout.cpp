@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -6,6 +8,14 @@
 
 #include "mainLayout.hpp"
 #include <QtGui>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QWidget>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QMenu>
+#include <QGridLayout>
+#include <QMenuBar>
 #include <QDebug>
 
 #include <algorithm>
@@ -35,7 +45,7 @@ void MainWindow::help()
    tr(
    "This application allow to perform a rigid registration of a SfM scene to know GCP (Ground Control Points)<br>"
    "<b>Important:</b><br>"
-   "Each GCP must have an unique numbered ID.<br>"
+   "Each GCP must have a unique numbered ID.<br>"
    "<b>1-</b> Add GCP image observations:<br>"
    " - double-click on one image on the left (in which you want add a GCP observation)<br>"
    " - click on the displayed image on the right, and choose your ID and move your GCP observation to the right place.<br>"
@@ -226,7 +236,7 @@ void MainWindow::registerProject()
     //Triangulate the point:
     Triangulation trianObj;
     const Observations & obs = landmark.obs;
-    for(Observations::const_iterator itObs = obs.begin();
+    for (Observations::const_iterator itObs = obs.begin();
       itObs != obs.end(); ++itObs)
     {
       const View * view = m_doc._sfm_data.views.at(itObs->first).get();
@@ -266,7 +276,7 @@ void MainWindow::registerProject()
     // data conversion to appropriate container
     Mat x1(3, vec_control_points.size()),
         x2(3, vec_control_points.size());
-    for (int i=0; i < vec_control_points.size(); ++i)
+    for (size_t i=0; i < vec_control_points.size(); ++i)
     {
       x1.col(i) = vec_triangulated[i];
       x2.col(i) = vec_control_points[i];
@@ -364,6 +374,7 @@ MainWindow::MainWindow
   createConnections();
 
   setWindowTitle(tr("Control_point_editor"));
+
   QMainWindow::statusBar()->showMessage("Welcome in Control_point_editor GUI.");
   resize(640, 480);
 }
@@ -403,10 +414,8 @@ void MainWindow::createMenus()
   m_menuFile = new QMenu(tr("&File"),this);
   m_menuFile->setObjectName(QString::fromUtf8("m_menuFile"));
   menuBar()->addMenu(m_menuFile);
-  QMenu * fileMenu = new QMenu(tr("Open Project"), this);
   m_menuFile->addAction(m_open_action);
 
-  QMenu * m_menuSave = new QMenu(tr("&Save Project"),this);
   m_menuFile->setObjectName(QString::fromUtf8("m_menuSave"));
   m_menuFile->addAction(m_save_action);
 
@@ -425,7 +434,6 @@ void MainWindow::createMenus()
   m_menuHelp = new QMenu(tr("&Help"),this);
   m_menuHelp->setObjectName(QString::fromUtf8("m_menuHelp"));
   menuBar()->addMenu(m_menuHelp);
-  QMenu * helpMenu = new QMenu(tr("Help"), this);
   m_menuHelp->addAction(m_help_action);
 }
 

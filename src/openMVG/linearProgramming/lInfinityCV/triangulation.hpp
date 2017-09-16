@@ -1,16 +1,19 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
-#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
+#ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
+#define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include <limits>
 #include <utility>
 #include <vector>
+
+#include "openMVG/numeric/numeric.h"
 
 //--
 //- Implementation of algorithm from Paper titled :
@@ -51,7 +54,7 @@ inline void EncodeTriangulation(
   C.resize(5*nbCamera,1);
 
   int cpt = 0;
-  for (int i = 0; i< nbCamera; ++i)
+  for (size_t i = 0; i < nbCamera; ++i)
   {
     const Mat3 R = Pi[i].block<3,3>(0,0);
     const Vec3 t = Pi[i].block<3,1>(0,3);
@@ -85,12 +88,15 @@ inline void EncodeTriangulation(
 ///  under a Linear Program form.
 struct Triangulation_L1_ConstraintBuilder
 {
-  Triangulation_L1_ConstraintBuilder(
+  Triangulation_L1_ConstraintBuilder
+  (
     const std::vector<Mat34> & vec_Pi,
-    const Mat2X & x_ij)
+    const Mat2X & x_ij
+  )
+  : vec_Pi_(vec_Pi),
+    x_ij_(x_ij)
   {
-    vec_Pi_ = vec_Pi;
-    x_ij_ = x_ij;
+
   }
 
   /// Setup constraints of the triangulation problem as a Linear program
@@ -104,9 +110,8 @@ struct Triangulation_L1_ConstraintBuilder
     // We look for 3 variables [X,Y,Z] with no bounds.
     // Constraint sign are all less or equal (<=)
     constraint.nbParams_ = 3;
-    constraint.vec_bounds_ = std::vector< std::pair<double,double> >(1);
-    fill(constraint.vec_bounds_.begin(),constraint.vec_bounds_.end(),
-      std::make_pair((double)-1e+30, (double)1e+30));
+    constraint.vec_bounds_ = {{std::numeric_limits<double>::lowest(),
+                               std::numeric_limits<double>::max()}};
     // Setup constraint sign
     constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
     fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
@@ -124,4 +129,4 @@ struct Triangulation_L1_ConstraintBuilder
 } // namespace lInfinityCV
 } // namespace openMVG
 
-#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_H_
+#endif // OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP

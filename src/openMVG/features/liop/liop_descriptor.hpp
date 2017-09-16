@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (C) 2013  "Robot Vision Group, NLPR, CASIA", Zhenhua Wang,
 // Bin Fan and Fuchao Wu.
@@ -8,6 +9,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP
+#define OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP
+
+
 //------------------
 //-- Bibliography --
 //------------------
@@ -15,10 +20,9 @@
 //- Authors: Zhenhua Wang, Bin Fan and Fuchao Wu
 //- Date: 2011, ICCV, IEEE International Conference on Computer Vision
 
-#pragma once
 
-#include <openMVG/image/image.hpp>
-#include <openMVG/features/feature.hpp>
+namespace openMVG { namespace features { class SIOPointFeature; } }
+namespace openMVG { namespace image { template <typename T> class Image; } }
 
 #include <map>
 #include <vector>
@@ -56,3 +60,5 @@ public:
 } // namespace LIOP
 } // namespace features
 } // namespace openMVG
+
+#endif // OPENMVG_FEATURES_LIOP_LIOP_DESCRIPTOR_HPP

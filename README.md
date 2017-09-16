@@ -1,10 +1,8 @@
-=====================================
 OpenMVG (open Multiple View Geometry)
 =====================================
 
 ![Logo](https://github.com/openMVG/openMVG/raw/master/logo/openMVG_Logo.png)
 
-------------
 Introduction
 ------------
 
@@ -14,36 +12,31 @@ The openMVG credo is: "Keep it simple, keep it maintainable". OpenMVG targets re
 
 All the features and modules are unit tested. This test driven development ensures that the code works as it should and enables more consistent repeatability. Furthermore, it makes it easier for the user to understand and learn the given features.
 
---------
 Building
 --------
 
 See [BUILD](https://github.com/openMVG/openMVG/raw/master/BUILD) text file
 
 Continuous integration:
- - linux 64 bits/GCC (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
+ - linux 64 bits, GCC/CLANG (Build + tests): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)
  - VStudio 2015 64 bits (Build): [![Build status](https://ci.appveyor.com/api/projects/status/3nv6rt41yxqx5v7i?svg=true)](https://ci.appveyor.com/project/pmoulon/openmvg)
  - Unit test coverage: [![Coverage Status](https://coveralls.io/repos/openMVG/openMVG/badge.png?branch=develop)](https://coveralls.io/r/openMVG/openMVG?branch=develop)
 
--------
 License
 -------
 
 See [LICENSE MPL2](https://github.com/openMVG/openMVG/raw/master/license.openMVG) text file
 
--------
 Authors
 -------
 
 See [Authors](https://github.com/openMVG/openMVG/raw/master/AUTHORS) text file
 
--------
 Documentation
--------
+-------------
 
 See [documentation](http://openmvg.readthedocs.org/en/latest)
 
-----------------
 Acknowledgements
 ----------------
 
@@ -55,14 +48,12 @@ library an opensource project.
 [1] [http://www.mikrosimage.eu/](http://www.mikrosimage.eu/)
 [2] [http://imagine.enpc.fr/](http://imagine.enpc.fr/)
 
----------
 Contact
----------
+-------
 
 openmvg-team[AT]googlegroups.com
 
 
----------
 Citations
 ---------
 

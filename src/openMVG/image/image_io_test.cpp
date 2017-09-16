@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -5,12 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#include "openMVG/image/image_io.hpp"
+
+#include "testing/testing.h"
+
 #include <cstdio>
 #include <iostream>
 #include <string>
-
-#include "openMVG/image/image.hpp"
-#include "testing/testing.h"
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -226,7 +229,7 @@ TEST(ImageHeader, AllFormats) {
 
   const std::vector<std::string> ext_Type = {"jpg", "png", "tif", "png", "pgm"};
   const int image_border_size = 10;
-  for (int i=0; i < ext_Type.size(); ++i)
+  for (size_t i=0; i < ext_Type.size(); ++i)
   {
     std::ostringstream os;
     os << "img" << "." << ext_Type[i];

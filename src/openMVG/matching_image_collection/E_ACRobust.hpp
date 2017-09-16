@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014, 2015 Pierre MOULON.
 
@@ -5,22 +6,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
+#define OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP
 
-#include "openMVG/types.hpp"
+#include <limits>
+#include <utility>
+#include <vector>
+
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
-#include <limits>
-
-#include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/matching_image_collection/Geometric_Filter_utils.hpp"
+#include "openMVG/types.hpp"
 
 namespace openMVG {
+
+namespace sfm {
+  struct Regions_Provider;
+}
+
 namespace matching_image_collection {
 
 //-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences
@@ -30,7 +39,7 @@ struct GeometricFilter_EMatrix_AC
     double dPrecision = std::numeric_limits<double>::infinity(),
     size_t iteration = 1024)
     : m_dPrecision(dPrecision), m_stIteration(iteration), m_E(Mat3::Identity()),
-      m_dPrecision_robust(std::numeric_limits<double>::infinity()){};
+      m_dPrecision_robust(std::numeric_limits<double>::infinity()){}
 
   /// Robust fitting of the ESSENTIAL matrix
   template<typename Regions_or_Features_ProviderT>
@@ -81,12 +90,11 @@ struct GeometricFilter_EMatrix_AC
     //--
 
     // Define the AContrario adapted Essential matrix solver
-    typedef ACKernelAdaptorEssential<
+    using KernelType =
+      ACKernelAdaptorEssential<
         openMVG::essential::kernel::FivePointKernel,
         openMVG::fundamental::kernel::EpipolarDistanceError,
-        UnnormalizerT,
-        Mat3>
-        KernelType;
+        Mat3>;
 
     const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
     const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
@@ -98,7 +106,7 @@ struct GeometricFilter_EMatrix_AC
 
     // Robustly estimate the Essential matrix with A Contrario ransac
     const double upper_bound_precision = Square(m_dPrecision);
-    std::vector<size_t> vec_inliers;
+    std::vector<uint32_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =
       ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
 
@@ -106,7 +114,7 @@ struct GeometricFilter_EMatrix_AC
       m_dPrecision_robust = ACRansacOut.first;
       // update geometric_inliers
       geometric_inliers.reserve(vec_inliers.size());
-      for ( const size_t & index : vec_inliers)  {
+      for (const uint32_t & index : vec_inliers) {
         geometric_inliers.push_back( vec_PutativeMatches[index] );
       }
       return true;
@@ -155,13 +163,16 @@ struct GeometricFilter_EMatrix_AC
       Mat3 F;
       FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
 
+      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
+      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+
       geometry_aware::GuidedMatching
         <Mat3,
         openMVG::fundamental::kernel::EpipolarDistanceError>(
         //openMVG::fundamental::kernel::SymmetricEpipolarDistanceError>(
         F,
-        cam_I, *regions_provider->regions_per_view.at(iIndex),
-        cam_J, *regions_provider->regions_per_view.at(jIndex),
+        cam_I, *regionsI,
+        cam_J, *regionsJ,
         Square(m_dPrecision_robust), Square(dDistanceRatio),
         matches);
     }
@@ -179,3 +190,4 @@ struct GeometricFilter_EMatrix_AC
 } //namespace matching_image_collection
 }  // namespace openMVG
 
+#endif // OPENMVG_MATCHING_IMAGE_COLLECTION_E_AC_ROBUST_HPP

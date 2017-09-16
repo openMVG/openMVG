@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2015 Chris Sweeney (cmsweeney@cs.ucsb.edu)
 // Copyright (c) 2016 Pierre Moulon
 
@@ -5,21 +7,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
-#define OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
+#ifndef OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP
+#define OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP
 
 #include <Eigen/Core>
 #ifdef EIGEN_MPL2_ONLY
 #include <Eigen/SparseLU>
 #else
-#include <Eigen/SparseCholesky>
 #include <Eigen/Cholesky>
+#include <Eigen/SparseCholesky>
 #endif
 
 
 #include <algorithm>
-#include <string>
 #include <iostream>
+#include <string>
 
 namespace openMVG {
 
@@ -123,7 +125,7 @@ class L1Solver {
   )
   {
     // Since constructor was called before we check Compute status
-    if(linear_solver_.info() != Eigen::Success)
+    if (linear_solver_.info() != Eigen::Success)
     {
       std::cerr << "Cannot compute the matrix factorization" << std::endl;
       return false;
@@ -196,11 +198,11 @@ class L1Solver {
 
   // Cholesky linear solver.
 #ifdef EIGEN_MPL2_ONLY
-  typedef Eigen::SparseLU<Eigen::SparseMatrix<double> > Linear_Solver_T;
+  using Linear_Solver_T = Eigen::SparseLU<Eigen::SparseMatrix<double> >;
 #else
   // Since our linear system will be a SPD matrix we can
   // utilize the Cholesky factorization.
-  typedef Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > Linear_Solver_T;
+  using Linear_Solver_T = Eigen::SimplicialLLT<Eigen::SparseMatrix<double> >;
 #endif
   Linear_Solver_T linear_solver_;
 
@@ -218,5 +220,4 @@ class L1Solver {
 
 }  // namespace openMVG
 
-#endif  // OPENMVG_NUMERIC_L1_SOLVER_ADMM_H_
-
+#endif  // OPENMVG_NUMERIC_L1_SOLVER_ADMM_HPP

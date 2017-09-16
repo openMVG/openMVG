@@ -12,13 +12,15 @@ the terms of the BSD license (see the COPYING file).
 
 #include "algorithm.h"
 
+#include "openMVG/features/feature.hpp"
+
 IntegralImages::IntegralImages(const openMVG::image::Image< float >& I)
 {
   map.resize( I.Width() + 1, I.Height() + 1 );
   map.fill( 0 );
-  for( int y = 0; y < I.Height(); y++ )
+  for (int y = 0; y < I.Height(); y++ )
   {
-    for( int x = 0; x < I.Width(); x++ )
+    for (int x = 0; x < I.Width(); x++ )
     {
       map( y + 1, x + 1 ) = double( I( y, x ) ) + map( y, x + 1 ) + map( y + 1, x ) - map( y, x );
     }

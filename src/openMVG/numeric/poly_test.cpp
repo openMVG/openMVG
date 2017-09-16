@@ -19,15 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "CppUnitLite/TestHarness.h"
+
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/poly.h"
+
+#include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
 using namespace openMVG;

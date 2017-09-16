@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,14 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "openMVG/image/image.hpp"
-#include "openMVG/sfm/sfm.hpp"
-
-/// Feature/Regions & Image describer interfaces
-#include "openMVG/features/features.hpp"
+// The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -61,29 +59,46 @@ typedef features::AKAZE_Float_Regions AKAZE_OpenCV_Regions;
 class AKAZE_OCV_Image_describer : public Image_describer
 {
 public:
+  using Regions_type = AKAZE_OpenCV_Regions;
+
   AKAZE_OCV_Image_describer():Image_describer(){}
 
-
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset)
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
     return false;
   }
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
-  @param regions The detected regions and attributes (the caller must delete the allocated data)
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  bool Describe(const Image<unsigned char>& image,
-    std::unique_ptr<Regions> &regions,
-    const Image<unsigned char> * mask = nullptr)
+  std::unique_ptr<Regions> Describe(
+      const Image<unsigned char>& image,
+      const Image<unsigned char> * mask = nullptr
+  ) override
+  {
+    return Describe_AKAZE_OCV(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> Describe_AKAZE_OCV(
+    const Image<unsigned char>& image,
+    const Image<unsigned char> * mask = nullptr
+  )
   {
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
 
     cv::Mat m_mask;
-    if(mask != nullptr) {
+    if (mask != nullptr) {
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
 
@@ -95,36 +110,33 @@ public:
 
     if (!vec_keypoints.empty())
     {
-      Allocate(regions);
+      auto regions = std::unique_ptr<Regions_type>(new Regions_type);
 
-      // Build alias to cached data
-      AKAZE_OpenCV_Regions * regionsCasted = dynamic_cast<AKAZE_OpenCV_Regions*>(regions.get());
       // reserve some memory for faster keypoint saving
-      regionsCasted->Features().reserve(vec_keypoints.size());
-      regionsCasted->Descriptors().reserve(vec_keypoints.size());
+      regions->Features().reserve(vec_keypoints.size());
+      regions->Descriptors().reserve(vec_keypoints.size());
 
-      typedef Descriptor<float, 64> DescriptorT;
+      using DescriptorT = Descriptor<float, 64>;
       DescriptorT descriptor;
       int cpt = 0;
-      for(std::vector< cv::KeyPoint >::const_iterator i_keypoint = vec_keypoints.begin();
-        i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
-
+      for (auto i_keypoint = vec_keypoints.begin(); i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
         SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
-        regionsCasted->Features().push_back(feat);
+        regions->Features().push_back(feat);
 
         memcpy(descriptor.data(),
                m_desc.ptr<typename DescriptorT::bin_type>(cpt),
                DescriptorT::static_size*sizeof(DescriptorT::bin_type));
-        regionsCasted->Descriptors().push_back(descriptor);
+        regions->Descriptors().push_back(descriptor);
       }
+      return regions;
     }
-    return true;
+    return nullptr;
   };
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
+  std::unique_ptr<Regions> Allocate() const override
   {
-    regions.reset( new AKAZE_OpenCV_Regions );
+    return std::unique_ptr<Regions_type>(new Regions_type);
   }
 
   template<class Archive>
@@ -134,8 +146,8 @@ public:
 };
 #include <cereal/cereal.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <cereal/archives/json.hpp>
 CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_describer");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, AKAZE_OCV_Image_describer)
 
 #ifdef USE_OCVSIFT
 ///
@@ -145,6 +157,8 @@ CEREAL_REGISTER_TYPE_WITH_NAME(AKAZE_OCV_Image_describer, "AKAZE_OCV_Image_descr
 class SIFT_OPENCV_Image_describer : public Image_describer
 {
 public:
+  using Regions_type = SIFT_Regions;
+
   SIFT_OPENCV_Image_describer() : Image_describer() {}
 
   ~SIFT_OPENCV_Image_describer() {}
@@ -156,13 +170,29 @@ public:
   /**
   @brief Detect regions on the image and compute their attributes (description)
   @param image Image.
-  @param regions The detected regions and attributes (the caller must delete the allocated data)
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  bool Describe(const image::Image<unsigned char>& image,
-    std::unique_ptr<Regions> &regions,
-    const image::Image<unsigned char> * mask = nullptr)
+  std::unique_ptr<Regions> Describe(
+    const image::Image<unsigned char>& image,
+    const image::Image<unsigned char> * mask = nullptr
+  ) override
+  {
+    return Describe_SIFT_OPENCV(image, mask);
+  }
+
+  /**
+  @brief Detect regions on the image and compute their attributes (description)
+  @param image Image.
+  @param mask 8-bit gray image for keypoint filtering (optional).
+     Non-zero values depict the region of interest.
+  @return regions The detected regions and attributes (the caller must delete the allocated data)
+  */
+  std::unique_ptr<Regions_type> Describe_SIFT_OPENCV(
+      const image::Image<unsigned char>& image,
+      const image::Image<unsigned char>* mask = nullptr
+  )
   {
     // Convert for opencv
     cv::Mat img;
@@ -170,7 +200,7 @@ public:
 
     // Convert mask image into cv::Mat
     cv::Mat m_mask;
-    if(mask != nullptr) {
+    if (mask != nullptr) {
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
 
@@ -182,13 +212,11 @@ public:
     // Process SIFT computation
     siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
 
-    Allocate(regions);
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
 
-    // Build alias to cached data
-    SIFT_Regions * regionsCasted = dynamic_cast<SIFT_Regions*>(regions.get());
     // reserve some memory for faster keypoint saving
-    regionsCasted->Features().reserve(v_keypoints.size());
-    regionsCasted->Descriptors().reserve(v_keypoints.size());
+    regions->Features().reserve(v_keypoints.size());
+    regions->Descriptors().reserve(v_keypoints.size());
 
     // Prepare a column vector with the sum of each descriptor
     cv::Mat m_siftsum;
@@ -196,38 +224,37 @@ public:
 
     // Copy keypoints and descriptors in the regions
     int cpt = 0;
-    for(std::vector< cv::KeyPoint >::const_iterator i_kp = v_keypoints.begin();
+    for (auto i_kp = v_keypoints.begin();
         i_kp != v_keypoints.end();
         ++i_kp, ++cpt)
     {
       SIOPointFeature feat((*i_kp).pt.x, (*i_kp).pt.y, (*i_kp).size, (*i_kp).angle);
-      regionsCasted->Features().push_back(feat);
+      regions->Features().push_back(feat);
 
       Descriptor<unsigned char, 128> desc;
-      for(int j = 0; j < 128; j++)
+      for (int j = 0; j < 128; j++)
       {
         desc[j] = static_cast<unsigned char>(512.0*sqrt(m_desc.at<float>(cpt, j)/m_siftsum.at<float>(cpt, 0)));
       }
-      regionsCasted->Descriptors().push_back(desc);
+      regions->Descriptors().push_back(desc);
     }
 
-    return true;
+    return regions;
   };
 
   /// Allocate Regions type depending of the Image_describer
-  void Allocate(std::unique_ptr<Regions> &regions) const
+  std::unique_ptr<Regions_type> Allocate() const
   {
-    regions.reset( new SIFT_Regions );
+    return std::unique_ptr<Regions_type>(new Regions_type);
   }
 
   template<class Archive>
   void serialize( Archive & ar )
   {
   }
-private:
-  int _i;
 };
 CEREAL_REGISTER_TYPE_WITH_NAME(SIFT_OPENCV_Image_describer, "SIFT_OPENCV_Image_describer");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Image_describer, SIFT_OPENCV_Image_describer)
 #endif //USE_OCVSIFT
 
 /// Compute between the Views
@@ -258,7 +285,7 @@ int main(int argc, char **argv)
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir] path \n"
@@ -358,9 +385,8 @@ int main(int argc, char **argv)
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));
-      std::unique_ptr<Regions> regionsType;
-      image_describer->Allocate(regionsType);
-      archive(cereal::make_nvp("regions_type", regionsType));
+      auto regions = image_describer->Allocate();
+      archive(cereal::make_nvp("regions_type", regions));
     }
   }
 
@@ -373,13 +399,13 @@ int main(int argc, char **argv)
     Image<unsigned char> imageGray, globalMask, imageMask;
 
     const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if(stlplus::file_exists(sGlobalMask_filename))
+    if (stlplus::file_exists(sGlobalMask_filename))
       ReadImage(sGlobalMask_filename.c_str(), &globalMask);
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
-    for(Views::const_iterator iterViews = sfm_data.views.begin();
-        iterViews != sfm_data.views.end();
+    for (auto iterViews = sfm_data.views.cbegin();
+        iterViews != sfm_data.views.cend();
         ++iterViews, ++my_progress_bar)
     {
       const View * view = iterViews->second.get();
@@ -400,19 +426,18 @@ int main(int argc, char **argv)
           stlplus::create_filespec(sfm_data.s_root_path,
             stlplus::basename_part(sView_filename) + "_mask", "png");
 
-        if(stlplus::file_exists(sImageMask_filename))
+        if (stlplus::file_exists(sImageMask_filename))
           ReadImage(sImageMask_filename.c_str(), &imageMask);
 
         // The mask point to the globalMask, if a valid one exists for the current image
-        if(globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
+        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
           mask = &globalMask;
         // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if(imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
           mask = &imageMask;
 
         // Compute features and descriptors and export them to files
-        std::unique_ptr<Regions> regions;
-        image_describer->Describe(imageGray, regions, mask);
+        auto regions = image_describer->Describe(imageGray, mask);
         image_describer->Save(regions.get(), sFeat, sDesc);
       }
     }

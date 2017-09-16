@@ -1,37 +1,42 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2016 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
+#include "openMVG/graph/graph.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/matching/indMatch.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/matching_image_collection/Matcher_Regions.hpp"
+#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
+#include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-
-/// Generic Image Collection image matching
-#include "openMVG/matching_image_collection/Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions_AllInMemory.hpp"
-#include "openMVG/matching_image_collection/GeometricFilter.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
+#include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
 
-#include "openMVG/graph/graph.hpp"
-#include "openMVG/stl/stl.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
-#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
 
 using namespace openMVG;
-using namespace openMVG::cameras;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
@@ -67,11 +72,11 @@ int main(int argc, char **argv)
   float fDistRatio = 0.8f;
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
-  bool bUpRight = false;
   std::string sNearestMatchingMethod = "AUTO";
   bool bForce = false;
   bool bGuided_matching = false;
   int imax_iteration = 2048;
+  unsigned int ui_max_cache_size = 0;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -85,11 +90,13 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
+  cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
+
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
-  } catch(const std::string& s) {
+  } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] a SfM_Data file\n"
       << "[-o|--out_dir path] output path where computed are stored\n"
@@ -121,6 +128,9 @@ int main(int argc, char **argv)
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
+      << "[-c|--cache_size]\n"
+      << "  Use a regions cache (only cache_size regions will be stored in memory)"
+      << "  If not used, all regions will be load in memory."
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -138,7 +148,8 @@ int main(int argc, char **argv)
             << "--video_mode_matching " << iMatchingVideoMode << "\n"
             << "--pair_list " << sPredefinedPairList << "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
-            << "--guided_matching " << bGuided_matching << std::endl;
+            << "--guided_matching " << bGuided_matching << "\n"
+            << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 
@@ -157,7 +168,7 @@ int main(int argc, char **argv)
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
   std::string sGeometricMatchesFilename = "";
-  switch(sGeometricModel[0])
+  switch (sGeometricModel[0])
   {
     case 'f': case 'F':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
@@ -214,8 +225,22 @@ int main(int argc, char **argv)
   //---------------------------------------
 
   // Load the corresponding view regions
-  std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type)) {
+  std::shared_ptr<Regions_Provider> regions_provider;
+  if (ui_max_cache_size == 0)
+  {
+    // Default regions provider (load & store all regions in memory)
+    regions_provider = std::make_shared<Regions_Provider>();
+  }
+  else
+  {
+    // Cached regions provider (load & store regions on demand)
+    regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
+  }
+
+  // Show the progress on the command line:
+  C_Progress_display progress;
+
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
@@ -275,44 +300,44 @@ int main(int argc, char **argv)
       if (regions_type->IsScalar())
       {
         std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
+        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
       }
       else
       if (regions_type->IsBinary())
       {
         std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-        collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
+        collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
       }
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEL2")
     {
       std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_L2));
     }
     else
     if (sNearestMatchingMethod == "BRUTEFORCEHAMMING")
     {
       std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, BRUTE_FORCE_HAMMING));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
     {
       std::cout << "Using ANN_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, ANN_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, ANN_L2));
     }
     else
     if (sNearestMatchingMethod == "CASCADEHASHINGL2")
     {
       std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions_AllInMemory(fDistRatio, CASCADE_HASHING_L2));
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, CASCADE_HASHING_L2));
     }
     else
     if (sNearestMatchingMethod == "FASTCASCADEHASHINGL2")
     {
       std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions_AllInMemory(fDistRatio));
+      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
     }
     if (!collectionMatcher)
     {
@@ -329,14 +354,14 @@ int main(int argc, char **argv)
         case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
-          if(!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
+          if (!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
           {
               return EXIT_FAILURE;
-          };
+          }
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches);
+      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
@@ -362,7 +387,7 @@ int main(int argc, char **argv)
     graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_PutativesMatches));
     graph::exportToGraphvizData(
       stlplus::create_filespec(sMatchesDirectory, "putative_matches"),
-      putativeGraph.g);
+      putativeGraph);
   }
 
   //---------------------------------------
@@ -377,7 +402,7 @@ int main(int argc, char **argv)
   if (filter_ptr)
   {
     system::Timer timer;
-    std::cout << std::endl << " - Geometric filtering - " << std::endl;
+    const double d_distance_ratio = 0.6;
 
     PairWiseMatches map_GeometricMatches;
     switch (eGeometricModelToCompute)
@@ -387,41 +412,39 @@ int main(int argc, char **argv)
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(GeometricFilter_HMatrix_AC(4.0, imax_iteration),
           map_PutativesMatches, bGuided_matching,
-          bGeometric_only_guided_matching ? -1.0 : 0.6);
+          bGeometric_only_guided_matching ? -1.0 : d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case FUNDAMENTAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_FMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
       case ESSENTIAL_MATRIX:
       {
         filter_ptr->Robust_model_estimation(GeometricFilter_EMatrix_AC(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
-        for (PairWiseMatches::const_iterator iterMap = map_GeometricMatches.begin();
-          iterMap != map_GeometricMatches.end(); ++iterMap)
+        for (const auto & pairwisematches_it : map_GeometricMatches)
         {
-          const size_t putativePhotometricCount = map_PutativesMatches.find(iterMap->first)->second.size();
-          const size_t putativeGeometricCount = iterMap->second.size();
-          const float ratio = putativeGeometricCount / (float)putativePhotometricCount;
+          const size_t putativePhotometricCount = map_PutativesMatches.find(pairwisematches_it.first)->second.size();
+          const size_t putativeGeometricCount = pairwisematches_it.second.size();
+          const float ratio = putativeGeometricCount / static_cast<float>(putativePhotometricCount);
           if (putativeGeometricCount < 50 || ratio < .3f)  {
             // the pair will be removed
-            vec_toRemove.push_back(iterMap->first);
+            vec_toRemove.push_back(pairwisematches_it.first);
           }
         }
         //-- remove discarded pairs
-        for (std::vector<PairWiseMatches::key_type>::const_iterator
-          iter =  vec_toRemove.begin(); iter != vec_toRemove.end(); ++iter)
+        for (const auto & pair_to_remove_it : vec_toRemove)
         {
-          map_GeometricMatches.erase(*iter);
+          map_GeometricMatches.erase(pair_to_remove_it);
         }
       }
       break;
@@ -456,7 +479,7 @@ int main(int argc, char **argv)
       graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
       graph::exportToGraphvizData(
         stlplus::create_filespec(sMatchesDirectory, "geometric_matches"),
-        putativeGraph.g);
+        putativeGraph);
     }
   }
   return EXIT_SUCCESS;

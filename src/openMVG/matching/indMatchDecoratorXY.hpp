@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -5,12 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
-#define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
+#ifndef OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
+#define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 
+#include <algorithm>
 #include <iostream>
+#include <fstream>
+#include <set>
+#include <vector>
+
+#include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/features/features.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -140,27 +146,27 @@ public:
   }
 
   /**
-    * Save the corresponding matches to file.
-    * \param nameFile   The file where matches will be saved.
-    * \param vec_match  The matches that we want to save.
-    * \return bool True if everything was ok, otherwise false.
-    */
-    bool saveMatch(const char* nameFile) const
-    {
-      std::ofstream f(nameFile);
-      if( f.is_open() ) {
-        std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
-          std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
-      }
-      return f.is_open();
+  * Save the corresponding matches to file.
+  * \param nameFile   The file where matches will be saved.
+  * \param vec_match  The matches that we want to save.
+  * \return bool True if everything was ok, otherwise false.
+  */
+  bool saveMatch(const char* nameFile) const
+  {
+    std::ofstream f(nameFile);
+    if (f.is_open() ) {
+      std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
+        std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
     }
+    return f.is_open();
+  }
 
-    friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)
-    {
-      return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
-    }
+  friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)
+  {
+    return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
+  }
 
-private :
+private:
   std::vector<IndMatch> vec_matches_;
   std::vector<IndMatchDecoratorStruct> vecDecoredMatches_;
 };
@@ -168,4 +174,4 @@ private :
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_H
+#endif // OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP

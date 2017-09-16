@@ -1,3 +1,5 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
 // Copyright (c) 2014-2016 Yongchao Xu, Pascal Monasse, Thierry Géraud, Laurent Najman
 // Copyright (c) 2016 Pierre Moulon.
 
@@ -6,6 +8,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/tbmr/tbmr.hpp"
+#include "openMVG/features/feature.hpp"
+#include "openMVG/image/image_container.hpp"
+
+#include <numeric>
 
 namespace openMVG
 {
@@ -38,23 +44,19 @@ namespace tbmr
     const unsigned int pixel_count = input.Width()*input.Height();
     std::vector<unsigned int> v(pixel_count);
     std::iota(v.begin(), v.end(), 0);
-    std::sort(v.begin(), v.begin() + pixel_count, [&input, cmp](unsigned int x, unsigned int y) { return cmp(input[x], input[y]); });
+    std::sort(v.begin(), v.begin() + pixel_count,
+      [&input, cmp](unsigned int x, unsigned int y)
+      { return cmp(input[x], input[y]); }
+    );
     return v;
   }
 
-  template<typename I>
   std::vector<Vec2i>
   wrt_delta_index
   (
-    const image::Image<I> & ima
   )
   {
-    std::vector<Vec2i> vec;
-    vec.emplace_back(0,-1);
-    vec.emplace_back(0,1);
-    vec.emplace_back(-1,0);
-    vec.emplace_back(1,0);
-    return vec;
+    return std::vector<Vec2i>{ { 0,-1 }, {0,1}, {-1, 0}, {1,0} };
   }
 
   //for incremental computation of region information
@@ -139,7 +141,7 @@ namespace tbmr
     std::vector<attribute> imaAttribute(ima.Width() * ima.Height());
     image::Image<unsigned int> zpar(ima.Width(), ima.Height());
 
-    const std::vector<Vec2i> offsets = wrt_delta_index(ima);
+    const std::vector<Vec2i> offsets = wrt_delta_index();
 
     for (int i = S.size()-1; i >= 0; --i)
     {
@@ -220,9 +222,9 @@ namespace tbmr
     for (int i = S.size()-1; i >= 0; --i)
     {
       const unsigned int p = S[i];
-      if(parent[p] == p || ima[p] != ima[parent[p]]) {
+      if (parent[p] == p || ima[p] != ima[parent[p]]) {
         vecNodes[numNodes++] = p;
-        if(imaAttribute[p].area >= minimumSize)
+        if (imaAttribute[p].area >= minimumSize)
           ++numSons[parent[p]];
       }
     }
@@ -242,9 +244,8 @@ namespace tbmr
     unsigned int numTbmrs = 0;
 
     std::vector<unsigned int> vecTbmrs(numNodes);
-    for (int i = 0; i < vecNodes.size(); ++i)
+    for (const unsigned p : vecNodes)
     {
-      const unsigned int  p = vecNodes[i];
       if (numSons[p] == 1 && !isSeen[p] && imaAttribute[p].area <= maxArea)
       {
         unsigned int num_ancestors = 0;
@@ -279,7 +280,7 @@ namespace tbmr
       const double i11 = imaAttribute[p].sum_xy - imaAttribute[p].area*x*y;
       const double n = i20*i02 - i11*i11;
 
-      if(n != 0)
+      if (n != 0)
       {
         const double a = i02/n * (imaAttribute[p].area-1)/4;
         const double b = -i11/n * (imaAttribute[p].area-1)/4;
@@ -287,7 +288,7 @@ namespace tbmr
 
         const features::AffinePointFeature affineFP (x, y, a, b, c);
 
-        // Check feature validity	(avoid tiny and thick ellipses)
+        // Check feature validity  (avoid tiny and thick ellipses)
         const double lMin = std::min(affineFP.l1(), affineFP.l2());
         if (lMin < 1.5)
           continue;

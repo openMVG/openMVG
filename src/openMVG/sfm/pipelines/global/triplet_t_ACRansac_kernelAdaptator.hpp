@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013, 2014 Pierre MOULON.
 
@@ -5,19 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
-#define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
+#ifndef OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
+#define OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP
 
-#include "openMVG/numeric/numeric.h"
+#include <vector>
+
 #include "openMVG/multiview/conditioning.hpp"
-
-#include "openMVG/linearProgramming/linearProgramming.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/numeric/numeric.h"
 
 namespace openMVG{
 namespace sfm{
-
-using namespace openMVG::trifocal::kernel;
 
 /// AContrario Kernel to solve a translation triplet & structure problem
 template <typename SolverArg,
@@ -26,42 +24,48 @@ template <typename SolverArg,
 class TranslationTripletKernel_ACRansac
 {
 public:
-  typedef SolverArg Solver;
-  typedef ModelArg  Model;
+  using Solver = SolverArg;
+  using Model = ModelArg;
 
-  TranslationTripletKernel_ACRansac(
-  const Mat & x1, const Mat & x2, const Mat & x3,
-    const std::vector<Mat3> & vec_KRi, const Mat3 & K,
-    const double ThresholdUpperBound)
-    : x1_(x1), x2_(x2), x3_(x3), vec_KR_(vec_KRi),
-      K_(K), ThresholdUpperBound_(ThresholdUpperBound),
-      logalpha0_(log10(M_PI)),
-      Kinv_(K.inverse())
+  TranslationTripletKernel_ACRansac
+  (
+    const Mat & x1,
+    const Mat & x2,
+    const Mat & x3,
+    const std::vector<Mat3> & vec_KRi,
+    const Mat3 & K,
+    const double ThresholdUpperBound
+  )
+  : x1_(x1), x2_(x2), x3_(x3),
+    Kinv_(K.inverse()),
+    K_(K),
+    logalpha0_(log10(M_PI)),
+    ThresholdUpperBound_(ThresholdUpperBound),
+    vec_KR_(vec_KRi)
   {
     // Normalize points by inverse(K)
     ApplyTransformationToPoints(x1_, Kinv_, &x1n_);
     ApplyTransformationToPoints(x2_, Kinv_, &x2n_);
     ApplyTransformationToPoints(x3_, Kinv_, &x3n_);
 
-    vec_KR_[0] = Kinv_ * vec_KR_[0];
-    vec_KR_[1] = Kinv_ * vec_KR_[1];
-    vec_KR_[2] = Kinv_ * vec_KR_[2];
+    vec_KR_[0] *= Kinv_;
+    vec_KR_[1] *= Kinv_;
+    vec_KR_[2] *= Kinv_;
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
-  void Fit(const std::vector<size_t> &samples, std::vector<Model> *models) const {
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
 
     // Create a model from the points
-    Solver::Solve(
-                  ExtractColumns(x1n_, samples),
+    Solver::Solve(ExtractColumns(x1n_, samples),
                   ExtractColumns(x2n_, samples),
                   ExtractColumns(x3n_, samples),
                   vec_KR_, models, ThresholdUpperBound_);
   }
 
-  double Error(size_t sample, const Model &model) const {
+  double Error(uint32_t sample, const Model &model) const {
     return ErrorArg::Error(model, x1n_.col(sample), x2n_.col(sample), x3n_.col(sample));
   }
 
@@ -102,4 +106,4 @@ private:
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_H
+#endif // OPENMVG_GLOBAL_SFM_ENGINE_TRIPLET_T_ESTIMATOR_HPP

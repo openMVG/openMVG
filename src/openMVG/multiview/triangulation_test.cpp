@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -29,6 +30,8 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/numeric/numeric.h"
+
 #include "testing/testing.h"
 
 using namespace openMVG;
@@ -36,15 +39,14 @@ using namespace std;
 
 TEST(Triangulation, TriangulateDLT) {
 
-  NViewDataSet d = NRealisticCamerasRing(2, 12);
+  const NViewDataSet d = NRealisticCamerasRing(2, 12);
 
   for (int i = 0; i < d._X.cols(); ++i) {
-    Vec2 x1, x2;
-    x1 = d._x[0].col(i);
-    x2 = d._x[1].col(i);
-    Vec3 X_estimated, X_gt;
-    X_gt = d._X.col(i);
-    TriangulateDLT(d.P(0), x1, d.P(1), x2, &X_estimated);
+    const Vec3 X_gt = d._X.col(i);
+    Vec3 X_estimated;
+    const Vec2 x1 = d._x[0].col(i);
+    const Vec2 x2 = d._x[1].col(i);
+    TriangulateDLT(d.P(0), x1.homogeneous(), d.P(1), x2.homogeneous(), &X_estimated);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }
@@ -52,4 +54,3 @@ TEST(Triangulation, TriangulateDLT) {
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-

@@ -280,7 +280,7 @@ LinearSolverTerminationType SuiteSparse::Cholesky(cholmod_sparse* A,
       *message = "CHOLMOD failure: Out of memory.";
       return LINEAR_SOLVER_FATAL_ERROR;
     case CHOLMOD_TOO_LARGE:
-      *message = "CHOLMOD failure: Integer overflow occured.";
+      *message = "CHOLMOD failure: Integer overflow occurred.";
       return LINEAR_SOLVER_FATAL_ERROR;
     case CHOLMOD_INVALID:
       *message = "CHOLMOD failure: Invalid input.";

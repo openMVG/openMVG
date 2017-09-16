@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -26,8 +27,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "testing/testing.h"
 #include "openMVG/multiview/solver_affine.hpp"
+
+#include "testing/testing.h"
 
 using namespace openMVG;
 
@@ -80,8 +82,8 @@ TEST(Affine2DTest, Rotation45) {
           sin(angle),  cos(angle), 0,
           0,           0,          1;
   Mat x2 = x1;
-  for(int i = 0; i < x2.cols(); ++i)  {
-    x2.block<2,1>(0,i) = rot.block<2,2>(0,0) * x1.col(i) ;
+  for (int i = 0; i < x2.cols(); ++i)  {
+    x2.block<2,1>(0,i) = rot.block<2,2>(0,0) * x1.col(i);
   }
 
   Mat3 affine_mat;
@@ -103,7 +105,7 @@ TEST(Affine2DTest, Rotation45AndTranslationXY) {
 
   Mat x2 = x1;
   // Transform point from ground truth matrix
-  for(int i = 0; i < x2.cols(); ++i)  {
+  for (int i = 0; i < x2.cols(); ++i)  {
     x2.block<2,1>(0,i) = rot.block<2,2>(0,0) *  x1.col(i);// rot
     x2.block<2,1>(0,i) += rot.block<2,1>(0,2); // translation
   }
@@ -125,7 +127,7 @@ TEST(Affine2DTest, AffineGeneral) {
 
   Mat x2 = x1;
   // Transform point from ground truth matrix
-  for(int i = 0; i < x2.cols(); ++i)  {
+  for (int i = 0; i < x2.cols(); ++i)  {
     x2.block<2,1>(0,i) = m.block<2,2>(0,0) * x1.col(i);// affine
     x2.block<2,1>(0,i) += m.block<2,1>(0,2); // translation
   }
@@ -217,8 +219,8 @@ TEST(Affine3DTest, RotationAndTranslationXYZ) {
   M *= rot;
   Mat x2 = x1;
   // Transform point from ground affine matrix
-  for(int i = 0; i < x2.cols(); ++i)  {
-    x2.block<3,1>(0,i) =  M.block<3,3>(0,0) * x1.col(i) ;
+  for (int i = 0; i < x2.cols(); ++i)  {
+    x2.block<3,1>(0,i) =  M.block<3,3>(0,0) * x1.col(i);
     x2.block<3,1>(0,i) += M.block<3,1>(0,3); // translation
   }
 
@@ -241,7 +243,7 @@ TEST(Affine3DTest, AffineGeneral) {
 
   Mat x2 = x1;
   // Transform point from ground truth affine matrix
-  for(int i = 0; i < x2.cols(); ++i)  {
+  for (int i = 0; i < x2.cols(); ++i)  {
     x2.block<3,1>(0,i) = m.block<3,3>(0,0) * x1.col(i);// affine
     x2.block<3,1>(0,i) += m.block<3,1>(0,3); // translation
   }

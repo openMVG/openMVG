@@ -1,3 +1,4 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
 
@@ -11,6 +12,7 @@
 #include "openMVG/numeric/numeric.h"
 
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -18,68 +20,97 @@ namespace openMVG{
 namespace plyHelper{
 
 /// Export 3D point vector to PLY format
-static bool exportToPly(const std::vector<Vec3> & vec_points,
-  const std::string & sFileName)
+inline
+bool
+exportToPly
+(
+  const std::vector<Vec3> & vec_points,
+  const std::string & sFileName
+)
 {
-  std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
 
   outfile << "ply"
     << std::endl << "format ascii 1.0"
     << std::endl << "element vertex " << vec_points.size()
-    << std::endl << "property float x"
-    << std::endl << "property float y"
-    << std::endl << "property float z"
+    << std::endl << "property double x"
+    << std::endl << "property double y"
+    << std::endl << "property double z"
     << std::endl << "property uchar red"
     << std::endl << "property uchar green"
     << std::endl << "property uchar blue"
     << std::endl << "end_header" << std::endl;
 
+  outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
   for (size_t i=0; i < vec_points.size(); ++i)
   {
-    outfile << vec_points[i].transpose()
-      << " 255 255 255" << "\n";
+    outfile
+      << vec_points[i](0) << ' '
+      << vec_points[i](1) << ' '
+      << vec_points[i](2) << ' '
+      << "255 255 255" << "\n";
   }
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }
 
 /// Export 3D point vector and camera position to PLY format
-static bool exportToPly(const std::vector<Vec3> & vec_points,
+inline bool exportToPly
+(
+  const std::vector<Vec3> & vec_points,
   const std::vector<Vec3> & vec_camPos,
   const std::string & sFileName,
-  const std::vector<Vec3> * vec_coloredPoints = NULL)
+  const std::vector<Vec3> * vec_coloredPoints = nullptr
+)
 {
-  std::ofstream outfile;
-  outfile.open(sFileName.c_str(), std::ios_base::out);
+  std::ofstream outfile(sFileName.c_str());
+  if (!outfile.is_open())
+    return false;
 
   outfile << "ply"
     << '\n' << "format ascii 1.0"
     << '\n' << "element vertex " << vec_points.size()+vec_camPos.size()
-    << '\n' << "property float x"
-    << '\n' << "property float y"
-    << '\n' << "property float z"
+    << '\n' << "property double x"
+    << '\n' << "property double y"
+    << '\n' << "property double z"
     << '\n' << "property uchar red"
     << '\n' << "property uchar green"
     << '\n' << "property uchar blue"
     << '\n' << "end_header" << std::endl;
 
+  outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
+
   for (size_t i=0; i < vec_points.size(); ++i)  {
-    if (vec_coloredPoints == NULL)
-      outfile << vec_points[i].transpose()
-        << " 255 255 255" << "\n";
+    if (vec_coloredPoints == nullptr)
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << "255 255 255\n";
     else
-      outfile << vec_points[i].transpose()
-        << " " << (*vec_coloredPoints)[i].transpose() << "\n";
+      outfile
+        << vec_points[i](0) << ' '
+        << vec_points[i](1) << ' '
+        << vec_points[i](2) << ' '
+        << static_cast<int>((*vec_coloredPoints)[i](0)) << ' '
+        << static_cast<int>((*vec_coloredPoints)[i](1)) << ' '
+        << static_cast<int>((*vec_coloredPoints)[i](2))
+        << "\n";
   }
 
   for (size_t i=0; i < vec_camPos.size(); ++i)  {
-    outfile << vec_camPos[i].transpose()
-      << " 0 255 0" << "\n";
+    outfile
+      << vec_camPos[i](0) << ' '
+      << vec_camPos[i](1) << ' '
+      << vec_camPos[i](2) << ' '
+      << "0 255 0\n";
   }
   outfile.flush();
-  bool bOk = outfile.good();
+  const bool bOk = outfile.good();
   outfile.close();
   return bOk;
 }
