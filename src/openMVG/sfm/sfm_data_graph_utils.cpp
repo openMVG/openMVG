@@ -107,12 +107,10 @@ namespace openMVG {
 			const std::string &sOutputFolder = stlplus::folder_part(match_file_components);
 			const std::string &sExt = stlplus::extension_part(match_file);
 			int nIndex = 0;
-			int nSize = 0;
 			for (auto subgraph : vec_subgraph)
 			{
-				nSize = subgraph.size();
 				std::stringstream strstream_FileName;
-				strstream_FileName << sBaseName << "_" << nIndex << "_" << nSize <<  "." << sExt;
+				strstream_FileName << sBaseName << "_" << nIndex << "_" << subgraph.size() <<  "." << sExt;
 				const std::string &sOutputFileName = strstream_FileName.str();
 				const std::string &sMatch_file_components = stlplus::create_filespec(sOutputFolder, sOutputFileName);
 
