@@ -16,7 +16,7 @@
 #include <random>
 #include <set>
 
-#define for_parallel(i, nIters) for(int i = 0; i < static_cast<int>(nIters); ++i)
+#define for_parallel(i, nIters) for (int i = 0; i < static_cast<int>(nIters); ++i)
 
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 using namespace openMVG::matching;
@@ -40,7 +40,6 @@ void Domset::normalizePointCloud()
   ArrayMatcher_Kdtree_Flann<float> matcher;
   matcher.Build(points_cpy[0].data(), points_cpy.size(), 3);
 
-  const size_t numResults( 1 );
   const size_t numPoints( points.size() );
   float totalDist = 0;
   pcCentre.pos << 0, 0, 0;
@@ -386,7 +385,7 @@ const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
   for_parallel( p, numCP )
   {
     const auto pId = commonPoints[ p ];
-    //for( const auto pId : commonPoints ){
+    //for ( const auto pId : commonPoints ){
     const Eigen::Vector3f c1 = (v1.trans - points[ pId ].pos).normalized();
     const Eigen::Vector3f c2 = (v2.trans - points[ pId ].pos).normalized();
     const float angle    = acos( c1.dot( c2 ) );
@@ -426,7 +425,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
 #if OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for ( size_t i = 0; i < numX; i++ )
+    for_parallel( i, numX )
     {
       Y( i ) = AS.row( i ).maxCoeff( &I[ i ] );
       AS( i, I[ i ] ) = minFloat;
@@ -437,7 +436,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
 #if OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-    for ( size_t i = 0; i < numX; i++ )
+    for_parallel( i, numX )
     {
       Y2( i ) = AS.row( i ).maxCoeff( &I2[ i ] );
     }
@@ -451,13 +450,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
     Eigen::MatrixXf Aold = A;
 
     Eigen::MatrixXf Rp = ( R.array() > 0 ).select( R, 0 );
-#if OPENMVG_USE_OPENMP
-#pragma omp parallel for
-#endif
-    for ( size_t i = 0; i < numX; i++ )
-    {
-      Rp( i, i ) = R( i, i );
-    }
+    Rp.diagonal() = R.diagonal();
 
     Eigen::VectorXf sumRp = Rp.colwise().sum();
 
@@ -465,13 +458,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
     Eigen::VectorXf dA = A.diagonal();
 
     A = ( A.array() < 0 ).select( A, 0 );
-#if OPENMVG_USE_OPENMP
-#pragma omp parallel for
-#endif
-    for ( size_t i = 0; i < numX; i++ )
-    {
-      A( i, i ) = dA( i );
-    }
+    A.diagonal() = dA;
 
     A = ( ( 1 - lambda ) * A.array() ) + ( lambda * Aold.array() );
   }
@@ -616,7 +603,6 @@ void Domset::clusterViews( std::map<size_t, size_t> &xId2vId, const size_t &minC
                            const size_t &maxClusterSize )
 {
 //  std::cout << "[ Clustering Views ] " << std::endl;
-  const size_t umC = views.size();
   kMinClusterSize  = minClusterSize;
   kMaxClusterSize  = maxClusterSize;
 

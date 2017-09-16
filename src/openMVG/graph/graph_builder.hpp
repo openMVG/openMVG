@@ -47,7 +47,7 @@ struct indexedGraph
   * @param pairs List of pairs
   */
   template <typename IterablePairs>
-  indexedGraph( const IterablePairs & pairs )
+  explicit indexedGraph( const IterablePairs & pairs )
   {
     node_map_id.reset( new map_NodeMapIndex( g ) );
 

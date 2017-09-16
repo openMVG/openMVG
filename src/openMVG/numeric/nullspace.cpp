@@ -31,29 +31,5 @@ double Nullspace
   return Nullspace( A_extended, nullspace );
 }
 
-double Nullspace2
-(
-  const Eigen::Ref<const Mat> & A,
-  Eigen::Ref<Vec> x1,
-  Eigen::Ref<Vec> x2
-)
-{
-  if ( A.rows() >= A.cols() )
-  {
-    Eigen::JacobiSVD<Mat> svd( A, Eigen::ComputeFullV );
-    const Mat & V = svd.matrixV();
-    x1 = V.col( A.cols() - 1 );
-    x2 = V.col( A.cols() - 2 );
-    return svd.singularValues()( A.cols() - 1 );
-  }
-  // Extend A with rows of zeros to make it square. It's a hack, but it is
-  // necessary until Eigen supports SVD with more columns than rows.
-  Mat A_extended( A.cols(), A.cols() );
-  A_extended.block( A.rows(), 0, A.cols() - A.rows(), A.cols() ).setZero();
-  A_extended.block( 0, 0, A.rows(), A.cols() ) = A;
-  return Nullspace2( A_extended, x1, x2 );
-}
-
-
 } // namespace openMVG
 

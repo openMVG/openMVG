@@ -66,9 +66,8 @@ bool ExpectFundamentalProperties(const Mat3 &F,
   bool bOk = true;
   bOk &= F.determinant() < precision;
   assert(ptsA.cols() == ptsB.cols());
-  Mat hptsA, hptsB;
-  EuclideanToHomogeneous(ptsA, &hptsA);
-  EuclideanToHomogeneous(ptsB, &hptsB);
+  const Mat hptsA = ptsA.colwise().homogeneous();
+  const Mat hptsB = ptsB.colwise().homogeneous();
   for (int i = 0; i < ptsA.cols(); ++i) {
     const double residual = hptsB.col(i).dot(F * hptsA.col(i));
     bOk &= residual < precision;

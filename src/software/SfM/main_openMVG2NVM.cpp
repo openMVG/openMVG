@@ -38,8 +38,8 @@ using namespace openMVG::features;
 * @param filename Name of the file to create
 */
 bool CreateNVMFile( const SfM_Data & sfm_data ,
-                    const std::string sOutDirectory ,
-                    const std::string filename )
+                    const std::string & sOutDirectory ,
+                    const std::string & filename )
 {
   const std::string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
   if ( !stlplus::folder_exists( sOutViewsDirectory ) )

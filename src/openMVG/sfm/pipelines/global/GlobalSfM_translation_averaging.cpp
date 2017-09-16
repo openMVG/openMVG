@@ -358,7 +358,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   }
   // List putative triplets (from global rotations Ids)
   const std::vector< graph::Triplet > vec_triplets =
-    graph::tripletListing(rotation_pose_id_graph);
+    graph::TripletListing(rotation_pose_id_graph);
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
   {
@@ -739,9 +739,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       // get view Id and feat ID
       const uint32_t viewIndex = it->first;
       const uint32_t featIndex = it->second;
-
-      // initialize view and get intrinsics
-      const View * view = sfm_data.GetViews().at(viewIndex).get();
 
       // get feature
       const features::PointFeature & pt = features_provider->getFeatures(viewIndex)[featIndex];

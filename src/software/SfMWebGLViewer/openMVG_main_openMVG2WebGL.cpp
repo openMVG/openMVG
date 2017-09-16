@@ -47,7 +47,6 @@ void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
       const Landmark & landmark = it->second;
       const Observations & obs = landmark.obs;
       // Sum all rays from all observations
-      int nb_valid = 0;
       for (Observations::const_iterator itOb = obs.begin(); itOb != obs.end(); ++itOb )
         {
           const IndexT viewId = itOb->first;
@@ -81,7 +80,6 @@ void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
           // TODO : good for educational but really inefficient ! (+C-C)
           const Vec3 dst = Rt * ( ( Kinv * Vec3( pos.x() , pos.y() , 1.0 ) ) ) + C;
           const Vec3 n = ( dst - C ).normalized();
-          nb_valid ++;
           vec_nor[ cpt ] += n;
         }
         // Mean and normalize

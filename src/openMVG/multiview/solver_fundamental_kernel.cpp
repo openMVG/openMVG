@@ -52,17 +52,23 @@ void SevenPointSolver::Solve
     using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
-    Mat9 A = Mat::Zero(9,9);
-    EncodeEpipolarEquation(x1, x2, &A);
-    // Find the two F matrices in the nullspace of A.
-    Nullspace2(A, f1, f2);
+    Mat9 epipolar_constraint = Mat::Zero(9,9);
+    EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+    // Find the two F matrices in the nullspace of epipolar_constraint.
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> solver
+      (epipolar_constraint.transpose() * epipolar_constraint);
+    f1 = solver.eigenvectors().leftCols<2>().col(0);
+    f2 = solver.eigenvectors().leftCols<2>().col(1);
   }
   else  {
     // Set up the homogeneous system Af = 0 from the equations x'T*F*x = 0.
-    Mat A(x1.cols(), 9);
-    EncodeEpipolarEquation(x1, x2, &A);
-    // Find the two F matrices in the nullspace of A.
-    Nullspace2(A, f1, f2);
+    Mat epipolar_constraint(x1.cols(), 9);
+    EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+    // Find the two F matrices in the nullspace of epipolar_constraint.
+    Eigen::SelfAdjointEigenSolver<Mat> solver
+      (epipolar_constraint.transpose() * epipolar_constraint);
+    f1 = solver.eigenvectors().leftCols<2>().col(0);
+    f2 = solver.eigenvectors().leftCols<2>().col(1);
   }
 
   const Mat3 F1 = Map<RMat3>(f1.data());
@@ -96,7 +102,7 @@ void SevenPointSolver::Solve
 
   // Build the fundamental matrix for each solution.
   for (int kk = 0; kk < num_roots; ++kk)  {
-    F->push_back(F1 + roots[kk] * F2);
+    F->emplace_back(F1 + roots[kk] * F2);
   }
 }
 
@@ -115,14 +121,19 @@ void EightPointSolver::Solve
     using Mat9 = Eigen::Matrix<double, 9, 9>;
     // In the minimal solution use fixed sized matrix to let Eigen and the
     //  compiler doing the maximum of optimization.
-    Mat9 A = Mat::Zero(9,9);
-    EncodeEpipolarEquation(x1, x2, &A);
-    Nullspace(A, f);
+    Mat9 epipolar_constraint = Mat::Zero(9,9);
+    EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> solver
+      (epipolar_constraint.transpose() * epipolar_constraint);
+    f = solver.eigenvectors().leftCols<1>();
   }
   else  {
-    MatX9 A(x1.cols(), 9);
-    EncodeEpipolarEquation(x1, x2, &A);
-    Nullspace(A, f);
+    MatX9 epipolar_constraint(x1.cols(), 9);
+    epipolar_constraint.fill(0.0);
+    EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+    Eigen::SelfAdjointEigenSolver<MatX9> solver
+      (epipolar_constraint.transpose() * epipolar_constraint);
+    f = solver.eigenvectors().leftCols<1>();
   }
 
   Mat3 F = Map<RMat3>(f.data());

@@ -115,4 +115,3 @@ void control_point_2DNode::mouseReleaseEvent
   update();
   QGraphicsItem::mouseReleaseEvent(event);
 }
-

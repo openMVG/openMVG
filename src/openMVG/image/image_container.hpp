@@ -62,7 +62,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @brief Copy constructor
     * @param I Source image
     */
-    inline Image( const Base& I )
+    explicit inline Image( const Base& I )
       : Base( I )
     {
 

@@ -298,7 +298,7 @@ void InitRotationsMST
         }
     }
     stack.pop();
-  } while(!stack.empty());
+  } while (!stack.empty());
 }
 
 // Robustly estimate global rotations from relative rotations as in:

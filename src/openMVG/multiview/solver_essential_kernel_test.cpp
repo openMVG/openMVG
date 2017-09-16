@@ -173,13 +173,12 @@ TEST(FivePointKernelTest, KernelError) {
   using Kernel = essential::kernel::FivePointKernel;
   Kernel kernel(x1,x2, Mat3::Identity(), Mat3::Identity());
 
-  bool bOk = true;
   std::vector<uint32_t> samples(x1.cols());
   std::iota(samples.begin(), samples.end(), 0);
   std::vector<Mat3> Es;
   kernel.Fit(samples, &Es);
 
-  bOk &= (!Es.empty());
+  EXPECT_TRUE(!Es.empty());
   for (size_t i = 0; i < Es.size(); ++i) {
     for (Mat::Index j = 0; j < x1.cols(); ++j)
       EXPECT_NEAR(0.0, kernel.Error(j,Es[i]), 1e-8);

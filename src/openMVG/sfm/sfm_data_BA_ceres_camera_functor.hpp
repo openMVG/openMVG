@@ -32,14 +32,14 @@ namespace sfm {
 template <typename CostFunctor>
 struct WeightedCostFunction
 {
-  WeightedCostFunction() :weight_(1.0) {}
+  WeightedCostFunction(): weight_(1.0) {}
 
   explicit WeightedCostFunction
   (
     CostFunctor * func,
     const double weight
-  )
-    :functor_(func), weight_(weight)
+  ):
+    functor_(func), weight_(weight)
   {}
 
   template <typename T>
@@ -100,7 +100,7 @@ struct WeightedCostFunction
  */
 struct ResidualErrorFunctor_Pinhole_Intrinsic
 {
-  ResidualErrorFunctor_Pinhole_Intrinsic(const double* const pos_2dpoint)
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic(const double* const pos_2dpoint)
   :m_pos_2dpoint(pos_2dpoint)
   {
   }
@@ -209,7 +209,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
  */
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 {
-  ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(const double* const pos_2dpoint)
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(const double* const pos_2dpoint)
   :m_pos_2dpoint(pos_2dpoint)
   {
   }
@@ -326,7 +326,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
  */
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
 {
-  ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(const double* const pos_2dpoint)
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3(const double* const pos_2dpoint)
   :m_pos_2dpoint(pos_2dpoint)
   {
   }
@@ -449,7 +449,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
  */
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
 {
-  ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(const double* const pos_2dpoint)
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2(const double* const pos_2dpoint)
   :m_pos_2dpoint(pos_2dpoint)
   {
   }
@@ -580,7 +580,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
 
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 {
-  ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(const double* const pos_2dpoint)
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye(const double* const pos_2dpoint)
   :m_pos_2dpoint(pos_2dpoint)
   {
   }
@@ -704,7 +704,7 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
 
 struct ResidualErrorFunctor_Intrinsic_Spherical
 {
-  ResidualErrorFunctor_Intrinsic_Spherical
+  explicit ResidualErrorFunctor_Intrinsic_Spherical
   (
     const double* const pos_2dpoint,
     const size_t imageSize_w,

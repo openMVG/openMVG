@@ -13,7 +13,6 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
 {
@@ -54,9 +53,9 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0,
       double t1 = 0.0, double t2 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy )
+      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+        params_({k1, k2, k3, t1, t2})
     {
-      params_ = {k1, k2, k3, t1, t2};
     }
 
     /**

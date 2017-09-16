@@ -39,7 +39,7 @@ namespace robust{
 template<typename Kernel>
 class ScorerEvaluator {
 public:
-  ScorerEvaluator(double threshold) : threshold_(threshold) {}
+  explicit ScorerEvaluator(double threshold) : threshold_(threshold) {}
 
   template <typename T>
   double Score(const Kernel &kernel,
