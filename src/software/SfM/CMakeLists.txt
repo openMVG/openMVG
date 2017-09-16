@@ -70,6 +70,20 @@ INSTALL(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
 
+# Split MatchFile Into MatchFiles
+ADD_EXECUTABLE(openMVG_main_SplitMatchFileIntoMatchFiles main_SplitMatchFileIntoMatchFiles.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_SplitMatchFileIntoMatchFiles
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+  
+# Installation rules
+SET_PROPERTY(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
+
 ###
 # SfM Pipelines
 # - Incremental/Sequential
