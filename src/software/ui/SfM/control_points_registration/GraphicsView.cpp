@@ -74,7 +74,7 @@ namespace control_point_GUI
       if (!cp)
         continue;
 
-      auto i = _doc._sfm_data.control_points.find(cp->id_control_point());
+      auto i = _doc._sfm_data.control_points.find(cp->controlPointId());
 
       if (i!=_doc._sfm_data.control_points.end())
       {

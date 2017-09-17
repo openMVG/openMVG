@@ -21,7 +21,7 @@ class ControlPoint2DNode : public QGraphicsItem
 public:
   ControlPoint2DNode(const QPointF& pos, double & x, double & y, size_t id_control_point);
 
-  size_t id_control_point() const;
+  size_t controlPointId() const;
 
   QRectF boundingRect() const;
   QPainterPath shape() const;

@@ -33,7 +33,7 @@ ControlPoint2DNode::ControlPoint2DNode
   setPos(pos);
 }
 
-size_t ControlPoint2DNode::id_control_point() const
+size_t ControlPoint2DNode::controlPointId() const
 {
   return _id_control_point;
 }
