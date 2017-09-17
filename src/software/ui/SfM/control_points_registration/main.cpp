@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <QApplication>
-#include "mainLayout.hpp"
+#include "MainWindow.hpp"
 
 int main(int argc, char ** argv)
 {
