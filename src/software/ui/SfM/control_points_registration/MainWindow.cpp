@@ -73,8 +73,8 @@ void MainWindow::doubleClickImageList()
   {
     const View * view = m_doc._sfm_data.GetViews().at(id).get();
     const std::string sView = stlplus::create_filespec(m_doc._sfm_data.s_root_path, view->s_Img_path);
-    m_widget->AddImage(QString::fromStdString(sView), 0.f, 0.f, true);
-    m_widget->SetCurrentViewId(view->id_view);
+    m_widget->addImage(QString::fromStdString(sView), 0.f, 0.f, true);
+    m_widget->setCurrentViewId(view->id_view);
 
     setWindowTitle(QString("Control_point_editor: " + QString::fromStdString(sView)));
 
@@ -90,7 +90,7 @@ void MainWindow::doubleClickImageList()
         // It will allow dynamic update of the control_point observation when the user will move the Node
         Vec2 & ref = obs[view->id_view].x;
         const size_t index = iterL->first;
-        m_widget->AddNode(new control_point_2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
+        m_widget->addNode(new control_point_2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
       }
     }
   }

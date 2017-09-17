@@ -36,11 +36,11 @@ namespace control_point_GUI {
   public: /* methods */
     GraphicsView(Document & doc, QWidget * parent = 0);
 
-    void AddImage(const QString & qs_filename, float xpos=0.f, float ypos=0.f, bool bClear = false);
+    void addImage(const QString & qs_filename, float xpos=0.f, float ypos=0.f, bool bClear = false);
 
-    void AddNode(QGraphicsItem* it);
+    void addNode(QGraphicsItem* it);
 
-    void SetCurrentViewId(const IndexT index) {_current_view_id = index;}
+    void setCurrentViewId(const IndexT index) {_current_view_id = index;}
 
   protected: /* methods */
     void drawBackground(QPainter * painter, const QRectF &rect);

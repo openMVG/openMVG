@@ -136,7 +136,7 @@ namespace control_point_GUI
         landmark.obs[_current_view_id] = Observation(Vec2(pos.x(), pos.y()), 0);
         // Create a graphical instance that points directly to the control point observation
         Vec2 & ref = landmark.obs[_current_view_id].x;
-        this->AddNode(new control_point_2DNode(pos, ref(0), ref(1), index));
+        this->addNode(new control_point_2DNode(pos, ref(0), ref(1), index));
       }
       else
       {
@@ -210,7 +210,7 @@ namespace control_point_GUI
     addAction(removeControlPointAct);
   }
 
-  void GraphicsView::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
+  void GraphicsView::addImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
   {
     if (bClear) {
       scene->clear();
@@ -241,7 +241,7 @@ namespace control_point_GUI
     }
   }
 
-  void GraphicsView::AddNode(QGraphicsItem* it)
+  void GraphicsView::addNode(QGraphicsItem* it)
   {
       scene->addItem(it);
   }
