@@ -31,7 +31,8 @@ if(Qt5Widgets_FOUND)
   MainWindow.hpp
   GraphicsView.hpp
   node.hpp
-  document.hpp)
+  document.hpp
+  ControlPointTableView.hpp)
 
   # ==============================================================================
   # Add the following files, modules and libraries to the project.
