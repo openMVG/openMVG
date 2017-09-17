@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#ifndef CONTROLPOINTTABLEVIEW_HPP
+#define CONTROLPOINTTABLEVIEW_HPP
+
 #include <QDialog>
 #include <QTableWidget>
 #include "openMVG/sfm/sfm_data.hpp"
-
-#pragma once
 
 namespace control_point_GUI {
 
@@ -42,3 +43,5 @@ private:
 };
 
 } // namespace control_point_GUI
+
+#endif /* CONTROLPOINTTABLEVIEW_HPP */

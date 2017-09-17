@@ -6,7 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef MAINWINDOW_HPP
+#define MAINWINDOW_HPP
 
 #include <QtGui>
 #include <QTreeView>
@@ -98,3 +99,4 @@ public:
   void createConnections();
 };
 
+#endif /* MAINWINDOW_HPP */
