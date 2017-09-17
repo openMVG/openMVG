@@ -24,13 +24,13 @@ if(Qt5Widgets_FOUND)
   MainWindow.cpp
   GraphicsView.cpp
   ControlPointTableView.cpp
-  node.cpp)
+  ControlPoint2DNode.cpp)
 
   # All non moc header files here
   SET(HeaderFiles
   MainWindow.hpp
   GraphicsView.hpp
-  node.hpp
+  ControlPoint2DNode.hpp
   document.hpp
   ControlPointTableView.hpp)
 

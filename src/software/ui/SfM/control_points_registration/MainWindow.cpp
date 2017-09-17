@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <clocale>
 
-#include "node.hpp"
+#include "ControlPoint2DNode.hpp"
 #include "ControlPointTableView.hpp"
 
 #include "openMVG/multiview/triangulation_nview.hpp"
@@ -90,7 +90,7 @@ void MainWindow::doubleClickImageList()
         // It will allow dynamic update of the control_point observation when the user will move the Node
         Vec2 & ref = obs[view->id_view].x;
         const size_t index = iterL->first;
-        m_widget->addNode(new control_point_2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
+        m_widget->addNode(new ControlPoint2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
       }
     }
   }

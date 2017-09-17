@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "node.hpp"
+#include "ControlPoint2DNode.hpp"
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-control_point_2DNode::control_point_2DNode
+ControlPoint2DNode::ControlPoint2DNode
 (
   const QPointF& pos,
   double & x,
@@ -33,24 +33,24 @@ control_point_2DNode::control_point_2DNode
   setPos(pos);
 }
 
-size_t control_point_2DNode::id_control_point() const
+size_t ControlPoint2DNode::id_control_point() const
 {
   return _id_control_point;
 }
 
-QRectF control_point_2DNode::boundingRect() const
+QRectF ControlPoint2DNode::boundingRect() const
 {
   return QRectF(QPointF(-10,-10),QSize(20,20));
 }
 
-QPainterPath control_point_2DNode::shape() const
+QPainterPath ControlPoint2DNode::shape() const
 {
   QPainterPath path;
   path.addEllipse(QPointF(0,0),10,10);
   return path;
 }
 
-void control_point_2DNode::paint
+void ControlPoint2DNode::paint
 (
   QPainter *painter,
   const QStyleOptionGraphicsItem *option,
@@ -92,7 +92,7 @@ void control_point_2DNode::paint
   painter->drawText(node_rect, Qt::AlignCenter, s_node_id);
 }
 
-QVariant control_point_2DNode::itemChange
+QVariant ControlPoint2DNode::itemChange
 (
   GraphicsItemChange change,
   const QVariant &value
@@ -104,7 +104,7 @@ QVariant control_point_2DNode::itemChange
   return variant;
 }
 
-void control_point_2DNode::mousePressEvent
+void ControlPoint2DNode::mousePressEvent
 (
   QGraphicsSceneMouseEvent *event
 )
@@ -112,7 +112,7 @@ void control_point_2DNode::mousePressEvent
   update();
   QGraphicsItem::mousePressEvent(event);
 }
-void control_point_2DNode::mouseReleaseEvent
+void ControlPoint2DNode::mouseReleaseEvent
 (
   QGraphicsSceneMouseEvent *event
 )

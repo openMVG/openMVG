@@ -16,10 +16,10 @@ class QGraphicsSceneMouseEvent;
 
 // Graphical movable QtGraphicItem to represent a control_point image observation
 // A dynamic update of the control_point observation coordinates is performed thanks to variable reference.
-class control_point_2DNode : public QGraphicsItem
+class ControlPoint2DNode : public QGraphicsItem
 {
 public:
-  control_point_2DNode(const QPointF& pos, double & x, double & y, size_t id_control_point);
+  ControlPoint2DNode(const QPointF& pos, double & x, double & y, size_t id_control_point);
 
   size_t id_control_point() const;
 

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "GraphicsView.hpp"
-#include "node.hpp"
+#include "ControlPoint2DNode.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -69,7 +69,7 @@ namespace control_point_GUI
 
     foreach (auto item, items)
     {
-      auto cp = dynamic_cast<control_point_2DNode *>(item);
+      auto cp = dynamic_cast<ControlPoint2DNode *>(item);
 
       if (!cp)
         continue;
@@ -136,7 +136,7 @@ namespace control_point_GUI
         landmark.obs[_current_view_id] = Observation(Vec2(pos.x(), pos.y()), 0);
         // Create a graphical instance that points directly to the control point observation
         Vec2 & ref = landmark.obs[_current_view_id].x;
-        this->addNode(new control_point_2DNode(pos, ref(0), ref(1), index));
+        this->addNode(new ControlPoint2DNode(pos, ref(0), ref(1), index));
       }
       else
       {
