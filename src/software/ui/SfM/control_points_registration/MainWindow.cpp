@@ -169,7 +169,7 @@ void MainWindow::editControlPoints()
     ControlPointTableView control_point_editor(&m_doc._sfm_data, this);
     control_point_editor.exec();
     Landmarks control_points_cpy = m_doc._sfm_data.control_points;
-    control_point_editor.update_control_points(control_points_cpy);
+    control_point_editor.updateControlPoints(control_points_cpy);
     m_doc._sfm_data.control_points = control_points_cpy;
   }
   else

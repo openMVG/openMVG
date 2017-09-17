@@ -27,7 +27,7 @@ public:
   );
 
   /// Update control points X,Y,Z data (if valid datum is provided)
-  void update_control_points(openMVG::sfm::Landmarks & control_points);
+  void updateControlPoints(openMVG::sfm::Landmarks & control_points);
 
   /// Delete selected control_points row(s) on Key_Delete event
   void keyReleaseEvent(QKeyEvent* event);
