@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2017 nomoko AG, Sebastien Chappuis<sebastien@nomoko.camera>, Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_threshold_checker.hpp"
 
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
@@ -12,12 +20,12 @@ HsfmSubmap generateBasicSubmap(int n_views, int n_points)
   smap.sfm_data = getInputScene(dataset, config, openMVG::cameras::PINHOLE_CAMERA_RADIAL3);
   const openMVG::sfm::Landmarks & landmarks = smap.sfm_data.structure;
   std::transform(landmarks.begin(), landmarks.end(),
-                 std::inserter(smap.track_ids, smap.track_ids.begin()),
+                 std::inserter(smap.track_ids, smap.track_ids.cbegin()),
                  [](const std::pair<openMVG::IndexT, openMVG::sfm::Landmark> & landmark){return landmark.first;});
   // take only the first half of the points for the separator
-  auto it_half = smap.track_ids.begin();
+  auto it_half = smap.track_ids.cbegin();
   std::advance(it_half, n_points / 2);
-  smap.separator.insert(smap.track_ids.begin(), it_half);
+  smap.separator.insert(smap.track_ids.cbegin(), it_half);
 
   return smap;
 }
@@ -73,8 +81,8 @@ TEST(SubmapPartitionablePredicate, works_asPredicateOnAlgorithms)
   const HsfmSubmap smap_not_enough_tracks = generateBasicSubmap(20, tracks_threshold - 1);
   const HsfmSubmaps submaps = {{1,smap1}, {2,smap2}, {3,smap3}, {4, smap_not_enough_tracks}};
 
-  EXPECT_FALSE(std::all_of(submaps.begin(), submaps.end(), is_partitionable));
-  EXPECT_TRUE(std::any_of(submaps.begin(), submaps.end(), is_partitionable));
+  EXPECT_FALSE(std::all_of(submaps.cbegin(), submaps.cend(), is_partitionable));
+  EXPECT_TRUE(std::any_of(submaps.cbegin(), submaps.cend(), is_partitionable));
 }
 
 /* ************************************************************************* */

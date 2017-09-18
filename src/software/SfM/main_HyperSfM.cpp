@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2017 nomoko AG, Sebastien Chappuis<sebastien@nomoko.camera>, Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
@@ -23,12 +31,12 @@ std::unique_ptr<SubmapThresholdChecker> getThresholdChecker(const int tracks_thr
 {
   if (tracks_threshold < 0)
   {
-    std::cout << "View threshold chosen : " << view_threshold << std::endl;
+    std::cout << "View threshold chosen: " << view_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapViewThresholdChecker(view_threshold));
   }
   else
   {
-    std::cout << "Tracks threshold chosen : " << tracks_threshold << std::endl;
+    std::cout << "Tracks threshold chosen: " << tracks_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapTracksThresholdChecker(tracks_threshold));
   }
 }
@@ -61,7 +69,7 @@ int main(int argc, char **argv)
     << "[-o|--outdir] path where the output data will be stored\n"
     << "[-v|--views_threshold] clustering threshold in number of views per submap\n"
     << "[-t|--tracks_threshold] clustering threshold in number of tracks per submap\n"
-    << "NOTE : if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority !\n"
+    << "NOTE: if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority!\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
@@ -74,9 +82,9 @@ int main(int argc, char **argv)
   if (tracks_threshold_clustering < 0 && view_threshold_clustering < 0)
   {
     std::cerr << std::endl
-      << "Could not find any valid input threshold value ! Threshold must be positive !" << std::endl
-      << "Views threshold : " << view_threshold_clustering << std::endl
-      << "tracks threshold : " << tracks_threshold_clustering << std::endl
+      << "Could not find any valid input threshold value! Threshold must be positive!" << std::endl
+      << "Views threshold: " << view_threshold_clustering << std::endl
+      << "tracks threshold: " << tracks_threshold_clustering << std::endl
       << "add a tracks threshold with -t, a view threshold with -v" << std::endl;
     return EXIT_FAILURE;
   }
@@ -159,15 +167,15 @@ int main(int argc, char **argv)
   std::unique_ptr<SubmapThresholdChecker> threshold_checker = getThresholdChecker(tracks_threshold_clustering, view_threshold_clustering);
 
   // cluster the scene into submaps
-  std::cout << "...Start Clustering : "<< timer << std::endl;
+  std::cout << "...Start Clustering: "<< timer << std::endl;
   HyperCluster clusterer(sfm_data, map_tracks, std::move(threshold_checker));
   clusterer.recursivePartitioning();
   clusterer.exportTreeGraph(stlplus::create_filespec(sOutDir, "hyperCluster"));
   HsfmSubmaps submaps = clusterer.getSubMaps();
-  std::cout << "Clustering Done : " << timer << std::endl;
+  std::cout << "Clustering Done: " << timer << std::endl;
 
   // reconstruct each leaf submap separately
-  std::cout << "...Start Reconstruction of Leaf Submaps : " << timer << std::endl;
+  std::cout << "...Start Reconstruction of Leaf Submaps: " << timer << std::endl;
   for (auto & smap : submaps)
   {
     if (smap.second.is_parent)
@@ -202,7 +210,7 @@ int main(int argc, char **argv)
   SaveSubmaps(submaps,
       stlplus::create_filespec(sOutDir, "submaps_before_merge", "json"));
 
-  std::cout << "...Start Merging Submaps : " << timer << std::endl;
+  std::cout << "...Start Merging Submaps: " << timer << std::endl;
   SubmapMerger merger(submaps);
   merger.Merge();
   submaps = merger.getSubmaps();

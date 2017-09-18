@@ -113,7 +113,7 @@ bool HyperCluster::recursivePartitioning()
         std::vector<HsfmSubmap> new_submap_pair(2);
         if(!PartitionSubmap(submap_id, new_submap_pair))
         {
-          std::cout << "can not partitition further for submap nb " << submap_id << std::endl;
+          std::cout << "can not partition further for submap nb " << submap_id << std::endl;
           non_partitionable_submap_ids.insert(submap_id); // flag the submap to stop partitioning it
           continue;
         }
