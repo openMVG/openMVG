@@ -352,8 +352,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         && set_pose_ids.count(v1->id_pose)
         && set_pose_ids.count(v2->id_pose))
     {
-      rotation_pose_id_graph.insert(
-        std::make_pair(v1->id_pose, v2->id_pose));
+      rotation_pose_id_graph.insert({v1->id_pose, v2->id_pose});
     }
   }
   // List putative triplets (from global rotations Ids)
@@ -551,7 +550,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                   std::advance(iter_J, 1);
                   while (iter_J != track.end())
                   { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
-                    newpairMatches[std::make_pair(iter_I->first, iter_J->first)]
+                    newpairMatches[{iter_I->first, iter_J->first}]
                      .emplace_back(iter_I->second, iter_J->second);
                     ++iter_I;
                     ++iter_J;
