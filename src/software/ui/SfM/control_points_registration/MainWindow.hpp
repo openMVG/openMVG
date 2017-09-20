@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef MAINWINDOW_HPP
+#define MAINWINDOW_HPP
 
 #include <QtGui>
 #include <QTreeView>
 #include <string>
 
-#include "GraphicsMainWindow.hpp"
+#include "GraphicsView.hpp"
 #include "document.hpp"
 
 class MainWindow : public QMainWindow
@@ -44,7 +45,7 @@ private:
   // -- END DOCUMENT
 
   // -- VIEW
-  control_point_GUI::GraphicsMainWindow * m_widget;
+  control_point_GUI::GraphicsView * m_widget;
   // -- END VIEW
 
   private slots:
@@ -98,3 +99,4 @@ public:
   void createConnections();
 };
 
+#endif /* MAINWINDOW_HPP */
