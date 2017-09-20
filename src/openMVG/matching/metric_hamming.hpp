@@ -12,16 +12,8 @@
 #include "openMVG/matching/metric.hpp"
 
 #include <bitset>
-
-#ifdef _MSC_VER
-#include <intrin.h>
-#else
 #include <cstdint>
-#endif
-
-#ifdef __ARM_NEON__
-#include "arm_neon.h"
-#endif
+#include <type_traits>
 
 // Brief:
 // Hamming distance count the number of bits in common between descriptors
@@ -30,14 +22,6 @@
 
 namespace openMVG {
 namespace matching {
-
-#undef PLATFORM_64_BIT
-#undef PLATFORM_32_BIT
-#if __amd64__ || __x86_64__ || _WIN64 || _M_X64
-#define PLATFORM_64_BIT
-#else
-#define PLATFORM_32_BIT
-#endif
 
 /// Hamming distance:
 ///  Working for STL fixed size BITSET and boost DYNAMIC_BITSET
@@ -55,16 +39,6 @@ struct HammingBitSet
   }
 };
 
-// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
-// Lookup table to count the number of common 1 bits on unsigned char values
-static const unsigned char pop_count_LUT[256] =
-{
-#   define B2_POPC(n) n,     n+1,     n+1,     n+2
-#   define B4(n) B2_POPC(n), B2_POPC(n+1), B2_POPC(n+1), B2_POPC(n+2)
-#   define B6(n) B4(n), B4(n+1), B4(n+1), B4(n+2)
-    B6(0), B6(1), B6(1), B6(2)
-};
-
 // Hamming distance to work on raw memory
 //  like unsigned char *
 template<typename T>
@@ -73,34 +47,11 @@ struct Hamming
   using ElementType = T;
   using ResultType = unsigned int;
 
-  /** This is popcount_3() from:
-   * http://en.wikipedia.org/wiki/Hamming_weight */
-  static inline unsigned int popcnt32(uint32_t n)
+  template<typename U>
+  static inline std::size_t constexpr popcnt(const U & rhs)
   {
-#ifdef _MSC_VER
-    return __popcnt(n);
-#else
-#if (defined __GNUC__ || defined __clang__)
-    return __builtin_popcountl(n);
-#endif
-    n -= ((n >> 1) & 0x55555555);
-    n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
-    return (((n + (n >> 4))& 0xF0F0F0F)* 0x1010101) >> 24;
-#endif
-  }
-
-  static inline unsigned int popcnt64(uint64_t n)
-  {
-#if defined _MSC_VER && defined PLATFORM_64_BIT
-    return __popcnt64(n);
-#else
-#if (defined __GNUC__ || defined __clang__)
-    return __builtin_popcountll(n);
-#endif
-    n -= ((n >> 1) & 0x5555555555555555LL);
-    n = (n & 0x3333333333333333LL) + ((n >> 2) & 0x3333333333333333LL);
-    return (((n + (n >> 4))& 0x0f0f0f0f0f0f0f0fLL)* 0x0101010101010101LL) >> 56;
-#endif
+    static_assert(std::is_integral<U>::value, "U must be an integral type.");
+    return std::bitset<sizeof(U) * 8>(rhs).count();
   }
 
   // Size must be equal to number of ElementType
@@ -108,56 +59,33 @@ struct Hamming
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     ResultType result = 0;
-// Windows & generic platforms:
 
-#ifdef PLATFORM_64_BIT
-    if (size%sizeof(uint64_t) == 0)
+    if (size % sizeof(uint64_t) == 0)
     {
       const uint64_t* pa = reinterpret_cast<const uint64_t*>(a);
       const uint64_t* pb = reinterpret_cast<const uint64_t*>(b);
       size /= (sizeof(uint64_t)/sizeof(unsigned char));
       for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
-        result += popcnt64(*pa ^ *pb);
+        result += popcnt(*pa ^ *pb);
       }
     }
-    else if (size%sizeof(uint32_t) == 0)
+    else if (size % sizeof(uint32_t) == 0)
     {
       const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
       const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
       size /= (sizeof(uint32_t)/sizeof(unsigned char));
       for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
-        result += popcnt32(*pa ^ *pb);
+        result += popcnt(*pa ^ *pb);
       }
     }
     else
     {
       const ElementType * a2 = reinterpret_cast<const ElementType*> (a);
       const ElementType * b2 = reinterpret_cast<const ElementType*> (b);
-      for (size_t i = 0;
-           i < size / (sizeof(unsigned char)); ++i) {
-        result += pop_count_LUT[a2[i] ^ b2[i]];
+      for (size_t i = 0; i < size / (sizeof(ElementType)); ++i) {
+        result += popcnt(a2[i] ^ b2[i]);
       }
     }
-#else // PLATFORM_64_BIT
-    if (size%sizeof(uint32_t) == 0)
-    {
-      const uint32_t* pa = reinterpret_cast<const uint32_t*>(a);
-      const uint32_t* pb = reinterpret_cast<const uint32_t*>(b);
-      size /= (sizeof(uint32_t)/sizeof(unsigned char));
-      for (size_t i = 0; i < size; ++i, ++pa, ++pb ) {
-        result += popcnt32(*pa ^ *pb);
-      }
-    }
-    else
-    {
-      const ElementType * a2 = reinterpret_cast<const ElementType*> (a);
-      const ElementType * b2 = reinterpret_cast<const ElementType*> (b);
-      for (size_t i = 0;
-           i < size / (sizeof(unsigned char)); ++i) {
-        result += pop_count_LUT[a2[i] ^ b2[i]];
-      }
-    }
-#endif // PLATFORM_64_BIT
     return result;
   }
 };
