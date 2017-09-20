@@ -2767,6 +2767,7 @@ Rollei d23 com;7.53
 Rollei d33 com;7.11
 Rollei d41 com;7.11
 RP_imx219;3.674
+RP_ov5647;3.76
 Samsung NX2000;23.5
 Samsung NX1100;23.5
 Samsung ST72;6.16

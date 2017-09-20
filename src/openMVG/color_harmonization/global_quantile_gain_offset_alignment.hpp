@@ -109,11 +109,10 @@ static void Encode_histo_relation(
   }
 
   //-- Fix the required image to known gain and offset value
-  for (std::vector<size_t>::const_iterator iter = vec_indexToFix.begin();
-    iter != vec_indexToFix.end(); ++iter)
+  for (const auto & index : vec_indexToFix)
   {
-    vec_bounds[GVAR(*iter)] = std::make_pair(1.0, 1.0);      // gain = 1.0
-    vec_bounds[OFFSETVAR(*iter)] = std::make_pair(0.0, 0.0); // offset = 0
+    vec_bounds[GVAR(index)] = {1.0, 1.0};      // gain = 1.0
+    vec_bounds[OFFSETVAR(index)] = {0.0, 0.0}; // offset = 0
   }
 
   // Setup gamma >= 0

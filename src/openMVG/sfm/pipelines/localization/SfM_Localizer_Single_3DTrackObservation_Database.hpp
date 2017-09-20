@@ -52,6 +52,7 @@ public:
   /**
   * @brief Try to localize an image in the database
   *
+  * @param[in] solver_type the type of absolute pose solver to use
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
   * @param[in] query_regions the image regions (type must be the same as the database)
@@ -61,6 +62,7 @@ public:
   */
   bool Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,

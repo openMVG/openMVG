@@ -76,6 +76,7 @@ namespace sfm {
   bool
   SfM_Localization_Single_3DTrackObservation_Database::Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,
@@ -117,7 +118,7 @@ namespace sfm {
     }
 
     const bool bResection =  SfM_Localizer::Localize(
-      image_size, optional_intrinsics, resection_data, pose);
+      solver_type, image_size, optional_intrinsics, resection_data, pose);
 
     resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 

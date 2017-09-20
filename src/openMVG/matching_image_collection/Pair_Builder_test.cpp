@@ -19,10 +19,9 @@ using namespace std;
 template<typename IterablePairs>
 bool checkPairOrder(const IterablePairs & pairs)
 {
-  for (typename IterablePairs::const_iterator iterP = pairs.begin(); iterP != pairs.end();
-    ++iterP)
+  for (const auto & iterP : pairs)
   {
-    if (iterP->first >= iterP->second)
+    if (iterP.first >= iterP.second)
       return false;
   }
   return true;
@@ -36,12 +35,12 @@ TEST(matching_image_collection, exhaustivePairs)
   pairSet = exhaustivePairs(4);
   EXPECT_TRUE( checkPairOrder(pairSet) );
   EXPECT_EQ( 6, pairSet.size());
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,1)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,3)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,3)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(2,3)) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({0,1}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({0,2}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({0,3}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({1,2}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({1,3}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({2,3}) != pairSet.end() );
 }
 
 TEST(matching_image_collection, contiguousWithOverlap)
@@ -52,22 +51,22 @@ TEST(matching_image_collection, contiguousWithOverlap)
   pairSet = contiguousWithOverlap(4,1);
   EXPECT_TRUE( checkPairOrder(pairSet) );
   EXPECT_EQ( 3, pairSet.size());
-  EXPECT_TRUE( pairSet.find(std::make_pair(0,1)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(1,2)) != pairSet.end() );
-  EXPECT_TRUE( pairSet.find(std::make_pair(2,3)) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({0,1}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({1,2}) != pairSet.end() );
+  EXPECT_TRUE( pairSet.find({2,3}) != pairSet.end() );
 }
 
 TEST(matching_image_collection, IO)
 {
   Pair_Set pairSetGT;
-  pairSetGT.insert( std::make_pair(0,1) );
-  pairSetGT.insert( std::make_pair(1,2) );
-  pairSetGT.insert( std::make_pair(2,0) );
+  pairSetGT.insert( {0,1} );
+  pairSetGT.insert( {1,2} );
+  pairSetGT.insert( {2,0} );
 
   Pair_Set pairSetGTsorted;
-  pairSetGTsorted.insert( std::make_pair(0,1) );
-  pairSetGTsorted.insert( std::make_pair(0,2) );
-  pairSetGTsorted.insert( std::make_pair(1,2) );
+  pairSetGTsorted.insert( {0,1} );
+  pairSetGTsorted.insert( {0,2} );
+  pairSetGTsorted.insert( {1,2} );
 
   EXPECT_TRUE( savePairs("pairsT_IO.txt", pairSetGT));
 
@@ -80,8 +79,8 @@ TEST(matching_image_collection, IO_InvalidInput)
 {
   // A pair with index superior to the expected picture count
   Pair_Set pairSetGT;
-  pairSetGT.insert( std::make_pair(0,1) );
-  pairSetGT.insert( std::make_pair(10,20) );
+  pairSetGT.insert( {0,1} );
+  pairSetGT.insert( {10,20} );
 
   EXPECT_TRUE( savePairs("pairsT_IO_InvalidInput.txt", pairSetGT));
 
@@ -91,8 +90,8 @@ TEST(matching_image_collection, IO_InvalidInput)
 
   // A pair with equal index
   pairSetGT.clear();
-  pairSetGT.insert( std::make_pair(0,1) );
-  pairSetGT.insert( std::make_pair(0,0) );
+  pairSetGT.insert( {0,1} );
+  pairSetGT.insert( {0,0} );
   EXPECT_FALSE( loadPairs(expectedPicCount, "pairsT_IO_InvalidInput.txt", loaded_Pairs));
 }
 
