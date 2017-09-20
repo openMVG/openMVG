@@ -8,6 +8,7 @@
 
 
 #include "openMVG/features/feature.hpp"
+#include "openMVG/features/feature_container.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 
 #include "testing/testing.h"
@@ -15,56 +16,78 @@
 using namespace openMVG;
 using namespace openMVG::matching;
 
-TEST(IndMatchDecorator, Empty)
+TEST(DeduplicateLeftOrRight, Empty)
 {
-  const std::vector<features::PointFeature> features;
   matching::IndMatches matches;
-  const IndMatchDecorator<float> decorator(matches, features, features);
-  EXPECT_FALSE(decorator.getDeduplicated(matches));
+  EXPECT_FALSE(DeduplicateLeftAndRight({}, {}, matches));
+  EXPECT_TRUE(matches.empty());
 }
 
-TEST(IndMatchDecorator, NoDuplicates)
+TEST(DeduplicateLeftOrRight, NoDuplicates)
 {
-  const std::vector<features::PointFeature> left_features = {{0,1}, {1,2}};
-  const std::vector<features::PointFeature> right_features = {{2,3}, {4,5}};
-  const matching::IndMatches input_matches = {{0,0}, {1,1}};
-  const IndMatchDecorator<float> decorator(input_matches, left_features, right_features);
-  matching::IndMatches output_matches;
-  EXPECT_FALSE(decorator.getDeduplicated(output_matches));
-  EXPECT_EQ(2, output_matches.size());
+  const features::PointFeatures left_features = {{0,1}, {1,2}};
+  const features::PointFeatures right_features = {{2,3}, {4,5}};
+  matching::IndMatches input_matches = {{0,0}, {1,1}};
+  EXPECT_FALSE(DeduplicateLeftAndRight(left_features,
+                                       right_features,
+                                       input_matches));
+  EXPECT_EQ(2, input_matches.size());
 }
 
-TEST(IndMatchDecorator, RightFeaturesAreTheSame)
+TEST(DeduplicateLeftAndRight, Duplicates)
 {
-  const std::vector<features::PointFeature> left_features = {{1,1}, {1,1}};
-  const std::vector<features::PointFeature> right_features = {{0,0}};
-  const matching::IndMatches input_matches = {{0,0}, {1,0}};
-  const IndMatchDecorator<float> decorator(input_matches, left_features, right_features);
-  matching::IndMatches output_matches;
-  EXPECT_TRUE(decorator.getDeduplicated(output_matches));
-  EXPECT_EQ(1, output_matches.size());
+  const features::PointFeatures left_features = {{1,1}, {1,1}};
+  const features::PointFeatures right_features = {{0,0}, {0,0}};
+  {
+    matching::IndMatches input_matches = {{0,0}, {1,1}};
+    EXPECT_TRUE(DeduplicateLeftAndRight(left_features,
+                                        right_features,
+                                        input_matches));
+    EXPECT_EQ(1, input_matches.size());
+  }
+
+  {
+    matching::IndMatches input_matches = {{0,0}, {0,0}};
+    EXPECT_TRUE(DeduplicateLeftAndRight(left_features,
+                                        right_features,
+                                        input_matches));
+    EXPECT_EQ(1, input_matches.size());
+  }
 }
 
-TEST(IndMatchDecorator, LeftFeaturesAreTheSame)
+TEST(indMatchDecoratorXY, DeduplicateLeftOrRight)
 {
-  const std::vector<features::PointFeature> left_features = {{0,0}};
-  const std::vector<features::PointFeature> right_features = {{1,1}, {1,0}};
-  const matching::IndMatches input_matches = {{0,0}, {0,1}};
-  const IndMatchDecorator<float> decorator(input_matches, left_features, right_features);
-  matching::IndMatches output_matches;
-  EXPECT_TRUE(decorator.getDeduplicated(output_matches));
-  EXPECT_EQ(1, output_matches.size());
-}
+  const features::PointFeature x1(1,1), x2(2,2), x3(3,3);
 
-TEST(IndMatchDecorator, PartialDeletion)
-{
-  const std::vector<features::PointFeature> left_features = {{0,0}, {0,0}, {5,15}};
-  const std::vector<features::PointFeature> right_features = {{1,1}, {2,2}};
-  const matching::IndMatches input_matches = {{0,0}, {1,0}, {2,1}};
-  const IndMatchDecorator<float> decorator(input_matches, left_features, right_features);
-  matching::IndMatches output_matches;
-  EXPECT_TRUE(decorator.getDeduplicated(output_matches));
-  EXPECT_EQ(2, output_matches.size());
+  // Corner case (empty arrays)
+  {
+    matching::IndMatches matches = {};
+    EXPECT_FALSE(
+      DeduplicateLeftOrRight(
+        {}, {}, matches));
+  }
+  // No deduplication check
+  {
+    matching::IndMatches matches = {{0,0}, {1,1}};
+    EXPECT_FALSE(
+      DeduplicateLeftOrRight(
+        {x1, x2}, {x1, x3}, matches)
+    );
+  }
+
+  // Deduplication check
+  {
+    matching::IndMatches matches = {{0,0}, {1,0}};
+    EXPECT_TRUE(
+      DeduplicateLeftOrRight(
+        {x1, x2}, {x1}, matches));
+  }
+  {
+    matching::IndMatches matches = {{0,0}, {1,2}};
+    EXPECT_TRUE(
+      DeduplicateLeftOrRight(
+        {x1, x2}, {x1, x2, x1}, matches));
+  }
 }
 
 /* ************************************************************************* */

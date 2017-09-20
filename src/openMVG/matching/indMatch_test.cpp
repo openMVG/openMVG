@@ -13,7 +13,7 @@
 #include "testing/testing.h"
 
 using namespace openMVG;
-using namespace matching;
+using namespace openMVG::matching;
 
 TEST(IndMatch, IO)
 {
@@ -29,39 +29,38 @@ TEST(IndMatch, IO)
   EXPECT_EQ(0, matches.size());
 
   // Test export with not empty data
-  matches[std::make_pair(0,1)] = {{0,0},{1,1}};
-  matches[std::make_pair(1,2)] = {{0,0},{1,1}, {2,2}};
+  matches[{0,1}] = {{0,0},{1,1}};
+  matches[{1,2}] = {{0,0},{1,1}, {2,2}};
 
   EXPECT_TRUE(Save(matches, "matches.txt"));
   EXPECT_TRUE(Load(matches, "matches.txt"));
   EXPECT_EQ(2, matches.size());
-  EXPECT_EQ(1, matches.count(std::make_pair(0,1)));
-  EXPECT_EQ(1, matches.count(std::make_pair(1,2)));
-  EXPECT_EQ(2, matches.at(std::make_pair(0,1)).size());
-  EXPECT_EQ(3, matches.at(std::make_pair(1,2)).size());
+  EXPECT_EQ(1, matches.count({0,1}));
+  EXPECT_EQ(1, matches.count({1,2}));
+  EXPECT_EQ(2, matches.at({0,1}).size());
+  EXPECT_EQ(3, matches.at({1,2}).size());
 
   matches.clear();
-  matches[std::make_pair(0,1)] = {{0,0},{1,1}};
-  matches[std::make_pair(1,2)] = {{0,0},{1,1}, {2,2}};
+  matches[{0,1}] = {{0,0},{1,1}};
+  matches[{1,2}] = {{0,0},{1,1}, {2,2}};
 
   EXPECT_TRUE(Save(matches, "matches.bin"));
   EXPECT_TRUE(Load(matches, "matches.bin"));
   EXPECT_EQ(2, matches.size());
-  EXPECT_EQ(1, matches.count(std::make_pair(0,1)));
-  EXPECT_EQ(1, matches.count(std::make_pair(1,2)));
-  EXPECT_EQ(2, matches.at(std::make_pair(0,1)).size());
-  EXPECT_EQ(3, matches.at(std::make_pair(1,2)).size());
+  EXPECT_EQ(1, matches.count({0,1}));
+  EXPECT_EQ(1, matches.count({1,2}));
+  EXPECT_EQ(2, matches.at({0,1}).size());
+  EXPECT_EQ(3, matches.at({1,2}).size());
 }
 
 TEST(IndMatch, DuplicateRemoval_NoRemoval)
 {
-  std::vector<IndMatch> vec_indMatch;
-
-  vec_indMatch.push_back(IndMatch(2,3)); // 0
-  vec_indMatch.push_back(IndMatch(0,1)); // 1
-
+  std::vector<IndMatch> vec_indMatch = {
+    {2,3}, // 0
+    {0,1}  // 1
+  };
   // Check no removal
-  EXPECT_FALSE(IndMatch::getDeduplicated(vec_indMatch));
+  EXPECT_FALSE(IndMatch::DeduplicateLeftAndRight(vec_indMatch));
 
   // Check lexigraphical sorting
   // Due to lexigraphical sorting (0,1) must appears first
@@ -71,33 +70,31 @@ TEST(IndMatch, DuplicateRemoval_NoRemoval)
 
 TEST(IndMatch, DuplicateRemoval_Simple)
 {
-  std::vector<IndMatch> vec_indMatch;
+  std::vector<IndMatch> vec_indMatch = {
+    {0,1}, // 0
+    {0,1}, // 1: error with addition 0
+    {1,2}, // 2
+    {1,2}, // 3: error with addition 2
+  };
 
-  vec_indMatch.push_back(IndMatch(0,1)); // 0
-  vec_indMatch.push_back(IndMatch(0,1)); // 1: error with addition 0
-
-  vec_indMatch.push_back(IndMatch(1,2)); // 2
-  vec_indMatch.push_back(IndMatch(1,2)); // 3: error with addition 2
-
-  EXPECT_TRUE(IndMatch::getDeduplicated(vec_indMatch));
+  EXPECT_TRUE(IndMatch::DeduplicateLeftAndRight(vec_indMatch));
   // Two matches must remain (line 0 and 2)
   EXPECT_EQ(2, vec_indMatch.size());
 }
 
 TEST(IndMatch, DuplicateRemoval)
 {
-  std::vector<IndMatch> vec_indMatch;
+  std::vector<IndMatch> vec_indMatch = {
+    {0,1},
+    {0,1}, // Error defined before
+    // Add some other matches whithout conflict
+    {0,2},
+    {1,1},
+    {2,3},
+    {3,3}
+  };
 
-  vec_indMatch.push_back(IndMatch(0,1));
-  vec_indMatch.push_back(IndMatch(0,1)); // Error defined before
-
-  // Add some other matches
-  vec_indMatch.push_back(IndMatch(0,2));
-  vec_indMatch.push_back(IndMatch(1,1));
-  vec_indMatch.push_back(IndMatch(2,3));
-  vec_indMatch.push_back(IndMatch(3,3));
-
-  EXPECT_TRUE(IndMatch::getDeduplicated(vec_indMatch));
+  EXPECT_TRUE(IndMatch::DeduplicateLeftAndRight(vec_indMatch));
   // Five matches must remain (one (0,1) must disappear)
   EXPECT_EQ(5, vec_indMatch.size());
 
