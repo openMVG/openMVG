@@ -71,7 +71,7 @@ set(CMAKE_MODULE_PATH ${CURRENT_CONFIG_INSTALL_DIR})
 # Build the absolute root install directory as a relative path
 get_filename_component(CURRENT_ROOT_INSTALL_DIR
   ${CMAKE_MODULE_PATH}/../../../ ABSOLUTE)
-IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
+if (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
   OPENMVG_REPORT_NOT_FOUND(
     "OpenMVG install root: ${CURRENT_ROOT_INSTALL_DIR}, "
     "determined from relative path from OpenMVGConfig.cmake install location: "
@@ -79,7 +79,7 @@ IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
 endif (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
 
 # Check if OpenMVG header is installed
-IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
+if (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
   OPENMVG_REPORT_NOT_FOUND(
     "OpenMVG install root: ${CMAKE_MODULE_PATH}. "
     "Cannot find openMVG include files.")
@@ -98,7 +98,7 @@ find_package(Threads REQUIRED)
 
 # Import exported OpenMVG targets
 set(OPENMVG_LIBRARIES @OpenMVG_LIBRARIES@)
-INCLUDE(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
+include(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
 
 # As we use OPENMVG_REPORT_NOT_FOUND() to abort, if we reach this point we have
 # found OpenMVG and all required dependencies.

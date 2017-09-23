@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
             landmark.X = inliers_X[i];
             landmark.obs[tiny_scene.views[0]->id_view] = Observation(xL.col(inliers_indexes[i]), 0);
             landmark.obs[tiny_scene.views[1]->id_view] = Observation(xR.col(inliers_indexes[i]), 0);
-            tiny_scene.structure.insert(std::make_pair(tiny_scene.structure.size(), landmark));
+            tiny_scene.structure.insert({tiny_scene.structure.size(), landmark});
           }
 
           Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));

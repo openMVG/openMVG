@@ -1,26 +1,7 @@
-// Copyright (c) 2007, 2008 libmv authors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
-
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013, 2017 Pierre MOULON.
+// Copyright (c) 2017 Pascal Monasse
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,7 +11,10 @@
 #define OPENMVG_NUMERIC_POLY_H
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <complex>
+#include <limits>
 
 namespace openMVG
 {
@@ -41,91 +25,48 @@ namespace openMVG
 * @param a Coefficient of cubic parameter
 * @param b Coefficient of linear parameter
 * @param c Coefficient of scalar parameter
-* @param[out] x0 potential solution
-* @param[out] x1 potential solution
-* @param[out] x2 potential solution
+* @param[out] x Found solution(s)
 * @return Number of solution
-* @note If number of solution is less than 3, only the first output parameters are computed
-* @note The GSL cubic solver was used as a reference for this routine.
 */
 template<typename Real>
 int SolveCubicPolynomial( Real a, Real b, Real c,
-                          Real *x0, Real *x1, Real *x2 )
+                          Real x[3] )
 {
-  const Real q = a * a - 3 * b;
-  const Real r = 2 * a * a * a - 9 * a * b + 27 * c;
-
-  const Real Q = q / 9;
-  const Real R = r / 54;
-
-  const Real Q3 = Q * Q * Q;
-  const Real R2 = R * R;
-
-  const Real CR2 = 729 * r * r;
-  const Real CQ3 = 2916 * q * q * q;
-
-  if ( R == 0 && Q == 0 )
+  const Real eps = std::numeric_limits<Real>::epsilon();
+  a /= 3;
+  Real p = (b - 3 * a * a) / 3;
+  Real q = (2 * a * a * a - a * b + c) / 2;
+  Real d = q * q + p * p * p;
+  Real tolq = std::max(std::abs(2 * a * a * a),
+                       std::max(std::abs(a * b), std::abs(c)));
+  Real tolp = std::max(std::abs(b), std::abs(3 * a * a));
+  int n = (d > eps * std::max(p * p * tolp, std::abs(q) * tolq)? 1 : 3);
+  if (n == 1) // Single root: Cardano's formula
   {
-    // Tripple root in one place.
-    *x0 = *x1 = *x2 = -a / 3;
-    return 3;
-
+    d = std::pow(std::abs(q) + std::sqrt(d), 1 / (Real)3);
+    x[0] = d - p / d;
+    if (q > 0)
+      x[0] = -x[0];
   }
-  else if ( CR2 == CQ3 )
-  {
-    // This test is actually R2 == Q3, written in a form suitable for exact
-    // computation with integers.
-    //
-    // Due to finite precision some double roots may be missed, and considered
-    // to be a pair of complex roots z = x +/- epsilon i close to the real
-    // axis.
-    const Real sqrtQ = sqrt ( Q );
-    if ( R > 0 )
+  else // Three roots: Viete's formula
+  { 
+    if (3 * p >= -eps * tolp) // p=0 and d<=0 implies q=0: triple root 0
     {
-      *x0 = -2 * sqrtQ - a / 3;
-      *x1 =      sqrtQ - a / 3;
-      *x2 =      sqrtQ - a / 3;
+      n = 1;
+      x[0] = 0;
     }
     else
     {
-      *x0 =     -sqrtQ - a / 3;
-      *x1 =     -sqrtQ - a / 3;
-      *x2 =  2 * sqrtQ - a / 3;
+      p = std::sqrt(-p);
+      q /= p * p * p;
+      d = Real((q <= -1)? M_PI : (q >= 1)? 0 : std::acos(q));
+      for (int i = 0; i < 3; ++i)
+        x[i] = Real(-2 * p * std::cos((d + 2 * M_PI * i) / 3));
     }
-    return 3;
-
   }
-  else if ( CR2 < CQ3 )
-  {
-    // This case is equivalent to R2 < Q3.
-    const Real sqrtQ = sqrt ( Q );
-    const Real sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
-    const Real theta = acos ( R / sqrtQ3 );
-    const Real norm = -2 * sqrtQ;
-    *x0 = norm * cos ( theta / 3 ) - a / 3;
-    *x1 = norm * cos ( ( theta + 2.0 * M_PI ) / 3 ) - a / 3;
-    *x2 = norm * cos ( ( theta - 2.0 * M_PI ) / 3 ) - a / 3;
-
-    // Put the roots in ascending order.
-    if ( *x0 > *x1 )
-    {
-      std::swap( *x0, *x1 );
-    }
-    if ( *x1 > *x2 )
-    {
-      std::swap( *x1, *x2 );
-      if ( *x0 > *x1 )
-      {
-        std::swap( *x0, *x1 );
-      }
-    }
-    return 3;
-  }
-  const Real sgnR = ( R >= 0 ? 1 : -1 );
-  const Real A = -sgnR * pow ( std::abs ( R ) + sqrt ( R2 - Q3 ), 1.0 / 3.0 );
-  const Real B = Q / A;
-  *x0 = A + B - a / 3;
-  return 1;
+  for (int i = 0; i < n; ++i)
+    x[i] -= a;
+  return n;
 }
 
 
@@ -139,21 +80,94 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
 * @note Assuming coeffs and solutions vectors have 4 values
 */
 template<typename Real>
-int SolveCubicPolynomial( const Real *coeffs, Real *solutions )
+int SolveCubicPolynomial
+(
+  const Real *coeffs, Real *solutions
+)
 {
   if ( coeffs[0] == 0.0 )
   {
-    // TODO(keir): This is a quadratic not a cubic. Implement a quadratic
-    // solver!
     return 0;
   }
   const Real a = coeffs[2] / coeffs[3];
   const Real b = coeffs[1] / coeffs[3];
   const Real c = coeffs[0] / coeffs[3];
-  return SolveCubicPolynomial( a, b, c,
-                               solutions + 0,
-                               solutions + 1,
-                               solutions + 2 );
+  return SolveCubicPolynomial( a, b, c, solutions );
 }
+
+static std::complex<double> complex_cbrt
+(
+  const std::complex<double> & z
+)
+{
+  return pow(z, 1. / 3.);
+}
+
+/**
+* @brief Solve roots of a quartic polynomial.
+* @param coeffs Coefficients of the polynomial
+* @param[out] real_roots Found roots
+*
+* @note Input coefficients are in ascending order ( coeffs[N] * x^N )
+*/
+// Adapted from:
+// https://github.com/sidneycadot/quartic/blob/master/solve-quartic.cc
+static void solveQuarticPolynomial
+(
+  const std::array<double, 5> & coeffs,
+  std::array<double, 4> & real_roots
+)
+{
+
+  const double a = coeffs[0];
+  const double b = coeffs[1] / a;
+  const double c = coeffs[2] / a;
+  const double d = coeffs[3] / a;
+  const double e = coeffs[4] / a;
+
+  const std::complex<double> Q1 = c * c - 3. * b * d + 12. * e;
+  const std::complex<double> Q2 = 2. * c * c * c - 9. * b * c * d
+                                  + 27. * d * d + 27. * b * b * e - 72. * c * e;
+  const std::complex<double> Q3 = 8. * b * c - 16. * d - 2. * b * b * b;
+  const std::complex<double> Q4 = 3. * b * b - 8. * c;
+
+  const std::complex<double> Q5 = complex_cbrt(Q2 / 2.
+                                  + sqrt(Q2 * Q2 / 4. - Q1 * Q1 * Q1));
+  const std::complex<double> Q6 = (Q1 / Q5 + Q5) / 3.;
+  const std::complex<double> Q7 = 2. * sqrt(Q4 / 12. + Q6);
+
+  real_roots = {
+    (-b - Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+    (-b - Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+    (-b + Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.,
+    (-b + Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.};
+}
+
+/// Refine the quartic roots
+static void polishQuarticPolynomialRoots
+(
+  const std::array<double, 5> & coeffs,
+  std::array<double, 4> & roots,
+  const int iterations = 2)
+{
+  for (int i = 0; i < iterations; ++i)
+  {
+    for (auto & root : roots)
+    {
+      const double error =
+        coeffs[4] + root * (coeffs[3] +
+                            root * (coeffs[2] +
+                                    root * (coeffs[1] +
+                                            root * coeffs[0])));
+
+      const double derivative =
+        coeffs[3] + root * (2 * coeffs[2] +
+                            root * ((4 * coeffs[0] * root + 3 * coeffs[1])));
+
+      root -= error / derivative;
+    }
+  }
+}
+
 }  // namespace openMVG
 #endif  // OPENMVG_NUMERIC_POLY_H

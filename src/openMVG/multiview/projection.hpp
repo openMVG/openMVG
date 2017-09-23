@@ -113,65 +113,6 @@ Mat2X Project( const Mat34 &P, const Mat3X &X );
 */
 Mat2X Project( const Mat34 &P, const Mat4X &X );
 
-
-/**
-* @brief Change homogeneous coordinates to euclidean
-* @param H Input 4d point
-* @param[out] X Output 3d point
-*/
-void HomogeneousToEuclidean( const Vec4 &H, Vec3 *X );
-
-/**
-* @brief Change euclidean coordinates to homogeneous
-* @param X Input points
-* @param H Output points
-*/
-void EuclideanToHomogeneous( const Mat &X, Mat *H );
-
-/**
-* @brief Change homogeneous to euclidean
-* @param H Input homogeneous Points
-* @param[out] Output euclidean points
-*/
-void HomogeneousToEuclidean( const Mat &H, Mat *X );
-
-/**
-* @brief Change euclidean to homogenous
-* @param x Input 2d points
-* @return Output 3d homogeneous points
-*/
-Mat3X EuclideanToHomogeneous( const Mat2X &x );
-
-/**
-* @brief Change euclidean to homogenous
-* @param x Input 2d points
-* @param[out] h Output 3d homogeneous points
-*/
-void EuclideanToHomogeneous( const Mat2X &x, Mat3X *h );
-
-/**
-* @brief Change homogenous to euclidean
-* @param x Input 3d homogeneous points
-* @param[out] e Output 2d euclidean points
-*/
-void HomogeneousToEuclidean( const Mat3X &h, Mat2X *e );
-
-/**
-* @brief Project x point in camera coordinates
-* @param x Input list of 2d points
-* @param K intrinsic matrix
-* @param[out] n Normalized points in camera plane frame
-*/
-void EuclideanToNormalizedCamera( const Mat2X &x, const Mat3 &K, Mat2X *n );
-
-/**
-* @brief Project x point in camera coordinates
-* @param x Input list of (homogeneous) 3d points
-* @param K intrinsic matrix
-* @param[out] n Normalized points in camera plane frame
-*/
-void HomogeneousToNormalizedCamera( const Mat3X &x, const Mat3 &K, Mat2X *n );
-
 /**
 * @brief Estimates the root mean square error (2D)
 * @param x_image Points in image frame
