@@ -16,10 +16,26 @@
 namespace openMVG {
 namespace matching {
 
+void Match
+(
+  const matching::EMatcherType & matcher_type,
+  const features::Regions & database_regions,
+  const features::Regions & query_regions,
+  matching::IndMatches & matches
+)
+{
+  const std::unique_ptr<RegionsMatcher> matcher =
+    RegionMatcherFactory(matcher_type, database_regions);
+  if (matcher)
+  {
+    matcher->Match(query_regions, matches);
+  }
+}
+
 void DistanceRatioMatch
 (
   float f_dist_ratio,
-  matching::EMatcherType matcher_type,
+  const matching::EMatcherType & matcher_type,
   const features::Regions & database_regions,
   const features::Regions & query_regions,
   matching::IndMatches & matches
@@ -150,7 +166,7 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
       }
       break;
       default:
-          std::cerr << "Using unknown matcher type" << std::endl;
+        std::cerr << "Using unknown matcher type" << std::endl;
     }
   }
   else
