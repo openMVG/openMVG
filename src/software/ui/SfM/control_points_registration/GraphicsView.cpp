@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "GraphicsMainWindow.hpp"
-#include "node.hpp"
+#include "GraphicsView.hpp"
+#include "ControlPoint2DNode.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -29,55 +29,90 @@
 
 namespace control_point_GUI
 {
-
   using namespace std;
+
   // =========================================================================
   // Public methods
   // =========================================================================
-  GraphicsMainWindow::GraphicsMainWindow(Document & doc, QWidget * parent)
-    : QMainWindow(parent), scene(new QGraphicsScene),
-    view(new QGraphicsView(scene)), _doc(doc), _current_view_id(UndefinedIndexT)
+  GraphicsView::GraphicsView(Document & doc, QWidget * parent)
+    : QGraphicsView(parent), scene(new QGraphicsScene),
+    _doc(doc), _current_view_id(UndefinedIndexT)
   {
+    setScene(scene);
+
     // The OpenGL rendering does not seem to work with too big images.
-    //view->setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
-    view->setBackgroundRole(QPalette::Dark);
-    view->setAlignment(Qt::AlignCenter);
-    view->setCacheMode(QGraphicsView::CacheBackground);
-    view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    view->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    //setViewport(new QGLWidget(QGLFormat(QGL::SampleBuffers)));
+    setBackgroundRole(QPalette::Dark);
+    setAlignment(Qt::AlignCenter);
+    setCacheMode(QGraphicsView::CacheBackground);
+    setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 
-    setCentralWidget(view);
-
-    view->setMouseTracking(true);
+    setMouseTracking(true);
 
     createActions();
 
     resize(800, 600);
   }
 
-  void GraphicsMainWindow::zoomIn() {
-    view->scale(1.25, 1.25); update();
+  void GraphicsView::zoomIn()
+  {
+    scale(1.25, 1.25); update();
   }
 
-  void GraphicsMainWindow::zoomOut() { view->scale(0.8, .8); update();}
-  void GraphicsMainWindow::normalSize() {view->resetTransform();  update();}
+  void GraphicsView::zoomOut() { scale(0.8, .8); update(); }
+  void GraphicsView::normalSize() { resetTransform();  update(); }
+
+  void GraphicsView::removeControlPoint()
+  {
+    auto items = scene->selectedItems();
+
+    foreach (auto item, items)
+    {
+      auto cp = dynamic_cast<ControlPoint2DNode *>(item);
+
+      if (!cp)
+        continue;
+
+      auto i = _doc._sfm_data.control_points.find(cp->controlPointId());
+
+      if (i != _doc._sfm_data.control_points.end())
+      {
+        Landmark & landmark = i->second;
+
+        landmark.obs.erase(_current_view_id);
+
+        if (landmark.obs.empty())
+          _doc._sfm_data.control_points.erase(i);
+      }
+
+      delete cp;
+    }
+  }
 
   // =========================================================================
   // Protected methods
   // =========================================================================
-  void GraphicsMainWindow::drawBackground(QPainter *painter,
+  void GraphicsView::drawBackground(QPainter *painter,
     const QRectF &rect)
   {
   }
 
-  void GraphicsMainWindow::mousePressEvent (QMouseEvent* e )
+  void GraphicsView::mousePressEvent (QMouseEvent* e )
   {
-    if (_doc._sfm_data.GetViews().empty())
+    QGraphicsView::mousePressEvent(e);
+
+    if (e->isAccepted())
+      return; // QGraphicsView handled this event
+
+    if (_doc._sfm_data.GetViews().empty() || e->button()!=Qt::LeftButton)
     {
       return;
     }
 
-    const QPointF pos =  this->view->mapToScene(e->pos());
+    e->accept(); // We handled this event
+
+    const QPointF pos =  this->mapToScene(e->pos());
 
     int index = -1;
     QInputDialog input;
@@ -101,7 +136,7 @@ namespace control_point_GUI
         landmark.obs[_current_view_id] = Observation(Vec2(pos.x(), pos.y()), 0);
         // Create a graphical instance that points directly to the control point observation
         Vec2 & ref = landmark.obs[_current_view_id].x;
-        this->AddNode(new control_point_2DNode(pos, ref(0), ref(1), index));
+        this->addNode(new ControlPoint2DNode(pos, ref(0), ref(1), index));
       }
       else
       {
@@ -116,7 +151,7 @@ namespace control_point_GUI
     }
   }
 
-  void GraphicsMainWindow::wheelEvent ( QWheelEvent * e)
+  void GraphicsView::wheelEvent ( QWheelEvent * e)
   {
     if (e->modifiers().testFlag(Qt::ControlModifier))
     // zoom only when CTRL key is pressed
@@ -135,38 +170,47 @@ namespace control_point_GUI
     }
     else
     {
-      QMainWindow::wheelEvent(e);
+      QGraphicsView::wheelEvent(e);
     }
   }
 
-  void GraphicsMainWindow::zoom(qreal factor, QPointF centerPoint)
+  void GraphicsView::zoom(qreal factor, QPointF centerPoint)
   {
-    view->scale(factor, factor);
-    //view->centerOn(centerPoint);
+    scale(factor, factor);
+    //centerOn(centerPoint);
   }
 
   // =========================================================================
   // Private methods
   // =========================================================================
-  void GraphicsMainWindow::createActions()
+  void GraphicsView::createActions()
   {
     zoomInAct = new QAction(tr("Zoom &In (25%)"), this);
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomInAct->setEnabled(false);
     connect(zoomInAct, SIGNAL(triggered()), this, SLOT(zoomIn()));
+    addAction(zoomInAct);
 
     zoomOutAct = new QAction(tr("Zoom &Out (25%)"), this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setEnabled(false);
     connect(zoomOutAct, SIGNAL(triggered()), this, SLOT(zoomOut()));
+    addAction(zoomOutAct);
 
     normalSizeAct = new QAction(tr("&Normal Size"), this);
-    normalSizeAct->setShortcut(tr("Ctrl+S"));
+    normalSizeAct->setShortcut(tr("Ctrl+1"));
     normalSizeAct->setEnabled(false);
     connect(normalSizeAct, SIGNAL(triggered()), this, SLOT(normalSize()));
+    addAction(normalSizeAct);
+
+    removeControlPointAct = new QAction(tr("&Remove Control Point"), this);
+    removeControlPointAct->setShortcut(tr("Del"));
+    removeControlPointAct->setEnabled(false);
+    connect(removeControlPointAct, SIGNAL(triggered()), this, SLOT(removeControlPoint()));
+    addAction(removeControlPointAct);
   }
 
-  void GraphicsMainWindow::AddImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
+  void GraphicsView::addImage(const QString & qs_filename, float xpos, float ypos, bool bClear)
   {
     if (bClear) {
       scene->clear();
@@ -189,6 +233,7 @@ namespace control_point_GUI
       zoomInAct->setEnabled(true);
       zoomOutAct->setEnabled(true);
       normalSizeAct->setEnabled(true);
+      removeControlPointAct->setEnabled(true);
 
       const QFileInfo fi(qs_filename);
       const QString name = fi.fileName();
@@ -196,9 +241,8 @@ namespace control_point_GUI
     }
   }
 
-  void GraphicsMainWindow::AddNode(QGraphicsItem* it)
+  void GraphicsView::addNode(QGraphicsItem* it)
   {
       scene->addItem(it);
   }
 } // namespace control_point_GUI
-

@@ -1,3 +1,6 @@
+#ifndef DOCUMENT_HPP
+#define DOCUMENT_HPP
+
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
@@ -35,3 +38,4 @@ struct Document
   }
 };
 
+#endif /* DOCUMENT_HPP */
