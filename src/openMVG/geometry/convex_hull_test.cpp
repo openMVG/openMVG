@@ -39,7 +39,7 @@ TEST(ConvexHull, Line) {
 
 // Test corner case (point cloud with one point)
 TEST(ConvexHull, OnePoint) {
-  const Polygon2d point_cloud = {{0, 0}};
+  const Polygon2d point_cloud(1, {0, 0});
   // A one point polygon have no area
   double area = -1.0;
   EXPECT_TRUE(ConvexPolygonArea(point_cloud, area));
