@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
 
   CmdLine cmd;
   cmd.add( make_option('t', sImage_describer_type, "type") );
+  cmd.add( make_switch('d', "distance_ratio"));
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -43,7 +44,8 @@ int main(int argc, char **argv) {
       << "[-t|--type\n"
       << "  (choose an image_describer interface):\n"
       << "   SIFT: SIFT keypoint & descriptor,\n"
-      << "   AKAZE: AKAZE keypoint & floating point descriptor]"
+      << "   AKAZE: AKAZE keypoint & floating point descriptor]\n"
+      << "[-d|distance_ratio] Use distance ratio filter before GMS, else 1-1 matching is used."
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -72,7 +74,7 @@ int main(int argc, char **argv) {
     image_describer = AKAZE_Image_describer::create
       (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB));
 
-  if (image_describer == nullptr)
+  if (!image_describer)
   {
     std::cerr << "Invalid Image_describer type" << std::endl;
     return EXIT_FAILURE;
@@ -119,15 +121,28 @@ int main(int argc, char **argv) {
   //--
   //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
   matching::IndMatches vec_PutativeMatches;
-  const float kDistanceRatio = 0.8f;
-  matching::DistanceRatioMatch(
-    kDistanceRatio,
-    matching::BRUTE_FORCE_L2,
-    *regions_perImage.at(0).get(),
-    *regions_perImage.at(1).get(),
-    vec_PutativeMatches);
-
-  // Draw the correspondences kept by the Nearest Neighbor ratio filter
+  const bool distance_ratio_matching = cmd.used('d');
+  if (distance_ratio_matching)
+  {
+    const float kDistanceRatio = 0.8f;
+    matching::DistanceRatioMatch(
+      kDistanceRatio,
+      (sImage_describer_type == "AKAZE_MLDB") ? matching::BRUTE_FORCE_HAMMING
+        : matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
+  }
+  else
+  {
+    matching::Match(
+      (sImage_describer_type == "AKAZE_MLDB") ? matching::BRUTE_FORCE_HAMMING
+        : matching::BRUTE_FORCE_L2,
+      *regions_perImage.at(0).get(),
+      *regions_perImage.at(1).get(),
+      vec_PutativeMatches);
+  }
+  // Draw the putative photometric correspondences
   {
     const bool bVertical = true;
     Matches2SVG
@@ -145,10 +160,7 @@ int main(int argc, char **argv) {
   }
 
   // Display some statistics
-  std::cout
-    << regions_perImage.at(0)->RegionCount() << " #Features on image A" << std::endl
-    << regions_perImage.at(1)->RegionCount() << " #Features on image B" << std::endl
-    << vec_PutativeMatches.size() << " #matches with Distance Ratio filter" << std::endl;
+  std::cout << vec_PutativeMatches.size() << " #matches Found" << std::endl;
 
   // Apply the GMS filter
   {
@@ -180,7 +192,10 @@ int main(int argc, char **argv) {
                                              with_scale_invariance,
                                              with_rotation_invariance);
 
-    std::cout << nb_inliers << " #matches kept by the GMS Filter" << std::endl;
+    std::cout
+      << vec_points_left.size() << " #Features on image A" << std::endl
+      << vec_points_right.size() << " #Features on image B" << std::endl
+      << nb_inliers << " #matches kept by the GMS Filter" << std::endl;
 
     matching::IndMatches vec_gms_matches;
     for (int i = 0; i < static_cast<int>(inlier_flags.size()); ++i)
