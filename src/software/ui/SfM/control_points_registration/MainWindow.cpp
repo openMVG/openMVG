@@ -7,16 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "MainWindow.hpp"
-#include <QtGui>
-#include <QMessageBox>
+
 #include <QFileDialog>
-#include <QWidget>
-#include <QSplitter>
-#include <QStatusBar>
-#include <QMenu>
 #include <QGridLayout>
 #include <QMenuBar>
 #include <QDebug>
+#include <QMenu>
+#include <QMessageBox>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QtGui>
+#include <QWidget>
 
 #include <algorithm>
 #include <clocale>
@@ -32,6 +33,9 @@
 #include "openMVG/sfm/sfm_data_transform.hpp"
 
 #include "openMVG/stl/stl.hpp"
+
+using namespace openMVG;
+using namespace openMVG::sfm;
 
 void MainWindow::removeAllControlPoints()
 {
@@ -478,4 +482,3 @@ void MainWindow::createConnections()
     ,SLOT(doubleClickImageList())
     );
 }
-

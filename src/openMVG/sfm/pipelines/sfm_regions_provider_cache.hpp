@@ -53,10 +53,7 @@ public:
       {
         cache_[x] = ret;
       }
-      else
-      {
-        // Invalid ressource
-      }
+      // else -> Invalid ressource -> an empty smart poiter is returned
     }
     else
     {

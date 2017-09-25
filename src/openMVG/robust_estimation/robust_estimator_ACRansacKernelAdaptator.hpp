@@ -104,7 +104,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, N2_, &(*model));
+    UnnormalizerArg::Unnormalize(N1_, N2_, model);
   }
 
   double logalpha0() const {return logalpha0_;}
@@ -175,7 +175,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), &(*model));
+    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), model);
   }
 
   double logalpha0() const {return logalpha0_;}

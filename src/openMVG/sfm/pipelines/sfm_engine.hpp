@@ -30,7 +30,8 @@ public:
   )
   :sOut_directory_(soutDirectory),
     sfm_data_(sfm_data),
-    intrinsic_refinement_options_(cameras::Intrinsic_Parameter_Type::ADJUST_ALL)
+    intrinsic_refinement_options_(cameras::Intrinsic_Parameter_Type::ADJUST_ALL),
+    b_use_motion_prior_(false)
   {
   }
 

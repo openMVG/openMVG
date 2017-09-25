@@ -90,7 +90,7 @@ typename TIntegralImage::Tpixel BlockSum
   const auto & B = integral_image(left_corner.y() - 1, right_corner.x());
   const auto & C = integral_image(right_corner.y()   , left_corner.x() - 1);
   const auto & D = integral_image(right_corner.y()   , right_corner.x());
-  return  D + A - C - B;
+  return (D + A - C - B);
 }
 
 } // namespace image

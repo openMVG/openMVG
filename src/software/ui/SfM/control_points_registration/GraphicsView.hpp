@@ -41,13 +41,13 @@ namespace control_point_GUI {
 
     void addNode(QGraphicsItem* it);
 
-    void setCurrentViewId(const IndexT index) {_current_view_id = index;}
+    void setCurrentViewId(const openMVG::IndexT index) {_current_view_id = index;}
 
   protected: /* methods */
     void drawBackground(QPainter * painter, const QRectF &rect);
 
-    void mousePressEvent (QMouseEvent* e );
-    void wheelEvent ( QWheelEvent * event );
+    void mousePressEvent(QMouseEvent* e );
+    void wheelEvent(QWheelEvent * event );
 
     void zoom(qreal factor, QPointF centerPoint);
 
@@ -75,7 +75,7 @@ namespace control_point_GUI {
     // Document
     Document & _doc;
     // Current viewed image id
-    IndexT _current_view_id;
+    openMVG::IndexT _current_view_id;
   };
 
 } // namespace control_point_GUI
