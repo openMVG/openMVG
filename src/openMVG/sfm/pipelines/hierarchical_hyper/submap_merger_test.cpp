@@ -1,3 +1,11 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2017 nomoko AG, Sebastien Chappuis<sebastien@nomoko.camera>, Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_merger.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_test_utilities.hpp"
@@ -91,7 +99,7 @@ TEST(SubmapMerger, MergingTwoSubmaps_GivesComparableResultsToSingleReconstructio
   submap_B.track_ids = extractTrackIds(sfm_data_B);
   submap_B.sfm_data = sfm_data_B;
 
-  HsfmSubmaps submaps =
+  const HsfmSubmaps submaps =
   {
     {0, parent_submap},
     {1, submap_A},
@@ -109,8 +117,8 @@ TEST(SubmapMerger, MergingTwoSubmaps_GivesComparableResultsToSingleReconstructio
     const geometry::Pose3 & merged_pose = mapped_pose.second;
     const geometry::Pose3 & gt_pose = sfm_data_common.poses.at(pose_id);
 
-    EXPECT_MATRIX_NEAR(merged_pose.center(), gt_pose.center(), 1e-1);
-    EXPECT_MATRIX_NEAR(merged_pose.rotation(), gt_pose.rotation(), 1e-1);
+    EXPECT_MATRIX_NEAR(merged_pose.center(), gt_pose.center(), 1e-10);
+    EXPECT_MATRIX_NEAR(merged_pose.rotation(), gt_pose.rotation(), 1e-10);
   }
 }
 
