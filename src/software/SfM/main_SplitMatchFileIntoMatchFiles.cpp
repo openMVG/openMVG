@@ -27,17 +27,17 @@ int main(int argc, char **argv)
 
   CmdLine cmd;
 
-  std::string sSfM_Data_Filename;
-  std::string sMatchsFile;
-  std::string sMatchFileComponents;
-  bool bBiEdge = false;
-  int nMinNodes = 3;
+  std::string sfm_data_filename;
+  std::string match_filename;
+  std::string match_component_filename;
+  bool is_biedge = false;
+  int min_nodes = 3;
 
-  cmd.add(make_option('i', sSfM_Data_Filename, "input_file"));
-  cmd.add(make_option('m', sMatchsFile, "match_file"));
-  cmd.add(make_option('o', sMatchFileComponents, "match_file_components"));
-  cmd.add(make_option('b', bBiEdge, "biedge"));
-  cmd.add(make_option('n', nMinNodes, "min_nodes"));
+  cmd.add(make_option('i', sfm_data_filename, "input_file"));
+  cmd.add(make_option('m', match_filename, "match_file"));
+  cmd.add(make_option('o', match_component_filename, "match_component_file"));
+  cmd.add(make_option('b', is_biedge, "biedge"));
+  cmd.add(make_option('n', min_nodes, "min_nodes"));
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -47,52 +47,57 @@ int main(int argc, char **argv)
     std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] path to a SfM_Data scene\n"
       << "[-m|--match_file] path to the matches that corresponds to the provided SfM_Data scene\n"
-      << "[-o|--match_file_components] path to the matches components that corresponds to the provided SfM_Data scene\n"
+      << "[-o|--match_component_file] path to the matches components that corresponds to the provided SfM_Data scene\n"
       << "\n[Optional]\n"
       << "[-b|--biedge]\n"
-      << "[-n|--min_nodes]\n"
-      << "value of n should larger than 3\n"
+      << "[-n|--min_nodes] Note:value of n should larger than 3\n"
       << std::endl;
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::file_exists(sSfM_Data_Filename))
+  if (!stlplus::file_exists(sfm_data_filename))
   {
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::file_exists(sMatchsFile))
+  if (!stlplus::file_exists(match_filename))
   {
     return EXIT_FAILURE;
   }
 
-  const std::string &sMatchFileComponentsDir = stlplus::folder_part(sMatchFileComponents);
-  if (!stlplus::folder_exists(sMatchFileComponentsDir))
+  const std::string &match_component_dir = stlplus::folder_part(match_component_filename);
+  if (!stlplus::folder_exists(match_component_dir))
   {
-    stlplus::folder_create(sMatchFileComponentsDir);
+    const bool folder_create_flag = stlplus::folder_create(match_component_dir);
+    if (!folder_create_flag)
+    {
+      std::cerr << "Cannot create the output directory" << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS | INTRINSICS)))
+  if (!Load(sfm_data, sfm_data_filename, ESfM_Data(VIEWS | INTRINSICS)))
   {
     std::cerr << std::endl
-      << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" cannot be read." << std::endl;
+      << "The input SfM_Data file \"" << sfm_data_filename << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
   }
 
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if (!(matches_provider->load(sfm_data, sMatchsFile)))
+  if (!(matches_provider->load(sfm_data, match_filename)))
   {
     std::cerr << std::endl
       << "Invalid matches file." << std::endl;
     return EXIT_FAILURE;
   }
 
-  // split match_file by connected compents;
-  bool success_flag = SplitMatchFileIntoMatchFiles(sfm_data, sMatchsFile, sMatchFileComponents, bBiEdge, nMinNodes);
+  // Split match_filename by connected components;
+  const bool success_flag = SplitMatchFileIntoMatchFiles(sfm_data, match_filename,
+    match_component_filename, is_biedge, min_nodes);
   if (success_flag)
   {
     return EXIT_SUCCESS;
@@ -104,4 +109,3 @@ int main(int argc, char **argv)
 
   return EXIT_SUCCESS;
 }
-

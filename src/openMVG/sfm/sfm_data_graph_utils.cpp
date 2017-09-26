@@ -22,7 +22,10 @@
 namespace openMVG {
 namespace sfm {
 
-static void KeepOnlyReferencedElement(
+/// Filter the toFilter iterable sequence into a new sequence without change the source sequence
+/// (keep only the element that share a common index with the provided Ids index list).
+/// See the reference: sfm_filters.hpp
+void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   const matching::PairWiseMatches & map_matches_in,
   matching::PairWiseMatches & map_matches_out)
@@ -40,7 +43,7 @@ static void KeepOnlyReferencedElement(
 }
 
 bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string & match_file,
-  const std::string & match_file_components, bool bBiEdge, int nMinNode)
+  const std::string & match_component_filename, bool is_biedge, int min_nodes)
 {
   if (!stlplus::file_exists(match_file))
   {
@@ -56,7 +59,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
   const Pair_Set pairs = matches_provider->getPairs();
   graph::indexedGraph putativeGraph(pairs);
 
-  if (bBiEdge)
+  if (is_biedge)
   {
     using EdgeMapAlias = Graph::EdgeMap<bool>;
     EdgeMapAlias cutMap(putativeGraph.g);
@@ -83,7 +86,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
     const std::map<IndexT, std::set<Graph::Node> > map_subgraphs = graph::exportGraphToMapSubgraphs<Graph, IndexT>(putativeGraph.g);
     for (const auto & iter_map_subgraphs : map_subgraphs)
     {
-      if (iter_map_subgraphs.second.size() > nMinNode)
+      if (iter_map_subgraphs.second.size() > min_nodes)
       {
         std::set<IndexT> subgraphNodes;
         const std::set<lemon::ListGraph::Node> & ccSet = iter_map_subgraphs.second;
@@ -100,7 +103,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
   std::set<std::string> set_filenames;
 
   const std::string &file_basename = stlplus::basename_part(match_file);
-  const std::string &output_folder = stlplus::folder_part(match_file_components);
+  const std::string &output_folder = stlplus::folder_part(match_component_filename);
   const std::string &match_file_extension = stlplus::extension_part(match_file);
   int index = 0;
   for (const auto & subgraph : vec_subgraph)
@@ -125,7 +128,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
     ++index;
   }
 
-  std::ofstream stream(match_file_components.c_str());
+  std::ofstream stream(match_component_filename.c_str());
   if (!stream.is_open())
   {
     return false;
