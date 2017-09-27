@@ -16,16 +16,16 @@ namespace sfm {
 struct SfM_Data;
 
 ///  @brief Split match_file into match_files
-///         When handling a scene which may contains many disconnected graphs, 
-///         for the moment OpenMVG consider only the largest connected component for SfM.
-///         Especially, when the GPS data of the images known, the disconnected graphs in a scene should be 
-///         merged since they all share the same coordinate system.
-///         Steps handling the above scenario.
-///         Step 1 : Use this function to compute the various connected component and export 
-///         the matches of the each connected component in a different match file.
-///         Step 2 : Run the SfM pipeline of your choice on the produced matches file.
-///         Step 3 : Merge all the sfm_data into a single sfm_data and 
-///         triangulate the initial match file, when the GPS data of the images known.
+///  When handling a scene which may contains many disconnected graphs, 
+///  for the moment OpenMVG consider only the largest connected component for SfM.
+///  Especially, when the GPS data of the images known, the disconnected graphs in a scene should be 
+///  merged since they all share the same coordinate system.
+///  Steps handling the above scenario.
+///  Step 1 : Use this function to compute the various connected component and export 
+///  the matches of the each connected component in a different match file.
+///  Step 2 : Run the SfM pipeline of your choice on the produced matches file.
+///  Step 3 : Merge all the sfm_data into a single sfm_data and 
+///  triangulate the initial match file, when the GPS data of the images known.
 ///         
 ///
 ///  @param[in]  sfm_data   The sfm_data.

@@ -25,7 +25,7 @@ namespace sfm {
 /// Filter the toFilter iterable sequence into a new sequence without change the source sequence
 /// (keep only the element that share a common index with the provided Ids index list).
 /// See the reference: sfm_filters.hpp
-void KeepOnlyReferencedElement(
+static void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   const matching::PairWiseMatches & map_matches_in,
   matching::PairWiseMatches & map_matches_out)
