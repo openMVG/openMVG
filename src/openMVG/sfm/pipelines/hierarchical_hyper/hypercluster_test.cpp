@@ -21,14 +21,14 @@ TEST(HYPERCLUSTER, Basis)
   openMVG::sfm::SfM_Data sfm_data;
   openMVG::tracks::STLMAPTracks map_tracks;
 
-  int n_views(4), n_tracks(50);
+  const int n_views(4), n_tracks(50);
 
   // create some input sfm data and tracks
   generate_sfm_data_and_tracks(sfm_data, map_tracks, n_views, n_tracks);
 
   // test constructor
-  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker =
-      std::unique_ptr<openMVG::sfm::SubmapThresholdChecker>(new openMVG::sfm::SubmapTracksThresholdChecker(n_tracks));
+  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker(
+    new openMVG::sfm::SubmapTracksThresholdChecker(n_tracks));
   openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, std::move(threshold_checker));
 }
 
@@ -38,14 +38,14 @@ TEST(HYPERCLUSTER, simple_partitioning_successful)
   openMVG::sfm::SfM_Data sfm_data;
   openMVG::tracks::STLMAPTracks map_tracks;
 
-  int n_views(20), n_tracks(200);
+  const int n_views(20), n_tracks(200);
 
   // create some input sfm data and tracks
   generate_sfm_data_and_tracks(sfm_data, map_tracks, n_views, n_tracks);
 
   // create clusterer
-  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker =
-      std::unique_ptr<openMVG::sfm::SubmapThresholdChecker>(new openMVG::sfm::SubmapTracksThresholdChecker(3*n_tracks/4));
+  std::unique_ptr<openMVG::sfm::SubmapThresholdChecker> threshold_checker(
+    new openMVG::sfm::SubmapTracksThresholdChecker(3*n_tracks/4));
   openMVG::sfm::HyperCluster hyper_cluster(sfm_data, map_tracks, std::move(threshold_checker));
 
   // test recursive partitioning
@@ -105,11 +105,11 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
     // generate random submaptrack
     const int n_views_in_track = randomPositiveInteger(n_views);
     std::set<openMVG::IndexT> remaining_view_ids = all_view_ids;
-    auto it = remaining_view_ids.begin();
+    auto it = remaining_view_ids.cbegin();
     for (int j(0); j<n_views_in_track; j++)
     {
-      it = remaining_view_ids.begin();
-      int next_id = randomPositiveInteger(remaining_view_ids.size() - 1);
+      it = remaining_view_ids.cbegin();
+      const int next_id = randomPositiveInteger(remaining_view_ids.size() - 1);
       std::advance(it, next_id);
       s_track[*it] = randomPositiveInteger(RAND_MAX);// complete random feature id...it is not used anyway TODO < true ?
       it = remaining_view_ids.erase(it);

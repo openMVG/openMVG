@@ -106,7 +106,7 @@ inline bool ScotchPartitionHyperGraph(
     }
     j++;
   }
-  
+
   for (const auto & view_id : view_ids_all)
   {
     const int current_node_id = map_view_id_node_id[view_id];
@@ -171,12 +171,10 @@ inline bool ScotchPartitionHyperGraph(
   SCOTCH_stratInit(stratptr);
 
   // array for partitioned data
-  SCOTCH_Num parttab[vnodnbr];
-  for (auto & part_element : parttab)
-    part_element = -1;
+  std::vector<SCOTCH_Num> parttab(vnodnbr, -1);
 
   // partition in 2
-  if (SCOTCH_graphPart(&grafdat, 2, stratptr, parttab) == 0)
+  if (SCOTCH_graphPart(&grafdat, 2, stratptr, &parttab[0]) == 0)
     std::cout << "graph partitioned !" << std::endl;
 
   // free memory

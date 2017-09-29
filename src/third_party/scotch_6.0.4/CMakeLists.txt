@@ -3,7 +3,9 @@
 ##
 #URL http://gforge.inria.fr/frs/download.php/zip/9109/scotch-6.0.4.zip
 
-SET(scotch_out_dir ${PROJECT_BINARY_DIR}/third_party/scotch_6.0.4)
+project(scotch CXX)
+
+set(scotch_out_dir ${PROJECT_BINARY_DIR})
 
 file(
   GLOB
@@ -68,17 +70,17 @@ target_compile_options(
   "-DSCOTCH_PATCHLEVEL=4"
   )
 
-SET(outParserYYFile ${scotch_out_dir}/src/libscotch/parser_yy.c)
-SET(outParserLLFile ${scotch_out_dir}/src/libscotch/parser_ll.c)
-SET(outParserLYFile ${scotch_out_dir}/src/libscotch/parser_ly.h)
-SET(outScotchHFile ${scotch_out_dir}/include/scotch.h)
+set(outParserYYFile ${scotch_out_dir}/src/libscotch/parser_yy.c)
+set(outParserLLFile ${scotch_out_dir}/src/libscotch/parser_ll.c)
+set(outParserLYFile ${scotch_out_dir}/src/libscotch/parser_ly.h)
+set(outScotchHFile ${scotch_out_dir}/include/scotch.h)
 
-FIND_PACKAGE(BISON)
-FIND_PACKAGE(FLEX)
+#FIND_PACKAGE(BISON)
+#FIND_PACKAGE(FLEX)
 
 # do without bison/flex for now (does not work yet)
-SET(BISON_FOUND FALSE)
-SET(FLEX_FOUND FALSE)
+set(BISON_FOUND FALSE)
+set(FLEX_FOUND FALSE)
 
 file(MAKE_DIRECTORY ${scotch_out_dir}/include)
 file(MAKE_DIRECTORY ${scotch_out_dir}/src)
@@ -165,13 +167,19 @@ include_directories(src/libscotch)
 set_property(TARGET myScotch PROPERTY SOURCES ${myScotch_headers} ${myScotch_sources})
 
 # these compile flags come from the scotch make.inc files...
-set(linux_compile_flags "-O3;-DCOMMON_FILE_COMPRESS_GZ;-DCOMMON_PTHREAD;-DCOMMON_RANDOM_FIXED_SEED;-DSCOTCH_RENAME;-DSCOTCH_PTHREAD;-Drestrict=__restrict")
-set(osx_compile_flags "-O3;-Drestrict=__restrict;-DCOMMON_FILE_COMPRESS_GZ;-DCOMMON_PTHREAD;-DCOMMON_PTHREAD_BARRIER;-DCOMMON_RANDOM_FIXED_SEED;-DCOMMON_TIMING_OLD;-DSCOTCH_PTHREAD;-DSCOTCH_RENAME;-fPIC")
-if (UNIX AND NOT APPLE)
-  set(scotch_compile_flags ${linux_compile_flags})
-elseif(APPLE)
-  set(scotch_compile_flags ${osx_compile_flags})
-endif()
+set(scotch_compile_flags "-DHAVE_STDINT_H;-DHAVE_UINT_T;-DCOMMON_RANDOM_FIXED_SEED;-DSCOTCH_RENAME;-Drestrict=__restrict")
+if(UNIX OR APPLE)
+list(APPEND scotch_compile_flags "-DCOMMON_FILE_COMPRESS_GZ;-DCOMMON_PTHREAD")
+if(APPLE)
+  list(APPEND scotch_compile_flags "-DCOMMON_TIMING_OLD;-DCOMMON_PTHREAD_BARRIER")
+endif(APPLE)
+else(UNIX OR APPLE)
+list(APPEND scotch_compile_flags "-DCOMMON_WINDOWS;-DYY_NO_UNISTD_H")
+endif(UNIX OR APPLE)
+
+ target_compile_options(
+   myScotch PRIVATE
+   ${scotch_compile_flags})
 
 target_compile_options(
   myScotch PRIVATE
@@ -196,5 +204,8 @@ add_custom_target(dummysize_run
 add_dependencies(myScotch dummysize_run)
 
 install(TARGETS myScotch DESTINATION lib EXPORT openMVG-targets)
+target_include_directories(myScotch INTERFACE
+    $<BUILD_INTERFACE:${scotch_out_dir}/include>
+)
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${outParserYYFile};${outParserLLFile};${outParserLYFile};${outScotchHFile}")
