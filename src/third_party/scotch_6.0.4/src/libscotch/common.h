@@ -8,13 +8,13 @@
 ** use, modify and/or redistribute the software under the terms of the
 ** CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
 ** URL: "http://www.cecill.info".
-** 
+**
 ** As a counterpart to the access to the source code and rights to copy,
 ** modify and redistribute granted by the license, users are provided
 ** only with a limited warranty and the software's author, the holder of
 ** the economic rights, and the successive licensors have only limited
 ** liability.
-** 
+**
 ** In this respect, the user's attention is drawn to the risks associated
 ** with loading, using, modifying and/or developing or reproducing the
 ** software by the user in light of its specific status of free software,
@@ -25,7 +25,7 @@
 ** their requirements in conditions enabling the security of their
 ** systems and/or data to be ensured and, more generally, to use and
 ** operate it in the same conditions as regards security.
-** 
+**
 ** The fact that you are presently reading this means that you have had
 ** knowledge of the CeCILL-C license and that you accept its terms.
 */
@@ -84,7 +84,6 @@
 #include            <malloc.h>                    /* Deprecated, but required on some old systems */
 #endif /* HAVE_MALLOC_H */
 #include            <string.h>
-#include            <strings.h>
 #include            <time.h>                      /* For the effective calls to clock () */
 #include            <limits.h>
 #include            <float.h>
@@ -99,6 +98,10 @@
 #include            <io.h>                        /* For _pipe () */
 #include            <stddef.h>                    /* For intptr_t */
 #include            <windows.h>
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #endif /* ((defined COMMON_WINDOWS) || (defined HAVE_WINDOWS_H)) */
 #if ((! defined COMMON_WINDOWS) && (! defined HAVE_NOT_UNISTD_H))
 #include            <unistd.h>
@@ -299,10 +302,11 @@ typedef void (* ThreadScanFunc)   (void * const, void * const, void * const, con
 /** The thread group header block. **/
 
 typedef struct ThreadGroupHeader_ {
+  int                       thrdnbr;              /*+ Number of threads        +*/
 #if ((defined COMMON_PTHREAD) || (defined SCOTCH_PTHREAD))
   int                       flagval;              /*+ Thread block flags       +*/
   size_t                    datasiz;              /*+ Size of data array cell  +*/
-  int                       thrdnbr;              /*+ Number of threads        +*/
+
   ThreadLaunchStartFunc     stafptr;              /*+ Pointer to start routine +*/
   ThreadLaunchJoinFunc      joifptr;              /*+ Pointer to join routine  +*/
   ThreadBarrier             barrdat;              /*+ Barrier data structure   +*/

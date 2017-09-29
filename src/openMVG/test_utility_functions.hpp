@@ -43,7 +43,7 @@ inline openMVG::Mat3 randomRotationMatrix()
   rotation_axis *= distr(eng);
   openMVG::Mat3 rotation_matrix;
   ceres::AngleAxisToRotationMatrix(rotation_axis.data(), rotation_matrix.data());
-  
+
   return rotation_matrix;
 }
 
@@ -72,7 +72,7 @@ inline openMVG::sfm::Poses generateRandomPoses(const int n_poses)
   for (int i(0); i < n_poses; i++)
   {
     const openMVG::geometry::Pose3 pose = openMVG::geometry::Pose3(randomRotationMatrix(), randomVector(20.0));
-    poses.insert(std::pair<openMVG::IndexT, openMVG::geometry::Pose3>(i, pose));
+    poses.insert({i, pose});
   }
 
   return poses;
