@@ -34,7 +34,7 @@ public:
 class SubmapTracksThresholdChecker : public SubmapThresholdChecker
 {
 public:
-  SubmapTracksThresholdChecker(int tracks_threshold);
+  explicit SubmapTracksThresholdChecker(int tracks_threshold);
 
   bool operator()(const HsfmSubmap & smap) const;
   bool operator()(const std::pair<openMVG::IndexT, HsfmSubmap> & smap_with_id) const;
@@ -51,7 +51,7 @@ private:
 class SubmapViewThresholdChecker : public SubmapThresholdChecker
 {
 public:
-  SubmapViewThresholdChecker(int views_threshold);
+  explicit SubmapViewThresholdChecker(int views_threshold);
 
   bool operator()(const HsfmSubmap & smap) const;
   bool operator()(const std::pair<openMVG::IndexT, HsfmSubmap> & smap_with_id) const;
