@@ -18,6 +18,7 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 
@@ -41,6 +42,27 @@ inline Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
     for (IndexT J = I+1; J < I+1+overlapSize && J < static_cast<IndexT>(N); ++J)
       pairs.insert({I,J});
   return pairs;
+}
+
+/// Removes pairs when both indices are contained in matches 
+inline Pair_Set filterAnalyzedPairs(const Pair_Set &pairs, const matching::PairWiseMatches &matches, const size_t N)
+{
+  Pair_Set filtered_pairs;
+  std::vector<bool> contained(N, false);
+
+  for ( const auto & cur_match : matches ) {
+    size_t left = cur_match.first.first;
+    size_t right = cur_match.first.second;
+    contained[left] = true;
+    contained[right] = true;
+  }
+
+  for ( const auto & cur_pair : pairs ) {
+    if (!contained[cur_pair.first] || !contained[cur_pair.second]) {
+      filtered_pairs.insert({cur_pair.first, cur_pair.second});
+    }
+  }
+  return filtered_pairs;
 }
 
 /// Load a set of Pair_Set from a file
