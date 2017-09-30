@@ -15,8 +15,6 @@
 #include "openMVG/features/liop/liop_descriptor.hpp"
 #include "openMVG/features/regions_factory.hpp"
 
-#include <cereal/cereal.hpp>
-
 #include <iostream>
 #include <numeric>
 
