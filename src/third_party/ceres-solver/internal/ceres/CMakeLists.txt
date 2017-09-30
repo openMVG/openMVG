@@ -61,13 +61,17 @@ set(CERES_INTERNAL_SRC
     dogleg_strategy.cc
     dynamic_compressed_row_jacobian_writer.cc
     dynamic_compressed_row_sparse_matrix.cc
+    dynamic_sparse_normal_cholesky_solver.cc
     evaluator.cc
+    eigensparse.cc
     file.cc
+    function_sample.cc
     gradient_checker.cc
     gradient_checking_cost_function.cc
     gradient_problem.cc
     gradient_problem_solver.cc
     implicit_schur_complement.cc
+    inner_product_computer.cc
     is_close.cc
     iterative_schur_complement_solver.cc
     levenberg_marquardt_strategy.cc
@@ -98,11 +102,13 @@ set(CERES_INTERNAL_SRC
     schur_complement_solver.cc
     schur_eliminator.cc
     schur_jacobi_preconditioner.cc
+    schur_templates.cc
     scratch_evaluate_preparer.cc
     single_linkage_clustering.cc
     solver.cc
     solver_utils.cc
     sparse_matrix.cc
+    sparse_cholesky.cc
     sparse_normal_cholesky_solver.cc
     split.cc
     stringprintf.cc
@@ -120,6 +126,14 @@ set(CERES_INTERNAL_SRC
 
 # Also depend on the header files so that they appear in IDEs.
 file(GLOB CERES_INTERNAL_HDRS *.h)
+if (MINIGLOG)
+  file(GLOB MINIGLOG_HDRS miniglog/glog/*.h)
+  list(APPEND CERES_INTERNAL_HDRS ${MINIGLOG_HDRS})
+endif()
+
+# Depend also on public headers so they appear in IDEs.
+file(GLOB CERES_PUBLIC_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
+file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
 
 # Include the specialized schur solvers.
 if (SCHUR_SPECIALIZATIONS)
@@ -172,6 +186,8 @@ endif (OPENMP_FOUND)
 set(CERES_LIBRARY_SOURCE
     ${CERES_INTERNAL_SRC}
     ${CERES_INTERNAL_HDRS}
+    ${CERES_PUBLIC_HDRS}
+    ${CERES_PUBLIC_INTERNAL_HDRS}
     ${CERES_INTERNAL_SCHUR_FILES})
 
 # Primarily for Android, but optionally for others, compile the minimal
@@ -202,29 +218,9 @@ if (NOT WIN32 AND NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 
-if (CMAKE_VERSION VERSION_LESS "2.8.12")
-  # CMake version < 2.8.12 does not support target_compile_options(), warn
-  # user that they will have to add compile flags to their own projects
-  # manually if required.
-  if (CXX11 AND COMPILER_HAS_CXX11_FLAG)
-    message("-- Warning: Detected CMake version: ${CMAKE_VERSION} < 2.8.12, "
-      "which is the minimum required for compile options to be included in an "
-      "exported CMake target, but CERES_USE_CXX11 is enabled and the detected. "
-      "compiler requires -std=c++11. The client is responsible for adding "
-      "-std=c++11 when using Ceres.")
-  endif()
-else()
-  # CMake version >= 2.8.12 supports target_compile_options().
-  if (CXX11 AND COMPILER_HAS_CXX11_FLAG)
-    # If Ceres is compiled using C++11, and the compiler requires -std=c++11
-    # to be set, then ensure that this requirement is rolled into the exported
-    # CMake target, such that client code which uses Ceres will inherit it (if
-    # the CMake version supports it), iff they are NOT compiling for C.  We
-    # check for not C, rather than C++ as LINKER_LANGUAGE is often NOTFOUND and
-    # then uses the default (C++).
-    target_compile_options(ceres PUBLIC
-      $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,C>>:-std=c++11>)
-  endif()
+if (CXX11)
+  include(AddCeresCXX11RequirementsToTarget)
+  add_ceres_cxx11_requirements_to_target(ceres)
 endif()
 
 if (BUILD_SHARED_LIBS)
@@ -288,7 +284,7 @@ if (BUILD_TESTING AND GFLAGS)
     add_test(NAME ${NAME}_test
              COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}_test
              --test_srcdir
-             ${CMAKE_SOURCE_DIR}/data)
+             ${Ceres_SOURCE_DIR}/data)
   endmacro (CERES_TEST)
 
   ceres_test(array_utils)
@@ -300,20 +296,25 @@ if (BUILD_TESTING AND GFLAGS)
   ceres_test(block_random_access_diagonal_matrix)
   ceres_test(block_random_access_sparse_matrix)
   ceres_test(block_sparse_matrix)
-  ceres_test(bundle_adjustment)
   ceres_test(c_api)
   ceres_test(canonical_views_clustering)
+  ceres_test(compressed_col_sparse_matrix_utils)
   ceres_test(compressed_row_sparse_matrix)
   ceres_test(conditioned_cost_function)
+  ceres_test(conjugate_gradients_solver)
   ceres_test(corrector)
   ceres_test(cost_function_to_functor)
   ceres_test(covariance)
   ceres_test(cubic_interpolation)
-  ceres_test(detect_structure)
+  ceres_test(dense_linear_solver)
   ceres_test(dense_sparse_matrix)
+  ceres_test(detect_structure)
+  ceres_test(dogleg_strategy)
   ceres_test(dynamic_autodiff_cost_function)
   ceres_test(dynamic_compressed_row_sparse_matrix)
   ceres_test(dynamic_numeric_diff_cost_function)
+  ceres_test(dynamic_sparse_normal_cholesky_solver)
+  ceres_test(dynamic_sparsity)
   ceres_test(evaluator)
   ceres_test(gradient_checker)
   ceres_test(gradient_checking_cost_function)
@@ -322,12 +323,14 @@ if (BUILD_TESTING AND GFLAGS)
   ceres_test(graph)
   ceres_test(graph_algorithms)
   ceres_test(householder_vector)
-  ceres_test(is_close)
   ceres_test(implicit_schur_complement)
+  ceres_test(inner_product_computer)
+  ceres_test(invert_psd_matrix)
+  ceres_test(is_close)
   ceres_test(iterative_schur_complement_solver)
   ceres_test(jet)
   ceres_test(levenberg_marquardt_strategy)
-  ceres_test(dogleg_strategy)
+  ceres_test(line_search_minimizer)
   ceres_test(line_search_preprocessor)
   ceres_test(local_parameterization)
   ceres_test(loss_function)
@@ -350,23 +353,16 @@ if (BUILD_TESTING AND GFLAGS)
   ceres_test(single_linkage_clustering)
   ceres_test(small_blas)
   ceres_test(solver)
-
-  # TODO(sameeragarwal): This test should ultimately be made
-  # independent of SuiteSparse.
-  if (SUITESPARSE AND SUITESPARSE_FOUND)
-    ceres_test(compressed_col_sparse_matrix_utils)
-    target_link_libraries(compressed_col_sparse_matrix_utils_test
-                          ${SUITESPARSE_LIBRARIES})
-  endif (SUITESPARSE AND SUITESPARSE_FOUND)
-
-  ceres_test(symmetric_linear_solver)
+  ceres_test(sparse_cholesky)
+  ceres_test(sparse_normal_cholesky_solver)
+  ceres_test(system)
   ceres_test(triplet_sparse_matrix)
   ceres_test(trust_region_minimizer)
   ceres_test(trust_region_preprocessor)
-  ceres_test(unsymmetric_linear_solver)
   ceres_test(visibility)
   ceres_test(visibility_based_preconditioner)
 
   # Put the large end to end test last.
-  ceres_test(system)
+  ceres_test(bundle_adjustment)
+
 endif (BUILD_TESTING AND GFLAGS)

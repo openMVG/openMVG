@@ -89,7 +89,8 @@ class ImplicitSchurComplementTest : public ::testing::Test {
     scoped_ptr<SchurEliminatorBase> eliminator(
         SchurEliminatorBase::Create(options));
     CHECK_NOTNULL(eliminator.get());
-    eliminator->Init(num_eliminate_blocks_, bs);
+    const bool kFullRankETE = true;
+    eliminator->Init(num_eliminate_blocks_, kFullRankETE, bs);
 
     lhs->resize(num_schur_rows, num_schur_rows);
     rhs->resize(num_schur_rows);

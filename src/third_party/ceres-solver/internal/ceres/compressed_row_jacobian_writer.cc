@@ -30,6 +30,7 @@
 
 #include "ceres/compressed_row_jacobian_writer.h"
 
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -121,6 +122,7 @@ SparseMatrix* CompressedRowJacobianWriter::CreateJacobian() const {
   // seems to be the only way to construct it without doing a memory copy.
   int* rows = jacobian->mutable_rows();
   int* cols = jacobian->mutable_cols();
+
   int row_pos = 0;
   rows[0] = 0;
   for (int i = 0; i < residual_blocks.size(); ++i) {

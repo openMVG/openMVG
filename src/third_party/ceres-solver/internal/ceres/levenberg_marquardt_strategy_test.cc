@@ -155,7 +155,7 @@ TEST(LevenbergMarquardtStrategy, CorrectDiagonalToLinearSolver) {
     EXPECT_CALL(log, Log(GLOG_WARNING, _,
                          HasSubstr("Failed to compute a step")));
 #else
-    EXPECT_CALL(log, Log(WARNING, _,
+    EXPECT_CALL(log, Log(google::WARNING, _,
                          HasSubstr("Failed to compute a step")));
 #endif
 

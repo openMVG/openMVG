@@ -108,5 +108,111 @@ TEST_F(BlockSparseMatrixTest, ToDenseMatrixTest) {
   EXPECT_LT((m_a - m_b).norm(), 1e-12);
 }
 
+TEST_F(BlockSparseMatrixTest, AppendRows) {
+  scoped_ptr<LinearLeastSquaresProblem> problem(
+      CreateLinearLeastSquaresProblemFromId(2));
+  scoped_ptr<BlockSparseMatrix> m(
+      down_cast<BlockSparseMatrix*>(problem->A.release()));
+  A_->AppendRows(*m);
+  EXPECT_EQ(A_->num_rows(), 2 * m->num_rows());
+  EXPECT_EQ(A_->num_cols(), m->num_cols());
+
+  problem.reset(CreateLinearLeastSquaresProblemFromId(1));
+  scoped_ptr<TripletSparseMatrix> m2(
+      down_cast<TripletSparseMatrix*>(problem->A.release()));
+  B_->AppendRows(*m2);
+
+  Vector y_a = Vector::Zero(A_->num_rows());
+  Vector y_b = Vector::Zero(A_->num_rows());
+  for (int i = 0; i < A_->num_cols(); ++i) {
+    Vector x = Vector::Zero(A_->num_cols());
+    x[i] = 1.0;
+    y_a.setZero();
+    y_b.setZero();
+
+    A_->RightMultiply(x.data(), y_a.data());
+    B_->RightMultiply(x.data(), y_b.data());
+    EXPECT_LT((y_a - y_b).norm(), 1e-12);
+  }
+}
+
+TEST_F(BlockSparseMatrixTest, AppendAndDeleteBlockDiagonalMatrix) {
+  const std::vector<Block>& column_blocks = A_->block_structure()->cols;
+  const int num_cols =
+      column_blocks.back().size + column_blocks.back().position;
+  Vector diagonal(num_cols);
+  for (int i = 0; i < num_cols; ++i) {
+    diagonal(i) = 2 * i * i + 1;
+  }
+  scoped_ptr<BlockSparseMatrix> appendage(
+      BlockSparseMatrix::CreateDiagonalMatrix(diagonal.data(), column_blocks));
+
+  A_->AppendRows(*appendage);
+  Vector y_a, y_b;
+  y_a.resize(A_->num_rows());
+  y_b.resize(A_->num_rows());
+  for (int i = 0; i < A_->num_cols(); ++i) {
+    Vector x = Vector::Zero(A_->num_cols());
+    x[i] = 1.0;
+    y_a.setZero();
+    y_b.setZero();
+
+    A_->RightMultiply(x.data(), y_a.data());
+    B_->RightMultiply(x.data(), y_b.data());
+    EXPECT_LT((y_a.head(B_->num_rows()) - y_b.head(B_->num_rows())).norm(), 1e-12);
+    Vector expected_tail = Vector::Zero(A_->num_cols());
+    expected_tail(i) = diagonal(i);
+    EXPECT_LT((y_a.tail(A_->num_cols()) - expected_tail).norm(), 1e-12);
+  }
+
+
+  A_->DeleteRowBlocks(column_blocks.size());
+  EXPECT_EQ(A_->num_rows(), B_->num_rows());
+  EXPECT_EQ(A_->num_cols(), B_->num_cols());
+
+  y_a.resize(A_->num_rows());
+  y_b.resize(A_->num_rows());
+  for (int i = 0; i < A_->num_cols(); ++i) {
+    Vector x = Vector::Zero(A_->num_cols());
+    x[i] = 1.0;
+    y_a.setZero();
+    y_b.setZero();
+
+    A_->RightMultiply(x.data(), y_a.data());
+    B_->RightMultiply(x.data(), y_b.data());
+    EXPECT_LT((y_a - y_b).norm(), 1e-12);
+  }
+}
+
+TEST(BlockSparseMatrix, CreateDiagonalMatrix) {
+  std::vector<Block> column_blocks;
+  column_blocks.push_back(Block(2, 0));
+  column_blocks.push_back(Block(1, 2));
+  column_blocks.push_back(Block(3, 3));
+  const int num_cols =
+      column_blocks.back().size + column_blocks.back().position;
+  Vector diagonal(num_cols);
+  for (int i = 0; i < num_cols; ++i) {
+    diagonal(i) = 2 * i * i + 1;
+  }
+
+  scoped_ptr<BlockSparseMatrix> m(
+      BlockSparseMatrix::CreateDiagonalMatrix(diagonal.data(), column_blocks));
+  const CompressedRowBlockStructure* bs = m->block_structure();
+  EXPECT_EQ(bs->cols.size(), column_blocks.size());
+  for (int i = 0; i < column_blocks.size(); ++i) {
+    EXPECT_EQ(bs->cols[i].size, column_blocks[i].size);
+    EXPECT_EQ(bs->cols[i].position, column_blocks[i].position);
+  }
+  EXPECT_EQ(m->num_rows(), m->num_cols());
+  Vector x = Vector::Ones(num_cols);
+  Vector y = Vector::Zero(num_cols);
+  m->RightMultiply(x.data(), y.data());
+  for (int i = 0; i < num_cols; ++i) {
+    EXPECT_NEAR(y[i], diagonal[i], std::numeric_limits<double>::epsilon());
+  }
+}
+
+
 }  // namespace internal
 }  // namespace ceres

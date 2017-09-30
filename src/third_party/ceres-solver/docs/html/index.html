@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ceres Solver &mdash; A Nonlinear Least Squares Minimizer</title>
+  <title>Ceres Solver &mdash; A Large Scale Non-linear Optimization Library</title>
   
 
   
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,11 +28,13 @@
   
 
   
-    <link rel="top" title="Ceres Solver" href="#"/>
-        <link rel="next" title="Features" href="features.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="Ceres Solver" href="#"/>
+        <link rel="next" title="Why?" href="features.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -42,85 +44,63 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        <a href="#" class="fa fa-home"> Ceres Solver</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Ceres Solver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.13
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
-        
-            <ul>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#linux">Linux</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#mac-os-x">Mac OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#windows">Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#android">Android</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#ios">iOS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html">Non-linear Least Squares</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gradient_tutorial.html">General Unconstrained Minimization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
-</ul>
-</li>
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Why?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">On Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_covariance.html">Covariance Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-environment">Setting up your Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change">Submitting a change</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.11.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.10.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id4">1.9.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id8">1.8.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id11">1.7.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id15">1.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id18">1.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id22">1.4.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id26">1.3.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id29">1.2.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id31">1.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id36">1.2.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id39">1.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id41">1.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id44">1.0.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#origins">Origins</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 
-        
+            
+          
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -136,46 +116,49 @@
       <div class="wy-nav-content">
         <div class="rst-content">
           
-          <div role="main">
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>Ceres Solver</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="ceres-solver">
 <h1>Ceres Solver<a class="headerlink" href="#ceres-solver" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
 <p>Ceres Solver <a class="footnote-reference" href="#f1" id="id1">[1]</a> is an open source C++ library for modeling and
-solving large, complicated optimization problems. It is a feature
-rich, mature and performant library which has been used in production
-at Google since 2010. Ceres Solver can solve two kinds of problems.</p>
-<ol class="arabic simple">
-<li><a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">Non-linear Least Squares</a> problems with bounds constraints.</li>
-<li>General unconstrained optimization problems.</li>
-</ol>
-<div class="section" id="getting-started">
-<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
-<ul>
-<li><p class="first">Download the <a class="reference external" href="http://ceres-solver.org/ceres-solver-1.11.0.tar.gz">latest stable release</a> or clone the
-Git repository for the latest development version.</p>
-<div class="highlight-bash"><div class="highlight"><pre>git clone https://ceres-solver.googlesource.com/ceres-solver
-</pre></div>
-</div>
-</li>
-<li><p class="first">Read the <a class="reference internal" href="tutorial.html#chapter-tutorial"><em>Tutorial</em></a> and browse the <a class="reference internal" href="api.html#chapter-api"><em>API Reference</em></a>.</p>
-</li>
-<li><p class="first">Join the <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/ceres-solver">mailing list</a>
-and ask questions.</p>
-</li>
-<li><p class="first">File bugs, feature requests on <a class="reference external" href="https://github.com/ceres-solver/ceres-solver/issues">GitHub</a>.</p>
-</li>
-</ul>
+solving large, complicated optimization problems. It can be used to
+solve <a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">Non-linear Least Squares</a> problems with bounds constraints and
+general unconstrained optimization problems. It is a mature, feature
+rich, and performant library that has been used in production at
+Google since 2010. For more, see <a class="reference internal" href="features.html"><span class="doc">Why?</span></a>.</p>
+<p><a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/ceres-solver">ceres-solver&#64;googlegroups.com</a> is
+the place for discussions and questions about Ceres Solver. We use the
+<a class="reference external" href="https://github.com/ceres-solver/ceres-solver/issues">GitHub Issue Tracker</a> to manage bug
+reports and feature requests.</p>
+<div class="toctree-wrapper compound">
 </div>
 <div class="section" id="cite-us">
 <h2>Cite Us<a class="headerlink" href="#cite-us" title="Permalink to this headline">¶</a></h2>
 <p>If you use Ceres Solver for a publication, please cite it as:</p>
-<div class="highlight-python"><div class="highlight"><pre>@misc{ceres-solver,
-  author = &quot;Sameer Agarwal and Keir Mierle and Others&quot;,
-  title = &quot;Ceres Solver&quot;,
-  howpublished = &quot;\url{http://ceres-solver.org}&quot;,
-}
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@misc</span><span class="p">{</span><span class="n">ceres</span><span class="o">-</span><span class="n">solver</span><span class="p">,</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="s2">&quot;Sameer Agarwal and Keir Mierle and Others&quot;</span><span class="p">,</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Ceres Solver&quot;</span><span class="p">,</span>
+  <span class="n">howpublished</span> <span class="o">=</span> <span class="s2">&quot;\url{http://ceres-solver.org}&quot;</span><span class="p">,</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p class="rubric">Footnotes</p>
@@ -198,12 +181,13 @@ statistics and optimization.</td></tr>
 </div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="features.html" class="btn btn-neutral float-right" title="Features"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="features.html" class="btn btn-neutral float-right" title="Why?" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -213,12 +197,13 @@ statistics and optimization.</td></tr>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2014 Google Inc.
-    </p>
-  </div>
+        &copy; Copyright 2016 Google Inc.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+    </p>
+  </div> 
+
 </footer>
+
         </div>
       </div>
 
@@ -233,7 +218,7 @@ statistics and optimization.</td></tr>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.11.0',
+            VERSION:'1.13.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -242,7 +227,7 @@ statistics and optimization.</td></tr>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
       MathJax.Hub.Config({
           "HTML-CSS": {
             availableFonts: ["TeX"]
