@@ -16,7 +16,6 @@
 
 using namespace openMVG;
 using namespace openMVG::geometry;
-using namespace std;
 
 static const double KEps = std::numeric_limits<double>::epsilon();
 
@@ -30,16 +29,17 @@ TEST(ConvexHull, Empty) {
 }
 
 TEST(ConvexHull, Line) {
-  const Polygon2d point_cloud = {{0, 0}, {0, 2}};
+  Polygon2d point_cloud;
+  point_cloud.emplace_back(0., 0.);
+  point_cloud.emplace_back(0., 2.);
   // Since a line is not a polygon (no area) we expect false for the IsIn test
   EXPECT_FALSE(IsIn(point_cloud[1], point_cloud));
   EXPECT_FALSE(IsIn(point_cloud[0], point_cloud));
-
 }
 
 // Test corner case (point cloud with one point)
 TEST(ConvexHull, OnePoint) {
-  const Polygon2d point_cloud(1, {0, 0});
+  const Polygon2d point_cloud(1, {0., 0.});
   // A one point polygon have no area
   double area = -1.0;
   EXPECT_TRUE(ConvexPolygonArea(point_cloud, area));
@@ -61,10 +61,9 @@ TEST(ConvexHull, Random_Point_ConvexHull) {
 
   std::random_device rd;
   std::mt19937 gen(std::mt19937::default_seed);
-  std::uniform_real_distribution<> dis_x(100, 200), dis_y(300, 400);
+  std::uniform_real_distribution<double> dis_x(100, 200), dis_y(300, 400);
 
   const int kIteration = 10;
-std::cout.precision(24);
   for (int i = 0; i < kIteration; ++i) {
     const int kNbPoints = 5;
     Polygon2d point_cloud(kNbPoints);
