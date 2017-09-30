@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   int iMatchingVideoMode = -1;
   std::string sPredefinedPairList = "";
   std::string sNearestMatchingMethod = "AUTO";
-  bool bForce = false;
+  int bForce = 0;
   bool bGuided_matching = false;
   int imax_iteration = 2048;
   unsigned int ui_max_cache_size = 0;
@@ -102,6 +102,9 @@ int main(int argc, char **argv)
       << "[-o|--out_dir path] output path where computed are stored\n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data]\n"
+      << "   0: (default) reload previously computed data\n"
+      << "   1: force to recompute matches and save them\n"
+      << "   2: compute matches only with views not present in prevously computed matches\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.8: (default).\n"
       << "[-g|--geometric_model]\n"
@@ -360,6 +363,25 @@ int main(int argc, char **argv)
           }
           break;
       }
+
+      // checks incremental matches conditions
+      if (
+        bForce == 2 && (stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt")
+                        || stlplus::file_exists(sMatchesDirectory + "/matches.putative.bin"))
+      )
+      {
+        if (
+          !(Load(map_PutativesMatches, sMatchesDirectory + "/matches.putative.bin") ||
+                          Load(map_PutativesMatches, sMatchesDirectory + "/matches.putative.txt"))
+        )
+        {
+          std::cerr << "Cannot load input matches file, recompute all.";
+        } else {
+          // removes pairs containing views already matched
+          pairs = filterAnalyzedPairs(pairs, map_PutativesMatches, sfm_data.GetViews().size());   // code in Pair_Builder.hpp
+        }
+      }
+
       // Photometric matching of putative pairs
       collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
