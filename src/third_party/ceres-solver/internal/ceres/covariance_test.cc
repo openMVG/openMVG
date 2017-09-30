@@ -629,14 +629,16 @@ TEST_F(CovarianceTest, NormalBehavior) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -677,14 +679,16 @@ TEST_F(CovarianceTest, ThreadedNormalBehavior) {
   options.num_threads = 4;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -726,14 +730,16 @@ TEST_F(CovarianceTest, ConstantParameterBlock) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -781,14 +787,16 @@ TEST_F(CovarianceTest, LocalParameterization) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -839,14 +847,17 @@ TEST_F(CovarianceTest, LocalParameterizationInTangentSpace) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
+
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 }
 
@@ -899,14 +910,17 @@ TEST_F(CovarianceTest, LocalParameterizationInTangentSpaceWithConstantBlocks) {
   Covariance::Options options;
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
+
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 }
 
@@ -978,14 +992,16 @@ TEST_F(CovarianceTest, DenseCovarianceMatrixFromSetOfParameters) {
   covariance.GetCovarianceMatrix(parameter_blocks, expected_covariance);
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -1005,14 +1021,16 @@ TEST_F(CovarianceTest, DenseCovarianceMatrixFromSetOfParametersThreaded) {
   covariance.GetCovarianceMatrix(parameter_blocks, expected_covariance);
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocks(options, expected_covariance);
 }
 
@@ -1043,14 +1061,17 @@ TEST_F(CovarianceTest, DenseCovarianceMatrixFromSetOfParametersInTangentSpace) {
                                                expected_covariance);
 
 #ifndef CERES_NO_SUITESPARSE
-  options.algorithm_type = SUITE_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = SUITE_SPARSE;
+
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 #endif
 
   options.algorithm_type = DENSE_SVD;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 
-  options.algorithm_type = EIGEN_SPARSE_QR;
+  options.algorithm_type = SPARSE_QR;
+  options.sparse_linear_algebra_library_type = EIGEN_SPARSE;
   ComputeAndCompareCovarianceBlocksInTangentSpace(options, expected_covariance);
 }
 
@@ -1197,10 +1218,14 @@ class LargeScaleCovarianceTest : public ::testing::Test {
     }
   }
 
-  void ComputeAndCompare(CovarianceAlgorithmType algorithm_type,
-                         int num_threads) {
+  void ComputeAndCompare(
+      CovarianceAlgorithmType algorithm_type,
+      SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type,
+      int num_threads) {
     Covariance::Options options;
     options.algorithm_type = algorithm_type;
+    options.sparse_linear_algebra_library_type =
+        sparse_linear_algebra_library_type;
     options.num_threads = num_threads;
     Covariance covariance(options);
     EXPECT_TRUE(covariance.Compute(all_covariance_blocks_, &problem_));
@@ -1243,7 +1268,7 @@ class LargeScaleCovarianceTest : public ::testing::Test {
 #if !defined(CERES_NO_SUITESPARSE) && defined(CERES_USE_OPENMP)
 
 TEST_F(LargeScaleCovarianceTest, Parallel) {
-  ComputeAndCompare(SUITE_SPARSE_QR, 4);
+  ComputeAndCompare(SPARSE_QR, SUITE_SPARSE, 4);
 }
 
 #endif  // !defined(CERES_NO_SUITESPARSE) && defined(CERES_USE_OPENMP)

@@ -471,9 +471,9 @@ inline void ApplyRadialDistortionCameraIntrinsics(const T &focal_length_x,
   T r2 = x*x + y*y;
   T r4 = r2 * r2;
   T r6 = r4 * r2;
-  T r_coeff = (T(1) + k1*r2 + k2*r4 + k3*r6);
-  T xd = x * r_coeff + T(2)*p1*x*y + p2*(r2 + T(2)*x*x);
-  T yd = y * r_coeff + T(2)*p2*x*y + p1*(r2 + T(2)*y*y);
+  T r_coeff = 1.0 + k1 * r2 + k2 * r4 + k3 * r6;
+  T xd = x * r_coeff + 2.0 * p1 * x * y + p2 * (r2 + 2.0 * x * x);
+  T yd = y * r_coeff + 2.0 * p2 * x * y + p1 * (r2 + 2.0 * y * y);
 
   // Apply focal length and principal point to get the final image coordinates.
   *image_x = focal_length_x * xd + principal_point_x;
@@ -533,8 +533,8 @@ struct OpenCVReprojectionError {
                                           &predicted_y);
 
     // The error is the difference between the predicted and observed position.
-    residuals[0] = predicted_x - T(observed_x);
-    residuals[1] = predicted_y - T(observed_y);
+    residuals[0] = predicted_x - observed_x;
+    residuals[1] = predicted_y - observed_y;
 
     return true;
   }

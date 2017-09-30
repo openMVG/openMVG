@@ -46,7 +46,7 @@ struct traits<CwiseBinaryOp<BinaryOp, Lhs, Rhs> >
   typedef typename remove_reference<LhsNested>::type _LhsNested;
   typedef typename remove_reference<RhsNested>::type _RhsNested;
   enum {
-    Flags = _LhsNested::Flags & RowMajorBit
+    Flags = cwise_promote_storage_order<typename traits<Lhs>::StorageKind,typename traits<Rhs>::StorageKind,_LhsNested::Flags & RowMajorBit,_RhsNested::Flags & RowMajorBit>::value
   };
 };
 } // end namespace internal

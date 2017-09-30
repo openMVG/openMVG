@@ -28,11 +28,6 @@
 //
 // Author: Sameer Agarwal (sameeragarwal@google.com)
 
-// This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
-
-#ifndef CERES_NO_SUITESPARSE
-
 #include "ceres/single_linkage_clustering.h"
 
 #include "ceres/collections_port.h"
@@ -128,5 +123,3 @@ TEST(SingleLinkageClustering, ComponentWithWeakLinkAndStrongLink) {
 
 }  // namespace internal
 }  // namespace ceres
-
-#endif  // CERES_NO_SUITESPARSE

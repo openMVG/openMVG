@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2017 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,11 +41,11 @@
 #include <cstring>
 #include <string>
 #include <vector>
-
+#include "SuiteSparseQR.hpp"
 #include "ceres/linear_solver.h"
+#include "ceres/sparse_cholesky.h"
 #include "cholmod.h"
 #include "glog/logging.h"
-#include "SuiteSparseQR.hpp"
 
 // Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
 // if SuiteSparse was compiled with Metis support. This makes
@@ -278,12 +278,35 @@ class SuiteSparse {
   cholmod_common cc_;
 };
 
+class SuiteSparseCholesky : public SparseCholesky {
+ public:
+  static SuiteSparseCholesky* Create(const OrderingType ordering_type);
+
+  // SparseCholesky interface.
+  virtual ~SuiteSparseCholesky();
+  virtual CompressedRowSparseMatrix::StorageType StorageType() const;
+  virtual LinearSolverTerminationType Factorize(
+      CompressedRowSparseMatrix* lhs, std::string* message);
+  virtual LinearSolverTerminationType Solve(const double* rhs,
+                                            double* solution,
+                                            std::string* message);
+ private:
+  SuiteSparseCholesky(const OrderingType ordering_type);
+
+  const OrderingType ordering_type_;
+  SuiteSparse ss_;
+  cholmod_factor* factor_;
+};
+
 }  // namespace internal
 }  // namespace ceres
 
 #else  // CERES_NO_SUITESPARSE
 
 typedef void cholmod_factor;
+
+namespace ceres {
+namespace internal {
 
 class SuiteSparse {
  public:
@@ -300,6 +323,9 @@ class SuiteSparse {
 
   void Free(void* arg) {}
 };
+
+}  // namespace internal
+}  // namespace ceres
 
 #endif  // CERES_NO_SUITESPARSE
 

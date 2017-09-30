@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Tutorial &mdash; Ceres Solver</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   
   
@@ -28,12 +28,14 @@
   
 
   
-    <link rel="top" title="Ceres Solver" href="index.html"/>
-        <link rel="next" title="Non-linear Least Squares" href="nnls_tutorial.html"/>
-        <link rel="prev" title="Building &amp; Installation" href="building.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+    <link rel="top" title="Ceres Solver" href="index.html"/>
+        <link rel="next" title="Non-linear Least Squares" href="nnls_tutorial.html"/>
+        <link rel="prev" title="Installation" href="installation.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -43,85 +45,67 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        <a href="index.html" class="fa fa-home"> Ceres Solver</a>
-        <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Ceres Solver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.13
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
-        
-            <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building &amp; Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="building.html#getting-the-source-code">Getting the source code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#linux">Linux</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#mac-os-x">Mac OS X</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#windows">Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#android">Android</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#ios">iOS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#customizing-the-build">Customizing the build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="building.html#using-ceres-with-cmake">Using Ceres with CMake</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a><ul>
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Why?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="nnls_tutorial.html">Non-linear Least Squares</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradient_tutorial.html">General Unconstrained Minimization</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#building">Building</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#modeling">Modeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#solving">Solving</a></li>
-<li class="toctree-l2"><a class="reference internal" href="faqs.html#further-reading">Further Reading</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">On Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_modeling.html">Modeling Non-linear Least Squares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_solving.html">Solving Non-linear Least Squares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nnls_covariance.html">Covariance Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_solver.html">General Unconstrained Minimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">FAQS, Tips &amp; Tricks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="users.html">Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#setting-up-your-environment">Setting up your Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-a-change">Submitting a change</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id1">1.11.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id2">1.10.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id4">1.9.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id8">1.8.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id11">1.7.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id15">1.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id18">1.5.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id22">1.4.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id26">1.3.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id29">1.2.3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id31">1.2.2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id33">1.2.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id36">1.2.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id39">1.1.1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id41">1.1.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#id44">1.0.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="version_history.html#origins">Origins</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="version_history.html">Version History</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 
-        
+            
+          
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -137,7 +121,26 @@
       <div class="wy-nav-content">
         <div class="rst-content">
           
-          <div role="main">
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="tutorial">
 <span id="chapter-tutorial"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
@@ -168,15 +171,16 @@
 </div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="nnls_tutorial.html" class="btn btn-neutral float-right" title="Non-linear Least Squares"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="nnls_tutorial.html" class="btn btn-neutral float-right" title="Non-linear Least Squares" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="building.html" class="btn btn-neutral" title="Building &amp; Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -185,12 +189,13 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2014 Google Inc.
-    </p>
-  </div>
+        &copy; Copyright 2016 Google Inc.
 
-  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+    </p>
+  </div> 
+
 </footer>
+
         </div>
       </div>
 
@@ -205,7 +210,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.11.0',
+            VERSION:'1.13.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -214,7 +219,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
       MathJax.Hub.Config({
           "HTML-CSS": {
             availableFonts: ["TeX"]

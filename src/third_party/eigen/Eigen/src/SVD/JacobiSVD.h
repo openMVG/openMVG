@@ -112,9 +112,11 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    Options = MatrixType::Options
+    TrOptions = RowsAtCompileTime==1 ? (MatrixType::Options & ~(RowMajor))
+              : ColsAtCompileTime==1 ? (MatrixType::Options |   RowMajor)
+              : MatrixType::Options
   };
-  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime>
+  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, TrOptions, MaxColsAtCompileTime, MaxRowsAtCompileTime>
           TransposeTypeWithSameStorageOrder;
 
   void allocate(const JacobiSVD<MatrixType, FullPivHouseholderQRPreconditioner>& svd)
@@ -200,10 +202,12 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    Options = MatrixType::Options
+    TrOptions = RowsAtCompileTime==1 ? (MatrixType::Options & ~(RowMajor))
+              : ColsAtCompileTime==1 ? (MatrixType::Options |   RowMajor)
+              : MatrixType::Options
   };
 
-  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime>
+  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, TrOptions, MaxColsAtCompileTime, MaxRowsAtCompileTime>
           TransposeTypeWithSameStorageOrder;
 
   void allocate(const JacobiSVD<MatrixType, ColPivHouseholderQRPreconditioner>& svd)

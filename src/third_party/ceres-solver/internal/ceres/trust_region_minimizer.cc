@@ -586,7 +586,7 @@ void TrustRegionMinimizer::DoLineSearch(const Vector& x,
       line_search_summary.total_time_in_seconds;
 
   if (line_search_summary.success) {
-    *delta *= line_search_summary.optimal_step_size;
+    *delta *= line_search_summary.optimal_point.x;
   }
 }
 

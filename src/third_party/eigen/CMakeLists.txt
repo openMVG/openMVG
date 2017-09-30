@@ -1,4 +1,5 @@
-project(Eigen)
+project(Eigen3)
+
 cmake_minimum_required(VERSION 2.8.5)
 
 # guard against in-source builds
@@ -6,6 +7,11 @@ cmake_minimum_required(VERSION 2.8.5)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt. ")
 endif()
+
+# Alias Eigen_*_DIR to Eigen3_*_DIR:
+
+set(Eigen_SOURCE_DIR ${Eigen3_SOURCE_DIR})
+set(Eigen_BINARY_DIR ${Eigen3_BINARY_DIR})
 
 # guard against bad build-type strings
 
@@ -57,6 +63,10 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # Backward compatibility support for EIGEN_INCLUDE_INSTALL_DIR
+if(EIGEN_INCLUDE_INSTALL_DIR)
+  message(WARNING "EIGEN_INCLUDE_INSTALL_DIR is deprecated. Use INCLUDE_INSTALL_DIR instead.")
+endif()
+
 if(EIGEN_INCLUDE_INSTALL_DIR AND NOT INCLUDE_INSTALL_DIR)
   set(INCLUDE_INSTALL_DIR ${EIGEN_INCLUDE_INSTALL_DIR}
       CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen header files are installed")
@@ -66,9 +76,8 @@ else()
       CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen header files are installed"
       )
 endif()
-
 set(CMAKEPACKAGE_INSTALL_DIR
-    "${CMAKE_INSTALL_LIBDIR}/cmake/eigen3"
+    "${CMAKE_INSTALL_DATADIR}/eigen3/cmake"
     CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen3Config.cmake is installed"
     )
 set(PKGCONFIG_INSTALL_DIR

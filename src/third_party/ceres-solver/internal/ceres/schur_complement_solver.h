@@ -35,18 +35,15 @@
 #include <utility>
 #include <vector>
 
-#include "ceres/internal/port.h"
-
+#include "ceres/block_random_access_diagonal_matrix.h"
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
-#include "ceres/cxsparse.h"
+#include "ceres/internal/port.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_solver.h"
 #include "ceres/schur_eliminator.h"
-#include "ceres/suitesparse.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
-#include "ceres/block_random_access_diagonal_matrix.h"
 
 #ifdef CERES_USE_EIGEN_SPARSE
 #include "Eigen/SparseCholesky"
@@ -57,6 +54,7 @@ namespace ceres {
 namespace internal {
 
 class BlockSparseMatrix;
+class SparseCholesky;
 
 // Base class for Schur complement based linear least squares
 // solvers. It assumes that the input linear system Ax = b can be
@@ -96,18 +94,19 @@ class BlockSparseMatrix;
 // be used for problems with upto a few hundred cameras.
 //
 // SparseSchurComplementSolver: For problems where the Schur
-// complement matrix is large and sparse. It requires that
-// CHOLMOD/SuiteSparse be installed, as it uses CHOLMOD to find a
-// sparse Cholesky factorization of the Schur complement. This solver
-// can be used for solving structure from motion problems with tens of
-// thousands of cameras, though depending on the exact sparsity
-// structure, it maybe better to use an iterative solver.
+// complement matrix is large and sparse. It requires that Ceres be
+// build with at least one sparse linear algebra library, as it
+// computes a sparse Cholesky factorization of the Schur complement.
+//
+// This solver can be used for solving structure from motion problems
+// with tens of thousands of cameras, though depending on the exact
+// sparsity structure, it maybe better to use an iterative solver.
 //
 // The two solvers can be instantiated by calling
 // LinearSolver::CreateLinearSolver with LinearSolver::Options::type
 // set to DENSE_SCHUR and SPARSE_SCHUR
-// respectively. LinearSolver::Options::elimination_groups[0] should be
-// at least 1.
+// respectively. LinearSolver::Options::elimination_groups[0] should
+// be at least 1.
 class SchurComplementSolver : public BlockSparseMatrixSolver {
  public:
   explicit SchurComplementSolver(const LinearSolver::Options& options)
@@ -174,48 +173,13 @@ class SparseSchurComplementSolver : public SchurComplementSolver {
   virtual LinearSolver::Summary SolveReducedLinearSystem(
       const LinearSolver::PerSolveOptions& per_solve_options,
       double* solution);
-  LinearSolver::Summary SolveReducedLinearSystemUsingSuiteSparse(
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* solution);
-  LinearSolver::Summary SolveReducedLinearSystemUsingCXSparse(
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* solution);
-  LinearSolver::Summary SolveReducedLinearSystemUsingEigen(
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* solution);
   LinearSolver::Summary SolveReducedLinearSystemUsingConjugateGradients(
       const LinearSolver::PerSolveOptions& per_solve_options,
       double* solution);
 
   // Size of the blocks in the Schur complement.
   std::vector<int> blocks_;
-
-  SuiteSparse ss_;
-  // Symbolic factorization of the reduced linear system. Precomputed
-  // once and reused in subsequent calls.
-  cholmod_factor* factor_;
-
-  CXSparse cxsparse_;
-  // Cached factorization
-  cs_dis* cxsparse_factor_;
-
-#ifdef CERES_USE_EIGEN_SPARSE
-
-  // The preprocessor gymnastics here are dealing with the fact that
-  // before version 3.2.2, Eigen did not support a third template
-  // parameter to specify the ordering.
-#if EIGEN_VERSION_AT_LEAST(3,2,2)
-  typedef Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower,
-                                Eigen::NaturalOrdering<int> >
-  SimplicialLDLT;
-#else
-  typedef Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>, Eigen::Lower>
-  SimplicialLDLT;
-#endif
-
-  scoped_ptr<SimplicialLDLT> simplicial_ldlt_;
-#endif
-
+  scoped_ptr<SparseCholesky> sparse_cholesky_;
   scoped_ptr<BlockRandomAccessDiagonalMatrix> preconditioner_;
   CERES_DISALLOW_COPY_AND_ASSIGN(SparseSchurComplementSolver);
 };

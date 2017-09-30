@@ -35,11 +35,6 @@
 #ifndef CERES_INTERNAL_VISIBILITY_H_
 #define CERES_INTERNAL_VISIBILITY_H_
 
-// This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
-
-#ifndef CERES_NO_SUITESPARSE
-
 #include <set>
 #include <vector>
 #include "ceres/graph.h"
@@ -80,5 +75,4 @@ WeightedGraph<int>* CreateSchurComplementGraph(
 }  // namespace internal
 }  // namespace ceres
 
-#endif  // CERES_NO_SUITESPARSE
 #endif  // CERES_INTERNAL_VISIBILITY_H_
