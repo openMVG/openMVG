@@ -23,13 +23,10 @@ build_script:
   # - ceres - SCHUR_SPECIALIZATIONS set to OFF to speed up build time 
   - cmake -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=%configuration% -DOpenMVG_BUILD_EXAMPLES=OFF -DOpenMVG_BUILD_TESTS=ON -DSCHUR_SPECIALIZATIONS=OFF ../src/
   # Build:
-  # - only some targets since there is no time to compile all
-  # - in debug mode, since the build is faster and VisualStudio reporting is better
-  #- cmake --build . --config Debug --target openMVG_test_sequential_SfM
-  #- cmake --build . --config Debug --target openMVG_test_global_SfM
-  #- cmake --build . --config Debug --target openMVG_main_IncrementalSfM
-  #- cmake --build . --config Debug --target openMVG_main_GlobalSfM
   - cmake --build . --config %configuration% 
+
+test_script:
+  - ctest -C %configuration% -V
 
 build:
   parallel: true

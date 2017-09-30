@@ -59,7 +59,7 @@ struct Optimize_Options
     const cameras::Intrinsic_Parameter_Type intrinsics = cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
     const Extrinsic_Parameter_Type extrinsics = Extrinsic_Parameter_Type::ADJUST_ALL,
     const Structure_Parameter_Type structure = Structure_Parameter_Type::ADJUST_ALL,
-    const Control_Point_Parameter control_point = Control_Point_Parameter(0.0, false), // Default setting does not use GCP in the BA
+    const Control_Point_Parameter & control_point = Control_Point_Parameter(0.0, false), // Default setting does not use GCP in the BA
     const bool use_motion_priors = false
   )
   :intrinsics_opt(intrinsics),

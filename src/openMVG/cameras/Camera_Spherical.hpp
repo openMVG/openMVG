@@ -21,7 +21,7 @@ namespace cameras
  */
 class Intrinsic_Spherical : public IntrinsicBase {
 
-using  class_type = Intrinsic_Spherical;
+using class_type = Intrinsic_Spherical;
 
   public:
 

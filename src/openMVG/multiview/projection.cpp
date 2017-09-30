@@ -1,4 +1,3 @@
-
 // Copyright (c) 2010 libmv authors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -190,64 +189,8 @@ Mat2X Project(const Mat34 &P, const Mat4X &X) {
   return x;
 }
 
-void HomogeneousToEuclidean(const Vec4 &H, Vec3 *X) {
-  double w = H(3);
-  *X << H(0) / w, H(1) / w, H(2) / w;
-}
-
-void EuclideanToHomogeneous(const Mat &X, Mat *H) {
-  Mat::Index d = X.rows();
-  Mat::Index n = X.cols();
-  H->resize(d + 1, n);
-  H->block(0, 0, d, n) = X;
-  H->row(d).setOnes();
-}
-
 double Depth(const Mat3 &R, const Vec3 &t, const Vec3 &X) {
   return (R*X)[2] + t[2];
-}
-
-void HomogeneousToEuclidean(const Mat &H, Mat *X) {
-  Mat::Index d = H.rows() - 1;
-  Mat::Index n = H.cols();
-  X->resize(d, n);
-  for (Mat::Index i = 0; i < n; ++i) {
-    double h = H(d, i);
-    for (int j = 0; j < d; ++j) {
-      (*X)(j, i) = H(j, i) / h;
-    }
-  }
-}
-
-Mat3X EuclideanToHomogeneous(const Mat2X &x) {
-  Mat3X h(3, x.cols());
-  h.block(0, 0, 2, x.cols()) = x;
-  h.row(2).setOnes();
-  return h;
-}
-
-void EuclideanToHomogeneous(const Mat2X &x, Mat3X *h) {
-  h->resize(3, x.cols());
-  h->block(0, 0, 2, x.cols()) = x;
-  h->row(2).setOnes();
-}
-
-void HomogeneousToEuclidean(const Mat3X &h, Mat2X *e) {
-  e->resize(2, h.cols());
-  e->row(0) = h.row(0).array() / h.row(2).array();
-  e->row(1) = h.row(1).array() / h.row(2).array();
-}
-
-void EuclideanToNormalizedCamera(const Mat2X &x, const Mat3 &K, Mat2X *n) {
-  Mat3X x_image_h;
-  EuclideanToHomogeneous(x, &x_image_h);
-  Mat3X x_camera_h = K.inverse() * x_image_h;
-  HomogeneousToEuclidean(x_camera_h, n);
-}
-
-void HomogeneousToNormalizedCamera(const Mat3X &x, const Mat3 &K, Mat2X *n) {
-  Mat3X x_camera_h = K.inverse() * x;
-  HomogeneousToEuclidean(x_camera_h, n);
 }
 
 /// Estimates the root mean square error (2D)

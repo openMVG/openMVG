@@ -23,7 +23,7 @@ namespace alternative_vo
 class VOViewerPanel : public QWidget
 {
   public:
-    VOViewerPanel( QWidget * parent );
+    explicit VOViewerPanel( QWidget * parent );
 
     void SetImage( QImage & img );
 

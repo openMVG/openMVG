@@ -27,6 +27,7 @@ target_link_libraries(
     openMVG_lInftyComputerVision
     openMVG_system
     openMVG_matching
+    lemon
 )
 target_include_directories(
   openMVG_sfm

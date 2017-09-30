@@ -69,7 +69,7 @@ struct LineKernel {
   using Model =  Vec2;  // line parametrization: a, b;
   enum { MINIMUM_SAMPLES = 2 };
 
-  LineKernel(const Mat2X &xs) : xs_(xs) {}
+  explicit LineKernel(const Mat2X &xs) : xs_(xs) {}
 
   size_t NumSamples() const { return static_cast<size_t> (xs_.cols()); }
 

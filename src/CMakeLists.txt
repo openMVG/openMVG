@@ -385,7 +385,6 @@ set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
-  ${LEMON_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
   ${FLANN_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
@@ -412,12 +411,21 @@ set(OpenMVG_LIBRARIES
   openMVG_multiview
   openMVG_lInftyComputerVision
   openMVG_system
-  openMVG_sfm)
+  openMVG_sfm
+  lemon)
 
 foreach(omvglib ${OpenMVG_LIBRARIES})
   set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
   set_property(TARGET ${omvglib} APPEND PROPERTY
     INTERFACE_COMPILE_DEFINITIONS ${OpenMVG_DEFINITIONS})
+  string(REPLACE " " ";" REPLACED_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  target_compile_options(${omvglib} INTERFACE ${REPLACED_CMAKE_CXX_FLAGS})
+
+  check_cxx_compiler_flag("-std=c++11" COMPILER_HAS_CXX11_FLAG)
+  if (COMPILER_HAS_CXX11_FLAG)
+    target_compile_options(${omvglib} INTERFACE "-std=c++11")
+  endif(COMPILER_HAS_CXX11_FLAG)
+
 endforeach()
 
 # openMVG tutorial examples

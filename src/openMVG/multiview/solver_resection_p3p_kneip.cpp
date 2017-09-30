@@ -1,4 +1,7 @@
 
+//
+// License for compute_P3P_Poses
+//
 /*
  * Copyright (c) 2011, Laurent Kneip, ETH Zurich
  * All rights reserved.
@@ -26,6 +29,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+//
+// License for the rest of the file
+//
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2012, 2013 Pierre MOULON.
@@ -34,69 +40,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/solver_resection_p3p.hpp"
+#include "openMVG/multiview/solver_resection_p3p_kneip.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/numeric/poly.h"
 
 #include <cmath>
 
 namespace openMVG {
 namespace euclidean_resection {
-
-using Vec5 = Eigen::Matrix<double, 5, 1>;
-
-inline void solveQuartic
-(
-  const Vec5 & factors,
-  Vec4 & realRoots
-)
-{
-  double A = factors[0];
-  double B = factors[1];
-  double C = factors[2];
-  double D = factors[3];
-  double E = factors[4];
-
-  double A_pw2 = A*A;
-  double B_pw2 = B*B;
-  double A_pw3 = A_pw2*A;
-  double B_pw3 = B_pw2*B;
-  double A_pw4 = A_pw3*A;
-  double B_pw4 = B_pw3*B;
-
-  double alpha = -3*B_pw2/(8*A_pw2)+C/A;
-  double beta = B_pw3/(8*A_pw3)-B*C/(2*A_pw2)+D/A;
-  double gamma = -3*B_pw4/(256*A_pw4)+B_pw2*C/(16*A_pw3)-B*D/(4*A_pw2)+E/A;
-
-  double alpha_pw2 = alpha*alpha;
-  double alpha_pw3 = alpha_pw2*alpha;
-
-  std::complex<double> P (-alpha_pw2/12-gamma,0);
-  std::complex<double> Q (-alpha_pw3/108+alpha*gamma/3-pow(beta,2)/8,0);
-  std::complex<double> R = -Q/2.0+sqrt(pow(Q,2.0)/4.0+pow(P,3.0)/27.0);
-
-  std::complex<double> U = pow(R,(1.0/3.0));
-  std::complex<double> y;
-
-  if (U.real() == 0)
-    y = -5.0*alpha/6.0-pow(Q,(1.0/3.0));
-  else
-    y = -5.0*alpha/6.0-P/(3.0*U)+U;
-
-  std::complex<double> w = sqrt(alpha+2.0*y);
-
-  std::complex<double> temp;
-
-  temp = -B/(4.0*A) + 0.5*(w+sqrt(-(3.0*alpha+2.0*y+2.0*beta/w)));
-  realRoots[0] = temp.real();
-  temp = -B/(4.0*A) + 0.5*(w-sqrt(-(3.0*alpha+2.0*y+2.0*beta/w)));
-  realRoots[1] = temp.real();
-  temp = -B/(4.0*A) + 0.5*(-w+sqrt(-(3.0*alpha+2.0*y-2.0*beta/w)));
-  realRoots[2] = temp.real();
-  temp = -B/(4.0*A) + 0.5*(-w-sqrt(-(3.0*alpha+2.0*y-2.0*beta/w)));
-  realRoots[3] = temp.real();
-}
 
 /*
  *      Author: Laurent Kneip, adapted to openMVG by Pierre Moulon
@@ -221,8 +174,8 @@ inline bool compute_P3P_Poses
 
   // Computation of factors of 4th degree polynomial
 
-  Vec5 factors;
-  factors << -f_2_pw2*p_2_pw4 - p_2_pw4*f_1_pw2 - p_2_pw4,
+  const std::array<double,5> factors = {
+    -f_2_pw2*p_2_pw4 - p_2_pw4*f_1_pw2 - p_2_pw4,
 
     2.*p_2_pw3*d_12*b +
     2.*f_2_pw2*p_2_pw3*d_12*b
@@ -253,12 +206,11 @@ inline bool compute_P3P_Poses
     -p_1_pw4
     -2.*f_2_pw2*p_2_pw2*p_1*d_12
     +p_2_pw2*f_1_pw2*p_1_pw2
-    +f_2_pw2*p_2_pw2*d_12_pw2*b_pw2;
+    +f_2_pw2*p_2_pw2*d_12_pw2*b_pw2};
 
   // Computation of roots
-
-  Vec4 realRoots;
-  solveQuartic( factors, realRoots );
+  std::array<double, 4> realRoots;
+  solveQuarticPolynomial( factors, realRoots );
 
   // Backsubstitution of each solution
 
@@ -296,29 +248,23 @@ inline bool compute_P3P_Poses
   return true;
 }
 
-void P3PSolver::Solve
+void P3PSolver_Kneip::Solve
 (
-  const Mat &pt2D,
-  const Mat &pt3D,
-  std::vector<Mat34> *models
+  const Mat & bearing_vectors,
+  const Mat & pt3D,
+  std::vector<Mat34> * models
 )
 {
-  Mat3 R;
-  Vec3 t;
-  Mat34 P;
-  assert(2 == pt2D.rows());
+  assert(3 == bearing_vectors.rows());
   assert(3 == pt3D.rows());
-  assert(pt2D.cols() == pt3D.cols());
+  assert(bearing_vectors.cols() == pt3D.cols());
+
   Mat solutions = Mat(3, 4*4);
-  Mat3 pt2D_3x3;
-  pt2D_3x3.block<2,3>(0,0) = pt2D;
-  pt2D_3x3.row(2).fill(1);
-  pt2D_3x3.col(0).normalize();
-  pt2D_3x3.col(1).normalize();
-  pt2D_3x3.col(2).normalize();
-  Mat3 pt3D_3x3 = pt3D;
-  if (compute_P3P_Poses( pt2D_3x3, pt3D_3x3, solutions))
+  if (compute_P3P_Poses( bearing_vectors, pt3D, solutions))
   {
+    Mat3 R;
+    Vec3 t;
+    Mat34 P;
     for (size_t i=0; i < 4; ++i)  {
       R = solutions.block<3,3>(0,i*4+1);
       t = -R * solutions.col(i*4);
@@ -328,74 +274,16 @@ void P3PSolver::Solve
   }
 }
 
-// Compute the residual of the projection distance(pt2D, Project(P,pt3D))
-double P3PSolver::Error
+double P3PSolver_Kneip::Error
 (
   const Mat34 & P,
-  const Vec2 & pt2D,
+  const Vec3 & bearing_vector,
   const Vec3 & pt3D
 )
 {
-  return (pt2D - Project(P, pt3D)).norm();
+  const auto new_bearing = (P * pt3D.homogeneous()).normalized();
+  return 1.0 - (bearing_vector.dot(new_bearing));
 }
-
-P3P_ResectionKernel_K::P3P_ResectionKernel_K
-(
-  const Mat2X &x_camera,
-  const Mat3X &X,
-  const Mat3 &K
-)
-: x_image_(x_camera), X_(X), K_(K)
-{
-  assert(x_camera.cols() == X.cols());
-  // Conversion from image coordinates to normalized camera coordinates
-  Mat3X x_image_h;
-  EuclideanToHomogeneous(x_image_, &x_image_h);
-  x_camera_ = K_.inverse() * x_image_h;
-  for (Mat2X::Index i = 0; i < x_camera_.cols(); ++i)
-    x_camera_.col(i).normalize();
-}
-
-void P3P_ResectionKernel_K::Fit
-(
-  const std::vector<uint32_t> &samples,
-  std::vector<Model> *models
-) const
-{
-  const Mat3 pt2D_3x3 ( ExtractColumns(x_camera_, samples) );
-  const Mat3 pt3D_3x3 ( ExtractColumns(X_, samples) );
-  Mat solutions(3, 4*4);
-  if (compute_P3P_Poses( pt2D_3x3, pt3D_3x3, solutions))
-  {
-    Mat34 P;
-    Mat3 R;
-    Vec3 t;
-    for (size_t i=0; i < 4; ++i)  {
-      R = solutions.block<3,3>(0,i*4+1);
-      t = -R * solutions.col(i*4);
-      P_From_KRt(K_, R, t, &P);
-      models->push_back(P);
-    }
-  }
-}
-
-double P3P_ResectionKernel_K::Error
-(
-  size_t sample,
-  const Model &model
-) const
-{
-  const Vec3 X = X_.col(sample);
-  const Mat2X error = Project(model, X) - x_image_.col(sample);
-  return error.col(0).norm();
-}
-
-size_t P3P_ResectionKernel_K::NumSamples() const
-{
-  return static_cast<size_t>(x_camera_.cols());
-}
-
 
 }  // namespace euclidean_resection
 }  // namespace openMVG
-

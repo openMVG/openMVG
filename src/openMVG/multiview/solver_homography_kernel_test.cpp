@@ -49,15 +49,14 @@ TEST(HomographyKernelTest, Fitting_Unnormalized) {
             -7,  8,  1;
 
   // Define a set of points.
-  Mat x(2, 9), xh;
+  Mat x(2, 9);
   x << 0, 0, 0, 1, 1, 1, 2, 2, 2,
        0, 1, 2, 0, 1, 2, 0, 1, 2;
-  EuclideanToHomogeneous(x, &xh);
+  const Mat xh = x.colwise().homogeneous();
 
   for (size_t i = 0; i < H_gt.size(); ++i) {
     // Transform points by the ground truth homography.
-    Mat y, yh = H_gt[i] * xh;
-    HomogeneousToEuclidean(yh, &y);
+    const Mat y = (H_gt[i] * xh).colwise().hnormalized();
 
     homography::kernel::UnnormalizedKernel kernel(x, y);
 
@@ -89,15 +88,14 @@ TEST(HomographyKernelTest, Fitting_Normalized) {
             -7,  8,  1;
 
   // Define a set of points.
-  Mat x(2, 9), xh;
+  Mat x(2, 9);
   x << 0, 0, 0, 1, 1, 1, 2, 2, 2,
        0, 1, 2, 0, 1, 2, 0, 1, 2;
-  EuclideanToHomogeneous(x, &xh);
+  const Mat xh = x.colwise().homogeneous();
 
   for (size_t i = 0; i < H_gt.size(); ++i) {
     // Transform points by the ground truth homography.
-    Mat y, yh = H_gt[i] * xh;
-    HomogeneousToEuclidean(yh, &y);
+    const Mat y = (H_gt[i] * xh).colwise().hnormalized();
 
     homography::kernel::Kernel kernel(x, y);
 

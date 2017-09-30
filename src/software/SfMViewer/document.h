@@ -98,7 +98,7 @@ struct Document
         size_t nbImages = 0;
         iFilein>> nbImages;
         size_t camIndex = 0; // track inserted image and camera count
-        while(iFilein.good())
+        while (iFilein.good())
         {
           getline(iFilein,temp);
           if (!temp.empty() && temp.length() > 1)

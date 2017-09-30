@@ -71,7 +71,7 @@ set(CMAKE_MODULE_PATH ${CURRENT_CONFIG_INSTALL_DIR})
 # Build the absolute root install directory as a relative path
 get_filename_component(CURRENT_ROOT_INSTALL_DIR
   ${CMAKE_MODULE_PATH}/../../../ ABSOLUTE)
-IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
+if (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
   OPENMVG_REPORT_NOT_FOUND(
     "OpenMVG install root: ${CURRENT_ROOT_INSTALL_DIR}, "
     "determined from relative path from OpenMVGConfig.cmake install location: "
@@ -79,7 +79,7 @@ IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
 endif (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR})
 
 # Check if OpenMVG header is installed
-IF (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
+if (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
   OPENMVG_REPORT_NOT_FOUND(
     "OpenMVG install root: ${CMAKE_MODULE_PATH}. "
     "Cannot find openMVG include files.")
@@ -89,8 +89,6 @@ endif (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
 # dependencies with which OpenMVG was compiled.
 set(OPENMVG_INCLUDE_DIRS "@OpenMVG_INCLUDE_DIRS@")
 
-# set the compile flags for OpenMVG.
-set(OPENMVG_CFLAGS "@OpenMVG_CFLAGS@")
 
 ##### the libraries themselves come in via OpenMVGTargets-<release/debug>.cmake
 # as link libraries rules as target.
@@ -100,7 +98,7 @@ find_package(Threads REQUIRED)
 
 # Import exported OpenMVG targets
 set(OPENMVG_LIBRARIES @OpenMVG_LIBRARIES@)
-INCLUDE(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
+include(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
 
 # As we use OPENMVG_REPORT_NOT_FOUND() to abort, if we reach this point we have
 # found OpenMVG and all required dependencies.
@@ -110,11 +108,9 @@ message(STATUS "----")
 message(STATUS "Found OpenMVG version: ${OPENMVG_VERSION}")
 message(STATUS "Installed in: ${CURRENT_ROOT_INSTALL_DIR}")
 message(STATUS "Used OpenMVG libraries: ${OPENMVG_LIBRARIES}")
-message(STATUS "Required CFLAGS: ${OPENMVG_CFLAGS}")
 message(STATUS "----")
 
 set(OPENMVG_FOUND TRUE)
 
 # Reset the CMake module path to its state when this script was called.
 set(CMAKE_MODULE_PATH ${CALLERS_CMAKE_MODULE_PATH})
-
