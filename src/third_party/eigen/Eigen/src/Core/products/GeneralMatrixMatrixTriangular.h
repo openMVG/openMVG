@@ -148,7 +148,7 @@ struct tribb_kernel
     ResMapper res(_res, resStride);
     gebp_kernel<LhsScalar, RhsScalar, Index, ResMapper, mr, nr, ConjLhs, ConjRhs> gebp_kernel;
 
-    Matrix<ResScalar,BlockSize,BlockSize,ColMajor> buffer;
+    Matrix<ResScalar,BlockSize,BlockSize,ColMajor> buffer((internal::constructor_without_unaligned_array_assert()));
 
     // let's process the block per panel of actual_mc x BlockSize,
     // again, each is split into three parts, etc.
@@ -199,7 +199,7 @@ struct general_product_to_triangular_selector;
 template<typename MatrixType, typename ProductType, int UpLo>
 struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,true>
 {
-  static void run(MatrixType& mat, const ProductType& prod, const typename MatrixType::Scalar& alpha)
+  static void run(MatrixType& mat, const ProductType& prod, const typename MatrixType::Scalar& alpha, bool beta)
   {
     typedef typename MatrixType::Scalar Scalar;
     
@@ -216,6 +216,9 @@ struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,true>
     typename internal::add_const_on_value_type<ActualRhs>::type actualRhs = RhsBlasTraits::extract(prod.rhs());
 
     Scalar actualAlpha = alpha * LhsBlasTraits::extractScalarFactor(prod.lhs().derived()) * RhsBlasTraits::extractScalarFactor(prod.rhs().derived());
+
+    if(!beta)
+      mat.template triangularView<UpLo>().setZero();
 
     enum {
       StorageOrder = (internal::traits<MatrixType>::Flags&RowMajorBit) ? RowMajor : ColMajor,
@@ -244,7 +247,7 @@ struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,true>
 template<typename MatrixType, typename ProductType, int UpLo>
 struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,false>
 {
-  static void run(MatrixType& mat, const ProductType& prod, const typename MatrixType::Scalar& alpha)
+  static void run(MatrixType& mat, const ProductType& prod, const typename MatrixType::Scalar& alpha, bool beta)
   {
     typedef typename internal::remove_all<typename ProductType::LhsNested>::type Lhs;
     typedef internal::blas_traits<Lhs> LhsBlasTraits;
@@ -260,13 +263,19 @@ struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,false>
 
     typename ProductType::Scalar actualAlpha = alpha * LhsBlasTraits::extractScalarFactor(prod.lhs().derived()) * RhsBlasTraits::extractScalarFactor(prod.rhs().derived());
 
+    if(!beta)
+      mat.template triangularView<UpLo>().setZero();
+
     enum {
       IsRowMajor = (internal::traits<MatrixType>::Flags&RowMajorBit) ? 1 : 0,
       LhsIsRowMajor = _ActualLhs::Flags&RowMajorBit ? 1 : 0,
-      RhsIsRowMajor = _ActualRhs::Flags&RowMajorBit ? 1 : 0
+      RhsIsRowMajor = _ActualRhs::Flags&RowMajorBit ? 1 : 0,
+      SkipDiag = (UpLo&(UnitDiag|ZeroDiag))!=0
     };
 
     Index size = mat.cols();
+    if(SkipDiag)
+      size--;
     Index depth = actualLhs.cols();
 
     typedef internal::gemm_blocking_space<IsRowMajor ? RowMajor : ColMajor,typename Lhs::Scalar,typename Rhs::Scalar,
@@ -277,20 +286,22 @@ struct general_product_to_triangular_selector<MatrixType,ProductType,UpLo,false>
     internal::general_matrix_matrix_triangular_product<Index,
       typename Lhs::Scalar, LhsIsRowMajor ? RowMajor : ColMajor, LhsBlasTraits::NeedToConjugate,
       typename Rhs::Scalar, RhsIsRowMajor ? RowMajor : ColMajor, RhsBlasTraits::NeedToConjugate,
-      IsRowMajor ? RowMajor : ColMajor, UpLo>
+      IsRowMajor ? RowMajor : ColMajor, UpLo&(Lower|Upper)>
       ::run(size, depth,
-            &actualLhs.coeffRef(0,0), actualLhs.outerStride(), &actualRhs.coeffRef(0,0), actualRhs.outerStride(),
-            mat.data(), mat.outerStride(), actualAlpha, blocking);
+            &actualLhs.coeffRef(SkipDiag&&(UpLo&Lower)==Lower ? 1 : 0,0), actualLhs.outerStride(),
+            &actualRhs.coeffRef(0,SkipDiag&&(UpLo&Upper)==Upper ? 1 : 0), actualRhs.outerStride(),
+            mat.data() + (SkipDiag ? (bool(IsRowMajor) != ((UpLo&Lower)==Lower) ? 1 : mat.outerStride() ) : 0), mat.outerStride(), actualAlpha, blocking);
   }
 };
 
 template<typename MatrixType, unsigned int UpLo>
 template<typename ProductType>
-TriangularView<MatrixType,UpLo>& TriangularViewImpl<MatrixType,UpLo,Dense>::_assignProduct(const ProductType& prod, const Scalar& alpha)
+TriangularView<MatrixType,UpLo>& TriangularViewImpl<MatrixType,UpLo,Dense>::_assignProduct(const ProductType& prod, const Scalar& alpha, bool beta)
 {
+  EIGEN_STATIC_ASSERT((UpLo&UnitDiag)==0, WRITING_TO_TRIANGULAR_PART_WITH_UNIT_DIAGONAL_IS_NOT_SUPPORTED);
   eigen_assert(derived().nestedExpression().rows() == prod.rows() && derived().cols() == prod.cols());
   
-  general_product_to_triangular_selector<MatrixType, ProductType, UpLo, internal::traits<ProductType>::InnerSize==1>::run(derived().nestedExpression().const_cast_derived(), prod, alpha);
+  general_product_to_triangular_selector<MatrixType, ProductType, UpLo, internal::traits<ProductType>::InnerSize==1>::run(derived().nestedExpression().const_cast_derived(), prod, alpha, beta);
   
   return derived();
 }

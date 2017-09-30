@@ -6,22 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "mainLayout.hpp"
-#include <QtGui>
-#include <QMessageBox>
+#include "MainWindow.hpp"
+
 #include <QFileDialog>
-#include <QWidget>
-#include <QSplitter>
-#include <QStatusBar>
-#include <QMenu>
 #include <QGridLayout>
 #include <QMenuBar>
 #include <QDebug>
+#include <QMenu>
+#include <QMessageBox>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QtGui>
+#include <QWidget>
 
 #include <algorithm>
 #include <clocale>
 
-#include "node.hpp"
+#include "ControlPoint2DNode.hpp"
 #include "ControlPointTableView.hpp"
 
 #include "openMVG/multiview/triangulation_nview.hpp"
@@ -32,6 +33,9 @@
 #include "openMVG/sfm/sfm_data_transform.hpp"
 
 #include "openMVG/stl/stl.hpp"
+
+using namespace openMVG;
+using namespace openMVG::sfm;
 
 void MainWindow::removeAllControlPoints()
 {
@@ -73,8 +77,8 @@ void MainWindow::doubleClickImageList()
   {
     const View * view = m_doc._sfm_data.GetViews().at(id).get();
     const std::string sView = stlplus::create_filespec(m_doc._sfm_data.s_root_path, view->s_Img_path);
-    m_widget->AddImage(QString::fromStdString(sView), 0.f, 0.f, true);
-    m_widget->SetCurrentViewId(view->id_view);
+    m_widget->addImage(QString::fromStdString(sView), 0.f, 0.f, true);
+    m_widget->setCurrentViewId(view->id_view);
 
     setWindowTitle(QString("Control_point_editor: " + QString::fromStdString(sView)));
 
@@ -90,7 +94,7 @@ void MainWindow::doubleClickImageList()
         // It will allow dynamic update of the control_point observation when the user will move the Node
         Vec2 & ref = obs[view->id_view].x;
         const size_t index = iterL->first;
-        m_widget->AddNode(new control_point_2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
+        m_widget->addNode(new ControlPoint2DNode(QPointF(ref(0), ref(1)), ref(0), ref(1), index));
       }
     }
   }
@@ -169,7 +173,7 @@ void MainWindow::editControlPoints()
     ControlPointTableView control_point_editor(&m_doc._sfm_data, this);
     control_point_editor.exec();
     Landmarks control_points_cpy = m_doc._sfm_data.control_points;
-    control_point_editor.update_control_points(control_points_cpy);
+    control_point_editor.updateControlPoints(control_points_cpy);
     m_doc._sfm_data.control_points = control_points_cpy;
   }
   else
@@ -385,7 +389,7 @@ void MainWindow::createPanel()
   //-- Create left panel
   m_tabWidget = new QTabWidget;
   //-- Create right panel
-  m_widget = new control_point_GUI::GraphicsMainWindow(m_doc, this);
+  m_widget = new control_point_GUI::GraphicsView(m_doc, this);
   splitter->addWidget(m_tabWidget);
   splitter->addWidget(m_widget);
   splitter->setStretchFactor(0, 0);
@@ -473,9 +477,8 @@ void MainWindow::createActions()
 void MainWindow::createConnections()
 {
   connect (m_treeView_Images
-    ,SIGNAL(doubleClicked(const QModelIndex &))
+    ,SIGNAL(activated(const QModelIndex &))
     ,this
     ,SLOT(doubleClickImageList())
     );
 }
-

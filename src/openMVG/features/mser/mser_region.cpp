@@ -226,7 +226,7 @@ namespace openMVG
 
 
       /**
-      * @brief Compute MSER stability , compress parent path, and check if the region (and it's children) is stable
+      * @brief Compute MSER stability , compress parent path, and check if the region (and its children) is stable
       * @param delta distance (in level) to the other region to compute stability (stability is not made up to delta level)
       * @param minimumArea Minimum area to be accepted as stable
       * @param maximumArea Maximum area to be accepted as stable
@@ -248,7 +248,7 @@ namespace openMVG
         // Ensure the region could be qualified as stable
         const bool stable =
           // Hierarchy MSER criterion
-          ( ( ref == nullptr ) || m_variation <= ref->m_variation ) && // Top level region or less variation than it's parent
+          ( ( ref == nullptr ) || m_variation <= ref->m_variation ) && // Top level region or less variation than its parent
           // Basic MSER criterion
           ( ( m_variation <= maxVariation ) && ( m_area >= minimumArea ) && ( m_area <= maximumArea ) );
 
@@ -283,7 +283,7 @@ namespace openMVG
       * @brief check criteria on the whole region
       * @param variation Minimum variation to validate the criteria
       * @param area Maximum area to validate the criteria
-      * @return true if it as minimum variation and maximum area (on the whole region, ie: region and it's child)
+      * @return true if it as minimum variation and maximum area (on the whole region, ie: region and its child)
       */
       bool MSERRegion::CheckCriteria( const double variation , const int area ) const
       {
@@ -346,7 +346,7 @@ namespace openMVG
           {
             cur_parent = cur_parent->m_parent;
 
-            // 2 - Parent must have move diversity than it's children
+            // 2 - Parent must have move diversity than its children
             // If not it's more stable than this region
             if (cur_parent->m_is_stable && ( cur_parent->m_variation <= m_variation ) )
             {
@@ -398,7 +398,7 @@ namespace openMVG
       {
         // Compute MSER stability stats on all the hierarchy
         ComputeStability( delta , minArea , maxArea , maxVariation );
-        // Export regions that pass all MSER stability checks (region and it's direct hierarchy)
+        // Export regions that pass all MSER stability checks (region and its direct hierarchy)
         Export( minDiversity , regions );
       }
 

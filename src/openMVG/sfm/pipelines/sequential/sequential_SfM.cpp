@@ -48,7 +48,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const std::string & sloggingFile)
   : ReconstructionEngine(sfm_data, soutDirectory),
     sLogging_file_(sloggingFile),
-    initial_pair_(Pair(0,0)),
+    initial_pair_(0,0),
     cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3))
 {
   if (!sLogging_file_.empty())
@@ -343,7 +343,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 
 bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
 {
-  // select a pair that have the largest baseline (mean angle between it's bearing vectors).
+  // select a pair that have the largest baseline (mean angle between its bearing vectors).
 
   const unsigned iMin_inliers_count = 100;
   const float fRequired_min_angle = 3.0f;
@@ -941,7 +941,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   geometry::Pose3 pose;
   const bool bResection = sfm::SfM_Localizer::Localize
   (
-    Pair(view_I->ui_width, view_I->ui_height),
+    optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+    {view_I->ui_width, view_I->ui_height},
     optional_intrinsic.get(),
     resection_data,
     pose

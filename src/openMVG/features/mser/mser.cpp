@@ -77,7 +77,7 @@ namespace openMVG
       }
 
       /*
-      * Given a pixel and image dimension, retrive it's neighbor
+      * Given a pixel and image dimension, retrieve its neighbor
       * If neighbor is out of the image range, return (-1,-1) coord
       * @param x Input x pixel coord
       * @param y Input y pixel coord

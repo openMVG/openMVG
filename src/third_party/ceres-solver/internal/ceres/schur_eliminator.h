@@ -171,7 +171,14 @@ class SchurEliminatorBase {
   // CompressedRowBlockStructure object passed to this method is the
   // same one (or is equivalent to) the one associated with the
   // BlockSparseMatrix objects below.
+  //
+  // assume_full_rank_ete controls how the eliminator inverts with the
+  // diagonal blocks corresponding to e blocks in A'A. If
+  // assume_full_rank_ete is true, then a Cholesky factorization is
+  // used to compute the inverse, otherwise a singular value
+  // decomposition is used to compute the pseudo inverse.
   virtual void Init(int num_eliminate_blocks,
+                    bool assume_full_rank_ete,
                     const CompressedRowBlockStructure* bs) = 0;
 
   // Compute the Schur complement system from the augmented linear
@@ -225,6 +232,7 @@ class SchurEliminator : public SchurEliminatorBase {
   // SchurEliminatorBase Interface
   virtual ~SchurEliminator();
   virtual void Init(int num_eliminate_blocks,
+                    bool assume_full_rank_ete,
                     const CompressedRowBlockStructure* bs);
   virtual void Eliminate(const BlockSparseMatrix* A,
                          const double* b,
@@ -308,7 +316,9 @@ class SchurEliminator : public SchurEliminatorBase {
                                int row_block_index,
                                BlockRandomAccessMatrix* lhs);
 
+  int num_threads_;
   int num_eliminate_blocks_;
+  bool assume_full_rank_ete_;
 
   // Block layout of the columns of the reduced linear system. Since
   // the f blocks can be of varying size, this vector stores the
@@ -341,7 +351,6 @@ class SchurEliminator : public SchurEliminatorBase {
   scoped_array<double> chunk_outer_product_buffer_;
 
   int buffer_size_;
-  int num_threads_;
   int uneliminated_row_begins_;
 
   // Locks for the blocks in the right hand side of the reduced linear

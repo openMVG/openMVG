@@ -87,7 +87,8 @@ void apply_block_householder_on_the_left(MatrixType& mat, const VectorsType& vec
   const TriangularView<const VectorsType, UnitLower> V(vectors);
 
   // A -= V T V^* A
-  Matrix<typename MatrixType::Scalar,VectorsType::ColsAtCompileTime,MatrixType::ColsAtCompileTime,0,
+  Matrix<typename MatrixType::Scalar,VectorsType::ColsAtCompileTime,MatrixType::ColsAtCompileTime,
+         (VectorsType::MaxColsAtCompileTime==1 && MatrixType::MaxColsAtCompileTime!=1)?RowMajor:ColMajor,
          VectorsType::MaxColsAtCompileTime,MatrixType::MaxColsAtCompileTime> tmp = V.adjoint() * mat;
   // FIXME add .noalias() once the triangular product can work inplace
   if(forward) tmp = T.template triangularView<Upper>()           * tmp;

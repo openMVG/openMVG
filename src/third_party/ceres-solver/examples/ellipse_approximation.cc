@@ -272,7 +272,7 @@ ceres::ConstMatrixRef kY(kYData, kYRows, kYCols);
 class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
  public:
   PointToLineSegmentContourCostFunction(const int num_segments,
-                                        const Eigen::Vector2d y)
+                                        const Eigen::Vector2d& y)
       : num_segments_(num_segments), y_(y) {
     // The first parameter is the preimage position.
     mutable_parameter_block_sizes()->push_back(1);
@@ -323,12 +323,12 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
   }
 
   static ceres::CostFunction* Create(const int num_segments,
-                                     const Eigen::Vector2d y) {
+                                     const Eigen::Vector2d& y) {
     return new PointToLineSegmentContourCostFunction(num_segments, y);
   }
 
  private:
-  inline double ModuloNumSegments(const double& t) const {
+  inline double ModuloNumSegments(const double t) const {
     return t - num_segments_ * floor(t / num_segments_);
   }
 
@@ -336,18 +336,19 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
   const Eigen::Vector2d y_;
 };
 
-struct EuclideanDistanceFunctor {
-  EuclideanDistanceFunctor(const double& sqrt_weight)
+class EuclideanDistanceFunctor {
+ public:
+  explicit EuclideanDistanceFunctor(const double& sqrt_weight)
       : sqrt_weight_(sqrt_weight) {}
 
   template <typename T>
   bool operator()(const T* x0, const T* x1, T* residuals) const {
-    residuals[0] = T(sqrt_weight_) * (x0[0] - x1[0]);
-    residuals[1] = T(sqrt_weight_) * (x0[1] - x1[1]);
+    residuals[0] = sqrt_weight_ * (x0[0] - x1[0]);
+    residuals[1] = sqrt_weight_ * (x0[1] - x1[1]);
     return true;
   }
 
-  static ceres::CostFunction* Create(const double& sqrt_weight) {
+  static ceres::CostFunction* Create(const double sqrt_weight) {
     return new ceres::AutoDiffCostFunction<EuclideanDistanceFunctor, 2, 2, 2>(
         new EuclideanDistanceFunctor(sqrt_weight));
   }

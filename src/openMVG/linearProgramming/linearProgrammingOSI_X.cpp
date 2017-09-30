@@ -185,7 +185,7 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstra
     std::fill(col_lb.begin(), col_lb.end(), cstraints.vec_bounds_[0].first);
     std::fill(col_ub.begin(), col_ub.end(), cstraints.vec_bounds_[0].second);
   }
-  else  // each parameter have it's own bounds
+  else  // each parameter have its own bounds
   {
     for (int i=0; i < this->nbParams_; ++i)
     {

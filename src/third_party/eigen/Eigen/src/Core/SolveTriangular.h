@@ -161,6 +161,7 @@ struct triangular_solver_selector<Lhs,Rhs,OnTheRight,Mode,CompleteUnrolling,1> {
 * TriangularView methods
 ***************************************************************************/
 
+#ifndef EIGEN_PARSED_BY_DOXYGEN
 template<typename MatrixType, unsigned int Mode>
 template<int Side, typename OtherDerived>
 void TriangularViewImpl<MatrixType,Mode,Dense>::solveInPlace(const MatrixBase<OtherDerived>& _other) const
@@ -188,6 +189,7 @@ TriangularViewImpl<Derived,Mode,Dense>::solve(const MatrixBase<Other>& other) co
 {
   return internal::triangular_solve_retval<Side,TriangularViewType,Other>(derived(), other.derived());
 }
+#endif
 
 namespace internal {
 

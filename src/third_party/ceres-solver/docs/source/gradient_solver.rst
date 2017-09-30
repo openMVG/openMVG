@@ -447,6 +447,14 @@ Solving
 
    :class:`IterationSummary` for each minimizer iteration in order.
 
+.. member:: int num_cost_evaluations
+
+   Number of times the cost (and not the gradient) was evaluated.
+
+.. member:: int num_gradient_evaluations
+
+   Number of times the gradient (and the cost) were evaluated.
+
 .. member:: double GradientProblemSolver::Summary::total_time_in_seconds
 
    Time (in seconds) spent in the solver.

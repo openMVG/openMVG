@@ -98,7 +98,7 @@ class PowellsFunction {
                                           const T* const x2,
                                           T* residual) const {
       // f1 = x1 + 10 * x2;
-      *residual = *x1 + T(10.0) * *x2;
+      *residual = *x1 + 10.0 * *x2;
       return true;
     }
   };
@@ -109,7 +109,7 @@ class PowellsFunction {
                                           const T* const x4,
                                           T* residual) const {
       // f2 = sqrt(5) (x3 - x4)
-      *residual = T(sqrt(5.0)) * (*x3 - *x4);
+      *residual = sqrt(5.0) * (*x3 - *x4);
       return true;
     }
   };
@@ -120,7 +120,7 @@ class PowellsFunction {
                                           const T* const x4,
                                           T* residual) const {
       // f3 = (x2 - 2 x3)^2
-      residual[0] = (x2[0] - T(2.0) * x4[0]) * (x2[0] - T(2.0) * x4[0]);
+      residual[0] = (x2[0] - 2.0 * x4[0]) * (x2[0] - 2.0 * x4[0]);
       return true;
     }
   };
@@ -131,7 +131,7 @@ class PowellsFunction {
                                           const T* const x4,
                                           T* residual) const {
       // f4 = sqrt(10) (x1 - x4)^2
-      residual[0] = T(sqrt(10.0)) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
+      residual[0] = sqrt(10.0) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
       return true;
     }
   };

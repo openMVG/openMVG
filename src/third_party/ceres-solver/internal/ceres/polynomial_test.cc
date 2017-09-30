@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <algorithm>
 #include "gtest/gtest.h"
+#include "ceres/function_sample.h"
 #include "ceres/test_util.h"
 
 namespace ceres {

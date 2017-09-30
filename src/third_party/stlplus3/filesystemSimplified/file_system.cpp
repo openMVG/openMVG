@@ -11,9 +11,15 @@
 //   which are ported to all platforms that we are interested in. Therefore your
 //   code is inherently portable.
 
-//   Native Windows version: switched on by macro _WIN32 which is defined by VC++/Borland/Mingw compilers
-//   Unix/Gnu version:   default variant, no compiler directives are required but _WIN32 must be absent
-//   Cygwin/Gnu version: as Unix version but with additional support for Windows drive letters
+//   Native Windows version: switched on by macro MSWINDOWS which is
+//     enabled in portability_fixes.hpp if _WIN32 is on, which in turn
+//     is defined by default in VC++/Borland/Mingw compilers
+
+//   Unix/Gnu version: default variant, no compiler directives are
+//     required but _WIN32 must be absent
+
+//   Cygwin/Gnu version: as Unix version but with additional support
+//     for Windows drive letters enabled by the CYGWIN compiler directive
 
 ////////////////////////////////////////////////////////////////////////////////
 #include "./file_system.hpp"
@@ -127,7 +133,7 @@ namespace stlplus
     void set_path(const std::vector<std::string>& path) {m_path = path;}
 
     void add_subpath(const std::string& subpath) {m_path.push_back(subpath);}
-    size_t subpath_size(void) const {return m_path.size();}
+    unsigned subpath_size(void) const {return static_cast<unsigned>(m_path.size());}
     const std::string& subpath_element(unsigned i) const {return m_path[i];}
     void subpath_erase(unsigned i) {m_path.erase(m_path.begin()+i);}
 
@@ -231,23 +237,18 @@ namespace stlplus
     unsigned start = i;
     while(i <= spec.size())
     {
-      if (i == spec.size())
+      // check for element terminated by either a separator or the end of the string
+      if ((i == spec.size()) || is_separator(spec[i]))
       {
-        // path element terminated by the end of the string
-        // discard this element if it is zero length because that represents the trailing /
-        if (i != start)
-          m_path.push_back(spec.substr(start, i-start));
-      }
-      else if (is_separator(spec[i]))
-      {
-        // path element terminated by a separator
-        m_path.push_back(spec.substr(start, i-start));
+        // path element found
+        std::string element = spec.substr(start, i-start);
+        m_path.push_back(element);
         start = i+1;
       }
       i++;
     }
     // TODO - some error handling?
-    return true;
+    return simplify();
   }
 
   bool file_specification::initialise_file(const std::string& spec)
@@ -273,7 +274,7 @@ namespace stlplus
 
   bool file_specification::simplify(void)
   {
-    // simplify the path by removing unnecessary . and .. entries - Note that zero-length entries are treated like .
+    // simplify the path by removing unnecessary empty, . and .. entries - Note that zero-length entries are treated like .
     for (unsigned i = 0; i < m_path.size(); )
     {
       if (m_path[i].empty() || m_path[i].compare(".") == 0)
@@ -289,7 +290,6 @@ namespace stlplus
         {
           // up from the root does nothing so can be deleted
           m_path.erase(m_path.begin()+i);
-          i++;
         }
         else if (i == 0 || m_path[i-1].compare("..") == 0)
         {
@@ -299,6 +299,8 @@ namespace stlplus
         else
         {
           // otherwise delete this element and the previous one
+          // TODO - this is unsafe if there is a link in the path, this is a naive algorithm
+          //      - to do it properly need to check each path element for links
           m_path.erase(m_path.begin()+i);
           m_path.erase(m_path.begin()+i-1);
           i--;
@@ -314,9 +316,7 @@ namespace stlplus
 
   bool file_specification::make_absolute(const std::string& root)
   {
-    // test whether already an absolute path in which case there's nothing to do
-    if (absolute()) return true;
-    // now simply call the other version of make_absolute
+    // simply call the other version of make_absolute
     file_specification rootspec;
     rootspec.initialise_folder(root);
     return make_absolute(rootspec);
@@ -325,26 +325,25 @@ namespace stlplus
   bool file_specification::make_absolute(const file_specification& rootspec)
   {
     // test whether already an absolute path in which case there's nothing to do
-    if (absolute()) return true;
-    // initialise the result with the root and make the root absolute
-    file_specification result = rootspec;
-    result.make_absolute();
-    // now append this's relative path and filename to the root's absolute path
-    for (unsigned i = 0; i < subpath_size(); i++)
-      result.add_subpath(subpath_element(i));
-    result.set_file(file());
-    // now the result is the absolute path, so transfer it to this
-    *this = result;
+    if (!absolute())
+    {
+      // initialise the result with the root and make the root absolute
+      file_specification result = rootspec;
+      result.make_absolute();
+      // now append this's relative path and filename to the root's absolute path
+      for (unsigned i = 0; i < subpath_size(); i++)
+        result.add_subpath(subpath_element(i));
+      result.set_file(file());
+      // now the result is the absolute path, so transfer it to this
+      *this = result;
+    }
     // and simplify to get rid of any unwanted .. or . elements
-    simplify();
-    return true;
+    return simplify();
   }
 
   bool file_specification::make_relative(const std::string& root)
   {
-    // test whether already an relative path in which case there's nothing to do
-    if (relative()) return true;
-    // now simply call the other version of make_relative
+    // simply call the other version of make_relative
     file_specification rootspec;
     rootspec.initialise_folder(root);
     return make_relative(rootspec);
@@ -353,31 +352,34 @@ namespace stlplus
   bool file_specification::make_relative(const file_specification& rootspec)
   {
     // test whether already an relative path in which case there's nothing to do
-    if (relative()) return true;
-    // initialise the result with the root and make the root absolute
-    file_specification absolute_root = rootspec;
-    absolute_root.make_absolute();
-    // now compare elements of the absolute root with elements of this to find the common path
-    // if the drives are different, no conversion can take place and the result must be absolute, else clear the drive
-    if (!path_compare(drive(), absolute_root.drive())) return true;
-    set_drive("");
-    // first remove leading elements that are identical to the corresponding element in root
-    unsigned i = 0;
-    while(subpath_size() > 0 && 
-          i < absolute_root.subpath_size() && 
-          path_compare(subpath_element(0), absolute_root.subpath_element(i)))
+    if (!relative())
     {
-      subpath_erase(0);
-      i++;
+      // initialise the result with the root and make the root absolute
+      file_specification absolute_root = rootspec;
+      absolute_root.make_absolute();
+      // now compare elements of the absolute root with elements of this to find the common path
+      // if the drives are different, no conversion can take place and the result must be absolute, else clear the drive
+      if (!path_compare(drive(), absolute_root.drive())) return true;
+      set_drive("");
+      // first remove leading elements that are identical to the corresponding element in root
+      unsigned i = 0;
+      while(subpath_size() > 0 && 
+            i < absolute_root.subpath_size() && 
+            path_compare(subpath_element(0), absolute_root.subpath_element(i)))
+      {
+        subpath_erase(0);
+        i++;
+      }
+      // now add a .. prefix for every element in root that is different from this
+      while (i < absolute_root.subpath_size())
+      {
+        m_path.insert(m_path.begin(), "..");
+        i++;
+      }
+      set_relative();
     }
-    // now add a .. prefix for every element in root that is different from this
-    while (i < absolute_root.subpath_size())
-    {
-      m_path.insert(m_path.begin(), "..");
-      i++;
-    }
-    set_relative();
-    return true;
+    // and simplify to get rid of any unwanted .. or . elements
+    return simplify();
   }
 
   std::string file_specification::image(void) const
@@ -408,8 +410,8 @@ namespace stlplus
 
 // Under both Windows and Unix, the stat function is used for classification
 
-// Under Linux, the following classifications are defined
-// source: Linux man page for stat(2) http://linux.die.net/man/2/stat
+// Under Gnu/Linux, the following classifications are defined
+// source: Gnu/Linux man page for stat(2) http://linux.die.net/man/2/stat
 //   S_IFMT 	0170000	bitmask for the file type bitfields
 //   S_IFSOCK 	0140000	socket (Note this overlaps with S_IFDIR)
 //   S_IFLNK 	0120000	symbolic link
@@ -787,6 +789,8 @@ namespace stlplus
   {
     file_specification spec;
     spec.initialise_folder(directory);
+    // add .. elements for each level to go up, then use simplify
+    // TODO - doesn't work if any of the elements are links
     for (unsigned i = 0; i < levels; i++)
       spec.add_subpath("..");
     spec.simplify();
@@ -884,15 +888,19 @@ namespace stlplus
     // decompose the path and test whether it is already an absolute path, in which case just return it
     file_specification spec;
     spec.initialise_folder(path.empty() ? std::string(".") : path);
-    if (spec.absolute()) return spec.image();
-    // okay, so the path is relative after all, so we need to combine it with the root path
-    // decompose the root path and check whether it is relative
-    file_specification rootspec;
-    rootspec.initialise_folder(root.empty() ? std::string(".") : root);
-    if (rootspec.relative())
-      rootspec.make_absolute();
-    // Now do the conversion of the path relative to the root
-    spec.make_absolute(rootspec);
+    if (spec.relative())
+    {
+      // okay, so the path is relative after all, so we need to combine it with the root path
+      // decompose the root path and check whether it is relative
+      file_specification rootspec;
+      rootspec.initialise_folder(root.empty() ? std::string(".") : root);
+      if (rootspec.relative())
+        rootspec.make_absolute();
+      // Now do the conversion of the path relative to the root
+      spec.make_absolute(rootspec);
+    }
+    // clean up the path
+    spec.simplify();
     return spec.image();
   }
 
@@ -910,6 +918,8 @@ namespace stlplus
       spec.make_absolute();
     // now make path spec relative to the root spec
     spec.make_relative(rootspec);
+    // clean up the path
+    spec.simplify();
     return spec.image();
   }
 
@@ -958,6 +968,21 @@ namespace stlplus
     std::string result = folder;
     if (result.empty() || !is_separator(result[result.size()-1]))
       result += preferred_separator;
+    return result;
+  }
+
+  std::string folder_remove_end_separator(const std::string& folder)
+  {
+    std::string result = folder;
+    // remove the end separator if it is not the only element in the path
+#ifdef MSWINDOWS
+    // allow for the drive letter
+    if (result.size() >= 2 && isalpha(result[0]) && result[1] == ':')
+      if ((result.size() > 3) && is_separator(result[result.size()-1]))
+        result.erase(result.size()-1,1);
+#endif
+    if ((result.size() > 1) && is_separator(result[result.size()-1]))
+      result.erase(result.size()-1,1);
     return result;
   }
 
