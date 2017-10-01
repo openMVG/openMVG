@@ -45,10 +45,10 @@ inline Pair_Set contiguousWithOverlap(const size_t N, const size_t overlapSize)
 }
 
 /// Removes pairs when both indices are contained in matches 
-inline Pair_Set filterAnalyzedPairs(const Pair_Set &pairs, const matching::PairWiseMatches &matches, const size_t N)
+inline Pair_Set filterAnalyzedPairs(const Pair_Set &pairs, const matching::PairWiseMatches &matches)
 {
   Pair_Set filtered_pairs;
-  std::vector<bool> contained(N, false);
+  std::vector<bool> contained(matches.size(), false);
 
   for ( const auto & cur_match : matches ) {
     size_t left = cur_match.first.first;
