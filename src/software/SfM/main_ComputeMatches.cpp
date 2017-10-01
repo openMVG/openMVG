@@ -104,7 +104,7 @@ int main(int argc, char **argv)
       << "[-f|--force] Force to recompute data]\n"
       << "   0: (default) reload previously computed data\n"
       << "   1: force to recompute matches and save them\n"
-      << "   2: compute matches only with views not present in prevously computed matches\n"
+      << "   2: compute matches only with views not present in previously computed matches\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
       << "   0.8: (default).\n"
       << "[-g|--geometric_model]\n"
