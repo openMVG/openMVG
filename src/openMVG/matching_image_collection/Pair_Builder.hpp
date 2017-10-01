@@ -51,8 +51,8 @@ inline Pair_Set filterAnalyzedPairs(const Pair_Set &pairs, const matching::PairW
   std::vector<bool> contained(matches.size(), false);
 
   for ( const auto & cur_match : matches ) {
-    size_t left = cur_match.first.first;
-    size_t right = cur_match.first.second;
+    const IndexT left = cur_match.first.first;
+    const IndexT right = cur_match.first.second;
     contained[left] = true;
     contained[right] = true;
   }
