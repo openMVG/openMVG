@@ -88,7 +88,7 @@ namespace nomoko {
       Eigen::MatrixXf viewDists;
 
       std::vector<std::vector<size_t > > finalClusters;
-      std::vector<std::vector<size_t>> finalBorders;
+      std::vector<std::vector<size_t > > finalBorders;
 
       const float kAngleSigma = M_PI / 6.f;
       const float kAngleSigma_2 = kAngleSigma * kAngleSigma;
