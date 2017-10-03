@@ -248,6 +248,8 @@ int main( int argc, char **argv )
   // export to ply to visualize
   const std::string viewOut = sOutDir + "/views.ply";
   domset.exportToPLY( viewOut );
+  const std::string viewOutBorders = sOutDir + "/viewBorders.ply";
+  domset.exportToPLYBorders( viewOutBorders );
 
   // Retrieve the cluster and export them
   std::vector<std::set<size_t>> finalClusters;

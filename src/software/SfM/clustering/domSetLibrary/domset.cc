@@ -587,6 +587,55 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
     }
   } while ( change );
 
+  // find the borders of each cluster
+  auto findBorders = [&](std::vector<size_t> cluster) {
+    auto center = findCenter(cluster);
+    cluster.erase(std::find(cluster.begin(), cluster.end(), center));
+
+    std::vector<size_t> borders;
+    borders.push_back(center);
+    while (borders.size() <= kNumOverlap) {
+      auto borderView = *std::min_element(cluster.begin(), cluster.end(),
+        [&](size_t a, size_t b) {
+          const auto ref = borders[borders.size() - 1];
+          return S(ref, a) < S(ref,b);
+        });
+      borders.push_back(borderView);
+      cluster.erase(std::find(cluster.begin(), cluster.end(), borderView));
+    }
+    borders.erase(borders.begin());
+    return borders;
+  };
+
+  for (auto cluster1 : clMap) {
+    // find border
+    auto borders = findBorders(cluster1.second);
+
+    // add border views to neighbouring cluster
+    for(auto & c : borders) {
+      /// find nearest cluster to border view
+      float minDist = std::numeric_limits<float>::max();
+      size_t clId = clMap.size();
+      for(auto cluster2 : clMap) {
+        /// skip the same cluster
+        if (cluster1.first == cluster2.first) continue;
+        for(auto i : cluster2.second) {
+          const float dist(
+              viewDists(xId2vId[c], xId2vId[i]));
+          if (dist < minDist) {
+            minDist = dist;
+            clId = cluster2.first;
+          }
+        }
+      }
+      for(auto i : clMap[clId]) std::cout << i << " ";
+      std::cout << "( " << c << ") | ";
+      clMap[clId].push_back(c);
+    }
+    std::cout << std::endl;
+    finalBorders.push_back(borders);
+  }
+
   // adding it to clusters vector
   for ( auto p = clMap.begin(); p != clMap.end(); ++p )
   {
@@ -650,6 +699,51 @@ void Domset::printClusters()
   std::cout << ss.str();
 }
 
+void Domset::exportToPLYBorders( const std::string &plyFilename) {
+  std::stringstream plys;
+  plys << "ply\n"
+       << "format ascii 1.0\n";
+
+  size_t totalPoints= 0;
+  for(auto cl : finalBorders)
+    totalPoints += cl.size();
+  plys << "element vertex "
+       << totalPoints << std::endl
+       << "property float x\n"
+       << "property float y\n"
+       << "property float z\n"
+       << "property uchar red\n"
+       << "property uchar green\n"
+       << "property uchar blue\n"
+       << "end_header\n";
+
+  std::mt19937 gen;
+  std::uniform_int_distribution<> dis(0, 255);
+  for (const auto cl : finalBorders) {
+    const unsigned int
+      red   = dis(gen),
+            green = dis(gen),
+            blue  = dis(gen);
+    for ( const auto id : cl)
+    {
+      const auto & pos = views[ id ].trans;
+      plys
+        << pos( 0 ) << " " << pos( 1 ) << " " << pos( 2 ) << " "
+        << red << " " << green << " " << blue << std::endl;
+    }
+  }
+
+  std::ofstream plyFile( plyFilename );
+  if ( !plyFile.is_open() )
+  {
+    std::cout << "Cant open " << plyFilename << " file\n";
+  }
+  else
+  {
+    plyFile << plys.str();
+    plyFile.close();
+  }
+}
 void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints )
 {
   std::stringstream plys;

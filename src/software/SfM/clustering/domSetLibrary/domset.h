@@ -67,6 +67,7 @@ namespace nomoko {
 
       // export function
       void exportToPLY(const std::string& plyFile, bool exportPoints = false);
+      void exportToPLYBorders(const std::string& plyFile);
 
       const std::vector<std::vector<size_t> >& getClusters() {
         return finalClusters;
@@ -87,11 +88,13 @@ namespace nomoko {
       Eigen::MatrixXf viewDists;
 
       std::vector<std::vector<size_t > > finalClusters;
+      std::vector<std::vector<size_t>> finalBorders;
 
       const float kAngleSigma = M_PI / 6.f;
       const float kAngleSigma_2 = kAngleSigma * kAngleSigma;
       size_t kMinClusterSize = 10;
       size_t kMaxClusterSize = 20;
+      size_t kNumOverlap = 2;
       float kE = 0.01f;
 
       // AP constants
