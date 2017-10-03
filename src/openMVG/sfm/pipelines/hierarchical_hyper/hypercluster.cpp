@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <iostream>
+#include <fstream>
 #include "ceres/rotation.h"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/hypercluster.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/hypergraph_partitioning_scotch.hpp"
