@@ -219,6 +219,7 @@ Canon EOS M;22.3
 Canon PowerShot D20;6.16
 Canon PowerShot S110;7.53
 Canon EOS 5D Mark III;36
+Canon EOS 5D Mark IV;36
 Canon IXUS 125 HS;6.16
 Canon PowerShot SX260 HS;6.16
 Canon IXUS 240 HS;6.16
@@ -2104,6 +2105,9 @@ Olympus C-1400L;8.8
 Olympus D-300L;8.8
 Olympus D-200L;8.8
 Panasonic Lumix DMC-G6;17.3
+Panasonic Lumix DMC-G7;17.3
+Panasonic Lumix DMC-GH4;17.3
+Panasonic Lumix DMC-GH5;17.3
 Panasonic Lumix DMC-LF1;7.53
 Panasonic Lumix DMC-GF6;17.3
 Panasonic Lumix DMC-FH10;6.08
