@@ -591,7 +591,9 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
   auto findBorders = [&](std::vector<size_t> cluster)
   {
     auto center = findCenter(cluster);
-    cluster.erase(std::find(cluster.cbegin(), cluster.cend(), center));
+    std::vector<size_t>::const_iterator centerIt=
+        std::find(cluster.cbegin(), cluster.cend(), center);
+    cluster.erase(centerIt);
 
     std::vector<size_t> borders;
     borders.push_back(center);
@@ -603,7 +605,9 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
           return S(ref, a) < S(ref,b);
         });
       borders.push_back(borderView);
-      cluster.erase(std::find(cluster.cbegin(), cluster.cend(), borderView));
+      std::vector<size_t>::const_iterator borderIt =
+          std::find(cluster.cbegin(), cluster.cend(), borderView);
+      cluster.erase(borderIt);
     }
     borders.erase(borders.begin());
     return borders;
