@@ -40,8 +40,8 @@ void MatchesPointsToMat
   const features::PointFeatures & feature_I,
   const cameras::IntrinsicBase * cam_J,
   const features::PointFeatures & feature_J,
-  Mat & x_I,
-  Mat & x_J
+  Mat2X & x_I,
+  Mat2X & x_J
 );
 
 /**
@@ -59,8 +59,8 @@ void MatchesPairToMat
   const matching::IndMatches & putativeMatches,
   const sfm::SfM_Data * sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
-  Mat & x_I,
-  Mat & x_J
+  Mat2X & x_I,
+  Mat2X & x_J
 );
 
 /**
@@ -78,8 +78,8 @@ void MatchesPairToMat
   const matching::IndMatches & putativeMatches,
   const sfm::SfM_Data * sfm_data,
   const std::shared_ptr<sfm::Features_Provider> & features_provider,
-  Mat & x_I,
-  Mat & x_J
+  Mat2X & x_I,
+  Mat2X & x_J
 );
 
 } //namespace matching_image_collection

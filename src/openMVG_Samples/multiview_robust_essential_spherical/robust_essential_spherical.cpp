@@ -17,8 +17,10 @@
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/solver_essential_spherical.hpp"
+#include "openMVG/multiview/solver_essential_eight_point.hpp"
+#include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
@@ -156,7 +158,7 @@ int main(int argc, char **argv) {
   // Essential geometry filtering of putative matches
   {
     //A. get back interest point and send it to the robust estimation framework
-    Mat
+    Mat2X
       xL(2, vec_PutativeMatches.size()),
       xR(2, vec_PutativeMatches.size());
 
@@ -168,12 +170,8 @@ int main(int argc, char **argv) {
     }
 
     //-- Convert planar to spherical coordinates
-    Mat xL_spherical(3,vec_PutativeMatches.size()), xR_spherical(3,vec_PutativeMatches.size());
-    for (size_t iCol = 0; iCol < vec_PutativeMatches.size(); ++iCol)
-    {
-      xL_spherical.col(iCol) = cameraL(xL.col(iCol));
-      xR_spherical.col(iCol) = cameraR(xR.col(iCol));
-    }
+    Mat xL_spherical = cameraL(xL),
+        xR_spherical = cameraR(xR);
 
     //-- Essential matrix robust estimation from spherical bearing vectors
     {
@@ -182,14 +180,14 @@ int main(int argc, char **argv) {
       // Define the AContrario angular error adaptor
       using KernelType =
         openMVG::robust::ACKernelAdaptor_AngularRadianError<
-          // Use the 8 point solver in order to estimate E
-          openMVG::spherical_cam::EightPointRelativePoseSolver,
-          openMVG::spherical_cam::AngularError,
+          openMVG::EightPointRelativePoseSolver, // Use the 8 point solver in order to estimate E
+          //openMVG::essential::kernel::FivePointSolver, // Use the 5 point solver in order to estimate E
+          openMVG::AngularError,
           Mat3>;
 
       KernelType kernel(xL_spherical, xR_spherical);
 
-      // Robust estimation of the Essential matrix and it's precision
+      // Robust estimation of the Essential matrix and its precision
       Mat3 E;
       const double precision = std::numeric_limits<double>::infinity();
       const std::pair<double,double> ACRansacOut =
@@ -217,12 +215,15 @@ int main(int argc, char **argv) {
       if (vec_inliers.size() > 60) // 60 is used to filter solution with few common geometric matches (unstable solution)
       {
         // Decompose the essential matrix and keep the best solution (if any)
-        Mat3 R;
-        Vec3 t;
+        geometry::Pose3 relative_pose;
         std::vector<uint32_t> inliers_indexes;
         std::vector<Vec3> inliers_X;
-        if (openMVG::sfm::estimate_Rt_fromE(xL_spherical, xR_spherical, E, vec_inliers,
-                                            &R, &t, &inliers_indexes, &inliers_X))
+        if (RelativePoseFromEssential(xL_spherical,
+                                      xR_spherical,
+                                      E, vec_inliers,
+                                      &relative_pose,
+                                      &inliers_indexes,
+                                      &inliers_X))
         {
           // Lets make a BA on the scene to check if it relative pose and structure can be refined
 
@@ -235,7 +236,7 @@ int main(int argc, char **argv) {
 
           // Setup poses camera data
           const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-          const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = Pose3(R, - R.transpose() * t);
+          const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relative_pose;
 
           // Add a new landmark (3D point with its image observations)
           for (int i = 0; i < inliers_indexes.size(); ++i)
@@ -262,11 +263,10 @@ int main(int argc, char **argv) {
             const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose];
             const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose];
 
-            for (Landmarks::const_iterator iter = tiny_scene.GetLandmarks().begin();
-              iter != tiny_scene.GetLandmarks().end(); ++iter)
+            for (const auto landmark_entry : tiny_scene.GetLandmarks())
             {
-              const IndexT trackId = iter->first;
-              const Landmark & landmark = iter->second;
+              const IndexT trackId = landmark_entry.first;
+              const Landmark & landmark = landmark_entry.second;
               const Observations & obs = landmark.obs;
               Observations::const_iterator iterObs_xI = obs.find(tiny_scene.views[0]->id_view);
               Observations::const_iterator iterObs_xJ = obs.find(tiny_scene.views[1]->id_view);
@@ -274,13 +274,13 @@ int main(int argc, char **argv) {
               const Observation & ob_x0 = iterObs_xI->second;
               const Observation & ob_x1 = iterObs_xJ->second;
 
-              const Vec2 residual_I = cameraL.residual(pose0, landmark.X, ob_x0.x);
-              const Vec2 residual_J = cameraR.residual(pose1, landmark.X, ob_x1.x);
-              residuals.push_back(residual_I.norm());
-              residuals.push_back(residual_J.norm());
+              const Vec2 residual_I = cameraL.residual(pose0(landmark.X), ob_x0.x);
+              const Vec2 residual_J = cameraR.residual(pose1(landmark.X), ob_x1.x);
+              residuals.emplace_back(residual_I.norm());
+              residuals.emplace_back(residual_J.norm());
             }
             std::cout << "Residual statistics (pixels):" << std::endl;
-            minMaxMeanMedian<double>( residuals.begin(), residuals.end());
+            minMaxMeanMedian<double>(residuals.cbegin(), residuals.cend());
 
             Save(tiny_scene, "EssentialGeometry_refined.ply", ESfM_Data(ALL));
           }

@@ -51,7 +51,10 @@ bool track_sample_triangulation
 {
   if (samples.size() >= 2 && obs.size() >= 2)
   {
-    Triangulation trian_obj;
+    std::vector<Vec3> bearing;
+    std::vector<Mat34> poses;
+    bearing.reserve(samples.size());
+    poses.reserve(samples.size());
     for (const auto& idx : samples)
     {
       Observations::const_iterator itObs = obs.begin();
@@ -61,13 +64,19 @@ bool track_sample_triangulation
         continue;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      trian_obj.add(
-        cam->get_projective_equivalent(pose),
-        cam->get_ud_pixel(itObs->second.x));
+      bearing.emplace_back((*cam)(cam->get_ud_pixel(itObs->second.x)));
+      poses.emplace_back(pose.asMatrix());
     }
-    if (trian_obj.size() >= 2)
+    if (bearing.size() >= 2)
     {
-      X = trian_obj.compute();
+      const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
+      Vec4 Xhomogeneous;
+      TriangulateNViewAlgebraic
+      (
+        bearing_matrix,
+        poses, // Ps are projective cameras.
+        &Xhomogeneous);
+      X = Xhomogeneous.hnormalized();
       return true;
     }
   }
@@ -108,7 +117,7 @@ const
       {
         // Generate the track 3D hypothesis
         std::set<IndexT> samples;
-        for (int i = 0; i < obs.size(); ++i)  { samples.insert(i); }
+        for (size_t i = 0; i < obs.size(); ++i)  { samples.insert(i); }
         Vec3 X;
         if (track_sample_triangulation(sfm_data, obs, samples, X))
         {
@@ -117,12 +126,12 @@ const
             obs_it != obs.end() && bChierality; ++obs_it)
           {
             const View * view = sfm_data.views.at(obs_it->first).get();
+            const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
-            const double z = pose.depth(X);
-            bChierality &= z > 0;
+            bChierality &= CheiralityTest((*cam)(obs_it->second.x), pose, X);
           }
 
-          if (bChierality) // Keep the point only if it have a positive depth
+          if (bChierality) // Keep the point only if it has a positive depth
           {
             tracks_it.second.X = X;
             bKeep = true;
@@ -264,9 +273,8 @@ const
           continue;
         const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        const double z = pose.depth(X);
-        bChierality &= z > 0;
-        const Vec2 residual = cam->residual(pose, X, itObs->second.x);
+        bChierality &= CheiralityTest((*cam)(itObs->second.x), pose, X);
+        const Vec2 residual = cam->residual(pose(X), itObs->second.x);
         bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
         validity_test_count += (bChierality && bReprojection_error) ? 1 : 0;
       }
@@ -325,9 +333,8 @@ const
         continue;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const double z = pose.depth(X);
-      bChierality &= z > 0;
-      const Vec2 residual = cam->residual(pose, X, itObs->second.x);
+      bChierality &= CheiralityTest((*cam)(itObs->second.x), pose, X);;
+      const Vec2 residual = cam->residual(pose(X), itObs->second.x);
       bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
       validity_test_count += (bChierality && bReprojection_error) ? 1 : 0;
     }
@@ -346,7 +353,7 @@ const
         continue;
       const IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      const Vec2 residual = intrinsic->residual(pose, X, obs_it.second.x);
+      const Vec2 residual = intrinsic->residual(pose(X), obs_it.second.x);
       const double residual_d = residual.squaredNorm();
       if (residual_d < dSquared_pixel_threshold)
       {

@@ -42,7 +42,7 @@ bool computeIndexFromImageNames(
     return false;
   }
 
-  initialPairIndex = Pair(UndefinedIndexT, UndefinedIndexT);
+  initialPairIndex = {UndefinedIndexT, UndefinedIndexT};
 
   /// List views filenames and find the one that correspond to the user ones:
   for (Views::const_iterator it = sfm_data.GetViews().begin();
@@ -129,8 +129,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (i_User_camera_model < PINHOLE_CAMERA ||
-      i_User_camera_model > PINHOLE_CAMERA_FISHEYE )  {
+  if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
   }

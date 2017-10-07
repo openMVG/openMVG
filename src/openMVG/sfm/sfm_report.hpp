@@ -42,7 +42,7 @@ inline bool Generate_SfM_Report
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
       const cameras::IntrinsicBase * intrinsic = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       // Use absolute values
-      const Vec2 residual = intrinsic->residual(pose, iterTracks.second.X, itObs.second.x).array().abs();
+      const Vec2 residual = intrinsic->residual(pose(iterTracks.second.X), itObs.second.x).array().abs();
       residuals_per_view[itObs.first].push_back(residual(0));
       residuals_per_view[itObs.first].push_back(residual(1));
       ++residualCount;
@@ -147,9 +147,9 @@ inline bool Generate_SfM_Report
       os << sFullLine << "SfM Scene RMSE: " << RMSE << sFullLine;
       htmlDocStream.pushInfo(os.str());
 
-      const double maxRange = *max_element(residuals.begin(), residuals.end());
+      const double maxRange = *max_element(residuals.cbegin(), residuals.cend());
       Histogram<double> histo(0.0, maxRange, 100);
-      histo.Add(residuals.begin(), residuals.end());
+      histo.Add(residuals.cbegin(), residuals.cend());
 
       svg::svgHisto svg_Histo;
       svg_Histo.draw(histo.GetHist(), std::pair<float,float>(0.f, maxRange),

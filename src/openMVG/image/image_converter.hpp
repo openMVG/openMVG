@@ -101,7 +101,7 @@ void ConvertPixelType( const ImageIn& imaIn, ImageOut *imaOut )
 * @param scaling factor applied to input color component
 * @tparam Tin Input color type
 * @tparam[out] Tout Output color type
-* @todo Use SFINAE to ensure input type is an intergral one
+* @todo Use SFINAE to ensure input type is an integral one
 * @todo Why not using RGBfColor as output type ?
 */
 template< typename Tin, typename Tout >

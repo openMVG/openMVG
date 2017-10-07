@@ -8,7 +8,6 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/triplet_tijsAndXis_kernel.hpp"
 
-#include "openMVG/multiview/conditioning.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -33,11 +32,19 @@ double TrifocalTensorModel::Error
 )
 {
   // Triangulate
-  Triangulation triangulationObj;
-  triangulationObj.add(t.P1, pt1);
-  triangulationObj.add(t.P2, pt2);
-  triangulationObj.add(t.P3, pt3);
-  const Vec3 X = triangulationObj.compute();
+  const std::vector<Mat34> poses {t.P1, t.P2, t.P3};
+  const std::vector<Vec3> Xs {pt1.homogeneous(),
+                              pt2.homogeneous(),
+                              pt3.homogeneous()};
+  Eigen::Map<const Mat3> bearing_matrix(Xs[0].data());
+
+  Vec4 Xhomogeneous;
+  TriangulateNViewAlgebraic
+  (
+    bearing_matrix,
+    poses, // Ps are projective cameras.
+    &Xhomogeneous);
+  const Vec3 X = Xhomogeneous.hnormalized();
 
   // Return the maximum observed reprojection error
   const double pt1ReProj = (Project(t.P1, X) - pt1).squaredNorm();
@@ -97,10 +104,10 @@ void translations_Triplet_Solver::Solve
     ThresholdUpperBound,
     0.0, 1e-8, 2, &gamma, false))
   {
-    const std::vector<Vec3> vec_tis = {
-      Vec3(vec_solution[0], vec_solution[1], vec_solution[2]),
-      Vec3(vec_solution[3], vec_solution[4], vec_solution[5]),
-      Vec3(vec_solution[6], vec_solution[7], vec_solution[8])};
+    const std::vector<Vec3> vec_tis {
+      {vec_solution[0], vec_solution[1], vec_solution[2]},
+      {vec_solution[3], vec_solution[4], vec_solution[5]},
+      {vec_solution[6], vec_solution[7], vec_solution[8]}};
 
     TrifocalTensorModel PTemp;
     PTemp.P1 = HStack(vec_KR[0], vec_tis[0]);

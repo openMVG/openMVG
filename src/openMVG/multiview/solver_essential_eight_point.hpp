@@ -13,7 +13,6 @@
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
-namespace spherical_cam {
 
 /**
  * Eight-point algorithm for solving for the essential matrix from bearing
@@ -26,9 +25,9 @@ struct EightPointRelativePoseSolver {
   enum { MAX_MODELS = 1 };
   static void Solve
   (
-    const Mat &x1,
-    const Mat &x2,
-    std::vector<Mat3> *pvec_E
+    const Mat3X & x1,
+    const Mat3X & x2,
+    std::vector<Mat3> * pvec_E
   );
 };
 
@@ -37,40 +36,12 @@ struct AngularError
 {
   static double Error
   (
-    const Mat3 &model,
-    const Vec3 &x1,
-    const Vec3 &x2
+    const Mat3 & model,
+    const Vec3 & x1,
+    const Vec3 & x2
   );
 };
 
-class EssentialKernel_spherical
-{
-public:
-  typedef Mat3 Model;
-  enum { MINIMUM_SAMPLES = EightPointRelativePoseSolver::MINIMUM_SAMPLES };
-
-  EssentialKernel_spherical(const Mat &x1, const Mat &x2);
-
-  void Fit
-  (
-    const std::vector<size_t> &samples,
-    std::vector<Model> *models
-  ) const;
-
-  size_t NumSamples() const;
-
-  /// Return the angular error (between 0 and PI/2)
-  double Error
-  (
-    size_t sample,
-    const Model &model
-  ) const;
-
-  protected:
-  const Mat & x1_, & x2_;
-};
-
-} // namespace spherical_cam
 } // namespace openMVG
 
 #endif  // OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_SPHERICAL_HPP

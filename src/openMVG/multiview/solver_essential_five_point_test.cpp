@@ -28,16 +28,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/essential.hpp"
+#include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/numeric/numeric.h"
 
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/multiview/triangulation.hpp"
+
 #include "testing/testing.h"
 
 #include <iostream>
+#include <random>
 
 using namespace openMVG;
+using namespace openMVG::sfm;
 
 struct TestData {
   //-- Dataset that encapsulate :
@@ -69,7 +75,6 @@ TestData SomeTestData() {
 
   d.R = RotationAroundZ(0.3) * RotationAroundX(0.1) * RotationAroundY(0.2);
   d.t.setRandom();
-  //d.t(1)  = 10;
 
   EssentialFromRt(Mat3::Identity(), Vec3::Zero(), d.R, d.t, &d.E);
 
@@ -86,18 +91,19 @@ TEST(FivePointsNullspaceBasis, SatisfyEpipolarConstraint) {
 
   const TestData d = SomeTestData();
 
-  Mat E_basis = FivePointsNullspaceBasis(d.x1, d.x2);
+  const Mat E_basis = FivePointsNullspaceBasis(d.x1.colwise().homogeneous(),
+                                               d.x2.colwise().homogeneous());
 
-  for (int s = 0; s < 4; ++s) {
+  for (const int s : {0, 1, 2, 3}) {
     Mat3 E;
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) {
+    for (const int i : {0, 1, 2}) {
+      for (const int j : {0, 1, 2}) {
         E(i, j) = E_basis(3 * i + j, s);
       }
     }
     for (int i = 0; i < d.x1.cols(); ++i) {
-      Vec3 x1(d.x1(0,i), d.x1(1,i), 1);
-      Vec3 x2(d.x2(0,i), d.x2(1,i), 1);
+      const Vec3 x1(d.x1(0,i), d.x1(1,i), 1);
+      const Vec3 x2(d.x2(0,i), d.x2(1,i), 1);
       EXPECT_NEAR(0, x2.dot(E * x1), 1e-6);
     }
   }
@@ -129,14 +135,17 @@ double EvalPolynomial(Vec p, double x, double y, double z) {
 TEST(o1, Evaluation) {
 
   Vec p1 = Vec::Zero(20), p2 = Vec::Zero(20);
-  p1(coef_x) = double(rand()) / RAND_MAX;
-  p1(coef_y) = double(rand()) / RAND_MAX;
-  p1(coef_z) = double(rand()) / RAND_MAX;
-  p1(coef_1) = double(rand()) / RAND_MAX;
-  p2(coef_x) = double(rand()) / RAND_MAX;
-  p2(coef_y) = double(rand()) / RAND_MAX;
-  p2(coef_z) = double(rand()) / RAND_MAX;
-  p2(coef_1) = double(rand()) / RAND_MAX;
+  std::mt19937 gen(std::mt19937::default_seed);
+  std::uniform_real_distribution<double> dis(0, 1);
+
+  p1(coef_x) = dis(gen);
+  p1(coef_y) = dis(gen);
+  p1(coef_z) = dis(gen);
+  p1(coef_1) = dis(gen);
+  p2(coef_x) = dis(gen);
+  p2(coef_y) = dis(gen);
+  p2(coef_z) = dis(gen);
+  p2(coef_1) = dis(gen);
 
   Vec p3 = o1(p1, p2);
 
@@ -154,20 +163,22 @@ TEST(o1, Evaluation) {
 TEST(o2, Evaluation) {
 
   Vec p1 = Vec::Zero(20), p2 = Vec::Zero(20);
-  p1(coef_xx) = double(rand()) / RAND_MAX;
-  p1(coef_xy) = double(rand()) / RAND_MAX;
-  p1(coef_xz) = double(rand()) / RAND_MAX;
-  p1(coef_yy) = double(rand()) / RAND_MAX;
-  p1(coef_yz) = double(rand()) / RAND_MAX;
-  p1(coef_zz) = double(rand()) / RAND_MAX;
-  p1(coef_x)  = double(rand()) / RAND_MAX;
-  p1(coef_y)  = double(rand()) / RAND_MAX;
-  p1(coef_z)  = double(rand()) / RAND_MAX;
-  p1(coef_1)  = double(rand()) / RAND_MAX;
-  p2(coef_x)  = double(rand()) / RAND_MAX;
-  p2(coef_y)  = double(rand()) / RAND_MAX;
-  p2(coef_z)  = double(rand()) / RAND_MAX;
-  p2(coef_1)  = double(rand()) / RAND_MAX;
+  std::mt19937 gen(std::mt19937::default_seed);
+  std::uniform_real_distribution<double> dis(0, 1);
+  p1(coef_xx) = dis(gen);
+  p1(coef_xy) = dis(gen);
+  p1(coef_xz) = dis(gen);
+  p1(coef_yy) = dis(gen);
+  p1(coef_yz) = dis(gen);
+  p1(coef_zz) = dis(gen);
+  p1(coef_x)  = dis(gen);
+  p1(coef_y)  = dis(gen);
+  p1(coef_z)  = dis(gen);
+  p1(coef_1)  = dis(gen);
+  p2(coef_x)  = dis(gen);
+  p2(coef_y)  = dis(gen);
+  p2(coef_z)  = dis(gen);
+  p2(coef_1)  = dis(gen);
 
   Vec p3 = o2(p1, p2);
 
@@ -194,42 +205,50 @@ TEST(o2, Evaluation) {
 
 TEST(FivePointsRelativePose, Random) {
 
-  TestData d = SomeTestData();
+  const TestData d = SomeTestData();
 
-  std::vector<Mat3> Es, Rs;
-  std::vector<Vec3> ts;
-  FivePointsRelativePose(d.x1, d.x2, &Es);
+  std::vector<Mat3> Es;
+  FivePointsRelativePose(d.x1.colwise().homogeneous(),
+                         d.x2.colwise().homogeneous(),
+                         &Es);
 
-  // Recover rotation and translation from E
-  Rs.resize(Es.size());
-  ts.resize(Es.size());
+  // Recover the relative pose from E.
+  std::vector<geometry::Pose3> relative_poses;
   for (size_t s = 0; s < Es.size(); ++s) {
-    Vec2 x1Col = d.x1.col(0);
-    Vec2 x2Col = d.x2.col(0);
-    CHECK(
-      MotionFromEssentialAndCorrespondence(Es[s],
-                                         Mat3::Identity(),
-                                         x1Col,
-                                         Mat3::Identity(),
-                                         x2Col,
-                                         &Rs[s],
-                                         &ts[s]));
+
+    // Check that E holds the essential matrix constraints.
+    EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[s], 1e-8);
+
+    std::vector<uint32_t> index(d.x1.cols());
+    std::iota(index.begin(), index.end(), 0);
+    geometry::Pose3 relative_pose;
+    if(RelativePoseFromEssential(
+      d.x1.colwise().homogeneous(),
+      d.x2.colwise().homogeneous(),
+      Es[s],
+      index,
+      &relative_pose))
+    {
+      relative_poses.push_back(relative_pose);
+    }
   }
+  CHECK(!relative_poses.empty());
 
   bool bsolution_found = false;
-  for (size_t i = 0; i < Es.size(); ++i) {
+  for (size_t i = 0; i < relative_poses.size(); ++i) {
 
     // Check that we find the correct relative orientation.
-    if (FrobeniusDistance(d.R, Rs[i]) < 1e-3
-        && (d.t / d.t.norm() - ts[i] / ts[i].norm()).norm() < 1e-3 ) {
-      bsolution_found = true;
-      // Check that E holds the essential matrix constraints.
-      EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[i], 1e-8);
+    if (FrobeniusDistance(d.R, relative_poses[i].rotation()) < 1e-3
+      && (d.t / d.t.norm()
+          - relative_poses[i].translation()
+            / relative_poses[i].translation().norm()).norm() < 1e-3 ) {
+        bsolution_found = true;
     }
   }
   //-- Almost one solution must find the correct relative orientation
   CHECK(bsolution_found);
 }
+
 
 TEST(FivePointsRelativePose, test_data_sets) {
 
@@ -239,27 +258,37 @@ TEST(FivePointsRelativePose, test_data_sets) {
     nViewDatasetConfigurator(1,1,0,0,5,0)); // Suppose a camera with Unit matrix as K
 
   // Compute pose [R|t] from 0 to [1;..;iNviews]
-  for (int i=1; i <iNviews; ++i)
+  for (int i=1; i < iNviews; ++i)
   {
-    std::vector<Mat3> Es, Rs;  // Essential, Rotation matrix.
-    std::vector<Vec3> ts;      // Translation matrix.
-    FivePointsRelativePose(d._x[0], d._x[i], &Es);
+    std::vector<Mat3> Es;  // Essential matrices.
+    const Mat3X bearing0 = d._K[0].inverse() * d._x[0].colwise().homogeneous();
+    const Mat3X bearingI = d._K[i].inverse() * d._x[i].colwise().homogeneous();
+    FivePointsRelativePose(bearing0,
+                           bearingI,
+                           &Es);
+    CHECK(!Es.empty());
 
-    // Recover rotation and translation from E.
-    Rs.resize(Es.size());
-    ts.resize(Es.size());
+    // Recover the relative pose from E.
+    std::vector<geometry::Pose3> relative_poses;
     for (size_t s = 0; s < Es.size(); ++s) {
-      Vec2 x1Col = d._x[0].col(0);
-      Vec2 x2Col = d._x[i].col(0);
-      CHECK(
-        MotionFromEssentialAndCorrespondence(Es[s],
-        d._K[0],
-        x1Col,
-        d._K[i],
-        x2Col,
-        &Rs[s],
-        &ts[s]));
+
+      // Check that E holds the essential matrix constraints.
+      EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[s], 1e-8);
+      std::vector<uint32_t> index(d._x[0].cols());
+      std::iota(index.begin(), index.end(), 0);
+      geometry::Pose3 relative_pose;
+      if (RelativePoseFromEssential(
+        bearing0,
+        bearingI,
+        Es[s],
+        index,
+        &relative_pose))
+      {
+        relative_poses.push_back(relative_pose);
+      }
     }
+
+    CHECK(!relative_poses.empty());
     //-- Compute Ground Truth motion
     Mat3 R;
     Vec3 t;
@@ -267,14 +296,13 @@ TEST(FivePointsRelativePose, test_data_sets) {
 
     // Assert that found relative motion is correct for almost one model.
     bool bsolution_found = false;
-    for (size_t nModel = 0; nModel < Es.size(); ++nModel) {
-
-      // Check that E holds the essential matrix constraints.
-      EXPECT_ESSENTIAL_MATRIX_PROPERTIES(Es[nModel], 1e-8);
+    for (size_t nModel = 0; nModel < relative_poses.size(); ++nModel) {
 
       // Check that we find the correct relative orientation.
-      if (FrobeniusDistance(R, Rs[nModel]) < 1e-3
-        && (t / t.norm() - ts[nModel] / ts[nModel].norm()).norm() < 1e-3 ) {
+      if (FrobeniusDistance(R, relative_poses[nModel].rotation()) < 1e-3
+        && (t / t.norm()
+            - relative_poses[nModel].translation()
+              / relative_poses[nModel].translation().norm()).norm() < 1e-3 ) {
           bsolution_found = true;
       }
     }

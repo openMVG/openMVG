@@ -19,7 +19,7 @@ template <class Archive>
 void openMVG::sfm::Observation::save( Archive & ar) const
 {
   ar(cereal::make_nvp("id_feat", id_feat ));
-  const std::vector<double> pp = { x(0), x(1) };
+  const std::vector<double> pp { x(0), x(1) };
   ar(cereal::make_nvp("x", pp));
 }
 
@@ -36,7 +36,7 @@ void openMVG::sfm::Observation::load( Archive & ar)
 template <class Archive>
 void openMVG::sfm::Landmark::save( Archive & ar) const
 {
-  const std::vector<double> point = { X(0), X(1), X(2) };
+  const std::vector<double> point { X(0), X(1), X(2) };
   ar(cereal::make_nvp("X", point ));
   ar(cereal::make_nvp("observations", obs));
 }

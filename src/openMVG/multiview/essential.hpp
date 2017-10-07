@@ -30,9 +30,8 @@
 #ifndef OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 #define OPENMVG_MULTIVIEW_ESSENTIAL_HPP
 
-#include <vector>
-
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/geometry/pose3.hpp"
 
 namespace openMVG
 {
@@ -96,57 +95,17 @@ void FundamentalFromEssential( const Mat3 &E,
                                const Mat3 &K2,
                                Mat3 *F );
 
-
 /**
-* @brief Test the possible R|t configuration to have point in front of the cameras
-* @param E Essential matrix
-* @param K1 First camera intrinsic matrix
-* @param x1 Point in first camera
-* @param K2 Second camera intrinsic matrix
-* @param[out] R Rotation matrix of a valid motion
-* @param[out] t Translation vector of a valid motion
-* @retval true if a valid configuration could be found
-* @retval false if no possible configuration
-*/
-bool MotionFromEssentialAndCorrespondence( const Mat3 &E,
-    const Mat3 &K1,
-    const Vec2 &x1,
-    const Mat3 &K2,
-    const Vec2 &x2,
-    Mat3 *R,
-    Vec3 *t );
-
-/**
-* @brief Choose one of the four possible motion solutions from an essential matrix.
-* Decides the right solution by checking that the triangulation of a match
-* x1--x2 lies in front of the cameras.
-* @param Rs The four possible rotations
-* @param ts The four possible translation
-* @param K1 Intrinsic of the first camera
-* @param x1 Point in first camera
-* @param K2 Intrinsic of the second camera
-* @param x2 Point in second camera
-* @retval -1 if no valid motion is correct
-* @return the index of the right solution
-*/
-int MotionFromEssentialChooseSolution( const std::vector<Mat3> &Rs,
-                                       const std::vector<Vec3> &ts,
-                                       const Mat3 &K1,
-                                       const Vec2 &x1,
-                                       const Mat3 &K2,
-                                       const Vec2 &x2 );
-
-/**
- * @brief Given an essential matrix computes the four possible motions
+ * @brief Given an essential matrix computes the 2 rotations and the 2 translations
+ * that can generate four possible motions.
  * @param E Essential matrix
- * @param[out] Rs The four possible rotation
- * @param[out] ts The four possible translation
+ * @param[out] relative_poses The 4 possible relative poses
  * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
  * @see HZ 9.7 page 259 (Result 9.19)
  */
-void MotionFromEssential( const Mat3 &E,
-                          std::vector<Mat3> *Rs,
-                          std::vector<Vec3> *ts );
+void MotionFromEssential(
+  const Mat3 &E,
+  std::vector<geometry::Pose3> * relative_poses );
 
 
 } // namespace openMVG
