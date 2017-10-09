@@ -378,7 +378,7 @@ int main(int argc, char **argv)
           std::cerr << "Cannot load input matches file, recompute all.";
         } else {
           // removes pairs containing views already matched
-          pairs = filterAnalyzedPairs(pairs, map_PutativesMatches, sfm_data.GetViews().size());   // code in Pair_Builder.hpp
+          pairs = filterAnalyzedPairs(pairs, map_PutativesMatches);   // code in Pair_Builder.hpp
         }
       }
 
