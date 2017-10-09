@@ -25,6 +25,16 @@ AKAZE_Image_describer_SURF::Describe_AKAZE_SURF
   akaze.Feature_Detection(kpts);
   akaze.Do_Subpixel_Refinement(kpts);
 
+  // Feature masking (remove keypoints if they are masked)
+  kpts.erase(std::remove_if(kpts.begin(),
+                            kpts.end(),
+                            [&](const AKAZEKeypoint & pt)
+                            {
+                              if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
+                            }),
+             kpts.end());
+
   // will be automatically deleted if something goes wrong
   auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
@@ -35,13 +45,6 @@ AKAZE_Image_describer_SURF::Describe_AKAZE_SURF
   #endif
   for (int i = 0; i<static_cast<int>(kpts.size()); ++i) {
     AKAZEKeypoint ptAkaze = kpts[i];
-
-    // Feature masking
-    if (mask) {
-      const image::Image<unsigned char>& maskIma = *mask;
-      if (maskIma(ptAkaze.y, ptAkaze.x)==0)
-        continue;
-    }
 
     const TEvolution& cur_slice = akaze.getSlices()[ptAkaze.class_id];
 
@@ -76,6 +79,16 @@ AKAZE_Image_describer_LIOP::Describe_AKAZE_LIOP
   akaze.Feature_Detection(kpts);
   akaze.Do_Subpixel_Refinement(kpts);
 
+  // Feature masking (remove keypoints if they are masked)
+  kpts.erase(std::remove_if(kpts.begin(),
+                            kpts.end(),
+                            [&](const AKAZEKeypoint & pt)
+                            {
+                              if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
+                            }),
+             kpts.end());
+
   // will be automatically deleted if something goes wrong
   auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
@@ -89,13 +102,6 @@ AKAZE_Image_describer_LIOP::Describe_AKAZE_LIOP
   #endif
   for (int i = 0; i<static_cast<int>(kpts.size()); ++i) {
     AKAZEKeypoint ptAkaze = kpts[i];
-
-    // Feature masking
-    if (mask) {
-      const image::Image<unsigned char>& maskIma = *mask;
-      if (maskIma(ptAkaze.y, ptAkaze.x)>0)
-        continue;
-    }
 
     const TEvolution& cur_slice = akaze.getSlices()[ptAkaze.class_id];
 
@@ -111,8 +117,7 @@ AKAZE_Image_describer_LIOP::Describe_AKAZE_LIOP
     //  LIOP descriptor is rotation invariant).
     // Rescale for LIOP patch extraction
     const SIOPointFeature fp =
-      SIOPointFeature(ptAkaze.x, ptAkaze.y,
-        ptAkaze.size/2.0, ptAkaze.angle);
+      SIOPointFeature(ptAkaze.x, ptAkaze.y, ptAkaze.size/2.0, ptAkaze.angle);
 
     float desc[144];
     liop_extractor.extract(image, fp, desc);
@@ -139,6 +144,16 @@ AKAZE_Image_describer_MLDB::Describe_AKAZE_MLDB
   akaze.Feature_Detection(kpts);
   akaze.Do_Subpixel_Refinement(kpts);
 
+  // Feature masking (remove keypoints if they are masked)
+  kpts.erase(std::remove_if(kpts.begin(),
+                            kpts.end(),
+                            [&](const AKAZEKeypoint & pt)
+                            {
+                              if (mask) return (*mask)(pt.y, pt.x) == 0;
+                              else return false;
+                            }),
+             kpts.end());
+
   // will be automatically deleted if something goes wrong
   auto regions = std::unique_ptr<Regions_type>(new Regions_type);
   regions->Features().resize(kpts.size());
@@ -149,13 +164,6 @@ AKAZE_Image_describer_MLDB::Describe_AKAZE_MLDB
   #endif
   for (int i = 0; i<static_cast<int>(kpts.size()); ++i) {
     AKAZEKeypoint ptAkaze = kpts[i];
-
-    // Feature masking
-    if (mask) {
-      const image::Image<unsigned char>& maskIma = *mask;
-      if (maskIma(ptAkaze.y, ptAkaze.x)>0)
-        continue;
-    }
 
     const TEvolution& cur_slice = akaze.getSlices()[ptAkaze.class_id];
 

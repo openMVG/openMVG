@@ -9,11 +9,8 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_TRIANGULATION_HPP
 
-#include <limits>
-#include <utility>
-#include <vector>
-
-#include "openMVG/numeric/numeric.h"
+#include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 //--
 //- Implementation of algorithm from Paper titled :
@@ -29,8 +26,6 @@
 namespace openMVG   {
 namespace lInfinityCV  {
 
-using namespace linearProgramming;
-
 //-- Triangulation
 //    - Estimation of X from Pi and xij
 // [1] -> 5.1 The triangulation problem
@@ -38,46 +33,17 @@ using namespace linearProgramming;
 //    - This implementation Use L1 norm instead of the L2 norm of
 //      the paper, it allows to use standard standard LP
 //      (simplex) instead of using SOCP (second order cone programming).
-//      Implementation by Pierre Moulon
 //
 
-inline void EncodeTriangulation(
+void EncodeTriangulation
+(
   const std::vector<Mat34> & Pi, // Projection matrices
   const Mat2X & x_ij, // corresponding observations
   double gamma, // Start upper bound
-  Mat & A, Vec & C)
-{
-  // Build A, C matrix.
+  Mat & A,
+  Vec & C
+);
 
-  const size_t nbCamera = Pi.size();
-  A.resize(5*nbCamera,3);
-  C.resize(5*nbCamera,1);
-
-  int cpt = 0;
-  for (size_t i = 0; i < nbCamera; ++i)
-  {
-    const Mat3 R = Pi[i].block<3,3>(0,0);
-    const Vec3 t = Pi[i].block<3,1>(0,3);
-    const Mat2X pt = x_ij.col(i);
-
-    // A (Rotational part):
-    A.block<1,3>(cpt,0)   = R.row(0) - pt(0) * R.row(2) - gamma * R.row(2);
-    A.block<1,3>(cpt+1,0) = R.row(1) - pt(1) * R.row(2) - gamma * R.row(2);
-    A.block<1,3>(cpt+2,0) = - R.row(2);
-    A.block<1,3>(cpt+3,0) = - R.row(0) + pt(0) * R.row(2) - gamma * R.row(2);
-    A.block<1,3>(cpt+4,0) = - R.row(1) + pt(1) * R.row(2) - gamma * R.row(2);
-
-    // C (translation part):
-    C(cpt)   = - t(0) + pt(0) * t(2) + gamma * t(2);
-    C(cpt+1) = - t(1) + pt(1) * t(2) + gamma * t(2);
-    C(cpt+2) = t(2);
-    C(cpt+3) = t(0) - pt(0) * t(2) + gamma * t(2);
-    C(cpt+4) = t(1) - pt(1) * t(2) + gamma * t(2);
-
-    //- Next entry
-    cpt += 5;
-  }
-}
 
 /// Kernel that set Linear constraints for the Triangulation Problem.
 ///  Designed to be used with bisectionLP and LP_Solver interface.
@@ -92,33 +58,14 @@ struct Triangulation_L1_ConstraintBuilder
   (
     const std::vector<Mat34> & vec_Pi,
     const Mat2X & x_ij
-  )
-  : vec_Pi_(vec_Pi),
-    x_ij_(x_ij)
-  {
-
-  }
+  );
 
   /// Setup constraints of the triangulation problem as a Linear program
-  bool Build(double gamma, LP_Constraints & constraint)
-  {
-    EncodeTriangulation(vec_Pi_, x_ij_,
-      gamma,
-      constraint.constraint_mat_,
-      constraint.constraint_objective_);
-    //-- Setup additional information about the Linear Program constraint
-    // We look for 3 variables [X,Y,Z] with no bounds.
-    // Constraint sign are all less or equal (<=)
-    constraint.nbParams_ = 3;
-    constraint.vec_bounds_ = {{std::numeric_limits<double>::lowest(),
-                               std::numeric_limits<double>::max()}};
-    // Setup constraint sign
-    constraint.vec_sign_.resize(constraint.constraint_mat_.rows());
-    fill(constraint.vec_sign_.begin(), constraint.vec_sign_.end(),
-      LP_Constraints::LP_LESS_OR_EQUAL);
-
-    return true;
-  }
+  bool Build
+  (
+    double gamma,
+    linearProgramming::LP_Constraints & constraint
+  );
 
   //-- Data required for triangulation :
   std::vector<Mat34> vec_Pi_;  // Projection matrix

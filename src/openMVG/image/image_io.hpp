@@ -12,7 +12,7 @@
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_converter.hpp"
 
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
 namespace openMVG

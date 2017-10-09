@@ -50,8 +50,6 @@ struct GeometricFilter_EMatrix_AC
     const matching::IndMatches & vec_PutativeMatches,
     matching::IndMatches & geometric_inliers)
   {
-    using namespace openMVG;
-    using namespace openMVG::robust;
     geometric_inliers.clear();
 
     // Get back corresponding view index
@@ -91,7 +89,7 @@ struct GeometricFilter_EMatrix_AC
 
     // Define the AContrario adapted Essential matrix solver
     using KernelType =
-      ACKernelAdaptorEssential<
+      openMVG::robust::ACKernelAdaptorEssential<
         openMVG::essential::kernel::FivePointKernel,
         openMVG::fundamental::kernel::EpipolarDistanceError,
         Mat3>;
@@ -108,7 +106,7 @@ struct GeometricFilter_EMatrix_AC
     const double upper_bound_precision = Square(m_dPrecision);
     std::vector<uint32_t> vec_inliers;
     const std::pair<double,double> ACRansacOut =
-      ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
+      openMVG::robust::ACRANSAC(kernel, vec_inliers, m_stIteration, &m_E, upper_bound_precision);
 
     if (vec_inliers.size() > KernelType::MINIMUM_SAMPLES *2.5)  {
       m_dPrecision_robust = ACRansacOut.first;
@@ -163,8 +161,9 @@ struct GeometricFilter_EMatrix_AC
       Mat3 F;
       FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
 
-      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
-      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+      const std::shared_ptr<features::Regions>
+        regionsI = regions_provider->get(iIndex),
+        regionsJ = regions_provider->get(jIndex);
 
       geometry_aware::GuidedMatching
         <Mat3,

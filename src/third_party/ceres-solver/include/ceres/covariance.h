@@ -200,19 +200,28 @@ class CovarianceImpl;
 class CERES_EXPORT Covariance {
  public:
   struct CERES_EXPORT Options {
-    Options()
-#ifndef CERES_NO_SUITESPARSE
-        : algorithm_type(SUITE_SPARSE_QR),
-#else
-        : algorithm_type(EIGEN_SPARSE_QR),
+    Options() {
+      algorithm_type = SPARSE_QR;
+
+      // Eigen's QR factorization is always available.
+      sparse_linear_algebra_library_type = EIGEN_SPARSE;
+#if !defined(CERES_NO_SUITESPARSE)
+      sparse_linear_algebra_library_type = SUITE_SPARSE;
 #endif
-          min_reciprocal_condition_number(1e-14),
-          null_space_rank(0),
-          num_threads(1),
-          apply_loss_function(true) {
+
+      min_reciprocal_condition_number = 1e-14;
+      null_space_rank = 0;
+      num_threads = 1;
+      apply_loss_function = true;
     }
 
-    // Ceres supports three different algorithms for covariance
+    // Sparse linear algebra library to use when a sparse matrix
+    // factorization is being used to compute the covariance matrix.
+    //
+    // Currently this only applies to SPARSE_QR.
+    SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
+
+    // Ceres supports two different algorithms for covariance
     // estimation, which represent different tradeoffs in speed,
     // accuracy and reliability.
     //
@@ -229,22 +238,19 @@ class CERES_EXPORT Covariance {
     //    for small to moderate sized problems. It can handle
     //    full-rank as well as rank deficient Jacobians.
     //
-    // 2. EIGEN_SPARSE_QR uses the sparse QR factorization algorithm
-    //    in Eigen to compute the decomposition
+    // 2. SPARSE_QR uses the sparse QR factorization algorithm
+    //    to compute the decomposition
     //
     //      Q * R = J
     //
     //    [J'J]^-1 = [R*R']^-1
     //
-    //    It is a moderately fast algorithm for sparse matrices.
-    //
-    // 3. SUITE_SPARSE_QR uses the SuiteSparseQR sparse QR
-    //    factorization algorithm. It uses dense linear algebra and is
-    //    multi threaded, so for large sparse sparse matrices it is
-    //    significantly faster than EIGEN_SPARSE_QR.
-    //
-    // Neither EIGEN_SPARSE_QR not SUITE_SPARSE_QR are capable of
-    // computing the covariance if the Jacobian is rank deficient.
+    // SPARSE_QR is not capable of computing the covariance if the
+    // Jacobian is rank deficient. Depending on the value of
+    // Covariance::Options::sparse_linear_algebra_library_type, either
+    // Eigen's Sparse QR factorization algorithm will be used or
+    // SuiteSparse's high performance SuiteSparseQR algorithm will be
+    // used.
     CovarianceAlgorithmType algorithm_type;
 
     // If the Jacobian matrix is near singular, then inverting J'J
@@ -270,7 +276,7 @@ class CERES_EXPORT Covariance {
     //    where min_sigma and max_sigma are the minimum and maxiumum
     //    singular values of J respectively.
     //
-    // 2. SUITE_SPARSE_QR and EIGEN_SPARSE_QR
+    // 2. SPARSE_QR
     //
     //      rank(J) < num_col(J)
     //

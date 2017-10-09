@@ -38,7 +38,7 @@ The implementation is based on
         http://www.ipol.im/pub/algo/rd_anatomy_sift/
 
 Changes are:
-- The hierarchical scale space code can be run on it's own,
+- The hierarchical scale space code can be run on its own,
 - Keypoint detection and description is split in two separate modules,
 - the code can run per Octave (less memory consuming),
 - some computation can be run in parallel.
@@ -99,11 +99,12 @@ public:
     bool root_sift_;        // see [1]
   };
 
-  SIFT_Anatomy_Image_describer
+  explicit SIFT_Anatomy_Image_describer
   (
-    const Params params = Params()
-  )
-  :Image_describer(), params_(params)
+    const Params & params = Params()
+  ):
+    Image_describer(),
+    params_(params)
   {}
 
 
@@ -145,7 +146,6 @@ public:
     // compute sift keypoints
     auto regions = std::unique_ptr<Regions_type>(new Regions_type);
     {
-      using namespace openMVG::features::sift;
       const int supplementary_images = 3;
       // => in order to ensure each gaussian slice is used in the process 3 extra images are required:
       // +1 for dog computation
@@ -159,19 +159,19 @@ public:
         : GaussianScaleSpaceParams(1.6f, 1.0f, 0.5f, supplementary_images));
       octave_gen.SetImage( If );
 
-      std::vector<Keypoint> keypoints;
+      std::vector<sift::Keypoint> keypoints;
       keypoints.reserve(5000);
       Octave octave;
       while ( octave_gen.NextOctave( octave ) )
       {
-        std::vector< Keypoint > keys;
+        std::vector<sift::Keypoint> keys;
         // Find Keypoints
-        SIFT_KeypointExtractor keypointDetector(
+        sift::SIFT_KeypointExtractor keypointDetector(
           params_.peak_threshold_ / octave_gen.NbSlice(),
           params_.edge_threshold_);
         keypointDetector(octave, keys);
         // Find Keypoints orientation and compute their description
-        Sift_DescriptorExtractor descriptorExtractor;
+        sift::Sift_DescriptorExtractor descriptorExtractor;
         descriptorExtractor(octave, keys);
 
         // Concatenate the found keypoints

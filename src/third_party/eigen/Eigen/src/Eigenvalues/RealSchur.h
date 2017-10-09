@@ -248,12 +248,24 @@ template<typename MatrixType>
 template<typename InputType>
 RealSchur<MatrixType>& RealSchur<MatrixType>::compute(const EigenBase<InputType>& matrix, bool computeU)
 {
+  const Scalar considerAsZero = (std::numeric_limits<Scalar>::min)();
+
   eigen_assert(matrix.cols() == matrix.rows());
   Index maxIters = m_maxIters;
   if (maxIters == -1)
     maxIters = m_maxIterationsPerRow * matrix.rows();
 
   Scalar scale = matrix.derived().cwiseAbs().maxCoeff();
+  if(scale<considerAsZero)
+  {
+    m_matT.setZero(matrix.rows(),matrix.cols());
+    if(computeU)
+      m_matU.setIdentity(matrix.rows(),matrix.cols());
+    m_info = Success;
+    m_isInitialized = true;
+    m_matUisUptodate = computeU;
+    return *this;
+  }
 
   // Step 1. Reduce to Hessenberg form
   m_hess.compute(matrix.derived()/scale);

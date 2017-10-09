@@ -52,4 +52,3 @@ void openMVG::sfm::Landmark::load( Archive & ar)
 }
 
 #endif // OPENMVG_SFM_SFM_LANDMARK_IO_HPP
-

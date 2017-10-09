@@ -108,7 +108,9 @@ class AutoDiffScalar
     template<typename OtherDerType>
     AutoDiffScalar(const AutoDiffScalar<OtherDerType>& other
 #ifndef EIGEN_PARSED_BY_DOXYGEN
-    , typename internal::enable_if<internal::is_same<Scalar, typename internal::traits<typename internal::remove_all<OtherDerType>::type>::Scalar>::value,void*>::type = 0
+    , typename internal::enable_if<
+            internal::is_same<Scalar, typename internal::traits<typename internal::remove_all<OtherDerType>::type>::Scalar>::value
+        &&  internal::is_convertible<OtherDerType,DerType>::value , void*>::type = 0
 #endif
     )
       : m_value(other.value()), m_derivatives(other.derivatives())
@@ -680,5 +682,12 @@ template<typename DerType> struct NumTraits<AutoDiffScalar<DerType> >
 };
 
 }
+
+namespace std {
+template <typename T>
+class numeric_limits<Eigen::AutoDiffScalar<T> >
+  : public numeric_limits<typename T::Scalar> {};
+
+}  // namespace std
 
 #endif // EIGEN_AUTODIFF_SCALAR_H

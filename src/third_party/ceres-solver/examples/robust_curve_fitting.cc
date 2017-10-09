@@ -127,7 +127,7 @@ struct ExponentialResidual {
   template <typename T> bool operator()(const T* const m,
                                         const T* const c,
                                         T* residual) const {
-    residual[0] = T(y_) - exp(m[0] * T(x_) + c[0]);
+    residual[0] = y_ - exp(m[0] * x_ + c[0]);
     return true;
   }
 

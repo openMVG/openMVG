@@ -15,8 +15,9 @@
 #ifndef THE_FRENCH_LEAF_SVG_DRAWER_H
 #define THE_FRENCH_LEAF_SVG_DRAWER_H
 
-#include <sstream>
 #include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 namespace svg {
@@ -144,6 +145,7 @@ public:
 
     svgStream << ">" << stext << "</text>\n";
   }
+
   template< typename DataInputIteratorX, typename DataInputIteratorY>
   void drawPolyline(DataInputIteratorX xStart, DataInputIteratorX xEnd,
      DataInputIteratorY yStart, DataInputIteratorY yEnd,
@@ -153,7 +155,8 @@ public:
 
     DataInputIteratorY itery = yStart;
     for (DataInputIteratorX iterx = xStart;
-        iterx != xEnd; std::advance(iterx, 1), std::advance(itery, 1))
+      iterx != xEnd;
+      std::advance(iterx, 1), std::advance(itery, 1))
     {
       svgStream << *iterx << ',' << *itery << ' ';
     }
@@ -196,21 +199,18 @@ struct svgHisto
       return;
     }
     //-- Max value
-    //T mini = min_element(vec_value.begin(), vec_value.end());
-    T maxi = *max_element(vec_value.begin(), vec_value.end());
-    size_t n = vec_value.size();
+    const T maxi = *max_element(vec_value.begin(), vec_value.end());
+    const size_t n = vec_value.size();
 
-    float scaleFactorY = H / static_cast<float>(maxi);
-    float scaleFactorX = W / static_cast<float>(n);
+    const float scaleFactorY = H / static_cast<float>(maxi);
+    const float scaleFactorX = W / static_cast<float>(n);
 
     svgDrawer svgStream;
 
-    for (typename std::vector<T>::const_iterator iter = vec_value.begin();
-      iter != vec_value.end();
-      ++iter)
+    for (size_t i = 0; i < vec_value.size(); ++i)
     {
-      const size_t dist = std::distance(vec_value.begin(), iter);
-      const T val = *iter;
+      const size_t dist = i;
+      const T val = vec_value[i];
       std::ostringstream os;
       os << '(' << range.first + dist/float(n) * (range.second-range.first) << ',' << val << ')';
       svgStyle style = svgStyle().fill("blue").stroke("black", 1.0).tooltip(os.str());

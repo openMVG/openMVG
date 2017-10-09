@@ -1,15 +1,10 @@
-/** @Main KVLD algorithm implementation
- ** @Containing scale image pyramid, VLD structure and KVLD algorithm
- ** @author Zhe Liu
- **/
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-/*
-Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
-All rights reserved.
+//Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
 
-This file is part of the KVLD library and is made available under
-the terms of the BSD license ( see the COPYING file).
-*/
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/image/image_container.hpp"
@@ -78,7 +73,7 @@ void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Im
 
       if (!anglefrom( gx, gy, angle( y, x ) ) )
         angle( y, x ) = -1;
-      m( y, x ) = sqrt( gx * gx + gy * gy );
+      m( y, x ) = std::hypot( gx, gy );
     }
   }
 }
@@ -116,7 +111,7 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
   const float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
   const float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
-  distance = sqrt( dy * dy + dx * dx );
+  distance = std::hypot( dy, dx );
 
   if (distance == 0 )
     std::cerr<<"Two SIFT points have the same coordinate"<< std::endl;

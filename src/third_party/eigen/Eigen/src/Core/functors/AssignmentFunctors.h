@@ -28,7 +28,7 @@ template<typename DstScalar,typename SrcScalar> struct assign_op {
   { internal::pstoret<DstScalar,Packet,Alignment>(a,b); }
 };
 
-// Empty overload for void type (used by PermutationMatrix
+// Empty overload for void type (used by PermutationMatrix)
 template<typename DstScalar> struct assign_op<DstScalar,void> {};
 
 template<typename DstScalar,typename SrcScalar>

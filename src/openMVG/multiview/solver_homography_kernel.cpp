@@ -47,20 +47,13 @@ void BuildActionMatrix
   const Mat::Index n = x.cols();
   for (Mat::Index i = 0; i < n; ++i) {
     Mat::Index j = 2 * i;
-    L(j, 0) = x(0, i);
-    L(j, 1) = x(1, i);
-    L(j, 2) = 1.0;
-    L(j, 6) = -y(0, i) * x(0, i);
-    L(j, 7) = -y(0, i) * x(1, i);
-    L(j, 8) = -y(0, i);
-
+    L.row(j) << x.col(i).homogeneous().transpose(),
+                Vec3::Constant(0.0).transpose(),
+                -y.col(i).x() * x.col(i).homogeneous().transpose();
     ++j;
-    L(j, 3) = x(0, i);
-    L(j, 4) = x(1, i);
-    L(j, 5) = 1.0;
-    L(j, 6) = -y(1, i) * x(0, i);
-    L(j, 7) = -y(1, i) * x(1, i);
-    L(j, 8) = -y(1, i);
+    L.row(j) << Vec3::Constant(0.0).transpose(),
+                x.col(i).homogeneous().transpose(),                
+                -y.col(i).y() * x.col(i).homogeneous().transpose();
   }
 }
 

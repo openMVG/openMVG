@@ -71,9 +71,9 @@ Evaluator* Evaluator::Create(const Evaluator::Options& options,
                                     DynamicCompressedRowJacobianFinalizer>(
                                         options, program);
       } else {
-        return new ProgramEvaluator<ScratchEvaluatePreparer,
-                                    CompressedRowJacobianWriter>(options,
-                                                                 program);
+        return new ProgramEvaluator<BlockEvaluatePreparer,
+                                    BlockJacobianWriter>(options,
+                                                         program);
       }
 
     default:

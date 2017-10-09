@@ -953,6 +953,20 @@ class CERES_EXPORT Solver {
     // parameter blocks.
     std::vector<int> linear_solver_ordering_used;
 
+    // For Schur type linear solvers, this string describes the
+    // template specialization which was detected in the problem and
+    // should be used.
+    std::string schur_structure_given;
+
+    // This is the Schur template specialization that was actually
+    // instantiated and used. The reason this will be different from
+    // schur_structure_given is because the corresponding template
+    // specialization does not exist.
+    //
+    // Template specializations can be added to ceres by editing
+    // internal/ceres/generate_template_specializations.py
+    std::string schur_structure_used;
+
     // True if the user asked for inner iterations to be used as part
     // of the optimization.
     bool inner_iterations_given;

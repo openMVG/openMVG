@@ -53,11 +53,11 @@ void Match
   // Sort pairs according the first index to minimize later memory swapping
   using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
-  for (Pair_Set::const_iterator iter = pairs.begin(); iter != pairs.end(); ++iter)
+  for (const auto & pair_idx : pairs)
   {
-    map_Pairs[iter->first].push_back(iter->second);
-    used_index.insert(iter->first);
-    used_index.insert(iter->second);
+    map_Pairs[pair_idx.first].push_back(pair_idx.second);
+    used_index.insert(pair_idx.first);
+    used_index.insert(pair_idx.second);
   }
 
   using BaseMat = Eigen::Matrix<ScalarT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -67,7 +67,7 @@ void Match
   if (!used_index.empty())
   {
     const IndexT I = *used_index.begin();
-    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
     const size_t dimension = regionsI->DescriptorLength();
     cascade_hasher.Init(dimension);
   }
@@ -83,7 +83,7 @@ void Match
       std::set<IndexT>::const_iterator iter = used_index.begin();
       std::advance(iter, i);
       const IndexT I = *iter;
-      std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+      const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
       const ScalarT * tabI =
         reinterpret_cast<const ScalarT*>(regionsI->DescriptorRawData());
       const size_t dimension = regionsI->DescriptorLength();
@@ -110,7 +110,7 @@ void Match
     std::set<IndexT>::const_iterator iter = used_index.begin();
     std::advance(iter, i);
     const IndexT I = *iter;
-    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
     const ScalarT * tabI =
       reinterpret_cast<const ScalarT*>(regionsI->DescriptorRawData());
     const size_t dimension = regionsI->DescriptorLength();
@@ -126,15 +126,14 @@ void Match
   }
 
   // Perform matching between all the pairs
-  for (Map_vectorT::const_iterator iter = map_Pairs.begin();
-    iter != map_Pairs.end(); ++iter)
+  for (const auto & pairs : map_Pairs)
   {
     if (my_progress_bar->hasBeenCanceled())
       break;
-    const IndexT I = iter->first;
-    const std::vector<IndexT> & indexToCompare = iter->second;
+    const IndexT I = pairs.first;
+    const std::vector<IndexT> & indexToCompare = pairs.second;
 
-    std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
     if (regionsI->RegionCount() == 0)
     {
       (*my_progress_bar) += indexToCompare.size();
@@ -155,7 +154,7 @@ void Match
       if (my_progress_bar->hasBeenCanceled())
         continue;
       const size_t J = indexToCompare[j];
-      std::shared_ptr<features::Regions> regionsJ = regions_provider.get(J);
+      const std::shared_ptr<features::Regions> regionsJ = regions_provider.get(J);
 
       if (regionsI->Type_id() != regionsJ->Type_id())
       {

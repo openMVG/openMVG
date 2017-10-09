@@ -35,11 +35,12 @@
 #include "ceres/suitesparse.h"
 
 #include <vector>
-#include "cholmod.h"
+
 #include "ceres/compressed_col_sparse_matrix_utils.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/linear_solver.h"
 #include "ceres/triplet_sparse_matrix.h"
+#include "cholmod.h"
 
 namespace ceres {
 namespace internal {
@@ -47,13 +48,9 @@ namespace internal {
 using std::string;
 using std::vector;
 
-SuiteSparse::SuiteSparse() {
-  cholmod_start(&cc_);
-}
+SuiteSparse::SuiteSparse() { cholmod_start(&cc_); }
 
-SuiteSparse::~SuiteSparse() {
-  cholmod_finish(&cc_);
-}
+SuiteSparse::~SuiteSparse() { cholmod_finish(&cc_); }
 
 cholmod_sparse* SuiteSparse::CreateSparseMatrix(TripletSparseMatrix* A) {
   cholmod_triplet triplet;
@@ -72,7 +69,6 @@ cholmod_sparse* SuiteSparse::CreateSparseMatrix(TripletSparseMatrix* A) {
 
   return cholmod_triplet_to_sparse(&triplet, triplet.nnz, &cc_);
 }
-
 
 cholmod_sparse* SuiteSparse::CreateSparseMatrixTranspose(
     TripletSparseMatrix* A) {
@@ -106,7 +102,15 @@ cholmod_sparse SuiteSparse::CreateSparseMatrixTransposeView(
   m.i = reinterpret_cast<void*>(A->mutable_cols());
   m.x = reinterpret_cast<void*>(A->mutable_values());
   m.z = NULL;
-  m.stype = 0;  // Matrix is not symmetric.
+
+  if (A->storage_type() == CompressedRowSparseMatrix::LOWER_TRIANGULAR) {
+    m.stype = 1;
+  } else if (A->storage_type() == CompressedRowSparseMatrix::UPPER_TRIANGULAR) {
+    m.stype = -1;
+  } else {
+    m.stype = 0;
+  }
+
   m.itype = CHOLMOD_INT;
   m.xtype = CHOLMOD_REAL;
   m.dtype = CHOLMOD_DOUBLE;
@@ -119,12 +123,12 @@ cholmod_sparse SuiteSparse::CreateSparseMatrixTransposeView(
 cholmod_dense* SuiteSparse::CreateDenseVector(const double* x,
                                               int in_size,
                                               int out_size) {
-    CHECK_LE(in_size, out_size);
-    cholmod_dense* v = cholmod_zeros(out_size, 1, CHOLMOD_REAL, &cc_);
-    if (x != NULL) {
-      memcpy(v->x, x, in_size*sizeof(*x));
-    }
-    return v;
+  CHECK_LE(in_size, out_size);
+  cholmod_dense* v = cholmod_zeros(out_size, 1, CHOLMOD_REAL, &cc_);
+  if (x != NULL) {
+    memcpy(v->x, x, in_size * sizeof(*x));
+  }
+  return v;
 }
 
 cholmod_factor* SuiteSparse::AnalyzeCholesky(cholmod_sparse* A,
@@ -143,19 +147,18 @@ cholmod_factor* SuiteSparse::AnalyzeCholesky(cholmod_sparse* A,
   }
 
   if (cc_.status != CHOLMOD_OK) {
-    *message = StringPrintf("cholmod_analyze failed. error code: %d",
-                            cc_.status);
+    *message =
+        StringPrintf("cholmod_analyze failed. error code: %d", cc_.status);
     return NULL;
   }
 
   return CHECK_NOTNULL(factor);
 }
 
-cholmod_factor* SuiteSparse::BlockAnalyzeCholesky(
-    cholmod_sparse* A,
-    const vector<int>& row_blocks,
-    const vector<int>& col_blocks,
-    string* message) {
+cholmod_factor* SuiteSparse::BlockAnalyzeCholesky(cholmod_sparse* A,
+                                                  const vector<int>& row_blocks,
+                                                  const vector<int>& col_blocks,
+                                                  string* message) {
   vector<int> ordering;
   if (!BlockAMDOrdering(A, row_blocks, col_blocks, &ordering)) {
     return NULL;
@@ -164,22 +167,20 @@ cholmod_factor* SuiteSparse::BlockAnalyzeCholesky(
 }
 
 cholmod_factor* SuiteSparse::AnalyzeCholeskyWithUserOrdering(
-    cholmod_sparse* A,
-    const vector<int>& ordering,
-    string* message) {
+    cholmod_sparse* A, const vector<int>& ordering, string* message) {
   CHECK_EQ(ordering.size(), A->nrow);
 
   cc_.nmethods = 1;
   cc_.method[0].ordering = CHOLMOD_GIVEN;
 
-  cholmod_factor* factor  =
+  cholmod_factor* factor =
       cholmod_analyze_p(A, const_cast<int*>(&ordering[0]), NULL, 0, &cc_);
   if (VLOG_IS_ON(2)) {
     cholmod_print_common(const_cast<char*>("Symbolic Analysis"), &cc_);
   }
   if (cc_.status != CHOLMOD_OK) {
-    *message = StringPrintf("cholmod_analyze failed. error code: %d",
-                            cc_.status);
+    *message =
+        StringPrintf("cholmod_analyze failed. error code: %d", cc_.status);
     return NULL;
   }
 
@@ -187,19 +188,18 @@ cholmod_factor* SuiteSparse::AnalyzeCholeskyWithUserOrdering(
 }
 
 cholmod_factor* SuiteSparse::AnalyzeCholeskyWithNaturalOrdering(
-    cholmod_sparse* A,
-    string* message) {
+    cholmod_sparse* A, string* message) {
   cc_.nmethods = 1;
   cc_.method[0].ordering = CHOLMOD_NATURAL;
   cc_.postorder = 0;
 
-  cholmod_factor* factor  = cholmod_analyze(A, &cc_);
+  cholmod_factor* factor = cholmod_analyze(A, &cc_);
   if (VLOG_IS_ON(2)) {
     cholmod_print_common(const_cast<char*>("Symbolic Analysis"), &cc_);
   }
   if (cc_.status != CHOLMOD_OK) {
-    *message = StringPrintf("cholmod_analyze failed. error code: %d",
-                            cc_.status);
+    *message =
+        StringPrintf("cholmod_analyze failed. error code: %d", cc_.status);
     return NULL;
   }
 
@@ -224,7 +224,6 @@ bool SuiteSparse::BlockAMDOrdering(const cholmod_sparse* A,
                                             col_blocks,
                                             &block_rows,
                                             &block_cols);
-
   cholmod_sparse_struct block_matrix;
   block_matrix.nrow = num_row_blocks;
   block_matrix.ncol = num_col_blocks;
@@ -265,13 +264,6 @@ LinearSolverTerminationType SuiteSparse::Cholesky(cholmod_sparse* A,
   int cholmod_status = cholmod_factorize(A, L, &cc_);
   cc_.print = old_print_level;
 
-  // TODO(sameeragarwal): This switch statement is not consistent. It
-  // treats all kinds of CHOLMOD failures as warnings. Some of these
-  // like out of memory are definitely not warnings. The problem is
-  // that the return value Cholesky is two valued, but the state of
-  // the linear solver is really three valued. SUCCESS,
-  // NON_FATAL_FAILURE (e.g., indefinite matrix) and FATAL_FAILURE
-  // (e.g. out of memory).
   switch (cc_.status) {
     case CHOLMOD_NOT_INSTALLED:
       *message = "CHOLMOD failure: Method not installed.";
@@ -289,23 +281,25 @@ LinearSolverTerminationType SuiteSparse::Cholesky(cholmod_sparse* A,
       *message = "CHOLMOD warning: Matrix not positive definite.";
       return LINEAR_SOLVER_FAILURE;
     case CHOLMOD_DSMALL:
-      *message = "CHOLMOD warning: D for LDL' or diag(L) or "
-                "LL' has tiny absolute value.";
+      *message =
+          "CHOLMOD warning: D for LDL' or diag(L) or "
+          "LL' has tiny absolute value.";
       return LINEAR_SOLVER_FAILURE;
     case CHOLMOD_OK:
       if (cholmod_status != 0) {
         return LINEAR_SOLVER_SUCCESS;
       }
 
-      *message = "CHOLMOD failure: cholmod_factorize returned false "
+      *message =
+          "CHOLMOD failure: cholmod_factorize returned false "
           "but cholmod_common::status is CHOLMOD_OK."
           "Please report this to ceres-solver@googlegroups.com.";
       return LINEAR_SOLVER_FATAL_ERROR;
     default:
-      *message =
-          StringPrintf("Unknown cholmod return code: %d. "
-                       "Please report this to ceres-solver@googlegroups.com.",
-                       cc_.status);
+      *message = StringPrintf(
+          "Unknown cholmod return code: %d. "
+          "Please report this to ceres-solver@googlegroups.com.",
+          cc_.status);
       return LINEAR_SOLVER_FATAL_ERROR;
   }
 
@@ -329,9 +323,7 @@ bool SuiteSparse::ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
 }
 
 bool SuiteSparse::ConstrainedApproximateMinimumDegreeOrdering(
-    cholmod_sparse* matrix,
-    int* constraints,
-    int* ordering) {
+    cholmod_sparse* matrix, int* constraints, int* ordering) {
 #ifndef CERES_NO_CAMD
   return cholmod_camd(matrix, NULL, 0, constraints, ordering, &cc_);
 #else
@@ -342,6 +334,80 @@ bool SuiteSparse::ConstrainedApproximateMinimumDegreeOrdering(
              << "the Ceres Solver developers.";
   return false;
 #endif
+}
+
+SuiteSparseCholesky* SuiteSparseCholesky::Create(
+    const OrderingType ordering_type) {
+  return new SuiteSparseCholesky(ordering_type);
+}
+
+SuiteSparseCholesky::SuiteSparseCholesky(const OrderingType ordering_type)
+    : ordering_type_(ordering_type), factor_(NULL) {}
+
+SuiteSparseCholesky::~SuiteSparseCholesky() {
+  if (factor_ != NULL) {
+    ss_.Free(factor_);
+  }
+}
+
+LinearSolverTerminationType SuiteSparseCholesky::Factorize(
+    CompressedRowSparseMatrix* lhs, string* message) {
+  if (lhs == NULL) {
+    *message = "Failure: Input lhs is NULL.";
+    return LINEAR_SOLVER_FATAL_ERROR;
+  }
+
+  cholmod_sparse cholmod_lhs = ss_.CreateSparseMatrixTransposeView(lhs);
+
+  if (factor_ == NULL) {
+    if (ordering_type_ == NATURAL) {
+      factor_ = ss_.AnalyzeCholeskyWithNaturalOrdering(&cholmod_lhs, message);
+    } else {
+      if (!lhs->col_blocks().empty() && !(lhs->row_blocks().empty())) {
+        factor_ = ss_.BlockAnalyzeCholesky(
+            &cholmod_lhs, lhs->col_blocks(), lhs->row_blocks(), message);
+      } else {
+        factor_ = ss_.AnalyzeCholesky(&cholmod_lhs, message);
+      }
+    }
+
+    if (factor_ == NULL) {
+      return LINEAR_SOLVER_FATAL_ERROR;
+    }
+  }
+
+  return ss_.Cholesky(&cholmod_lhs, factor_, message);
+}
+
+CompressedRowSparseMatrix::StorageType SuiteSparseCholesky::StorageType()
+    const {
+  return ((ordering_type_ == NATURAL)
+              ? CompressedRowSparseMatrix::UPPER_TRIANGULAR
+              : CompressedRowSparseMatrix::LOWER_TRIANGULAR);
+}
+
+LinearSolverTerminationType SuiteSparseCholesky::Solve(const double* rhs,
+                                                       double* solution,
+                                                       string* message) {
+  // Error checking
+  if (factor_ == NULL) {
+    *message = "Solve called without a call to Factorize first.";
+    return LINEAR_SOLVER_FATAL_ERROR;
+  }
+
+  const int num_cols = factor_->n;
+  cholmod_dense* cholmod_dense_rhs =
+      ss_.CreateDenseVector(rhs, num_cols, num_cols);
+  cholmod_dense* cholmod_dense_solution =
+      ss_.Solve(factor_, cholmod_dense_rhs, message);
+  ss_.Free(cholmod_dense_rhs);
+  if (cholmod_dense_solution == NULL) {
+    return LINEAR_SOLVER_FAILURE;
+  }
+
+  memcpy(solution, cholmod_dense_solution->x, num_cols * sizeof(*solution));
+  ss_.Free(cholmod_dense_solution);
+  return LINEAR_SOLVER_SUCCESS;
 }
 
 }  // namespace internal

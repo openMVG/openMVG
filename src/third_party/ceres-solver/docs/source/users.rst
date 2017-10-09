@@ -53,6 +53,14 @@ Users
   beamforming engine, called ASASIN , for estimating platform
   kinematics.
 
+* `Colmap <https://github.com/colmap/colmap>`_ is a an open source
+  structure from motion library that makes heavy use of Ceres for
+  bundle adjustment with support for many camera models and for other
+  non-linear least-squares problems (relative, absolute pose
+  refinement, etc.).
+
+
+
 .. _bundle adjustment: http://en.wikipedia.org/wiki/Structure_from_motion
 .. _Street View: http://youtu.be/z00ORu4bU-A
 .. _PhotoTours: http://google-latlong.blogspot.com/2012/04/visit-global-landmarks-with-photo-tours.html

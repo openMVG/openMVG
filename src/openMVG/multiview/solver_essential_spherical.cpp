@@ -23,15 +23,10 @@ static inline void EncodeEpipolarEquation
 {
   for (int i = 0; i < x1.cols(); ++i)
   {
-    (*A)(i, 0) = x2(0, i) * x1(0, i);  // 0 represents x coords
-    (*A)(i, 1) = x2(0, i) * x1(1, i);  // 1 represents y coords
-    (*A)(i, 2) = x2(0, i) * x1(2, i);  // 2 represents z coords
-    (*A)(i, 3) = x2(1, i) * x1(0, i);
-    (*A)(i, 4) = x2(1, i) * x1(1, i);
-    (*A)(i, 5) = x2(1, i) * x1(2, i);
-    (*A)(i, 6) = x2(2, i) * x1(0, i);
-    (*A)(i, 7) = x2(2, i) * x1(1, i);
-    (*A)(i, 8) = x2(2, i) * x1(2, i);
+    A->row(i) <<
+      x2(0, i) * x1.col(i).transpose(),
+      x2(1, i) * x1.col(i).transpose(),
+      x2(2, i) * x1.col(i).transpose();
   }
 }
 
@@ -47,11 +42,13 @@ void EightPointRelativePoseSolver::Solve
   assert(x1.rows() == x2.rows());
   assert(x1.cols() == x2.cols());
 
-  MatX9 A(x1.cols(), 9);
-  EncodeEpipolarEquation(x1, x2, &A);
+  MatX9 epipolar_constraint(x1.cols(), 9);
+  epipolar_constraint.fill(0.0);
+  EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
 
-  Vec9 e;
-  Nullspace(A, e);
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> solver
+    (epipolar_constraint.transpose() * epipolar_constraint);
+  Vec9 e = solver.eigenvectors().leftCols<1>();
   Mat3 E = Map<RMat3>(e.data());
 
   // Find the closest essential matrix to E in frobenius norm
@@ -61,10 +58,10 @@ void EightPointRelativePoseSolver::Solve
     Vec3 d = USV.singularValues();
     const double a = d[0];
     const double b = d[1];
-    d << (a+b)/2., (a+b)/2., 0.0;
+    d << (a + b) / 2., (a + b) / 2., 0.0;
     E = USV.matrixU() * d.asDiagonal() * USV.matrixV().transpose();
   }
-  pvec_E->push_back(E);
+  pvec_E->emplace_back(E);
 }
 
 
@@ -77,8 +74,7 @@ double AngularError::Error
 )
 {
   const Vec3 Em1 = (model * x1).normalized();
-  double angleVal = (x2.transpose() * Em1);
-  angleVal /= (x2.norm() * Em1.norm());
+  const double angleVal = (x2.transpose() * Em1);
   return std::abs(asin(angleVal));
 }
 

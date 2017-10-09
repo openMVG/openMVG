@@ -115,7 +115,7 @@ bool robustRelativePose
                     x2, size_ima2.first, size_ima2.second,
                     K1, K2);
 
-  // Robustly estimation of the Essential matrix and it's precision
+  // Robustly estimation of the Model and its precision
   const std::pair<double,double> acRansacOut = robust::ACRANSAC(
     kernel, relativePose_info.vec_inliers,
     max_iteration_count, &relativePose_info.essential_matrix,

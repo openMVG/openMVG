@@ -66,10 +66,10 @@ Arguments description:
   The black areas on a mask denote the "bad parts", *i.e.* the areas to be masked and for which descriptors are not computed. A point is kept if the mask value at the point position is different than 0.
   In openMVG_main_ComputeFeatures, the association of a mask and an image is implicit. It uses the following conventions:
 
-  - It tries to load a global mask.png file from directory where the the SfM container file (sfm_data.*) is stored.
-  - It tries to load an individual <image_name>_mask.png from directory where the current image is stored 
+  - It tries to load a global mask.png file from where the images are stored.
+  - It tries to load an individual <image_name>_mask.png from directory where the current image is stored.
 
-  The individual mask **always** takes precedence over the global one 
+  The individual mask **always** takes precedence over the global one.
 
 Once openMVG_main_ComputeFeatures is done you can compute the Matches between the computed description.
 
