@@ -169,14 +169,14 @@ int main(int argc, char **argv) {
       const auto & regions_pos = regions_perImage.at(0)->GetRegionsPositions();
       vec_points_left.reserve(regions_pos.size());
       for (const auto & it : regions_pos)
-        vec_points_left.push_back({it.x(), it.y()});
+        vec_points_left.emplace_back(it.x(), it.y());
     }
     std::vector<Eigen::Vector2f> vec_points_right;
     {
       const auto & regions_pos = regions_perImage.at(1)->GetRegionsPositions();
       vec_points_right.reserve(regions_pos.size());
       for (const auto & it : regions_pos)
-        vec_points_right.push_back({it.x(), it.y()});
+        vec_points_right.emplace_back(it.x(), it.y());
     }
 
     const int kGmsThreshold = 6;
