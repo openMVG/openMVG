@@ -26,10 +26,8 @@ namespace sfm {
 
 
 SubmapSfMReconstructionEngine::SubmapSfMReconstructionEngine(const HsfmSubmap & submap, const tracks::STLMAPTracks & map_tracks, const std::string & soutDirectory, const std::string & sloggingFile)
-  : SequentialSfMReconstructionEngine(submap.sfm_data, soutDirectory, sloggingFile)
-{
-  map_tracks_ = map_tracks;
-}
+  : SequentialSfMReconstructionEngine(submap.sfm_data, soutDirectory, sloggingFile, map_tracks)
+{}
 
 // we override this method with an empty function since it is
 // the only thing that we don't use from SequentialSfMReconstructionEngine::Process.

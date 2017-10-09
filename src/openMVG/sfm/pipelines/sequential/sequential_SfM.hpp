@@ -34,7 +34,8 @@ public:
   SequentialSfMReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & soutDirectory,
-    const std::string & loggingFile = "");
+    const std::string & loggingFile = "",
+    const openMVG::tracks::STLMAPTracks & map_tracks = {});
 
   ~SequentialSfMReconstructionEngine() override;
 

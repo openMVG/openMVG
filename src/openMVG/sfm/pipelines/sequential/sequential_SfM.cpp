@@ -45,11 +45,13 @@ using namespace openMVG::matching;
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
-  const std::string & sloggingFile)
+  const std::string & sloggingFile,
+  const tracks::STLMAPTracks & map_tracks)
   : ReconstructionEngine(sfm_data, soutDirectory),
     sLogging_file_(sloggingFile),
     initial_pair_(Pair(0,0)),
-    cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3))
+    cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3)),
+    map_tracks_(map_tracks)
 {
   if (!sLogging_file_.empty())
   {
