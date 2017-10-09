@@ -39,15 +39,19 @@
 #include <utility>
 #include <vector>
 #include "ceres/casts.h"
+#include "ceres/compressed_row_jacobian_writer.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/cost_function.h"
 #include "ceres/crs_matrix.h"
 #include "ceres/evaluator.h"
+#include "ceres/internal/port.h"
 #include "ceres/loss_function.h"
 #include "ceres/map_util.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
+#include "ceres/program_evaluator.h"
 #include "ceres/residual_block.h"
+#include "ceres/scratch_evaluate_preparer.h"
 #include "ceres/stl_util.h"
 #include "ceres/stringprintf.h"
 #include "glog/logging.h"
@@ -752,24 +756,10 @@ bool ProblemImpl::Evaluate(const Problem::EvaluateOptions& evaluate_options,
   evaluator_options.num_threads = evaluate_options.num_threads;
 #endif  // CERES_USE_OPENMP
 
-  string error;
   scoped_ptr<Evaluator> evaluator(
-      Evaluator::Create(evaluator_options, &program, &error));
-  if (evaluator.get() == NULL) {
-    LOG(ERROR) << "Unable to create an Evaluator object. "
-               << "Error: " << error
-               << "This is a Ceres bug; please contact the developers!";
-
-    // Make the parameter blocks that were temporarily marked
-    // constant, variable again.
-    for (int i = 0; i < variable_parameter_blocks.size(); ++i) {
-      variable_parameter_blocks[i]->SetVarying();
-    }
-
-    program_->SetParameterBlockStatePtrsToUserStatePtrs();
-    program_->SetParameterOffsetsAndIndex();
-    return false;
-  }
+      new ProgramEvaluator<ScratchEvaluatePreparer,
+                           CompressedRowJacobianWriter>(evaluator_options,
+                                                        &program));
 
   if (residuals !=NULL) {
     residuals->resize(evaluator->NumResiduals());

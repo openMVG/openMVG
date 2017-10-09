@@ -80,6 +80,8 @@ public:
   sparse_diagonal_product_evaluator(const SparseXprType &sparseXpr, const DiagonalCoeffType &diagCoeff)
     : m_sparseXprImpl(sparseXpr), m_diagCoeffImpl(diagCoeff)
   {}
+
+  Index nonZerosEstimate() const { return m_sparseXprImpl.nonZerosEstimate(); }
     
 protected:
   evaluator<SparseXprType> m_sparseXprImpl;
@@ -121,6 +123,8 @@ struct sparse_diagonal_product_evaluator<SparseXprType, DiagCoeffType, SDP_AsCwi
   sparse_diagonal_product_evaluator(const SparseXprType &sparseXpr, const DiagCoeffType &diagCoeff)
     : m_sparseXprEval(sparseXpr), m_diagCoeffNested(diagCoeff)
   {}
+
+  Index nonZerosEstimate() const { return m_sparseXprEval.nonZerosEstimate(); }
     
 protected:
   evaluator<SparseXprType> m_sparseXprEval;

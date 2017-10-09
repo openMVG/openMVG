@@ -107,7 +107,7 @@ add_subdirectory(fast)
 ##
 if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   #Configure Eigen install
-  set(EIGEN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
+  set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
   add_subdirectory(eigen)
 endif()
 

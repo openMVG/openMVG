@@ -739,6 +739,8 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
     imgheader->height = cinfo.output_height;
     bStatus = true;
   }
+
+  jpeg_destroy_decompress(&cinfo);
   fclose(file);
   return bStatus;
 }

@@ -6,7 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef CONTROLPOINT2DNODE_HPP
+#define CONTROLPOINT2DNODE_HPP
 
 #include <QGraphicsItem>
 #include <QPointF>
@@ -16,10 +17,12 @@ class QGraphicsSceneMouseEvent;
 
 // Graphical movable QtGraphicItem to represent a control_point image observation
 // A dynamic update of the control_point observation coordinates is performed thanks to variable reference.
-class control_point_2DNode : public QGraphicsItem
+class ControlPoint2DNode : public QGraphicsItem
 {
 public:
-  control_point_2DNode(const QPointF& pos, double & x, double & y, size_t id_control_point);
+  ControlPoint2DNode(const QPointF& pos, double & x, double & y, size_t id_control_point);
+
+  size_t controlPointId() const;
 
   QRectF boundingRect() const;
   QPainterPath shape() const;
@@ -37,3 +40,4 @@ private:
   double & _y;
 };
 
+#endif /* CONTROLPOINT2DNODE_HPP */

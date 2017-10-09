@@ -46,7 +46,8 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       // Triplet inference (test over the composition error)
       //-------------------
       Pair_Set pairs = getPairs(relativeRotations);
-      std::vector< graph::Triplet > vec_triplets = graph::tripletListing(pairs);
+      std::vector< graph::Triplet > vec_triplets = graph::TripletListing(pairs);
+
       //-- Rejection triplet that are 'not' identity rotation (error to identity > 5°)
       TripletRotationRejection(5.0f, vec_triplets, relativeRotations);
 

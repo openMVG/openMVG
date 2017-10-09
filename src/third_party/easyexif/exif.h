@@ -103,6 +103,16 @@ class EXIFInfo {
   std::string ImageUniqueID;        // Unique identifier assigned to the picture
   double ExposureTime;              // Exposure time in seconds
   double FNumber;                   // F/stop
+  unsigned short ExposureProgram;   // Exposure program
+                                    // 0: Not defined
+                                    // 1: Manual
+                                    // 2: Normal program
+                                    // 3: Aperture priority
+                                    // 4: Shutter priority
+                                    // 5: Creative program
+                                    // 6: Action program
+                                    // 7: Portrait mode
+                                    // 8: Landscape mode
   unsigned short ISOSpeedRatings;   // ISO speed
   double ShutterSpeedValue;         // Shutter speed (reciprocal of exposure time)
   double ExposureBiasValue;         // Exposure bias value in EV
@@ -110,6 +120,16 @@ class EXIFInfo {
   double FocalLength;               // Focal length of lens in millimeters
   unsigned short FocalLengthIn35mm; // Focal length in 35mm film
   char Flash;                       // 0 = no flash, 1 = flash used
+  unsigned short FlashReturnedLight;// Flash returned light status
+                                    // 0: No strobe return detection function
+                                    // 1: Reserved
+                                    // 2: Strobe return light not detected
+                                    // 3: Strobe return light detected
+  unsigned short FlashMode;         // Flash mode
+                                    // 0: Unknown
+                                    // 1: Compulsory flash firing
+                                    // 2: Compulsory flash suppression
+                                    // 3: Automatic mode
   unsigned short MeteringMode;      // Metering mode
                                     // 1: average
                                     // 2: center weighted average
@@ -138,6 +158,12 @@ class EXIFInfo {
     double FocalLengthMax;          // Max focal length (mm)
     double FocalPlaneXResolution;   // Focal plane X-resolution
     double FocalPlaneYResolution;   // Focal plane Y-resolution
+    unsigned short FocalPlaneResolutionUnit; // Focal plane resolution unit
+                                             // 1: No absolute unit of measurement.
+                                             // 2: Inch.
+                                             // 3: Centimeter.
+                                             // 4: Millimeter.
+                                             // 5: Micrometer.
     std::string Make;               // Lens manufacturer
     std::string Model;              // Lens model
   } LensInfo;

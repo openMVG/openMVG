@@ -94,6 +94,10 @@ Bibliography
    Part II: Implementation and Experiments**, Management Science,
    20(5), 863-874, 1974.
 
+.. [Press] W. H. Press, S. A. Teukolsky, W. T. Vetterling
+   & B. P. Flannery, **Numerical Recipes**, Cambridge University
+   Press, 2007.
+
 .. [Ridders] C. J. F. Ridders, **Accurate computation of F'(x) and
    F'(x) F"(x)**, Advances in Engineering Software 4(2), 75-76, 1978.
 

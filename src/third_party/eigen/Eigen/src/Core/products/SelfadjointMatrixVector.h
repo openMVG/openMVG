@@ -83,10 +83,10 @@ EIGEN_DONT_INLINE void selfadjoint_matrix_vector_product<Scalar,Index,StorageOrd
     Scalar t3(0);
     Packet ptmp3 = pset1<Packet>(t3);
 
-    size_t starti = FirstTriangular ? 0 : j+2;
-    size_t endi   = FirstTriangular ? j : size;
-    size_t alignedStart = (starti) + internal::first_default_aligned(&res[starti], endi-starti);
-    size_t alignedEnd = alignedStart + ((endi-alignedStart)/(PacketSize))*(PacketSize);
+    Index starti = FirstTriangular ? 0 : j+2;
+    Index endi   = FirstTriangular ? j : size;
+    Index alignedStart = (starti) + internal::first_default_aligned(&res[starti], endi-starti);
+    Index alignedEnd = alignedStart + ((endi-alignedStart)/(PacketSize))*(PacketSize);
 
     res[j]   += cjd.pmul(numext::real(A0[j]), t0);
     res[j+1] += cjd.pmul(numext::real(A1[j+1]), t1);
@@ -101,7 +101,7 @@ EIGEN_DONT_INLINE void selfadjoint_matrix_vector_product<Scalar,Index,StorageOrd
       t2 += cj1.pmul(A0[j+1], rhs[j+1]);
     }
 
-    for (size_t i=starti; i<alignedStart; ++i)
+    for (Index i=starti; i<alignedStart; ++i)
     {
       res[i] += cj0.pmul(A0[i], t0) + cj0.pmul(A1[i],t1);
       t2 += cj1.pmul(A0[i], rhs[i]);
@@ -113,7 +113,7 @@ EIGEN_DONT_INLINE void selfadjoint_matrix_vector_product<Scalar,Index,StorageOrd
     const Scalar* EIGEN_RESTRICT a1It  = A1  + alignedStart;
     const Scalar* EIGEN_RESTRICT rhsIt = rhs + alignedStart;
           Scalar* EIGEN_RESTRICT resIt = res + alignedStart;
-    for (size_t i=alignedStart; i<alignedEnd; i+=PacketSize)
+    for (Index i=alignedStart; i<alignedEnd; i+=PacketSize)
     {
       Packet A0i = ploadu<Packet>(a0It);  a0It  += PacketSize;
       Packet A1i = ploadu<Packet>(a1It);  a1It  += PacketSize;
@@ -125,7 +125,7 @@ EIGEN_DONT_INLINE void selfadjoint_matrix_vector_product<Scalar,Index,StorageOrd
       ptmp3 = pcj1.pmadd(A1i,  Bi, ptmp3);
       pstore(resIt,Xi); resIt += PacketSize;
     }
-    for (size_t i=alignedEnd; i<endi; i++)
+    for (Index i=alignedEnd; i<endi; i++)
     {
       res[i] += cj0.pmul(A0[i], t0) + cj0.pmul(A1[i],t1);
       t2 += cj1.pmul(A0[i], rhs[i]);

@@ -158,10 +158,7 @@ struct Assignment<DstXprType, Product<Lhs,Rhs,Options>, internal::add_assign_op<
   static EIGEN_STRONG_INLINE
   void run(DstXprType &dst, const SrcXprType &src, const internal::add_assign_op<Scalar,Scalar> &)
   {
-    Index dstRows = src.rows();
-    Index dstCols = src.cols();
-    if((dst.rows()!=dstRows) || (dst.cols()!=dstCols))
-      dst.resize(dstRows, dstCols);
+    eigen_assert(dst.rows() == src.rows() && dst.cols() == src.cols());
     // FIXME shall we handle nested_eval here?
     generic_product_impl<Lhs, Rhs>::addTo(dst, src.lhs(), src.rhs());
   }
@@ -176,10 +173,7 @@ struct Assignment<DstXprType, Product<Lhs,Rhs,Options>, internal::sub_assign_op<
   static EIGEN_STRONG_INLINE
   void run(DstXprType &dst, const SrcXprType &src, const internal::sub_assign_op<Scalar,Scalar> &)
   {
-    Index dstRows = src.rows();
-    Index dstCols = src.cols();
-    if((dst.rows()!=dstRows) || (dst.cols()!=dstCols))
-      dst.resize(dstRows, dstCols);
+    eigen_assert(dst.rows() == src.rows() && dst.cols() == src.cols());
     // FIXME shall we handle nested_eval here?
     generic_product_impl<Lhs, Rhs>::subTo(dst, src.lhs(), src.rhs());
   }
@@ -209,6 +203,12 @@ struct Assignment<DstXprType, CwiseBinaryOp<internal::scalar_product_op<ScalarBi
 
 template<typename OtherXpr, typename Lhs, typename Rhs>
 struct evaluator_assume_aliasing<CwiseBinaryOp<internal::scalar_sum_op<typename OtherXpr::Scalar,typename Product<Lhs,Rhs,DefaultProduct>::Scalar>, const OtherXpr,
+                                               const Product<Lhs,Rhs,DefaultProduct> >, DenseShape > {
+  static const bool value = true;
+};
+
+template<typename OtherXpr, typename Lhs, typename Rhs>
+struct evaluator_assume_aliasing<CwiseBinaryOp<internal::scalar_difference_op<typename OtherXpr::Scalar,typename Product<Lhs,Rhs,DefaultProduct>::Scalar>, const OtherXpr,
                                                const Product<Lhs,Rhs,DefaultProduct> >, DenseShape > {
   static const bool value = true;
 };
@@ -377,7 +377,6 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,GemvProduct>
   {
     LhsNested actual_lhs(lhs);
     RhsNested actual_rhs(rhs);
-
     internal::gemv_dense_selector<Side,
                             (int(MatrixType::Flags)&RowMajorBit) ? RowMajor : ColMajor,
                             bool(internal::blas_traits<MatrixType>::HasUsableDirectAccess)

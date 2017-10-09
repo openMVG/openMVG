@@ -28,11 +28,6 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-// This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
-
-#ifndef CERES_NO_SUITESPARSE
-
 #include "ceres/visibility_based_preconditioner.h"
 
 #include "Eigen/Dense"
@@ -345,5 +340,3 @@ namespace internal {
 
 }  // namespace internal
 }  // namespace ceres
-
-#endif  // CERES_NO_SUITESPARSE

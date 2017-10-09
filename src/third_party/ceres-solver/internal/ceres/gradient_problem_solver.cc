@@ -169,7 +169,12 @@ void GradientProblemSolver::Solve(const GradientProblemSolver::Options& options,
       FindWithDefault(evaluator_time_statistics, "Evaluator::Residual", 0.0);
   summary->gradient_evaluation_time_in_seconds =
       FindWithDefault(evaluator_time_statistics, "Evaluator::Jacobian", 0.0);
-
+  const std::map<string, int>& evaluator_call_statistics =
+       minimizer_options.evaluator->CallStatistics();
+  summary->num_cost_evaluations =
+      FindWithDefault(evaluator_call_statistics, "Evaluator::Residual", 0);
+  summary->num_gradient_evaluations =
+      FindWithDefault(evaluator_call_statistics, "Evaluator::Jacobian", 0);
   summary->total_time_in_seconds = WallTimeInSeconds() - start_time;
 }
 
@@ -257,14 +262,14 @@ string GradientProblemSolver::Summary::FullReport() const {
                 static_cast<int>(iterations.size()));
 
   StringAppendF(&report, "\nTime (in seconds):\n");
-
-  StringAppendF(&report, "\n  Cost evaluation     %23.4f\n",
-                cost_evaluation_time_in_seconds);
-  StringAppendF(&report, "  Gradient evaluation %23.4f\n",
-                gradient_evaluation_time_in_seconds);
+  StringAppendF(&report, "\n  Cost evaluation     %23.4f (%d)\n",
+                cost_evaluation_time_in_seconds,
+                num_cost_evaluations);
+  StringAppendF(&report, "  Gradient evaluation %23.4f (%d)\n",
+                gradient_evaluation_time_in_seconds,
+                num_gradient_evaluations);
   StringAppendF(&report, "  Polynomial minimization   %17.4f\n",
                 line_search_polynomial_minimization_time_in_seconds);
-
   StringAppendF(&report, "Total               %25.4f\n\n",
                 total_time_in_seconds);
 

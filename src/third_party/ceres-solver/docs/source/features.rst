@@ -1,6 +1,6 @@
-========
-Features
-========
+====
+Why?
+====
 .. _chapter-features:
 
 * **Code Quality** - Ceres Solver has been used in production at

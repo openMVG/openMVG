@@ -70,6 +70,11 @@ struct Cell {
 bool CellLessThan(const Cell& lhs, const Cell& rhs);
 
 struct CompressedList {
+  CompressedList() {}
+
+  // Construct a CompressedList with the cells containing num_cells
+  // entries.
+  CompressedList(int num_cells) : cells(num_cells) {}
   Block block;
   std::vector<Cell> cells;
 };

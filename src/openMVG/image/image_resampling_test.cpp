@@ -67,7 +67,7 @@ bool ImageRotation(
   // Rotate image then set starting image as source
   for (int id_rot = 0; id_rot < nb_rot; ++id_rot )
   {
-    // angle of rotation (negative because it's inverse transformation)
+    // angle of rotation (negative because we are using the inverse transformation)
     const float cur_angle = delta;
 
     const float cs = cosf( -cur_angle );

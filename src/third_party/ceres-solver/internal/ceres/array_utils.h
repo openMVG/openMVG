@@ -66,8 +66,6 @@ int FindInvalidValue(const int size, const double* x);
 // array pointer is NULL, it is treated as an array of zeros.
 void AppendArrayToString(const int size, const double* x, std::string* result);
 
-extern const double kImpossibleValue;
-
 // This routine takes an array of integer values, sorts and uniques
 // them and then maps each value in the array to its position in the
 // sorted+uniqued array. By doing this, if there are are k unique

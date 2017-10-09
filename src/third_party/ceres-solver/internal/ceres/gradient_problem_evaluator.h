@@ -57,9 +57,18 @@ class GradientProblemEvaluator : public Evaluator {
                         SparseMatrix* jacobian) {
     CHECK(jacobian == NULL);
     ScopedExecutionTimer total_timer("Evaluator::Total", &execution_summary_);
+    // The reason we use Residual and Jacobian here even when we are
+    // only computing the cost and gradient has to do with the fact
+    // that the line search minimizer code is used by both the
+    // GradientProblemSolver and the main CeresSolver coder where the
+    // Evaluator evaluates the Jacobian, and these magic strings need
+    // to be consistent across the code base for the time accounting
+    // to work.
     ScopedExecutionTimer call_type_timer(
-        gradient == NULL ? "Evaluator::Cost" : "Evaluator::Gradient",
+        gradient == NULL ? "Evaluator::Residual" : "Evaluator::Jacobian",
         &execution_summary_);
+    execution_summary_.IncrementCall(gradient == NULL ? "Evaluator::Residual"
+                                                      : "Evaluator::Jacobian");
     return problem_.Evaluate(state, cost, gradient);
   }
 

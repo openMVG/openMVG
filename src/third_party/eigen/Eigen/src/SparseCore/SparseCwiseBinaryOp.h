@@ -45,7 +45,7 @@ class CwiseBinaryOpImpl<BinaryOp, Lhs, Rhs, Sparse>
       EIGEN_STATIC_ASSERT((
                 (!internal::is_same<typename internal::traits<Lhs>::StorageKind,
                                     typename internal::traits<Rhs>::StorageKind>::value)
-            ||  ((Lhs::Flags&RowMajorBit) == (Rhs::Flags&RowMajorBit))),
+            ||  ((internal::evaluator<Lhs>::Flags&RowMajorBit) == (internal::evaluator<Rhs>::Flags&RowMajorBit))),
             THE_STORAGE_ORDER_OF_BOTH_SIDES_MUST_MATCH);
     }
 };
@@ -110,6 +110,7 @@ public:
     EIGEN_STRONG_INLINE Scalar value() const { return m_value; }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_id; }
+    EIGEN_STRONG_INLINE Index outer() const { return m_lhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return Lhs::IsRowMajor ? m_lhsIter.row() : index(); }
     EIGEN_STRONG_INLINE Index col() const { return Lhs::IsRowMajor ? index() : m_lhsIter.col(); }
 
@@ -193,6 +194,7 @@ public:
     EIGEN_STRONG_INLINE Scalar value() const { eigen_internal_assert(m_id<m_innerSize); return m_value; }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_id; }
+    EIGEN_STRONG_INLINE Index outer() const { return m_rhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return IsRowMajor ? m_rhsIter.outer() : m_id; }
     EIGEN_STRONG_INLINE Index col() const { return IsRowMajor ? m_id : m_rhsIter.outer(); }
 
@@ -280,6 +282,7 @@ public:
     EIGEN_STRONG_INLINE Scalar value() const { eigen_internal_assert(m_id<m_innerSize); return m_value; }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_id; }
+    EIGEN_STRONG_INLINE Index outer() const { return m_lhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return IsRowMajor ? m_lhsIter.outer() : m_id; }
     EIGEN_STRONG_INLINE Index col() const { return IsRowMajor ? m_id : m_lhsIter.outer(); }
 
@@ -352,6 +355,16 @@ struct binary_evaluator<CwiseBinaryOp<scalar_product_op<T1,T2>, Lhs, Rhs>, Itera
   : sparse_conjunction_evaluator<CwiseBinaryOp<scalar_product_op<T1,T2>, Lhs, Rhs> >
 {
   typedef CwiseBinaryOp<scalar_product_op<T1,T2>, Lhs, Rhs> XprType;
+  typedef sparse_conjunction_evaluator<XprType> Base;
+  explicit binary_evaluator(const XprType& xpr) : Base(xpr) {}
+};
+
+// "sparse ./ dense"
+template<typename T1, typename T2, typename Lhs, typename Rhs>
+struct binary_evaluator<CwiseBinaryOp<scalar_quotient_op<T1,T2>, Lhs, Rhs>, IteratorBased, IndexBased>
+  : sparse_conjunction_evaluator<CwiseBinaryOp<scalar_quotient_op<T1,T2>, Lhs, Rhs> >
+{
+  typedef CwiseBinaryOp<scalar_quotient_op<T1,T2>, Lhs, Rhs> XprType;
   typedef sparse_conjunction_evaluator<XprType> Base;
   explicit binary_evaluator(const XprType& xpr) : Base(xpr) {}
 };
@@ -432,6 +445,7 @@ public:
     EIGEN_STRONG_INLINE Scalar value() const { return m_functor(m_lhsIter.value(), m_rhsIter.value()); }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_lhsIter.index(); }
+    EIGEN_STRONG_INLINE Index outer() const { return m_lhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return m_lhsIter.row(); }
     EIGEN_STRONG_INLINE Index col() const { return m_lhsIter.col(); }
 
@@ -503,6 +517,7 @@ public:
     { return m_functor(m_lhsEval.coeff(IsRowMajor?m_outer:m_rhsIter.index(),IsRowMajor?m_rhsIter.index():m_outer), m_rhsIter.value()); }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_rhsIter.index(); }
+    EIGEN_STRONG_INLINE Index outer() const { return m_rhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return m_rhsIter.row(); }
     EIGEN_STRONG_INLINE Index col() const { return m_rhsIter.col(); }
 
@@ -577,6 +592,7 @@ public:
                        m_rhsEval.coeff(IsRowMajor?m_outer:m_lhsIter.index(),IsRowMajor?m_lhsIter.index():m_outer)); }
 
     EIGEN_STRONG_INLINE StorageIndex index() const { return m_lhsIter.index(); }
+    EIGEN_STRONG_INLINE Index outer() const { return m_lhsIter.outer(); }
     EIGEN_STRONG_INLINE Index row() const { return m_lhsIter.row(); }
     EIGEN_STRONG_INLINE Index col() const { return m_lhsIter.col(); }
 
@@ -620,6 +636,22 @@ protected:
 /***************************************************************************
 * Implementation of SparseMatrixBase and SparseCwise functions/operators
 ***************************************************************************/
+
+template<typename Derived>
+template<typename OtherDerived>
+Derived& SparseMatrixBase<Derived>::operator+=(const EigenBase<OtherDerived> &other)
+{
+  call_assignment(derived(), other.derived(), internal::add_assign_op<Scalar,typename OtherDerived::Scalar>());
+  return derived();
+}
+
+template<typename Derived>
+template<typename OtherDerived>
+Derived& SparseMatrixBase<Derived>::operator-=(const EigenBase<OtherDerived> &other)
+{
+  call_assignment(derived(), other.derived(), internal::assign_op<Scalar,typename OtherDerived::Scalar>());
+  return derived();
+}
 
 template<typename Derived>
 template<typename OtherDerived>
