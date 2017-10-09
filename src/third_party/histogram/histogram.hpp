@@ -119,7 +119,8 @@ public:
   std::string ToString(const std::string & sTitle = "") const
   {
     std::ostringstream os;
-    os << std::endl << sTitle << std::endl;
+    if (!sTitle.empty())
+      os << "\n" << sTitle << "\n";
     const size_t n = freq.size();
     for (size_t i = 0; i < n; ++i)
     {
@@ -127,7 +128,8 @@ public:
           << static_cast<float>(End-Start)/n*static_cast<float>(i)
           << "\t|\t" << freq[i] << "\n";
     }
-    os << std::setprecision(3) << End << std::endl;
+    if (!freq.empty())
+      os << std::setprecision(3) << End << "\n";
     return os.str();
   }
 

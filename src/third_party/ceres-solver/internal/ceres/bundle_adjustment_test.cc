@@ -212,8 +212,8 @@ class BundleAdjustmentProblem {
       T r2 = xp*xp + yp*yp;
       T distortion = T(1.0) + r2  * (l1 + l2  * r2);
 
-      residuals[0] = distortion * xp - T(u);
-      residuals[1] = distortion * yp - T(v);
+      residuals[0] = distortion * xp - u;
+      residuals[1] = distortion * yp - v;
 
       return true;
     }

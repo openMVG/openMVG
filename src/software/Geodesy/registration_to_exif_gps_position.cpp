@@ -194,7 +194,7 @@ int main(int argc, char **argv)
           std::cout << "\nFound: " << vec_fitting_errors.size() << " inliers"
            << " from " << X_SfM.cols() << " points." << std::endl;
           std::cout << "\n3D Similarity fitting error using only the fitted inliers (in target coordinate system units):";
-          minMaxMeanMedian<float>( vec_fitting_errors.begin(), vec_fitting_errors.end() );
+          minMaxMeanMedian<float>( vec_fitting_errors.cbegin(), vec_fitting_errors.cend() );
         }
       }
       break;

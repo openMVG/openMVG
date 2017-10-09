@@ -34,6 +34,7 @@
 
 #include "gtest/gtest.h"
 #include "ceres/cost_function.h"
+#include "ceres/array_utils.h"
 
 namespace ceres {
 namespace internal {
@@ -140,6 +141,31 @@ TEST(AutodiffCostFunction, ManyParameterAutodiffInstantiates) {
   delete[] jacobians;
   delete[] parameters;
   delete cost_function;
+}
+
+struct OnlyFillsOneOutputFunctor {
+  template <typename T>
+  bool operator()(const T* x, T* output) const {
+    output[0] = x[0];
+    return true;
+  }
+};
+
+TEST(AutoDiffCostFunction, PartiallyFilledResidualShouldFailEvaluation) {
+  double parameter = 1.0;
+  double jacobian[2];
+  double residuals[2];
+  double* parameters[] = {&parameter};
+  double* jacobians[] = {jacobian};
+
+  scoped_ptr<CostFunction> cost_function(
+      new AutoDiffCostFunction<OnlyFillsOneOutputFunctor, 2, 1>(
+          new OnlyFillsOneOutputFunctor));
+  InvalidateArray(2, jacobian);
+  InvalidateArray(2, residuals);
+  EXPECT_TRUE(cost_function->Evaluate(parameters, residuals, jacobians));
+  EXPECT_FALSE(IsArrayValid(2, jacobian));
+  EXPECT_FALSE(IsArrayValid(2, residuals));
 }
 
 }  // namespace internal

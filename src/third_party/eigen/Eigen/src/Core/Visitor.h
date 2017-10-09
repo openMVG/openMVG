@@ -194,7 +194,8 @@ struct functor_traits<max_coeff_visitor<Scalar> > {
 
 } // end namespace internal
 
-/** \returns the minimum of all coefficients of *this and puts in *row and *col its location.
+/** \fn DenseBase<Derived>::minCoeff(IndexType* rowId, IndexType* colId) const
+  * \returns the minimum of all coefficients of *this and puts in *row and *col its location.
   * \warning the result is undefined if \c *this contains NaN.
   *
   * \sa DenseBase::minCoeff(Index*), DenseBase::maxCoeff(Index*,Index*), DenseBase::visit(), DenseBase::minCoeff()
@@ -230,7 +231,8 @@ DenseBase<Derived>::minCoeff(IndexType* index) const
   return minVisitor.res;
 }
 
-/** \returns the maximum of all coefficients of *this and puts in *row and *col its location.
+/** \fn DenseBase<Derived>::maxCoeff(IndexType* rowId, IndexType* colId) const
+  * \returns the maximum of all coefficients of *this and puts in *row and *col its location.
   * \warning the result is undefined if \c *this contains NaN. 
   *
   * \sa DenseBase::minCoeff(IndexType*,IndexType*), DenseBase::visit(), DenseBase::maxCoeff()

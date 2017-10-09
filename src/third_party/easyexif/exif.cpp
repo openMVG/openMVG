@@ -420,25 +420,20 @@ int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
   if (!buf || len < 4) return PARSE_EXIF_ERROR_NO_JPEG;
   if (buf[0] != 0xFF || buf[1] != 0xD8) return PARSE_EXIF_ERROR_NO_JPEG;
 
-  // Sanity check: some cameras pad the JPEG image with null bytes at the end.
-  // Normally, we should able to find the JPEG end marker 0xFFD9 at the end
-  // of the image, but not always. As long as there are null/0xFF bytes at the
-  // end of the image buffer, keep decrementing len until an 0xFFD9 is found,
-  // or some other bytes are. If the first non-zero/0xFF bytes from the end are
-  // not 0xFFD9, then we can be reasonably sure that the buffer is not a JPEG.
-  // [OpenMVG note]
-  // Since we encounter often invalid ended JPEG file, we skip this check.
-  /*while (len > 2) {
-    if (buf[len - 1] == 0 || buf[len - 1] == 0xFF) {
-      len--;
-    } else {
-      if (buf[len - 1] != 0xD9 || buf[len - 2] != 0xFF) {
-        return PARSE_EXIF_ERROR_NO_JPEG;
-      } else {
-        break;
-      }
-    }
-  }*/
+  // Sanity check: some cameras pad the JPEG image with some bytes at the end.
+  // Normally, we should be able to find the JPEG end marker 0xFFD9 at the end
+  // of the image buffer, but not always. As long as there are some bytes
+  // except 0xD9 at the end of the image buffer, keep decrementing len until
+  // an 0xFFD9 is found. If JPEG end marker 0xFFD9 is not found,
+  // then we can be reasonably sure that the buffer is not a JPEG.
+  while (len > 2) {
+    if (buf[len - 1] == 0xD9 && buf[len - 2] == 0xFF)
+      break;
+    len--;
+  }
+  if (len <= 2)
+    return PARSE_EXIF_ERROR_NO_JPEG;
+
   clear();
 
   // Scan for EXIF header (bytes 0xFF 0xE1) and do a sanity check by
@@ -467,191 +462,8 @@ int easyexif::EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
 }
 
 int easyexif::EXIFInfo::parseFrom(const string &data) {
-  return parseFrom((const unsigned char *)data.data(), data.length());
-}
-
-void readTag(IFEntry & result, easyexif::EXIFInfo * exif)
-{
-  switch (result.tag()) {
-    case 0x102:
-      // Bits per sample
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->BitsPerSample = result.val_short().front();
-      break;
-
-    case 0x10E:
-      // Image description
-      if (result.format() == 2) exif->ImageDescription = result.val_string();
-      break;
-
-    case 0x10F:
-      // Digicam make
-      if (result.format() == 2) exif->Make = result.val_string();
-      break;
-
-    case 0x110:
-      // Digicam model
-      if (result.format() == 2) exif->Model = result.val_string();
-      break;
-
-    case 0x112:
-      // Orientation of image
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->Orientation = result.val_short().front();
-      break;
-
-    case 0x131:
-      // Software used for image
-      if (result.format() == 2) exif->Software = result.val_string();
-      break;
-
-    case 0x132:
-      // EXIF/TIFF date/time of image modification
-      if (result.format() == 2) exif->DateTime = result.val_string();
-      break;
-
-    case 0x8298:
-      // Copyright information
-      if (result.format() == 2) exif->Copyright = result.val_string();
-      break;
-
-    case 0x829a:
-      // Exposure time in seconds
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->ExposureTime = result.val_rational().front();
-      break;
-
-    case 0x829d:
-      // FNumber
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->FNumber = result.val_rational().front();
-      break;
-
-    case 0x8827:
-      // ISO Speed Rating
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->ISOSpeedRatings = result.val_short().front();
-      break;
-
-    case 0x9003:
-      // Original date and time
-      if (result.format() == 2)
-        exif->DateTimeOriginal = result.val_string();
-      break;
-
-    case 0x9004:
-      // Digitization date and time
-      if (result.format() == 2)
-        exif->DateTimeDigitized = result.val_string();
-      break;
-
-    case 0x9201:
-      // Shutter speed value
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->ShutterSpeedValue = result.val_rational().front();
-      break;
-
-    case 0x9204:
-      // Exposure bias value
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->ExposureBiasValue = result.val_rational().front();
-      break;
-
-    case 0x9206:
-      // Subject distance
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->SubjectDistance = result.val_rational().front();
-      break;
-
-    case 0x9209:
-      // Flash used
-      if (result.format() == 3) exif->Flash = result.data() ? 1 : 0;
-      break;
-
-    case 0x920a:
-      // Focal length
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->FocalLength = result.val_rational().front();
-      break;
-
-    case 0x9207:
-      // Metering mode
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->MeteringMode = result.val_short().front();
-      break;
-
-    case 0x9291:
-      // Subsecond original time
-      if (result.format() == 2)
-        exif->SubSecTimeOriginal = result.val_string();
-      break;
-
-    case 0xa002:
-      // EXIF Image width
-      if (result.format() == 4 && !result.val_long().empty())
-        exif->ImageWidth = result.val_long().front();
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->ImageWidth = result.val_short().front();
-      break;
-
-    case 0xa003:
-      // EXIF Image height
-      if (result.format() == 4 && !result.val_long().empty())
-        exif->ImageHeight = result.val_long().front();
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->ImageHeight = result.val_short().front();
-      break;
-
-    case 0xa20e:
-      // EXIF Focal plane X-resolution
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->LensInfo.FocalPlaneXResolution = result.val_rational().front();
-      break;
-
-    case 0xa20f:
-      // EXIF Focal plane Y-resolution
-      if (result.format() == 5 && !result.val_rational().empty())
-        exif->LensInfo.FocalPlaneYResolution = result.val_rational().front();
-      break;
-
-    case 0xa405:
-      // Focal length in 35mm film
-      if (result.format() == 3 && !result.val_short().empty())
-        exif->FocalLengthIn35mm = result.val_short().front();
-      break;
-
-    case 0xa420:
-      if (result.format() == 2)
-        exif->ImageUniqueID = result.val_string();
-       break;
-
-    case 0xa432:
-      // Focal length and FStop.
-      if (result.format() == 5) {
-        const int sz = result.val_rational().size();
-        if (sz)
-          exif->LensInfo.FocalLengthMin = result.val_rational()[0];
-        if (sz > 1)
-          exif->LensInfo.FocalLengthMax = result.val_rational()[1];
-        if (sz > 2)
-          exif->LensInfo.FStopMin = result.val_rational()[2];
-        if (sz > 3)
-          exif->LensInfo.FStopMax = result.val_rational()[3];
-      }
-      break;
-
-    case 0xa433:
-      // Lens make.
-      if (result.format() == 2)
-        exif->LensInfo.Make = result.val_string();
-      break;
-
-    case 0xa434:
-      // Lens model.
-      if (result.format() == 2)
-        exif->LensInfo.Model = result.val_string();
-      break;
-  }
+  return parseFrom(
+      reinterpret_cast<const unsigned char *>(data.data()), static_cast<unsigned>(data.length()));
 }
 
 //
@@ -715,9 +527,49 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
     IFEntry result =
         parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
     offs += 12;
-    readTag(result, this);
-    switch(result.tag())
-    {
+    switch (result.tag()) {
+      case 0x102:
+        // Bits per sample
+        if (result.format() == 3 && result.val_short().size())
+          this->BitsPerSample = result.val_short().front();
+        break;
+
+      case 0x10E:
+        // Image description
+        if (result.format() == 2) this->ImageDescription = result.val_string();
+        break;
+
+      case 0x10F:
+        // Digicam make
+        if (result.format() == 2) this->Make = result.val_string();
+        break;
+
+      case 0x110:
+        // Digicam model
+        if (result.format() == 2) this->Model = result.val_string();
+        break;
+
+      case 0x112:
+        // Orientation of image
+        if (result.format() == 3 && result.val_short().size())
+          this->Orientation = result.val_short().front();
+        break;
+
+      case 0x131:
+        // Software used for image
+        if (result.format() == 2) this->Software = result.val_string();
+        break;
+
+      case 0x132:
+        // EXIF/TIFF date/time of image modification
+        if (result.format() == 2) this->DateTime = result.val_string();
+        break;
+
+      case 0x8298:
+        // Copyright information
+        if (result.format() == 2) this->Copyright = result.val_string();
+        break;
+
       case 0x8825:
         // GPS IFS offset
         gps_sub_ifd_offset = tiff_header_start + result.data();
@@ -742,7 +594,162 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
     while (--num_entries >= 0) {
       IFEntry result =
           parseIFEntry(buf, offs, alignIntel, tiff_header_start, len);
-      readTag(result, this);
+      switch (result.tag()) {
+        case 0x829a:
+          // Exposure time in seconds
+          if (result.format() == 5 && result.val_rational().size())
+            this->ExposureTime = result.val_rational().front();
+          break;
+
+        case 0x829d:
+          // FNumber
+          if (result.format() == 5 && result.val_rational().size())
+            this->FNumber = result.val_rational().front();
+          break;
+
+      case 0x8822:
+        // Exposure Program
+        if (result.format() == 3 && result.val_short().size())
+          this->ExposureProgram = result.val_short().front();
+        break;
+
+        case 0x8827:
+          // ISO Speed Rating
+          if (result.format() == 3 && result.val_short().size())
+            this->ISOSpeedRatings = result.val_short().front();
+          break;
+
+        case 0x9003:
+          // Original date and time
+          if (result.format() == 2)
+            this->DateTimeOriginal = result.val_string();
+          break;
+
+        case 0x9004:
+          // Digitization date and time
+          if (result.format() == 2)
+            this->DateTimeDigitized = result.val_string();
+          break;
+
+        case 0x9201:
+          // Shutter speed value
+          if (result.format() == 5 && result.val_rational().size())
+            this->ShutterSpeedValue = result.val_rational().front();
+          break;
+
+        case 0x9204:
+          // Exposure bias value
+          if (result.format() == 5 && result.val_rational().size())
+            this->ExposureBiasValue = result.val_rational().front();
+          break;
+
+        case 0x9206:
+          // Subject distance
+          if (result.format() == 5 && result.val_rational().size())
+            this->SubjectDistance = result.val_rational().front();
+          break;
+
+        case 0x9209:
+          // Flash used
+          if (result.format() == 3 && result.val_short().size()) {
+            uint16_t data = result.val_short().front();
+            
+            this->Flash = data & 1;
+            this->FlashReturnedLight = (data & 6) >> 1;
+            this->FlashMode = (data & 24) >> 3;
+          }
+          break;
+
+        case 0x920a:
+          // Focal length
+          if (result.format() == 5 && result.val_rational().size())
+            this->FocalLength = result.val_rational().front();
+          break;
+
+        case 0x9207:
+          // Metering mode
+          if (result.format() == 3 && result.val_short().size())
+            this->MeteringMode = result.val_short().front();
+          break;
+
+        case 0x9291:
+          // Subsecond original time
+          if (result.format() == 2)
+            this->SubSecTimeOriginal = result.val_string();
+          break;
+
+        case 0xa002:
+          // EXIF Image width
+          if (result.format() == 4 && result.val_long().size())
+            this->ImageWidth = result.val_long().front();
+          if (result.format() == 3 && result.val_short().size())
+            this->ImageWidth = result.val_short().front();
+          break;
+
+        case 0xa003:
+          // EXIF Image height
+          if (result.format() == 4 && result.val_long().size())
+            this->ImageHeight = result.val_long().front();
+          if (result.format() == 3 && result.val_short().size())
+            this->ImageHeight = result.val_short().front();
+          break;
+
+        case 0xa20e:
+          // EXIF Focal plane X-resolution
+          if (result.format() == 5) {
+            this->LensInfo.FocalPlaneXResolution = result.val_rational()[0];
+          }
+          break;
+
+        case 0xa20f:
+          // EXIF Focal plane Y-resolution
+          if (result.format() == 5) {
+            this->LensInfo.FocalPlaneYResolution = result.val_rational()[0];
+          }
+          break;
+
+          case 0xa210:
+            // EXIF Focal plane resolution unit
+            if (result.format() == 3 && result.val_short().size()) {
+               this->LensInfo.FocalPlaneResolutionUnit = result.val_short().front();
+            }
+          break;
+
+        case 0xa405:
+          // Focal length in 35mm film
+          if (result.format() == 3 && result.val_short().size())
+            this->FocalLengthIn35mm = result.val_short().front();
+          break;
+
+        case 0xa432:
+          // Focal length and FStop.
+          if (result.format() == 5) {
+            int sz = static_cast<unsigned>(result.val_rational().size());
+            if (sz)
+              this->LensInfo.FocalLengthMin = result.val_rational()[0];
+            if (sz > 1)
+              this->LensInfo.FocalLengthMax = result.val_rational()[1];
+            if (sz > 2)
+              this->LensInfo.FStopMin = result.val_rational()[2];
+            if (sz > 3)
+              this->LensInfo.FStopMax = result.val_rational()[3];
+          }
+          break;
+
+        case 0xa433:
+          // Lens make.
+          if (result.format() == 2) {
+            this->LensInfo.Make = result.val_string();
+          }
+          break;
+
+        case 0xa434:
+          // Lens model.
+          if (result.format() == 2) {
+            this->LensInfo.Model = result.val_string();
+          }
+          break;
+      }
       offs += 12;
     }
   }
@@ -772,7 +779,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 2:
           // GPS latitude
-          if (format == 5 && length == 3) {
+          if ((format == 5 || format == 10) && length == 3) {
             this->GeoLocation.LatComponents.degrees = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
             this->GeoLocation.LatComponents.minutes = parse_value<Rational>(
@@ -828,7 +835,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 6:
           // GPS altitude
-          if (format == 5 || format == 10) {
+          if ((format == 5 || format == 10)) {
             this->GeoLocation.Altitude = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
             if (1 == this->GeoLocation.AltitudeRef) {
@@ -839,7 +846,7 @@ int easyexif::EXIFInfo::parseFromEXIFSegment(const unsigned char *buf,
 
         case 11:
           // GPS degree of precision (DOP)
-          if (format == 5 || format == 10) {
+          if ((format == 5 || format == 10)) {
             this->GeoLocation.DOP = parse_value<Rational>(
                 buf + data + tiff_header_start, alignIntel);
           }
@@ -871,6 +878,7 @@ void easyexif::EXIFInfo::clear() {
   BitsPerSample = 0;
   ExposureTime = 0;
   FNumber = 0;
+  ExposureProgram = 0;
   ISOSpeedRatings = 0;
   ShutterSpeedValue = 0;
   ExposureBiasValue = 0;
@@ -878,6 +886,8 @@ void easyexif::EXIFInfo::clear() {
   FocalLength = 0;
   FocalLengthIn35mm = 0;
   Flash = 0;
+  FlashReturnedLight = 0;
+  FlashMode = 0;
   MeteringMode = 0;
   ImageWidth = 0;
   ImageHeight = 0;
@@ -904,6 +914,7 @@ void easyexif::EXIFInfo::clear() {
   LensInfo.FStopMin = 0;
   LensInfo.FocalPlaneYResolution = 0;
   LensInfo.FocalPlaneXResolution = 0;
+  LensInfo.FocalPlaneResolutionUnit= 0;
   LensInfo.Make = "";
   LensInfo.Model = "";
 }

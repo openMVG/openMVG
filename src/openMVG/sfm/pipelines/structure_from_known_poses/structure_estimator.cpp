@@ -113,14 +113,16 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
         sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
-      const Mat34 P_L = iterIntrinsicL->second->get_projective_equivalent(poseL);
-      const Mat34 P_R = iterIntrinsicR->second->get_projective_equivalent(poseR);
+      const Mat34
+        P_L = iterIntrinsicL->second->get_projective_equivalent(poseL),
+        P_R = iterIntrinsicR->second->get_projective_equivalent(poseR);
 
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = max_reprojection_error_;
 
-      std::shared_ptr<features::Regions> regionsL = regions_provider->get(it->first);
-      std::shared_ptr<features::Regions> regionsR = regions_provider->get(it->second);
+      const std::shared_ptr<features::Regions>
+        regionsL = regions_provider->get(it->first),
+        regionsR = regions_provider->get(it->second);
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching

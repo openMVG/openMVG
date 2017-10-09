@@ -44,16 +44,16 @@ struct linspaced_op_impl<Scalar,Packet,/*IsInteger*/false>
 {
   linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
     m_low(low), m_high(high), m_size1(num_steps==1 ? 1 : num_steps-1), m_step(num_steps==1 ? Scalar() : (high-low)/Scalar(num_steps-1)),
-    m_interPacket(plset<Packet>(0)),
     m_flip(numext::abs(high)<numext::abs(low))
   {}
 
   template<typename IndexType>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (IndexType i) const {
+    typedef typename NumTraits<Scalar>::Real RealScalar;
     if(m_flip)
-      return (i==0)? m_low : (m_high - (m_size1-i)*m_step);
+      return (i==0)? m_low : (m_high - RealScalar(m_size1-i)*m_step);
     else
-      return (i==m_size1)? m_high : (m_low + i*m_step);
+      return (i==m_size1)? m_high : (m_low + RealScalar(i)*m_step);
   }
 
   template<typename IndexType>
@@ -63,7 +63,7 @@ struct linspaced_op_impl<Scalar,Packet,/*IsInteger*/false>
     // [low, ..., low] + ( [step, ..., step] * ( [i, ..., i] + [0, ..., size] ) )
     if(m_flip)
     {
-      Packet pi = padd(pset1<Packet>(Scalar(i-m_size1)),m_interPacket);
+      Packet pi = plset<Packet>(Scalar(i-m_size1));
       Packet res = padd(pset1<Packet>(m_high), pmul(pset1<Packet>(m_step), pi));
       if(i==0)
         res = pinsertfirst(res, m_low);
@@ -71,7 +71,7 @@ struct linspaced_op_impl<Scalar,Packet,/*IsInteger*/false>
     }
     else
     {
-      Packet pi = padd(pset1<Packet>(Scalar(i)),m_interPacket);
+      Packet pi = plset<Packet>(Scalar(i));
       Packet res = padd(pset1<Packet>(m_low), pmul(pset1<Packet>(m_step), pi));
       if(i==m_size1-unpacket_traits<Packet>::size+1)
         res = pinsertlast(res, m_high);
@@ -83,7 +83,6 @@ struct linspaced_op_impl<Scalar,Packet,/*IsInteger*/false>
   const Scalar m_high;
   const Index m_size1;
   const Scalar m_step;
-  const Packet m_interPacket;
   const bool m_flip;
 };
 
@@ -93,8 +92,8 @@ struct linspaced_op_impl<Scalar,Packet,/*IsInteger*/true>
   linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
     m_low(low),
     m_multiplier((high-low)/convert_index<Scalar>(num_steps<=1 ? 1 : num_steps-1)),
-    m_divisor(convert_index<Scalar>(num_steps+high-low)/(high-low+1)),
-    m_use_divisor((high+1)<(low+num_steps))
+    m_divisor(convert_index<Scalar>((high>=low?num_steps:-num_steps)+(high-low))/((numext::abs(high-low)+1)==0?1:(numext::abs(high-low)+1))),
+    m_use_divisor(num_steps>1 && (numext::abs(high-low)+1)<num_steps)
   {}
 
   template<typename IndexType>

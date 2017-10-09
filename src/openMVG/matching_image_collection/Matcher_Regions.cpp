@@ -51,20 +51,20 @@ void Matcher_Regions::Match
   // Sort pairs according the first index to minimize the MatcherT build operations
   using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
-  for (const auto & pair_it : pairs)
+  for (const auto & pair_idx : pairs)
   {
-    map_Pairs[pair_it.first].push_back(pair_it.second);
+    map_Pairs[pair_idx.first].push_back(pair_idx.second);
   }
 
   // Perform matching between all the pairs
-  for (const auto & pairs_it : map_Pairs)
+  for (const auto & pairs : map_Pairs)
   {
     if (my_progress_bar->hasBeenCanceled())
       continue;
-    const IndexT I = pairs_it.first;
-    const auto & indexToCompare = pairs_it.second;
+    const IndexT I = pairs.first;
+    const auto & indexToCompare = pairs.second;
 
-    std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
+    const std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI->RegionCount() == 0)
     {
       (*my_progress_bar) += indexToCompare.size();
@@ -84,7 +84,7 @@ void Matcher_Regions::Match
     {
       const IndexT J = indexToCompare[j];
 
-      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
+      const std::shared_ptr<features::Regions> regionsJ = regions_provider->get(J);
       if (regionsJ->RegionCount() == 0
           || regionsI->Type_id() != regionsJ->Type_id())
       {

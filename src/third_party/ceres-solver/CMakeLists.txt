@@ -47,12 +47,12 @@ message("   ===============================================================")
 # Make CMake aware of the cmake folder for local FindXXX scripts,
 # append rather than set in case the user has passed their own
 # additional paths via -D.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${Ceres_SOURCE_DIR}/cmake")
 include(UpdateCacheVariable)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${Ceres_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${Ceres_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${Ceres_BINARY_DIR}/lib)
 # Set postfixes for generated libraries based on buildtype.
 set(CMAKE_RELEASE_POSTFIX "")
 set(CMAKE_DEBUG_POSTFIX "-debug")
@@ -60,7 +60,7 @@ set(CMAKE_DEBUG_POSTFIX "-debug")
 # Read the Ceres version from the source, such that we only ever have a single
 # definition of the Ceres version.
 include(ReadCeresVersionFromSource)
-read_ceres_version_from_source(${CMAKE_CURRENT_SOURCE_DIR})
+read_ceres_version_from_source(${Ceres_SOURCE_DIR})
 
 enable_testing()
 
@@ -121,6 +121,30 @@ if (MSVC)
     update_cache_variable(BUILD_TESTING OFF)
   endif (BUILD_TESTING AND BUILD_SHARED_LIBS)
 endif (MSVC)
+# Allow user to specify a suffix for the library install directory, the only
+# really sensible option (other than "") being "64", such that:
+# ${CMAKE_INSTALL_PREFIX}/lib -> ${CMAKE_INSTALL_PREFIX}/lib64.
+#
+# Heuristic for determining LIB_SUFFIX. FHS recommends that 64-bit systems
+# install native libraries to lib64 rather than lib. Most distros seem to
+# follow this convention with a couple notable exceptions (Debian-based and
+# Arch-based distros) which we try to detect here.
+if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND
+    NOT DEFINED LIB_SUFFIX AND
+    NOT CMAKE_CROSSCOMPILING AND
+    CMAKE_SIZEOF_VOID_P EQUAL "8" AND
+    NOT EXISTS "/etc/debian_version" AND
+    NOT EXISTS "/etc/arch-release")
+  message("-- Detected non-Debian/Arch-based 64-bit Linux distribution. "
+    "Defaulting to library install directory: lib${LIB_SUFFIX}. You can "
+    "override this by specifying LIB_SUFFIX.")
+  set(LIB_SUFFIX "64")
+endif ()
+# Only create the cache variable (for the CMake GUI) after attempting to detect
+# the suffix *if not specified by the user* (NOT DEFINED LIB_SUFFIX in if())
+# s/t the user could override our autodetected suffix with "" if desired.
+set(LIB_SUFFIX "${LIB_SUFFIX}" CACHE STRING
+  "Suffix of library install directory (to support lib/lib64)." FORCE)
 
 # IOS is defined iff using the iOS.cmake CMake toolchain to build a static
 # library for iOS.
@@ -361,6 +385,7 @@ if (OPENMP)
     message("-- Building with OpenMP.")
     list(APPEND CERES_COMPILE_OPTIONS CERES_USE_OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     if (UNIX)
       # At least on Linux, we need pthreads to be enabled for mutex to
       # compile.  This may not work on Windows or Android.
@@ -379,13 +404,18 @@ else (OPENMP)
   list(APPEND CERES_COMPILE_OPTIONS CERES_NO_THREADS)
 endif (OPENMP)
 
+# Initialise CMAKE_REQUIRED_FLAGS used by CheckCXXSourceCompiles with the
+# contents of CMAKE_CXX_FLAGS such that if the user has passed extra flags
+# they are used when discovering shared_ptr/unordered_map.
+set(CMAKE_REQUIRED_FLAGS ${CMAKE_CXX_FLAGS})
+
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++11" COMPILER_HAS_CXX11_FLAG)
 if (CXX11 AND COMPILER_HAS_CXX11_FLAG)
   # Update CMAKE_REQUIRED_FLAGS used by CheckCXXSourceCompiles to include
   # -std=c++11 s/t we will detect the C++11 versions of unordered_map &
   # shared_ptr if they exist.
-  set(CMAKE_REQUIRED_FLAGS -std=c++11)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++11")
 endif (CXX11 AND COMPILER_HAS_CXX11_FLAG)
 
 # Set the Ceres compile definitions for the unordered_map configuration.
@@ -437,7 +467,12 @@ if (CXX11)
     message("   of Ceres that will require the use of C++11 in client code.")
     message("   ==============================================================")
     list(APPEND CERES_COMPILE_OPTIONS CERES_USE_CXX11)
-    if (COMPILER_HAS_CXX11_FLAG)
+    if (COMPILER_HAS_CXX11_FLAG AND
+        CMAKE_VERSION VERSION_LESS "2.8.12")
+      # For CMake versions > 2.8.12, the C++11 dependency is rolled into the
+      # Ceres target, and all dependent targets, but for older versions of CMake
+      # the flag must be specified explicitly both for Ceres and the
+      # examples/tests.
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     endif()
   endif()
@@ -602,6 +637,14 @@ if (MSVC)
 
   # Tuple sizes of 10 are used by Gtest.
   add_definitions("-D_VARIADIC_MAX=10")
+
+  include(CheckIfUnderscorePrefixedBesselFunctionsExist)
+  check_if_underscore_prefixed_bessel_functions_exist(
+    HAVE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
+  if (HAVE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
+    list(APPEND CERES_COMPILE_OPTIONS
+      CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
+  endif()
 endif (MSVC)
 
 if (UNIX)
@@ -655,13 +698,13 @@ endif (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 list(REMOVE_DUPLICATES CERES_COMPILE_OPTIONS)
 include(CreateCeresConfig)
 create_ceres_config("${CERES_COMPILE_OPTIONS}"
-  ${CMAKE_CURRENT_BINARY_DIR}/config/ceres/internal)
+  ${Ceres_BINARY_DIR}/config/ceres/internal)
 # Force the location containing the configured config.h to the front of the
 # include_directories list (by default it is appended to the back) to ensure
 # that if the user has an installed version of Ceres in the same location as one
 # of the dependencies (e.g. /usr/local) that we find the config.h we just
 # configured, not the (older) installed config.h.
-include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/config)
+include_directories(BEFORE ${Ceres_BINARY_DIR}/config)
 
 add_subdirectory(internal/ceres)
 
@@ -689,21 +732,21 @@ else (BUILD_EXAMPLES)
 endif (BUILD_EXAMPLES)
 
 # Setup installation of Ceres public headers.
-file(GLOB CERES_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/include/ceres/*.h)
+file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
 install(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
 
-file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${CMAKE_CURRENT_SOURCE_DIR}/include/ceres/internal/*.h)
+file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
 install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
 # Also setup installation of Ceres config.h configured with the current
 # build options into the installed headers directory.
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/config/ceres/internal/config.h
+install(FILES ${Ceres_BINARY_DIR}/config/ceres/internal/config.h
         DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
 if (MINIGLOG)
   # Install miniglog header if being used as logging #includes appear in
   # installed public Ceres headers.
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
+  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
           DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
 endif (MINIGLOG)
 

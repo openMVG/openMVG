@@ -37,7 +37,11 @@ template<typename Derived> class SparseMatrixBase
     
     typedef typename internal::packet_traits<Scalar>::type PacketScalar;
     typedef typename internal::traits<Derived>::StorageKind StorageKind;
+
+    /** The integer type used to \b store indices within a SparseMatrix.
+      * For a \c SparseMatrix<Scalar,Options,IndexType> it an alias of the third template parameter \c IndexType. */
     typedef typename internal::traits<Derived>::StorageIndex StorageIndex;
+
     typedef typename internal::add_const_on_value_type_if_arithmetic<
                          typename internal::packet_traits<Scalar>::type
                      >::type PacketReturnType;
@@ -213,7 +217,7 @@ template<typename Derived> class SparseMatrixBase
 
       if (Flags&RowMajorBit)
       {
-        const Nested nm(m.derived());
+        Nested nm(m.derived());
         internal::evaluator<NestedCleaned> thisEval(nm);
         for (Index row=0; row<nm.outerSize(); ++row)
         {
@@ -232,7 +236,7 @@ template<typename Derived> class SparseMatrixBase
       }
       else
       {
-        const Nested nm(m.derived());
+        Nested nm(m.derived());
         internal::evaluator<NestedCleaned> thisEval(nm);
         if (m.cols() == 1) {
           Index row = 0;
@@ -264,6 +268,11 @@ template<typename Derived> class SparseMatrixBase
     Derived& operator+=(const DiagonalBase<OtherDerived>& other);
     template<typename OtherDerived>
     Derived& operator-=(const DiagonalBase<OtherDerived>& other);
+
+    template<typename OtherDerived>
+    Derived& operator+=(const EigenBase<OtherDerived> &other);
+    template<typename OtherDerived>
+    Derived& operator-=(const EigenBase<OtherDerived> &other);
 
     Derived& operator*=(const Scalar& other);
     Derived& operator/=(const Scalar& other);

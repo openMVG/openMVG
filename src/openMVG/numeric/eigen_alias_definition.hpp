@@ -48,7 +48,7 @@ namespace std {                                                            \
     explicit vector(iterator start, iterator end) : vector_base(start, end) {}      \
     vector& operator=(const vector& x) = default;                          \
     /* Add initializer list constructor support*/                          \
-    vector(initializer_list<__VA_ARGS__> list)                             \
+    vector(std::initializer_list<__VA_ARGS__> list)                             \
         : vector_base(list.begin(), list.end()) {}                         \
   };                                                                       \
 }  // namespace std

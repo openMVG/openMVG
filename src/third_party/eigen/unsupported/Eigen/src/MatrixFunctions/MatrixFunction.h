@@ -398,8 +398,8 @@ struct matrix_function_compute
 template <typename MatrixType>
 struct matrix_function_compute<MatrixType, 0>
 {  
-  template <typename AtomicType, typename ResultType> 
-  static void run(const MatrixType& A, AtomicType& atomic, ResultType &result)
+  template <typename MatA, typename AtomicType, typename ResultType>
+  static void run(const MatA& A, AtomicType& atomic, ResultType &result)
   {
     typedef internal::traits<MatrixType> Traits;
     typedef typename Traits::Scalar Scalar;
@@ -422,11 +422,10 @@ struct matrix_function_compute<MatrixType, 0>
 template <typename MatrixType>
 struct matrix_function_compute<MatrixType, 1>
 {
-  template <typename AtomicType, typename ResultType> 
-  static void run(const MatrixType& A, AtomicType& atomic, ResultType &result)
+  template <typename MatA, typename AtomicType, typename ResultType>
+  static void run(const MatA& A, AtomicType& atomic, ResultType &result)
   {
     typedef internal::traits<MatrixType> Traits;
-    typedef typename MatrixType::Index Index;
     
     // compute Schur decomposition of A
     const ComplexSchur<MatrixType> schurOfA(A);  
@@ -514,7 +513,7 @@ template<typename Derived> class MatrixFunctionReturnValue
       typedef internal::MatrixFunctionAtomic<DynMatrixType> AtomicType;
       AtomicType atomic(m_f);
 
-      internal::matrix_function_compute<NestedEvalTypeClean>::run(m_A, atomic, result);
+      internal::matrix_function_compute<typename NestedEvalTypeClean::PlainObject>::run(m_A, atomic, result);
     }
 
     Index rows() const { return m_A.rows(); }

@@ -23,11 +23,11 @@ template<typename Kernel>
 void EvalInlier(const Kernel & kernel, const typename Kernel::Model & model,
    double dThreshold, std::vector<uint32_t> * vec_inliers)
 {
-  ScorerEvaluator<Kernel> scorer(dThreshold);
+  const ScorerEvaluator<Kernel> scorer(dThreshold);
   std::vector<uint32_t> vec_index(kernel.NumSamples());
   std::iota(vec_index.begin(), vec_index.end(), 0);
 
-  scorer.Score(kernel, model, vec_index, &(*vec_inliers));
+  scorer.Score(kernel, model, vec_index, vec_inliers);
 }
 
 // Test without outlier
@@ -129,7 +129,7 @@ TEST(LMedsLineFitter, RealisticCase) {
 
   Vec2 model;
   double dThreshold = std::numeric_limits<double>::infinity();
-  const double dBestMedian = LeastMedianOfSquares(kernel, &model, &dThreshold);
+  LeastMedianOfSquares(kernel, &model, &dThreshold);
   EXPECT_NEAR(-2.0, model[0], dExpectedPrecision);
   EXPECT_NEAR(6.3, model[1], dExpectedPrecision);
   //Compute which point are inliers (error below dThreshold)
