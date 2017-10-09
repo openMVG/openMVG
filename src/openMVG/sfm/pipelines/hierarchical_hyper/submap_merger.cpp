@@ -35,10 +35,8 @@ std::vector<size_t> findCommonReconstructedSeparatorTracks(HsfmSubmap& parent_su
 }
 
 SubmapMerger::SubmapMerger(const HsfmSubmaps & submaps)
-  : submaps_(submaps)
-{
-  scene_aligner_ = std::unique_ptr<SceneAligner>(new SceneAligner);
-}
+  : submaps_(submaps), scene_aligner_(new SceneAligner)
+{}
 
 bool SubmapMerger::Merge(const std::string & debug_out_dir)
 {
