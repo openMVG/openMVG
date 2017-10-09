@@ -23,6 +23,7 @@
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
+#include "openMVG/robust_estimation/gms_filter.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
@@ -56,6 +57,51 @@ enum EPairMode
   PAIR_CONTIGUOUS = 1,
   PAIR_FROM_FILE  = 2
 };
+
+/// Functor to filter a matche selection with the GMS filter
+IndMatches GMSRegionsMatchFilter
+(
+  const features::Regions & regions_left,
+  const features::Regions & regions_right,
+  const matching::IndMatches & matches,
+  const std::pair<int, int> & image_left_size,
+  const std::pair<int, int> & image_right_size
+)
+{
+  std::vector<Eigen::Vector2f> vec_points_left, vec_points_right;
+  {
+    const auto & regions_pos = regions_left.GetRegionsPositions();
+    vec_points_left.reserve(regions_pos.size());
+    for (const auto & it : regions_pos)
+      vec_points_left.emplace_back(it.x(), it.y());
+  }
+  {
+    const auto & regions_pos = regions_right.GetRegionsPositions();
+    vec_points_right.reserve(regions_pos.size());
+    for (const auto & it : regions_pos)
+      vec_points_right.emplace_back(it.x(), it.y());
+  }
+
+  const int kGmsThreshold = 6;
+  robust::GMSFilter gms(
+    vec_points_left,  image_left_size,
+    vec_points_right, image_right_size,
+    matches,
+    kGmsThreshold);
+  const bool with_scale_invariance = true;
+  const bool with_rotation_invariance = true;
+  std::vector<bool> inlier_flags;
+  const int nb_inliers = gms.GetInlierMask(inlier_flags,
+                                           with_scale_invariance,
+                                           with_rotation_invariance);
+  matching::IndMatches vec_gms_matches;
+  for (int i = 0; i < static_cast<int>(inlier_flags.size()); ++i)
+  {
+   if (inlier_flags[i])
+     vec_gms_matches.push_back(matches[i]);
+  }
+  return vec_gms_matches;
+}
 
 /// Compute corresponding features between a series of views:
 /// - Load view images description (regions: features & descriptors)
@@ -91,7 +137,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
-
+  cmd.add( make_switch('x', "gms_filter") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -118,19 +164,20 @@ int main(int argc, char **argv)
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  For Scalar based regions descriptor:\n"
-      << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
-      << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
-      << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
-      << "    FASTCASCADEHASHINGL2: (default)\n"
+      << "    ANN_L2: L2 Approximate Nearest Neighbor matching,\n"
+      << "    BRUTE_FORCE_L2: L2 BruteForce matching,\n"
+      << "    BRUTE_FORCE_HAMMING: BruteForce Hamming matching (For Binary based descriptor).\n"
+      << "    CASCADE_HASHING_L2: L2 Cascade Hashing matching.\n"
+      << "    FAST_CASCADE_HASHING_L2: (default)\n"
       << "      L2 Cascade Hashing with precomputed hashed regions\n"
-      << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
-      << "  For Binary based descriptor:\n"
-      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
+      << "     (faster than CASCADE_HASHING_L2 but use more memory).\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
       << "[-c|--cache_size]\n"
-      << "  Use a regions cache (only cache_size regions will be stored in memory)"
-      << "  If not used, all regions will be load in memory."
+      << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
+      << "  If not used, all regions will be load in memory.\n"
+      << "[-x|--gms_filter]\n"
+      << "  switch option that enable 1o1 matching + the GMS filter"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -291,57 +338,79 @@ int main(int argc, char **argv)
       case PAIR_FROM_FILE:  std::cout << "user defined pairwise matching" << std::endl; break;
     }
 
-    // Allocate the right Matcher according the Matching requested method
+    //
+    // Allocate the right Matcher according the requested Matching method
+    //
     std::unique_ptr<Matcher> collectionMatcher;
-    if (sNearestMatchingMethod == "AUTO")
+    if (sNearestMatchingMethod == "AUTO"
+        || sNearestMatchingMethod == "FAST_CASCADE_HASHING_L2")
     {
       if (regions_type->IsScalar())
       {
-        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
+        sNearestMatchingMethod = "FAST_CASCADE_HASHING_L2";
         collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
       }
       else
       if (regions_type->IsBinary())
+        sNearestMatchingMethod = EnumToString(EMatcherType::BRUTE_FORCE_HAMMING);
+    }
+    // If no collection Matcher have been created we create a Matcher_Regions matcher.
+    if (!collectionMatcher)
+    {
+      matching::EMatcherType matcher_type;
+      try { matcher_type = StringToEnum(sNearestMatchingMethod); }
+      catch (std::exception & e)
       {
-        std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-        collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
       }
-    }
-    else
-    if (sNearestMatchingMethod == "BRUTEFORCEL2")
-    {
-      std::cout << "Using BRUTE_FORCE_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_L2));
-    }
-    else
-    if (sNearestMatchingMethod == "BRUTEFORCEHAMMING")
-    {
-      std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
-    }
-    else
-    if (sNearestMatchingMethod == "ANNL2")
-    {
-      std::cout << "Using ANN_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, ANN_L2));
-    }
-    else
-    if (sNearestMatchingMethod == "CASCADEHASHINGL2")
-    {
-      std::cout << "Using CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, CASCADE_HASHING_L2));
-    }
-    else
-    if (sNearestMatchingMethod == "FASTCASCADEHASHINGL2")
-    {
-      std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-      collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
+
+      MatcherFactory matcher_factory;
+      switch (matcher_type)
+      {
+        case matching::EMatcherType::ANN_L2:
+        case matching::EMatcherType::BRUTE_FORCE_L2:
+        case matching::EMatcherType::BRUTE_FORCE_HAMMING:
+        case matching::EMatcherType::CASCADE_HASHING_L2:
+        {
+          matcher_factory.matcher_type_ = StringToEnum(sNearestMatchingMethod);
+          using std::placeholders::_1;
+          const Matcher_Regions::CreateMatcherFunctor f_matching_factory =
+            std::bind(&MatcherFactory::Create, matcher_factory, _1);
+
+          const Matcher_Regions::CallMatcherFunctor f_call_matcher_1o1 = MatchingOneOne;
+
+          const DistanceRatioMatching ratio_matcher(fDistRatio);
+          using std::placeholders::_2;
+          using std::placeholders::_3;
+          const Matcher_Regions::CallMatcherFunctor f_call_matcher_dist_ratio =
+              std::bind(&DistanceRatioMatching::Match, ratio_matcher, _1, _2, _3);
+
+          const bool matching_1o1 = cmd.used('x');
+          const bool post_matching_gms = cmd.used('x');
+          Matcher_Regions::CallPostProcessMatchFunctor f_post_process_match;
+          if (post_matching_gms)
+            f_post_process_match = GMSRegionsMatchFilter;
+
+          collectionMatcher.reset(new Matcher_Regions(
+            f_matching_factory,
+            matching_1o1 ? f_call_matcher_1o1 : f_call_matcher_dist_ratio,
+            f_post_process_match));
+        }
+        break;
+      }
     }
     if (!collectionMatcher)
     {
       std::cerr << "Invalid Nearest Neighbor method: " << sNearestMatchingMethod << std::endl;
       return EXIT_FAILURE;
     }
+
+    std::cout
+      << "Collection Matcher is using this: "
+      << sNearestMatchingMethod
+      << " matcher." <<std::endl;
+
     // Perform the matching
     system::Timer timer;
     {

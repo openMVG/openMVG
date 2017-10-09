@@ -59,6 +59,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   openMVG_multiview
   openMVG_sfm
   openMVG_matching_image_collection
+  openMVG_robust_estimation
   stlplus
   )
 

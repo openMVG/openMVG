@@ -9,10 +9,12 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_REGIONS_HPP
 
+#include <functional>
 #include <memory>
 
 #include "openMVG/matching/matcher_type.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 namespace openMVG { namespace matching { class PairWiseMatchesContainer; } }
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
@@ -22,18 +24,37 @@ namespace openMVG {
 namespace matching_image_collection {
 
 /// Implementation of an Image Collection Matcher
-/// Compute putative matches between a collection of pictures
-/// Spurious correspondences are discarded by using the
-///  a threshold over the distance ratio of the 2 nearest neighbours.
+/// Computes the putative matches between a collection of picture regions.
 ///
 class Matcher_Regions : public Matcher
 {
   public:
+  /// Functor to create on the fly the required matching::RegionsMatcher
+  using CreateMatcherFunctor = std::function
+    <std::unique_ptr<matching::RegionsMatcher>(const features::Regions &)>;
+  /// Functor to call the Matching function of the created matching::RegionsMatcher
+  using CallMatcherFunctor = std::function
+    <void(matching::RegionsMatcher *,
+          const features::Regions &,
+          matching::IndMatches &)>;
+  /// Functor to post_process the found matched (can be empty or do features depuplication...)
+  using CallPostProcessMatchFunctor = std::function
+    <const matching::IndMatches(
+      const features::Regions &,
+      const features::Regions &,
+      const matching::IndMatches &,
+      const std::pair<int, int> &,
+      const std::pair<int, int> &)>;
+
   Matcher_Regions
   (
-    float dist_ratio,
-    matching::EMatcherType eMatcherType
-  );
+    const CreateMatcherFunctor & create_matcher,
+    const CallMatcherFunctor & call_matcher,
+    const CallPostProcessMatchFunctor & post_process_match
+  ): create_matcher_(create_matcher),
+     call_matcher_(call_matcher),
+     call_post_process_match_functor(post_process_match)
+  {};
 
   /// Find corresponding points between some pair of view Ids
   void Match
@@ -46,10 +67,10 @@ class Matcher_Regions : public Matcher
   ) const override;
 
   private:
-  // Distance ratio used to discard spurious correspondence
-  float f_dist_ratio_;
-  // Matcher Type
-  matching::EMatcherType eMatcherType_;
+  const CreateMatcherFunctor create_matcher_;
+  const CallMatcherFunctor call_matcher_;
+  const CallPostProcessMatchFunctor call_post_process_match_functor;
+
 };
 
 } // namespace matching_image_collection

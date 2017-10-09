@@ -123,7 +123,7 @@ struct GeometricFilter_FMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
-      const std::shared_ptr<features::Regions>
+      const auto
         regionsI = regions_provider->get(iIndex),
         regionsJ = regions_provider->get(jIndex);
 

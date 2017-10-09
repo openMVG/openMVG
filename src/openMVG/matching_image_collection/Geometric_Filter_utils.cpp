@@ -72,7 +72,7 @@ void MatchesPairToMat
       sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
   // Load features of Inth and Jnth images
-  const std::shared_ptr<features::Regions>
+  const auto
     regionsI = regions_provider->get(pairIndex.first),
     regionsJ = regions_provider->get(pairIndex.second);
   const features::PointFeatures

@@ -50,8 +50,9 @@ namespace sfm {
         if (observation.second.id_feat != UndefinedIndexT)
         {
           // copy the feature/descriptor to landmark_observations_descriptors
-          const std::shared_ptr<features::Regions> view_regions = regions_provider.get(observation.first);
-          view_regions->CopyRegion(observation.second.id_feat, landmark_observations_descriptors_.get());
+          const auto view_regions = regions_provider.get(observation.first);
+          view_regions->CopyRegion(observation.second.id_feat,
+                                   landmark_observations_descriptors_.get());
           // link this descriptor to the track Id
           index_to_landmark_id_.push_back(landmark.first);
         }

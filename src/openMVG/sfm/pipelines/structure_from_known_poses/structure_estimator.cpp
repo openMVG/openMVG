@@ -120,9 +120,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       const Mat3 F_lr = F_from_P(P_L, P_R);
       const double thresholdF = max_reprojection_error_;
 
-      const std::shared_ptr<features::Regions>
-        regionsL = regions_provider->get(it->first),
-        regionsR = regions_provider->get(it->second);
+      const auto regionsL = regions_provider->get(it->first);
+      const auto regionsR = regions_provider->get(it->second);
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
@@ -221,14 +220,13 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
         regions[K] = regions_provider->get(K);
 
         // Triangulate the tracks
-        for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
-          iterTracks != map_tracksCommon.end(); ++iterTracks)
+        for (const auto track_it : map_tracksCommon)
         {
-          const tracks::submapTrack & subTrack = iterTracks->second;
+          const tracks::submapTrack & subTrack = track_it.second;
           Triangulation trianObj;
-          for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
-            const size_t imaIndex = iter->first;
-            const size_t featIndex = iter->second;
+          for (const auto obs_it : subTrack) {
+            const size_t imaIndex = obs_it.first;
+            const size_t featIndex = obs_it.second;
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
@@ -236,7 +234,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
           }
           trianObj.compute();
-          if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
+          if (trianObj.minDepth() > 0
+              && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
@@ -244,7 +243,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             #endif // OPENMVG_USE_OPENMP
             {
               openMVG::tracks::submapTrack::const_iterator iterI, iterJ, iterK;
-              iterI = iterJ = iterK = subTrack.begin();
+              iterI = iterJ = iterK = subTrack.cbegin();
               std::advance(iterJ,1);
               std::advance(iterK,2);
 
@@ -292,11 +291,11 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
       const tracks::submapTrack & track = itTracks->second;
 
       Observations obs;
-      for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+      for (const auto obs_it : track)
       {
-        const IndexT imaIndex = it->first;
-        const IndexT featIndex = it->second;
-        const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
+        const IndexT imaIndex = obs_it.first;
+        const IndexT featIndex = obs_it.second;
+        const auto regions = regions_provider->get(imaIndex);
         const Vec2 pt = regions->GetRegionPosition(featIndex);
         obs[imaIndex] = Observation(pt, featIndex);
       }

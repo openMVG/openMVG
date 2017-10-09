@@ -161,7 +161,7 @@ struct GeometricFilter_EMatrix_AC
       Mat3 F;
       FundamentalFromEssential(m_E, ptrPinhole_I->K(), ptrPinhole_J->K(), &F);
 
-      const std::shared_ptr<features::Regions>
+      const auto
         regionsI = regions_provider->get(iIndex),
         regionsJ = regions_provider->get(jIndex);
 

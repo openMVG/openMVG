@@ -67,7 +67,7 @@ void Match
   if (!used_index.empty())
   {
     const IndexT I = *used_index.begin();
-    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const auto regionsI = regions_provider.get(I);
     const size_t dimension = regionsI->DescriptorLength();
     cascade_hasher.Init(dimension);
   }
@@ -78,12 +78,12 @@ void Match
   Eigen::VectorXf zero_mean_descriptor;
   {
     Eigen::MatrixXf matForZeroMean;
-    for (int i =0; i < used_index.size(); ++i)
+    for (int i(0); i < used_index.size(); ++i)
     {
       std::set<IndexT>::const_iterator iter = used_index.begin();
       std::advance(iter, i);
       const IndexT I = *iter;
-      const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+      const auto regionsI = regions_provider.get(I);
       const ScalarT * tabI =
         reinterpret_cast<const ScalarT*>(regionsI->DescriptorRawData());
       const size_t dimension = regionsI->DescriptorLength();
@@ -94,7 +94,7 @@ void Match
       }
       if (regionsI->RegionCount() > 0)
       {
-        Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
+        const Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
         matForZeroMean.row(i) = CascadeHasher::GetZeroMeanDescriptor(mat_I);
       }
     }
@@ -105,17 +105,17 @@ void Match
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i =0; i < used_index.size(); ++i)
+  for (int i = 0; i < used_index.size(); ++i)
   {
     std::set<IndexT>::const_iterator iter = used_index.begin();
     std::advance(iter, i);
     const IndexT I = *iter;
-    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const auto regionsI = regions_provider.get(I);
     const ScalarT * tabI =
       reinterpret_cast<const ScalarT*>(regionsI->DescriptorRawData());
     const size_t dimension = regionsI->DescriptorLength();
 
-    Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
+    const Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp critical
 #endif
@@ -132,8 +132,7 @@ void Match
       break;
     const IndexT I = pairs.first;
     const std::vector<IndexT> & indexToCompare = pairs.second;
-
-    const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
+    const auto regionsI = regions_provider.get(I);
     if (regionsI->RegionCount() == 0)
     {
       (*my_progress_bar) += indexToCompare.size();
@@ -154,7 +153,7 @@ void Match
       if (my_progress_bar->hasBeenCanceled())
         continue;
       const size_t J = indexToCompare[j];
-      const std::shared_ptr<features::Regions> regionsJ = regions_provider.get(J);
+      const auto regionsJ = regions_provider.get(J);
 
       if (regionsI->Type_id() != regionsJ->Type_id())
       {
@@ -164,7 +163,7 @@ void Match
 
       // Matrix representation of the query input data;
       const ScalarT * tabJ = reinterpret_cast<const ScalarT*>(regionsJ->DescriptorRawData());
-      Eigen::Map<BaseMat> mat_J( (ScalarT*)tabJ, regionsJ->RegionCount(), dimension);
+      const Eigen::Map<BaseMat> mat_J( (ScalarT*)tabJ, regionsJ->RegionCount(), dimension);
 
       IndMatches pvec_indices;
       using ResultType = typename Accumulator<ScalarT>::Type;
@@ -173,50 +172,50 @@ void Match
       pvec_indices.reserve(regionsJ->RegionCount() * 2);
 
       // Match the query descriptors to the database
-      cascade_hasher.Match_HashedDescriptions<BaseMat, ResultType>(
+      cascade_hasher.Match_HashedDescriptions<const BaseMat, ResultType>(
         hashed_base_[J], mat_J,
         hashed_base_[I], mat_I,
         &pvec_indices, &pvec_distances);
 
-      std::vector<int> vec_nn_ratio_idx;
+      std::vector<int> nn_ratio_indexes;
       // Filter the matches using a distance ratio test:
       //   The probability that a match is correct is determined by taking
       //   the ratio of distance from the closest neighbor to the distance
       //   of the second closest.
       matching::NNdistanceRatio(
-        pvec_distances.begin(), // distance start
-        pvec_distances.end(),   // distance end
+        pvec_distances.cbegin(), // distance start
+        pvec_distances.cend(),   // distance end
         2, // Number of neighbor in iterator sequence (minimum required 2)
-        vec_nn_ratio_idx, // output (indices that respect the distance Ratio)
+        nn_ratio_indexes, // output (indices that respect the distance Ratio)
         Square(fDistRatio));
 
-      matching::IndMatches vec_putative_matches;
-      vec_putative_matches.reserve(vec_nn_ratio_idx.size());
-      for (size_t k=0; k < vec_nn_ratio_idx.size(); ++k)
+      matching::IndMatches matches;
+      matches.reserve(nn_ratio_indexes.size());
+      for (const auto & index : nn_ratio_indexes)
       {
-        const size_t index = vec_nn_ratio_idx[k];
-        vec_putative_matches.emplace_back(pvec_indices[index*2].j_, pvec_indices[index*2].i_);
+        matches.emplace_back(pvec_indices[index * 2].j_,
+                             pvec_indices[index * 2].i_);
       }
 
       // Remove duplicates
-      matching::IndMatch::getDeduplicated(vec_putative_matches);
+      matching::IndMatch::getDeduplicated(matches);
 
       // Remove matches that have the same (X,Y) coordinates
       const std::vector<features::PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
-      matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
+      matching::IndMatchDecorator<float> matchDeduplicator(matches,
         pointFeaturesI, pointFeaturesJ);
-      matchDeduplicator.getDeduplicated(vec_putative_matches);
+      matchDeduplicator.getDeduplicated(matches);
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
       {
-        if (!vec_putative_matches.empty())
+        if (!matches.empty())
         {
           map_PutativesMatches.insert(
             {
               {I,J},
-              std::move(vec_putative_matches)
+              std::move(matches)
             });
         }
       }

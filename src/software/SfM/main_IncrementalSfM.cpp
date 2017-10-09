@@ -129,8 +129,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (i_User_camera_model < PINHOLE_CAMERA ||
-      i_User_camera_model > PINHOLE_CAMERA_FISHEYE )  {
+  if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
   }

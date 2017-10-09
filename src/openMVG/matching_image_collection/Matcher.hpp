@@ -10,7 +10,6 @@
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_MATCHER_HPP
 
 #include <string>
-#include <vector>
 #include <memory>
 
 #include "openMVG/matching/indMatch.hpp"

@@ -83,6 +83,39 @@ class RegionsMatcher
   ) = 0;
 };
 
+/// Functor designed to use the matching::RegionsMatcher::Match function
+inline void MatchingOneOne
+(
+  matching::RegionsMatcher * matcher,
+  const features::Regions & regions,
+  matching::IndMatches & matches
+)
+{
+  matcher->Match(regions, matches);
+}
+
+/// Functor designed to use the matching::RegionsMatcher::MatchDistanceRatio function
+struct DistanceRatioMatching
+{
+  DistanceRatioMatching
+  (
+    float distance_ratio // Distance ratio used to discard similar correspondences
+  ) : distance_ratio_(distance_ratio)
+  {}
+
+  float distance_ratio_;
+
+  void Match
+  (
+    matching::RegionsMatcher * matcher,
+    const features::Regions & regions,
+    matching::IndMatches & matches
+  )
+  {
+    matcher->MatchDistanceRatio(distance_ratio_, regions, matches);
+  }
+};
+
 /**
  * @brief Create a region matcher according a matcher type and the regions type.
  * @param[in] matcher_type The Matcher type.
@@ -95,6 +128,29 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
   matching::EMatcherType matcher_type,
   const features::Regions & regions
 );
+
+struct MatcherFactory
+{
+  MatcherFactory() = default;
+
+  MatcherFactory
+  (
+    const matching::EMatcherType & matcher_type
+  ): matcher_type_(matcher_type)
+  {}
+
+  std::unique_ptr<RegionsMatcher> Create
+  (
+    const features::Regions & regions
+  )
+  {
+    return RegionMatcherFactory(
+      matcher_type_,
+      regions
+    );
+  }
+  matching::EMatcherType matcher_type_;
+};
 
 /**
  * Match two Regions with one stored as a "database" according a Template ArrayMatcher.
@@ -166,7 +222,7 @@ public:
     matching::IndMatches & matches
   ) override
   {
-    if (regions_ == nullptr)
+    if (!regions_)
       return false;
 
     const Scalar * queries = reinterpret_cast<const Scalar *>(query_regions.DescriptorRawData());
