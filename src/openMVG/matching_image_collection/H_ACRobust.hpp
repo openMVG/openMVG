@@ -163,13 +163,6 @@ struct GeometricFilter_HMatrix_AC
         geometry_aware::GuidedMatching
           <Mat3, openMVG::homography::kernel::AsymmetricError>(
           m_H, xI, xJ, Square(m_dPrecision_robust), matches);
-
-        // Remove duplicates
-        matching::IndMatch::getDeduplicated(matches);
-
-        // Remove matches that have the same (X,Y) coordinates
-        matching::IndMatchDecorator<float> matchDeduplicator(matches, pointsFeaturesI, pointsFeaturesJ);
-        matchDeduplicator.getDeduplicated(matches);
       }
       else
       {

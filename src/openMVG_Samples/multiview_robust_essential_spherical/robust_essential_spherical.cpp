@@ -134,9 +134,6 @@ int main(int argc, char **argv) {
       *regions_perImage.at(1).get(),
       vec_PutativeMatches);
 
-    IndMatchDecorator<float> matchDeduplicator(vec_PutativeMatches, featsL, featsR);
-    matchDeduplicator.getDeduplicated(vec_PutativeMatches);
-
     // Draw correspondences after Nearest Neighbor ratio filter
     const bool bVertical = true;
     Matches2SVG

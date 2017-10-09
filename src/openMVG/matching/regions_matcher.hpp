@@ -172,15 +172,6 @@ public:
       vec_putative_matches.emplace_back(vec_Indice[index*NNN__].j_, vec_Indice[index*NNN__].i_);
     }
 
-    // Remove duplicates
-    //matching::IndMatch::getDeduplicated(vec_putative_matches);
-
-    // Remove matches that have the same (X,Y) coordinates
-    /*
-    matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
-      regions_->GetRegionsPositions(), queryregions_.GetRegionsPositions());
-    matchDeduplicator.getDeduplicated(vec_putative_matches);
-    */
     return (!vec_putative_matches.empty());
   }
 };

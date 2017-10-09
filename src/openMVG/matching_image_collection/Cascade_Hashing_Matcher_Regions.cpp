@@ -199,15 +199,6 @@ void Match
         vec_putative_matches.emplace_back(pvec_indices[index*2].j_, pvec_indices[index*2].i_);
       }
 
-      // Remove duplicates
-      matching::IndMatch::getDeduplicated(vec_putative_matches);
-
-      // Remove matches that have the same (X,Y) coordinates
-      const std::vector<features::PointFeature> pointFeaturesJ = regionsJ->GetRegionsPositions();
-      matching::IndMatchDecorator<float> matchDeduplicator(vec_putative_matches,
-        pointFeaturesI, pointFeaturesJ);
-      matchDeduplicator.getDeduplicated(vec_putative_matches);
-
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif

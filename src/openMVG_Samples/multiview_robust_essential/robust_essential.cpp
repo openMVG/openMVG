@@ -103,10 +103,6 @@ int main() {
       *regions_perImage.at(1).get(),
       vec_PutativeMatches);
 
-    IndMatchDecorator<float> matchDeduplicator(
-            vec_PutativeMatches, featsL, featsR);
-    matchDeduplicator.getDeduplicated(vec_PutativeMatches);
-
     std::cout
       << regions_perImage.at(0)->RegionCount() << " #Features on image A" << std::endl
       << regions_perImage.at(1)->RegionCount() << " #Features on image B" << std::endl
