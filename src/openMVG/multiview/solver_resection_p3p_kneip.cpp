@@ -175,38 +175,38 @@ inline bool compute_P3P_Poses
   // Computation of factors of 4th degree polynomial
 
   const std::array<double,5> factors = {
-    -f_2_pw2*p_2_pw4 - p_2_pw4*f_1_pw2 - p_2_pw4,
-
-    2.*p_2_pw3*d_12*b +
-    2.*f_2_pw2*p_2_pw3*d_12*b
-    -2.*f_2*p_2_pw3*f_1*d_12,
-
-    -f_2_pw2*p_2_pw2*p_1_pw2
-    -f_2_pw2*p_2_pw2*d_12_pw2*b_pw2
-    -f_2_pw2*p_2_pw2*d_12_pw2
-    +f_2_pw2*p_2_pw4
-    +p_2_pw4*f_1_pw2
-    +2.*p_1*p_2_pw2*d_12
-    +2.*f_1*f_2*p_1*p_2_pw2*d_12*b
-    -p_2_pw2*p_1_pw2*f_1_pw2
-    +2.*p_1*p_2_pw2*f_2_pw2*d_12
-    -p_2_pw2*d_12_pw2*b_pw2
-    -2.*p_1_pw2*p_2_pw2,
-
-    2.*p_1_pw2*p_2*d_12*b
-    +2.*f_2*p_2_pw3*f_1*d_12
-    -2.*f_2_pw2*p_2_pw3*d_12*b
-    -2.*p_1*p_2*d_12_pw2*b,
-
-    -2.*f_2*p_2_pw2*f_1*p_1*d_12*b
-    +f_2_pw2*p_2_pw2*d_12_pw2
-    +2.*p_1_pw3*d_12
-    -p_1_pw2*d_12_pw2
-    +f_2_pw2*p_2_pw2*p_1_pw2
-    -p_1_pw4
-    -2.*f_2_pw2*p_2_pw2*p_1*d_12
-    +p_2_pw2*f_1_pw2*p_1_pw2
-    +f_2_pw2*p_2_pw2*d_12_pw2*b_pw2};
+    {-f_2_pw2*p_2_pw4 - p_2_pw4*f_1_pw2 - p_2_pw4,
+      
+      2.*p_2_pw3*d_12*b +
+      2.*f_2_pw2*p_2_pw3*d_12*b
+      -2.*f_2*p_2_pw3*f_1*d_12,
+      
+      -f_2_pw2*p_2_pw2*p_1_pw2
+      -f_2_pw2*p_2_pw2*d_12_pw2*b_pw2
+      -f_2_pw2*p_2_pw2*d_12_pw2
+      +f_2_pw2*p_2_pw4
+      +p_2_pw4*f_1_pw2
+      +2.*p_1*p_2_pw2*d_12
+      +2.*f_1*f_2*p_1*p_2_pw2*d_12*b
+      -p_2_pw2*p_1_pw2*f_1_pw2
+      +2.*p_1*p_2_pw2*f_2_pw2*d_12
+      -p_2_pw2*d_12_pw2*b_pw2
+      -2.*p_1_pw2*p_2_pw2,
+      
+      2.*p_1_pw2*p_2*d_12*b
+      +2.*f_2*p_2_pw3*f_1*d_12
+      -2.*f_2_pw2*p_2_pw3*d_12*b
+      -2.*p_1*p_2*d_12_pw2*b,
+      
+      -2.*f_2*p_2_pw2*f_1*p_1*d_12*b
+      +f_2_pw2*p_2_pw2*d_12_pw2
+      +2.*p_1_pw3*d_12
+      -p_1_pw2*d_12_pw2
+      +f_2_pw2*p_2_pw2*p_1_pw2
+      -p_1_pw4
+      -2.*f_2_pw2*p_2_pw2*p_1*d_12
+      +p_2_pw2*f_1_pw2*p_1_pw2
+      +f_2_pw2*p_2_pw2*d_12_pw2*b_pw2}};
 
   // Computation of roots
   std::array<double, 4> realRoots;

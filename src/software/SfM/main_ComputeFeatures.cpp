@@ -152,7 +152,7 @@ int main(int argc, char **argv)
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
       << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
-    return false;
+    return EXIT_FAILURE;
   }
 
   // b. Init the image_describer
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      return false;
+      return EXIT_FAILURE;
 
     try
     {
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
     {
       std::ofstream stream(sImage_describer.c_str());
       if (!stream.is_open())
-        return false;
+        return EXIT_FAILURE;
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("image_describer", image_describer));

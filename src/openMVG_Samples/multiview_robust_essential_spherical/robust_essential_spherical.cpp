@@ -262,11 +262,9 @@ int main(int argc, char **argv) {
             const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose];
             const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose];
 
-            for (Landmarks::const_iterator iter = tiny_scene.GetLandmarks().begin();
-              iter != tiny_scene.GetLandmarks().end(); ++iter)
+            for (const auto & landmark_it : tiny_scene.GetLandmarks())
             {
-              const IndexT trackId = iter->first;
-              const Landmark & landmark = iter->second;
+              const Landmark & landmark = landmark_it.second;
               const Observations & obs = landmark.obs;
               Observations::const_iterator iterObs_xI = obs.find(tiny_scene.views[0]->id_view);
               Observations::const_iterator iterObs_xJ = obs.find(tiny_scene.views[1]->id_view);
