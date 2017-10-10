@@ -50,7 +50,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
   public:
   explicit Bundle_Adjustment_Ceres
   (
-    Bundle_Adjustment_Ceres::BA_Ceres_options options =
+    const Bundle_Adjustment_Ceres::BA_Ceres_options & options =
     std::move(BA_Ceres_options())
   );
 

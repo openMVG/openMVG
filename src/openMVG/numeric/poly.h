@@ -137,10 +137,10 @@ static void solveQuarticPolynomial
   const std::complex<double> Q7 = 2. * sqrt(Q4 / 12. + Q6);
 
   real_roots = {
-    (-b - Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
-    (-b - Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
-    (-b + Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.,
-    (-b + Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.};
+    {(-b - Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+      (-b - Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+      (-b + Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.,
+      (-b + Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.}};
 }
 
 /// Refine the quartic roots

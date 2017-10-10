@@ -153,7 +153,7 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 
 Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 (
-  Bundle_Adjustment_Ceres::BA_Ceres_options options
+  const Bundle_Adjustment_Ceres::BA_Ceres_options & options
 )
 : ceres_options_(options)
 {}

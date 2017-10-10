@@ -98,11 +98,11 @@ bool computePoses
   const double g6 = f11 * f25 - f15 * f21;
   const double g7 = -f15 * f24;
   const std::array<double, 5> coeffs = {
-    g5 * g5 + g1 * g1 + g3 * g3,
-    2 * (g5 * g6 + g1 * g2 + g3 * g4),
-    g6 * g6 + 2 * g5 * g7 + g2 * g2 + g4 * g4 - g1 * g1 - g3 * g3,
-    2 * (g6 * g7 - g1 * g2 - g3 * g4),
-    g7 * g7 - g2 * g2 - g4 * g4
+    {g5 * g5 + g1 * g1 + g3 * g3,
+      2 * (g5 * g6 + g1 * g2 + g3 * g4),
+      g6 * g6 + 2 * g5 * g7 + g2 * g2 + g4 * g4 - g1 * g1 - g3 * g3,
+      2 * (g6 * g7 - g1 * g2 - g3 * g4),
+      g7 * g7 - g2 * g2 - g4 * g4}
   };
   std::array<double, 4> s;
   solveQuarticPolynomial(coeffs, s);
