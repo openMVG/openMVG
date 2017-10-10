@@ -13,39 +13,39 @@ namespace robust {
 
 // Store the 8 possible 3 x 3 grid rotation pattern
 static const std::array<std::array<uint8_t,9>,8> kRotationPatterns =
-{
-  1,2,3,
-  4,5,6,
-  7,8,9,
+{{
+  {{1,2,3,
+    4,5,6,
+    7,8,9}},
 
-  4,1,2,
-  7,5,3,
-  8,9,6,
+  {{4,1,2,
+    7,5,3,
+    8,9,6}},
 
-  7,4,1,
-  8,5,2,
-  9,6,3,
+  {{7,4,1,
+    8,5,2,
+    9,6,3}},
 
-  8,7,4,
-  9,5,1,
-  6,3,2,
+  {{8,7,4,
+    9,5,1,
+    6,3,2}},
 
-  9,8,7,
-  6,5,4,
-  3,2,1,
+  {{9,8,7,
+    6,5,4,
+    3,2,1}},
 
-  6,9,8,
-  3,5,7,
-  2,1,4,
+  {{6,9,8,
+    3,5,7,
+    2,1,4}},
 
-  3,6,9,
-  2,5,8,
-  1,4,7,
+  {{3,6,9,
+    2,5,8,
+    1,4,7}},
 
-  2,3,6,
-  1,5,9,
-  4,7,8
-};
+  {{2,3,6,
+    1,5,9,
+    4,7,8}}
+}};
 
 // 5 level scales
 static const std::array<double, 5> kScaleRatios = {
@@ -64,10 +64,10 @@ GMSFilter::GMSFilter
   point_positions1_(point_positions1),
   point_positions2_(point_positions2),
   matches_indexes_(matches),
+  threshold_factor_(threshold_factor),
   // Grid initialization
   left_grid_size_(kGridSize, kGridSize),
-  left_grid_count_(left_grid_size_.first * left_grid_size_.second),
-  threshold_factor_(threshold_factor)
+  left_grid_count_(left_grid_size_.first * left_grid_size_.second)
 {
   // Normalize the points position to [{0,1};{0,1}]
   NormalizePoints(image_size1, point_positions1_);

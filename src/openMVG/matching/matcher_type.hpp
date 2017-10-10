@@ -10,6 +10,7 @@
 #define OPENMVG_MATCHING_MATCHER_TYPE_HPP
 
 #include <stdexcept>
+#include <string>
 
 namespace openMVG{
 namespace matching{

@@ -91,9 +91,9 @@ IndMatches GMSRegionsMatchFilter
   const bool with_scale_invariance = true;
   const bool with_rotation_invariance = true;
   std::vector<bool> inlier_flags;
-  const int nb_inliers = gms.GetInlierMask(inlier_flags,
-                                           with_scale_invariance,
-                                           with_rotation_invariance);
+  gms.GetInlierMask(inlier_flags,
+                    with_scale_invariance,
+                    with_rotation_invariance);
   matching::IndMatches vec_gms_matches;
   for (int i = 0; i < static_cast<int>(inlier_flags.size()); ++i)
   {
