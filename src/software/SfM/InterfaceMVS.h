@@ -46,9 +46,9 @@ public:
 	typedef Eigen::Map<const EMat> CEMatMap;
 	typedef Eigen::Map<EMat> EMatMap;
 	template<typename Derived>
-	inline Matx(const Eigen::EigenBase<Derived>& rhs) { operator EMatMap () = rhs; }
+	inline Matx(const Eigen::DenseBase<Derived>& rhs) { operator EMatMap () = rhs; }
 	template<typename Derived>
-	inline Matx& operator = (const Eigen::EigenBase<Derived>& rhs) { operator EMatMap () = rhs; return *this; }
+	inline Matx& operator = (const Eigen::DenseBase<Derived>& rhs) { operator EMatMap () = rhs; return *this; }
 	inline operator CEMatMap() const { return CEMatMap((const Type*)val); }
 	inline operator EMatMap () { return EMatMap((Type*)val); }
 	#endif
@@ -78,9 +78,9 @@ public:
 	typedef Eigen::Matrix<Type,3,1> EVec;
 	typedef Eigen::Map<EVec> EVecMap;
 	template<typename Derived>
-	inline Point3_(const Eigen::EigenBase<Derived>& rhs) { operator EVecMap () = rhs; }
+	inline Point3_(const Eigen::DenseBase<Derived>& rhs) { operator EVecMap () = rhs; }
 	template<typename Derived>
-	inline Point3_& operator = (const Eigen::EigenBase<Derived>& rhs) { operator EVecMap () = rhs; return *this; }
+	inline Point3_& operator = (const Eigen::DenseBase<Derived>& rhs) { operator EVecMap () = rhs; return *this; }
 	inline operator const EVecMap () const { return EVecMap((Type*)this); }
 	inline operator EVecMap () { return EVecMap((Type*)this); }
 	#endif
