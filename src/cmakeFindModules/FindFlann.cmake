@@ -2,7 +2,7 @@
 #                  Find Flann Library
 #----------------------------------------------------------
 
-FIND_PATH(FLANN_DIR flann.hpp
+FIND_PATH(FLANN_DIR flann/flann.hpp
     HINTS "${FLANN_ROOT}" "$ENV{FLANN_ROOT}" "${FLANN_INCLUDE_DIR_HINTS}"
     PATHS "$ENV{PROGRAMFILES}/flann" "$ENV{PROGRAMW6432}/flann"
     PATH_SUFFIXES flann
@@ -18,7 +18,7 @@ IF(EXISTS "${FLANN_DIR}" AND NOT "${FLANN_DIR}" STREQUAL "")
         MARK_AS_ADVANCED(FLANN_DIR)
 
         # Extract Flann version from config.h
-        SET(FLANN_VERSION_FILE ${FLANN_INCLUDE_DIRS}/config.h)
+        SET(FLANN_VERSION_FILE ${FLANN_INCLUDE_DIRS}/flann/config.h)
         IF (NOT EXISTS ${FLANN_VERSION_FILE})
                 FLANN_REPORT_NOT_FOUND(
                   "Could not find file: ${FLANN_VERSION_FILE} "
