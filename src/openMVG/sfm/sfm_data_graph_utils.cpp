@@ -45,7 +45,7 @@ static void KeepOnlyReferencedElement(
 bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string & match_file,
   const std::string & match_component_filename, bool is_biedge, int min_nodes)
 {
-  if (!stlplus::file_exists(match_file))
+  if (!stlplus::file_exists(match_file) || match_component_filename.empty())
   {
     return false;
   }
@@ -59,6 +59,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
   const Pair_Set pairs = matches_provider->getPairs();
   graph::indexedGraph putativeGraph(pairs);
 
+  // For global SFM, firstly remove the not bi-edge element 
   if (is_biedge)
   {
     using EdgeMapAlias = Graph::EdgeMap<bool>;
@@ -78,7 +79,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
     }
   }
 
-
+  // Compute all subgraphs in the putative graph
   std::vector<std::set<IndexT>> vec_subgraph;
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   if (connectedComponentCount >= 1)
@@ -100,6 +101,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
     }
   }
 
+  // Save all of the subgraphs into match file
   std::set<std::string> set_filenames;
 
   const std::string &file_basename = stlplus::basename_part(match_file);
@@ -128,6 +130,7 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
     ++index;
   }
 
+  // Save the match file name of subgraph into a match component file
   std::ofstream stream(match_component_filename.c_str());
   if (!stream.is_open())
   {

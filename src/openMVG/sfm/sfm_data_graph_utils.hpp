@@ -37,7 +37,7 @@ struct SfM_Data;
 ///  @return True if the area can be computed
 ///
 bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string & match_file,
-  const std::string & match_file_components, bool bBiEdge, int nMinNode = 3);
+  const std::string & match_component_filename, bool is_biedge, int min_nodes);
 
 } // namespace sfm
 } // namespace openMVG
