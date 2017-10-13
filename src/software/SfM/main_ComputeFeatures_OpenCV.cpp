@@ -132,7 +132,7 @@ public:
       }
       return regions;
     }
-    return nullptr;
+    return {};
   };
 
   /// Allocate Regions type depending of the Image_describer

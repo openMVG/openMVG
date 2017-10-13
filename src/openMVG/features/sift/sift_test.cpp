@@ -7,10 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/feature.hpp"
-#include "openMVG/features/sift/hierarchical_gaussian_scale_space.hpp"
-#include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
-#include "openMVG/features/sift/sift_keypoint.hpp"
-#include "openMVG/features/sift/sift_KeypointExtractor.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/system/timer.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
@@ -118,6 +115,13 @@ TEST( Sift_Keypoint , DetectionAndDescription )
   std::ofstream svgFile( out_filename.c_str() );
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
+}
+
+TEST( Sift , EmptyImage )
+{
+  Image<unsigned char> image_in;
+  SIFT_Anatomy_Image_describer extractor;
+  EXPECT_TRUE(extractor.Describe(image_in)->RegionCount() == 0);
 }
 
 /* ************************************************************************* */
