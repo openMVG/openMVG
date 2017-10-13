@@ -110,7 +110,7 @@ struct Hamming
       const ElementType * pb = reinterpret_cast<const ElementType*> (b);
       return popcntLoop(pa, pb, size);
     }
-    return {0};
+    return 0;
   }
 };
 
