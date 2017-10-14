@@ -339,7 +339,7 @@ IF(OpenMVG_USE_OPENCV)
     ${OpenCV_LIBS})
   target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
   IF(OpenMVG_USE_OCVSIFT)
-    target_compile_definitions(openMVG_main_ComputeFeatures_OpenCV PRIVATE USE_OCVSIFT=1)
+    target_compile_definitions(openMVG_main_ComputeFeatures_OpenCV PRIVATE USE_OCVSIFT)
   ENDIF(OpenMVG_USE_OCVSIFT)
   
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
