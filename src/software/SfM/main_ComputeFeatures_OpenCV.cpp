@@ -11,6 +11,7 @@
 
 #include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -245,7 +246,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }
