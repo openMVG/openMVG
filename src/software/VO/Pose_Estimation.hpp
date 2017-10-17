@@ -92,7 +92,7 @@ struct Pose_Estimator
     std::vector<uint32_t> vec_inliers;
     Mat3 pE;
     double precision = std::numeric_limits<double>::infinity();
-    // Robustly estimation of the Essential matrix and it's precision
+    // Robustly estimation of the model and its precision
     ACRANSAC(kernel, vec_inliers, ACRANSAC_ITER, &pE, precision, false);
 
     return vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES;
@@ -105,9 +105,10 @@ struct Pose_Estimator
     const Mat & pt3D
   )
   {
+    using SolverType = openMVG::euclidean_resection::P3PSolver_Ke;
     using KernelType =
       ACKernelAdaptorResection_K<
-        openMVG::euclidean_resection::P3PSolver,
+        SolverType,
         ResectionSquaredResidualError,
         Mat34>;
 
@@ -117,11 +118,11 @@ struct Pose_Estimator
     Mat34 P;
     const double dPrecision = std::numeric_limits<double>::infinity();
 
-    // Robustly estimation of the Projection matrix and it's precision
+    // Robustly estimation of the model and its precision
     ACRANSAC(kernel, vec_inliers, ACRANSAC_ITER, &P, dPrecision, true);
 
     // Test if the found model is valid
-    return vec_inliers.size() > 2.5 * openMVG::euclidean_resection::P3PSolver::MINIMUM_SAMPLES;
+    return vec_inliers.size() > 2.5 * SolverType::MINIMUM_SAMPLES;
   }
 };
 

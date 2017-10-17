@@ -33,9 +33,11 @@ using namespace std;
 class RepeatabilityDataset
 {
 public:
-  RepeatabilityDataset
-    (const std::string& folderPath)
-    : folderPath_(folderPath)
+  explicit RepeatabilityDataset
+  (
+    const std::string& folderPath
+  ):
+    folderPath_(folderPath)
   {
     loadImages();
     loadGroundTruthHs();

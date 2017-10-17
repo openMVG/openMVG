@@ -148,8 +148,9 @@ struct GeometricFilter_HMatrix_AC
         sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
-      std::shared_ptr<features::Regions> regionsI = regions_provider->get(iIndex);
-      std::shared_ptr<features::Regions> regionsJ = regions_provider->get(jIndex);
+      const std::shared_ptr<features::Regions>
+        regionsI = regions_provider->get(iIndex),
+        regionsJ = regions_provider->get(jIndex);
 
       if (dDistanceRatio < 0)
       {

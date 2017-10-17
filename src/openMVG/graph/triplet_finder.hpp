@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013 Pierre MOULON.
+// Copyright (c) 2012, 2013. 2017 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,13 +10,14 @@
 #define OPENMVG_GRAPH_GRAPH_TRIPLET_FINDER_HPP
 
 #include <algorithm>
+#include <array>
+#include <ostream>
+#include <set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "openMVG/graph/graph.hpp"
 #include "openMVG/types.hpp"
-
-#include "lemon/list_graph.h"
 
 namespace openMVG
 {
@@ -24,9 +25,8 @@ namespace graph
 {
 
 /**
-* @brief Simple container for tuple of three value
+* @brief Simple container for a tuple of three value
 * @note It is used to store the node id of triplets of a graph.
-* @todo Why not using std::tuple ?
 */
 struct Triplet
 {
@@ -51,15 +51,8 @@ struct Triplet
   {
     const IndexT It = edge.first;
     const IndexT Jt = edge.second;
-    if ( ( It == i || It == j || It == k ) &&
-         ( Jt == i || Jt == j || Jt == k ) && It != Jt )
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return ( ( It == i || It == j || It == k ) &&
+             ( Jt == i || Jt == j || Jt == k ) && It != Jt );
   }
 
   /**
@@ -71,8 +64,8 @@ struct Triplet
   */
   friend bool operator==( const Triplet& m1, const Triplet& m2 )
   {
-    return m1.contain( {m2.i, m2.j} )
-           && m1.contain( {m2.i, m2.k} );
+    return m1.contain( { m2.i, m2.j } ) &&
+           m1.contain( { m2.i, m2.k } );
   }
 
   /**
@@ -82,7 +75,7 @@ struct Triplet
   * @retval true if triplets are differents
   * @retval false if triplets are the same
   */
-  friend bool operator!=( const Triplet& m1, const Triplet& m2 )
+  friend bool operator!=( const Triplet & m1, const Triplet & m2 )
   {
     return !( m1 == m2 );
   }
@@ -95,7 +88,7 @@ struct Triplet
   */
   friend std::ostream & operator<<( std::ostream & os, const Triplet & t )
   {
-    os << t.i << " " << t.j << " " << t.k << std::endl;
+    os << t.i << ' ' << t.j << ' ' << t.k << '\n';
     return os;
   }
 
@@ -103,83 +96,69 @@ struct Triplet
   IndexT i, j, k;
 };
 
-
 /**
-* @brief Function that return all the triplets found in a graph
-* @param g Input graph
-* @param[out] vec_triplets Output list of triplet found in the graph
-* @retval true If at least one triplet is found
-* @retval false If no triplet is found
-* @note vec_triplets must be empty.
-*/
-template<typename GraphT>
-bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
+* @brief Return triplets contained in the graph build from IterablePairs
+* @param[in] pairs A list of pairs
+* @param[out] triplets List of triplet found in graph
+* @return boolean return true if some triplet are found
+**/
+template <typename IterablePairs, class TTripletContainer>
+bool ListTriplets
+(
+  const IterablePairs & pairs,
+  TTripletContainer & triplets
+)
 {
-  // Algorithm
-  //
-  //-- For each node
-  //    - list the outgoing not visited edge
-  //    -  for each tuple of edge
-  //       - if their end are connected
-  //          Detected cycle of length 3
-  //          Mark first edge as visited
+  triplets.clear();
 
-  /// Type of graph iterator
-  using OutArcIt = typename GraphT::OutArcIt;
-
-  /// Type of node iterator
-  using NodeIterator = typename GraphT::NodeIt;
-
-  /// Type for edge maps
-  using BoolEdgeMap = typename GraphT::template EdgeMap<bool>;
-
-  /// List of visited edge map
-  BoolEdgeMap map_edge( g, false ); // Visited edge map
-
-  // For each nodes
-  for ( NodeIterator itNode( g ); itNode != lemon::INVALID; ++itNode )
+  // Build an adjacency list corresponding to the edge list
+  std::unordered_map<IndexT, std::set<IndexT>> adjacency_list;
+  for (const auto & edge : pairs)
   {
-
-    // For each edges (list the not visited outgoing edges)
-    std::vector<OutArcIt> vec_edges;
-    for ( OutArcIt e( g, itNode ); e != lemon::INVALID; ++e )
-    {
-      if ( !map_edge[e] ) // If not visited
-      {
-        vec_edges.push_back( e );
-      }
-    }
-
-    // For all tuples look of ends of edges are linked
-    while (vec_edges.size() > 1)
-    {
-      OutArcIt itPrev = vec_edges[0]; // For all tuple (0,Inth)
-      for (size_t i = 1; i < vec_edges.size(); ++i )
-      {
-        // Check if the extremity is linked
-        typename GraphT::Arc cycleEdge = findArc( g, g.target( itPrev ), g.target( vec_edges[i] ) );
-        if ( cycleEdge != lemon::INVALID && !map_edge[cycleEdge] )
-        {
-          // Elementary cycle found (make value follow a monotonic ascending serie)
-          int triplet[3] =
-          {
-            g.id( itNode ),
-            g.id( g.target( itPrev ) ),
-            g.id( g.target( vec_edges[i] ) )
-          };
-          std::sort( &triplet[0], &triplet[3] );
-          vec_triplets.emplace_back( triplet[0], triplet[1], triplet[2] );
-        }
-      }
-      // Mark the current ref edge as visited
-      map_edge[itPrev] = true;
-      // remove head to list remaining tuples
-      vec_edges.erase( vec_edges.begin() );
-    }
+    adjacency_list[edge.first].insert(edge.second);
+    adjacency_list[edge.second].insert(edge.first);
   }
-  return ( !vec_triplets.empty() );
-}
 
+  std::vector<IndexT> node_candidate_for_triplet;
+
+  // List the pair and find all triplets thanks to the adjacency list
+  for (const auto & edge_it : pairs)
+  {
+    // Find any targeting edge that contains the first and the second node index
+    const auto & node1_edges = adjacency_list.find(edge_it.first)->second;
+    const auto & node2_edges = adjacency_list.find(edge_it.second)->second;
+
+    // Compute the intersection between the two adjacency lists to find
+    //  triplets (it will list the nodes that are connected to the first and
+    //  second)
+    node_candidate_for_triplet.clear();
+    std::set_intersection(node1_edges.cbegin(),
+                          node1_edges.cend(),
+                          node2_edges.cbegin(),
+                          node2_edges.cend(),
+                          std::back_inserter(node_candidate_for_triplet));
+    // Add a triplet
+    for (const auto & node_index_it : node_candidate_for_triplet)
+    {
+      std::array<IndexT, 3> triplet_indexes = {{
+        static_cast<IndexT>(edge_it.first),
+        static_cast<IndexT>(edge_it.second),
+        node_index_it}};
+      // sort the triplet indexes as i<j<k (monotonic ascending sorting)
+      std::sort(triplet_indexes.begin(), triplet_indexes.end());
+      triplets.emplace_back(triplet_indexes[0],
+                            triplet_indexes[1],
+                            triplet_indexes[2]);
+    }
+
+    // Since we have already listed all the triplets than contain this edge.
+    // We can now remove the edge from the adjacency graph to reduce the
+    // node array size for the next iterations.
+    adjacency_list[edge_it.first].erase(edge_it.second);
+    adjacency_list[edge_it.second].erase(edge_it.first);
+  }
+  return ( !triplets.empty() );
+}
 
 /**
 * @brief Return triplets contained in the graph build from IterablePairs
@@ -187,26 +166,14 @@ bool List_Triplets( const GraphT & g, std::vector< Triplet > & vec_triplets )
 * @return List of triplet found in graph
 */
 template <typename IterablePairs>
-static std::vector< graph::Triplet > tripletListing
+static std::vector< graph::Triplet > TripletListing
 (
   const IterablePairs & pairs
 )
 {
-  indexedGraph putativeGraph( pairs );
-  std::vector< graph::Triplet > vec_triplets;
-  graph::List_Triplets<indexedGraph::GraphT>( putativeGraph.g, vec_triplets );
-
-  //Change triplets to ImageIds
-  for ( auto & triplet : vec_triplets )
-  {
-    const IndexT I = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.i )];
-    const IndexT J = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.j )];
-    const IndexT K = ( *putativeGraph.node_map_id )[putativeGraph.g.nodeFromId( triplet.k )];
-    IndexT triplet_[3] = { I, J, K };
-    std::sort( &triplet_[0], &triplet_[3] );
-    triplet = graph::Triplet( triplet_[0], triplet_[1], triplet_[2] );
-  }
-  return vec_triplets;
+  std::vector< graph::Triplet > triplets;
+  graph::ListTriplets( pairs, triplets );
+  return triplets;
 }
 
 } // namespace graph

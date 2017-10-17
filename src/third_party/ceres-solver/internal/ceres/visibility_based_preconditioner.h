@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2017 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -49,15 +49,15 @@
 #define CERES_INTERNAL_VISIBILITY_BASED_PRECONDITIONER_H_
 
 #include <set>
-#include <vector>
 #include <utility>
+#include <vector>
 #include "ceres/collections_port.h"
 #include "ceres/graph.h"
 #include "ceres/internal/macros.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_solver.h"
 #include "ceres/preconditioner.h"
-#include "ceres/suitesparse.h"
+#include "ceres/sparse_cholesky.h"
 
 namespace ceres {
 namespace internal {
@@ -122,8 +122,6 @@ class SchurEliminatorBase;
 //      *A.block_structure(), options);
 //   preconditioner.Update(A, NULL);
 //   preconditioner.RightMultiply(x, y);
-//
-#ifndef CERES_NO_SUITESPARSE
 class VisibilityBasedPreconditioner : public BlockSparseMatrixPreconditioner {
  public:
   // Initialize the symbolic structure of the preconditioner. bs is
@@ -189,43 +187,9 @@ class VisibilityBasedPreconditioner : public BlockSparseMatrixPreconditioner {
 
   // Preconditioner matrix.
   scoped_ptr<BlockRandomAccessSparseMatrix> m_;
-
-  // RightMultiply is a const method for LinearOperators. It is
-  // implemented using CHOLMOD's sparse triangular matrix solve
-  // function. This however requires non-const access to the
-  // SuiteSparse context object, even though it does not result in any
-  // of the state of the preconditioner being modified.
-  SuiteSparse ss_;
-
-  // Symbolic and numeric factorization of the preconditioner.
-  cholmod_factor* factor_;
-
-  // Temporary vector used by RightMultiply.
-  cholmod_dense* tmp_rhs_;
+  scoped_ptr<SparseCholesky> sparse_cholesky_;
   CERES_DISALLOW_COPY_AND_ASSIGN(VisibilityBasedPreconditioner);
 };
-#else  // SuiteSparse
-// If SuiteSparse is not compiled in, the preconditioner is not
-// available.
-class VisibilityBasedPreconditioner : public BlockSparseMatrixPreconditioner {
- public:
-  VisibilityBasedPreconditioner(const CompressedRowBlockStructure& bs,
-                                const Preconditioner::Options& options) {
-    LOG(FATAL) << "Visibility based preconditioning is not available. Please "
-        "build Ceres with SuiteSparse.";
-  }
-  virtual ~VisibilityBasedPreconditioner() {}
-  virtual void RightMultiply(const double* x, double* y) const {}
-  virtual void LeftMultiply(const double* x, double* y) const {}
-  virtual int num_rows() const { return -1; }
-  virtual int num_cols() const { return -1; }
-
- private:
-  bool UpdateImpl(const BlockSparseMatrix& A, const double* D) {
-    return false;
-  }
-};
-#endif  // CERES_NO_SUITESPARSE
 
 }  // namespace internal
 }  // namespace ceres

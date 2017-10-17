@@ -68,8 +68,8 @@ public:
     // LogAlpha0 is used to make error data scale invariant
     if (bPointToLine)  {
       // Ratio of containing diagonal image rectangle over image area
-      double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
-      double A = w2*(double)h2; // area
+      const double D = std::hypot(w2, h2); // diameter
+      const double A = w2*(double)h2; // area
       logalpha0_ = log10(2.0*D/A /N2_(0,0));
     }
     else  {
@@ -104,7 +104,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, N2_, &(*model));
+    UnnormalizerArg::Unnormalize(N1_, N2_, model);
   }
 
   double logalpha0() const {return logalpha0_;}
@@ -175,7 +175,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), &(*model));
+    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), model);
   }
 
   double logalpha0() const {return logalpha0_;}
@@ -203,26 +203,33 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
 
-  ACKernelAdaptorResection_K(const Mat &x2d, const Mat &x3D, const Mat3 & K)
-    : x2d_(x2d.rows(), x2d.cols()), x3D_(x3D),
+  ACKernelAdaptorResection_K
+  (
+    const Mat &x2d,
+    const Mat &x3D,
+    const Mat3 & K
+  ):x2d_(x2d.rows(), x2d.cols()),
+    x3D_(x3D),
     N1_(K.inverse()),
-    logalpha0_(log10(M_PI)), K_(K)
+    logalpha0_(log10(M_PI)),
+    K_(K)
   {
     assert(2 == x2d_.rows());
     assert(3 == x3D_.rows());
     assert(x2d_.cols() == x3D_.cols());
 
     // Normalize points by inverse(K)
-    x2d_ = (N1_ * x2d.colwise().homogeneous()).colwise().hnormalized();
+    bearing_vectors_ = (N1_ * x2d.colwise().homogeneous());
+    x2d_ = bearing_vectors_.colwise().hnormalized();
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x2d_, samples);
-    const Mat x2 = ExtractColumns(x3D_, samples);
-    Solver::Solve(x1, x2, models);
+    Solver::Solve(ExtractColumns(bearing_vectors_, samples), // bearing vectors
+                  ExtractColumns(x3D_, samples), // 3D points
+                  models); // Found model hypothesis
   }
 
   double Error(uint32_t sample, const Model &model) const {
@@ -250,10 +257,10 @@ public:
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
-  Mat x2d_;
+  Mat x2d_, bearing_vectors_;
   const Mat & x3D_;
-  Mat3 N1_;      // Matrix used to normalize data
-  double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
+  Mat3 N1_;           // Matrix used to normalize data
+  double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
   Mat3 K_;            // Intrinsic camera parameter
 };
 
@@ -268,14 +275,15 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
 
-  ACKernelAdaptorEssential(
+  ACKernelAdaptorEssential
+  (
     const Mat &x1, int w1, int h1,
     const Mat &x2, int w2, int h2,
-    const Mat3 & K1, const Mat3 & K2)
-    : x1_(x1), x2_(x2),
+    const Mat3 & K1, const Mat3 & K2
+  ):x1_(x1), x2_(x2),
     N1_(Mat3::Identity()), N2_(Mat3::Identity()), logalpha0_(0.0),
     K1_(K1), K2_(K2)
-{
+  {
     assert(2 == x1_.rows());
     assert(x1_.rows() == x2_.rows());
     assert(x1_.cols() == x2_.cols());
@@ -284,7 +292,7 @@ public:
     x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
 
     //Point to line probability (line is the epipolar line)
-    const double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
+    const double D = std::hypot(w2, h2); // diameter
     const double A = w2*(double)h2; // area
     logalpha0_ = log10(2.0*D/A * .5);
   }

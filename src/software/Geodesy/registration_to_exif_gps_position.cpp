@@ -36,7 +36,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  enum
+  enum ERegistrationType
   {
     ROBUST_RIGID_REGISTRATION = 0,
     RIGID_REGISTRATION_ALL_POINTS = 1
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   std::string
     sSfM_Data_Filename_In,
     sSfM_Data_Filename_Out;
-  unsigned int rigid_registration_method = RIGID_REGISTRATION_ALL_POINTS;
+  unsigned int rigid_registration_method = ERegistrationType::RIGID_REGISTRATION_ALL_POINTS;
 
   CmdLine cmd;
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
     // - using a robust scheme (using partial points - robust estimation)
     switch (rigid_registration_method)
     {
-      case ROBUST_RIGID_REGISTRATION:
+      case ERegistrationType::ROBUST_RIGID_REGISTRATION:
       {
         using namespace openMVG::robust;
         using namespace openMVG::geometry;
@@ -194,11 +194,11 @@ int main(int argc, char **argv)
           std::cout << "\nFound: " << vec_fitting_errors.size() << " inliers"
            << " from " << X_SfM.cols() << " points." << std::endl;
           std::cout << "\n3D Similarity fitting error using only the fitted inliers (in target coordinate system units):";
-          minMaxMeanMedian<float>( vec_fitting_errors.begin(), vec_fitting_errors.end() );
+          minMaxMeanMedian<float>( vec_fitting_errors.cbegin(), vec_fitting_errors.cend() );
         }
       }
       break;
-      case RIGID_REGISTRATION_ALL_POINTS:
+      case ERegistrationType::RIGID_REGISTRATION_ALL_POINTS:
       {
         Vec3 t;
         Mat3 R;

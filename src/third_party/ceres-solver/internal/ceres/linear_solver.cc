@@ -35,6 +35,7 @@
 #include "ceres/dense_qr_solver.h"
 #include "ceres/iterative_schur_complement_solver.h"
 #include "ceres/schur_complement_solver.h"
+#include "ceres/dynamic_sparse_normal_cholesky_solver.h"
 #include "ceres/sparse_normal_cholesky_solver.h"
 #include "ceres/types.h"
 #include "glog/logging.h"
@@ -80,6 +81,10 @@ LinearSolver* LinearSolver::Create(const LinearSolver::Options& options) {
    !defined(CERES_USE_EIGEN_SPARSE)
       return NULL;
 #else
+      if (options.dynamic_sparsity) {
+        return new DynamicSparseNormalCholeskySolver(options);
+      }
+
       return new SparseNormalCholeskySolver(options);
 #endif
 

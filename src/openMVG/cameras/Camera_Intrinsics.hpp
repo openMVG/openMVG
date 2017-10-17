@@ -262,12 +262,14 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
 *
 * @return Angle (in degree) between the two rays
 */
-inline double AngleBetweenRay(
+inline double AngleBetweenRay
+(
   const geometry::Pose3 & pose1,
   const IntrinsicBase * intrinsic1,
   const geometry::Pose3 & pose2,
   const IntrinsicBase * intrinsic2,
-  const Vec2 & x1, const Vec2 & x2 )
+  const Vec2 & x1, const Vec2 & x2
+)
 {
   // x = (u, v, 1.0)  // image coordinates
   // X = R.t() * K.inv() * x + C // Camera world point

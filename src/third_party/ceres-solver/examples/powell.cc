@@ -60,7 +60,7 @@ struct F1 {
                                         const T* const x2,
                                         T* residual) const {
     // f1 = x1 + 10 * x2;
-    residual[0] = x1[0] + T(10.0) * x2[0];
+    residual[0] = x1[0] + 10.0 * x2[0];
     return true;
   }
 };
@@ -70,7 +70,7 @@ struct F2 {
                                         const T* const x4,
                                         T* residual) const {
     // f2 = sqrt(5) (x3 - x4)
-    residual[0] = T(sqrt(5.0)) * (x3[0] - x4[0]);
+    residual[0] = sqrt(5.0) * (x3[0] - x4[0]);
     return true;
   }
 };
@@ -80,7 +80,7 @@ struct F3 {
                                         const T* const x4,
                                         T* residual) const {
     // f3 = (x2 - 2 x3)^2
-    residual[0] = (x2[0] - T(2.0) * x4[0]) * (x2[0] - T(2.0) * x4[0]);
+    residual[0] = (x2[0] - 2.0 * x4[0]) * (x2[0] - 2.0 * x4[0]);
     return true;
   }
 };
@@ -90,7 +90,7 @@ struct F4 {
                                         const T* const x4,
                                         T* residual) const {
     // f4 = sqrt(10) (x1 - x4)^2
-    residual[0] = T(sqrt(10.0)) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
+    residual[0] = sqrt(10.0) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
     return true;
   }
 };

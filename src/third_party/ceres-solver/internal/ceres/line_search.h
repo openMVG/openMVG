@@ -35,6 +35,7 @@
 
 #include <string>
 #include <vector>
+#include "ceres/function_sample.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/port.h"
 #include "ceres/types.h"
@@ -43,7 +44,6 @@ namespace ceres {
 namespace internal {
 
 class Evaluator;
-struct FunctionSample;
 class LineSearchFunction;
 
 // Line search is another name for a one dimensional optimization
@@ -155,7 +155,6 @@ class LineSearch {
   struct Summary {
     Summary()
         : success(false),
-          optimal_step_size(0.0),
           num_function_evaluations(0),
           num_gradient_evaluations(0),
           num_iterations(0),
@@ -165,7 +164,7 @@ class LineSearch {
           total_time_in_seconds(-1.0) {}
 
     bool success;
-    double optimal_step_size;
+    FunctionSample optimal_point;
     int num_function_evaluations;
     int num_gradient_evaluations;
     int num_iterations;
@@ -234,6 +233,7 @@ class LineSearchFunction {
  public:
   explicit LineSearchFunction(Evaluator* evaluator);
   void Init(const Vector& position, const Vector& direction);
+
   // Evaluate the line search objective
   //
   //   f(x) = p(position + x * direction)
@@ -241,27 +241,29 @@ class LineSearchFunction {
   // Where, p is the objective function of the general optimization
   // problem.
   //
-  // g is the gradient f'(x) at x.
+  // evaluate_gradient controls whether the gradient will be evaluated
+  // or not.
   //
-  // f must not be null. The gradient is computed only if g is not null.
-  bool Evaluate(double x, double* f, double* g);
+  // On return output->*_is_valid indicate indicate whether the
+  // corresponding fields have numerically valid values or not.
+  void Evaluate(double x, bool evaluate_gradient, FunctionSample* output);
+
   double DirectionInfinityNorm() const;
+
   // Resets to now, the start point for the results from TimeStatistics().
   void ResetTimeStatistics();
   void TimeStatistics(double* cost_evaluation_time_in_seconds,
                       double* gradient_evaluation_time_in_seconds) const;
+  const Vector& position() const { return position_; }
+  const Vector& direction() const { return direction_; }
 
  private:
   Evaluator* evaluator_;
   Vector position_;
   Vector direction_;
 
-  // evaluation_point = Evaluator::Plus(position_,  x * direction_);
-  Vector evaluation_point_;
-
   // scaled_direction = x * direction_;
   Vector scaled_direction_;
-  Vector gradient_;
 
   // We may not exclusively own the evaluator (e.g. in the Trust Region
   // minimizer), hence we need to save the initial evaluation durations for the

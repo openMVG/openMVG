@@ -16,7 +16,7 @@
 // problems with missing functions
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_MSC_VER)
+#ifdef MSWINDOWS
 unsigned sleep(unsigned seconds)
 {
   Sleep(1000*seconds);

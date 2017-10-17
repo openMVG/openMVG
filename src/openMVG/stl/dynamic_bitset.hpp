@@ -86,7 +86,7 @@ namespace stl
     size_t num_blocks() const { return vec_bits.size(); }
 
     // Constructor
-    dynamic_bitset(size_t num_bits = 0)
+    explicit dynamic_bitset(size_t num_bits = 0)
     {
       vec_bits.resize(calc_num_blocks(num_bits));
       m_num_bits = num_bits;

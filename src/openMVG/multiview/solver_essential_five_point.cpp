@@ -35,11 +35,11 @@
 namespace openMVG {
 
 Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
-  Eigen::Matrix<double,9, 9> A;
-  A.setZero();  // Make A square until Eigen supports rectangular SVD.
-  fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
-  Eigen::JacobiSVD<Eigen::Matrix<double, 9, 9> > svd(A, Eigen::ComputeFullV);
-  return svd.matrixV().topRightCorner<9, 4>();
+  Mat epipolar_constraint = Eigen::Matrix<double,9, 9>::Constant(0.0);
+  fundamental::kernel::EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+  Eigen::SelfAdjointEigenSolver<Mat> solver
+    (epipolar_constraint.transpose() * epipolar_constraint);
+  return solver.eigenvectors().leftCols<4>();
 }
 
 Vec o1(const Vec &a, const Vec &b) {

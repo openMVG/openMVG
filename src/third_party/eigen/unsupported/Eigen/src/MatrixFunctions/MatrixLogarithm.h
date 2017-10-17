@@ -339,7 +339,7 @@ public:
     typedef internal::MatrixLogarithmAtomic<DynMatrixType> AtomicType;
     AtomicType atomic;
     
-    internal::matrix_function_compute<DerivedEvalTypeClean>::run(m_A, atomic, result);
+    internal::matrix_function_compute<typename DerivedEvalTypeClean::PlainObject>::run(m_A, atomic, result);
   }
 
   Index rows() const { return m_A.rows(); }

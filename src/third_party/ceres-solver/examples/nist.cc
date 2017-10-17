@@ -180,6 +180,7 @@ class NISTProblem {
  public:
   explicit NISTProblem(const string& filename) {
     ifstream ifs(filename.c_str(), ifstream::in);
+    CHECK(ifs) << "Unable to open : " << filename;
 
     vector<string> pieces;
     SkipLines(ifs, 24);
@@ -281,12 +282,12 @@ class NISTProblem {
 
 // y = b1 * (b2+x)**(-1/b3)  +  e
 NIST_BEGIN(Bennet5)
-  b[0] * pow(b[1] + x, T(-1.0) / b[2])
+  b[0] * pow(b[1] + x, -1.0 / b[2])
 NIST_END
 
 // y = b1*(1-exp[-b2*x])  +  e
 NIST_BEGIN(BoxBOD)
-  b[0] * (T(1.0) - exp(-b[1] * x))
+  b[0] * (1.0 - exp(-b[1] * x))
 NIST_END
 
 // y = exp[-b1*x]/(b2+b3*x)  +  e
@@ -316,14 +317,14 @@ NIST_END
 //     (1+b5*x+b6*x**2+b7*x**3)  +  e
 NIST_BEGIN(Hahn1)
   (b[0] + b[1] * x + b[2] * x * x + b[3] * x * x * x) /
-  (T(1.0) + b[4] * x + b[5] * x * x + b[6] * x * x * x)
+  (1.0 + b[4] * x + b[5] * x * x + b[6] * x * x * x)
 NIST_END
 
 // y = (b1 + b2*x + b3*x**2) /
 //    (1 + b4*x + b5*x**2)  +  e
 NIST_BEGIN(Kirby2)
   (b[0] + b[1] * x + b[2] * x * x) /
-  (T(1.0) + b[3] * x + b[4] * x * x)
+  (1.0 + b[3] * x + b[4] * x * x)
 NIST_END
 
 // y = b1*(x**2+x*b2) / (x**2+x*b3+b4)  +  e
@@ -343,63 +344,63 @@ NIST_END
 
 // y = b1*(1-exp[-b2*x])  +  e
 NIST_BEGIN(Misra1a)
-  b[0] * (T(1.0) - exp(-b[1] * x))
+  b[0] * (1.0 - exp(-b[1] * x))
 NIST_END
 
 // y = b1 * (1-(1+b2*x/2)**(-2))  +  e
 NIST_BEGIN(Misra1b)
-  b[0] * (T(1.0) - T(1.0)/ ((T(1.0) + b[1] * x / 2.0) * (T(1.0) + b[1] * x / 2.0)))  // NOLINT
+  b[0] * (1.0 - 1.0/ ((1.0 + b[1] * x / 2.0) * (1.0 + b[1] * x / 2.0)))  // NOLINT
 NIST_END
 
 // y = b1 * (1-(1+2*b2*x)**(-.5))  +  e
 NIST_BEGIN(Misra1c)
-  b[0] * (T(1.0) - pow(T(1.0) + T(2.0) * b[1] * x, -0.5))
+  b[0] * (1.0 - pow(1.0 + 2.0 * b[1] * x, -0.5))
 NIST_END
 
 // y = b1*b2*x*((1+b2*x)**(-1))  +  e
 NIST_BEGIN(Misra1d)
-  b[0] * b[1] * x / (T(1.0) + b[1] * x)
+  b[0] * b[1] * x / (1.0 + b[1] * x)
 NIST_END
 
 const double kPi = 3.141592653589793238462643383279;
 // pi = 3.141592653589793238462643383279E0
 // y =  b1 - b2*x - arctan[b3/(x-b4)]/pi  +  e
 NIST_BEGIN(Roszman1)
-  b[0] - b[1] * x - atan2(b[2], (x - b[3]))/T(kPi)
+  b[0] - b[1] * x - atan2(b[2], (x - b[3])) / kPi
 NIST_END
 
 // y = b1 / (1+exp[b2-b3*x])  +  e
 NIST_BEGIN(Rat42)
-  b[0] / (T(1.0) + exp(b[1] - b[2] * x))
+  b[0] / (1.0 + exp(b[1] - b[2] * x))
 NIST_END
 
 // y = b1 / ((1+exp[b2-b3*x])**(1/b4))  +  e
 NIST_BEGIN(Rat43)
-  b[0] / pow(T(1.0) + exp(b[1] - b[2] * x), T(1.0) / b[3])
+  b[0] / pow(1.0 + exp(b[1] - b[2] * x), 1.0 / b[3])
 NIST_END
 
 // y = (b1 + b2*x + b3*x**2 + b4*x**3) /
 //    (1 + b5*x + b6*x**2 + b7*x**3)  +  e
 NIST_BEGIN(Thurber)
   (b[0] + b[1] * x + b[2] * x * x  + b[3] * x * x * x) /
-  (T(1.0) + b[4] * x + b[5] * x * x + b[6] * x * x * x)
+  (1.0 + b[4] * x + b[5] * x * x + b[6] * x * x * x)
 NIST_END
 
 // y = b1 + b2*cos( 2*pi*x/12 ) + b3*sin( 2*pi*x/12 )
 //        + b5*cos( 2*pi*x/b4 ) + b6*sin( 2*pi*x/b4 )
 //        + b8*cos( 2*pi*x/b7 ) + b9*sin( 2*pi*x/b7 )  + e
 NIST_BEGIN(ENSO)
-  b[0] + b[1] * cos(T(2.0 * kPi) * x / T(12.0)) +
-         b[2] * sin(T(2.0 * kPi) * x / T(12.0)) +
-         b[4] * cos(T(2.0 * kPi) * x / b[3]) +
-         b[5] * sin(T(2.0 * kPi) * x / b[3]) +
-         b[7] * cos(T(2.0 * kPi) * x / b[6]) +
-         b[8] * sin(T(2.0 * kPi) * x / b[6])
+  b[0] + b[1] * cos(2.0 * kPi * x / 12.0) +
+         b[2] * sin(2.0 * kPi * x / 12.0) +
+         b[4] * cos(2.0 * kPi * x / b[3]) +
+         b[5] * sin(2.0 * kPi * x / b[3]) +
+         b[7] * cos(2.0 * kPi * x / b[6]) +
+         b[8] * sin(2.0 * kPi * x / b[6])
 NIST_END
 
 // y = (b1/b2) * exp[-0.5*((x-b3)/b2)**2]  +  e
 NIST_BEGIN(Eckerle4)
-  b[0] / b[1] * exp(T(-0.5) * pow((x - b[2])/b[1], 2))
+  b[0] / b[1] * exp(-0.5 * pow((x - b[2])/b[1], 2))
 NIST_END
 
 struct Nelson {
@@ -410,7 +411,7 @@ struct Nelson {
   template <typename T>
   bool operator()(const T* const b, T* residual) const {
     // log[y] = b1 - b2*x1 * exp[-b3*x2]  +  e
-    residual[0] = T(log(y_)) - (b[0] - b[1] * T(x1_) * exp(-b[2] * T(x2_)));
+    residual[0] = log(y_) - (b[0] - b[1] * x1_ * exp(-b[2] * x2_));
     return true;
   }
 
@@ -425,10 +426,26 @@ static void SetNumericDiffOptions(ceres::NumericDiffOptions* options) {
   options->ridders_relative_initial_step_size = FLAGS_ridders_step_size;
 }
 
+string JoinPath(const string& dirname, const string& basename) {
+#ifdef _WIN32
+    static const char separator = '\\';
+#else
+    static const char separator = '/';
+#endif  // _WIN32
+
+  if ((!basename.empty() && basename[0] == separator) || dirname.empty()) {
+    return basename;
+  } else if (dirname[dirname.size() - 1] == separator) {
+    return dirname + basename;
+  } else {
+    return dirname + string(&separator, 1) + basename;
+  }
+}
+
 template <typename Model, int num_residuals, int num_parameters>
 int RegressionDriver(const string& filename,
                      const ceres::Solver::Options& options) {
-  NISTProblem nist_problem(FLAGS_nist_data_dir + filename);
+  NISTProblem nist_problem(JoinPath(FLAGS_nist_data_dir, filename));
   CHECK_EQ(num_residuals, nist_problem.response_size());
   CHECK_EQ(num_parameters, nist_problem.num_parameters());
 

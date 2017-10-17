@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
     if (!stream.is_open())
-      return false;
+      return EXIT_FAILURE;
 
     try
     {
@@ -196,14 +196,14 @@ int main(int argc, char **argv)
   }
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    std::cerr << "\nPlease provide a valid directory for the option [-o|--out_dir]." << std::endl;
     return EXIT_FAILURE;
   }
 
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create(sOutDir);
 
- if (bUseSingleIntrinsics && sfm_data.GetIntrinsics().size() != 1)
+  if (bUseSingleIntrinsics && sfm_data.GetIntrinsics().size() != 1)
   {
     std::cout << "More than one intrinsics to compare to in input scene "
               << " => Consider intrinsics as unkown." << std::endl;
@@ -229,7 +229,13 @@ int main(int argc, char **argv)
   // list images from sfm_data in a vector
   std::vector<std::string> vec_image_original (sfm_data.GetViews().size());
   int n(-1);
-  std::generate(vec_image_original.begin(),vec_image_original.end(),[&n,&sfm_data]{ n++; return stlplus::filename_part(sfm_data.views.at(n)->s_Img_path);} );
+  std::generate(vec_image_original.begin(),
+                vec_image_original.end(),
+                [&n,&sfm_data]
+                {
+                  n++;
+                  return stlplus::filename_part(sfm_data.views.at(n)->s_Img_path);
+                });
 
   // list images in query directory
   std::vector<std::string> vec_image;
@@ -245,8 +251,8 @@ int main(int argc, char **argv)
 
   // find difference between two list of images
   std::vector<std::string> vec_image_new;
-  std::set_difference(vec_image.begin(), vec_image.end(),
-      vec_image_original.begin(),vec_image_original.end(),
+  std::set_difference(vec_image.cbegin(), vec_image.cend(),
+      vec_image_original.cbegin(),vec_image_original.cend(),
       std::back_inserter(vec_image_new));
 
   // find common root directory between images in vec_image_original and vec_images_new
@@ -270,10 +276,6 @@ int main(int argc, char **argv)
   Views & views = sfm_data.views;
   Poses & poses = sfm_data.poses;
   Intrinsics & intrinsics = sfm_data.intrinsics;
-
-  // first intrinsics of the input sfm_data file, will be used if we inforce single intrinsics
-  cameras::Pinhole_Intrinsic_Radial_K3 * ptrPinhole = dynamic_cast<cameras::Pinhole_Intrinsic_Radial_K3*>(sfm_data.GetIntrinsics().at(0).get());
-  const int num_initial_intrinsics = sfm_data.GetIntrinsics().size();
 
   int total_num_images = 0;
 
@@ -324,13 +326,30 @@ int main(int argc, char **argv)
       }
     }
 
-    std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic(nullptr);
-    if (bUseSingleIntrinsics && num_initial_intrinsics == 1)
+    std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic;
+    if (bUseSingleIntrinsics)
     {
-      optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>(
-        imageGray.Width(), imageGray.Height(),
-        ptrPinhole->focal(), ptrPinhole->principal_point()[0], ptrPinhole->principal_point()[1],
-        ptrPinhole->getParams()[3], ptrPinhole->getParams()[4], ptrPinhole->getParams()[5]);
+      if (sfm_data.GetIntrinsics().size() != 1)
+      {
+        std::cerr << "You choose the single intrinsic mode but the sfm_data scene,"
+          <<" have too few or too much intrinsics."
+          << std::endl;
+        continue;
+      }
+      optional_intrinsic = sfm_data.GetIntrinsics().at(0);
+      if (imageGray.Width() != optional_intrinsic->w() || optional_intrinsic->h() != imageGray.Height())
+      {
+        std::cout << "The provided image does not have the same size as the camera model you want to use." << std::endl;
+        continue;
+      }
+    }
+    if (optional_intrinsic)
+    {
+      std::cout << "- use known intrinsics." << std::endl;
+    }
+    else
+    {
+      std::cout << "- use UNknown intrinsics for the resection. Then create a Pinhole_Intrinsic_Radial_K3 camera." << std::endl;
     }
 
     geometry::Pose3 pose;
@@ -341,7 +360,8 @@ int main(int argc, char **argv)
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
-      Pair(imageGray.Width(), imageGray.Height()),
+      optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+      {imageGray.Width(), imageGray.Height()},
       optional_intrinsic.get(),
       *(query_regions.get()),
       pose,
@@ -371,12 +391,10 @@ int main(int argc, char **argv)
           focal, principal_point(0), principal_point(1));
 
       }
-      if (!sfm::SfM_Localizer::RefinePose
-      (
+      if (!sfm::SfM_Localizer::RefinePose(
         optional_intrinsic.get(),
         pose, matching_data,
-        true, b_new_intrinsic
-      ))
+        true, b_new_intrinsic))
       {
         std::cerr << "Refining pose for image " << *iter_image << " failed." << std::endl;
       }
@@ -394,10 +412,10 @@ int main(int argc, char **argv)
     if (bSuccessfulLocalization)
     {
       vec_found_poses.push_back(pose.center());
-      // Build the view corresponding to the image
 
       // Add the computed intrinsic to the sfm_container
-      intrinsics[v.id_intrinsic] = optional_intrinsic;
+      if (!bUseSingleIntrinsics)
+        intrinsics[v.id_intrinsic] = optional_intrinsic;
       // Add the computed pose to the sfm_container
       poses[v.id_pose] = pose;
 

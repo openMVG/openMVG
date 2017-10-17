@@ -15,14 +15,14 @@ namespace Eigen {
 
 namespace internal {
 
-static Packet4ui  p4ui_CONJ_XOR = vec_mergeh((Packet4ui)p4i_ZERO, (Packet4ui)p4f_ZERO_);//{ 0x00000000, 0x80000000, 0x00000000, 0x80000000 };
+static Packet4ui  p4ui_CONJ_XOR = vec_mergeh((Packet4ui)p4i_ZERO, (Packet4ui)p4f_MZERO);//{ 0x00000000, 0x80000000, 0x00000000, 0x80000000 };
 #ifdef __VSX__
 #if defined(_BIG_ENDIAN)
-static Packet2ul  p2ul_CONJ_XOR1 = (Packet2ul) vec_sld((Packet4ui) p2d_ZERO_, (Packet4ui) p2l_ZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
-static Packet2ul  p2ul_CONJ_XOR2 = (Packet2ul) vec_sld((Packet4ui) p2l_ZERO,  (Packet4ui) p2d_ZERO_, 8);//{ 0x8000000000000000, 0x0000000000000000 };
+static Packet2ul  p2ul_CONJ_XOR1 = (Packet2ul) vec_sld((Packet4ui) p2d_MZERO, (Packet4ui) p2l_ZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
+static Packet2ul  p2ul_CONJ_XOR2 = (Packet2ul) vec_sld((Packet4ui) p2l_ZERO,  (Packet4ui) p2d_MZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
 #else
-static Packet2ul  p2ul_CONJ_XOR1 = (Packet2ul) vec_sld((Packet4ui) p2l_ZERO,  (Packet4ui) p2d_ZERO_, 8);//{ 0x8000000000000000, 0x0000000000000000 };
-static Packet2ul  p2ul_CONJ_XOR2 = (Packet2ul) vec_sld((Packet4ui) p2d_ZERO_, (Packet4ui) p2l_ZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
+static Packet2ul  p2ul_CONJ_XOR1 = (Packet2ul) vec_sld((Packet4ui) p2l_ZERO,  (Packet4ui) p2d_MZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
+static Packet2ul  p2ul_CONJ_XOR2 = (Packet2ul) vec_sld((Packet4ui) p2d_MZERO, (Packet4ui) p2l_ZERO, 8);//{ 0x8000000000000000, 0x0000000000000000 };
 #endif
 #endif
 
@@ -65,7 +65,7 @@ template<> struct unpacket_traits<Packet2cf> { typedef std::complex<float> type;
 template<> EIGEN_STRONG_INLINE Packet2cf pset1<Packet2cf>(const std::complex<float>&  from)
 {
   Packet2cf res;
-  if((ptrdiff_t(&from) % 16) == 0)
+  if((std::ptrdiff_t(&from) % 16) == 0)
     res.v = pload<Packet4f>((const float *)&from);
   else
     res.v = ploadu<Packet4f>((const float *)&from);

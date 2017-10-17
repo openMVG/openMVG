@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/solver_resection.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG { namespace cameras { struct IntrinsicBase; } }
@@ -56,6 +57,7 @@ public:
   /**
   * @brief Try to localize an image in the database
   *
+  * @param[in] solver_type the type of absolute pose solver to use
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
   * @param[in] query_regions the image regions (type must be the same as the database)
@@ -65,6 +67,7 @@ public:
   */
   virtual bool Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,
@@ -76,6 +79,7 @@ public:
   /**
   * @brief Try to localize an image from known 2D-3D matches
   *
+  * @param[in] solver_type the type of absolute pose solver to use
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
   * @param[in,out] resection_data matching data (with filled 2D-3D correspondences)
@@ -84,6 +88,7 @@ public:
   */
   static bool Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,

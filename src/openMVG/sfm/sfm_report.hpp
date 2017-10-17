@@ -30,12 +30,16 @@ inline bool Generate_SfM_Report
   const std::string & htmlFilename
 )
 {
-  // Compute mean,max,median residual values per View
+  // Computes:
+  // - Statistics per view (mean, max, median residual values)
+  // - Global tracks length statistic (length occurence)
   IndexT residualCount = 0;
   Hash_Map< IndexT, std::vector<double> > residuals_per_view;
+  std::map< IndexT, IndexT > track_length_occurences;
   for ( const auto & iterTracks : sfm_data.GetLandmarks() )
   {
     const Observations & obs = iterTracks.second.obs;
+    track_length_occurences[obs.size()] += 1;
     for ( const auto & itObs : obs )
     {
       const View * view = sfm_data.GetViews().at(itObs.first).get();
@@ -64,7 +68,8 @@ inline bool Generate_SfM_Report
   htmlDocStream.pushInfo( "Dataset info:" + sNewLine );
 
   std::ostringstream os;
-  os << " #views: " << sfm_data.GetViews().size() << sNewLine
+  os
+    << " #views: " << sfm_data.GetViews().size() << sNewLine
     << " #poses: " << sfm_data.GetPoses().size() << sNewLine
     << " #intrinsics: " << sfm_data.GetIntrinsics().size() << sNewLine
     << " #tracks: " << sfm_data.GetLandmarks().size() << sNewLine
@@ -73,6 +78,40 @@ inline bool Generate_SfM_Report
   htmlDocStream.pushInfo( os.str() );
   htmlDocStream.pushInfo( sFullLine );
 
+  // Track length statistics
+  if (!track_length_occurences.empty() && !sfm_data.GetLandmarks().empty())
+  {
+    const IndexT min_track_length = track_length_occurences.cbegin()->first;
+    const IndexT max_track_length = track_length_occurences.crbegin()->first;
+    // Compute the mean track length
+    IndexT sum = 0;
+    for (const auto & pair_length_occurence : track_length_occurences)
+    {
+      sum += pair_length_occurence.first * pair_length_occurence.second;
+    }
+    const IndexT mean_track_length = sum / static_cast<double>(sfm_data.GetLandmarks().size());
+
+    htmlDocStream.pushInfo( "Track length statistics:" );
+    htmlDocStream.pushInfo(sTableBegin);
+    os.str("");
+    os
+      << sRowBegin
+      << sColBegin + "min" + sColEnd
+      << sColBegin + "mean" + sColEnd
+      << sColBegin + "max" + sColEnd
+      << sRowEnd
+      << sRowBegin
+      << sColBegin << min_track_length << sColEnd
+      << sColBegin << mean_track_length << sColEnd
+      << sColBegin << max_track_length << sColEnd
+      << sRowEnd
+      << sTableEnd;
+    htmlDocStream.pushInfo( os.str() );
+  }
+
+  htmlDocStream.pushInfo( sFullLine );
+
+  // Residuals statistics and observation count per view
   htmlDocStream.pushInfo( sTableBegin);
   os.str("");
   os << sRowBegin
