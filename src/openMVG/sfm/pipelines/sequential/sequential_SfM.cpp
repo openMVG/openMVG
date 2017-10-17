@@ -45,13 +45,11 @@ using namespace openMVG::matching;
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,
-  const std::string & sloggingFile,
-  const tracks::STLMAPTracks & map_tracks)
+  const std::string & sloggingFile)
   : ReconstructionEngine(sfm_data, soutDirectory),
     sLogging_file_(sloggingFile),
     initial_pair_(0,0),
-    cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3)),
-    map_tracks_(map_tracks)
+    cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3))
 {
   if (!sLogging_file_.empty())
   {
@@ -1229,6 +1227,12 @@ bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size
   const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(sfm_data_, 2.0);
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
+}
+
+SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(const SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const std::string & soutDirectory, const std::string & loggingFile)
+  : SequentialSfMReconstructionEngine(sfm_data, soutDirectory, loggingFile)
+{
+  map_tracks_ = map_tracks;
 }
 
 } // namespace sfm

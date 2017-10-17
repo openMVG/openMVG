@@ -34,8 +34,7 @@ public:
   SequentialSfMReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & soutDirectory,
-    const std::string & loggingFile = "",
-    const openMVG::tracks::STLMAPTracks & map_tracks = {});
+    const std::string & loggingFile = "");
 
   ~SequentialSfMReconstructionEngine() override;
 
@@ -88,6 +87,9 @@ protected:
 
   /// Discard track with too large residual error
   bool badTrackRejector(double dPrecision, size_t count = 0);
+
+  /// Protected constructor for subclasses
+  SequentialSfMReconstructionEngine(const SfM_Data &sfm_data, const tracks::STLMAPTracks & map_tracks, const std::string &soutDirectory, const std::string &loggingFile = {});
 
   //----
   //-- Data
