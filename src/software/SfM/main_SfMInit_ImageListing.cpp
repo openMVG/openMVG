@@ -137,6 +137,7 @@ int main(int argc, char **argv)
 
   std::string sImageDir,
     sfileDatabase = "",
+    sSensorWidth = "",
     sOutputDir = "",
     sKmatrix;
 
@@ -149,18 +150,21 @@ int main(int argc, char **argv)
 
   int i_GPS_XYZ_method = 0;
 
-  double focal_pixels = -1.0;
+  double focal_pixels = -1.0, default_focal_pixels = -1.0;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
+  cmd.add( make_option('s', sSensorWidth, "sensorWidth") );
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', focal_pixels, "focal") );
+  cmd.add( make_option('l', default_focal_pixels, "defaultFocal") );
   cmd.add( make_option('k', sKmatrix, "intrinsics") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weights"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
+  cmd.add( make_switch('n', "interactive") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -169,8 +173,10 @@ int main(int argc, char **argv)
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
+      << "[-s|--sensorWidth]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
+      << "[-l|--defaultFocal] (pixels)\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
       << "\t 1: Pinhole\n"
@@ -187,6 +193,7 @@ int main(int argc, char **argv)
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
       << "\t 1: UTM\n"
+      << "[-n|--interactive] ask user for missing camera details\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -197,8 +204,10 @@ int main(int argc, char **argv)
             << argv[0] << std::endl
             << "--imageDirectory " << sImageDir << std::endl
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
+            << "--sensorWidth " << sSensorWidth << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focal " << focal_pixels << std::endl
+            << "--defaultFocal " << default_focal_pixels << std::endl
             << "--intrinsics " << sKmatrix << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
@@ -243,6 +252,20 @@ int main(int argc, char **argv)
   }
 
   std::vector<Datasheet> vec_database;
+  if (!sSensorWidth.empty())
+  {
+    // Add any sensor width overrides first
+    std::vector<std::string> dbEntries;
+    stl::split(sSensorWidth, ',', dbEntries);
+    for ( std::string entry : dbEntries )
+    {
+      if ( !addEntryToDatabase( entry, vec_database ) )
+      {
+        std::cerr << "\nInvalid input, cannot register sensor size definition: " <<
+        entry << std::endl;
+      }
+    }
+  }
   if (!sfileDatabase.empty())
   {
     if ( !parseDatabase( sfileDatabase, vec_database ) )
@@ -326,9 +349,15 @@ int main(int argc, char **argv)
         if (!checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy))
           focal = -1.0;
       }
-      else // User provided focal length value
-        if (focal_pixels != -1 )
-          focal = focal_pixels;
+      else if (focal_pixels != -1 )
+      {
+        // User provided focal length value
+        focal = focal_pixels;
+      }
+      else if ( default_focal_pixels != -1 )
+      {
+        focal = default_focal_pixels;
+      }
     }
     else // If image contains meta data
     {
@@ -337,9 +366,16 @@ int main(int argc, char **argv)
       // Handle case where focal length is equal to 0
       if (exifReader->getFocal() == 0.0f)
       {
-        error_report_stream
-          << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
-        focal = -1.0;
+        if ( default_focal_pixels != -1 )
+        {
+          focal = default_focal_pixels;
+        }
+        else
+        {
+          error_report_stream
+            << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
+            focal = -1.0;
+        }
       }
       else
       // Create the image entry in the list file
@@ -347,16 +383,83 @@ int main(int argc, char **argv)
         Datasheet datasheet;
         if ( getInfo( sCamModel, vec_database, datasheet ))
         {
-          // The camera model was found in the database so we can compute it's approximated focal length
+          // The camera model was found in the database so we can compute its approximated focal length
           const double ccdw = datasheet.sensorSize_;
           focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+        }
+        else if ( cmd.used('n') )
+        {
+          // Interactive mode - get the sensor width value from the user
+          std::string sUserSensorWidth;
+          bool valueFound = false;
+          // Ask the user for the camera sensor width details
+          std::cout << "\nCamera \"" << sCamModel << "\" not found in database" << std::endl;
+          while( !valueFound )
+          {
+            std::cout << "Please enter the sensor width in mm ( or blank to skip): ";
+            getline(std::cin, sUserSensorWidth);
+
+            if ( !sUserSensorWidth.empty() )
+            {
+              // Compute focal length
+              const double ccdw = atof( sUserSensorWidth.c_str() );
+              if( ccdw > 0.0 )
+              {
+                focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+                // Add camera to database
+                if ( addEntryToDatabase( sCamModel + ";" + std::to_string(ccdw), vec_database ) )
+                {
+                  // Check if user wants to append this camera to the local DB text file
+                  std::string sAddToDB;
+                  std::cout << "Do you want to add this camera permanently to the database (y/n): ";
+                  getline(std::cin, sAddToDB);
+                  if ( !sAddToDB.empty() && ( sAddToDB.at(0) == 'y' || sAddToDB.at(0) == 'Y' ) )
+                  {
+                    std::ofstream oDBFile( sfileDatabase.c_str(), std::ios_base::app );
+                    if ( oDBFile )
+                    {
+                      oDBFile << "# Added via interactive mode" << std::endl;
+                      oDBFile << sCamModel + ";" + std::to_string(ccdw) << std::endl;
+                      oDBFile.close();
+                    }
+                    else
+                    {
+                      std::cerr << "Could not open database file: " << sfileDatabase << std::endl;
+                    }
+                  }
+                }
+                else
+                {
+                  std::cerr << "Error adding sensor width to database" << std::endl;
+                }
+                valueFound = true;
+              }
+              else
+              {
+                std::cout << "Invalid sensor width: " << ccdw << std::endl;
+              }
+            }
+            else
+            {
+              // Skip this entry
+              valueFound = true;
+            }
+          }
+          // Redisplay the progress bar
+          int progress_count = my_progress_bar.count();
+          my_progress_bar.restart( vec_image.size() );
+          my_progress_bar += progress_count;
+        }
+        else if ( default_focal_pixels != -1 )
+        {
+          focal = default_focal_pixels;
         }
         else
         {
           error_report_stream
             << stlplus::basename_part(sImageFilename)
             << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
-            << "Please consider add your camera model and sensor width in the database." << "\n";
+            << "Please consider adding your camera model and sensor width to the database." << "\n";
         }
       }
     }
