@@ -9,6 +9,7 @@
 #include "submap_merger.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_utilities.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "ceres/types.h"
 
