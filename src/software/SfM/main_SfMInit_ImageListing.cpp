@@ -146,7 +146,7 @@ std::pair<bool, Vec3> checkGPS
     {
       // Add ECEF or UTM XYZ position to the GPS position array
       val.first = true;
-      switch(GPS_to_XYZ_method)
+      switch (GPS_to_XYZ_method)
       {
         case 1:
           val.second = it_gps->second;
@@ -173,7 +173,7 @@ Hash_Map<std::string,Vec3> parseGPSfile(std::string & sGPSfile)
   Vec3 vec_GPS;
 
   // Read header
-  if(!getline(fin,header))
+  if (!getline(fin,header))
   {
     std::cerr << "\n Missing header in GPS text file" << std::endl;
     return map_GPS_data;
