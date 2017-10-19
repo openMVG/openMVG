@@ -1,20 +1,34 @@
-.. Ceres Solver documentation master file, created by
-   sphinx-quickstart on Sat Jan 19 00:07:33 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ============
 Ceres Solver
 ============
 
+Ceres Solver [#f1]_ is an open source C++ library for modeling and
+solving large, complicated optimization problems. It can be used to
+solve `Non-linear Least Squares`_ problems with bounds constraints and
+general unconstrained optimization problems. It is a mature, feature
+rich, and performant library that has been used in production at
+Google since 2010. For more, see :doc:`features`.
+
+`ceres-solver@googlegroups.com
+<https://groups.google.com/forum/?fromgroups#!forum/ceres-solver>`_ is
+the place for discussions and questions about Ceres Solver. We use the
+`GitHub Issue Tracker
+<https://github.com/ceres-solver/ceres-solver/issues>`_ to manage bug
+reports and feature requests.
+
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :hidden:
 
    features
-   building
+   installation
    tutorial
-   api
+   derivatives
+   nnls_modeling
+   nnls_solving
+   nnls_covariance
+   gradient_solver
    faqs
    users
    contributing
@@ -22,33 +36,7 @@ Ceres Solver
    bibliography
    license
 
-Ceres Solver [#f1]_ is an open source C++ library for modeling and
-solving large, complicated optimization problems. It is a feature
-rich, mature and performant library which has been used in production
-at Google since 2010. Ceres Solver can solve two kinds of problems.
-
-1. `Non-linear Least Squares`_ problems with bounds constraints.
-2. General unconstrained optimization problems.
-
 .. _Non-linear Least Squares: http://en.wikipedia.org/wiki/Non-linear_least_squares
-
-Getting started
-===============
-
-* Download the `latest stable release
-  <http://ceres-solver.org/ceres-solver-1.11.0.tar.gz>`_ or clone the
-  Git repository for the latest development version.
-
-  .. code-block:: bash
-
-       git clone https://ceres-solver.googlesource.com/ceres-solver
-
-* Read the :ref:`chapter-tutorial` and browse the :ref:`chapter-api`.
-* Join the `mailing list
-  <https://groups.google.com/forum/?fromgroups#!forum/ceres-solver>`_
-  and ask questions.
-* File bugs, feature requests on `GitHub
-  <https://github.com/ceres-solver/ceres-solver/issues>`_.
 
 
 Cite Us

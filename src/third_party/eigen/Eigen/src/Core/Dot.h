@@ -51,7 +51,8 @@ struct dot_nocheck<T, U, true>
 
 } // end namespace internal
 
-/** \returns the dot product of *this with other.
+/** \fn MatrixBase::dot
+  * \returns the dot product of *this with other.
   *
   * \only_for_vectors
   *

@@ -28,11 +28,6 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-// This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
-
-#ifndef CERES_NO_SUITESPARSE
-
 #include "ceres/visibility_based_preconditioner.h"
 
 #include <algorithm>
@@ -77,19 +72,14 @@ static const double kSingleLinkageMinSimilarity = 0.9;
 VisibilityBasedPreconditioner::VisibilityBasedPreconditioner(
     const CompressedRowBlockStructure& bs,
     const Preconditioner::Options& options)
-    : options_(options),
-      num_blocks_(0),
-      num_clusters_(0),
-      factor_(NULL) {
+    : options_(options), num_blocks_(0), num_clusters_(0) {
   CHECK_GT(options_.elimination_groups.size(), 1);
   CHECK_GT(options_.elimination_groups[0], 0);
-  CHECK(options_.type == CLUSTER_JACOBI ||
-        options_.type == CLUSTER_TRIDIAGONAL)
+  CHECK(options_.type == CLUSTER_JACOBI || options_.type == CLUSTER_TRIDIAGONAL)
       << "Unknown preconditioner type: " << options_.type;
   num_blocks_ = bs.cols.size() - options_.elimination_groups[0];
-  CHECK_GT(num_blocks_, 0)
-      << "Jacobian should have atleast 1 f_block for "
-      << "visibility based preconditioning.";
+  CHECK_GT(num_blocks_, 0) << "Jacobian should have atleast 1 f_block for "
+                           << "visibility based preconditioning.";
 
   // Vector of camera block sizes
   block_size_.resize(num_blocks_);
@@ -114,29 +104,17 @@ VisibilityBasedPreconditioner::VisibilityBasedPreconditioner(
   InitEliminator(bs);
   const time_t eliminator_time = time(NULL);
 
-  // Allocate temporary storage for a vector used during
-  // RightMultiply.
-  tmp_rhs_ = CHECK_NOTNULL(ss_.CreateDenseVector(NULL,
-                                                 m_->num_rows(),
-                                                 m_->num_rows()));
+  sparse_cholesky_.reset(
+      SparseCholesky::Create(options_.sparse_linear_algebra_library_type, AMD));
+
   const time_t init_time = time(NULL);
-  VLOG(2) << "init time: "
-          << init_time - start_time
+  VLOG(2) << "init time: " << init_time - start_time
           << " structure time: " << structure_time - start_time
           << " storage time:" << storage_time - structure_time
           << " eliminator time: " << eliminator_time - storage_time;
 }
 
-VisibilityBasedPreconditioner::~VisibilityBasedPreconditioner() {
-  if (factor_ != NULL) {
-    ss_.Free(factor_);
-    factor_ = NULL;
-  }
-  if (tmp_rhs_ != NULL) {
-    ss_.Free(tmp_rhs_);
-    tmp_rhs_ = NULL;
-  }
-}
+VisibilityBasedPreconditioner::~VisibilityBasedPreconditioner() {}
 
 // Determine the sparsity structure of the CLUSTER_JACOBI
 // preconditioner. It clusters cameras using their scene
@@ -203,22 +181,17 @@ void VisibilityBasedPreconditioner::ClusterCameras(
   if (options_.visibility_clustering_type == CANONICAL_VIEWS) {
     vector<int> centers;
     CanonicalViewsClusteringOptions clustering_options;
-    clustering_options.size_penalty_weight =
-        kCanonicalViewsSizePenaltyWeight;
+    clustering_options.size_penalty_weight = kCanonicalViewsSizePenaltyWeight;
     clustering_options.similarity_penalty_weight =
         kCanonicalViewsSimilarityPenaltyWeight;
-    ComputeCanonicalViewsClustering(clustering_options,
-                                    *schur_complement_graph,
-                                    &centers,
-                                    &membership);
+    ComputeCanonicalViewsClustering(
+        clustering_options, *schur_complement_graph, &centers, &membership);
     num_clusters_ = centers.size();
   } else if (options_.visibility_clustering_type == SINGLE_LINKAGE) {
     SingleLinkageClusteringOptions clustering_options;
-    clustering_options.min_similarity =
-        kSingleLinkageMinSimilarity;
-    num_clusters_ = ComputeSingleLinkageClustering(clustering_options,
-                                                   *schur_complement_graph,
-                                                   &membership);
+    clustering_options.min_similarity = kSingleLinkageMinSimilarity;
+    num_clusters_ = ComputeSingleLinkageClustering(
+        clustering_options, *schur_complement_graph, &membership);
   } else {
     LOG(FATAL) << "Unknown visibility clustering algorithm.";
   }
@@ -341,7 +314,9 @@ void VisibilityBasedPreconditioner::InitEliminator(
   eliminator_options.f_block_size = options_.f_block_size;
   eliminator_options.row_block_size = options_.row_block_size;
   eliminator_.reset(SchurEliminatorBase::Create(eliminator_options));
-  eliminator_->Init(eliminator_options.elimination_groups[0], &bs);
+  const bool kFullRankETE = true;
+  eliminator_->Init(
+      eliminator_options.elimination_groups[0], kFullRankETE, &bs);
 }
 
 // Update the values of the preconditioner matrix and factorize it.
@@ -415,13 +390,12 @@ void VisibilityBasedPreconditioner::ScaleOffDiagonalCells() {
     }
 
     int r, c, row_stride, col_stride;
-    CellInfo* cell_info = m_->GetCell(block1, block2,
-                                      &r, &c,
-                                      &row_stride, &col_stride);
+    CellInfo* cell_info =
+        m_->GetCell(block1, block2, &r, &c, &row_stride, &col_stride);
     CHECK(cell_info != NULL)
         << "Cell missing for block pair (" << block1 << "," << block2 << ")"
-        << " cluster pair (" << cluster_membership_[block1]
-        << " " << cluster_membership_[block2] << ")";
+        << " cluster pair (" << cluster_membership_[block1] << " "
+        << cluster_membership_[block2] << ")";
 
     // Ah the magic of tri-diagonal matrices and diagonal
     // dominance. See Lemma 1 in "Visibility Based Preconditioning
@@ -435,58 +409,42 @@ void VisibilityBasedPreconditioner::ScaleOffDiagonalCells() {
 // matrix.
 LinearSolverTerminationType VisibilityBasedPreconditioner::Factorize() {
   // Extract the TripletSparseMatrix that is used for actually storing
-  // S and convert it into a cholmod_sparse object.
-  cholmod_sparse* lhs = ss_.CreateSparseMatrix(
-      down_cast<BlockRandomAccessSparseMatrix*>(
-          m_.get())->mutable_matrix());
+  // S and convert it into a CompressedRowSparseMatrix.
+  const TripletSparseMatrix* tsm =
+      down_cast<BlockRandomAccessSparseMatrix*>(m_.get())->mutable_matrix();
 
-  // The matrix is symmetric, and the upper triangular part of the
-  // matrix contains the values.
-  lhs->stype = 1;
-
-  // TODO(sameeragarwal): Refactor to pipe this up and out.
-  std::string status;
-
-  // Symbolic factorization is computed if we don't already have one handy.
-  if (factor_ == NULL) {
-    factor_ = ss_.BlockAnalyzeCholesky(lhs, block_size_, block_size_, &status);
+  scoped_ptr<CompressedRowSparseMatrix> lhs;
+  const CompressedRowSparseMatrix::StorageType storage_type =
+      sparse_cholesky_->StorageType();
+  if (storage_type == CompressedRowSparseMatrix::UPPER_TRIANGULAR) {
+    lhs.reset(CompressedRowSparseMatrix::FromTripletSparseMatrix(*tsm));
+    lhs->set_storage_type(CompressedRowSparseMatrix::UPPER_TRIANGULAR);
+  } else {
+    lhs.reset(
+        CompressedRowSparseMatrix::FromTripletSparseMatrixTransposed(*tsm));
+    lhs->set_storage_type(CompressedRowSparseMatrix::LOWER_TRIANGULAR);
   }
 
-  const LinearSolverTerminationType termination_type =
-      (factor_ != NULL)
-      ? ss_.Cholesky(lhs, factor_, &status)
-      : LINEAR_SOLVER_FATAL_ERROR;
-
-  ss_.Free(lhs);
-  return termination_type;
+  std::string message;
+  return sparse_cholesky_->Factorize(lhs.get(), &message);
 }
 
 void VisibilityBasedPreconditioner::RightMultiply(const double* x,
                                                   double* y) const {
   CHECK_NOTNULL(x);
   CHECK_NOTNULL(y);
-  SuiteSparse* ss = const_cast<SuiteSparse*>(&ss_);
-
-  const int num_rows = m_->num_rows();
-  memcpy(CHECK_NOTNULL(tmp_rhs_)->x, x, m_->num_rows() * sizeof(*x));
-  // TODO(sameeragarwal): Better error handling.
-  std::string status;
-  cholmod_dense* solution =
-      CHECK_NOTNULL(ss->Solve(factor_, tmp_rhs_, &status));
-  memcpy(y, solution->x, sizeof(*y) * num_rows);
-  ss->Free(solution);
+  CHECK_NOTNULL(sparse_cholesky_.get());
+  std::string message;
+  sparse_cholesky_->Solve(x, y, &message);
 }
 
-int VisibilityBasedPreconditioner::num_rows() const {
-  return m_->num_rows();
-}
+int VisibilityBasedPreconditioner::num_rows() const { return m_->num_rows(); }
 
 // Classify camera/f_block pairs as in and out of the preconditioner,
 // based on whether the cluster pair that they belong to is in the
 // preconditioner or not.
 bool VisibilityBasedPreconditioner::IsBlockPairInPreconditioner(
-    const int block1,
-    const int block2) const {
+    const int block1, const int block2) const {
   int cluster1 = cluster_membership_[block1];
   int cluster2 = cluster_membership_[block2];
   if (cluster1 > cluster2) {
@@ -496,8 +454,7 @@ bool VisibilityBasedPreconditioner::IsBlockPairInPreconditioner(
 }
 
 bool VisibilityBasedPreconditioner::IsBlockPairOffDiagonal(
-    const int block1,
-    const int block2) const {
+    const int block1, const int block2) const {
   return (cluster_membership_[block1] != cluster_membership_[block2]);
 }
 
@@ -557,11 +514,13 @@ WeightedGraph<int>* VisibilityBasedPreconditioner::CreateClusterGraph(
 
   for (int i = 0; i < num_clusters_; ++i) {
     const set<int>& cluster_i = cluster_visibility[i];
-    for (int j = i+1; j < num_clusters_; ++j) {
+    for (int j = i + 1; j < num_clusters_; ++j) {
       vector<int> intersection;
       const set<int>& cluster_j = cluster_visibility[j];
-      set_intersection(cluster_i.begin(), cluster_i.end(),
-                       cluster_j.begin(), cluster_j.end(),
+      set_intersection(cluster_i.begin(),
+                       cluster_i.end(),
+                       cluster_j.begin(),
+                       cluster_j.end(),
                        back_inserter(intersection));
 
       if (intersection.size() > 0) {
@@ -612,9 +571,8 @@ void VisibilityBasedPreconditioner::FlattenMembershipMap(
       cluster_id = camera_id % num_clusters_;
     }
 
-    const int index = FindWithDefault(cluster_id_to_index,
-                                      cluster_id,
-                                      cluster_id_to_index.size());
+    const int index = FindWithDefault(
+        cluster_id_to_index, cluster_id, cluster_id_to_index.size());
 
     if (index == cluster_id_to_index.size()) {
       cluster_id_to_index[cluster_id] = index;
@@ -627,5 +585,3 @@ void VisibilityBasedPreconditioner::FlattenMembershipMap(
 
 }  // namespace internal
 }  // namespace ceres
-
-#endif  // CERES_NO_SUITESPARSE

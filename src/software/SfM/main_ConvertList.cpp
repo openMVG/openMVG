@@ -111,7 +111,7 @@ int main(int argc, char **argv)
                                       sListsFile) )
   {
     std::cerr << "\nEmpty image list." << std::endl;
-    return false;
+    return EXIT_FAILURE;
   }
 
   // Configure an empty scene with Views and their corresponding cameras

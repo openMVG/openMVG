@@ -170,7 +170,7 @@ struct OdometryConstraint {
 
   template <typename T>
   bool operator()(const T* const odometry, T* residual) const {
-    *residual = (*odometry - T(odometry_mean)) / T(odometry_stddev);
+    *residual = (*odometry - odometry_mean) / odometry_stddev;
     return true;
   }
 
@@ -201,8 +201,8 @@ struct RangeConstraint {
     for (int i = 0; i <= pose_index; ++i) {
       global_pose += relative_poses[i][0];
     }
-    residuals[0] = (global_pose + T(range_reading) - T(corridor_length)) /
-        T(range_stddev);
+    residuals[0] = (global_pose + range_reading - corridor_length) /
+        range_stddev;
     return true;
   }
 

@@ -32,6 +32,7 @@ install(TARGETS openMVG_image DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG image "openMVG_image")
 UNIT_TEST(openMVG image_drawing "openMVG_image")
+UNIT_TEST(openMVG image_integral "openMVG_image")
 UNIT_TEST(openMVG image_io "openMVG_image")
 UNIT_TEST(openMVG image_filtering "openMVG_image")
 UNIT_TEST(openMVG image_resampling "openMVG_image")

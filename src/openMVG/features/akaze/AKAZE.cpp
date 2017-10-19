@@ -72,7 +72,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
 
       if (val > 0 )
       {
-        int bin_id = floor( (val / grad_max ) * static_cast<float>(nb_bin) );
+        int bin_id = std::floor( (val / grad_max ) * static_cast<float>(nb_bin) );
 
         // Handle overflow (need to do it in a cleaner way)
         if (bin_id == nb_bin )
@@ -206,17 +206,25 @@ AKAZE::AKAZE
   const AKAZE::Params & options
 ):options_(options)
 {
-  in_ = in.GetMat().cast<float>() / 255.f;
-  options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
-  //-- Safety check to limit the computable octave count
-  const int nbOctaveMax = ceil(std::log2( std::min(in_.Width(), in_.Height())));
-  options_.iNbOctave = std::min(options_.iNbOctave, nbOctaveMax);
+  if (in.size() > 0)
+  {
+    in_ = in.GetMat().cast<float>() / 255.f;
+
+    options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
+    //-- Safety check to limit the computable octave count
+    const int nbOctaveMax = std::ceil(std::log2( std::min(in_.Width(), in_.Height())));
+    options_.iNbOctave = std::min(options_.iNbOctave, nbOctaveMax);
+  }
 }
 
 /// Compute the AKAZE non linear diffusion scale space per slice
 void AKAZE::Compute_AKAZEScaleSpace()
 {
+  if (in_.size() == 0)
+    return;
+
   float contrast_factor = ComputeAutomaticContrastFactor( in_, 0.7f );
+
   Image<float> input = in_;
 
   // Octave computation
@@ -286,7 +294,11 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
     for (int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
+      if (evolution_.size() <= options_.iNbSlicePerOctave * p + q)
+        continue;
+
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave );
+
       const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
@@ -294,8 +306,8 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
         std::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
 
       for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
-      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
-
+      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix)
+      {
         const float value = LDetHess(jx, ix);
 
         // Filter the points with the detector threshold
@@ -317,7 +329,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
           point.y = jx * ratio + 0.5 * (ratio-1);
           point.angle = 0.0f;
           point.class_id = p * options_.iNbSlicePerOctave + q;
-          vec_kpts_perSlice[options_.iNbOctave * p + q].emplace_back( point,false );
+          vec_kpts_perSlice[options_.iNbOctave * p + q].emplace_back( point, false );
         }
       }
     }

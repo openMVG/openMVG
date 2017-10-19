@@ -43,6 +43,7 @@ TEST(Matching, Exif_IO_easyexif_ReadData)
   EXPECT_EQ( 2832, exif_io->getWidth());
   EXPECT_EQ( 2128, exif_io->getHeight());
   EXPECT_NEAR( 5.85, exif_io->getFocal(), 1e-2);
+  EXPECT_NEAR( 35, exif_io->getFocalLengthIn35mm(), 1e-2);
 
   EXPECT_EQ( "", exif_io->getLensModel());
 
@@ -66,6 +67,11 @@ TEST(Matching, Exif_IO_easyexif_Read_GPS_Data)
 
   EXPECT_TRUE(exif_io->GPSAltitude(&val));
   EXPECT_NEAR(120, val, 1e-0);
+
+  EXPECT_EQ( 13, exif_io->getWidth());
+  EXPECT_EQ( 23, exif_io->getHeight());
+  EXPECT_NEAR( 2.97, exif_io->getFocal(), 1e-2);
+  EXPECT_NEAR( 31, exif_io->getFocalLengthIn35mm(), 1e-2);
 }
 
 /* ************************************************************************* */

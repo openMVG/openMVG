@@ -9,8 +9,8 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
 
@@ -96,6 +96,8 @@ public:
     const Image<unsigned char> * mask = nullptr
   )
   {
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
+
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
 
@@ -112,8 +114,6 @@ public:
 
     if (!vec_keypoints.empty())
     {
-      auto regions = std::unique_ptr<Regions_type>(new Regions_type);
-
       // reserve some memory for faster keypoint saving
       regions->Features().reserve(vec_keypoints.size());
       regions->Descriptors().reserve(vec_keypoints.size());
@@ -122,7 +122,7 @@ public:
       DescriptorT descriptor;
       int cpt = 0;
       for (auto i_keypoint = vec_keypoints.begin(); i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
-        SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
+        const SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
         regions->Features().push_back(feat);
 
         memcpy(descriptor.data(),
@@ -130,9 +130,8 @@ public:
                DescriptorT::static_size*sizeof(DescriptorT::bin_type));
         regions->Descriptors().push_back(descriptor);
       }
-      return regions;
     }
-    return nullptr;
+    return regions;
   };
 
   /// Allocate Regions type depending of the Image_describer
@@ -245,7 +244,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const override
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }

@@ -1556,9 +1556,7 @@ struct evaluator<Diagonal<ArgType, DiagIndex> >
   { }
  
   typedef typename XprType::Scalar Scalar;
-  // FIXME having to check whether ArgType is sparse here i not very nice.
-  typedef typename internal::conditional<!internal::is_same<typename ArgType::StorageKind,Sparse>::value,
-                                         typename XprType::CoeffReturnType,Scalar>::type CoeffReturnType;
+  typedef typename XprType::CoeffReturnType CoeffReturnType;
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   CoeffReturnType coeff(Index row, Index) const

@@ -300,7 +300,7 @@ bool exportToBundlerFormat(
       os << X[0] << " " << X[1] << " " << X[2] << os.widen('\n')
          <<  "255 255 255" << os.widen('\n')
          << obs.size() << " ";
-      for(Observations::const_iterator iterObs = obs.begin();
+      for (Observations::const_iterator iterObs = obs.begin();
         iterObs != obs.end(); ++iterObs)
       {
         const Observation & ob = iterObs->second;
@@ -371,9 +371,9 @@ int main(int argc, char *argv[]) {
       stlplus::folder_append_separator("PMVS") + "list.txt"
       );
 
-    return( EXIT_SUCCESS );
+    return EXIT_SUCCESS;
   }
 
   // Exit program
-  return( EXIT_FAILURE );
+  return EXIT_FAILURE;
 }

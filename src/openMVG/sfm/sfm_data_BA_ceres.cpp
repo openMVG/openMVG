@@ -91,22 +91,18 @@ ceres::CostFunction * IntrinsicsToCostFunction
   {
     case PINHOLE_CAMERA:
       return ResidualErrorFunctor_Pinhole_Intrinsic::Create(observation, weight);
-    break;
     case PINHOLE_CAMERA_RADIAL1:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1::Create(observation, weight);
-    break;
     case PINHOLE_CAMERA_RADIAL3:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3::Create(observation, weight);
-    break;
     case PINHOLE_CAMERA_BROWN:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2::Create(observation, weight);
-    break;
     case PINHOLE_CAMERA_FISHEYE:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     case CAMERA_SPHERICAL:
       return ResidualErrorFunctor_Intrinsic_Spherical::Create(intrinsic, observation, weight);
     default:
-      return nullptr;
+      return {};
   }
 }
 
@@ -157,7 +153,7 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 
 Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 (
-  Bundle_Adjustment_Ceres::BA_Ceres_options options
+  const Bundle_Adjustment_Ceres::BA_Ceres_options & options
 )
 : ceres_options_(options)
 {}
@@ -261,7 +257,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     // angleAxis + translation
     map_poses[indexPose] = {angleAxis[0], angleAxis[1], angleAxis[2], t(0), t(1), t(2)};
 
-    double * parameter_block = &map_poses[indexPose][0];
+    double * parameter_block = &map_poses.at(indexPose)[0];
     problem.AddParameterBlock(parameter_block, 6);
     if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE)
     {
@@ -275,17 +271,13 @@ bool Bundle_Adjustment_Ceres::Adjust
       if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
       {
         // Subset rotation parametrization
-        vec_constant_extrinsic.push_back(0);
-        vec_constant_extrinsic.push_back(1);
-        vec_constant_extrinsic.push_back(2);
+        vec_constant_extrinsic.insert(vec_constant_extrinsic.end(), {0,1,2});
       }
       // If we adjust only the rotation, we must set TRANSLATION as constant
       if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_ROTATION)
       {
         // Subset translation parametrization
-        vec_constant_extrinsic.push_back(3);
-        vec_constant_extrinsic.push_back(4);
-        vec_constant_extrinsic.push_back(5);
+        vec_constant_extrinsic.insert(vec_constant_extrinsic.end(), {3,4,5});
       }
       if (!vec_constant_extrinsic.empty())
       {
@@ -304,10 +296,10 @@ bool Bundle_Adjustment_Ceres::Adjust
     if (isValid(intrinsic_it.second->getType()))
     {
       map_intrinsics[indexCam] = intrinsic_it.second->getParams();
-      if (!map_intrinsics[indexCam].empty())
+      if (!map_intrinsics.at(indexCam).empty())
       {
-        double * parameter_block = &map_intrinsics[indexCam][0];
-        problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
+        double * parameter_block = &map_intrinsics.at(indexCam)[0];
+        problem.AddParameterBlock(parameter_block, map_intrinsics.at(indexCam).size());
         if (options.intrinsics_opt == Intrinsic_Parameter_Type::NONE)
         {
           // set the whole parameter block as constant for best performance
@@ -321,7 +313,7 @@ bool Bundle_Adjustment_Ceres::Adjust
           {
             ceres::SubsetParameterization *subset_parameterization =
               new ceres::SubsetParameterization(
-                map_intrinsics[indexCam].size(), vec_constant_intrinsic);
+                map_intrinsics.at(indexCam).size(), vec_constant_intrinsic);
             problem.SetParameterization(parameter_block, subset_parameterization);
           }
         }
@@ -354,25 +346,31 @@ bool Bundle_Adjustment_Ceres::Adjust
       // dimensional residual. Internally, the cost function stores the observed
       // image location and compares the reprojection against the observation.
       ceres::CostFunction* cost_function =
-        IntrinsicsToCostFunction(sfm_data.intrinsics[view->id_intrinsic].get(), obs_it.second.x);
+        IntrinsicsToCostFunction(sfm_data.intrinsics.at(view->id_intrinsic).get(),
+                                 obs_it.second.x);
 
       if (cost_function)
       {
-        if (!map_intrinsics[view->id_intrinsic].empty())
+        if (!map_intrinsics.at(view->id_intrinsic).empty())
         {
           problem.AddResidualBlock(cost_function,
             p_LossFunction,
-            &map_intrinsics[view->id_intrinsic][0],
-            &map_poses[view->id_pose][0],
+            &map_intrinsics.at(view->id_intrinsic)[0],
+            &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
         }
         else
         {
           problem.AddResidualBlock(cost_function,
             p_LossFunction,
-            &map_poses[view->id_pose][0],
+            &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
         }
+      }
+      else
+      {
+        std::cerr << "Cannot create a CostFunction for this camera model." << std::endl;
+        return false;
       }
     }
     if (options.structure_opt == Structure_Parameter_Type::NONE)
@@ -397,16 +395,28 @@ bool Bundle_Adjustment_Ceres::Adjust
         // image location and compares the reprojection against the observation.
         ceres::CostFunction* cost_function =
           IntrinsicsToCostFunction(
-            sfm_data.intrinsics[view->id_intrinsic].get(),
+            sfm_data.intrinsics.at(view->id_intrinsic).get(),
             obs_it.second.x,
             options.control_point_opt.weight);
 
         if (cost_function)
-          problem.AddResidualBlock(cost_function,
-            nullptr,
-            &map_intrinsics[view->id_intrinsic][0],
-            &map_poses[view->id_pose][0],
-            gcp_landmark_it.second.X.data());
+        {
+          if (!map_intrinsics.at(view->id_intrinsic).empty())
+          {
+            problem.AddResidualBlock(cost_function,
+                                     nullptr,
+                                     &map_intrinsics.at(view->id_intrinsic)[0],
+                                     &map_poses.at(view->id_pose)[0],
+                                     gcp_landmark_it.second.X.data());
+          }
+          else
+          {
+            problem.AddResidualBlock(cost_function,
+                                     nullptr,
+                                     &map_poses.at(view->id_pose)[0],
+                                     gcp_landmark_it.second.X.data());
+          }
+        }
       }
       if (obs.empty())
       {
@@ -435,7 +445,11 @@ bool Bundle_Adjustment_Ceres::Adjust
           new ceres::AutoDiffCostFunction<PoseCenterConstraintCostFunction, 3, 6>(
             new PoseCenterConstraintCostFunction(prior->pose_center_, prior->center_weight_));
 
-        problem.AddResidualBlock(cost_function, new ceres::HuberLoss(Square(pose_center_robust_fitting_error)), &map_poses[prior->id_view][0]);
+        problem.AddResidualBlock(
+          cost_function,
+          new ceres::HuberLoss(
+            Square(pose_center_robust_fitting_error)),
+                   &map_poses.at(prior->id_view)[0]);
       }
     }
   }
@@ -497,8 +511,8 @@ bool Bundle_Adjustment_Ceres::Adjust
         const IndexT indexPose = pose_it.first;
 
         Mat3 R_refined;
-        ceres::AngleAxisToRotationMatrix(&map_poses[indexPose][0], R_refined.data());
-        Vec3 t_refined(map_poses[indexPose][3], map_poses[indexPose][4], map_poses[indexPose][5]);
+        ceres::AngleAxisToRotationMatrix(&map_poses.at(indexPose)[0], R_refined.data());
+        Vec3 t_refined(map_poses.at(indexPose)[3], map_poses.at(indexPose)[4], map_poses.at(indexPose)[5]);
         // Update the pose
         Pose3 & pose = pose_it.second;
         pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
@@ -512,7 +526,7 @@ bool Bundle_Adjustment_Ceres::Adjust
       {
         const IndexT indexCam = intrinsic_it.first;
 
-        const std::vector<double> & vec_params = map_intrinsics[indexCam];
+        const std::vector<double> & vec_params = map_intrinsics.at(indexCam);
         intrinsic_it.second->updateFromParams(vec_params);
       }
     }

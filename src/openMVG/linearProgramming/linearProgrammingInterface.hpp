@@ -33,8 +33,11 @@ struct LP_Constraints
     LP_EQUAL            = 3   // (=)
   };
 
-  LP_Constraints() {
-    bminimize_ = false;
+  LP_Constraints():
+    nbParams_(0),
+    bminimize_(false)
+  {
+
   }
 
   int nbParams_; // The number of parameter/variable in constraint.
@@ -56,8 +59,10 @@ struct LP_Constraints
 ///
 struct LP_Constraints_Sparse
 {
-  LP_Constraints_Sparse() {
-    bminimize_ = false;
+  LP_Constraints_Sparse():
+    nbParams_(0),
+    bminimize_(false)
+  {
   }
 
   // Variable part
@@ -80,7 +85,7 @@ class LP_Solver
 {
 public:
 
-  LP_Solver(int nbParams):nbParams_(nbParams){}
+  explicit LP_Solver(int nbParams): nbParams_(nbParams){}
 
   /// Setup constraint for the given library.
   virtual bool setup(const LP_Constraints & constraints) = 0;

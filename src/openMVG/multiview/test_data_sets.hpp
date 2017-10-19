@@ -74,12 +74,12 @@ struct nViewDatasetConfigurator
 
 /// Place cameras on a circle with point in the center
 NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
-                                   const nViewDatasetConfigurator
+                                   const nViewDatasetConfigurator &
                                      config = nViewDatasetConfigurator());
 
 /// Place cameras on cardiod shape with point in the center
 NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
-                                       const nViewDatasetConfigurator
+                                       const nViewDatasetConfigurator &
                                         config = nViewDatasetConfigurator());
 
 } // namespace openMVG

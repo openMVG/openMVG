@@ -20,8 +20,10 @@ namespace openMVG {
 namespace sfm {
 
   SfM_Localization_Single_3DTrackObservation_Database::
-  SfM_Localization_Single_3DTrackObservation_Database()
-  :SfM_Localizer(), sfm_data_(nullptr), matching_interface_(nullptr)
+  SfM_Localization_Single_3DTrackObservation_Database():
+    SfM_Localizer(),
+    sfm_data_(nullptr),
+    matching_interface_(nullptr)
   {}
 
   bool
@@ -51,7 +53,7 @@ namespace sfm {
         if (observation.second.id_feat != UndefinedIndexT)
         {
           // copy the feature/descriptor to landmark_observations_descriptors
-          std::shared_ptr<features::Regions> view_regions = regions_provider.get(observation.first);
+          const std::shared_ptr<features::Regions> view_regions = regions_provider.get(observation.first);
           view_regions->CopyRegion(observation.second.id_feat, landmark_observations_descriptors_.get());
           // link this descriptor to the track Id
           index_to_landmark_id_.push_back(landmark.first);
@@ -73,6 +75,7 @@ namespace sfm {
   bool
   SfM_Localization_Single_3DTrackObservation_Database::Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,
@@ -114,7 +117,7 @@ namespace sfm {
     }
 
     const bool bResection =  SfM_Localizer::Localize(
-      image_size, optional_intrinsics, resection_data, pose);
+      solver_type, image_size, optional_intrinsics, resection_data, pose);
 
     resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 

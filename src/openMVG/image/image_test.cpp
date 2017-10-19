@@ -38,7 +38,7 @@ TEST(Image, Basis)
 
   // Construction by matrix
   Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> matrix(5,5);
-  Image<unsigned char> imageGray3 = matrix;
+  const Image<unsigned char> imageGray3(matrix);
 
   //- Get back matrix contained in the image
   matrix = imaGray.GetMat();

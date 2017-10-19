@@ -28,33 +28,30 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include "ceres/internal/port.h"
+#include "ceres/schur_complement_solver.h"
 
 #include <algorithm>
 #include <ctime>
 #include <set>
-#include <sstream>
 #include <vector>
 
+#include "Eigen/Dense"
+#include "Eigen/SparseCore"
 #include "ceres/block_random_access_dense_matrix.h"
 #include "ceres/block_random_access_matrix.h"
 #include "ceres/block_random_access_sparse_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/block_structure.h"
 #include "ceres/conjugate_gradients_solver.h"
-#include "ceres/cxsparse.h"
 #include "ceres/detect_structure.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/lapack.h"
 #include "ceres/linear_solver.h"
-#include "ceres/schur_complement_solver.h"
-#include "ceres/suitesparse.h"
+#include "ceres/sparse_cholesky.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "ceres/types.h"
 #include "ceres/wall_time.h"
-#include "Eigen/Dense"
-#include "Eigen/SparseCore"
 
 namespace ceres {
 namespace internal {
@@ -135,8 +132,11 @@ LinearSolver::Summary SchurComplementSolver::SolveImpl(
                     &options_.e_block_size,
                     &options_.f_block_size);
     eliminator_.reset(CHECK_NOTNULL(SchurEliminatorBase::Create(options_)));
-    eliminator_->Init(options_.elimination_groups[0], A->block_structure());
+    const bool kFullRankETE = true;
+    eliminator_->Init(
+        options_.elimination_groups[0], kFullRankETE, A->block_structure());
   };
+
   std::fill(x, x + A->num_cols(), 0.0);
   event_logger.AddEvent("Setup");
 
@@ -225,21 +225,15 @@ DenseSchurComplementSolver::SolveReducedLinearSystem(
 
 SparseSchurComplementSolver::SparseSchurComplementSolver(
     const LinearSolver::Options& options)
-    : SchurComplementSolver(options),
-      factor_(NULL),
-      cxsparse_factor_(NULL) {
+    : SchurComplementSolver(options) {
+  if (options.type != ITERATIVE_SCHUR) {
+    sparse_cholesky_.reset(
+        SparseCholesky::Create(options.sparse_linear_algebra_library_type,
+                               options.use_postordering ? AMD : NATURAL));
+  }
 }
 
 SparseSchurComplementSolver::~SparseSchurComplementSolver() {
-  if (factor_ != NULL) {
-    ss_.Free(factor_);
-    factor_ = NULL;
-  }
-
-  if (cxsparse_factor_ != NULL) {
-    cxsparse_.Free(cxsparse_factor_);
-    cxsparse_factor_ = NULL;
-  }
 }
 
 // Determine the non-zero blocks in the Schur Complement matrix, and
@@ -313,296 +307,50 @@ void SparseSchurComplementSolver::InitStorage(
   set_rhs(new double[lhs()->num_rows()]);
 }
 
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystem(
-          const LinearSolver::PerSolveOptions& per_solve_options,
-          double* solution) {
+LinearSolver::Summary SparseSchurComplementSolver::SolveReducedLinearSystem(
+    const LinearSolver::PerSolveOptions& per_solve_options, double* solution) {
   if (options().type == ITERATIVE_SCHUR) {
-    CHECK(options().use_explicit_schur_complement);
     return SolveReducedLinearSystemUsingConjugateGradients(per_solve_options,
                                                            solution);
   }
 
-  switch (options().sparse_linear_algebra_library_type) {
-    case SUITE_SPARSE:
-      return SolveReducedLinearSystemUsingSuiteSparse(per_solve_options,
-                                                      solution);
-    case CX_SPARSE:
-      return SolveReducedLinearSystemUsingCXSparse(per_solve_options,
-                                                   solution);
-    case EIGEN_SPARSE:
-      return SolveReducedLinearSystemUsingEigen(per_solve_options,
-                                                solution);
-    default:
-      LOG(FATAL) << "Unknown sparse linear algebra library : "
-                 << options().sparse_linear_algebra_library_type;
-  }
-
-  return LinearSolver::Summary();
-}
-
-// Solve the system Sx = r, assuming that the matrix S is stored in a
-// BlockRandomAccessSparseMatrix.  The linear system is solved using
-// CHOLMOD's sparse cholesky factorization routines.
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystemUsingSuiteSparse(
-    const LinearSolver::PerSolveOptions& per_solve_options,
-    double* solution) {
-#ifdef CERES_NO_SUITESPARSE
-
-  LinearSolver::Summary summary;
-  summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-  summary.message = "Ceres was not built with SuiteSparse support. "
-      "Therefore, SPARSE_SCHUR cannot be used with SUITE_SPARSE";
-  return summary;
-
-#else
-
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
   summary.termination_type = LINEAR_SOLVER_SUCCESS;
   summary.message = "Success.";
 
-  TripletSparseMatrix* tsm =
-      const_cast<TripletSparseMatrix*>(
-          down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix());
-  const int num_rows = tsm->num_rows();
-
-  // The case where there are no f blocks, and the system is block
-  // diagonal.
-  if (num_rows == 0) {
+  const TripletSparseMatrix* tsm =
+      down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix();
+  if (tsm->num_rows() == 0) {
     return summary;
   }
+
+  scoped_ptr<CompressedRowSparseMatrix> lhs;
+  const CompressedRowSparseMatrix::StorageType storage_type =
+      sparse_cholesky_->StorageType();
+  if (storage_type == CompressedRowSparseMatrix::UPPER_TRIANGULAR) {
+    lhs.reset(CompressedRowSparseMatrix::FromTripletSparseMatrix(*tsm));
+    lhs->set_storage_type(CompressedRowSparseMatrix::UPPER_TRIANGULAR);
+  } else {
+    lhs.reset(
+        CompressedRowSparseMatrix::FromTripletSparseMatrixTransposed(*tsm));
+    lhs->set_storage_type(CompressedRowSparseMatrix::LOWER_TRIANGULAR);
+  }
+
+  *lhs->mutable_col_blocks() = blocks_;
+  *lhs->mutable_row_blocks() = blocks_;
 
   summary.num_iterations = 1;
-  cholmod_sparse* cholmod_lhs = NULL;
-  if (options().use_postordering) {
-    // If we are going to do a full symbolic analysis of the schur
-    // complement matrix from scratch and not rely on the
-    // pre-ordering, then the fastest path in cholmod_factorize is the
-    // one corresponding to upper triangular matrices.
-
-    // Create a upper triangular symmetric matrix.
-    cholmod_lhs = ss_.CreateSparseMatrix(tsm);
-    cholmod_lhs->stype = 1;
-
-    if (factor_ == NULL) {
-      factor_ = ss_.BlockAnalyzeCholesky(cholmod_lhs,
-                                         blocks_,
-                                         blocks_,
-                                         &summary.message);
-    }
-  } else {
-    // If we are going to use the natural ordering (i.e. rely on the
-    // pre-ordering computed by solver_impl.cc), then the fastest
-    // path in cholmod_factorize is the one corresponding to lower
-    // triangular matrices.
-
-    // Create a upper triangular symmetric matrix.
-    cholmod_lhs = ss_.CreateSparseMatrixTranspose(tsm);
-    cholmod_lhs->stype = -1;
-
-    if (factor_ == NULL) {
-      factor_ = ss_.AnalyzeCholeskyWithNaturalOrdering(cholmod_lhs,
-                                                       &summary.message);
-    }
-  }
-
-  if (factor_ == NULL) {
-    ss_.Free(cholmod_lhs);
-    summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-    // No need to set message as it has already been set by the
-    // symbolic analysis routines above.
-    return summary;
-  }
-
-  summary.termination_type =
-    ss_.Cholesky(cholmod_lhs, factor_, &summary.message);
-
-  ss_.Free(cholmod_lhs);
-
-  if (summary.termination_type != LINEAR_SOLVER_SUCCESS) {
-    // No need to set message as it has already been set by the
-    // numeric factorization routine above.
-    return summary;
-  }
-
-  cholmod_dense*  cholmod_rhs =
-      ss_.CreateDenseVector(const_cast<double*>(rhs()), num_rows, num_rows);
-  cholmod_dense* cholmod_solution = ss_.Solve(factor_,
-                                              cholmod_rhs,
-                                              &summary.message);
-  ss_.Free(cholmod_rhs);
-
-  if (cholmod_solution == NULL) {
-    summary.message =
-        "SuiteSparse failure. Unable to perform triangular solve.";
-    summary.termination_type = LINEAR_SOLVER_FAILURE;
-    return summary;
-  }
-
-  VectorRef(solution, num_rows)
-      = VectorRef(static_cast<double*>(cholmod_solution->x), num_rows);
-  ss_.Free(cholmod_solution);
+  summary.termination_type = sparse_cholesky_->FactorAndSolve(
+      lhs.get(), rhs(), solution, &summary.message);
   return summary;
-#endif  // CERES_NO_SUITESPARSE
-}
-
-// Solve the system Sx = r, assuming that the matrix S is stored in a
-// BlockRandomAccessSparseMatrix.  The linear system is solved using
-// CXSparse's sparse cholesky factorization routines.
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystemUsingCXSparse(
-    const LinearSolver::PerSolveOptions& per_solve_options,
-    double* solution) {
-#ifdef CERES_NO_CXSPARSE
-
-  LinearSolver::Summary summary;
-  summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-  summary.message = "Ceres was not built with CXSparse support. "
-      "Therefore, SPARSE_SCHUR cannot be used with CX_SPARSE";
-  return summary;
-
-#else
-
-  LinearSolver::Summary summary;
-  summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_SUCCESS;
-  summary.message = "Success.";
-
-  // Extract the TripletSparseMatrix that is used for actually storing S.
-  TripletSparseMatrix* tsm =
-      const_cast<TripletSparseMatrix*>(
-          down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix());
-  const int num_rows = tsm->num_rows();
-
-  // The case where there are no f blocks, and the system is block
-  // diagonal.
-  if (num_rows == 0) {
-    return summary;
-  }
-
-  cs_di* lhs = CHECK_NOTNULL(cxsparse_.CreateSparseMatrix(tsm));
-  VectorRef(solution, num_rows) = ConstVectorRef(rhs(), num_rows);
-
-  // Compute symbolic factorization if not available.
-  if (cxsparse_factor_ == NULL) {
-    cxsparse_factor_ = cxsparse_.BlockAnalyzeCholesky(lhs, blocks_, blocks_);
-  }
-
-  if (cxsparse_factor_ == NULL) {
-    summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-    summary.message =
-        "CXSparse failure. Unable to find symbolic factorization.";
-  } else if (!cxsparse_.SolveCholesky(lhs, cxsparse_factor_, solution)) {
-    summary.termination_type = LINEAR_SOLVER_FAILURE;
-    summary.message = "CXSparse::SolveCholesky failed.";
-  }
-
-  cxsparse_.Free(lhs);
-  return summary;
-#endif  // CERES_NO_CXPARSE
-}
-
-// Solve the system Sx = r, assuming that the matrix S is stored in a
-// BlockRandomAccessSparseMatrix.  The linear system is solved using
-// Eigen's sparse cholesky factorization routines.
-LinearSolver::Summary
-SparseSchurComplementSolver::SolveReducedLinearSystemUsingEigen(
-    const LinearSolver::PerSolveOptions& per_solve_options,
-    double* solution) {
-#ifndef CERES_USE_EIGEN_SPARSE
-
-  LinearSolver::Summary summary;
-  summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-  summary.message =
-      "SPARSE_SCHUR cannot be used with EIGEN_SPARSE. "
-      "Ceres was not built with support for "
-      "Eigen's SimplicialLDLT decomposition. "
-      "This requires enabling building with -DEIGENSPARSE=ON.";
-  return summary;
-
-#else
-  EventLogger event_logger("SchurComplementSolver::EigenSolve");
-  LinearSolver::Summary summary;
-  summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_SUCCESS;
-  summary.message = "Success.";
-
-  // Extract the TripletSparseMatrix that is used for actually storing S.
-  TripletSparseMatrix* tsm =
-      const_cast<TripletSparseMatrix*>(
-          down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix());
-  const int num_rows = tsm->num_rows();
-
-  // The case where there are no f blocks, and the system is block
-  // diagonal.
-  if (num_rows == 0) {
-    return summary;
-  }
-
-  // This is an upper triangular matrix.
-  CompressedRowSparseMatrix crsm(*tsm);
-  // Map this to a column major, lower triangular matrix.
-  Eigen::MappedSparseMatrix<double, Eigen::ColMajor> eigen_lhs(
-      crsm.num_rows(),
-      crsm.num_rows(),
-      crsm.num_nonzeros(),
-      crsm.mutable_rows(),
-      crsm.mutable_cols(),
-      crsm.mutable_values());
-  event_logger.AddEvent("ToCompressedRowSparseMatrix");
-
-  // Compute symbolic factorization if one does not exist.
-  if (simplicial_ldlt_.get() == NULL) {
-    simplicial_ldlt_.reset(new SimplicialLDLT);
-    // This ordering is quite bad. The scalar ordering produced by the
-    // AMD algorithm is quite bad and can be an order of magnitude
-    // worse than the one computed using the block version of the
-    // algorithm.
-    simplicial_ldlt_->analyzePattern(eigen_lhs);
-    if (VLOG_IS_ON(2)) {
-      std::stringstream ss;
-      simplicial_ldlt_->dumpMemory(ss);
-      VLOG(2) << "Symbolic Analysis\n"
-              << ss.str();
-    }
-    event_logger.AddEvent("Analysis");
-    if (simplicial_ldlt_->info() != Eigen::Success) {
-      summary.termination_type = LINEAR_SOLVER_FATAL_ERROR;
-      summary.message =
-          "Eigen failure. Unable to find symbolic factorization.";
-      return summary;
-    }
-  }
-
-  simplicial_ldlt_->factorize(eigen_lhs);
-  event_logger.AddEvent("Factorize");
-  if (simplicial_ldlt_->info() != Eigen::Success) {
-    summary.termination_type = LINEAR_SOLVER_FAILURE;
-    summary.message = "Eigen failure. Unable to find numeric factoriztion.";
-    return summary;
-  }
-
-  VectorRef(solution, num_rows) =
-      simplicial_ldlt_->solve(ConstVectorRef(rhs(), num_rows));
-  event_logger.AddEvent("Solve");
-  if (simplicial_ldlt_->info() != Eigen::Success) {
-    summary.termination_type = LINEAR_SOLVER_FAILURE;
-    summary.message = "Eigen failure. Unable to do triangular solve.";
-  }
-
-  return summary;
-#endif  // CERES_USE_EIGEN_SPARSE
 }
 
 LinearSolver::Summary
 SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
     const LinearSolver::PerSolveOptions& per_solve_options,
     double* solution) {
+  CHECK(options().use_explicit_schur_complement);
   const int num_rows = lhs()->num_rows();
   // The case where there are no f blocks, and the system is block
   // diagonal.

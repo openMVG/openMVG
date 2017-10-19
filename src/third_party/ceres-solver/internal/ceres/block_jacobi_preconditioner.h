@@ -31,7 +31,6 @@
 #ifndef CERES_INTERNAL_BLOCK_JACOBI_PRECONDITIONER_H_
 #define CERES_INTERNAL_BLOCK_JACOBI_PRECONDITIONER_H_
 
-#include <vector>
 #include "ceres/block_random_access_diagonal_matrix.h"
 #include "ceres/internal/scoped_ptr.h"
 #include "ceres/preconditioner.h"
@@ -62,8 +61,8 @@ class BlockJacobiPreconditioner : public BlockSparseMatrixPreconditioner {
   virtual void RightMultiply(const double* x, double* y) const;
   virtual int num_rows() const { return m_->num_rows(); }
   virtual int num_cols() const { return m_->num_rows(); }
-
   const BlockRandomAccessDiagonalMatrix& matrix() const { return *m_; }
+
  private:
   virtual bool UpdateImpl(const BlockSparseMatrix& A, const double* D);
 

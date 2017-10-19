@@ -27,7 +27,7 @@ namespace sfm {
 // Implementation of a naive method:
 // - init the database of descriptor from the structure and the observations.
 // - create a large array with all the used descriptors and init a Matcher with it
-// - to localize an input image compare it's regions to the database and robust estimate
+// - to localize an input image compare its regions to the database and robust estimate
 //   the pose from found 2d-3D correspondences
 
 class SfM_Localization_Single_3DTrackObservation_Database : public SfM_Localizer
@@ -52,6 +52,7 @@ public:
   /**
   * @brief Try to localize an image in the database
   *
+  * @param[in] solver_type the type of absolute pose solver to use
   * @param[in] image_size the w,h image size
   * @param[in] optional_intrinsics camera intrinsic if known (else nullptr)
   * @param[in] query_regions the image regions (type must be the same as the database)
@@ -61,6 +62,7 @@ public:
   */
   bool Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     const features::Regions & query_regions,

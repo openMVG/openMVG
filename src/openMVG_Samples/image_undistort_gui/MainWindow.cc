@@ -33,7 +33,7 @@ const int MainWindow::STATE_HAS_COMPUTED_DISTORTION = 2;
 
 /**
   * @brief Constructor
-  * @param parent Parent widget of this window 
+  * @param parent Parent widget of this window
   */
 MainWindow::MainWindow( QWidget *parent )
     : QMainWindow( parent ),
@@ -50,7 +50,7 @@ MainWindow::MainWindow( QWidget *parent )
 }
 
 /**
-  * @brief Action to be executed when user want to open an image 
+  * @brief Action to be executed when user want to open an image
   */
 void MainWindow::onOpenImage( void )
 {
@@ -59,7 +59,6 @@ void MainWindow::onOpenImage( void )
                                                    tr( "Images (*.png *.jpg *.tiff)" ) );
   if ( !( fileName.isNull() || fileName.isEmpty() ) )
   {
-    const std::string imagePath = fileName.toStdString();
     QImage tmp( fileName );
     m_inputImage = QImageToOpenMVGImage( tmp );
 
@@ -83,7 +82,7 @@ void MainWindow::onOpenImage( void )
 }
 
 /**
-  * @brief Action to be executed when user want to undistort an image 
+  * @brief Action to be executed when user want to undistort an image
   */
 void MainWindow::onProcessImage( void )
 {
@@ -148,7 +147,7 @@ void MainWindow::onProcessImage( void )
 }
 
 /**
-  * @brief Action to be executed when user want to export an undistorted image 
+  * @brief Action to be executed when user want to export an undistorted image
   */
 void MainWindow::onExportImage( void )
 {
@@ -163,7 +162,7 @@ void MainWindow::onExportImage( void )
 }
 
 /**
-  * @brief Action to be executed when user select an intrinsic type 
+  * @brief Action to be executed when user select an intrinsic type
   */
 void MainWindow::onSelectIntrinsicType( void )
 {
@@ -373,7 +372,7 @@ void MainWindow::onQuit( void )
 }
 
 /**
-  * @brief Fill intrinsic values in the combobox 
+  * @brief Fill intrinsic values in the combobox
   */
 void MainWindow::FillIntrinsicTypes( void )
 {
@@ -385,7 +384,7 @@ void MainWindow::FillIntrinsicTypes( void )
 }
 
 /**
-  * @brief Build virtual image representing a regular grid 
+  * @brief Build virtual image representing a regular grid
   */
 void MainWindow::BuildGrid( void )
 {
@@ -434,7 +433,7 @@ void MainWindow::BuildGrid( void )
 }
 
 /**
-  * @brief update interface based on internal state 
+  * @brief update interface based on internal state
   */
 void MainWindow::UpdateInterface( void )
 {
@@ -545,7 +544,7 @@ void MainWindow::UpdateInterface( void )
 }
 
 /**
-  * @brief Build Interface widgets 
+  * @brief Build Interface widgets
   */
 void MainWindow::BuildInterface()
 {
@@ -701,7 +700,7 @@ void MainWindow::BuildInterface()
 }
 
 /**
-  * @brief Create menus items 
+  * @brief Create menus items
   */
 void MainWindow::BuildMenus()
 {
@@ -748,7 +747,7 @@ void MainWindow::BuildMenus()
 }
 
 /**
-  * @brief Make connections between interface items and slots 
+  * @brief Make connections between interface items and slots
   */
 void MainWindow::MakeConnections()
 {

@@ -248,7 +248,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
-  cmd.add( make_option('W', sPriorWeights, "prior_weigths"));
+  cmd.add( make_option('W', sPriorWeights, "prior_weights"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
   cmd.add( make_option('G', sGPSfile, "gps_file") );
 
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << "\n"
       << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
-      << "[-W|--prior_weigths] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
+      << "[-W|--prior_weights] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
       << "\t 1: UTM\n"
@@ -481,11 +481,11 @@ int main(int argc, char **argv)
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_BROWN:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Brown_T2>
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_FISHEYE:
-          intrinsic =std::make_shared<Pinhole_Intrinsic_Fisheye>
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
             (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         default:

@@ -35,7 +35,6 @@ void ImageView::wheelEvent( QWheelEvent *event )
   // Store current anchor
   const ViewportAnchor anchor = transformationAnchor();
   setTransformationAnchor( QGraphicsView::AnchorUnderMouse );
-  const int angle    = event->angleDelta().y();
   const qreal factor = std::pow( 1.01, event->angleDelta().y() );
 
   scale( factor, factor );

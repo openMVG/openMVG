@@ -51,7 +51,7 @@ Setting up your Environment
 
 
 4. Build Ceres, following the instructions in
-   :ref:`chapter-building`.
+   :ref:`chapter-installation`.
 
    On Mac and Linux, the ``CMake`` build will download and enable
    the Gerrit pre-commit hook automatically. This pre-submit hook
@@ -65,9 +65,8 @@ Setting up your Environment
       curl -o .git/hooks/commit-msg https://ceres-solver-review.googlesource.com/tools/hooks/commit-msg
       chmod +x .git/hooks/commit-msg
 
-5. Configure your Gerrit password with a ``.netrc`` (Mac and Linux)
-   or ``_netrc`` (Windows) which allows pushing to Gerrit without
-   having to enter a very long random password every time:
+5. Configure your Gerrit password with a ``.gitcookies`` which allows pushing
+   to Gerrit without having to enter a very long random password every time:
 
    * Sign into `http://ceres-solver-review.googlesource.com
      <http://ceres-solver-review.googlesource.com>`_.
@@ -80,22 +79,11 @@ Setting up your Environment
    * Click ``Allow access`` when the page requests access to your
      ``git`` repositories.
 
-   * Copy the contents of the ``netrc`` into the clipboard.
-
-     - On Mac and Linux, paste the contents into ``~/.netrc``.
-
-     - On Windows, by default users do not have a ``%HOME%``
-       setting.
-
-
-       Executing ``setx HOME %USERPROFILE%`` in a terminal will set up
-       the ``%HOME%`` environment variable persistently, and is used
-       by ``git`` to find ``%HOME%\_netrc``.
-
-       Then, create a new text file named ``_netrc`` and put it in
-       e.g. ``C:\Users\username`` where ``username`` is your user
-       name.
-
+   * Follow the instructions from Gerrit to create a ``.gitcookies`` file on
+     your system, either in ``$HOME/.gitcookies`` (Mac and Linux) or
+     ``%USERPROFILE%\.gitcookies`` (Windows). Note that for Windows, please get
+     a recent `Git for Windows <https://git-scm.com/download/win>`_ install to
+     enable automatic lookup in the ``%USERPROFILE%\.gitcookies``.
 
 Submitting a change
 ===================
@@ -115,7 +103,8 @@ Submitting a change
 
    When the push succeeds, the console will display a URL showing the
    address of the review. Go to the URL and add at least one of the
-   maintainers (Sameer Agarwal, Keir Mierle, or Alex Stewart) as reviewers.
+   maintainers (Sameer Agarwal, Keir Mierle, Alex Stewart or William
+   Rucklidge) as reviewers.
 
 3. Wait for a review.
 

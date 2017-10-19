@@ -66,13 +66,13 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
                            bool bVerbose = true )
 {
   std::ifstream in(sFileName.c_str());
-  if(!in.is_open())  {
+  if (!in.is_open())  {
     std::cerr << std::endl
       << "Impossible to read the specified file." << std::endl;
   }
   std::string sValue;
   std::vector<std::string> vec_str;
-  while(getline( in, sValue ) )
+  while (getline( in, sValue ) )
   {
     vec_str.clear();
     stl::split(sValue, ';', vec_str);

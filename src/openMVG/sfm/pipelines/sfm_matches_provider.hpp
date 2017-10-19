@@ -16,6 +16,8 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/types.hpp"
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 namespace openMVG {
 namespace sfm {
 

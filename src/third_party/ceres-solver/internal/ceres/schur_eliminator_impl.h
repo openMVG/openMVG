@@ -60,6 +60,7 @@
 #include "ceres/internal/eigen.h"
 #include "ceres/internal/fixed_array.h"
 #include "ceres/internal/scoped_ptr.h"
+#include "ceres/invert_psd_matrix.h"
 #include "ceres/map_util.h"
 #include "ceres/schur_eliminator.h"
 #include "ceres/small_blas.h"
@@ -76,14 +77,16 @@ SchurEliminator<kRowBlockSize, kEBlockSize, kFBlockSize>::~SchurEliminator() {
 }
 
 template <int kRowBlockSize, int kEBlockSize, int kFBlockSize>
-void
-SchurEliminator<kRowBlockSize, kEBlockSize, kFBlockSize>::
-Init(int num_eliminate_blocks, const CompressedRowBlockStructure* bs) {
+void SchurEliminator<kRowBlockSize, kEBlockSize, kFBlockSize>::Init(
+    int num_eliminate_blocks,
+    bool assume_full_rank_ete,
+    const CompressedRowBlockStructure* bs) {
   CHECK_GT(num_eliminate_blocks, 0)
       << "SchurComplementSolver cannot be initialized with "
       << "num_eliminate_blocks = 0.";
 
   num_eliminate_blocks_ = num_eliminate_blocks;
+  assume_full_rank_ete_ = assume_full_rank_ete;
 
   const int num_col_blocks = bs->cols.size();
   const int num_row_blocks = bs->rows.size();
@@ -268,10 +271,7 @@ Eliminate(const BlockSparseMatrix* A,
     // use it to multiply other matrices/vectors instead of doing a
     // Solve call over and over again.
     typename EigenTypes<kEBlockSize, kEBlockSize>::Matrix inverse_ete =
-        ete
-        .template selfadjointView<Eigen::Upper>()
-        .llt()
-        .solve(Matrix::Identity(e_block_size, e_block_size));
+        InvertPSDMatrix<kEBlockSize>(assume_full_rank_ete_, ete);
 
     // For the current chunk compute and update the rhs of the reduced
     // linear system.
@@ -360,7 +360,8 @@ BackSubstitute(const BlockSparseMatrix* A,
               ete.data(), 0, 0, e_block_size, e_block_size);
     }
 
-    ete.llt().solveInPlace(y_block);
+    y_block = InvertPSDMatrix<kEBlockSize>(assume_full_rank_ete_, ete)
+        * y_block;
   }
 }
 

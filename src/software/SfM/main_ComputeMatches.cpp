@@ -267,10 +267,8 @@ int main(int argc, char **argv)
 
   std::cout << std::endl << " - PUTATIVE MATCHES - " << std::endl;
   // If the matches already exists, reload them
-  if
-  (
-    !bForce
-    && (stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt")
+  if (!bForce
+        && (stlplus::file_exists(sMatchesDirectory + "/matches.putative.txt")
         || stlplus::file_exists(sMatchesDirectory + "/matches.putative.bin"))
   )
   {

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2017 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,6 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: fredp@google.com (Fred Pighin)
-//
-// Tests for linear solvers that solve symmetric linear systems. Some
-// of this code is inhertited from Fred Pighin's code for testing the
-// old Conjugate Gradients solver.
 //
 // TODO(sameeragarwal): More comprehensive testing with larger and
 // more badly conditioned problem.
