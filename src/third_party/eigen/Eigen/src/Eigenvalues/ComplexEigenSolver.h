@@ -250,7 +250,7 @@ template<typename _MatrixType> class ComplexEigenSolver
     EigenvectorType m_matX;
 
   private:
-    void doComputeEigenvectors(const RealScalar& matrixnorm);
+    void doComputeEigenvectors(RealScalar matrixnorm);
     void sortEigenvalues(bool computeEigenvectors);
 };
 
@@ -284,9 +284,11 @@ ComplexEigenSolver<MatrixType>::compute(const EigenBase<InputType>& matrix, bool
 
 
 template<typename MatrixType>
-void ComplexEigenSolver<MatrixType>::doComputeEigenvectors(const RealScalar& matrixnorm)
+void ComplexEigenSolver<MatrixType>::doComputeEigenvectors(RealScalar matrixnorm)
 {
   const Index n = m_eivalues.size();
+
+  matrixnorm = numext::maxi(matrixnorm,(std::numeric_limits<RealScalar>::min)());
 
   // Compute X such that T = X D X^(-1), where D is the diagonal of T.
   // The matrix X is unit triangular.

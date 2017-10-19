@@ -21,7 +21,7 @@ namespace Eigen {
   * \param MatrixType the type of the object in which we are taking a sub/main/super diagonal
   * \param DiagIndex the index of the sub/super diagonal. The default is 0 and it means the main diagonal.
   *              A positive value means a superdiagonal, a negative value means a subdiagonal.
-  *              You can also use Dynamic so the index can be set at runtime.
+  *              You can also use DynamicIndex so the index can be set at runtime.
   *
   * The matrix is not required to be square.
   *

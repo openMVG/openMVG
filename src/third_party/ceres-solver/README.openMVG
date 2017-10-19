@@ -1,7 +1,7 @@
 Project: ceres-solver
 URL: http://ceres-solver.org/
 License: BSD License
-Upstream version: 1.12.0 + fixes at 7b4ec98ea9cd32be826365f37621f9232d95c15b
+Upstream version: 1.13.0
 
 Local modifications:
 

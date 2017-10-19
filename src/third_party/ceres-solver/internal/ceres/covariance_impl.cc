@@ -538,24 +538,37 @@ bool CovarianceImpl::ComputeCovarianceSparsity(
 }
 
 bool CovarianceImpl::ComputeCovarianceValues() {
-  switch (options_.algorithm_type) {
-    case DENSE_SVD:
-      return ComputeCovarianceValuesUsingDenseSVD();
-    case SUITE_SPARSE_QR:
-#ifndef CERES_NO_SUITESPARSE
+  if (options_.algorithm_type == DENSE_SVD) {
+    return ComputeCovarianceValuesUsingDenseSVD();
+  }
+
+  if (options_.algorithm_type == SPARSE_QR) {
+    if (options_.sparse_linear_algebra_library_type == EIGEN_SPARSE) {
+      return ComputeCovarianceValuesUsingEigenSparseQR();
+    }
+
+    if (options_.sparse_linear_algebra_library_type == SUITE_SPARSE) {
+#if !defined(CERES_NO_SUITESPARSE)
       return ComputeCovarianceValuesUsingSuiteSparseQR();
 #else
-      LOG(ERROR) << "SuiteSparse is required to use the "
-                 << "SUITE_SPARSE_QR algorithm.";
+      LOG(ERROR) << "SuiteSparse is required to use the SPARSE_QR algorithm "
+                 << "with "
+                 << "Covariance::Options::sparse_linear_algebra_library_type "
+                 << "= SUITE_SPARSE.";
       return false;
 #endif
-    case EIGEN_SPARSE_QR:
-      return ComputeCovarianceValuesUsingEigenSparseQR();
-    default:
-      LOG(ERROR) << "Unsupported covariance estimation algorithm type: "
-                 << CovarianceAlgorithmTypeToString(options_.algorithm_type);
-      return false;
+    }
+
+    LOG(ERROR) << "Unsupported "
+               << "Covariance::Options::sparse_linear_algebra_library_type "
+               << "= "
+               << SparseLinearAlgebraLibraryTypeToString(
+                      options_.sparse_linear_algebra_library_type);
+    return false;
   }
+
+  LOG(ERROR) << "Unsupported Covariance::Options::algorithm_type = "
+             << CovarianceAlgorithmTypeToString(options_.algorithm_type);
   return false;
 }
 

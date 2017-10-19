@@ -407,7 +407,7 @@ void Liop_Descriptor_Extractor::GeneratePatternMap(
   pattern_map.insert({key,count});
   ++count;
 
-  while(NextPermutation(p, n))
+  while (NextPermutation(p, n))
   {
     key = 0;
     for (unsigned char i = 0; i < n; ++i)

@@ -818,7 +818,7 @@ inline typename FixedBlockXpr<NRows,NCols>::Type block(Index startRow, Index sta
   return typename FixedBlockXpr<NRows,NCols>::Type(derived(), startRow, startCol, blockRows, blockCols);
 }
 
-/// This is the const version of block<>(Index, Index, Index, Index). */
+/// This is the const version of block<>(Index, Index, Index, Index).
 template<int NRows, int NCols>
 inline const typename ConstFixedBlockXpr<NRows,NCols>::Type block(Index startRow, Index startCol,
                                                               Index blockRows, Index blockCols) const
@@ -832,15 +832,15 @@ inline const typename ConstFixedBlockXpr<NRows,NCols>::Type block(Index startRow
 /// Output: \verbinclude MatrixBase_col.out
 ///
 EIGEN_DOC_BLOCK_ADDONS_INNER_PANEL_IF(column-major)
-///
-/// \sa row(), class Block */
+/**
+  * \sa row(), class Block */
 EIGEN_DEVICE_FUNC
 inline ColXpr col(Index i)
 {
   return ColXpr(derived(), i);
 }
 
-/// This is the const version of col(). */
+/// This is the const version of col().
 EIGEN_DEVICE_FUNC
 inline ConstColXpr col(Index i) const
 {
@@ -853,8 +853,8 @@ inline ConstColXpr col(Index i) const
 /// Output: \verbinclude MatrixBase_row.out
 ///
 EIGEN_DOC_BLOCK_ADDONS_INNER_PANEL_IF(row-major)
-///
-/// \sa col(), class Block */
+/**
+  * \sa col(), class Block */
 EIGEN_DEVICE_FUNC
 inline RowXpr row(Index i)
 {

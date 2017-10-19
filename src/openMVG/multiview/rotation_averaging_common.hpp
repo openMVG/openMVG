@@ -52,7 +52,7 @@ inline RelativeRotations_map getMap(const RelativeRotations & relRots)
 {
   RelativeRotations_map map_rots;
   for (const auto & cur_rotation : relRots )
-    map_rots[std::make_pair(cur_rotation.i, cur_rotation.j)] = cur_rotation;
+    map_rots[{cur_rotation.i, cur_rotation.j}] = cur_rotation;
   return map_rots;
 }
 

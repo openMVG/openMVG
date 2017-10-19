@@ -57,11 +57,9 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
 
     std::vector< Pair > matchesFiltered, matchesPair;
 
-    for (std::vector< matching::IndMatch >::const_iterator iter_match = _vec_PutativeMatches.begin();
-          iter_match != _vec_PutativeMatches.end();
-          ++iter_match )
+    for (const auto & iter_match : _vec_PutativeMatches)
     {
-      matchesPair.push_back( std::make_pair( iter_match->i_, iter_match->j_ ) );
+      matchesPair.push_back( {iter_match.i_, iter_match.j_} );
     }
 
     std::vector< double > vec_score;

@@ -132,7 +132,6 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     */
     Vec2 add_disto( const Vec2 & p ) const override
     {
-
       const double k1 = params_[0];
 
       const double r2 = p( 0 ) * p( 0 ) + p( 1 ) * p( 1 );

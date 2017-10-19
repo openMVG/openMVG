@@ -53,6 +53,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ListMatchingPairs
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
+  lemon
   openMVG_system
   openMVG_features
   openMVG_multiview
@@ -348,8 +349,11 @@ IF(OpenMVG_USE_OPENCV)
     vlsift
     ${OpenCV_LIBS})
   target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
-  target_compile_definitions(openMVG_main_ComputeFeatures PRIVATE USE_OCVSIFT)
-  
+
+  IF(OpenMVG_USE_OCVSIFT)
+    target_compile_definitions(openMVG_main_ComputeFeatures_OpenCV PRIVATE USE_OCVSIFT)
+  ENDIF(OpenMVG_USE_OCVSIFT)
+
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
   INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)

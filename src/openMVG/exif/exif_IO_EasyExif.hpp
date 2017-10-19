@@ -125,6 +125,46 @@ class Exif_IO_EasyExif : public Exif_IO
     }
 
     /**
+    * @brief Get FocalLengthIn35mm (in mm)
+    * @return The equivalent focal length assuming a 35mm film camera, in mm.
+    */
+    float getFocalLengthIn35mm() const override
+    {
+      return static_cast<float>( exifInfo_.FocalLengthIn35mm );
+    }
+
+    /**
+    * @brief Get FocalPlaneXResolution
+    * @return Number of pixels in the image width (X) direction per
+    *           FocalPlaneResolutionUnit on the camera focal plane.
+    */
+    float getFocalPlaneXResolution() const override
+    {
+      return static_cast<float>( exifInfo_.LensInfo.FocalPlaneXResolution );
+    }
+
+    /**
+    * @brief Get FocalPlaneYResolution 
+    * @return Number of pixels in the image height (Y) direction per
+    *           FocalPlaneResolutionUnit on the camera focal plane.
+    */
+    float getFocalPlaneYResolution() const override
+    {
+      return static_cast<float>( exifInfo_.LensInfo.FocalPlaneYResolution );
+    }
+
+    /**
+    * @brief Get FocalPlaneResolutionUnit
+    *        Unit -> 2: inch, 3: centimeter, 4: millimeter, 5: micrometer.
+    * @return Indicates the unit for measuring FocalPlaneXResolution and
+    *          FocalPlaneYResolution.
+    */
+    int getFocalPlaneResolutionUnit() const override
+    {
+      return static_cast<int>( exifInfo_.LensInfo.FocalPlaneResolutionUnit );
+    }
+
+    /**
     * @brief Get Brand of the camera
     * @return Brand name
     */

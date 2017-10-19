@@ -423,7 +423,7 @@ typedef Map<Quaternion<double>, Aligned>  QuaternionMapAlignedd;
 // Generic Quaternion * Quaternion product
 // This product can be specialized for a given architecture via the Arch template argument.
 namespace internal {
-template<int Arch, class Derived1, class Derived2, typename Scalar, int _Options> struct quat_product
+template<int Arch, class Derived1, class Derived2, typename Scalar> struct quat_product
 {
   EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Quaternion<Scalar> run(const QuaternionBase<Derived1>& a, const QuaternionBase<Derived2>& b){
     return Quaternion<Scalar>
@@ -446,8 +446,7 @@ QuaternionBase<Derived>::operator* (const QuaternionBase<OtherDerived>& other) c
   EIGEN_STATIC_ASSERT((internal::is_same<typename Derived::Scalar, typename OtherDerived::Scalar>::value),
    YOU_MIXED_DIFFERENT_NUMERIC_TYPES__YOU_NEED_TO_USE_THE_CAST_METHOD_OF_MATRIXBASE_TO_CAST_NUMERIC_TYPES_EXPLICITLY)
   return internal::quat_product<Architecture::Target, Derived, OtherDerived,
-                         typename internal::traits<Derived>::Scalar,
-                         EIGEN_PLAIN_ENUM_MIN(internal::traits<Derived>::Alignment, internal::traits<OtherDerived>::Alignment)>::run(*this, other);
+                         typename internal::traits<Derived>::Scalar>::run(*this, other);
 }
 
 /** \sa operator*(Quaternion) */
@@ -672,7 +671,7 @@ EIGEN_DEVICE_FUNC inline Quaternion<typename internal::traits<Derived>::Scalar> 
 
 // Generic conjugate of a Quaternion
 namespace internal {
-template<int Arch, class Derived, typename Scalar, int _Options> struct quat_conj
+template<int Arch, class Derived, typename Scalar> struct quat_conj
 {
   EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Quaternion<Scalar> run(const QuaternionBase<Derived>& q){
     return Quaternion<Scalar>(q.w(),-q.x(),-q.y(),-q.z());
@@ -691,8 +690,7 @@ EIGEN_DEVICE_FUNC inline Quaternion<typename internal::traits<Derived>::Scalar>
 QuaternionBase<Derived>::conjugate() const
 {
   return internal::quat_conj<Architecture::Target, Derived,
-                         typename internal::traits<Derived>::Scalar,
-                         internal::traits<Derived>::Alignment>::run(*this);
+                         typename internal::traits<Derived>::Scalar>::run(*this);
                          
 }
 

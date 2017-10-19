@@ -144,7 +144,7 @@ Translation_Structure_L1_ConstraintBuilder::Translation_Structure_L1_ConstraintB
 (
   const std::vector<Mat3> & vec_Ri,
   const Mat & M
-): M_(M), vec_Ri_(vec_Ri)
+): vec_Ri_(vec_Ri), M_(M)
 {
 }
 

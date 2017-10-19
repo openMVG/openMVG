@@ -84,11 +84,54 @@ class BlockSparseMatrix : public SparseMatrix {
   void ToTripletSparseMatrix(TripletSparseMatrix* matrix) const;
   const CompressedRowBlockStructure* block_structure() const;
 
+  // Append the contents of m to the bottom of this matrix. m must
+  // have the same column blocks structure as this matrix.
+  void AppendRows(const BlockSparseMatrix& m);
+
+  // Delete the bottom delta_rows_blocks.
+  void DeleteRowBlocks(int delta_row_blocks);
+
+  static BlockSparseMatrix* CreateDiagonalMatrix(
+      const double* diagonal,
+      const std::vector<Block>& column_blocks);
+
+  struct RandomMatrixOptions {
+    RandomMatrixOptions()
+        : num_row_blocks(0),
+          min_row_block_size(0),
+          max_row_block_size(0),
+          num_col_blocks(0),
+          min_col_block_size(0),
+          max_col_block_size(0),
+          block_density(0.0) {
+    }
+
+    int num_row_blocks;
+    int min_row_block_size;
+    int max_row_block_size;
+    int num_col_blocks;
+    int min_col_block_size;
+    int max_col_block_size;
+
+    // 0 < block_density <= 1 is the probability of a block being
+    // present in the matrix. A given random matrix will not have
+    // precisely this density.
+    double block_density;
+  };
+
+  // Create a random BlockSparseMatrix whose entries are normally
+  // distributed and whose structure is determined by
+  // RandomMatrixOptions.
+  //
+  // Caller owns the result.
+  static BlockSparseMatrix* CreateRandomMatrix(
+      const RandomMatrixOptions& options);
+
  private:
   int num_rows_;
   int num_cols_;
-  int max_num_nonzeros_;
   int num_nonzeros_;
+  int max_num_nonzeros_;
   scoped_array<double> values_;
   scoped_ptr<CompressedRowBlockStructure> block_structure_;
   CERES_DISALLOW_COPY_AND_ASSIGN(BlockSparseMatrix);

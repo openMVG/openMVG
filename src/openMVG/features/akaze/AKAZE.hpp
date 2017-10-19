@@ -131,6 +131,8 @@ public:
     const image::Image<float> & Lx,
     const image::Image<float> & Ly) const;
 
+private:
+
   /// Compute an AKAZE slice
   static
   void ComputeAKAZESlice(

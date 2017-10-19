@@ -37,6 +37,7 @@
 #include <vector>
 #include "ceres/internal/macros.h"
 #include "ceres/internal/scoped_ptr.h"
+#include "ceres/array_utils.h"
 #include "ceres/numeric_diff_test_utils.h"
 #include "ceres/test_util.h"
 #include "ceres/types.h"
@@ -353,6 +354,36 @@ TEST(NumericDiffCostFunction, RandomizedCostFunctionRidders) {
   functor.ExpectCostFunctionEvaluationIsNearlyCorrect(*cost_function);
 }
 
+struct OnlyFillsOneOutputFunctor {
+  bool operator()(const double* x, double* output) const {
+    output[0] = x[0];
+    return true;
+  }
+};
+
+TEST(NumericDiffCostFunction, PartiallyFilledResidualShouldFailEvaluation) {
+  double parameter = 1.0;
+  double jacobian[2];
+  double residuals[2];
+  double* parameters[] = {&parameter};
+  double* jacobians[] = {jacobian};
+
+  scoped_ptr<CostFunction> cost_function(
+      new NumericDiffCostFunction<OnlyFillsOneOutputFunctor, CENTRAL, 2, 1>(
+          new OnlyFillsOneOutputFunctor));
+  InvalidateArray(2, jacobian);
+  InvalidateArray(2, residuals);
+  EXPECT_TRUE(cost_function->Evaluate(parameters, residuals, jacobians));
+  EXPECT_FALSE(IsArrayValid(2, residuals));
+  InvalidateArray(2, residuals);
+  EXPECT_TRUE(cost_function->Evaluate(parameters, residuals, NULL));
+  // We are only testing residuals here, because the Jacobians are
+  // computed using finite differencing from the residuals, so unless
+  // we introduce a validation step after every evaluation of
+  // residuals inside NumericDiffCostFunction, there is no way of
+  // ensuring that the Jacobian array is invalid.
+  EXPECT_FALSE(IsArrayValid(2, residuals));
+}
 
 }  // namespace internal
 }  // namespace ceres

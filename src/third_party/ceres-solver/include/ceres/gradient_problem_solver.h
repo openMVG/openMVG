@@ -301,6 +301,12 @@ class CERES_EXPORT GradientProblemSolver {
     // IterationSummary for each minimizer iteration in order.
     std::vector<IterationSummary> iterations;
 
+    // Number of times the cost (and not the gradient) was evaluated.
+    int num_cost_evaluations;
+
+    // Number of times the gradient (and the cost) were evaluated.
+    int num_gradient_evaluations;
+
     // Sum total of all time spent inside Ceres when Solve is called.
     double total_time_in_seconds;
 

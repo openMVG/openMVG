@@ -55,7 +55,10 @@ template<typename MatrixType, unsigned int Mode> class TriangularViewImpl<Matrix
       this->solveInPlace(dst);
     }
 
+    /** Applies the inverse of \c *this to the dense vector or matrix \a other, "in-place" */
     template<typename OtherDerived> void solveInPlace(MatrixBase<OtherDerived>& other) const;
+
+    /** Applies the inverse of \c *this to the sparse vector or matrix \a other, "in-place" */
     template<typename OtherDerived> void solveInPlace(SparseMatrixBase<OtherDerived>& other) const;
   
 };

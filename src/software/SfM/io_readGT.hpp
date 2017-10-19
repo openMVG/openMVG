@@ -130,7 +130,7 @@ bool readGt(
   std::vector<std::string> & vec_filenames,
   std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
   std::map< size_t, cameras::PinholeCamera, std::less<size_t>,
-         Eigen::aligned_allocator<std::pair<size_t, cameras::PinholeCamera>>> & map_camerasGT)
+         Eigen::aligned_allocator<std::pair<const size_t, cameras::PinholeCamera>>> & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {

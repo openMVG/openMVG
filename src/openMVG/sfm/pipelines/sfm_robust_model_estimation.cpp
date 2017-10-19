@@ -33,7 +33,7 @@ bool estimate_Rt_fromE
 )
 {
   // Accumulator to find the best solution
-  std::array<uint32_t, 4> f{0, 0, 0, 0};
+  std::array<uint32_t, 4> f{{0, 0, 0, 0}};
 
   // Recover plausible rotation and translation from E.
   std::vector<Mat3> Rs;  // Rotation matrix.
@@ -115,7 +115,7 @@ bool robustRelativePose
                     x2, size_ima2.first, size_ima2.second,
                     K1, K2);
 
-  // Robustly estimation of the Essential matrix and it's precision
+  // Robustly estimation of the Model and its precision
   const std::pair<double,double> acRansacOut = robust::ACRANSAC(
     kernel, relativePose_info.vec_inliers,
     max_iteration_count, &relativePose_info.essential_matrix,

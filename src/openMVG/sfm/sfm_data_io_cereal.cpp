@@ -21,6 +21,7 @@
 #include "openMVG/sfm/sfm_view_io.hpp"
 #include "openMVG/sfm/sfm_view_priors_io.hpp"
 #include "openMVG/types.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <fstream>
 #include <string>

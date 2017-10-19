@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
   }
 
   // List valid camera (view that have a pose & a valid intrinsic data)
-  for(Views::const_iterator iter = sfm_data.GetViews().begin();
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
     iter != sfm_data.GetViews().end(); ++iter)
   {
     const View * view = iter->second.get();

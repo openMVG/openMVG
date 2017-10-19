@@ -105,23 +105,9 @@ class WithFormat
     }
 
   protected:
-    const typename ExpressionType::Nested m_matrix;
+    typename ExpressionType::Nested m_matrix;
     IOFormat m_format;
 };
-
-/** \returns a WithFormat proxy object allowing to print a matrix the with given
-  * format \a fmt.
-  *
-  * See class IOFormat for some examples.
-  *
-  * \sa class IOFormat, class WithFormat
-  */
-template<typename Derived>
-inline const WithFormat<Derived>
-DenseBase<Derived>::format(const IOFormat& fmt) const
-{
-  return WithFormat<Derived>(derived(), fmt);
-}
 
 namespace internal {
 

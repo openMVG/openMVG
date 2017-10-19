@@ -26,18 +26,48 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: keir@google.com (Keir Mierle)
+// Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include "ceres/collections_port.h"
+#include "ceres/function_sample.h"
+#include "ceres/stringprintf.h"
 
-inline uint32 Hash32NumWithSeed(uint32 num, uint32 c) {
-  uint32 b = 0x9e3779b9UL;            // the golden ratio; an arbitrary value
-  mix(num, b, c);
-  return c;
+namespace ceres {
+namespace internal {
+
+FunctionSample::FunctionSample()
+    : x(0.0),
+      vector_x_is_valid(false),
+      value(0.0),
+      value_is_valid(false),
+      vector_gradient_is_valid(false),
+      gradient(0.0),
+      gradient_is_valid(false) {}
+
+FunctionSample::FunctionSample(const double x, const double value)
+    : x(x),
+      vector_x_is_valid(false),
+      value(value),
+      value_is_valid(true),
+      vector_gradient_is_valid(false),
+      gradient(0.0),
+      gradient_is_valid(false) {}
+
+FunctionSample::FunctionSample(const double x,
+                               const double value,
+                               const double gradient)
+    : x(x),
+      vector_x_is_valid(false),
+      value(value),
+      value_is_valid(true),
+      vector_gradient_is_valid(false),
+      gradient(gradient),
+      gradient_is_valid(true) {}
+
+std::string FunctionSample::ToDebugString() const {
+  return StringPrintf("[x: %.8e, value: %.8e, gradient: %.8e, "
+                      "value_is_valid: %d, gradient_is_valid: %d]",
+                      x, value, gradient, value_is_valid, gradient_is_valid);
 }
 
-inline uint64 Hash64NumWithSeed(uint64 num, uint64 c) {
-  uint64 b = GG_ULONGLONG(0xe08c1d668b756f82);   // more of the golden ratio
-  mix(num, b, c);
-  return c;
-}
+}  // namespace internal
+}  // namespace ceres
