@@ -312,56 +312,58 @@ int main(int argc, char **argv)
     ppx = width / 2.0;
     ppy = height / 2.0;
 
-    std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
-    exifReader->open( sImageFilename );
-
-    const bool bHaveValidExifMetadata =
-      exifReader->doesHaveExifInfo()
-      && !exifReader->getModel().empty();
 
     // Consider the case where the focal is provided manually
-    if ( !bHaveValidExifMetadata || focal_pixels != -1)
+    if (sKmatrix.size() > 0) // Known user calibration K matrix
     {
-      if (sKmatrix.size() > 0) // Known user calibration K matrix
-      {
-        if (!checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy))
-          focal = -1.0;
-      }
-      else // User provided focal length value
-        if (focal_pixels != -1 )
-          focal = focal_pixels;
-    }
-    else // If image contains meta data
-    {
-      const std::string sCamModel = exifReader->getModel();
-
-      // Handle case where focal length is equal to 0
-      if (exifReader->getFocal() == 0.0f)
-      {
-        error_report_stream
-          << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
+      if (!checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy))
         focal = -1.0;
-      }
-      else
-      // Create the image entry in the list file
+    }
+    else // User provided focal length value
+      if (focal_pixels != -1 )
+        focal = focal_pixels;
+
+    // If not manually provided or wrongly provided
+    if (focal == -1)
+    {
+      std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
+      exifReader->open( sImageFilename );
+
+      const bool bHaveValidExifMetadata =
+        exifReader->doesHaveExifInfo()
+        && !exifReader->getModel().empty();
+
+      if (bHaveValidExifMetadata) // If image contains meta data
       {
-        Datasheet datasheet;
-        if ( getInfo( sCamModel, vec_database, datasheet ))
-        {
-          // The camera model was found in the database so we can compute it's approximated focal length
-          const double ccdw = datasheet.sensorSize_;
-          focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
-        }
-        else
+        const std::string sCamModel = exifReader->getModel();
+
+        // Handle case where focal length is equal to 0
+        if (exifReader->getFocal() == 0.0f)
         {
           error_report_stream
-            << stlplus::basename_part(sImageFilename)
-            << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
-            << "Please consider add your camera model and sensor width in the database." << "\n";
+            << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
+          focal = -1.0;
+        }
+        else
+        // Create the image entry in the list file
+        {
+          Datasheet datasheet;
+          if ( getInfo( sCamModel, vec_database, datasheet ))
+          {
+            // The camera model was found in the database so we can compute it's approximated focal length
+            const double ccdw = datasheet.sensorSize_;
+            focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+          }
+          else
+          {
+            error_report_stream
+              << stlplus::basename_part(sImageFilename)
+              << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
+              << "Please consider add your camera model and sensor width in the database." << "\n";
+          }
         }
       }
     }
-
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic;
 
