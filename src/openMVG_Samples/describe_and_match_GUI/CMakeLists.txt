@@ -14,17 +14,17 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
     set( FEATURES_PAIR_DEMO_HDRS ImageView.hpp MainWindow.hpp )
 
     if( APPLE )
-      add_executable( openMVG_sample_describe_and_match_GUI MACOSX_BUNDLE ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
-      set_target_properties(openMVG_sample_describe_and_match_GUI PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in)
+      add_executable( OMVGsmpl_descrMatchGUI MACOSX_BUNDLE ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
+      set_target_properties(OMVGsmpl_descrMatchGUI PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in)
     else( APPLE )
-      add_executable( openMVG_sample_describe_and_match_GUI WIN32 ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
+      add_executable( OMVGsmpl_descrMatchGUI WIN32 ${FEATURES_PAIR_DEMO_SRCS} ${FEATURES_PAIR_DEMO_HDRS} )
     endif( APPLE )
 
-    target_link_libraries( openMVG_sample_describe_and_match_GUI Qt5::Widgets openMVG_features openMVG_image openMVG_matching vlsift )
+    target_link_libraries( OMVGsmpl_descrMatchGUI Qt5::Widgets openMVG_features openMVG_image openMVG_matching vlsift )
 
-    set_target_properties( openMVG_sample_describe_and_match_GUI PROPERTIES CXX_STANDARD 11)
+    set_target_properties( OMVGsmpl_descrMatchGUI PROPERTIES CXX_STANDARD 11)
 
-    set_property(TARGET openMVG_sample_describe_and_match_GUI PROPERTY FOLDER OpenMVG/Samples)
+    set_property(TARGET OMVGsmpl_descrMatchGUI PROPERTY FOLDER OpenMVG/Samples)
 
   endif(Qt5Widgets_FOUND)
 

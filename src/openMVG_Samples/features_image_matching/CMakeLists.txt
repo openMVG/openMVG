@@ -1,12 +1,12 @@
 
-add_executable(openMVG_sample_image_matching describe_and_match.cpp)
-target_link_libraries(openMVG_sample_image_matching
+add_executable(OMVGsmpl_imgMatching describe_and_match.cpp)
+target_link_libraries(OMVGsmpl_imgMatching
   openMVG_image
   openMVG_features
   openMVG_matching
   stlplus
   vlsift)
-target_compile_definitions(openMVG_sample_image_matching
+target_compile_definitions(OMVGsmpl_imgMatching
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-set_property(TARGET openMVG_sample_image_matching PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_imgMatching PROPERTY FOLDER OpenMVG/Samples)

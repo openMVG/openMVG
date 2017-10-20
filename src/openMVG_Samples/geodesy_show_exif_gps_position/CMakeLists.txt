@@ -1,8 +1,8 @@
 
-add_executable(openMVG_sample_geodesy_show_exif_gps_position show_exif_gps_position_demo.cpp)
-target_link_libraries(openMVG_sample_geodesy_show_exif_gps_position
+add_executable(OMVGsmpl_geoShowExifGps show_exif_gps_position_demo.cpp)
+target_link_libraries(OMVGsmpl_geoShowExifGps
   easyexif
   stlplus)
-target_compile_definitions(openMVG_sample_geodesy_show_exif_gps_position
+target_compile_definitions(OMVGsmpl_geoShowExifGps
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set_property(TARGET openMVG_sample_geodesy_show_exif_gps_position PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_geoShowExifGps PROPERTY FOLDER OpenMVG/Samples)
