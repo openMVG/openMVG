@@ -232,6 +232,20 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
 ENDMACRO(UNIT_TEST)
 
 # ==============================================================================
+# cereal
+# ==============================================================================
+# - internal by default,
+# - external if CEREAL_INCLUDE_DIR_HINTS is defined
+# ==============================================================================
+if (NOT DEFINED CEREAL_INCLUDE_DIR_HINTS)
+  set(CEREAL_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include)
+  set(OpenMVG_USE_INTERNAL_CEREAL ON)
+else()
+  set(CEREAL_INCLUDE_DIRS ${CEREAL_INCLUDE_DIR_HINTS})
+endif()
+
+# ==============================================================================
 # Eigen
 # ==============================================================================
 # - internal by default,
@@ -384,7 +398,7 @@ add_subdirectory(third_party)
 set(OpenMVG_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/dependencies
-  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
+  ${CEREAL_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
   ${FLANN_INCLUDE_DIRS}
   CACHE PATH "include directories for openMVG and its dependencies"
@@ -505,6 +519,12 @@ message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
 
 message("\n")
+
+if (DEFINED OpenMVG_USE_INTERNAL_CEREAL)
+  message(STATUS "CEREAL: (internal)")
+else()
+  message(STATUS "CEREAL: (external)")
+endif()
 
 if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   message(STATUS "EIGEN: " ${EIGEN_VERSION} " (internal)")
