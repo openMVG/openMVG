@@ -25,9 +25,9 @@ class commonDataByPair_MatchedPoints  : public commonDataByPair
 public:
   commonDataByPair_MatchedPoints(const std::string & sLeftImage,
                                  const std::string & sRightImage,
-                                 const std::vector< matching::IndMatch >& vec_PutativeMatches,
-                                 const std::vector< features::SIOPointFeature >& vec_featsL,
-                                 const std::vector< features::SIOPointFeature >& vec_featsR,
+                                 const std::vector<matching::IndMatch>& vec_PutativeMatches,
+                                 const std::vector<features::SIOPointFeature>& vec_featsL,
+                                 const std::vector<features::SIOPointFeature>& vec_featsR,
                                  const size_t radius = 1 ):
      commonDataByPair( sLeftImage, sRightImage ),
      _radius( radius ),
@@ -45,17 +45,14 @@ public:
    *
    * \return True if some pixel have been set to true.
    */
-  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override
+  bool computeMask( image::Image<unsigned char> & maskLeft, image::Image<unsigned char> & maskRight ) override
   {
     maskLeft.fill(0);
     maskRight.fill(0);
-    for (std::vector< matching::IndMatch >::const_iterator
-          iter_putativeMatches = _vec_PutativeMatches.begin();
-          iter_putativeMatches != _vec_PutativeMatches.end();
-          ++iter_putativeMatches )
+    for (const auto & iter_matches : _vec_PutativeMatches)
     {
-      const features::SIOPointFeature & L = _vec_featsL[ iter_putativeMatches->i_ ];
-      const features::SIOPointFeature & R = _vec_featsR[ iter_putativeMatches->j_ ];
+      const features::SIOPointFeature & L = _vec_featsL[ iter_matches.i_ ];
+      const features::SIOPointFeature & R = _vec_featsR[ iter_matches.j_ ];
 
       image::FilledCircle( L.x(), L.y(), ( int )_radius, ( unsigned char ) 255, &maskLeft );
       image::FilledCircle( R.x(), R.y(), ( int )_radius, ( unsigned char ) 255, &maskRight );
@@ -65,9 +62,9 @@ public:
 
 private:
   size_t _radius;
-  std::vector< matching::IndMatch > _vec_PutativeMatches;
-  std::vector< features::SIOPointFeature > _vec_featsL;
-  std::vector< features::SIOPointFeature > _vec_featsR;
+  std::vector<matching::IndMatch> _vec_PutativeMatches;
+  std::vector<features::SIOPointFeature> _vec_featsL;
+  std::vector<features::SIOPointFeature> _vec_featsR;
 };
 
 }  // namespace color_harmonization

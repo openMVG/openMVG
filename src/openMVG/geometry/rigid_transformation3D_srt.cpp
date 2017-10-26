@@ -144,7 +144,7 @@ void Refine_RTS
 
     Eigen::NumericalDiff<lm_SRTRefine_functor> numDiff( functor );
 
-    Eigen::LevenbergMarquardt<Eigen::NumericalDiff<lm_SRTRefine_functor> > lm( numDiff );
+    Eigen::LevenbergMarquardt<Eigen::NumericalDiff<lm_SRTRefine_functor>> lm( numDiff );
     lm.parameters.maxfev = 1000;
     Vec xlm = Vec::Zero( 7 ); // The deviation vector {tx,ty,tz,rotX,rotY,rotZ,S}
 
@@ -171,7 +171,7 @@ void Refine_RTS
 
     Eigen::NumericalDiff<lm_RRefine_functor> numDiff( functor );
 
-    Eigen::LevenbergMarquardt<Eigen::NumericalDiff<lm_RRefine_functor> > lm( numDiff );
+    Eigen::LevenbergMarquardt<Eigen::NumericalDiff<lm_RRefine_functor>> lm( numDiff );
     lm.parameters.maxfev = 1000;
     Vec xlm = Vec::Zero( 3 ); // The deviation vector {rotX,rotY,rotZ}
 

@@ -177,7 +177,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   // Triangulate triplet tracks
   //  - keep valid one
 
-  using Triplets = std::vector< graph::Triplet >;
+  using Triplets = std::vector<graph::Triplet>;
   const Triplets triplets = graph::TripletListing(pairs);
 
   C_Progress_display my_progress_bar( triplets.size(), std::cout,
@@ -215,7 +215,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
-        std::map<IndexT, std::shared_ptr<openMVG::features::Regions> > regions;
+        std::map<IndexT, std::shared_ptr<openMVG::features::Regions>> regions;
         regions[I] = regions_provider->get(I);
         regions[J] = regions_provider->get(J);
         regions[K] = regions_provider->get(K);

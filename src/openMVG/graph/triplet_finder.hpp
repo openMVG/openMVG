@@ -166,12 +166,12 @@ bool ListTriplets
 * @return List of triplet found in graph
 */
 template <typename IterablePairs>
-static std::vector< graph::Triplet > TripletListing
+static std::vector<graph::Triplet> TripletListing
 (
   const IterablePairs & pairs
 )
 {
-  std::vector< graph::Triplet > triplets;
+  std::vector<graph::Triplet> triplets;
   graph::ListTriplets( pairs, triplets );
   return triplets;
 }

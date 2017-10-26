@@ -90,7 +90,7 @@ struct HashedDescriptions{
 
   using Bucket = std::vector<int>;
   // buckets[bucket_group][bucket_id] = bucket (container of description ids).
-  std::vector<std::vector<Bucket> > buckets;
+  std::vector<std::vector<Bucket>> buckets;
 };
 
 // This hasher will hash descriptors with a two-step hashing system:
@@ -292,7 +292,7 @@ public:
     Eigen::VectorXi num_descriptors_with_hamming_distance(nb_hash_code_ + 1);
 
     // Preallocate the container for keeping euclidean distances.
-    std::vector<std::pair<DistanceType, int> > candidate_euclidean_distances;
+    std::vector<std::pair<DistanceType, int>> candidate_euclidean_distances;
     candidate_euclidean_distances.reserve(kNumTopCandidates);
 
     // A preallocated vector to determine if we have already used a particular

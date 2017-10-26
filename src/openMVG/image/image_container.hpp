@@ -213,7 +213,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @return pixelwise imgA + imgB
     * @note Images must have the same size
     */
-    template< typename T1>
+    template<typename T1>
     friend Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB );
 
     /**
@@ -223,7 +223,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
     * @return pixelwise imgA - imgB
     * @note Images must have the same size
     */
-    template< typename T1>
+  template<typename T1>
     friend Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB );
 };
 
@@ -234,7 +234,7 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
 * @return pixelwise imgA + imgB
 * @note Images must have the same size
 */
-template< typename T1 >
+template<typename T1>
 Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB )
 {
   return Image<T1>( imgA.Image<T1>::operator+( imgB ) );
@@ -247,7 +247,7 @@ Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB )
 * @return pixelwise imgA - imgB
 * @note Images must have the same size
 */
-template< typename T1>
+template<typename T1>
 Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB )
 {
   return Image<T1>( imgA.Image<T1>::operator-( imgB ) );

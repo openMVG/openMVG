@@ -56,7 +56,7 @@ void NormalizePatch
   const float half_width = static_cast<float>( patch_size ) / 2.f;
 
   // Compute sampling grid
-  std::vector< std::pair<float,float> > sampling_grid;
+  std::vector<std::pair<float,float>> sampling_grid;
   sampling_grid.reserve(patch_size*patch_size);
   for (int i = 0; i < patch_size; ++i )
   {
@@ -95,7 +95,7 @@ void Extract_MSER
   {
     // Inverted image
     Image<unsigned char> image4( 255 - img.array() );
-    std::vector< MSERRegion > regs;
+    std::vector<MSERRegion> regs;
     MSERExtractor extr4( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
     extr4.Extract( image4 , regs );
     for (size_t i = 0; i < regs.size(); ++i )
@@ -110,7 +110,7 @@ void Extract_MSER
 
   //-- Extract Dark MSER
   {
-    std::vector< MSERRegion > regs;
+    std::vector<MSERRegion> regs;
     MSERExtractor extr8( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_8_CONNECTIVITY );
     extr8.Extract( img , regs );
     for (size_t i = 0; i < regs.size(); ++i )

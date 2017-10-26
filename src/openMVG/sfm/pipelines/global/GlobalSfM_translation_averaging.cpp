@@ -356,7 +356,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     }
   }
   // List putative triplets (from global rotations Ids)
-  const std::vector< graph::Triplet > vec_triplets =
+  const std::vector<graph::Triplet> vec_triplets =
     graph::TripletListing(rotation_pose_id_graph);
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
@@ -412,9 +412,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       "\nRelative translations computation (edge coverage algorithm)\n");
 
 #  ifdef OPENMVG_USE_OPENMP
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(omp_get_max_threads());
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(omp_get_max_threads());
 #  else
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(1);
 #  endif
 
     #ifdef OPENMVG_USE_OPENMP

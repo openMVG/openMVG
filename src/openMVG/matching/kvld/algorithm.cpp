@@ -10,7 +10,7 @@
 
 #include "openMVG/features/feature.hpp"
 
-IntegralImages::IntegralImages(const openMVG::image::Image< float >& I)
+IntegralImages::IntegralImages(const openMVG::image::Image<float>& I)
 {
   map.resize( I.Width() + 1, I.Height() + 1 );
   map.fill( 0 );
@@ -24,7 +24,7 @@ IntegralImages::IntegralImages(const openMVG::image::Image< float >& I)
 }
 
 float getRange(
-  const openMVG::image::Image< float >& I,
+  const openMVG::image::Image<float>& I,
   int a,
   const float p )
 {

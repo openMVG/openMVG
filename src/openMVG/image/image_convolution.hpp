@@ -36,7 +36,7 @@ namespace image
  ** @param kernel convolution kernel
  ** @param out resulting image
  **/
-template< typename Image >
+template<typename Image>
 void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
 {
   const int kernel_width  = kernel.cols();
@@ -81,7 +81,7 @@ void ImageConvolution( const Image & img , const Mat & kernel , Image & out )
  ** @param kernel convolution kernel
  ** @param out Output image
  **/
-template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
+template<typename ImageTypeIn, typename ImageTypeOut, typename Kernel>
 void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
   using pix_t = typename ImageTypeIn::Tpixel;
@@ -94,7 +94,7 @@ void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel
   const int kernel_width = kernel.size();
   const int half_kernel_width = kernel_width / 2;
 
-  std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( cols + kernel_width );
+  std::vector<pix_t, Eigen::aligned_allocator<pix_t>> line( cols + kernel_width );
 
   for (int row = 0; row < rows; ++row )
   {
@@ -125,7 +125,7 @@ void ImageHorizontalConvolution( const ImageTypeIn & img , const Kernel & kernel
  ** @param kernel convolution kernel
  ** @param out Output image
  **/
-template< typename ImageTypeIn , typename ImageTypeOut, typename Kernel >
+template<typename ImageTypeIn, typename ImageTypeOut, typename Kernel>
 void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel , ImageTypeOut & out )
 {
   using pix_t = typename ImageTypeIn::Tpixel;
@@ -138,7 +138,7 @@ void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel ,
 
   out.resize( cols , rows );
 
-  std::vector<pix_t, Eigen::aligned_allocator<pix_t> > line( rows + kernel_width );
+  std::vector<pix_t, Eigen::aligned_allocator<pix_t>> line( rows + kernel_width );
 
   for (int col = 0; col < cols; ++col )
   {
@@ -174,7 +174,7 @@ void ImageVerticalConvolution( const ImageTypeIn & img , const Kernel & kernel ,
  ** @param vert_k vertical kernel
  ** @param out output image
  **/
-template< typename ImageType, typename Kernel >
+template<typename ImageType, typename Kernel>
 void ImageSeparableConvolution( const ImageType & img ,
                                 const Kernel & horiz_k ,
                                 const Kernel & vert_k ,

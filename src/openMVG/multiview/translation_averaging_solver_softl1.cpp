@@ -88,7 +88,7 @@ struct SmallScaleError
 
 bool solve_translations_problem_softl1
 (
-  const std::vector< openMVG::RelativeInfo_Vec > & vec_relative_group_estimates,
+  const std::vector<openMVG::RelativeInfo_Vec > & vec_relative_group_estimates,
   std::vector<Eigen::Vector3d> & translations,
   const double d_l1_loss_threshold
 )

@@ -330,7 +330,7 @@ namespace openMVG
       * @param minDiversity Minimum diversity to validate the region
       * @param[out] regions Region that validate the criterion
       */
-      void MSERRegion::Export( const double minDiversity , std::vector< MSERRegion > & regions )
+      void MSERRegion::Export( const double minDiversity , std::vector<MSERRegion> & regions )
       {
         // Only export if it's stable
         if (m_is_stable )
@@ -394,7 +394,7 @@ namespace openMVG
       * @param minDiversity Minimum diversity to validate the region
       * @param[out] regions Region that validate the criterion
       */
-      void MSERRegion::ComputeMSER( const int delta , const int minArea , const int maxArea , const double maxVariation , const double minDiversity , std::vector< MSERRegion > & regions )
+      void MSERRegion::ComputeMSER( const int delta , const int minArea , const int maxArea , const double maxVariation , const double minDiversity , std::vector<MSERRegion> & regions )
       {
         // Compute MSER stability stats on all the hierarchy
         ComputeStability( delta , minArea , maxArea , maxVariation );

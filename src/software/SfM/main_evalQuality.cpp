@@ -111,9 +111,9 @@ int main(int argc, char **argv)
 
   // Load GT camera rotations & positions [R|C]:
 
-  std::map< std::string, std::pair<Mat3, Vec3> > map_Rt_gt;
-  std::map< size_t, PinholeCamera, std::less<size_t>,
-         Eigen::aligned_allocator<std::pair<const size_t, PinholeCamera>>> map_Cam_gt;
+  std::map< std::string, std::pair<Mat3, Vec3>> map_Rt_gt;
+  std::map<size_t, PinholeCamera, std::less<size_t>,
+      Eigen::aligned_allocator<std::pair<const size_t, PinholeCamera>>> map_Cam_gt;
   // READ DATA FROM GT
   {
     std::cout << "\nTry to read data from GT";

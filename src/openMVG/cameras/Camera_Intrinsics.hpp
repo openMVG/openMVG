@@ -24,7 +24,7 @@ namespace cameras
 /**
 * @brief Struct used to force "clonability"
 */
-template< typename T>
+template<typename T>
 struct Clonable
 {
   virtual T * clone() const = 0;

@@ -324,7 +324,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     TracksBuilder tracksBuilder;
 #if defined USE_ALL_VALID_MATCHES // not used by default
     matching::PairWiseMatches pose_supported_matches;
-    for (const std::pair< Pair, IndMatches > & match_info :  matches_provider_->pairWise_matches_)
+    for (const std::pair<Pair, IndMatches> & match_info :  matches_provider_->pairWise_matches_)
     {
       const View * vI = sfm_data_.GetViews().at(match_info.first.first).get();
       const View * vJ = sfm_data_.GetViews().at(match_info.first.second).get();
@@ -538,7 +538,7 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
   // Build the Relative pose graph from matches:
   //
   /// pairwise view relation between poseIds
-  using PoseWiseMatches = std::map< Pair, Pair_Set >;
+  using PoseWiseMatches = std::map<Pair, Pair_Set>;
 
   // List shared correspondences (pairs) between poses
   PoseWiseMatches poseWiseMatches;
@@ -549,6 +549,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
     const View * v2 = sfm_data_.GetViews().at(pair.second).get();
     poseWiseMatches[Pair(v1->id_pose, v2->id_pose)].insert(pair);
   }
+
+  system::Timer t;
 
   C_Progress_display my_progress_bar( poseWiseMatches.size(),
       std::cout, "\n- Relative pose computation -\n" );
@@ -693,6 +695,8 @@ void GlobalSfMReconstructionEngine_RelativeMotions::Compute_Relative_Rotations
       }
     }
   } // for all relative pose
+
+  std::cout << "Relative motion computation took: " << t.elapsedMs() << "(ms)" << std::endl;
 
   // Log input graph to the HTML report
   if (!sLogging_file_.empty() && !sOut_directory_.empty())

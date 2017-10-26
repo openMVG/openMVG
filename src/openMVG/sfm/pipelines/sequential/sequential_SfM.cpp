@@ -188,8 +188,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
 
     const std::vector<double> xBin = h.GetXbinsValue();
-    std::pair< std::pair<double,double>, std::pair<double,double> > range =
-      autoJSXGraphViewport<double>(xBin, h.GetHist());
+    const auto range = autoJSXGraphViewport<double>(xBin, h.GetHist());
 
     htmlDocument::JSXGraphWrapper jsxGraph;
     jsxGraph.init("3DtoImageResiduals",600,300);
@@ -242,7 +241,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
     // Try to list the 10 top pairs that have:
     //  - valid intrinsics,
     //  - valid estimated Fundamental matrix.
-    std::vector< uint32_t > vec_NbMatchesPerPair;
+    std::vector<uint32_t > vec_NbMatchesPerPair;
     std::vector<openMVG::matching::PairWiseMatches::const_iterator> vec_MatchesIterator;
     const openMVG::matching::PairWiseMatches & map_Matches = matches_provider_->pairWise_matches_;
     for (openMVG::matching::PairWiseMatches::const_iterator
@@ -259,7 +258,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
     }
     // sort the Pairs in descending order according their correspondences count
     using namespace stl::indexed_sort;
-    std::vector< sort_index_packet_descend< uint32_t, uint32_t> > packet_vec(vec_NbMatchesPerPair.size());
+    std::vector<sort_index_packet_descend<uint32_t, uint32_t>> packet_vec(vec_NbMatchesPerPair.size());
     sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, vec_NbMatchesPerPair.size()));
 
     for (size_t i = 0; i < std::min((size_t)10, vec_NbMatchesPerPair.size()); ++i) {
@@ -364,7 +363,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     return false; // There is not view that support valid intrinsic data
   }
 
-  std::vector<std::pair<double, Pair> > scoring_per_pair;
+  std::vector<std::pair<double, Pair>> scoring_per_pair;
 
   // Compute the relative pose & the 'baseline score'
   C_Progress_display my_progress_bar( matches_provider_->pairWise_matches_.size(),
@@ -373,7 +372,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif
-  for (const std::pair< Pair, IndMatches > & match_pair : matches_provider_->pairWise_matches_)
+  for (const std::pair<Pair, IndMatches> & match_pair : matches_provider_->pairWise_matches_)
   {
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp single nowait
@@ -677,8 +676,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of residuals"));
 
       std::vector<double> xBin = histoResiduals.GetXbinsValue();
-      std::pair< std::pair<double,double>, std::pair<double,double> > range =
-        autoJSXGraphViewport<double>(xBin, histoResiduals.GetHist());
+      const auto range = autoJSXGraphViewport<double>(xBin, histoResiduals.GetHist());
 
       htmlDocument::JSXGraphWrapper jsxGraph;
       jsxGraph.init("InitialPairTriangulationKeptInfo",600,300);
@@ -746,7 +744,7 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
 }
 
 /// Functor to sort a vector of pair given the pair's second value
-template<class T1, class T2, class Pred = std::less<T2> >
+template<class T1, class T2, class Pred = std::less<T2>>
 struct sort_pair_second {
   bool operator()(const std::pair<T1,T2>&left,
                     const std::pair<T1,T2>&right)
@@ -824,7 +822,7 @@ bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
   }
 
   // Sort by the number of matches to the 3D scene.
-  std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<uint32_t, uint32_t, std::greater<uint32_t> >());
+  std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<uint32_t, uint32_t, std::greater<uint32_t>>());
 
   // If the list is empty or if the list contains images with no correspdences
   // -> (no resection will be possible)
@@ -1074,7 +1072,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     const std::set<IndexT> valid_views = Get_Valid_Views(sfm_data_);
 
     // Go through each track and look if we must add new view observations or new 3D points
-    for (const std::pair< uint32_t, tracks::submapTrack >& trackIt : map_tracksCommon)
+    for (const std::pair<uint32_t, tracks::submapTrack>& trackIt : map_tracksCommon)
     {
       const uint32_t trackId = trackIt.first;
       const tracks::submapTrack & track = trackIt.second;
@@ -1094,7 +1092,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       else
       {
         // Go through the views that observe this track & look if a successful triangulation can be done
-        for (const std::pair< IndexT, IndexT >& trackViewIt : allViews_of_track)
+        for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track)
         {
           const IndexT & J = trackViewIt.first;
           // If view is valid try triangulation

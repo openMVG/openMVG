@@ -61,7 +61,7 @@ struct View
 };
 
 /// Define a collection of View
-using Views = Hash_Map<IndexT, std::shared_ptr<View> >;
+using Views = Hash_Map<IndexT, std::shared_ptr<View>>;
 
 } // namespace sfm
 } // namespace openMVG

@@ -140,7 +140,7 @@ public:
 
 protected:
   /// Regions per ViewId of the considered SfM_Data container
-  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions> > cache_;
+  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions>> cache_;
   std::unique_ptr<openMVG::features::Regions> region_type_;
 }; // Regions_Provider
 

@@ -340,7 +340,7 @@ void GuidedMatching_Fundamental_Fast(
   }
 
   // For each point in right image, find if there is good candidates.
-  std::vector<distanceRatio<double > > dR(lRegions.RegionCount());
+  std::vector<distanceRatio<double >> dR(lRegions.RegionCount());
   for (size_t j = 0; j < rRegions.RegionCount(); ++j)
   {
     // According the point:

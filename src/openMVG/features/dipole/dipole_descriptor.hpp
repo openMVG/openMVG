@@ -113,7 +113,7 @@ namespace features
       dipoleF2(i) = sampler(image, yi, xi) - sampler(image, yii, xii);
     }
     // Normalize to be affine luminance invariant (a*I(x,y)+b).
-    Map< Vecf > dataMap( data, 20);
+    Map<Vecf> dataMap( data, 20);
     dataMap.block<8,1>(0,0) = (A * dipoleF1).normalized();
     dataMap.block<12,1>(8,0) = dipoleF2.normalized();
   }
@@ -193,7 +193,7 @@ namespace features
         sampler(image, yii3, xii3)) /3.0f;
     }
     // Normalize to be affine luminance invariant (a*I(x,y)+b).
-    Map< Vecf > dataMap( data, 20);
+    Map<Vecf> dataMap( data, 20);
     dataMap.block<8,1>(0,0) = (A * dipoleF1).normalized();
     dataMap.block<12,1>(8,0) = dipoleF2.normalized();
   }
@@ -207,7 +207,7 @@ namespace features
     **  angular smoothed dipole
     ** @param magnif_factor Scaling factor used to rescale the dipole sampling
     **/
-  template< typename Real>
+  template<typename Real>
   void ComputeDipoleDescriptor
   (
     const image::Image<Real> & Li,

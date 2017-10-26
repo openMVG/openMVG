@@ -34,7 +34,7 @@ public:
    *
    * \return True.
    */
-  bool computeMask( image::Image< unsigned char > & maskLeft, image::Image< unsigned char > & maskRight ) override
+  bool computeMask( image::Image<unsigned char> & maskLeft, image::Image<unsigned char> & maskRight ) override
   {
     maskLeft.fill( image::WHITE );
     maskRight.fill( image::WHITE );

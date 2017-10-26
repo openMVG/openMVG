@@ -44,7 +44,7 @@ struct LP_Constraints
   Mat constraint_mat_; // Constraint under Matrix form.
   Vec constraint_objective_; // Constraint objective value.
   std::vector<eLP_SIGN> vec_sign_; // Constraint sign.
-  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
+  std::vector<std::pair<double, double>> vec_bounds_; // parameter/variable bounds.
 
   bool bminimize_; // minimize is true or maximize is false.
   std::vector<double> vec_cost_; // Objective function
@@ -67,7 +67,7 @@ struct LP_Constraints_Sparse
 
   // Variable part
   int nbParams_; // The number of parameter/variable in constraint.
-  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
+  std::vector<std::pair<double, double>> vec_bounds_; // parameter/variable bounds.
 
   // Constraint part
   sRMat constraint_mat_; // Constraint under Matrix form.

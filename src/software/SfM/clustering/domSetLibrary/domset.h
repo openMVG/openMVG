@@ -57,7 +57,7 @@ namespace nomoko {
       }
 
       // AP clustering
-      void computeClustersAP(std::map<size_t,size_t>&, std::vector<std::vector<size_t> >&);
+      void computeClustersAP(std::map<size_t,size_t>&, std::vector<std::vector<size_t>>&);
 
       void clusterViews(std::map<size_t, size_t>& xId2vId, const size_t& minClustersize,
           const size_t& maxClusterSize);
@@ -68,11 +68,11 @@ namespace nomoko {
       // export function
       void exportToPLY(const std::string& plyFile, bool exportPoints = false);
 
-      const std::vector<std::vector<size_t> >& getClusters() {
+      const std::vector<std::vector<size_t>>& getClusters() {
         return finalClusters;
       }
 
-      void setClusters(const std::vector<std::vector<size_t> > & clusters) {
+      void setClusters(const std::vector<std::vector<size_t>> & clusters) {
         finalClusters = clusters;
       }
 
@@ -86,7 +86,7 @@ namespace nomoko {
 
       Eigen::MatrixXf viewDists;
 
-      std::vector<std::vector<size_t > > finalClusters;
+      std::vector<std::vector<size_t >> finalClusters;
 
       const float kAngleSigma = M_PI / 6.f;
       const float kAngleSigma_2 = kAngleSigma * kAngleSigma;

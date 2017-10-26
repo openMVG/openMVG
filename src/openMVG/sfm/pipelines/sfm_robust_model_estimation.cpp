@@ -42,8 +42,8 @@ bool estimate_Rt_fromE
 
   // Find which solution is the best:
   // - count how many triangulated observations are in front of the cameras
-  std::vector< std::vector<uint32_t> > vec_newInliers(Rs.size());
-  std::vector< std::vector<Vec3> > vec_3D(Rs.size());
+  std::vector<std::vector<uint32_t>> vec_newInliers(Rs.size());
+  std::vector<std::vector<Vec3>> vec_3D(Rs.size());
 
   const Mat34 P1 = HStack(Mat3::Identity(), Vec3::Zero());
 

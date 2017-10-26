@@ -81,7 +81,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
   while (octave_gen.NextOctave( octave ))
   {
     std::cerr << "Computed octave : " << std::to_string(octave_id) << std::endl;
-    std::vector< Keypoint > keys;
+    std::vector<Keypoint> keys;
     SIFT_KeypointExtractor keypointDetector(0.04f / octave_gen.NbSlice(), 10.f, 5);
     keypointDetector(octave, keys);
     Sift_DescriptorExtractor descriptorExtractor;

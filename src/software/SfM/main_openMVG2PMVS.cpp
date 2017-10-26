@@ -165,7 +165,7 @@ bool exportToPMVSFormat(
 
     if (b_VisData)
     {
-      std::map< IndexT, std::set<IndexT> > view_shared;
+      std::map<IndexT, std::set<IndexT>> view_shared;
       // From the structure observations, list the putatives pairs (symmetric)
       for (Landmarks::const_iterator itL = sfm_data.GetLandmarks().begin();
         itL != sfm_data.GetLandmarks().end(); ++itL)
@@ -192,7 +192,7 @@ bool exportToPMVSFormat(
         << "VISDATA" << os.widen('\n')
         << view_shared.size() << os.widen('\n'); // #images
       // Export view shared visibility
-      for (std::map< IndexT, std::set<IndexT> >::const_iterator it = view_shared.begin();
+      for (std::map<IndexT, std::set<IndexT>>::const_iterator it = view_shared.begin();
         it != view_shared.end(); ++it)
       {
         const std::set<IndexT> & setView = it->second;

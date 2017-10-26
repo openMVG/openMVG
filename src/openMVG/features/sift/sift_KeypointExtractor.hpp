@@ -77,7 +77,7 @@ struct SIFT_KeypointExtractor
   * @param octave A Gaussian octave
   * @param[out] keypoints The found Scale Invariant keypoint
   */
-  void operator()( const Octave & octave , std::vector< Keypoint > & keypoints )
+  void operator()( const Octave & octave , std::vector<Keypoint> & keypoints )
   {
     if (!ComputeDogs(octave))
       return;
@@ -122,7 +122,7 @@ protected:
   */
   static inline bool is_local_min_max
   (
-    const std::vector< image::Image<float> > & slices,
+    const std::vector<image::Image<float>> & slices,
     const size_t id_slice,
     const size_t id_row,
     const size_t id_col
@@ -196,7 +196,7 @@ protected:
   */
   void Find_3d_discrete_extrema
   (
-    std::vector< Keypoint > & keypoints,
+    std::vector<Keypoint> & keypoints,
     float percent = 1.0f
   ) const
   {
@@ -288,7 +288,7 @@ protected:
     b << -gX, -gY, -gS;
 
     // solve for offset
-    Eigen::FullPivLU<Eigen::Matrix<float, 3, 3> > lu_decomp(A);
+    Eigen::FullPivLU<Eigen::Matrix<float, 3, 3>> lu_decomp(A);
     if (!lu_decomp.isInvertible())
       return false;
 
@@ -336,10 +336,10 @@ protected:
   */
   void Keypoints_refine_position
   (
-    std::vector< Keypoint > & keypoints
+    std::vector<Keypoint> & keypoints
   ) const
   {
-    std::vector< Keypoint > kps;
+    std::vector<Keypoint> kps;
     kps.reserve(keypoints.size());
 
     const float ofstMax = 0.6f;

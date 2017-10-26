@@ -18,12 +18,12 @@ namespace openMVG {
 
 //-- A slow but accurate way to draw K-VLD lines
 void getKVLDMask(
-  image::Image< unsigned char > *maskL,
-  image::Image< unsigned char > *maskR,
-  const std::vector< features::SIOPointFeature > &vec_F1,
-  const std::vector< features::SIOPointFeature > &vec_F2,
-  const std::vector< Pair >& vec_matches,
-  const std::vector< bool >& vec_valide,
+  image::Image<unsigned char> *maskL,
+  image::Image<unsigned char> *maskR,
+  const std::vector<features::SIOPointFeature > &vec_F1,
+  const std::vector<features::SIOPointFeature > &vec_F2,
+  const std::vector<Pair>& vec_matches,
+  const std::vector<bool>& vec_valide,
   const openMVG::Mat& mat_E)
 {
   for (size_t it1 = 0; it1 < vec_matches.size() - 1; it1++ )

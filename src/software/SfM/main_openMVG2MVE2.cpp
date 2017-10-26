@@ -349,7 +349,7 @@ create_thumbnail
   }
 
   // Generation of the sampling grid
-  std::vector< std::pair<float,float> > sampling_grid;
+  std::vector<std::pair<float,float>> sampling_grid;
   sampling_grid.reserve(rescale_height * rescale_width);
   for ( int i = 0; i < rescale_height; ++i )
   {

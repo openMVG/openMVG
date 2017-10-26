@@ -17,7 +17,7 @@ namespace openMVG {
 void TriangulateNView
 (
   const Mat3X &x,
-  const std::vector< Mat34 > &Ps,
+  const std::vector<Mat34> &Ps,
   Vec4 *X
 )
 {
@@ -39,7 +39,7 @@ void TriangulateNView
 void TriangulateNViewAlgebraic
 (
   const Mat3X &x,
-  const std::vector< Mat34 > &Ps,
+  const std::vector<Mat34> &Ps,
   Vec4 *X
 )
 {

@@ -106,7 +106,7 @@ public:
   void operator()
   (
     const Octave & octave ,
-    std::vector< Keypoint > & keypoints
+    std::vector<Keypoint> & keypoints
   )
   {
     Compute_Gradients(octave);
@@ -117,7 +117,7 @@ public:
   void Compute_Orientations
   (
     const Octave & octave,
-    std::vector< Keypoint > & keypoints
+    std::vector<Keypoint> & keypoints
   )
   {
     Compute_Gradients(octave);

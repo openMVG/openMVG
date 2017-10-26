@@ -22,7 +22,7 @@ namespace openMVG {
   void TriangulateNView
   (
     const Mat3X &x, // x's are landmark bearing vectors in each camera
-    const std::vector< Mat34 > &Ps, // Ps are projective cameras
+    const std::vector<Mat34> &Ps, // Ps are projective cameras
     Vec4 *X
   );
 
@@ -32,7 +32,7 @@ namespace openMVG {
   void TriangulateNViewAlgebraic
   (
     const Mat3X &x, // x's are landmark bearing vectors in each camera
-    const std::vector< Mat34 > &Ps, // Ps are projective cameras.
+    const std::vector<Mat34> &Ps, // Ps are projective cameras.
     Vec4 *X
   );
 
@@ -72,7 +72,7 @@ namespace openMVG {
       mutable double zmin; // min depth, mutable since modified in compute(...) const;
       mutable double zmax; // max depth, mutable since modified in compute(...) const;
       mutable double err;  // re-projection error, mutable since modified in compute(...) const;
-      std::vector< std::pair<Mat34, Vec2>, Eigen::aligned_allocator<std::pair<Mat34, Vec2>> > views; // Proj matrix and associated image point
+      std::vector<std::pair<Mat34, Vec2>, Eigen::aligned_allocator<std::pair<Mat34, Vec2>>> views; // Proj matrix and associated image point
   };
 
 }  // namespace openMVG

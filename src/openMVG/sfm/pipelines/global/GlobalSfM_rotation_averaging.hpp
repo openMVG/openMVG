@@ -53,7 +53,7 @@ public:
   ///  angular error once rotation composition have been computed.
   void TripletRotationRejection(
     const double max_angular_error,
-    std::vector< graph::Triplet > & vec_triplets,
+    std::vector<graph::Triplet> & vec_triplets,
     rotation_averaging::RelativeRotations & relativeRotations) const;
 
   /// Return the pairs validated by the GlobalRotation routine (inference can remove some)

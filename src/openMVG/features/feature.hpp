@@ -182,7 +182,7 @@ static bool saveFeatsToFile(
 }
 
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
-template< typename FeaturesT>
+template<typename FeaturesT>
 void PointsToMat(
   const FeaturesT & vec_feats,
   Mat& m)

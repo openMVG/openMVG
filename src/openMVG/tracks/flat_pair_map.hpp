@@ -22,9 +22,9 @@ class flat_pair_map
 {
   using P = std::pair<T1, T2>;
 public:
-  using iterator = typename std::vector< P >::iterator;
+  using iterator = typename std::vector<P>::iterator;
 
-  typename std::vector< P >::iterator find(const T1 & val)  {
+  typename std::vector<P>::iterator find(const T1 & val)  {
     return std::lower_bound(m_vec.begin(), m_vec.end(), val, superiorToFirst);
   }
 
@@ -37,7 +37,7 @@ public:
   void clear()  { m_vec.clear();}
   void reserve(size_t count)  { m_vec.reserve(count);}
 
-  template< class... Args >
+  template<class... Args>
   void emplace_back( Args&&... args )
   {
     m_vec.emplace_back(std::forward<Args>(args)...);
@@ -47,7 +47,7 @@ public:
   const P& operator[](std::size_t idx) const { return m_vec[idx];}
 
 private:
-  std::vector< P > m_vec;
+  std::vector<P> m_vec;
 
   static bool sortPairAscend(const P &a, const P &b) {return a.first<b.first;}
   static bool superiorToFirst(const P &a, const T1 &b) {return a.first<b;}

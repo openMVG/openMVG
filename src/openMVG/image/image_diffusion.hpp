@@ -36,7 +36,7 @@ namespace image
  ** @param out output coefficient
  ** NOTE : assume Lx and Ly have same size and image are in float format
  **/
-template < typename Image >
+template <typename Image>
 void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , const typename Image::Tpixel k , Image & out )
 {
   const int width = Lx.Width();
@@ -60,7 +60,7 @@ void ImagePeronaMalikG2DiffusionCoef( const Image & Lx , const Image & Ly , cons
 ** @param row_start Row range beginning (range is [row_start; row_end [ )
 ** @param row_end Row range end (range is [row_start; row_end [ )
 **/
-template< typename Image >
+template<typename Image>
 void ImageFEDCentral( const Image & src , const Image & diff , const typename Image::Tpixel half_t , Image & out ,
                       const int row_start , const int row_end )
 {
@@ -103,7 +103,7 @@ void ImageFEDCentral( const Image & src , const Image & diff , const typename Im
 ** @param half_t Half diffusion time
 ** @param out Output image
 **/
-template< typename Image >
+template<typename Image>
 void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const typename Image::Tpixel half_t , Image & out )
 {
 #ifdef OPENMVG_USE_OPENMP
@@ -113,7 +113,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 #endif
 
   // Compute ranges
-  std::vector< int > range;
+  std::vector<int > range;
   SplitRange( 1 , ( int ) ( src.rows() - 1 ) , nb_thread , range );
 
 #ifdef OPENMVG_USE_OPENMP
@@ -132,7 +132,7 @@ void ImageFEDCentralCPPThread( const Image & src , const Image & diff , const ty
 ** @param t diffusion time
 ** @param out output image
 **/
-template< typename Image >
+template<typename Image>
 void ImageFED( const Image & src , const Image & diff , const typename Image::Tpixel t , Image & out )
 {
   using Real = typename Image::Tpixel;
@@ -240,8 +240,8 @@ void ImageFED( const Image & src , const Image & diff , const typename Image::Tp
  ** @param diff diffusion coefficient
  ** @param tau cycle timing vector
  **/
-template< typename Image >
-void ImageFEDCycle( Image & self , const Image & diff , const std::vector< typename Image::Tpixel > & tau )
+template<typename Image>
+void ImageFEDCycle( Image & self , const Image & diff , const std::vector<typename Image::Tpixel > & tau )
 {
   Image tmp;
   for (int i = 0; i < tau.size(); ++i)
@@ -315,8 +315,8 @@ inline int NextPrimeGreaterOrEqualTo( const int i )
  ** @param tau vector of FED cycle timings
  ** @return number of cycle timings
  **/
-template< typename Real >
-int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau )
+template<typename Real>
+int FEDCycleTimings( const Real T , const Real Tmax , std::vector<Real > & tau )
 {
   // Number of timings
   const int n = ceil( sqrt( ( 3.0 * static_cast<double>( T ) ) / Tmax +  0.25 ) - 0.5 ) + 0.5;
@@ -342,7 +342,7 @@ int FEDCycleTimings( const Real T , const Real Tmax , std::vector< Real > & tau 
   const int p = NextPrimeGreaterOrEqualTo( n + 1 );
 
   // Store new positions
-  std::vector< Real > tmp( n );
+  std::vector<Real > tmp( n );
   for (int i = 0 , k = 0; i < n; ++i , ++k)
   {
     // Search new index

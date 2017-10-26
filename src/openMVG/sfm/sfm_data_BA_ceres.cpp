@@ -240,8 +240,8 @@ bool Bundle_Adjustment_Ceres::Adjust
   ceres::Problem problem;
 
   // Data wrapper for refinement:
-  Hash_Map<IndexT, std::vector<double> > map_intrinsics;
-  Hash_Map<IndexT, std::vector<double> > map_poses;
+  Hash_Map<IndexT, std::vector<double>> map_intrinsics;
+  Hash_Map<IndexT, std::vector<double>> map_poses;
 
   // Setup Poses data & subparametrization
   for (const auto & pose_it : sfm_data.poses)

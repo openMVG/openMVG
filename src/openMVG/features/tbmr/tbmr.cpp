@@ -33,7 +33,7 @@ namespace tbmr
     }
   }
 
-  template <typename I, typename BinaryFunction = std::less<I> >
+  template <typename I, typename BinaryFunction = std::less<I>>
   std::vector<unsigned int>
   pixel_indexes_ordering
   (

@@ -60,7 +60,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
   const float grad_max = grad.maxCoeff();
 
   // Compute histogram
-  std::vector< size_t > histo( nb_bin, 0 );
+  std::vector<size_t> histo( nb_bin, 0 );
 
   int nb_value = 0;
 
@@ -155,7 +155,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
     ImagePeronaMalikG2DiffusionCoef( Lx , Ly , contrast_factor , diff );
 
     // Compute FED cycles
-    std::vector< float > tau;
+    std::vector<float> tau;
     FEDCycleTimings( total_cycle_time , 0.25f , tau );
     ImageFEDCycle( in , diff , tau );
     Li = in; // evolution image
@@ -249,7 +249,7 @@ void AKAZE::Compute_AKAZEScaleSpace()
       str << "./" << "_oct_" << p << "_" << q << ".png";
       Image<float> tmp = evo.cur;
       convert_scale(tmp);
-      Image< unsigned char > tmp2 ((tmp*255).cast<unsigned char>());
+      Image<unsigned char> tmp2 ((tmp*255).cast<unsigned char>());
       WriteImage( str.str().c_str() , tmp2 );
 #endif // DEBUG_OCTAVE
     }
@@ -257,8 +257,8 @@ void AKAZE::Compute_AKAZEScaleSpace()
 }
 
 void detectDuplicates(
-  std::vector<std::pair<AKAZEKeypoint, bool> > & previous,
-  std::vector<std::pair<AKAZEKeypoint, bool> > & current)
+  std::vector<std::pair<AKAZEKeypoint, bool>> & previous,
+  std::vector<std::pair<AKAZEKeypoint, bool>> & current)
 {
   // mark duplicates - using a full search algorithm
   for (std::pair<AKAZEKeypoint, bool> & p1 : previous)
@@ -283,7 +283,7 @@ void detectDuplicates(
 
 void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
-  std::vector< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
+  std::vector<std::vector<std::pair<AKAZEKeypoint, bool>>> vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -346,7 +346,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
   // Keep only the one marked as not duplicated
   for (size_t k = 0; k < vec_kpts_perSlice.size(); ++k)
   {
-    const std::vector< std::pair<AKAZEKeypoint, bool> > & vec_kp = vec_kpts_perSlice[k];
+    const std::vector<std::pair<AKAZEKeypoint, bool>> & vec_kp = vec_kpts_perSlice[k];
     for (size_t i = 0; i < vec_kp.size(); ++i)
       if (!vec_kp[i].second)
         kpts.emplace_back(vec_kp[i].first);

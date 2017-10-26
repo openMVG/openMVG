@@ -103,7 +103,7 @@ TEST(exportGraphToMapSubgraphs, CC_Subgraph) {
   graph.addEdge(i,l);
   graph.addEdge(j,l);
 
-  const std::map<size_t, std::set<lemon::ListGraph::Node> > map_subgraphs =
+  const std::map<size_t, std::set<lemon::ListGraph::Node>> map_subgraphs =
     openMVG::graph::exportGraphToMapSubgraphs<lemon::ListGraph, size_t>(graph);
 
   EXPECT_EQ(4, map_subgraphs.size());

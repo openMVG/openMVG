@@ -79,7 +79,7 @@ int main() {
   //--
   std::unique_ptr<Image_describer> image_describer
     (new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params(-1)));
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  std::map<IndexT, std::unique_ptr<features::Regions>> regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 

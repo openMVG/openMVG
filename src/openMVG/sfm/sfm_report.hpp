@@ -34,8 +34,8 @@ inline bool Generate_SfM_Report
   // - Statistics per view (mean, max, median residual values)
   // - Global tracks length statistic (length occurence)
   IndexT residualCount = 0;
-  Hash_Map< IndexT, std::vector<double> > residuals_per_view;
-  std::map< IndexT, IndexT > track_length_occurences;
+  Hash_Map<IndexT, std::vector<double>> residuals_per_view;
+  std::map<IndexT, IndexT> track_length_occurences;
   for ( const auto & iterTracks : sfm_data.GetLandmarks() )
   {
     const Observations & obs = iterTracks.second.obs;

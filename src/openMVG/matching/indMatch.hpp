@@ -79,18 +79,18 @@ public:
 /// A structure used to store corresponding point indexes per images pairs
 struct PairWiseMatches :
   public PairWiseMatchesContainer,
-  public std::map< Pair, IndMatches >
+  public std::map<Pair, IndMatches>
 {
   void insert(std::pair<Pair, IndMatches> && pairWiseMatches)override
   {
-    std::map< Pair, IndMatches >::insert(
+    std::map<Pair, IndMatches>::insert(
       std::forward<std::pair<Pair, IndMatches>>(pairWiseMatches));
   }
 
   // Serialization
   template <class Archive>
   void serialize( Archive & ar )  {
-    ar(static_cast<std::map< Pair, IndMatches >&>(*this));
+    ar(static_cast<std::map<Pair, IndMatches>&>(*this));
   }
 };
 

@@ -24,7 +24,7 @@ namespace openMVG {
 namespace matching {
 
 // By default compute square(L2 distance).
-template < typename Scalar = float, typename Metric = L2<Scalar> >
+template < typename Scalar = float, typename Metric = L2<Scalar>>
 class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
 {
   public:
@@ -146,7 +146,7 @@ class ArrayMatcherBruteForce : public ArrayMatcher<Scalar, Metric>
 private:
   using BaseMat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   /// Use a memory mapping in order to avoid memory re-allocation
-  std::unique_ptr< Eigen::Map<BaseMat> > memMapping;
+  std::unique_ptr< Eigen::Map<BaseMat>> memMapping;
 
   /**
      * Search the N nearest Neighbor for a section of index of the scalar array query.

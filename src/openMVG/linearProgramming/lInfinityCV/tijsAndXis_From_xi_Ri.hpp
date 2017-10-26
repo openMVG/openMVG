@@ -51,7 +51,7 @@ void EncodeTiXi
   sRMat & A, Vec & C,
   std::vector<LP_Constraints::eLP_SIGN> & vec_sign,
   std::vector<double> & vec_costs,
-  std::vector< std::pair<double,double> > & vec_bounds
+  std::vector<std::pair<double,double>> & vec_bounds
 );
 
 

@@ -36,7 +36,7 @@ void EncodeTi_from_tij
   sRMat & A, Vec & C,
   std::vector<LP_Constraints::eLP_SIGN> & vec_sign,
   std::vector<double> & vec_costs,
-  std::vector< std::pair<double,double> > & vec_bounds
+  std::vector<std::pair<double,double>> & vec_bounds
 )
 {
   // Build Constraint matrix.
@@ -162,7 +162,7 @@ void EncodeTi_from_tij
 }
 
 Tifromtij_ConstraintBuilder::Tifromtij_ConstraintBuilder(
-  const std::vector< openMVG::RelativeInfo_Vec > & vec_relative
+  const std::vector<openMVG::RelativeInfo_Vec > & vec_relative
 )
 : vec_relative_(vec_relative)
 {

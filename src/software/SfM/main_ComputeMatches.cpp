@@ -250,7 +250,7 @@ int main(int argc, char **argv)
   // Build some alias from SfM_Data Views data:
   // - List views as a vector of filenames & image sizes
   std::vector<std::string> vec_fileNames;
-  std::vector<std::pair<size_t, size_t> > vec_imagesSize;
+  std::vector<std::pair<size_t, size_t>> vec_imagesSize;
   {
     vec_fileNames.reserve(sfm_data.GetViews().size());
     vec_imagesSize.reserve(sfm_data.GetViews().size());

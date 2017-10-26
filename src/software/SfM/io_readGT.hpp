@@ -128,9 +128,9 @@ bool readGt(
   const std::string & sGTPath,
   const std::string & suffix,
   std::vector<std::string> & vec_filenames,
-  std::map< std::string, std::pair<Mat3, Vec3> > & map_Rt_gt,
-  std::map< size_t, cameras::PinholeCamera, std::less<size_t>,
-         Eigen::aligned_allocator<std::pair<const size_t, cameras::PinholeCamera>>> & map_camerasGT)
+  std::map<std::string, std::pair<Mat3, Vec3>> & map_Rt_gt,
+  std::map<size_t, cameras::PinholeCamera, std::less<size_t>,
+      Eigen::aligned_allocator<std::pair<const size_t, cameras::PinholeCamera>>> & map_camerasGT)
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
@@ -141,7 +141,7 @@ bool readGt(
   {
     std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
     // Load GT
-    std::map< std::string, Mat3, Eigen::aligned_allocator<Mat3> > map_R_gt;
+    std::map<std::string, Mat3, Eigen::aligned_allocator<Mat3>> map_R_gt;
     //Try to read .suffix camera (parse camera names)
     std::vector<std::string> vec_camfilenames =
       stlplus::folder_wildcard(sGTPath, "*." + suffix, false, true);

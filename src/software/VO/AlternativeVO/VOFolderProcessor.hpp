@@ -86,7 +86,7 @@ class VOFolderProcessor
   private:
 
     std::string m_input_folder;
-    std::vector< std::string > m_input_files;
+    std::vector< std::string> m_input_files;
 
     std::unique_ptr<openMVG::VO::VO_Monocular> m_monocular_vo;
     std::unique_ptr<openMVG::VO::Abstract_Tracker> m_tracker;

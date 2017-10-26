@@ -200,14 +200,14 @@ namespace openMVG
       * @param img Input image
       * @param[out] regions Output regions
       */
-      void MSERExtractor::Extract( const image::Image<unsigned char> & img , std::vector< MSERRegion > & regions ) const
+      void MSERExtractor::Extract( const image::Image<unsigned char> & img , std::vector<MSERRegion> & regions ) const
       {
         // Compute minimum and maximum region area relative to this image
         const int minRegArea = img.Width() * img.Height() * m_minimum_area;
         const int maxRegArea = img.Width() * img.Height() * m_maximum_area;
 
         // List of processed pixels (maybe we can use a more efficient structure)
-        std::vector< std::vector< bool > > processed;
+        std::vector<std::vector<bool >> processed;
         processed.resize( img.Width() );
         for (int i = 0; i < img.Width(); ++i )
         {
@@ -216,10 +216,10 @@ namespace openMVG
         }
 
         // Holds the boundary of given grayscale value (boundary[0] -> pixels in the boundary with 0 grayscale value)
-        std::vector< PixelStackElt > boundary[ 256 ];
+        std::vector<PixelStackElt> boundary[ 256 ];
 
         // List of regions computed so far (not only valid MSER regions)
-        std::vector< MSERRegion * > regionStack;
+        std::vector<MSERRegion *> regionStack;
 
         // Push en empty region
         regionStack.push_back( new MSERRegion );
@@ -343,7 +343,7 @@ namespace openMVG
       * @param pixel_x X-coord of the base of the merged region
       * @param pixel_y Y-coord of the base of the merged region
       */
-      void MSERExtractor::ProcessStack( const int nextLevel , const int pixel_x , const int pixel_y , std::vector< MSERRegion * > & regionStack ) const
+      void MSERExtractor::ProcessStack( const int nextLevel , const int pixel_x , const int pixel_y , std::vector<MSERRegion * > & regionStack ) const
       {
         do
         {
