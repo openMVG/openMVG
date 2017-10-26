@@ -168,19 +168,11 @@ public:
     const MatrixT & descriptions
   )
   {
-    Eigen::VectorXf zero_mean_descriptor;
     if (descriptions.rows() == 0) {
-      return zero_mean_descriptor;
+      return {};
     }
     // Compute the ZeroMean descriptor
-    zero_mean_descriptor.setZero(descriptions.cols());
-    const typename MatrixT::Index nbDescriptions = descriptions.rows();
-    for (int i = 0; i < nbDescriptions; ++i)
-    {
-      for (int j = 0; j < descriptions.cols(); ++j)
-        zero_mean_descriptor(j) += descriptions(i,j);
-    }
-    return zero_mean_descriptor / static_cast<double>(nbDescriptions);
+    return descriptions.template cast<float>().colwise().mean();
   }
 
 
@@ -211,16 +203,11 @@ public:
         // Allocate space for each bucket id.
         hashed_descriptions.hashed_desc[i].bucket_ids.resize(nb_bucket_groups_);
 
-        for (int k = 0; k < descriptions.cols(); ++k)
-        {
-          descriptor(k) = descriptions(i,k);
-        }
-        descriptor -= zero_mean_descriptor;
-
+        // Compute hash code.
         auto& hash_code = hashed_descriptions.hashed_desc[i].hash_code;
         hash_code = stl::dynamic_bitset(descriptions.cols());
-
-        // Compute hash code.
+        descriptor = descriptions.row(i).template cast<float>();
+        descriptor -= zero_mean_descriptor;
         const Eigen::VectorXf primary_projection = primary_hash_projection_ * descriptor;
         for (int j = 0; j < nb_hash_code_; ++j)
         {
