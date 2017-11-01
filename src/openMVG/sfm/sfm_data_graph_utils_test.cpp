@@ -40,11 +40,10 @@ TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
   pair.emplace(std::make_pair(9, 10));
 
   std::map<IndexT, std::set<IndexT>> subgraphs_ids;
-  bool flag = true;
 
   // test for GlobalSFM with the biEdge condition
-  flag = PairsToConnectedComponents(pair, true, 3, subgraphs_ids);
-  EXPECT_TRUE(flag);
+  const bool flag1 = PairsToConnectedComponents(pair, true, 3, subgraphs_ids);
+  EXPECT_TRUE(flag1);
   EXPECT_EQ(1, subgraphs_ids.size());
   if (subgraphs_ids.size() == 1)
   {
@@ -61,8 +60,8 @@ TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
   }
 
   // test for IncrementalSFM with no biEdge condition
-  flag = PairsToConnectedComponents(pair, false, 3, subgraphs_ids);
-  EXPECT_TRUE(flag);
+  const bool flag2 = PairsToConnectedComponents(pair, false, 3, subgraphs_ids);
+  EXPECT_TRUE(flag2);
   EXPECT_EQ(2, subgraphs_ids.size());
   if (subgraphs_ids.size() == 2)
   {

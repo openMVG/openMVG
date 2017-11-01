@@ -88,7 +88,7 @@ bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge,
       }
     }
   }
-  return false;
+  return true;
 }
 
 bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::PairWiseMatches & matches, 

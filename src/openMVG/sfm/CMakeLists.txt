@@ -42,7 +42,7 @@ UNIT_TEST(openMVG sfm_data_io
 UNIT_TEST(openMVG sfm_data_BA
   "openMVG_multiview_test_data;openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_utils
-  "openMVG_features;openMVG_sfm")
+"openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_filters
   "openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_graph_utils
