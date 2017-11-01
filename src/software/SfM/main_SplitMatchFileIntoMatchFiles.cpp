@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -95,17 +96,57 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  std::vector<matching::PairWiseMatches> subgraphs_matches;
+
   // Split match_filename by connected components;
-  const bool success_flag = SplitMatchFileIntoMatchFiles(sfm_data, match_filename,
-    match_component_filename, is_biedge, min_nodes);
+  const bool success_flag = SplitMatchesIntoSubgraphMatches(matches_provider->getPairs(), matches_provider->pairWise_matches_,
+    is_biedge, min_nodes, subgraphs_matches);
   if (success_flag)
   {
+    std::cerr << std::endl
+      << "Failed to split matches file into subgraph matches." << std::endl;
     return EXIT_SUCCESS;
   }
-  else
+
+  // Save all of the subgraphs into match file
+  std::set<std::string> set_filenames;
+
+  const std::string &file_basename = stlplus::basename_part(match_filename);
+  const std::string &output_folder = stlplus::folder_part(match_component_filename);
+  const std::string &match_file_extension = stlplus::extension_part(match_filename);
+  int index = 0;
+  for (const auto & subgraph : subgraphs_matches)
   {
+    std::stringstream strstream_subgraph_match_filename;
+    strstream_subgraph_match_filename << file_basename << "_" << index << "_" << subgraph.size() << "." << match_file_extension;
+    const std::string &subgraph_match_filename = strstream_subgraph_match_filename.str();
+    const std::string &subgraph_match_file = stlplus::create_filespec(output_folder, subgraph_match_filename);
+
+    const bool success_flag = matching::Save(subgraph, subgraph_match_file);
+    if (success_flag)
+    {
+      set_filenames.insert(subgraph_match_filename);
+    }
+    else
+    {
+      return EXIT_FAILURE;
+    }
+    ++index;
+  }
+
+  // Save the match file name of subgraph into a match component file
+  std::ofstream stream(match_component_filename.c_str());
+  if (!stream.is_open())
+  {
+    std::cerr << std::endl
+      << "Cannot open match component file." << std::endl;
     return EXIT_FAILURE;
   }
+  for (const auto & iter_filename : set_filenames)
+  {
+    stream << iter_filename << std::endl;
+  }
+  stream.close();
 
   return EXIT_SUCCESS;
 }

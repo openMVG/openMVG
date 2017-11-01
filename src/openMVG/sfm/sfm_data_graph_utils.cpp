@@ -11,8 +11,6 @@
 #include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/graph/graph_builder.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/types.hpp"
 
@@ -42,21 +40,12 @@ static void KeepOnlyReferencedElement(
   map_matches_out.swap(map_matches_E_infered);
 }
 
-bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string & match_file,
-  const std::string & match_component_filename, bool is_biedge, int min_nodes)
+bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge, 
+  int min_nodes, std::map<IndexT, std::set<IndexT>>& subgraphs_ids)
 {
-  if (!stlplus::file_exists(match_file) || match_component_filename.empty())
-  {
-    return false;
-  }
+  subgraphs_ids.clear();
 
-  std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if (!(matches_provider->load(sfm_data, match_file)))
-  {
-    return false;
-  }
   using Graph = graph::indexedGraph::GraphT;
-  const Pair_Set pairs = matches_provider->getPairs();
   graph::indexedGraph putativeGraph(pairs);
 
   // For global SFM, firstly remove the not bi-edge element 
@@ -80,7 +69,6 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
   }
 
   // Compute all subgraphs in the putative graph
-  std::vector<std::set<IndexT>> vec_subgraph;
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   if (connectedComponentCount >= 1)
   {
@@ -96,51 +84,30 @@ bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string &
           const IndexT Id = (*putativeGraph.node_map_id)[iter2];
           subgraphNodes.insert(Id);
         }
-        vec_subgraph.emplace_back(subgraphNodes);
+        subgraphs_ids.emplace(iter_map_subgraphs.first, subgraphNodes);
       }
     }
   }
+  return false;
+}
 
-  // Save all of the subgraphs into match file
-  std::set<std::string> set_filenames;
-
-  const std::string &file_basename = stlplus::basename_part(match_file);
-  const std::string &output_folder = stlplus::folder_part(match_component_filename);
-  const std::string &match_file_extension = stlplus::extension_part(match_file);
-  int index = 0;
-  for (const auto & subgraph : vec_subgraph)
-  {
-    std::stringstream strstream_subgraph_filename;
-    strstream_subgraph_filename << file_basename << "_" << index << "_" << subgraph.size() << "." << match_file_extension;
-    const std::string &subgraph_filename = strstream_subgraph_filename.str();
-    const std::string &subgraph_match_file_components = stlplus::create_filespec(output_folder, subgraph_filename);
-
-    matching::PairWiseMatches subgraph_map_matches;
-    KeepOnlyReferencedElement(subgraph, matches_provider->pairWise_matches_, subgraph_map_matches);
-
-    const bool success_flag = matching::Save(subgraph_map_matches, subgraph_match_file_components);
-    if (success_flag)
-    {
-      set_filenames.insert(subgraph_filename);
-    }
-    else
-    {
-      return false;
-    }
-    ++index;
-  }
-
-  // Save the match file name of subgraph into a match component file
-  std::ofstream stream(match_component_filename.c_str());
-  if (!stream.is_open())
+bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::PairWiseMatches & matches, 
+  bool is_biedge, int min_nodes, std::vector<matching::PairWiseMatches> & subgraphs_matches)
+{
+  if (pairs.size() == 0 || matches.size() == 0)
   {
     return false;
   }
-  for (const auto & sFileName : set_filenames)
+  subgraphs_matches.clear();
+  std::map<IndexT, std::set<IndexT>> subgraphs_ids;
+  PairsToConnectedComponents(pairs, is_biedge, min_nodes, subgraphs_ids);
+
+  for (const auto & iter_subgraphs_ids : subgraphs_ids)
   {
-    stream << sFileName << std::endl;
+    matching::PairWiseMatches subgraph_map_matches;
+    KeepOnlyReferencedElement(iter_subgraphs_ids.second, matches, subgraph_map_matches);
+    subgraphs_matches.emplace_back(subgraph_map_matches);
   }
-  stream.close();
   return true;
 }
 

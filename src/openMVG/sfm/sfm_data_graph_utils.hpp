@@ -9,11 +9,20 @@
 #ifndef OPENMVG_SFM_DATA_GRAPH_UTILS_HPP
 #define OPENMVG_SFM_DATA_GRAPH_UTILS_HPP
 #include <string>
+#include "openMVG/types.hpp"
+#include "openMVG/matching/indMatch.hpp"
 
 namespace openMVG {
 namespace sfm {
-
-struct SfM_Data;
+///  @brief Split match pairs into connected match pairs 
+///  @param[in]  pairs   The pair sets of the images.
+///  @param[in]  is_biedge  Set true for global SFM, false for sequential SFM.
+///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file.Note: the value should be larger than 3.
+///  @param[out] subgraps_ids The pairs id of subgraphs splited from the whole graph.
+///
+///  @return True if the area can be computed
+bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge,
+  int min_nodes, std::map<IndexT, std::set<IndexT> > & subgraphs_ids);
 
 ///  @brief Split match_file into match_files
 ///  When handling a scene which may contains many disconnected graphs, 
@@ -28,16 +37,16 @@ struct SfM_Data;
 ///  triangulate the initial match file, when the GPS data of the images known.
 ///         
 ///
-///  @param[in]  sfm_data   The sfm_data.
-///  @param[in]  match_file The match file which contains all nodes of the whole graph.
-///  @param[in]  match_component_filename The output match_component_file contains a list of match files.
+///  @param[in]  pairs   The pair sets of the images.
+///  @param[in]  matches The pairwise matches of the images corresponding to pairs.
 ///  @param[in]  is_biedge  Set true for global SFM, false for sequential SFM.
-///  @param[out] min_nodes  The minimum nodes of graph in the output match_file.Note: the value should be larger than 3.
+///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file.Note: the value should be larger than 3.
+///  @param[out] subgraphs_matches The matches of subgraphs splited from the whole graph.
 ///
 ///  @return True if the area can be computed
 ///
-bool SplitMatchFileIntoMatchFiles(const SfM_Data & sfm_data, const std::string & match_file,
-  const std::string & match_component_filename, bool is_biedge, int min_nodes);
+bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::PairWiseMatches & matches,
+  bool is_biedge, int min_nodes, std::vector<matching::PairWiseMatches> & subgraphs_matches);
 
 } // namespace sfm
 } // namespace openMVG
