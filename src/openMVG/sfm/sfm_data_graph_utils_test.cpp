@@ -20,24 +20,15 @@ using namespace openMVG::sfm;
 
 TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
 {
-  Pair_Set pair;
-
-  // connected graph follows the biEdge condition: 0 -> 1 -> 2 ->3 ->4 -> 0
-  pair.emplace(std::make_pair(0, 1));
-  pair.emplace(std::make_pair(0, 2));
-  pair.emplace(std::make_pair(0, 3));
-  pair.emplace(std::make_pair(1, 2));
-  pair.emplace(std::make_pair(1, 3));
-  pair.emplace(std::make_pair(2, 3));
-
-  // connected graph: 4 -> 5 -> 6 -> 7 -> 8
-  pair.emplace(std::make_pair(4, 5));
-  pair.emplace(std::make_pair(5, 6));
-  pair.emplace(std::make_pair(6, 7));
-  pair.emplace(std::make_pair(7, 8));
-
-  // connected graph: 9 -> 10
-  pair.emplace(std::make_pair(9, 10));
+  Pair_Set pair =
+  {
+    // the first connected graph follows the biEdge condition: 0 -> 1 -> 2 ->3 ->4 -> 0
+    {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
+    // the second connected graph: 4 -> 5 -> 6 -> 7 -> 8
+    {4, 5}, {5, 6}, {6, 7}, {7, 8},
+    // the third connected graph: 9 -> 10
+    {9, 10}
+  };
 
   std::map<IndexT, std::set<IndexT>> subgraphs_ids;
 
@@ -65,7 +56,7 @@ TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
   EXPECT_EQ(2, subgraphs_ids.size());
   if (subgraphs_ids.size() == 2)
   {
-    auto & iter_first = subgraphs_ids.begin();
+    auto iter_first = subgraphs_ids.begin();
     const std::set<IndexT> & pairs0 = iter_first->second;
     EXPECT_EQ(5, pairs0.size());
     if (pairs0.size() == 5)
@@ -77,7 +68,8 @@ TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
       EXPECT_TRUE(pairs0.find(8) != pairs0.end());
     }
 
-    auto & iter_second = ++iter_first;
+    auto iter_second = subgraphs_ids.begin();
+    std::advance(iter_second, 1);
     const std::set<IndexT> & pairs1 = iter_second->second;
     EXPECT_EQ(4, pairs1.size());
     if (pairs1.size() == 4)
