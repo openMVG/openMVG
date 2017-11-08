@@ -30,7 +30,7 @@ To speed up the pairwise feature matching step
 
   .. code-block:: c++
 
-    $ openMVG_main_ListMatchingPairs -G -n 5 -i Dataset/matching/sfm_data.bin -o Dataset/matching/pair_list.txt
+    $ openMVG_main_ListMatchingPairs -G -n 5 -i Dataset/matching/sfm_data.json -o Dataset/matching/pair_list.txt
 
 **Required parameters:**
 
