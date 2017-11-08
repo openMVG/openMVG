@@ -1,6 +1,6 @@
 
-add_executable(openMVG_sample_multiview_robustEssential_spherical robust_essential_spherical.cpp)
-target_link_libraries(openMVG_sample_multiview_robustEssential_spherical
+add_executable(OMVGsmpl_mvRobustEssentialSpherical robust_essential_spherical.cpp)
+target_link_libraries(OMVGsmpl_mvRobustEssentialSpherical
   openMVG_image
   openMVG_multiview
   openMVG_features
@@ -8,6 +8,6 @@ target_link_libraries(openMVG_sample_multiview_robustEssential_spherical
   openMVG_system
   openMVG_sfm
   stlplus)
-target_compile_definitions(openMVG_sample_multiview_robustEssential_spherical
+target_compile_definitions(OMVGsmpl_mvRobustEssentialSpherical
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set_property(TARGET openMVG_sample_multiview_robustEssential_spherical PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_mvRobustEssentialSpherical PROPERTY FOLDER OpenMVG/Samples)

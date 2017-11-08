@@ -1,11 +1,11 @@
 
-add_executable(openMVG_sample_multiview_robustFundamental_guided robust_fundamental_guided.cpp)
-target_link_libraries(openMVG_sample_multiview_robustFundamental_guided
+add_executable(OMVGsmpl_mvRobustFundamentalGuided robust_fundamental_guided.cpp)
+target_link_libraries(OMVGsmpl_mvRobustFundamentalGuided
   openMVG_image
   openMVG_multiview
   openMVG_features
   openMVG_matching
   stlplus)
-target_compile_definitions(openMVG_sample_multiview_robustFundamental_guided
+target_compile_definitions(OMVGsmpl_mvRobustFundamentalGuided
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set_property(TARGET openMVG_sample_multiview_robustFundamental_guided PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_mvRobustFundamentalGuided PROPERTY FOLDER OpenMVG/Samples)

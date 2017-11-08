@@ -1,11 +1,11 @@
 
-add_executable(openMVG_sample_multiview_robustHomography robust_homography.cpp)
-target_link_libraries(openMVG_sample_multiview_robustHomography
+add_executable(OMVGsmpl_mvRobustHomography robust_homography.cpp)
+target_link_libraries(OMVGsmpl_mvRobustHomography
   openMVG_image
   openMVG_multiview
   openMVG_features
   openMVG_matching
   stlplus)
-target_compile_definitions(openMVG_sample_multiview_robustHomography
+target_compile_definitions(OMVGsmpl_mvRobustHomography
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-set_property(TARGET openMVG_sample_multiview_robustHomography PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_mvRobustHomography PROPERTY FOLDER OpenMVG/Samples)

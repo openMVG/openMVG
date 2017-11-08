@@ -1,9 +1,9 @@
 
-add_executable(openMVG_sample_cameras_undistoBrown undistoBrown.cpp)
-target_link_libraries(openMVG_sample_cameras_undistoBrown
+add_executable(OMVGsmpl_camUndistBrown undistoBrown.cpp)
+target_link_libraries(OMVGsmpl_camUndistBrown
   openMVG_geometry
   openMVG_image
   openMVG_multiview
   stlplus
   ${CERES_LIBRARIES})
-set_property(TARGET openMVG_sample_cameras_undistoBrown PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_camUndistBrown PROPERTY FOLDER OpenMVG/Samples)

@@ -1,6 +1,6 @@
 
-add_executable(openMVG_sample_main_features_repeatability_dataset main_repeatability_dataset.cpp)
-target_link_libraries(openMVG_sample_main_features_repeatability_dataset
+add_executable(OMVGsmpl_mainFeatRepeatDataset main_repeatability_dataset.cpp)
+target_link_libraries(OMVGsmpl_mainFeatRepeatDataset
   openMVG_image
   openMVG_features
   openMVG_matching
@@ -9,4 +9,4 @@ target_link_libraries(openMVG_sample_main_features_repeatability_dataset
   vlsift
   stlplus)
 
-set_property(TARGET openMVG_sample_main_features_repeatability_dataset PROPERTY FOLDER OpenMVG/Samples)
+set_property(TARGET OMVGsmpl_mainFeatRepeatDataset PROPERTY FOLDER OpenMVG/Samples)
