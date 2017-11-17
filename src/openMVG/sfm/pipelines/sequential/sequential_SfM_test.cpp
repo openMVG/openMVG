@@ -76,8 +76,8 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
   Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
   std::advance(iter_view_1, 1);
-  sfmEngine.setInitialPair(
-    Pair(iter_view_0->second->id_view, iter_view_1->second->id_view));
+  sfmEngine.setInitialPair({iter_view_0->second->id_view,
+                            iter_view_1->second->id_view});
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -106,12 +106,11 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   sfm_data_2.structure.clear();
   // Only the first three views will have valid intrinsics
   // Remaining one will have undefined intrinsics
-  for (Views::iterator iterV = sfm_data_2.views.begin();
-    iterV != sfm_data_2.views.end(); ++iterV)
+  for (auto & view : sfm_data_2.views)
   {
-    if (std::distance(sfm_data_2.views.begin(),iterV) > 2)
+    if (view.second->id_view > 2)
     {
-      iterV->second->id_intrinsic = UndefinedIndexT;
+      view.second->id_intrinsic = UndefinedIndexT;
     }
   }
 
@@ -124,7 +123,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   std::shared_ptr<Features_Provider> feats_provider =
     std::make_shared<Synthetic_Features_Provider>();
   // Add a tiny noise in 2D observations to make data more realistic
-  std::normal_distribution<double> distribution(0.0,0.5);
+  std::normal_distribution<double> distribution(0.0, 0.5);
   dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d,distribution);
 
   std::shared_ptr<Matches_Provider> matches_provider =
@@ -139,11 +138,8 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
   // Will use view ids (0,2) as the initial pair
-  Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
-  Views::const_iterator iter_view_2 = sfm_data_2.GetViews().begin();
-  std::advance(iter_view_2, 2);
-  sfmEngine.setInitialPair(Pair(iter_view_0->second->id_view,
-    iter_view_2->second->id_view));
+  sfmEngine.setInitialPair({sfm_data_2.GetViews().at(0)->id_view,
+                            sfm_data_2.GetViews().at(2)->id_view});
 
   EXPECT_TRUE (sfmEngine.Process());
 

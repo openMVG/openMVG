@@ -182,7 +182,7 @@ int main() {
 
       // Display some statistics of reprojection errors
       float dMin, dMax, dMean, dMedian;
-      minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
+      minMaxMeanMedian<float>(vec_residuals.cbegin(), vec_residuals.cend(),
                             dMin, dMax, dMean, dMedian);
 
       std::cout << std::endl

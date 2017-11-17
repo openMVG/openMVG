@@ -23,9 +23,9 @@ void openMVG::sfm::ViewPriors::save( Archive & ar ) const
   if (b_use_pose_center_)
   {
     ar( cereal::make_nvp( "use_pose_center_prior", b_use_pose_center_ ) );
-    const std::vector<double> vec_weights = { center_weight_( 0 ), center_weight_( 1 ), center_weight_( 2 ) };
+    const std::vector<double> vec_weights { center_weight_( 0 ), center_weight_( 1 ), center_weight_( 2 ) };
     ar( cereal::make_nvp( "center_weight", vec_weights ) );
-    const std::vector<double> vec = { pose_center_( 0 ), pose_center_( 1 ), pose_center_( 2 ) };
+    const std::vector<double> vec { pose_center_( 0 ), pose_center_( 1 ), pose_center_( 2 ) };
     ar( cereal::make_nvp( "center", vec ) );
   }
 

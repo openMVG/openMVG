@@ -97,9 +97,15 @@ class Pose3
     * @param p Point
     * @return transformed point
     */
-    inline Mat3X operator () ( const Mat3X& p ) const
+    template<typename T>
+    inline typename T::PlainObject operator() (const T& p) const
     {
       return rotation_ * ( p.colwise() - center_ );
+    }
+    /// Specialization for Vec3
+    inline typename Vec3::PlainObject operator() (const Vec3& p) const
+    {
+      return rotation_ * ( p - center_ );
     }
 
 
@@ -110,7 +116,8 @@ class Pose3
     */
     Pose3 operator * ( const Pose3& P ) const
     {
-      return Pose3( rotation_ * P.rotation_, P.center_ + P.rotation_.transpose() * center_ );
+      return {rotation_ * P.rotation_,
+              P.center_ + P.rotation_.transpose() * center_};
     }
 
 
@@ -120,9 +127,17 @@ class Pose3
     */
     Pose3 inverse() const
     {
-      return Pose3( rotation_.transpose(),  -( rotation_ * center_ ) );
+      return {rotation_.transpose(),  -( rotation_ * center_ )};
     }
 
+    /**
+    * @brief Return the pose as a single Mat34 matrix [R|t]
+    * @return The pose as a Mat34 matrix
+    */
+    inline Mat34 asMatrix() const
+    {
+      return (Mat34() << rotation_, translation()).finished();
+    }
 
     /**
     * @brief Return the depth (distance) of a point respect to the camera center

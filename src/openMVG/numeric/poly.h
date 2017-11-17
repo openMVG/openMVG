@@ -49,7 +49,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
       x[0] = -x[0];
   }
   else // Three roots: Viete's formula
-  { 
+  {
     if (3 * p >= -eps * tolp) // p=0 and d<=0 implies q=0: triple root 0
     {
       n = 1;

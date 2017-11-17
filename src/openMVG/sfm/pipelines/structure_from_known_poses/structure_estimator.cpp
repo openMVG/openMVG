@@ -225,18 +225,47 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           iterTracks != map_tracksCommon.end(); ++iterTracks)
         {
           const tracks::submapTrack & subTrack = iterTracks->second;
-          Triangulation trianObj;
-          for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
-            const size_t imaIndex = iter->first;
-            const size_t featIndex = iter->second;
+          std::vector<Vec3> bearing;
+          std::vector<Mat34> poses;
+          bearing.reserve(subTrack.size());
+          poses.reserve(subTrack.size());
+          for (const auto & track : subTrack) {
+            const size_t imaIndex = track.first;
+            const size_t featIndex = track.second;
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
             const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
-            trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
+            bearing.emplace_back((*cam)(cam->get_ud_pixel(pt)));
+            poses.emplace_back(pose.asMatrix());
           }
-          trianObj.compute();
-          if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
+          const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
+          Vec4 Xhomogeneous;
+          TriangulateNViewAlgebraic(bearing_matrix, poses, &Xhomogeneous);
+          const Vec3 X = Xhomogeneous.hnormalized();
+
+          // Test validity of the hypothesis:
+          // - residual error
+          // - chierality
+          bool bChierality = true;
+          bool bReprojection_error = true;
+          int i(0);
+          for (tracks::submapTrack::const_iterator obs_it = subTrack.begin();
+            obs_it != subTrack.end() && bChierality && bReprojection_error; ++obs_it, ++i)
+          {
+            const View * view = sfm_data.views.at(obs_it->first).get();
+
+            const Pose3 pose = sfm_data.GetPoseOrDie(view);
+            bChierality &= CheiralityTest(bearing[i], pose, X);
+
+            const size_t imaIndex = obs_it->first;
+            const size_t featIndex = obs_it->second;
+            const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
+            const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
+            const Vec2 residual = cam->residual(pose(X), pt);
+            bReprojection_error &= residual.squaredNorm() < max_reprojection_error_;
+          }
+          if (bChierality && bReprojection_error)
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
@@ -292,10 +321,10 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
       const tracks::submapTrack & track = itTracks->second;
 
       Observations obs;
-      for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+      for (const auto & track_obs : track)
       {
-        const IndexT imaIndex = it->first;
-        const IndexT featIndex = it->second;
+        const IndexT imaIndex = track_obs.first;
+        const IndexT featIndex = track_obs.second;
         const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
         const Vec2 pt = regions->GetRegionPosition(featIndex);
         obs[imaIndex] = Observation(pt, featIndex);

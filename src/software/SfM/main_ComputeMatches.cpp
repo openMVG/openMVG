@@ -20,6 +20,7 @@
 #include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
 #include "openMVG/matching_image_collection/F_ACRobust.hpp"
 #include "openMVG/matching_image_collection/E_ACRobust.hpp"
+#include "openMVG/matching_image_collection/E_ACRobust_Angular.hpp"
 #include "openMVG/matching_image_collection/H_ACRobust.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
@@ -47,7 +48,8 @@ enum EGeometricModel
 {
   FUNDAMENTAL_MATRIX = 0,
   ESSENTIAL_MATRIX   = 1,
-  HOMOGRAPHY_MATRIX  = 2
+  HOMOGRAPHY_MATRIX  = 2,
+  ESSENTIAL_MATRIX_ANGULAR = 3
 };
 
 enum EPairMode
@@ -109,6 +111,7 @@ int main(int argc, char **argv)
       << "   f: (default) fundamental matrix,\n"
       << "   e: essential matrix,\n"
       << "   h: homography matrix.\n"
+      << "   a: essential matrix with an angular parametrization.\n"
       << "[-v|--video_mode_matching]\n"
       << "  (sequence matching with an overlap of X images)\n"
       << "   X: with match 0 with (1->X), ...]\n"
@@ -181,6 +184,10 @@ int main(int argc, char **argv)
     case 'h': case 'H':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
       sGeometricMatchesFilename = "matches.h.bin";
+    break;
+    case 'a': case 'A':
+      eGeometricModelToCompute = ESSENTIAL_MATRIX_ANGULAR;
+      sGeometricMatchesFilename = "matches.f.bin";
     break;
     default:
       std::cerr << "Unknown geometric model" << std::endl;
@@ -444,6 +451,13 @@ int main(int argc, char **argv)
         {
           map_GeometricMatches.erase(pair_to_remove_it);
         }
+      }
+      break;
+      case ESSENTIAL_MATRIX_ANGULAR:
+      {
+        filter_ptr->Robust_model_estimation(GeometricFilter_ESphericalMatrix_AC_Angular(4.0, imax_iteration),
+          map_PutativesMatches, bGuided_matching);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
     }

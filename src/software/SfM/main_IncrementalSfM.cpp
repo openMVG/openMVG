@@ -42,7 +42,7 @@ bool computeIndexFromImageNames(
     return false;
   }
 
-  initialPairIndex = Pair(UndefinedIndexT, UndefinedIndexT);
+  initialPairIndex = {UndefinedIndexT, UndefinedIndexT};
 
   /// List views filenames and find the one that correspond to the user ones:
   for (Views::const_iterator it = sfm_data.GetViews().begin();
