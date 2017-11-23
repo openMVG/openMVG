@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
-  std::string sMatchesDir;
+  std::string sMatchesDir, sMatchFilename;
   std::string sOutDir = "";
   int iRotationAveragingMethod = int (ROTATION_AVERAGING_L2);
   int iTranslationAveragingMethod = int (TRANSLATION_AVERAGING_SOFTL1);
@@ -56,6 +56,7 @@ int main(int argc, char **argv)
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
+  cmd.add( make_option('M', sMatchFilename, "match_file") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('r', iRotationAveragingMethod, "rotationAveraging") );
   cmd.add( make_option('t', iTranslationAveragingMethod, "translationAveraging") );
@@ -92,6 +93,7 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions)\n"
+    << "[-M|--match_file] path to the match file to use.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -146,9 +148,10 @@ int main(int argc, char **argv)
   }
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if // Try to read the two matches file formats
+  if // Try to read the provided match filename or the default one (matches.e.txt/bin)
   (
-    !(matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt")) ||
+    !(matches_provider->load(sfm_data, sMatchFilename) ||
+      matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.txt")) ||
       matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.e.bin")))
   )
   {
