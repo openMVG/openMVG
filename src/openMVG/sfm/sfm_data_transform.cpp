@@ -41,7 +41,7 @@ void ApplySimilarity
       // Transform the camera position priors
       if (sfm::ViewPriors * prior = dynamic_cast<sfm::ViewPriors*>(iterView.second.get()))
       {
-          prior->pose_center_ = sim(prior->pose_center_);
+        prior->pose_center_ = sim(prior->pose_center_);
       }
     }
 

@@ -90,7 +90,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
-  for (Pair_Set::const_iterator it = pairs.begin(); it != pairs.end(); ++it)
+  for (const Pair & pair : pairs)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
@@ -103,16 +103,21 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     // - by considering geometric error and descriptor distance ratio.
     std::vector<IndMatch> vec_corresponding_indexes;
 
-    const View * viewL = sfm_data.GetViews().at(it->first).get();
-    const Pose3 poseL = sfm_data.GetPoseOrDie(viewL);
-    const Intrinsics::const_iterator iterIntrinsicL = sfm_data.GetIntrinsics().find(viewL->id_intrinsic);
-    const View * viewR = sfm_data.GetViews().at(it->second).get();
-    const Pose3 poseR = sfm_data.GetPoseOrDie(viewR);
-    const Intrinsics::const_iterator iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
+    const View
+      * viewL = sfm_data.GetViews().at(pair.first).get(),
+      * viewR = sfm_data.GetViews().at(pair.second).get();
+
+    const Pose3
+      poseL = sfm_data.GetPoseOrDie(viewL),
+      poseR = sfm_data.GetPoseOrDie(viewR);
 
     if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
         sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
+      const Intrinsics::const_iterator
+        iterIntrinsicL = sfm_data.GetIntrinsics().find(viewL->id_intrinsic),
+        iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
+
       const Mat34
         P_L = iterIntrinsicL->second->get_projective_equivalent(poseL),
         P_R = iterIntrinsicR->second->get_projective_equivalent(poseR);
@@ -121,8 +126,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       const double thresholdF = max_reprojection_error_;
 
       const std::shared_ptr<features::Regions>
-        regionsL = regions_provider->get(it->first),
-        regionsR = regions_provider->get(it->second);
+        regionsL = regions_provider->get(pair.first),
+        regionsR = regions_provider->get(pair.second);
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
@@ -158,7 +163,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          putatives_matches[*it].insert(putatives_matches[*it].end(),
+          putatives_matches[pair].insert(putatives_matches[pair].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
         ++my_progress_bar;
@@ -215,23 +220,23 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
-        std::map<IndexT, std::shared_ptr<openMVG::features::Regions>> regions;
-        regions[I] = regions_provider->get(I);
-        regions[J] = regions_provider->get(J);
-        regions[K] = regions_provider->get(K);
+        const std::map<IndexT, std::shared_ptr<openMVG::features::Regions>> regions =
+        {{I, regions_provider->get(I)},
+         {J, regions_provider->get(J)},
+         {K, regions_provider->get(K)},
+        };
 
         // Triangulate the tracks
-        for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
-          iterTracks != map_tracksCommon.end(); ++iterTracks)
+        for (const auto & track_it : map_tracksCommon)
         {
-          const tracks::submapTrack & subTrack = iterTracks->second;
+          const tracks::submapTrack & subTrack = track_it.second;
           std::vector<Vec3> bearing;
           std::vector<Mat34> poses;
           bearing.reserve(subTrack.size());
           poses.reserve(subTrack.size());
-          for (const auto & track : subTrack) {
-            const size_t imaIndex = track.first;
-            const size_t featIndex = track.second;
+          for (const auto & observation_it : subTrack) {
+            const size_t imaIndex = observation_it.first;
+            const size_t featIndex = observation_it.second;
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);

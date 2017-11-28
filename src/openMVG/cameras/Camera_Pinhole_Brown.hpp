@@ -237,8 +237,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
       const double k_diff = ( k1 * r2 + k2 * r4 + k3 * r6 );
       const double t_x = t2 * ( r2 + 2 * p( 0 ) * p( 0 ) ) + 2 * t1 * p( 0 ) * p( 1 );
       const double t_y = t1 * ( r2 + 2 * p( 1 ) * p( 1 ) ) + 2 * t2 * p( 0 ) * p( 1 );
-      Vec2 d( p( 0 ) * k_diff + t_x, p( 1 ) * k_diff + t_y );
-      return d;
+      return { p( 0 ) * k_diff + t_x, p( 1 ) * k_diff + t_y};
     }
 };
 

@@ -345,7 +345,7 @@ void GuidedMatching_Fundamental_Fast(
   {
     // According the point:
     // - Compute the epipolar line from the epipole
-    // - compute the range of possible bucket by computing
+    // - Compute the range of possible bucket by computing
     //    the epipolar line gauge limitation introduced by the tolerated pixel error
 
     const Vec2 xR = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j);
