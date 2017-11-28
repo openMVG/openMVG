@@ -14,9 +14,9 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
+#include <fstream>
 #include <memory>
 #include <string>
-#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -24,7 +24,6 @@ using namespace openMVG::sfm;
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << std::endl;
 
   CmdLine cmd;
 
@@ -57,23 +56,13 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::file_exists(sfm_data_filename))
-  {
-    return EXIT_FAILURE;
-  }
-
-  if (!stlplus::file_exists(match_filename))
-  {
-    return EXIT_FAILURE;
-  }
-
   const std::string &match_component_dir = stlplus::folder_part(match_component_filename);
   if (!stlplus::folder_exists(match_component_dir))
   {
     const bool folder_create_flag = stlplus::folder_create(match_component_dir);
     if (!folder_create_flag)
     {
-      std::cerr << "Cannot create the output directory" << std::endl;
+      std::cerr << "Cannot create the output directory: " << match_component_dir << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -99,9 +88,13 @@ int main(int argc, char **argv)
   std::vector<matching::PairWiseMatches> subgraphs_matches;
 
   // Split match_filename by connected components;
-  const bool success_flag = SplitMatchesIntoSubgraphMatches(matches_provider->getPairs(), matches_provider->pairWise_matches_,
-    is_biedge, min_nodes, subgraphs_matches);
-  if (success_flag)
+  const bool success_flag =
+    SplitMatchesIntoSubgraphMatches(matches_provider->getPairs(),
+                                    matches_provider->pairWise_matches_,
+                                    is_biedge,
+                                    min_nodes,
+                                    subgraphs_matches);
+  if (!success_flag)
   {
     std::cerr << std::endl
       << "Failed to split matches file into subgraph matches." << std::endl;
@@ -118,12 +111,13 @@ int main(int argc, char **argv)
   for (const auto & subgraph : subgraphs_matches)
   {
     std::stringstream strstream_subgraph_match_filename;
-    strstream_subgraph_match_filename << file_basename << "_" << index << "_" << subgraph.size() << "." << match_file_extension;
+    strstream_subgraph_match_filename << file_basename
+      << "_" << index
+      << "_" << subgraph.size() << "." << match_file_extension;
     const std::string &subgraph_match_filename = strstream_subgraph_match_filename.str();
     const std::string &subgraph_match_file = stlplus::create_filespec(output_folder, subgraph_match_filename);
 
-    const bool success_flag = matching::Save(subgraph, subgraph_match_file);
-    if (success_flag)
+    if (matching::Save(subgraph, subgraph_match_file))
     {
       set_filenames.insert(subgraph_match_filename);
     }

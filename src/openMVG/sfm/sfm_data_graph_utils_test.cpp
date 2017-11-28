@@ -17,10 +17,15 @@ using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
 
+TEST(SFM_DATA_GRAPH, PairsToConnectedComponents_EmptyInput)
+{
+  std::map<IndexT, std::set<IndexT>> subgraphs_ids;
+  EXPECT_FALSE(PairsToConnectedComponents({}, true, 1, subgraphs_ids));
+}
 
 TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
 {
-  Pair_Set pair =
+  const Pair_Set pairs =
   {
     // the first connected graph follows the biEdge condition: 0 -> 1 -> 2 ->3 ->4 -> 0
     {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
@@ -33,39 +38,36 @@ TEST(SFM_DATA_GRAPH, PairsToConnectedComponents)
   std::map<IndexT, std::set<IndexT>> subgraphs_ids;
 
   // test for GlobalSFM with the biEdge condition
-  const bool flag1 = PairsToConnectedComponents(pair, true, 3, subgraphs_ids);
-  EXPECT_TRUE(flag1);
+  EXPECT_TRUE(PairsToConnectedComponents(pairs, true, 3, subgraphs_ids));
   EXPECT_EQ(1, subgraphs_ids.size());
   if (subgraphs_ids.size() == 1)
   {
-    const auto & iter_begin = subgraphs_ids.begin();
-    const std::set<IndexT> & pairs0 = iter_begin->second;
-    EXPECT_EQ(4, pairs0.size());
-    if (pairs0.size() == 4)
+    const auto & iter_begin = subgraphs_ids.cbegin();
+    const std::set<IndexT> & kept_idx = iter_begin->second;
+    EXPECT_EQ(4, kept_idx.size());
     {
-      EXPECT_TRUE(pairs0.find(0) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(1) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(2) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(3) != pairs0.end());
+      EXPECT_TRUE(kept_idx.find(0) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(1) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(2) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(3) != kept_idx.cend());
     }
   }
 
   // test for IncrementalSFM with no biEdge condition
-  const bool flag2 = PairsToConnectedComponents(pair, false, 3, subgraphs_ids);
-  EXPECT_TRUE(flag2);
+  // The smallest graph must disappear since it is too small
+  EXPECT_TRUE(PairsToConnectedComponents(pairs, false, 3, subgraphs_ids));
   EXPECT_EQ(2, subgraphs_ids.size());
   if (subgraphs_ids.size() == 2)
   {
-    auto iter_first = subgraphs_ids.begin();
-    const std::set<IndexT> & pairs0 = iter_first->second;
-    EXPECT_EQ(5, pairs0.size());
-    if (pairs0.size() == 5)
+    const auto iter_first = subgraphs_ids.cbegin();
+    const std::set<IndexT> & kept_idx = iter_first->second;
+    EXPECT_EQ(5, kept_idx.size());
     {
-      EXPECT_TRUE(pairs0.find(4) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(5) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(6) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(7) != pairs0.end());
-      EXPECT_TRUE(pairs0.find(8) != pairs0.end());
+      EXPECT_TRUE(kept_idx.find(4) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(5) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(6) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(7) != kept_idx.cend());
+      EXPECT_TRUE(kept_idx.find(8) != kept_idx.cend());
     }
 
     auto iter_second = subgraphs_ids.begin();
