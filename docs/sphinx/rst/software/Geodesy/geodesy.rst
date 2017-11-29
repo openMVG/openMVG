@@ -125,6 +125,19 @@ Force pose prior usage
     - Enable the usage of view's motion priors data.
 
 
+Prepare a geo-referenced scene for processing for MVS
+=====================================================
+
+Since MVS frameworks does not like large double values (raw GPS coordinates) you can use the tool openMVG_main_ChangeLocalOrigin to center the scene on the first camera poses. This binary will create a sfm_data_local.bin file that has been recentered.
+
+  .. code-block:: c++
+
+    // Recenter the scene
+    openMVG_main_ChangeLocalOrigin \
+      -i /media/pierre/SenseFly/Quarry/quary_output/global_reconstruction/sfm_data.bin \
+      -o /media/pierre/SenseFly/Quarry/quary_output/global_reconstruction/ \
+      -f
+
 Use-case: command line used for a flat UAV survey
 ====================================================
 
@@ -172,7 +185,4 @@ In green the SFM poses, and in blue the GPS Exif ECEF poses. We clearly see that
 
 .. figure:: swiss_quarry_registered.png
    :align: center
-
-
-
 

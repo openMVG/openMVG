@@ -1,9 +1,10 @@
-// Copyright (c) 2015 Pierre MOULON.
+// Copyright (c) 2017 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/stl/split.hpp"
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('o', sOutDir, "output_dir"));
   cmd.add(make_option('l', sLocalFrameOrigin, "local_frame_origin"));
-  cmd.add( make_switch('f', "first_frame_origin") );
+  cmd.add(make_switch('f', "first_frame_origin"));
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
@@ -84,8 +86,11 @@ int main(int argc, char **argv)
   {
     if (b_first_frame_origin)
     {
-      local_Frame_Origin =  (sfm_data.poses.begin()->second).center();
-      std::cout<<"Using frame origin: "<<local_Frame_Origin<<"\n";
+      if (sfm_data.poses.empty()) {
+        std::cerr << "The provided scene does not contain any camera poses." << std::endl;
+        return EXIT_FAILURE;
+      }
+      local_Frame_Origin =  (sfm_data.poses.cbegin()->second).center();
     }
     else
     {
@@ -111,82 +116,31 @@ int main(int argc, char **argv)
     }
   }
 
-  // Move poses
-  {
-    C_Progress_display my_progress_bar(sfm_data.poses.size(),
-                                       std::cout,
-                                       "\nRecalculating poses:\n");
-    // Loop through views and structure and correct the position according to local frame
-    for (Poses::iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
-    {
-      Pose3 & pose = itPose->second;
-      pose = Pose3(pose.rotation(), pose.center()-local_Frame_Origin);
-      ++my_progress_bar;
-    }
-  }
+  std::cout << "Using frame origin: " << local_Frame_Origin.transpose() << std::endl;
 
-  // Move view priors
-  {
-    for (auto & view : sfm_data.GetViews())
-    {
-      if (sfm::ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(view.second.get()))
-      {
-	    if (prior->b_use_pose_center_)
-	    {
-          prior->pose_center_ = prior->pose_center_- local_Frame_Origin;
-	    }
-      }
-    }
-  }
-
-  // Move structure
-  {
-    C_Progress_display my_progress_bar(sfm_data.structure.size(),
-                                       std::cout,
-                                       "\nRecalculating structure:\n");
-
-    for (Landmarks::iterator itLandmark = sfm_data.structure.begin();
-      itLandmark != sfm_data.structure.end(); ++itLandmark)
-    {
-      Landmark &landmark = itLandmark->second;
-      landmark.X = landmark.X - local_Frame_Origin;
-      ++my_progress_bar;
-    }
-  }
-
-  // Move control points
-  {
-    C_Progress_display my_progress_bar(sfm_data.control_points.size(),
-                                       std::cout,
-                                       "\nRecalculating control points:\n");
-
-    for (Landmarks::iterator iterGCPTracks = sfm_data.control_points.begin();
-    iterGCPTracks!= sfm_data.control_points.end(); ++iterGCPTracks)
-    {
-      Landmark &landmark = iterGCPTracks->second;
-      landmark.X = landmark.X - local_Frame_Origin;
-      ++my_progress_bar;
-    }
-  }
+  // Define the transformation (Will substract the local_Frame_Origin):
+  Similarity3 sim( Pose3(Mat3::Identity(), local_Frame_Origin), 1.0);
+  // Apply the transformation to the sfm_data scene
+  const bool b_transform_priors = true;
+  ApplySimilarity(sim, sfm_data, b_transform_priors);
 
   // Save changed sfm data
     //-- Export to disk computed scene (data & visualizable results)
   std::cout << "...Export SfM_Data to disk." << std::endl;
-  Save(sfm_data,
-    stlplus::create_filespec(sOutDir, "sfm_data_local", ".bin"),
-    ESfM_Data(ALL));
-
-    Save(sfm_data,
-      stlplus::create_filespec(sOutDir, "sfm_data_local", ".json"),
-      ESfM_Data(ALL));
-
-  Save(sfm_data,
-    stlplus::create_filespec(sOutDir, "cloud_and_poses_local", ".ply"),
-    ESfM_Data(ALL));
+  if (!Save(sfm_data,
+            stlplus::create_filespec(sOutDir, "sfm_data_local", ".bin"),
+            ESfM_Data(ALL))
+    || !Save(sfm_data,
+             stlplus::create_filespec(sOutDir, "cloud_and_poses_local", ".ply"),
+             ESfM_Data(ALL)))
+  {
+    std::cerr << "Cannot save the resulting sfm_data scene." << std::endl;
+  }
 
   std::ofstream file_LocalFrameOrigin(stlplus::create_filespec(sOutDir, "local_frame_origin", ".txt"));
-    file_LocalFrameOrigin<<std::setprecision(8) << std::fixed;
-  file_LocalFrameOrigin<<local_Frame_Origin<<"\n";
+  file_LocalFrameOrigin << std::setprecision(8) << std::fixed;
+  file_LocalFrameOrigin << local_Frame_Origin << "\n";
   file_LocalFrameOrigin.close();
-      return EXIT_SUCCESS;
+
+  return EXIT_SUCCESS;
 }

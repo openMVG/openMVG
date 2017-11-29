@@ -100,6 +100,12 @@ apps:
   SfM-Localization:
     command: openMVG_main_SfM_Localization
     plugs: [home]
+  PointsFiltering:
+    command: openMVG_main_PointsFiltering
+    plugs: [home]
+  ChangeLocalOrigin:
+    command: openMVG_main_ChangeLocalOrigin
+    plugs: [home]
   SfM-GlobalPipeline-py:
     command: python3 $SNAP/bin/SfM_GlobalPipeline.py
     plugs: [home]
