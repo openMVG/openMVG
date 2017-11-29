@@ -78,7 +78,7 @@ INSTALL(
 
 INSTALL(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h
-  DESTINATION include/openMVG/third_party/lemon
+  DESTINATION include/openMVG/third_party/lemon/lemon
   COMPONENT headers
 )
 
