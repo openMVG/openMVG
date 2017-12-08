@@ -115,3 +115,10 @@ OpenMVG Pinhole camera models
        0, 1000, 500,
        0, 0, 1;
   PinholeCamera cam(K, Mat3::Identity(), Vec3::Zero());
+
+OpenMVG Spherical camera models
+-------------------------------
+
+* :class:`Intrinsic_Spherical : public IntrinsicBase` 
+
+    * a camera model for equirectangular panorama (360x180 degree). No focal is required, the camera is modelized as a unit sphere.

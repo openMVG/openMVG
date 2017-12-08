@@ -118,7 +118,7 @@ To use them simply run:
   $ python SfM_GlobalPipeline.py [full path image directory] [resulting directory]
 
 More details about openMVG tools
-=====================================
+================================
 
 To know more about each tool visit the following link and read the doc below:
 
@@ -177,3 +177,25 @@ PS: We strongly advise to use a 3 directories based data organisation structure
   4. SfM solving:
 
     - the corresponding features graph is send to the chosen SfM pipeline and it computes the scene and camera motion.
+
+Notes about Spherical SfM
+=========================
+
+Here as an example the pipeline to use in order to process equirectangular images (360 images) for SfM.
+
+.. code-block:: c++
+
+  // Configure the scene to use the Spherical camera model and a unit focal length
+  $ openMVG_main_SfMInit_ImageListing -i [full path image directory] -o [matches directory] -c 7 -f 1
+  
+  // Extract the features (using the HIGH preset is advised, since the spherical image introduced distortions)
+  $ openMVG_main_ComputeFeatures -i [matches directory]/sfm_data.json -o [matches directory] -m SIFT -p HIGH
+  
+  // Computes the matches (using the Essential matrix with an angular constraint)
+  $ openMVG_main_ComputeMatches -i [matches directory]/sfm_data.json -o [matches directory] -g a
+  
+  // Compute the reconstruction
+  $ openMVG_main_IncrementalSfM -i [matches directory]/sfm_data.json -m [matches directory] -o [reconstruction directory] -a R0010762.JPG -b R0010764.JPG
+  // /!\ Since the spherical geometry is different than classic pinhole images, the best is to provide the initial pair by hand with the -a -b image basenames (i.e. R0010762.JPG).
+
+
