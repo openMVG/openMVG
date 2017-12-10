@@ -27,12 +27,12 @@ using namespace openMVG;
 struct Document
 {
   std::vector<float> _vec_points;
-  std::map<size_t, std::vector<size_t> > _map_visibility; //Inth camera see the Inth 3D point
+  std::map<size_t, std::vector<size_t>> _map_visibility; //Inth camera see the Inth 3D point
   tracks::STLMAPTracks _tracks;
 
   std::map<size_t, PinholeCamera > _map_camera;
   std::vector<std::string> _vec_imageNames;
-  std::map<size_t, std::pair<size_t,size_t> > _map_imageSize;
+  std::map<size_t, std::pair<size_t,size_t>> _map_imageSize;
 
   std::string _sDirectory;
 
@@ -98,7 +98,7 @@ struct Document
         size_t nbImages = 0;
         iFilein>> nbImages;
         size_t camIndex = 0; // track inserted image and camera count
-        while(iFilein.good())
+        while (iFilein.good())
         {
           getline(iFilein,temp);
           if (!temp.empty() && temp.length() > 1)

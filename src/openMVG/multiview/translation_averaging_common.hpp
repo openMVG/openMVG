@@ -20,10 +20,10 @@
 namespace openMVG {
 
 /// Relative information [Rij|tij] for a pair
-using relativeInfo = std::pair< Pair, std::pair<Mat3,Vec3>>;
+using relativeInfo = std::pair<Pair, std::pair<Mat3,Vec3>>;
 
-using RelativeInfo_Vec = std::vector< relativeInfo >;
-using RelativeInfo_Map = std::map< Pair, std::pair<Mat3, Vec3>>;
+using RelativeInfo_Vec = std::vector<relativeInfo>;
+using RelativeInfo_Map = std::map<Pair, std::pair<Mat3, Vec3>>;
 
 // List the pairs used by the relative motions
 Pair_Set getPairs(const RelativeInfo_Vec & vec_relative);

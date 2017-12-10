@@ -30,7 +30,7 @@ namespace matching  {
 // By default use squared L2 metric (flann::L2<Scalar>)
 // sqrt is monotonic so for performance reason we do not compute it.
 
-template < typename Scalar = float, typename  Metric = flann::L2<Scalar> >
+template < typename Scalar = float, typename  Metric = flann::L2<Scalar>>
 class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 {
   public:
@@ -171,8 +171,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   private:
 
-  std::unique_ptr< flann::Matrix<Scalar> > datasetM_;
-  std::unique_ptr< flann::Index<Metric> > index_;
+  std::unique_ptr< flann::Matrix<Scalar>> datasetM_;
+  std::unique_ptr< flann::Index<Metric>> index_;
   std::size_t dimension_;
 };
 

@@ -1,9 +1,10 @@
 Project: Eigen
 URL: http://eigen.tuxfamily.org/
 License: MPL2
-Upstream version: Eigen 3.3.1, Archive from December 06, 2016.
+Upstream version: Eigen 3.3.3, Archive from June 15, 2017.
 
 Local modifications:
+- None
 
 Note: 
 - Only the license and Eigen/ directory is included.

@@ -10,8 +10,10 @@
 #include <cereal/archives/json.hpp>
 
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/sfm/sfm.hpp"
 #include "openMVG/system/timer.hpp"
+
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -94,6 +96,8 @@ public:
     const Image<unsigned char> * mask = nullptr
   )
   {
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
+
     cv::Mat img;
     cv::eigen2cv(image.GetMat(), img);
 
@@ -110,8 +114,6 @@ public:
 
     if (!vec_keypoints.empty())
     {
-      auto regions = std::unique_ptr<Regions_type>(new Regions_type);
-
       // reserve some memory for faster keypoint saving
       regions->Features().reserve(vec_keypoints.size());
       regions->Descriptors().reserve(vec_keypoints.size());
@@ -120,7 +122,7 @@ public:
       DescriptorT descriptor;
       int cpt = 0;
       for (auto i_keypoint = vec_keypoints.begin(); i_keypoint != vec_keypoints.end(); ++i_keypoint, ++cpt){
-        SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
+        const SIOPointFeature feat((*i_keypoint).pt.x, (*i_keypoint).pt.y, (*i_keypoint).size, (*i_keypoint).angle);
         regions->Features().push_back(feat);
 
         memcpy(descriptor.data(),
@@ -128,9 +130,8 @@ public:
                DescriptorT::static_size*sizeof(DescriptorT::bin_type));
         regions->Descriptors().push_back(descriptor);
       }
-      return regions;
     }
-    return nullptr;
+    return regions;
   };
 
   /// Allocate Regions type depending of the Image_describer
@@ -243,7 +244,7 @@ public:
   };
 
   /// Allocate Regions type depending of the Image_describer
-  std::unique_ptr<Regions_type> Allocate() const
+  std::unique_ptr<Regions> Allocate() const override
   {
     return std::unique_ptr<Regions_type>(new Regions_type);
   }
@@ -396,17 +397,16 @@ int main(int argc, char **argv)
   // - if no file, compute features
   {
     system::Timer timer;
-    Image<unsigned char> imageGray, globalMask, imageMask;
-
-    const std::string sGlobalMask_filename = stlplus::create_filespec(sOutDir, "mask.png");
-    if (stlplus::file_exists(sGlobalMask_filename))
-      ReadImage(sGlobalMask_filename.c_str(), &globalMask);
+    Image<unsigned char> imageGray;
 
     C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
       std::cout, "\n- EXTRACT FEATURES -\n" );
+
+    // Use a boolean to track if we must stop feature extraction
+    bool preemptive_exit(false);
     for (auto iterViews = sfm_data.views.cbegin();
-        iterViews != sfm_data.views.cend();
-        ++iterViews, ++my_progress_bar)
+        iterViews != sfm_data.views.cend() && !preemptive_exit;
+        ++iterViews)
     {
       const View * view = iterViews->second.get();
       const std::string
@@ -420,25 +420,60 @@ int main(int argc, char **argv)
         if (!ReadImage(sView_filename.c_str(), &imageGray))
           continue;
 
+        //
+        // Look if there is occlusion feature mask
+        //
         Image<unsigned char> * mask = nullptr; // The mask is null by default
 
-        const std::string sImageMask_filename =
-          stlplus::create_filespec(sfm_data.s_root_path,
-            stlplus::basename_part(sView_filename) + "_mask", "png");
+        const std::string
+          mask_filename_local =
+            stlplus::create_filespec(sfm_data.s_root_path,
+              stlplus::basename_part(sView_filename) + "_mask", "png"),
+          mask__filename_global =
+            stlplus::create_filespec(sfm_data.s_root_path, "mask", "png");
 
-        if (stlplus::file_exists(sImageMask_filename))
-          ReadImage(sImageMask_filename.c_str(), &imageMask);
-
-        // The mask point to the globalMask, if a valid one exists for the current image
-        if (globalMask.Width() == imageGray.Width() && globalMask.Height() == imageGray.Height())
-          mask = &globalMask;
-        // The mask point to the imageMask (individual mask) if a valid one exists for the current image
-        if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
-          mask = &imageMask;
+        Image<unsigned char> imageMask;
+        // Try to read the local mask
+        if (stlplus::file_exists(mask_filename_local))
+        {
+          if (!ReadImage(mask_filename_local.c_str(), &imageMask))
+          {
+            std::cerr << "Invalid mask: " << mask_filename_local << std::endl
+                      << "Stopping feature extraction." << std::endl;
+            preemptive_exit = true;
+            continue;
+          }
+          // Use the local mask only if it fits the current image size
+          if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+            mask = &imageMask;
+        }
+        else
+        {
+          // Try to read the global mask
+          if (stlplus::file_exists(mask__filename_global))
+          {
+            if (!ReadImage(mask__filename_global.c_str(), &imageMask))
+            {
+              std::cerr << "Invalid mask: " << mask__filename_global << std::endl
+                        << "Stopping feature extraction." << std::endl;
+              preemptive_exit = true;
+              continue;
+            }
+            // Use the global mask only if it fits the current image size
+            if (imageMask.Width() == imageGray.Width() && imageMask.Height() == imageGray.Height())
+              mask = &imageMask;
+          }
+        }
 
         // Compute features and descriptors and export them to files
         auto regions = image_describer->Describe(imageGray, mask);
-        image_describer->Save(regions.get(), sFeat, sDesc);
+        if (regions && !image_describer->Save(regions.get(), sFeat, sDesc)) {
+          std::cerr << "Cannot save regions for images: " << sView_filename << std::endl
+                    << "Stopping feature extraction." << std::endl;
+          preemptive_exit = true;
+          continue;
+        }
+        ++my_progress_bar;
       }
     }
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;

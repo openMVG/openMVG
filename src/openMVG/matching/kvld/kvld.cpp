@@ -1,15 +1,10 @@
-/** @Main KVLD algorithm implementation
- ** @Containing scale image pyramid, VLD structure and KVLD algorithm
- ** @author Zhe Liu
- **/
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-/*
-Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
-All rights reserved.
+//Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
 
-This file is part of the KVLD library and is made available under
-the terms of the BSD license ( see the COPYING file).
-*/
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/image/image_container.hpp"
@@ -22,7 +17,7 @@ the terms of the BSD license ( see the COPYING file).
 using namespace openMVG;
 using namespace openMVG::image;
 
-ImageScale::ImageScale( const Image< float >& I, double r )
+ImageScale::ImageScale( const Image<float>& I, double r )
 {
   IntegralImages inter( I );
   radius_size = r;
@@ -42,7 +37,7 @@ ImageScale::ImageScale( const Image< float >& I, double r )
 #endif
   for (int k = 1; k < number; k++ )
   {
-    Image< float > I2;
+    Image<float> I2;
     double ratio = 1 * pow( step, k );
     I2.resize( int( I.Width() / ratio ), int( I.Height() / ratio ) );
     angles[ k ].resize( int( I.Width() / ratio ), int( I.Height() / ratio ) );
@@ -60,10 +55,10 @@ ImageScale::ImageScale( const Image< float >& I, double r )
   }
 }
 
-void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Image< float >& m )
+void ImageScale::GradAndNorm( const Image<float>& I, Image<float>& angle, Image<float>& m )
 {
-  angle = Image< float >( I.Width(), I.Height() );
-  m = Image< float >( I.Width(), I.Height() );
+  angle = Image<float>( I.Width(), I.Height() );
+  m = Image<float>( I.Width(), I.Height() );
   angle.fill( 0 );
   m.fill( 0 );
 #ifdef OPENMVG_USE_OPENMP
@@ -78,7 +73,7 @@ void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Im
 
       if (!anglefrom( gx, gy, angle( y, x ) ) )
         angle( y, x ) = -1;
-      m( y, x ) = sqrt( gx * gx + gy * gy );
+      m( y, x ) = std::hypot( gx, gy );
     }
   }
 }
@@ -101,7 +96,7 @@ int ImageScale::getIndex( const double r )const
   }
 }
 
-template< typename T >
+template<typename T>
 VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 {
   //============== initializing============//
@@ -116,7 +111,7 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
   const float dy = float( end_point[ 1 ] - begin_point[ 1 ] );
   const float dx = float( end_point[ 0 ] - begin_point[ 0 ] );
-  distance = sqrt( dy * dy + dx * dx );
+  distance = std::hypot( dy, dx );
 
   if (distance == 0 )
     std::cerr<<"Two SIFT points have the same coordinate"<< std::endl;
@@ -127,8 +122,8 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
   const int image_index = series.getIndex( radius );
 
-  const Image< float > & ang = series.angles[ image_index ];
-  const Image< float > & m   = series.magnitudes[ image_index ];
+  const Image<float> & ang = series.angles[ image_index ];
+  const Image<float> & m   = series.magnitudes[ image_index ];
   const double ratio = series.ratios[ image_index ];
 
   const int w = m.Width();
@@ -199,15 +194,15 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
   normalize_weight( weight );
 }
 
-float KVLD( const Image< float >& I1,
-            const Image< float >& I2,
+float KVLD( const Image<float>& I1,
+            const Image<float>& I2,
             const std::vector<features::SIOPointFeature> & F1,
             const std::vector<features::SIOPointFeature> & F2,
-            const std::vector< Pair >& matches,
-            std::vector< Pair >& matchesFiltered,
-            std::vector< double >& score,
+            const std::vector<Pair>& matches,
+            std::vector<Pair>& matchesFiltered,
+            std::vector<double>& score,
             openMVG::Mat& E,
-            std::vector< bool >& valide,
+            std::vector<bool>& valide,
             KvldParameters& kvldParameters )
 {
   matchesFiltered.clear();
@@ -243,8 +238,8 @@ float KVLD( const Image< float >& I1,
   }
 
   std::fill( valide.begin(), valide.end(), true );
-  std::vector< double > scoretable( size, 0.0 );
-  std::vector< size_t > result( size, 0 );
+  std::vector<double> scoretable( size, 0.0 );
+  std::vector<size_t> result( size, 0 );
 
 
 //============main iteration formatch verification==========//
@@ -374,7 +369,7 @@ float KVLD( const Image< float >& I1,
       for (size_t i = 0; i < size; i++ )
         scoretable[ i ]=0;
 
-      std::vector< bool > switching;
+      std::vector<bool> switching;
       for (size_t i = 0; i < size; i++ )
         switching.push_back( false );
 

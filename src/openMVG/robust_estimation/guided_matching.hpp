@@ -340,16 +340,16 @@ void GuidedMatching_Fundamental_Fast(
   }
 
   // For each point in right image, find if there is good candidates.
-  std::vector<distanceRatio<double > > dR(lRegions.RegionCount());
+  std::vector<distanceRatio<double >> dR(lRegions.RegionCount());
   for (size_t j = 0; j < rRegions.RegionCount(); ++j)
   {
     // According the point:
-    // - Compute it's epipolar line from the epipole
-    // - compute the range of possible bucket by computing
+    // - Compute the epipolar line from the epipole
+    // - Compute the range of possible bucket by computing
     //    the epipolar line gauge limitation introduced by the tolerated pixel error
 
     const Vec2 xR = camR ? camR->get_ud_pixel(rRegions.GetRegionPosition(j)) : rRegions.GetRegionPosition(j);
-    const Vec3 l2 = ep2.cross(Vec3(xR(0), xR(1), 1.));
+    const Vec3 l2 = ep2.cross(xR.homogeneous());
     const Vec2 n = l2.head<2>() * (sqrt(errorTh) / l2.head<2>().norm());
 
     const Vec3 l2min = ep2.cross(Vec3(xR(0) - n(0), xR(1) - n(1), 1.));

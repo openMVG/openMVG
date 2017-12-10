@@ -106,7 +106,7 @@ public:
   void operator()
   (
     const Octave & octave ,
-    std::vector< Keypoint > & keypoints
+    std::vector<Keypoint> & keypoints
   )
   {
     Compute_Gradients(octave);
@@ -117,7 +117,7 @@ public:
   void Compute_Orientations
   (
     const Octave & octave,
-    std::vector< Keypoint > & keypoints
+    std::vector<Keypoint> & keypoints
   )
   {
     Compute_Gradients(octave);
@@ -222,7 +222,7 @@ protected:
         const float sX = (si - x) / sigma;
         const float sY = (sj - y) / sigma;
         const float r2 = Square(sX) + Square(sY);
-        const float M = hypot(dx,dy) * exp(-r2/(2*Square(m_orientation_scale)));
+        const float M = hypot(dx, dy) * exp(-r2/(2*Square(m_orientation_scale)));
 
         /// Determine the bin index in the circular histogram
         const int gamma = ori_to_bin(ori, m_nb_orientation_histogram_bin);

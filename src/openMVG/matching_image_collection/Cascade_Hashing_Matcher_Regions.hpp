@@ -30,7 +30,7 @@ namespace matching_image_collection {
 class Cascade_Hashing_Matcher_Regions : public Matcher
 {
   public:
-  Cascade_Hashing_Matcher_Regions
+  explicit Cascade_Hashing_Matcher_Regions
   (
     float dist_ratio
   );

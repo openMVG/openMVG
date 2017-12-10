@@ -9,8 +9,6 @@
 #ifndef OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_HPP
 #define OPENMVG_LINFINITY_COMPUTER_VISION_RESECTION_HPP
 
-#include <vector>
-
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 

@@ -23,10 +23,9 @@ std::set<IndexT> Get_Valid_Views
 )
 {
   std::set<IndexT> valid_idx;
-  for (Views::const_iterator it = sfm_data.GetViews().begin();
-    it != sfm_data.GetViews().end(); ++it)
+  for (const auto & view_it : sfm_data.GetViews())
   {
-    const View * v = it->second.get();
+    const View * v = view_it.second.get();
     if (sfm_data.IsPoseAndIntrinsicDefined(v))
     {
       valid_idx.insert(v->id_view);
@@ -55,7 +54,7 @@ IndexT RemoveOutliers_PixelResidualError
       const View * view = sfm_data.views.at(itObs->first).get();
       const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view);
       const cameras::IntrinsicBase * intrinsic = sfm_data.intrinsics.at(view->id_intrinsic).get();
-      const Vec2 residual = intrinsic->residual(pose, iterTracks->second.X, itObs->second.x);
+      const Vec2 residual = intrinsic->residual(pose(iterTracks->second.X), itObs->second.x);
       if (residual.norm() > dThresholdPixel)
       {
         ++outlier_count;
@@ -130,35 +129,28 @@ bool eraseMissingPoses
   // Count the observation poses occurrence
   Hash_Map<IndexT, IndexT> map_PoseId_Count;
   // Init with 0 count (in order to be able to remove non referenced elements)
-  for (Poses::const_iterator itPoses = sfm_data.GetPoses().begin();
-    itPoses != sfm_data.GetPoses().end(); ++itPoses)
+  for (const auto & pose_it : sfm_data.GetPoses())
   {
-    map_PoseId_Count[itPoses->first] = 0;
+    map_PoseId_Count[pose_it.first] = 0;
   }
 
   // Count occurrence of the poses in the Landmark observations
-  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-    itLandmarks != landmarks.end(); ++itLandmarks)
+  for (const auto & lanmark_it : landmarks)
   {
-    const Observations & obs = itLandmarks->second.obs;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    const Observations & obs = lanmark_it.second.obs;
+    for (const auto obs_it : obs)
     {
-      const IndexT ViewId = itObs->first;
+      const IndexT ViewId = obs_it.first;
       const View * v = sfm_data.GetViews().at(ViewId).get();
-      if (map_PoseId_Count.count(v->id_pose))
-        map_PoseId_Count.at(v->id_pose) += 1;
-      else
-        map_PoseId_Count[v->id_pose] = 0;
+      map_PoseId_Count[v->id_pose] += 1; // Default initialization is 0
     }
   }
   // If usage count is smaller than the threshold, remove the Pose
-  for (Hash_Map<IndexT, IndexT>::const_iterator it = map_PoseId_Count.begin();
-    it != map_PoseId_Count.end(); ++it)
+  for (const auto & it : map_PoseId_Count)
   {
-    if (it->second < min_points_per_pose)
+    if (it.second < min_points_per_pose)
     {
-      sfm_data.poses.erase(it->first);
+      sfm_data.poses.erase(it.first);
       ++removed_elements;
     }
   }
@@ -174,7 +166,7 @@ bool eraseObservationsWithMissingPoses
   IndexT removed_elements = 0;
 
   std::set<IndexT> pose_Index;
-  std::transform(sfm_data.poses.begin(), sfm_data.poses.end(),
+  std::transform(sfm_data.poses.cbegin(), sfm_data.poses.cend(),
     std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());
 
   // For each landmark:
@@ -245,16 +237,14 @@ bool IsTracksOneCC
   Hash_Map<IndexT, IndexT> view_renumbering;
   IndexT cpt = 0;
   const Landmarks & landmarks = sfm_data.structure;
-  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-    itLandmarks != landmarks.end(); ++itLandmarks)
+  for (const auto & Landmark_it : landmarks)
   {
-    const Observations & obs = itLandmarks->second.obs;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    const Observations & obs = Landmark_it.second.obs;
+    for (const auto & obs_it : obs)
     {
-      if (view_renumbering.count(itObs->first) == 0)
+      if (view_renumbering.count(obs_it.first) == 0)
       {
-        view_renumbering[itObs->first] = cpt++;
+        view_renumbering[obs_it.first] = cpt++;
       }
     }
   }
@@ -263,20 +253,18 @@ bool IsTracksOneCC
   uf_tree.InitSets(view_renumbering.size());
 
   // Link track observations in connected component
-  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-    itLandmarks != landmarks.end(); ++itLandmarks)
+  for (const auto & Landmark_it : landmarks)
   {
-    const Observations & obs = itLandmarks->second.obs;
+    const Observations & obs = Landmark_it.second.obs;
     std::set<IndexT> id_to_link;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    for (const auto & obs_it : obs)
     {
-      id_to_link.insert(view_renumbering.at(itObs->first));
+      id_to_link.insert(view_renumbering.at(obs_it.first));
     }
-    std::set<IndexT>::const_iterator iterI = id_to_link.begin();
-    std::set<IndexT>::const_iterator iterJ = id_to_link.begin();
-    std::advance(iterJ,1);
-    while (iterJ != id_to_link.end())
+    std::set<IndexT>::const_iterator iterI = id_to_link.cbegin();
+    std::set<IndexT>::const_iterator iterJ = id_to_link.cbegin();
+    std::advance(iterJ, 1);
+    while (iterJ != id_to_link.cend())
     {
       // Link I => J
       uf_tree.Union(*iterI, *iterJ);
@@ -284,8 +272,8 @@ bool IsTracksOneCC
     }
   }
   // Count the number of CC
-  const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
-  return parent_id.size()==1;
+  const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
+  return parent_id.size() == 1;
 }
 
 /// Keep the largest connected component of tracks from the sfm_data structure
@@ -302,16 +290,14 @@ void KeepLargestViewCCTracks
   {
     IndexT cpt = 0;
     const Landmarks & landmarks = sfm_data.structure;
-    for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-      itLandmarks != landmarks.end(); ++itLandmarks)
+    for (const auto & Landmark_it : landmarks)
     {
-      const Observations & obs = itLandmarks->second.obs;
-      for (Observations::const_iterator itObs = obs.begin();
-        itObs != obs.end(); ++itObs)
+      const Observations & obs = Landmark_it.second.obs;
+      for (const auto & obs_it : obs)
       {
-        if (view_renumbering.count(itObs->first) == 0)
+        if (view_renumbering.count(obs_it.first) == 0)
         {
-          view_renumbering[itObs->first] = cpt++;
+          view_renumbering[obs_it.first] = cpt++;
         }
       }
     }
@@ -322,20 +308,18 @@ void KeepLargestViewCCTracks
 
   // Link track observations in connected component
   Landmarks & landmarks = sfm_data.structure;
-  for (Landmarks::const_iterator itLandmarks = landmarks.begin();
-    itLandmarks != landmarks.end(); ++itLandmarks)
+  for (const auto & Landmark_it : landmarks)
   {
-    const Observations & obs = itLandmarks->second.obs;
+    const Observations & obs = Landmark_it.second.obs;
     std::set<IndexT> id_to_link;
-    for (Observations::const_iterator itObs = obs.begin();
-      itObs != obs.end(); ++itObs)
+    for (const auto & obs_it : obs)
     {
-      id_to_link.insert(view_renumbering.at(itObs->first));
+      id_to_link.insert(view_renumbering.at(obs_it.first));
     }
-    std::set<IndexT>::const_iterator iterI = id_to_link.begin();
-    std::set<IndexT>::const_iterator iterJ = id_to_link.begin();
-    std::advance(iterJ,1);
-    while (iterJ != id_to_link.end())
+    std::set<IndexT>::const_iterator iterI = id_to_link.cbegin();
+    std::set<IndexT>::const_iterator iterJ = id_to_link.cbegin();
+    std::advance(iterJ, 1);
+    while (iterJ != id_to_link.cend())
     {
       // Link I => J
       uf_tree.Union(*iterI, *iterJ);
@@ -344,8 +328,8 @@ void KeepLargestViewCCTracks
   }
 
   // Count the number of CC
-  const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
-  if (parent_id.size()>1)
+  const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
+  if (parent_id.size() > 1)
   {
     // There is many CC, look the largest one
     // (if many CC have the same size, export the first that have been seen)

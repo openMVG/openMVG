@@ -153,7 +153,8 @@ class SchurEliminatorTest : public ::testing::Test {
 
     scoped_ptr<SchurEliminatorBase> eliminator;
     eliminator.reset(SchurEliminatorBase::Create(options));
-    eliminator->Init(num_eliminate_blocks, A->block_structure());
+    const bool kFullRankETE = true;
+    eliminator->Init(num_eliminate_blocks, kFullRankETE, A->block_structure());
     eliminator->Eliminate(A.get(), b.get(), diagonal.data(), &lhs, rhs.data());
 
     MatrixRef lhs_ref(lhs.mutable_values(), lhs.num_rows(), lhs.num_cols());

@@ -387,7 +387,7 @@ int main(int, char**)
           delete [] arrayA;
 
         }
-        catch( cv::Exception& e )
+        catch ( cv::Exception& e )
         {
           std::cout << "An exception occurred. Ignoring frame. " << e.err << std::endl;
         }
@@ -415,4 +415,3 @@ int main(int, char**)
   // the camera object will be automatically released in VideoCapture destructor
   return 0;
 }
-

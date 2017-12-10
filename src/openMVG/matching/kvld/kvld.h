@@ -1,17 +1,13 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+//Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #ifndef OPENMVG_MATCHING_KVLD_H
 #define OPENMVG_MATCHING_KVLD_H
-/** @Main KVLD algorithm implementation
- ** @Containing scale image pyramid, VLD structure and KVLD algorithm
- ** @author Zhe Liu
- **/
-
-/*
-Copyright (C) 2011-12 Zhe Liu and Pierre Moulon.
-All rights reserved.
-
-This file is part of the KVLD library and is made available under
-the terms of the BSD license (see the COPYING file).
-*/
 
 #include <algorithm>
 #include <iostream>
@@ -56,20 +52,20 @@ struct KvldParameters
 // magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
-  std::vector< openMVG::image::Image< float > > angles;
-  std::vector< openMVG::image::Image< float > > magnitudes;
-  std::vector< double > ratios;
+  std::vector<openMVG::image::Image<float>> angles;
+  std::vector<openMVG::image::Image<float>> magnitudes;
+  std::vector<double> ratios;
   double radius_size;
   double step;
 
-  ImageScale(const openMVG::image::Image< float >& I, double r = 5.0);
+  ImageScale(const openMVG::image::Image<float>& I, double r = 5.0);
   int getIndex( const double r )const;
 
 private:
   void GradAndNorm(
-    const openMVG::image::Image< float >& I,
-    openMVG::image::Image< float >& angle,
-    openMVG::image::Image< float >& m);
+    const openMVG::image::Image<float>& I,
+    openMVG::image::Image<float>& angle,
+    openMVG::image::Image<float>& m);
 };
 
 //====== VLD structures ======//
@@ -88,7 +84,7 @@ class VLD
 public:
   inline double get_contrast()const{ return contrast; }
   //====================constructors=====================//
-  template< typename T >
+  template<typename T>
   VLD( const ImageScale& series, T const& P1, T const& P2 );
 //=========================================class functions==============================================//
   inline double get_orientation()const
@@ -174,15 +170,15 @@ public:
 //
 //kvldParameters: container of minimum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
 
-float KVLD(const openMVG::image::Image< float >& I1,
-  const openMVG::image::Image< float >& I2,
+float KVLD(const openMVG::image::Image<float>& I1,
+  const openMVG::image::Image<float>& I2,
   const std::vector<openMVG::features::SIOPointFeature> & F1,
   const std::vector<openMVG::features::SIOPointFeature> & F2,
-  const std::vector< openMVG::Pair >& matches,
-  std::vector< openMVG::Pair >& matchesFiltered,
-  std::vector< double >& score,
+  const std::vector<openMVG::Pair>& matches,
+  std::vector<openMVG::Pair>& matchesFiltered,
+  std::vector<double>& score,
   openMVG::Mat& E,
-  std::vector< bool >& valide,
+  std::vector<bool>& valide,
   KvldParameters& kvldParameters );
 
 #endif // OPENMVG_MATCHING_KVLD_H

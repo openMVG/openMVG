@@ -7,25 +7,42 @@ install:
 
 environment:
   matrix:
-    - GENERATOR: "Visual Studio 14 2015 Win64"
-    - GENERATOR: "Visual Studio 14 2015"
+  # Visual Studio 2015 Win32
+  - GENERATOR: Visual Studio 14 2015
+    PLATFORM: Win32
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
-build_script:
+  # Visual Studio 2015 x64
+  - GENERATOR: Visual Studio 14 2015 Win64
+    PLATFORM: x64
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+  # Visual Studio 2017 Win32
+  - GENERATOR: Visual Studio 15 2017
+    PLATFORM: Win32
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+  # Visual Studio 2017 x64
+  - GENERATOR: Visual Studio 15 2017 Win64
+    PLATFORM: x64
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+configuration:
+  - Debug
+  - Release
+
+before_build:
   - cd c:\dev\openMVG
   - md openMVG_build
   - cd openMVG_build
   # Configure:
-  # - ceres - SCHUR_SPECIALIZATIONS set to OFF to speed up build time 
-  - cmake -G"%GENERATOR%" -DOpenMVG_BUILD_EXAMPLES=OFF -DOpenMVG_BUILD_TESTS=ON -DSCHUR_SPECIALIZATIONS=OFF ../src/
-  # Build:
-  # - only some targets since there is no time to compile all
-  # - in debug mode, since the build is faster and VisualStudio reporting is better
-  - cmake --build . --config Debug --target openMVG_test_sequential_SfM
-  - cmake --build . --config Debug --target openMVG_test_global_SfM
-  - cmake --build . --config Debug --target openMVG_main_IncrementalSfM
-  - cmake --build . --config Debug --target openMVG_main_GlobalSfM
+  # - ceres - SCHUR_SPECIALIZATIONS is set to OFF to speed up the build time
+  - cmake -G"%GENERATOR%" -DCMAKE_BUILD_TYPE=%configuration% -DOpenMVG_BUILD_EXAMPLES=OFF -DOpenMVG_BUILD_TESTS=ON -DSCHUR_SPECIALIZATIONS=OFF ../src/
 
 build:
+  project: c:\dev\openMVG\openMVG_Build\openMVG.sln
   parallel: true
   verbosity: minimal
 
+test_script:
+  - ctest -C %configuration% -V

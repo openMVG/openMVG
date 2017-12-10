@@ -76,7 +76,7 @@ inline T clamp( const T & val, const T& min, const T & max )
 }
 
 /**
-* @brief Given a vector, computes it's cross product matrix
+* @brief Given a vector, computes its cross product matrix
 *
 * Cross product matrix is a helper matrix used to express cross product as a multiplication matrix \n
 * Given two vectors \f$a=\begin{pmatrix}a_x\\a_y\\a_z\end{pmatrix}\f$ and \f$b=\begin{pmatrix}b_x\\b_y\\b_z\end{pmatrix}\f$, cross product \f$a\times b\f$ is equal to :\n
@@ -410,9 +410,9 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end )
  ** @param nb_split Number of desired split
  ** @param d_range Output splitted range
  **/
-template < typename T >
+template <typename T>
 void SplitRange( const T range_start , const T range_end , const int nb_split ,
-                 std::vector< T > & d_range )
+                 std::vector<T > & d_range )
 {
   const T range_length = range_end - range_start;
   if (range_length < nb_split )

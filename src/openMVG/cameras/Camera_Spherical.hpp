@@ -9,7 +9,6 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 #define OPENMVG_CAMERAS_CAMERA_SPHERICAL_HPP
 
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 namespace openMVG
@@ -22,7 +21,7 @@ namespace cameras
  */
 class Intrinsic_Spherical : public IntrinsicBase {
 
-using  class_type = Intrinsic_Spherical;
+using class_type = Intrinsic_Spherical;
 
   public:
 
@@ -110,39 +109,42 @@ using  class_type = Intrinsic_Spherical;
   }
 
   /**
-  * @brief Get bearing vector of a point given an image coordinate
-  * @return bearing vector
+  * @brief Get bearing vectors from image coordinates
+  * @return bearing vectors
   */
-  virtual Vec3 operator () ( const Vec2& p ) const override
+  Mat3X operator () ( const Mat2X& points ) const override
   {
-    const Vec2 uv = ima2cam(p);
+    Mat3X bearing(3, points.cols());
+    for (Mat2X::Index i(0); i < points.cols(); ++i)
+    {
+      const Vec2 uv = ima2cam(points.col(i));
 
-    const double
-      lon = uv.x() * 2 * M_PI,
-      lat = uv.y() * 2 * M_PI;
+      const double
+        lon = uv.x() * 2 * M_PI,
+        lat = - uv.y() * 2 * M_PI;
 
-    return {
-      cos(lat) * sin(lon),
-      -sin(lat),
-      cos(lat) * cos(lon)};
+      bearing.col(i) <<
+        std::cos(lat) * std::sin(lon),
+        -std::sin(lat),
+        std::cos(lat) * std::cos(lon);
+    }
+    return bearing;
   }
 
   /**
   * @brief Compute projection of a 3D point into the image plane
-  * (Apply pose, disto (if any) and Intrinsics)
-  * @param pose Pose used to compute projection
+  * (Apply disto (if any) and Intrinsics)
   * @param pt3D 3D-point to project on image plane
   * @return Projected (2D) point on image plane
   */
   Vec2 project(
-    const geometry::Pose3 & pose,
-    const Vec3 & pt3D ) const override
+    const Vec3 & X,
+    const bool ignore_distortion = false) const override
   {
-    const Vec3 X = pose( pt3D ); // apply pose
-    const double lon = atan2(X.x(), X.z()); // Horizontal normalization of the  X-Z component
-    const double lat = atan2(-X.y(), sqrt(X.x()*X.x() + X.z()*X.z())); // Tilt angle
+    const double lon = std::atan2(X.x(), X.z()); // Horizontal normalization of the  X-Z component
+    const double lat = std::atan2(-X.y(), std::hypot(X.x(), X.z())); // Tilt angle
     // denormalization (angle to pixel value)
-    return cam2ima({lon / (2 * M_PI), lat / (2 * M_PI)});
+    return cam2ima({lon / (2 * M_PI), - lat / (2 * M_PI)});
   }
 
   /**
@@ -184,7 +186,8 @@ using  class_type = Intrinsic_Spherical;
   * @param value Error in image plane
   * @return error of passing from the image plane to the camera plane
   */
-  virtual double imagePlane_toCameraPlaneError(double value) const override { return value; }
+  virtual double imagePlane_toCameraPlaneError(double value) const override
+  { return value / std::max(w_, h_); }
 
   /**
   * @brief Return the projection matrix (interior & exterior) as a simplified projective projection
@@ -193,7 +196,7 @@ using  class_type = Intrinsic_Spherical;
   */
   virtual Mat34 get_projective_equivalent(const geometry::Pose3 &pose) const override
   {
-    return HStack(pose.rotation(), pose.translation());
+    return openMVG::HStack(pose.rotation(), pose.translation());
   }
 
   /**

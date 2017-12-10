@@ -100,34 +100,32 @@ bool L2RotationAveraging
   //--
   // Setup the Action Matrix
   //--
-  std::vector<Eigen::Triplet<double> > tripletList;
+  std::vector<Eigen::Triplet<double>> tripletList;
   tripletList.reserve(nRotationEstimation*12); // 3*3 + 3
   //-- Encode constraint (6.62 Martinec Thesis page 100):
   sMat::Index cpt = 0;
-  for (RelativeRotations::const_iterator
-    iter = vec_relativeRot.begin();
-    iter != vec_relativeRot.end();
-    iter++, cpt++)
+  for (const auto & iter : vec_relativeRot)
   {
     //-- Encode weight * ( rj - Rij * ri ) = 0
-    const sMat::Index i = iter->i;
-    const sMat::Index j = iter->j;
+    const sMat::Index i = iter.i;
+    const sMat::Index j = iter.j;
 
     // A.block<3,3>(3 * cpt, 3 * i) = - Rij * weight;
-    tripletList.emplace_back(3 * cpt, 3 * i, - iter->Rij(0,0) * iter->weight);
-    tripletList.emplace_back(3 * cpt, 3 * i + 1, - iter->Rij(0,1) * iter->weight);
-    tripletList.emplace_back(3 * cpt, 3 * i + 2, - iter->Rij(0,2) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 1, 3 * i, - iter->Rij(1,0) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 1, 3 * i + 1, - iter->Rij(1,1) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 1, 3 * i + 2, - iter->Rij(1,2) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 2, 3 * i, - iter->Rij(2,0) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 2, 3 * i + 1, - iter->Rij(2,1) * iter->weight);
-    tripletList.emplace_back(3 * cpt + 2, 3 * i + 2, - iter->Rij(2,2) * iter->weight);
+    tripletList.emplace_back(3 * cpt, 3 * i, - iter.Rij(0,0) * iter.weight);
+    tripletList.emplace_back(3 * cpt, 3 * i + 1, - iter.Rij(0,1) * iter.weight);
+    tripletList.emplace_back(3 * cpt, 3 * i + 2, - iter.Rij(0,2) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i, - iter.Rij(1,0) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i + 1, - iter.Rij(1,1) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * i + 2, - iter.Rij(1,2) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i, - iter.Rij(2,0) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i + 1, - iter.Rij(2,1) * iter.weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * i + 2, - iter.Rij(2,2) * iter.weight);
 
-   // A.block<3,3>(3 * cpt, 3 * j) = Id * weight;
-    tripletList.emplace_back(3 * cpt, 3 * j, iter->weight);
-    tripletList.emplace_back(3 * cpt + 1, 3 * j + 1, iter->weight);
-    tripletList.emplace_back(3 * cpt + 2, 3 * j + 2, iter->weight);
+    // A.block<3,3>(3 * cpt, 3 * j) = Id * weight;
+    tripletList.emplace_back(3 * cpt, 3 * j, iter.weight);
+    tripletList.emplace_back(3 * cpt + 1, 3 * j + 1, iter.weight);
+    tripletList.emplace_back(3 * cpt + 2, 3 * j + 2, iter.weight);
+    ++cpt;
   }
 
   // nCamera * 3 because each columns have 3 elements.
@@ -152,7 +150,7 @@ bool L2RotationAveraging
   // else
   {
     // Sort abs(eigenvalues)
-    std::vector<std::pair<double, Vec> > eigs(AtA.cols());
+    std::vector<std::pair<double, Vec>> eigs(AtA.cols());
     for (Mat::Index i = 0; i < AtA.cols(); ++i)
     {
       eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};

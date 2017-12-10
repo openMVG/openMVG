@@ -123,8 +123,10 @@ template<typename Derived>
 EIGEN_STRONG_INLINE Derived&
 SparseMatrixBase<Derived>::operator*=(const Scalar& other)
 {
+  typedef typename internal::evaluator<Derived>::InnerIterator EvalIterator;
+  internal::evaluator<Derived> thisEval(derived());
   for (Index j=0; j<outerSize(); ++j)
-    for (typename Derived::InnerIterator i(derived(),j); i; ++i)
+    for (EvalIterator i(thisEval,j); i; ++i)
       i.valueRef() *= other;
   return derived();
 }
@@ -133,8 +135,10 @@ template<typename Derived>
 EIGEN_STRONG_INLINE Derived&
 SparseMatrixBase<Derived>::operator/=(const Scalar& other)
 {
+  typedef typename internal::evaluator<Derived>::InnerIterator EvalIterator;
+  internal::evaluator<Derived> thisEval(derived());
   for (Index j=0; j<outerSize(); ++j)
-    for (typename Derived::InnerIterator i(derived(),j); i; ++i)
+    for (EvalIterator i(thisEval,j); i; ++i)
       i.valueRef() /= other;
   return derived();
 }

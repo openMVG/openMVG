@@ -20,7 +20,11 @@ target_link_libraries(openMVG_geometry openMVG_linearProgramming)
 
 install(TARGETS openMVG_geometry DESTINATION lib EXPORT openMVG-targets)
 
+UNIT_TEST(openMVG convex_hull "openMVG_numeric;openMVG_geometry")
+
 UNIT_TEST(openMVG rigid_transformation3D_srt "openMVG_numeric;openMVG_geometry")
+
+UNIT_TEST(openMVG plane_estimation_kernel "openMVG_numeric;openMVG_geometry")
 
 UNIT_TEST(openMVG half_space_intersection "openMVG_numeric;openMVG_linearProgramming;openMVG_geometry")
 

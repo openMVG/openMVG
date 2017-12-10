@@ -60,7 +60,7 @@ int main() {
   //--
   using namespace openMVG::features;
   std::unique_ptr<Image_describer> image_describer(new SIFT_Anatomy_Image_describer);
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  std::map<IndexT, std::unique_ptr<features::Regions>> regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 
@@ -138,6 +138,10 @@ int main() {
       return EXIT_FAILURE;
     }
 
+    const Pinhole_Intrinsic
+      camL(imageL.Width(), imageL.Height(), K(0,0), K(0,2), K(1,2)),
+      camR(imageR.Width(), imageR.Height(), K(0,0), K(0,2), K(1,2));
+
     //A. prepare the corresponding putatives points
     Mat xL(2, vec_PutativeMatches.size());
     Mat xR(2, vec_PutativeMatches.size());
@@ -149,10 +153,10 @@ int main() {
     }
 
     //B. Compute the relative pose thanks to a essential matrix estimation
-    std::pair<size_t, size_t> size_imaL(imageL.Width(), imageL.Height());
-    std::pair<size_t, size_t> size_imaR(imageR.Width(), imageR.Height());
+    const std::pair<size_t, size_t> size_imaL(imageL.Width(), imageL.Height());
+    const std::pair<size_t, size_t> size_imaR(imageR.Width(), imageR.Height());
     sfm::RelativePose_Info relativePose_info;
-    if (!sfm::robustRelativePose(K, K, xL, xR, relativePose_info, size_imaL, size_imaR, 256))
+    if (!sfm::robustRelativePose(&camL, &camR, xL, xR, relativePose_info, size_imaL, size_imaR, 256))
     {
       std::cerr << " /!\\ Robust relative pose estimation failure."
         << std::endl;
@@ -208,8 +212,8 @@ int main() {
       if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
         continue;
 
-      const Vec2 residual0 = intrinsic0.residual(pose0, X, LL.coords().cast<double>());
-      const Vec2 residual1 = intrinsic1.residual(pose1, X, RR.coords().cast<double>());
+      const Vec2 residual0 = intrinsic0.residual(pose0(X), LL.coords().cast<double>());
+      const Vec2 residual1 = intrinsic1.residual(pose1(X), RR.coords().cast<double>());
       vec_residuals.push_back(std::abs(residual0(0)));
       vec_residuals.push_back(std::abs(residual0(1)));
       vec_residuals.push_back(std::abs(residual1(0)));
@@ -219,7 +223,7 @@ int main() {
 
     // Display some statistics of reprojection errors
     float dMin, dMax, dMean, dMedian;
-    minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
+    minMaxMeanMedian<float>(vec_residuals.cbegin(), vec_residuals.cend(),
       dMin, dMax, dMean, dMedian);
 
     std::cout << std::endl

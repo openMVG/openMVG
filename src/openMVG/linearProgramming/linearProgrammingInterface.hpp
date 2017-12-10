@@ -33,15 +33,18 @@ struct LP_Constraints
     LP_EQUAL            = 3   // (=)
   };
 
-  LP_Constraints() {
-    bminimize_ = false;
+  LP_Constraints():
+    nbParams_(0),
+    bminimize_(false)
+  {
+
   }
 
   int nbParams_; // The number of parameter/variable in constraint.
   Mat constraint_mat_; // Constraint under Matrix form.
   Vec constraint_objective_; // Constraint objective value.
   std::vector<eLP_SIGN> vec_sign_; // Constraint sign.
-  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
+  std::vector<std::pair<double, double>> vec_bounds_; // parameter/variable bounds.
 
   bool bminimize_; // minimize is true or maximize is false.
   std::vector<double> vec_cost_; // Objective function
@@ -56,13 +59,15 @@ struct LP_Constraints
 ///
 struct LP_Constraints_Sparse
 {
-  LP_Constraints_Sparse() {
-    bminimize_ = false;
+  LP_Constraints_Sparse():
+    nbParams_(0),
+    bminimize_(false)
+  {
   }
 
   // Variable part
   int nbParams_; // The number of parameter/variable in constraint.
-  std::vector< std::pair<double, double> > vec_bounds_; // parameter/variable bounds.
+  std::vector<std::pair<double, double>> vec_bounds_; // parameter/variable bounds.
 
   // Constraint part
   sRMat constraint_mat_; // Constraint under Matrix form.
@@ -80,7 +85,7 @@ class LP_Solver
 {
 public:
 
-  LP_Solver(int nbParams):nbParams_(nbParams){}
+  explicit LP_Solver(int nbParams): nbParams_(nbParams){}
 
   /// Setup constraint for the given library.
   virtual bool setup(const LP_Constraints & constraints) = 0;

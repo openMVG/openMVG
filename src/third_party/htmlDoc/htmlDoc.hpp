@@ -12,18 +12,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef MIMATTE_HTML_DOC_H
-#define MIMATTE_HTML_DOC_H
+#ifndef HTML_DOC_H
+#define HTML_DOC_H
 
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include <fstream>
 #include <vector>
 
 namespace htmlDocument
 {
-  inline const std::string htmlMarkup(const std::string & markup, const std::string & text)
+  inline const std::string htmlMarkup(
+    const std::string & markup,
+    const std::string & text
+  )
   {
     std::ostringstream os;
     os << '<'<< markup <<'>' << text << "</"<< markup <<'>' <<"\n";
@@ -47,7 +50,10 @@ namespace htmlDocument
 
   /// Return a chain in the form attributes="val"
   template<typename T>
-  inline const std::string quotedAttributes(const std::string & attributes, const T & val)
+  inline const std::string quotedAttributes(
+    const std::string & attributes,
+    const T & val
+  )
   {
     std::ostringstream os;
     os << attributes << "=\"" << val << '"';
@@ -64,35 +70,38 @@ namespace htmlDocument
   }
 
   template<typename T, typename T2>
-  static std::pair< std::pair<T,T>, std::pair<T,T> > autoJSXGraphViewport(const std::vector<T> & vec_x, const std::vector<T2> & vec_y)
+  static std::pair<std::pair<T,T>, std::pair<T,T>> autoJSXGraphViewport(
+    const std::vector<T> & vec_x,
+    const std::vector<T2> & vec_y
+  )
   {
-    std::pair< std::pair<T,T>, std::pair<T,T> > viewport = std::make_pair( std::make_pair(0,0), std::make_pair(0,0));
     if (!vec_x.empty() && !vec_y.empty() && vec_x.size() == vec_y.size())
     {
       T minValX, maxValX;
       //For X values
-      minValX = *min_element(vec_x.begin(), vec_x.end());
-      maxValX = *max_element(vec_x.begin(), vec_x.end());
+      minValX = *min_element(vec_x.cbegin(), vec_x.cend());
+      maxValX = *max_element(vec_x.cbegin(), vec_x.cend());
 
       //For Y values
       T2 minValY, maxValY;
-      minValY = *min_element(vec_y.begin(), vec_y.end());
-      maxValY = *max_element(vec_y.begin(), vec_y.end());
+      minValY = *min_element(vec_y.cbegin(), vec_y.cend());
+      maxValY = *max_element(vec_y.cbegin(), vec_y.cend());
 
       //Use the value with a little margin
       T rangeX = maxValX-minValX;
       T rangeY = maxValY-minValY;
-      viewport = std::make_pair( std::make_pair
-        (-.2*rangeX+minValX,0.2*rangeX+maxValX),
-        std::make_pair(-.2*rangeY+minValY,0.2*rangeY+maxValY));
+      return { {-.2*rangeX+minValX, 0.2*rangeX+maxValX},
+                 {-.2*rangeY+minValY, 0.2*rangeY+maxValY}};
     }
-    return viewport;
+    return {{0,0}, {0,0}};
   }
 
   template<typename T, typename T2>
-  static std::pair< std::pair<T,T>, std::pair<T,T> > autoJSXGraphViewport(const std::vector<T2> & vec_y, bool bForceY0 = true)
+  static std::pair<std::pair<T,T>, std::pair<T,T>> autoJSXGraphViewport(
+    const std::vector<T2> & vec_y,
+    bool bForceY0 = true
+  )
   {
-    std::pair< std::pair<T,T>, std::pair<T,T> > viewport = std::make_pair( std::make_pair(0,0), std::make_pair(0,0));
     if (!vec_y.empty())
     {
       T2 minValX, maxValX;
@@ -102,18 +111,17 @@ namespace htmlDocument
 
       //For Y values
       T2 minValY, maxValY;
-      minValY = *min_element(vec_y.begin(), vec_y.end());
-      maxValY = *max_element(vec_y.begin(), vec_y.end());
+      minValY = *min_element(vec_y.cbegin(), vec_y.cend());
+      maxValY = *max_element(vec_y.cbegin(), vec_y.cend());
 
       if (bForceY0)  {  minValY = T2(0);  }
       //Use the value with a little margin
       T2 rangeX = maxValX-minValX;
       T2 rangeY = maxValY-minValY;
-      viewport = std::make_pair( std::make_pair
-        (static_cast<T>(-.2*rangeX+minValX),static_cast<T>(0.2*rangeX+maxValX)),
-        std::make_pair(static_cast<T>(-.2*rangeY+minValY),static_cast<T>(0.2*rangeY+maxValY)));
+      return { {-.2*rangeX+minValX, 0.2*rangeX+maxValX},
+               {-.2*rangeY+minValY, 0.2*rangeY+maxValY}};
     }
-    return viewport;
+    return {{0,0}, {0,0}};
   }
 
   class htmlDocumentStream
@@ -136,10 +144,10 @@ namespace htmlDocument
       htmlStream << "\n<head>\n";
       htmlStream << htmlMarkup("title",title);
       // CSS and JS ressources
-      for (std::vector<std::string>::const_iterator iter = vec_css.begin(); iter != vec_css.end(); ++iter)
-        htmlStream << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << *iter <<"\" />\n";
-      for (std::vector<std::string>::const_iterator iter = vec_js.begin(); iter != vec_js.end(); ++iter)
-        htmlStream << "<script type=\"text/javascript\" src=\"" << *iter <<"\"> </script>\n";
+      for (const auto & iter : vec_css)
+        htmlStream << "<link rel=\"stylesheet\" type=\"text/css\" href=\"" << iter <<"\" />\n";
+      for (const auto & iter : vec_js)
+        htmlStream << "<script type=\"text/javascript\" src=\"" << iter <<"\"> </script>\n";
       htmlStream << "</head>\n";
     }
 
@@ -183,7 +191,7 @@ namespace htmlDocument
     }
 
     template<typename T>
-    void setViewport(const std::pair< std::pair<T,T>, std::pair<T,T> > & range)
+    void setViewport(const std::pair<std::pair<T,T>, std::pair<T,T>> & range)
     {
       stream
         << "board.setBoundingBox(["
@@ -191,10 +199,10 @@ namespace htmlDocument
         << range.first.second << ","<< range.second.first <<"]);\n";
     }
 
-    void addLine(double x0, double y0, double x1, double y1, std::string color ="00ff00")
+    void addLine(double x0, double y0, double x1, double y1, const std::string & color ="00ff00")
     {
-      size_t index0 = cpt++;
-      size_t index1 = cpt++;
+      const size_t index0 = cpt++;
+      const size_t index1 = cpt++;
       stream
         <<"var p"<<index0<<" = board.create('point',["<<x0<<","<<y0<<"], {fixed:true});\n"
         <<"var p"<<index1<<" = board.create('point',["<<x1<<","<<y1<<"], {fixed:true});\n"
@@ -203,20 +211,23 @@ namespace htmlDocument
     }
 
     template<typename T, typename T2>
-    void addXYChart(const std::vector<T> & vec_x, const std::vector<T2> & vec_y,
-      std::string stype)
+    void addXYChart(
+      const std::vector<T> & vec_x,
+      const std::vector<T2> & vec_y,
+      const std::string & stype
+    )
     {
-      size_t index0 = cpt++;
-      size_t index1 = cpt++;
+      const size_t index0 = cpt++;
+      const size_t index1 = cpt++;
 
       stream.precision(5);
       stream.setf(std::ios::fixed,std::ios::floatfield);   // floatfield set to fixed
 
       stream << "var data"<< index0<<"= [";
-      copy(vec_x.begin(), vec_x.end(), std::ostream_iterator<T>(stream, ","));
+      std::copy(vec_x.cbegin(), vec_x.cend(), std::ostream_iterator<T>(stream, ","));
       stream << "];\n";
       stream << "var data"<< index1<<"= [";
-      copy(vec_y.begin(), vec_y.end(), std::ostream_iterator<T>(stream, ","));
+      std::copy(vec_y.cbegin(), vec_y.cend(), std::ostream_iterator<T>(stream, ","));
       stream << "];\n";
       std::ostringstream osData;
       osData<<"[ data" <<index0<<","<<"data"<<index1<<"]";
@@ -227,12 +238,12 @@ namespace htmlDocument
     }
 
     template<typename T>
-    void addYChart(const std::vector<T> & vec_y, std::string stype)
+    void addYChart(const std::vector<T> & vec_y, const std::string & stype)
     {
-      size_t index0 = cpt++;
+      const size_t index0 = cpt++;
 
       stream << "var data"<< index0<<"= [";
-      copy(vec_y.begin(), vec_y.end(), std::ostream_iterator<T>(stream, ","));
+      std::copy(vec_y.cbegin(), vec_y.cend(), std::ostream_iterator<T>(stream, ","));
       stream << "];\n";
       stream << "board.createElement('chart', "
         <<"data"<<index0
@@ -241,8 +252,9 @@ namespace htmlDocument
 
     void UnsuspendUpdate()
     {
-       stream << "board.unsuspendUpdate();\n";
+      stream << "board.unsuspendUpdate();\n";
     }
+
     void close()
     {
       stream << "</script>\n";
@@ -258,4 +270,4 @@ namespace htmlDocument
   };
 } // namespace htmlDocument
 
-#endif // MIMATTE_HTML_DOC_H
+#endif // HTML_DOC_H

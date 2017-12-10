@@ -338,7 +338,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   //
   Pair_Set rotation_pose_id_graph;
   std::set<IndexT> set_pose_ids;
-  std::transform(map_globalR.begin(), map_globalR.end(),
+  std::transform(map_globalR.cbegin(), map_globalR.cend(),
     std::inserter(set_pose_ids, set_pose_ids.begin()), stl::RetrieveKey());
   // List shared correspondences (pairs) between poses
   for (const auto & match_iterator : matches_provider->pairWise_matches_)
@@ -352,13 +352,12 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
         && set_pose_ids.count(v1->id_pose)
         && set_pose_ids.count(v2->id_pose))
     {
-      rotation_pose_id_graph.insert(
-        std::make_pair(v1->id_pose, v2->id_pose));
+      rotation_pose_id_graph.insert({v1->id_pose, v2->id_pose});
     }
   }
   // List putative triplets (from global rotations Ids)
-  const std::vector< graph::Triplet > vec_triplets =
-    graph::tripletListing(rotation_pose_id_graph);
+  const std::vector<graph::Triplet> vec_triplets =
+    graph::TripletListing(rotation_pose_id_graph);
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
   {
@@ -403,7 +402,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     }
     // Collect edges that are covered by the triplets
     std::vector<myEdge> vec_edges;
-    std::transform(map_tripletIds_perEdge.begin(), map_tripletIds_perEdge.end(), std::back_inserter(vec_edges), stl::RetrieveKey());
+    std::transform(map_tripletIds_perEdge.cbegin(),
+                   map_tripletIds_perEdge.cend(),
+                   std::back_inserter(vec_edges),
+                   stl::RetrieveKey());
 
     openMVG::sfm::MutexSet<myEdge> m_mutexSet;
 
@@ -413,9 +415,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       "\nRelative translations computation (edge coverage algorithm)\n");
 
 #  ifdef OPENMVG_USE_OPENMP
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(omp_get_max_threads());
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(omp_get_max_threads());
 #  else
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(1);
 #  endif
 
     #ifdef OPENMVG_USE_OPENMP
@@ -551,7 +553,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
                   std::advance(iter_J, 1);
                   while (iter_J != track.end())
                   { // matches(pair(view_id(I), view_id(J))) <= IndMatch(feat_id(I), feat_id(J))
-                    newpairMatches[std::make_pair(iter_I->first, iter_J->first)]
+                    newpairMatches[{iter_I->first, iter_J->first}]
                      .emplace_back(iter_I->second, iter_J->second);
                     ++iter_I;
                     ++iter_J;
@@ -601,7 +603,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 {
   // List matches that belong to the triplet of poses
   PairWiseMatches map_triplet_matches;
-  const std::set<IndexT> set_pose_ids = {poses_id.i, poses_id.j, poses_id.k};
+  const std::set<IndexT> set_pose_ids {poses_id.i, poses_id.j, poses_id.k};
   // List shared correspondences (pairs) between poses
   for (const auto & match_iterator : matches_provider->pairWise_matches_)
   {
@@ -646,7 +648,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
       intrinsic_ids.insert(view->id_intrinsic);
       const features::PointFeature pt = features_provider->getFeatures(idx_view)[track_it.second];
-      xxx[index++]->col(cpt) = ((*cam)(cam->get_ud_pixel(pt.coords().cast<double>()))).hnormalized();
+      xxx[index++]->col(cpt) = ((*cam)(cam->get_ud_pixel(pt.coords().cast<double>()))).colwise().hnormalized();
     }
     ++cpt;
   }
@@ -739,9 +741,6 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       // get view Id and feat ID
       const uint32_t viewIndex = it->first;
       const uint32_t featIndex = it->second;
-
-      // initialize view and get intrinsics
-      const View * view = sfm_data.GetViews().at(viewIndex).get();
 
       // get feature
       const features::PointFeature & pt = features_provider->getFeatures(viewIndex)[featIndex];

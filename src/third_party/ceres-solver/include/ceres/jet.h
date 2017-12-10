@@ -224,6 +224,27 @@ struct Jet {
     return *this;
   }
 
+  // Compound with scalar operators.
+  Jet<T, N>& operator+=(const T& s) {
+    *this = *this + s;
+    return *this;
+  }
+
+  Jet<T, N>& operator-=(const T& s) {
+    *this = *this - s;
+    return *this;
+  }
+
+  Jet<T, N>& operator*=(const T& s) {
+    *this = *this * s;
+    return *this;
+  }
+
+  Jet<T, N>& operator/=(const T& s) {
+    *this = *this / s;
+    return *this;
+  }
+
   // The scalar part.
   T a;
 
@@ -541,21 +562,21 @@ Jet<T, N> ceil(const Jet<T, N>& f) {
 // function errors in client code (the specific warning is suppressed when
 // Ceres itself is built).
 inline double BesselJ0(double x) {
-#if defined(_MSC_VER) && defined(_j0)
+#if defined(CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
   return _j0(x);
 #else
   return j0(x);
 #endif
 }
 inline double BesselJ1(double x) {
-#if defined(_MSC_VER) && defined(_j1)
+#if defined(CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
   return _j1(x);
 #else
   return j1(x);
 #endif
 }
 inline double BesselJn(int n, double x) {
-#if defined(_MSC_VER) && defined(_jn)
+#if defined(CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS)
   return _jn(n, x);
 #else
   return jn(n, x);
@@ -850,6 +871,8 @@ struct NumTraits<ceres::Jet<T, N> > {
     return Real(std::numeric_limits<T>::epsilon());
   }
 
+  static inline int digits10() { return NumTraits<T>::digits10(); }
+
   enum {
     IsComplex = 0,
     IsInteger = 0,
@@ -877,6 +900,23 @@ struct NumTraits<ceres::Jet<T, N> > {
     };
   };
 };
+
+#if EIGEN_VERSION_AT_LEAST(3, 3, 0)
+// Specifying the return type of binary operations between Jets and scalar types
+// allows you to perform matrix/array operations with Eigen matrices and arrays
+// such as addition, subtraction, multiplication, and division where one Eigen
+// matrix/array is of type Jet and the other is a scalar type. This improves
+// performance by using the optimized scalar-to-Jet binary operations but
+// is only available on Eigen versions >= 3.3
+template <typename BinaryOp, typename T, int N>
+struct ScalarBinaryOpTraits<ceres::Jet<T, N>, T, BinaryOp> {
+  typedef ceres::Jet<T, N> ReturnType;
+};
+template <typename BinaryOp, typename T, int N>
+struct ScalarBinaryOpTraits<T, ceres::Jet<T, N>, BinaryOp> {
+  typedef ceres::Jet<T, N> ReturnType;
+};
+#endif  // EIGEN_VERSION_AT_LEAST(3, 3, 0)
 
 }  // namespace Eigen
 

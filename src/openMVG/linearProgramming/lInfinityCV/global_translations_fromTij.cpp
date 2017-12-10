@@ -27,7 +27,7 @@ using namespace linearProgramming;
 // This implementation is a generalization of the LINEAR PROGRAM (9) page 5 of [1]
 // -> This implementation can deal with groups of relative motions.
 //    You can mix bearing vectors of 2-view, 3-view, X-view configuration.
-//    Each group will have it's own shared scaling factor.
+//    Each group will have its own shared scaling factor.
 //--
 void EncodeTi_from_tij
 (
@@ -36,7 +36,7 @@ void EncodeTi_from_tij
   sRMat & A, Vec & C,
   std::vector<LP_Constraints::eLP_SIGN> & vec_sign,
   std::vector<double> & vec_costs,
-  std::vector< std::pair<double,double> > & vec_bounds
+  std::vector<std::pair<double,double>> & vec_bounds
 )
 {
   // Build Constraint matrix.
@@ -162,7 +162,7 @@ void EncodeTi_from_tij
 }
 
 Tifromtij_ConstraintBuilder::Tifromtij_ConstraintBuilder(
-  const std::vector< openMVG::RelativeInfo_Vec > & vec_relative
+  const std::vector<openMVG::RelativeInfo_Vec > & vec_relative
 )
 : vec_relative_(vec_relative)
 {
@@ -206,4 +206,3 @@ bool Tifromtij_ConstraintBuilder::Build(LP_Constraints_Sparse & constraint)
 
 } // namespace lInfinityCV
 } // namespace openMVG
-

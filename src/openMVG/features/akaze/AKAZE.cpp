@@ -60,7 +60,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
   const float grad_max = grad.maxCoeff();
 
   // Compute histogram
-  std::vector< size_t > histo( nb_bin, 0 );
+  std::vector<size_t> histo( nb_bin, 0 );
 
   int nb_value = 0;
 
@@ -72,7 +72,7 @@ float AKAZE::ComputeAutomaticContrastFactor( const Image<float> & src , const fl
 
       if (val > 0 )
       {
-        int bin_id = floor( (val / grad_max ) * static_cast<float>(nb_bin) );
+        int bin_id = std::floor( (val / grad_max ) * static_cast<float>(nb_bin) );
 
         // Handle overflow (need to do it in a cleaner way)
         if (bin_id == nb_bin )
@@ -155,7 +155,7 @@ void AKAZE::ComputeAKAZESlice( const Image<float> & src , const int p , const in
     ImagePeronaMalikG2DiffusionCoef( Lx , Ly , contrast_factor , diff );
 
     // Compute FED cycles
-    std::vector< float > tau;
+    std::vector<float> tau;
     FEDCycleTimings( total_cycle_time , 0.25f , tau );
     ImageFEDCycle( in , diff , tau );
     Li = in; // evolution image
@@ -206,17 +206,25 @@ AKAZE::AKAZE
   const AKAZE::Params & options
 ):options_(options)
 {
-  in_ = in.GetMat().cast<float>() / 255.f;
-  options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
-  //-- Safety check to limit the computable octave count
-  const int nbOctaveMax = ceil(std::log2( std::min(in_.Width(), in_.Height())));
-  options_.iNbOctave = std::min(options_.iNbOctave, nbOctaveMax);
+  if (in.size() > 0)
+  {
+    in_ = in.GetMat().cast<float>() / 255.f;
+
+    options_.fDesc_factor = std::max(6.f*sqrtf(2.f), options_.fDesc_factor);
+    //-- Safety check to limit the computable octave count
+    const int nbOctaveMax = std::ceil(std::log2( std::min(in_.Width(), in_.Height())));
+    options_.iNbOctave = std::min(options_.iNbOctave, nbOctaveMax);
+  }
 }
 
 /// Compute the AKAZE non linear diffusion scale space per slice
 void AKAZE::Compute_AKAZEScaleSpace()
 {
+  if (in_.size() == 0)
+    return;
+
   float contrast_factor = ComputeAutomaticContrastFactor( in_, 0.7f );
+
   Image<float> input = in_;
 
   // Octave computation
@@ -241,7 +249,7 @@ void AKAZE::Compute_AKAZEScaleSpace()
       str << "./" << "_oct_" << p << "_" << q << ".png";
       Image<float> tmp = evo.cur;
       convert_scale(tmp);
-      Image< unsigned char > tmp2 ((tmp*255).cast<unsigned char>());
+      Image<unsigned char> tmp2 ((tmp*255).cast<unsigned char>());
       WriteImage( str.str().c_str() , tmp2 );
 #endif // DEBUG_OCTAVE
     }
@@ -249,8 +257,8 @@ void AKAZE::Compute_AKAZEScaleSpace()
 }
 
 void detectDuplicates(
-  std::vector<std::pair<AKAZEKeypoint, bool> > & previous,
-  std::vector<std::pair<AKAZEKeypoint, bool> > & current)
+  std::vector<std::pair<AKAZEKeypoint, bool>> & previous,
+  std::vector<std::pair<AKAZEKeypoint, bool>> & current)
 {
   // mark duplicates - using a full search algorithm
   for (std::pair<AKAZEKeypoint, bool> & p1 : previous)
@@ -275,7 +283,7 @@ void detectDuplicates(
 
 void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 {
-  std::vector< std::vector< std::pair<AKAZEKeypoint, bool> > > vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
+  std::vector<std::vector<std::pair<AKAZEKeypoint, bool>>> vec_kpts_perSlice(options_.iNbOctave*options_.iNbSlicePerOctave);
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -286,7 +294,11 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
 
     for (int q = 0; q < options_.iNbSlicePerOctave; ++q )
     {
+      if (evolution_.size() <= options_.iNbSlicePerOctave * p + q)
+        continue;
+
       const float sigma_cur = Sigma( options_.fSigma0 , p , q , options_.iNbSlicePerOctave );
+
       const Image<float> & LDetHess = evolution_[options_.iNbSlicePerOctave * p + q].Lhess;
 
       // Check that the point is under the image limits for the descriptor computation
@@ -294,8 +306,8 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
         std::round(options_.fDesc_factor*sigma_cur*fderivative_factor/ratio)+1;
 
       for (int jx = borderLimit; jx < LDetHess.Height()-borderLimit; ++jx)
-      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix) {
-
+      for (int ix = borderLimit; ix < LDetHess.Width()-borderLimit; ++ix)
+      {
         const float value = LDetHess(jx, ix);
 
         // Filter the points with the detector threshold
@@ -317,7 +329,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
           point.y = jx * ratio + 0.5 * (ratio-1);
           point.angle = 0.0f;
           point.class_id = p * options_.iNbSlicePerOctave + q;
-          vec_kpts_perSlice[options_.iNbOctave * p + q].emplace_back( point,false );
+          vec_kpts_perSlice[options_.iNbOctave * p + q].emplace_back( point, false );
         }
       }
     }
@@ -334,7 +346,7 @@ void AKAZE::Feature_Detection(std::vector<AKAZEKeypoint>& kpts) const
   // Keep only the one marked as not duplicated
   for (size_t k = 0; k < vec_kpts_perSlice.size(); ++k)
   {
-    const std::vector< std::pair<AKAZEKeypoint, bool> > & vec_kp = vec_kpts_perSlice[k];
+    const std::vector<std::pair<AKAZEKeypoint, bool>> & vec_kp = vec_kpts_perSlice[k];
     for (size_t i = 0; i < vec_kp.size(); ++i)
       if (!vec_kp[i].second)
         kpts.emplace_back(vec_kp[i].first);

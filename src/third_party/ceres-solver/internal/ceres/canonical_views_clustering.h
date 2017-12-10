@@ -41,11 +41,6 @@
 #ifndef CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_
 #define CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_
 
-// This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
-
-#ifndef CERES_NO_SUITESPARSE
-
 #include <vector>
 
 #include "ceres/collections_port.h"
@@ -132,5 +127,4 @@ struct CanonicalViewsClusteringOptions {
 }  // namespace internal
 }  // namespace ceres
 
-#endif  // CERES_NO_SUITESPARSE
 #endif  // CERES_INTERNAL_CANONICAL_VIEWS_CLUSTERING_H_

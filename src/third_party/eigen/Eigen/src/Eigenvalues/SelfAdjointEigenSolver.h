@@ -414,7 +414,8 @@ SelfAdjointEigenSolver<MatrixType>& SelfAdjointEigenSolver<MatrixType>
 
   if(n==1)
   {
-    m_eivalues.coeffRef(0,0) = numext::real(matrix.diagonal()[0]);
+    m_eivec = matrix;
+    m_eivalues.coeffRef(0,0) = numext::real(m_eivec.coeff(0,0));
     if(computeEigenvectors)
       m_eivec.setOnes(n,n);
     m_info = Success;

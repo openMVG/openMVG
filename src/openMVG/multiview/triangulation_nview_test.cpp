@@ -81,34 +81,12 @@ TEST(Triangulate_NViewAlgebraic, FiveViews) {
       xs.col(j) = d._x[j].col(i).homogeneous();
     }
     Vec4 X;
-    TriangulateNViewAlgebraic(xs, Ps, &X);
+    EXPECT_TRUE(TriangulateNViewAlgebraic(xs, Ps, &X));
 
     // Check reprojection error. Should be nearly zero.
     for (int j = 0; j < nviews; ++j) {
       const Vec3 x_reprojected = Ps[j]*X;
       const double error = (x_reprojected.hnormalized() - xs.col(j).hnormalized()).norm();
-      EXPECT_NEAR(error, 0.0, 1e-9);
-    }
-  }
-}
-
-TEST(Triangulate_NViewIterative, FiveViews) {
-  const int nviews = 5;
-  const int npoints = 6;
-  const NViewDataSet d = NRealisticCamerasRing(nviews, npoints);
-
-  for (int i = 0; i < npoints; ++i) {
-
-    Triangulation triangulationObj;
-    for (int j = 0; j < nviews; ++j)
-    triangulationObj.add(d.P(j), d._x[j].col(i));
-
-    const Vec3 X = triangulationObj.compute();
-    // Check reprojection error. Should be nearly zero.
-    EXPECT_NEAR(triangulationObj.error(X), 0.0, 1e-9);
-    for (int j = 0; j < nviews; ++j) {
-      const Vec3 x_reprojected = d.P(j) * X.homogeneous();
-      const double error = (x_reprojected.hnormalized() - d._x[j].col(i)).norm();
       EXPECT_NEAR(error, 0.0, 1e-9);
     }
   }

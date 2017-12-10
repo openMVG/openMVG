@@ -8,45 +8,57 @@
 
 #ifndef OPENMVG_SFM_DATA_GRAPH_UTILS_HPP
 #define OPENMVG_SFM_DATA_GRAPH_UTILS_HPP
-#include <string>
+
 #include "openMVG/types.hpp"
 #include "openMVG/matching/indMatch.hpp"
+#include <string>
 
 namespace openMVG {
 namespace sfm {
-///  @brief Split match pairs into connected match pairs 
+///  @brief Split match pairs into connected match pairs
 ///  @param[in]  pairs   The pair sets of the images.
 ///  @param[in]  is_biedge  Set true for global SFM, false for sequential SFM.
-///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file.Note: the value should be larger than 3.
-///  @param[out] subgraps_ids The pairs id of subgraphs splited from the whole graph.
+///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file. Note: the value should be larger than 3.
+///  @param[out] subgraps_ids The pairs id of subgraphs split from the whole graph.
 ///
-///  @return True if the area can be computed
-bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge,
-  int min_nodes, std::map<IndexT, std::set<IndexT> > & subgraphs_ids);
+///  @return True if some components have been kept
+bool PairsToConnectedComponents
+(
+  const Pair_Set & pairs,
+  bool is_biedge,
+  int min_nodes,
+  std::map<IndexT, std::set<IndexT>> & subgraphs_ids
+);
 
 ///  @brief Split match_file into match_files
-///  When handling a scene which may contains many disconnected graphs, 
+///  When handling a scene which may contains many disconnected graphs,
 ///  for the moment OpenMVG consider only the largest connected component for SfM.
-///  Especially, when the GPS data of the images known, the disconnected graphs in a scene should be 
+///  Especially, when the GPS data of the images known, the disconnected graphs in a scene should be
 ///  merged since they all share the same coordinate system.
 ///  Steps handling the above scenario.
-///  Step 1 : Use this function to compute the various connected component and export 
+///  Step 1 : Use this function to compute the various connected component and export
 ///  the matches of the each connected component in a different match file.
 ///  Step 2 : Run the SfM pipeline of your choice on the produced matches file.
-///  Step 3 : Merge all the sfm_data into a single sfm_data and 
+///  Step 3 : Merge all the sfm_data into a single sfm_data and
 ///  triangulate the initial match file, when the GPS data of the images known.
-///         
+///
 ///
 ///  @param[in]  pairs   The pair sets of the images.
 ///  @param[in]  matches The pairwise matches of the images corresponding to pairs.
 ///  @param[in]  is_biedge  Set true for global SFM, false for sequential SFM.
-///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file.Note: the value should be larger than 3.
-///  @param[out] subgraphs_matches The matches of subgraphs splited from the whole graph.
+///  @param[in]  min_nodes  The minimum nodes of graph in the output match_file. Note: the value should be larger than 3.
+///  @param[out] subgraphs_matches The matches of subgraphs split from the whole graph.
 ///
-///  @return True if the area can be computed
+///  @return True if subgraphs_matches is not empty
 ///
-bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::PairWiseMatches & matches,
-  bool is_biedge, int min_nodes, std::vector<matching::PairWiseMatches> & subgraphs_matches);
+bool SplitMatchesIntoSubgraphMatches
+(
+  const Pair_Set & pairs,
+  const matching::PairWiseMatches & matches,
+  bool is_biedge,
+  int min_nodes,
+  std::vector<matching::PairWiseMatches> & subgraphs_matches
+);
 
 } // namespace sfm
 } // namespace openMVG

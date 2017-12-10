@@ -33,7 +33,7 @@ namespace tbmr
     }
   }
 
-  template <typename I, typename BinaryFunction = std::less<I> >
+  template <typename I, typename BinaryFunction = std::less<I>>
   std::vector<unsigned int>
   pixel_indexes_ordering
   (
@@ -56,7 +56,7 @@ namespace tbmr
   (
   )
   {
-    return std::vector<Vec2i>{ { 0,-1 }, {0,1}, {-1, 0}, {1,0} };
+    return { { 0,-1 }, {0,1}, {-1, 0}, {1,0} };
   }
 
   //for incremental computation of region information
@@ -141,7 +141,7 @@ namespace tbmr
     std::vector<attribute> imaAttribute(ima.Width() * ima.Height());
     image::Image<unsigned int> zpar(ima.Width(), ima.Height());
 
-    const std::vector<Vec2i> offsets = wrt_delta_index();
+    const std::vector<Vec2i> offsets(wrt_delta_index());
 
     for (int i = S.size()-1; i >= 0; --i)
     {

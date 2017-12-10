@@ -146,7 +146,7 @@ struct SnavelyReprojectionError {
     const T& l1 = camera[7];
     const T& l2 = camera[8];
     T r2 = xp*xp + yp*yp;
-    T distortion = T(1.0) + r2  * (l1 + l2  * r2);
+    T distortion = 1.0 + r2  * (l1 + l2  * r2);
 
     // Compute final projected point position.
     const T& focal = camera[6];
@@ -154,8 +154,8 @@ struct SnavelyReprojectionError {
     T predicted_y = focal * distortion * yp;
 
     // The error is the difference between the predicted and observed position.
-    residuals[0] = predicted_x - T(observed_x);
-    residuals[1] = predicted_y - T(observed_y);
+    residuals[0] = predicted_x - observed_x;
+    residuals[1] = predicted_y - observed_y;
 
     return true;
   }

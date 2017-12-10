@@ -24,7 +24,7 @@ struct Octave{
   int octave_level;                   // the octave level
   float delta;                        // sampling rate in this octave
   std::vector<float> sigmas;          // sigma values
-  std::vector<image::Image<float> > slices;  // octave slice (from fine to coarse)
+  std::vector<image::Image<float>> slices;  // octave slice (from fine to coarse)
 
 };
 

@@ -15,17 +15,15 @@
 //
 //ACKernelAdaptor
 //  i.e. general two view estimation (affine, homography, fundamental)
-//ACKernelAdaptorResection
-//  For pose/resection estimation
-//ACKernelAdaptorResection_K
-//  For pose/resection with known camera intrinsic
-//ACKernelAdaptorEssential
-//  For essential matrix estimation
-//ACKernelAdaptor_AngularRadianError
-//  i.e. essential matrix estimation between spherical camera
 //
-// Mainly it add correct data normalization and define the function required
-//  by the generic ACRANSAC routine.
+// For pose/resection estimation:
+//  - ACKernelAdaptorResection
+// For essential matrix estimation
+//  - ACKernelAdaptorEssential
+//  - ACKernelAdaptor_AngularRadianError
+//
+// Mainly it add correct data normalization and define the required functions
+//  by the ACRANSAC algorithm.
 //
 
 #include <vector>
@@ -68,8 +66,8 @@ public:
     // LogAlpha0 is used to make error data scale invariant
     if (bPointToLine)  {
       // Ratio of containing diagonal image rectangle over image area
-      double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
-      double A = w2*(double)h2; // area
+      const double D = std::hypot(w2, h2); // diameter
+      const double A = w2*(double)h2; // area
       logalpha0_ = log10(2.0*D/A /N2_(0,0));
     }
     else  {
@@ -82,8 +80,9 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x1_, samples);
-    const Mat x2 = ExtractColumns(x2_, samples);
+    const Mat
+      x1 = ExtractColumns(x1_, samples),
+      x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
@@ -104,7 +103,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, N2_, &(*model));
+    UnnormalizerArg::Unnormalize(N1_, N2_, model);
   }
 
   double logalpha0() const {return logalpha0_;}
@@ -118,8 +117,8 @@ public:
 private:
   Mat x1_, x2_;       // Normalized input data
   Mat3 N1_, N2_;      // Matrix used to normalize data
-  double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
-  bool bPointToLine_;// Store if error model is pointToLine or point to point
+  double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
+  bool bPointToLine_; // Store if error model is pointToLine or point to point
 };
 
 struct UnnormalizerResection {
@@ -155,8 +154,9 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x2d_, samples);
-    const Mat x2 = ExtractColumns(x3D_, samples);
+    const Mat
+      x1 = ExtractColumns(x2d_, samples),
+      x2 = ExtractColumns(x3D_, samples);
     Solver::Solve(x1, x2, models);
   }
 
@@ -175,7 +175,7 @@ public:
 
   void Unnormalize(Model * model) const {
     // Unnormalize model from the computed conditioning.
-    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), &(*model));
+    UnnormalizerArg::Unnormalize(N1_, Mat3::Identity(), model);
   }
 
   double logalpha0() const {return logalpha0_;}
@@ -189,72 +189,6 @@ private:
   const Mat & x3D_;
   Mat3 N1_;      // Matrix used to normalize data
   double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
-};
-
-/// Pose/Resection Kernel adapter for the A contrario model estimator with
-///  known Intrinsic
-template <typename SolverArg,
-  typename ErrorArg,
-  typename ModelArg = Mat34>
-class ACKernelAdaptorResection_K
-{
-public:
-  using Solver = SolverArg;
-  using Model = ModelArg;
-  using ErrorT = ErrorArg;
-
-  ACKernelAdaptorResection_K(const Mat &x2d, const Mat &x3D, const Mat3 & K)
-    : x2d_(x2d.rows(), x2d.cols()), x3D_(x3D),
-    N1_(K.inverse()),
-    logalpha0_(log10(M_PI)), K_(K)
-  {
-    assert(2 == x2d_.rows());
-    assert(3 == x3D_.rows());
-    assert(x2d_.cols() == x3D_.cols());
-
-    // Normalize points by inverse(K)
-    x2d_ = (N1_ * x2d.colwise().homogeneous()).colwise().hnormalized();
-  }
-
-  enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
-  enum { MAX_MODELS = Solver::MAX_MODELS };
-
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x2d_, samples);
-    const Mat x2 = ExtractColumns(x3D_, samples);
-    Solver::Solve(x1, x2, models);
-  }
-
-  double Error(uint32_t sample, const Model &model) const {
-    return ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
-  }
-
-  void Errors(const Model & model, std::vector<double> & vec_errors) const
-  {
-    vec_errors.resize(x2d_.cols());
-    for (uint32_t sample = 0; sample < x2d_.cols(); ++sample)
-      vec_errors[sample] = ErrorT::Error(model, x2d_.col(sample), x3D_.col(sample));
-  }
-
-  size_t NumSamples() const { return x2d_.cols(); }
-
-  void Unnormalize(Model * model) const {
-    // Unnormalize model from the computed conditioning.
-    (*model) = K_ * (*model);
-  }
-
-  double logalpha0() const {return logalpha0_;}
-  double multError() const {return 1.0;} // point to point error
-  Mat3 normalizer1() const {return Mat3::Identity();}
-  Mat3 normalizer2() const {return N1_;}
-  double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
-
-private:
-  Mat x2d_;
-  const Mat & x3D_;
-  Mat3 N1_;      // Matrix used to normalize data
-  double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
-  Mat3 K_;            // Intrinsic camera parameter
 };
 
 /// Essential matrix Kernel adaptor for the A contrario model estimator
@@ -268,23 +202,25 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
 
-  ACKernelAdaptorEssential(
-    const Mat &x1, int w1, int h1,
-    const Mat &x2, int w2, int h2,
-    const Mat3 & K1, const Mat3 & K2)
-    : x1_(x1), x2_(x2),
-    N1_(Mat3::Identity()), N2_(Mat3::Identity()), logalpha0_(0.0),
+  ACKernelAdaptorEssential
+  (
+    const Mat2X &x1, const Mat3X & bearing1, int w1, int h1,
+    const Mat2X &x2, const Mat3X & bearing2, int w2, int h2,
+    const Mat3 & K1, const Mat3 & K2
+  ):x1_(x1),
+    x2_(x2),
+    bearing1_(bearing1),
+    bearing2_(bearing2),
+    N1_(Mat3::Identity()),
+    N2_(Mat3::Identity()), logalpha0_(0.0),
     K1_(K1), K2_(K2)
-{
+  {
     assert(2 == x1_.rows());
     assert(x1_.rows() == x2_.rows());
     assert(x1_.cols() == x2_.cols());
 
-    x1k_ = (K1_.inverse() * x1_.colwise().homogeneous()).colwise().hnormalized();
-    x2k_ = (K2_.inverse() * x2_.colwise().homogeneous()).colwise().hnormalized();
-
     //Point to line probability (line is the epipolar line)
-    const double D = sqrt(w2*(double)w2 + h2*(double)h2); // diameter
+    const double D = std::hypot(w2, h2); // diameter
     const double A = w2*(double)h2; // area
     logalpha0_ = log10(2.0*D/A * .5);
   }
@@ -293,8 +229,9 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x1k_, samples);
-    const Mat x2 = ExtractColumns(x2k_, samples);
+    const Mat
+      x1 = ExtractColumns(bearing1_, samples),
+      x2 = ExtractColumns(bearing2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
@@ -322,9 +259,10 @@ public:
   double unormalizeError(double val) const { return val; }
 
 private:
-  Mat x1_, x2_, x1k_, x2k_; // image point and camera plane point.
+  Mat2X x1_, x2_;       // image points
+  Mat3X bearing1_, bearing2_;   // bearing vectors
   Mat3 N1_, N2_;      // Matrix used to normalize data
-  double logalpha0_; // Alpha0 is used to make the error adaptive to the image size
+  double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
   Mat3 K1_, K2_;      // Intrinsic camera parameter
 };
 
@@ -355,8 +293,9 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    const Mat x1 = ExtractColumns(x1_, samples);
-    const Mat x2 = ExtractColumns(x2_, samples);
+    const Mat
+      x1 = ExtractColumns(x1_, samples),
+      x2 = ExtractColumns(x2_, samples);
     Solver::Solve(x1, x2, models);
   }
 
@@ -388,7 +327,7 @@ public:
   double unormalizeError(double val) const {return sqrt(val);}
 
 private:
-  Mat x1_, x2_;       // Normalized input data
+  Mat x1_, x2_;      // Normalized input data
   double logalpha0_; // Alpha0 is used to make the error scale invariant
 };
 

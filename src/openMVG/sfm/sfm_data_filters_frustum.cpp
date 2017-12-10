@@ -91,7 +91,7 @@ const
   // List active view Id
   std::vector<IndexT> viewIds;
   viewIds.reserve(z_near_z_far_perView.size());
-  std::transform(z_near_z_far_perView.begin(), z_near_z_far_perView.end(),
+  std::transform(z_near_z_far_perView.cbegin(), z_near_z_far_perView.cend(),
     std::back_inserter(viewIds), stl::RetrieveKey());
 
   C_Progress_display my_progress_bar(

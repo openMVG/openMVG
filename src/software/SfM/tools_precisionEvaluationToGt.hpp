@@ -19,7 +19,7 @@
 
 namespace openMVG
 {
-/// Compute a 5DOF rigid transform between the two camera trajectories
+/// Compute a 7DOF rigid transform between the two camera trajectories
 bool computeSimilarity(
   const std::vector<Vec3> & vec_camPosGT,
   const std::vector<Vec3> & vec_camPosComputed,
@@ -48,13 +48,10 @@ bool computeSimilarity(
   openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
-  std::vector<double> vec_residualErrors(vec_camPosGT.size());
   for (size_t i = 0; i  < vec_camPosGT.size(); ++i)
   {
     const Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
     vec_camPosComputed_T[i] = newPos;
-    const double dResidual = (newPos - vec_camPosGT[i]).norm();
-    vec_residualErrors[i] = dResidual;
   }
 
   *Sout = S;
@@ -97,7 +94,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
   return bOk;
 }
 
-/// Compare two camera path (translation and rotation residual after a 5DOF rigid registration)
+/// Compare two camera path (translation and rotation residual after a 7DOF rigid registration)
 /// Export computed statistics to a HTLM stream
 void EvaluteToGT(
   const std::vector<Vec3> & vec_camPosGT,

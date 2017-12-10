@@ -86,6 +86,11 @@ bool exportToOpenMVS(
     image.platformID = map_intrinsic.at(view.second->id_intrinsic);
     MVS::Interface::Platform& platform = scene.platforms[image.platformID];
     image.cameraID = 0;
+    if (!stlplus::is_file(srcImage))
+    {
+      std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
+      return EXIT_FAILURE;
+    }
     if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()) && stlplus::is_file(srcImage))
     {
       MVS::Interface::Platform::Pose pose;
@@ -190,8 +195,14 @@ bool exportToOpenMVS(
 
   std::cout
     << "Scene saved to OpenMVS interface format:\n"
-    << "\t" << scene.images.size() << " images (" << nPoses << " calibrated)\n"
-    << "\t" << scene.vertices.size() << " Landmarks\n";
+    << " #platforms: " << scene.platforms.size() << std::endl;
+    for (int i = 0; i < scene.platforms.size(); ++i)
+    {
+      std::cout << "  platform ( " << i << " ) #cameras: " << scene.platforms[i].cameras.size() << std::endl;
+    }
+  std::cout
+    << "  " << scene.images.size() << " images (" << nPoses << " calibrated)\n"
+    << "  " << scene.vertices.size() << " Landmarks\n";
   return true;
 }
 

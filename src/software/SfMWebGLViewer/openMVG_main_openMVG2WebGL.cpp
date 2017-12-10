@@ -18,6 +18,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -47,7 +48,6 @@ void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
       const Landmark & landmark = it->second;
       const Observations & obs = landmark.obs;
       // Sum all rays from all observations
-      int nb_valid = 0;
       for (Observations::const_iterator itOb = obs.begin(); itOb != obs.end(); ++itOb )
         {
           const IndexT viewId = itOb->first;
@@ -81,7 +81,6 @@ void ComputeNormals( const SfM_Data & sfm_data , std::vector<Vec3> & vec_nor )
           // TODO : good for educational but really inefficient ! (+C-C)
           const Vec3 dst = Rt * ( ( Kinv * Vec3( pos.x() , pos.y() , 1.0 ) ) ) + C;
           const Vec3 n = ( dst - C ).normalized();
-          nb_valid ++;
           vec_nor[ cpt ] += n;
         }
         // Mean and normalize
@@ -155,7 +154,7 @@ bool ColorizeTracks(
         std::back_inserter(vec_cardinal),
         stl::RetrieveValue());
       using namespace stl::indexed_sort;
-      std::vector< sort_index_packet_descend< IndexT, IndexT> > packet_vec(vec_cardinal.size());
+      std::vector< sort_index_packet_descend< IndexT, IndexT>> packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
       // First image index with the most of occurence

@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <sstream>   // NOLINT
 #include <vector>
+#include "ceres/detect_structure.h"
 #include "ceres/gradient_checking_cost_function.h"
 #include "ceres/internal/port.h"
 #include "ceres/parameter_block_ordering.h"
@@ -41,6 +42,7 @@
 #include "ceres/problem.h"
 #include "ceres/problem_impl.h"
 #include "ceres/program.h"
+#include "ceres/schur_templates.h"
 #include "ceres/solver_utils.h"
 #include "ceres/stringprintf.h"
 #include "ceres/types.h"
@@ -316,7 +318,7 @@ void StringifyOrdering(const vector<int>& ordering, string* report) {
   }
 
   for (int i = 0; i < ordering.size() - 1; ++i) {
-    internal::StringAppendF(report, "%d, ", ordering[i]);
+    internal::StringAppendF(report, "%d,", ordering[i]);
   }
   internal::StringAppendF(report, "%d", ordering.back());
 }
@@ -380,7 +382,7 @@ void PostSolveSummarize(const internal::PreprocessedProblem& pp,
                                  &(summary->inner_iteration_ordering_used));
 
   summary->inner_iterations_used          = pp.inner_iteration_minimizer.get() != NULL;     // NOLINT
-  summary->linear_solver_type_used        = pp.options.linear_solver_type;
+  summary->linear_solver_type_used        = pp.linear_solver_options.type;
   summary->num_linear_solver_threads_used = pp.options.num_linear_solver_threads;           // NOLINT
   summary->num_threads_used               = pp.options.num_threads;
   summary->preconditioner_type_used       = pp.options.preconditioner_type;                 // NOLINT
@@ -444,6 +446,24 @@ void Minimize(internal::PreprocessedProblem* pp,
     program->StateVectorToParameterBlocks(pp->reduced_parameters.data());
     program->CopyParameterBlockStateToUserState();
   }
+}
+
+std::string SchurStructureToString(const int row_block_size,
+                                   const int e_block_size,
+                                   const int f_block_size) {
+  const std::string row =
+      (row_block_size == Eigen::Dynamic)
+      ? "d" : internal::StringPrintf("%d", row_block_size);
+
+  const std::string e =
+      (e_block_size == Eigen::Dynamic)
+      ? "d" : internal::StringPrintf("%d", e_block_size);
+
+  const std::string f =
+      (f_block_size == Eigen::Dynamic)
+      ? "d" : internal::StringPrintf("%d", f_block_size);
+
+  return internal::StringPrintf("%s,%s,%s", row.c_str(), e.c_str(), f.c_str());
 }
 
 }  // namespace
@@ -517,7 +537,36 @@ void Solver::Solve(const Solver::Options& options,
   scoped_ptr<Preprocessor> preprocessor(
       Preprocessor::Create(modified_options.minimizer_type));
   PreprocessedProblem pp;
+
   const bool status = preprocessor->Preprocess(modified_options, problem_impl, &pp);
+
+  // We check the linear_solver_options.type rather than
+  // modified_options.linear_solver_type because, depending on the
+  // lack of a Schur structure, the preprocessor may change the linear
+  // solver type.
+  if (IsSchurType(pp.linear_solver_options.type)) {
+    // TODO(sameeragarwal): We can likely eliminate the duplicate call
+    // to DetectStructure here and inside the linear solver, by
+    // calling this in the preprocessor.
+    int row_block_size;
+    int e_block_size;
+    int f_block_size;
+    DetectStructure(*static_cast<internal::BlockSparseMatrix*>(
+                        pp.minimizer_options.jacobian.get())
+                    ->block_structure(),
+                    pp.linear_solver_options.elimination_groups[0],
+                    &row_block_size,
+                    &e_block_size,
+                    &f_block_size);
+    summary->schur_structure_given =
+        SchurStructureToString(row_block_size, e_block_size, f_block_size);
+    internal::GetBestSchurTemplateSpecialization(&row_block_size,
+                                                 &e_block_size,
+                                                 &f_block_size);
+    summary->schur_structure_used =
+        SchurStructureToString(row_block_size, e_block_size, f_block_size);
+  }
+
   summary->fixed_cost = pp.fixed_cost;
   summary->preprocessor_time_in_seconds = WallTimeInSeconds() - start_time;
 
@@ -720,6 +769,12 @@ string Solver::Summary::FullReport() const {
                   "Linear solver ordering %22s %24s\n",
                   given.c_str(),
                   used.c_str());
+    if (IsSchurType(linear_solver_type_used)) {
+      StringAppendF(&report,
+                    "Schur structure        %22s %24s\n",
+                    schur_structure_given.c_str(),
+                    schur_structure_used.c_str());
+    }
 
     if (inner_iterations_given) {
       StringAppendF(&report,
@@ -820,7 +875,7 @@ string Solver::Summary::FullReport() const {
   StringAppendF(&report, "  Jacobian evaluation %23.4f\n",
                 jacobian_evaluation_time_in_seconds);
   if (line_search_used) {
-    StringAppendF(&report, "    Line search gradient evaluation    %6.4f\n",
+    StringAppendF(&report, "    Line search gradient evaluation   %6.4f\n",
                   line_search_gradient_evaluation_time_in_seconds);
   }
 

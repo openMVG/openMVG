@@ -34,12 +34,12 @@
 
 namespace openMVG {
 
-Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
-  Eigen::Matrix<double,9, 9> A;
-  A.setZero();  // Make A square until Eigen supports rectangular SVD.
-  fundamental::kernel::EncodeEpipolarEquation(x1, x2, &A);
-  Eigen::JacobiSVD<Eigen::Matrix<double, 9, 9> > svd(A, Eigen::ComputeFullV);
-  return svd.matrixV().topRightCorner<9, 4>();
+Mat FivePointsNullspaceBasis(const Mat3X &x1, const Mat3X &x2) {
+  Mat epipolar_constraint = Eigen::Matrix<double,9, 9>::Constant(0.0);
+  fundamental::kernel::EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
+  Eigen::SelfAdjointEigenSolver<Mat> solver
+    (epipolar_constraint.transpose() * epipolar_constraint);
+  return solver.eigenvectors().leftCols<4>();
 }
 
 Vec o1(const Vec &a, const Vec &b) {
@@ -169,8 +169,8 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
   return M;
 }
 
-void FivePointsRelativePose(const Mat2X &x1,
-                            const Mat2X &x2,
+void FivePointsRelativePose(const Mat3X &x1,
+                            const Mat3X &x2,
                             std::vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
   const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);

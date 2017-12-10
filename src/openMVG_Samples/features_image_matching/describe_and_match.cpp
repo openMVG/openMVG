@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
   //--
   // Detect regions thanks to the image_describer
   //--
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  std::map<IndexT, std::unique_ptr<features::Regions>> regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 

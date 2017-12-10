@@ -45,7 +45,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
   //-   with the L_infinity optimization
 
   std::vector<double> vec_solution(iNviews*3 + vec_relative_estimates.size() + 1);
-  double gamma = -1.0;
+
 
   //- a. Setup the LP solver,
   //- b. Setup the constraints generator (for the dedicated L_inf problem),
@@ -67,7 +67,7 @@ TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
   //- d. Get back the estimated parameters.
   solverLP.getSolution(vec_solution);
-  gamma = vec_solution[vec_solution.size()-1];
+  const double gamma = vec_solution[vec_solution.size()-1];
 
   //--
   //-- Unit test checking about the found solution

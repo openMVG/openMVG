@@ -53,6 +53,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ListMatchingPairs
 
 ADD_EXECUTABLE(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
+  lemon
   openMVG_system
   openMVG_features
   openMVG_multiview
@@ -137,6 +138,15 @@ TARGET_LINK_LIBRARIES(openMVG_main_PointsFiltering
   stlplus
   )
 
+ADD_EXECUTABLE(openMVG_main_ChangeLocalOrigin main_ChangeLocalOrigin.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_ChangeLocalOrigin
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
@@ -152,6 +162,8 @@ SET_PROPERTY(TARGET openMVG_main_ComputeSfM_DataColor PROPERTY FOLDER OpenMVG/so
 INSTALL(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_PointsFiltering PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_PointsFiltering DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_ChangeLocalOrigin PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ChangeLocalOrigin DESTINATION bin/)
 
 # SplitMatchFileIntoMatchFiles
 ADD_EXECUTABLE(openMVG_main_SplitMatchFileIntoMatchFiles main_SplitMatchFileIntoMatchFiles.cpp)
@@ -162,7 +174,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SplitMatchFileIntoMatchFiles
   openMVG_sfm
   stlplus
   )
-  
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
@@ -352,8 +364,11 @@ IF(OpenMVG_USE_OPENCV)
     vlsift
     ${OpenCV_LIBS})
   target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
-  target_compile_definitions(openMVG_main_ComputeFeatures PRIVATE USE_OCVSIFT)
-  
+
+  IF(OpenMVG_USE_OCVSIFT)
+    target_compile_definitions(openMVG_main_ComputeFeatures_OpenCV PRIVATE USE_OCVSIFT)
+  ENDIF(OpenMVG_USE_OCVSIFT)
+
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
   SET_PROPERTY(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
   INSTALL(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)

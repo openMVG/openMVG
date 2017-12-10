@@ -126,7 +126,7 @@ class TensorStorage<T, DSizes<IndexType, NumIndices_>, Options_>
 	}
 	else 
           m_data = 0;
-        EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN
+        EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN({})
       }
       m_dimensions = nbDimensions;
     }

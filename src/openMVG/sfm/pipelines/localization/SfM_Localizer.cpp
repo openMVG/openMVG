@@ -23,13 +23,106 @@
 #include <memory>
 #include <utility>
 
+namespace openMVG
+{
+/// Pose/Resection Kernel adapter for the A contrario model estimator with
+///  known camera intrinsics.
+template <typename SolverArg,
+  typename ModelArg = Mat34>
+class ACKernelAdaptorResection_Intrinsics
+{
+public:
+  using Solver = SolverArg;
+  using Model = ModelArg;
+
+  ACKernelAdaptorResection_Intrinsics
+  (
+    const Mat & x2d, // Undistorted 2d feature_point location
+    const Mat & x3D, // 3D corresponding points
+    const cameras::IntrinsicBase * camera
+  ):x2d_(x2d),
+    x3D_(x3D),
+    logalpha0_(log10(M_PI)),
+    N1_(Mat3::Identity()),
+    camera_(camera)
+  {
+    N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
+    assert(2 == x2d_.rows());
+    assert(3 == x3D_.rows());
+    assert(x2d_.cols() == x3D_.cols());
+    bearing_vectors_= camera->operator()(x2d_);
+  }
+
+  enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
+  enum { MAX_MODELS = Solver::MAX_MODELS };
+
+  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
+    Solver::Solve(ExtractColumns(bearing_vectors_, samples), // bearing vectors
+                  ExtractColumns(x3D_, samples), // 3D points
+                  models); // Found model hypothesis
+  }
+
+  double Error(uint32_t sample, const Model &model) const {
+    /*
+    const Vec3 C = model.block(0, 3, 3, 1);
+    const geometry::Pose3 pose(model.block(0, 0, 3, 3),  - model.block(0, 0, 3, 3).transpose() * C);
+    //const Vec3 X = pose( x3D_.col(sample) ); // apply pose
+    const Vec3 X = pose( Vec3(x3D_.col(sample)) ); // apply pose
+    const Vec2 proj = X.hnormalized();
+    return (camera_->ima2cam(x2d_.col(sample)) - proj).squaredNorm();
+    */
+
+    const Vec3 t = model.block(0, 3, 3, 1);
+    const geometry::Pose3 pose(model.block(0, 0, 3, 3),
+                               - model.block(0, 0, 3, 3).transpose() * t);
+    const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+    return (camera_->residual(pose(x3D_.col(sample)),
+                              x2d_.col(sample),
+                              ignore_distortion) * N1_(0,0)).squaredNorm();
+    //const Vec2 x = Project(model, Vec3(x3D_.col(sample)));
+    //return (x - camera_->ima2cam(x2d_.col(sample))).squaredNorm();
+  }
+
+  void Errors(const Model & model, std::vector<double> & vec_errors) const
+  {
+    const Vec3 t = model.block(0, 3, 3, 1);
+    const geometry::Pose3 pose(model.block(0, 0, 3, 3),
+                               - model.block(0, 0, 3, 3).transpose() * t);
+
+    vec_errors.resize(x2d_.cols());
+    for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample)
+    {
+      vec_errors[sample] = this->Error(sample, model);
+    }
+  }
+
+  size_t NumSamples() const { return x2d_.cols(); }
+
+  void Unnormalize(Model * model) const {
+  }
+
+  double logalpha0() const {return logalpha0_;}
+  double multError() const {return 1.0;} // point to point error
+  Mat3 normalizer1() const {return Mat3::Identity();}
+  Mat3 normalizer2() const {return N1_;}
+  double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
+
+private:
+  Mat x2d_, bearing_vectors_;
+  const Mat & x3D_;
+  Mat3 N1_;
+  double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
+  const cameras::IntrinsicBase * camera_;   // Intrinsic camera parameter
+};
+} // namespace openMVG
+
 namespace openMVG {
 namespace sfm {
 
   struct ResectionSquaredResidualError {
     // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
     // Return the squared error
-    static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D){
+    static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D) {
       const Vec2 x = Project(P, pt3D);
       return (x - pt2D).squaredNorm();
     }
@@ -37,6 +130,7 @@ namespace sfm {
 
   bool SfM_Localizer::Localize
   (
+    const resection::SolverType & solver_type,
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,
@@ -56,48 +150,103 @@ namespace sfm {
       Square(resection_data.error_max);
 
     size_t MINIMUM_SAMPLES = 0;
-    const cameras::Pinhole_Intrinsic * pinhole_cam = dynamic_cast<const cameras::Pinhole_Intrinsic *>(optional_intrinsics);
-    if (pinhole_cam == nullptr)
+
+    switch (solver_type)
     {
-      //--
-      // Classic resection (try to compute the entire P matrix)
-      using SolverType = openMVG::resection::kernel::SixPointResectionSolver;
-      MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+      case resection::SolverType::DLT_6POINTS:
+      {
+        //--
+        // Classic resection (try to compute the entire P matrix)
+        using SolverType = openMVG::resection::kernel::SixPointResectionSolver;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      using KernelType =
-        openMVG::robust::ACKernelAdaptorResection<
-        SolverType,
-        ResectionSquaredResidualError,
-        openMVG::robust::UnnormalizerResection,
-        Mat34>;
+        using KernelType =
+          openMVG::robust::ACKernelAdaptorResection<
+            SolverType,
+            ResectionSquaredResidualError,
+            openMVG::robust::UnnormalizerResection,
+            Mat34>;
 
-      KernelType kernel(resection_data.pt2D, image_size.first, image_size.second,
-        resection_data.pt3D);
-      // Robust estimation of the Projection matrix and it's precision
-      const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
-    }
-    else
-    {
-      //--
-      // Since K calibration matrix is known, compute only [R|t]
-      using SolverType = openMVG::euclidean_resection::P3PSolver;
-      MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+        KernelType kernel(resection_data.pt2D, image_size.first, image_size.second,
+          resection_data.pt3D);
+        // Robust estimation of the pose and its precision
+        const std::pair<double,double> ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel,
+                                    resection_data.vec_inliers,
+                                    resection_data.max_iteration,
+                                    &P,
+                                    dPrecision,
+                                    true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
+      break;
+      case resection::SolverType::P3P_KE_CVPR17:
+      {
+        if (!optional_intrinsics)
+        {
+          std::cerr << "Intrinsic data is required for P3P solvers." << std::endl;
+          return false;
+        }
+        //--
+        // Since the intrinsic data is known, compute only the pose
+        using SolverType = openMVG::euclidean_resection::P3PSolver_Ke;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-      using KernelType =
-        openMVG::robust::ACKernelAdaptorResection_K<
-          SolverType,
-          ResectionSquaredResidualError,
-          Mat34>;
+        using KernelType =
+          ACKernelAdaptorResection_Intrinsics<
+            SolverType,
+            Mat34>;
 
-      KernelType kernel(resection_data.pt2D, resection_data.pt3D, pinhole_cam->K());
-      // Robust estimation of the Projection matrix and it's precision
-      const std::pair<double,double> ACRansacOut =
-        openMVG::robust::ACRANSAC(kernel, resection_data.vec_inliers, resection_data.max_iteration, &P, dPrecision, true);
-      // Update the upper bound precision of the model found by AC-RANSAC
-      resection_data.error_max = ACRansacOut.first;
+        KernelType kernel(resection_data.pt2D, resection_data.pt3D, optional_intrinsics);
+        // Robust estimation of the pose matrix and its precision
+        const auto ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel,
+                                    resection_data.vec_inliers,
+                                    resection_data.max_iteration,
+                                    &P,
+                                    dPrecision,
+                                    true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
+      break;
+      case resection::SolverType::P3P_KNEIP_CVPR11:
+      {
+        if (!optional_intrinsics)
+        {
+          std::cerr << "Intrinsic data is required for P3P solvers." << std::endl;
+          return false;
+        }
+        //--
+        // Since the intrinsic data is known, compute only the pose
+        using SolverType = openMVG::euclidean_resection::P3PSolver_Kneip;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+
+        using KernelType =
+          ACKernelAdaptorResection_Intrinsics<
+            SolverType,
+            Mat34>;
+
+        KernelType kernel(resection_data.pt2D, resection_data.pt3D, optional_intrinsics);
+
+        // Robust estimation of the pose matrix and its precision
+        const auto ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel,
+                                    resection_data.vec_inliers,
+                                    resection_data.max_iteration,
+                                    &P,
+                                    dPrecision,
+                                    true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
+      break;
+      default:
+      {
+        std::cerr << "Unknown absolute pose solver type." << std::endl;
+        return false;
+      }
     }
 
     // Test if the mode support some points (more than those required for estimation)

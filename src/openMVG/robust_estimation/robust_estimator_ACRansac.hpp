@@ -62,7 +62,7 @@ static float logcombi
   const std::vector<float> & vec_log10 // lookuptable in [0,n+1]
 )
 {
-  if (k>=n || k<=0) return 0.f;
+  if (k>=n) return 0.f;
   if (n-k<k) k=n-k;
   float r(0.f);
   for (uint32_t i = 1; i <= k; ++i)
@@ -210,7 +210,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     //   - to compute the NFA for every sample of the datum.
     const int nBins = 20;
     Histogram<double> histo(0.0f, m_max_threshold, nBins);
-    histo.Add(m_residuals.begin(), m_residuals.end());
+    histo.Add(m_residuals.cbegin(), m_residuals.cend());
 
     // Compute NFA scoring from the cumulative histogram
 

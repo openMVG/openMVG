@@ -198,11 +198,11 @@ class L1Solver {
 
   // Cholesky linear solver.
 #ifdef EIGEN_MPL2_ONLY
-  using Linear_Solver_T = Eigen::SparseLU<Eigen::SparseMatrix<double> >;
+  using Linear_Solver_T = Eigen::SparseLU<Eigen::SparseMatrix<double>>;
 #else
   // Since our linear system will be a SPD matrix we can
   // utilize the Cholesky factorization.
-  using Linear_Solver_T = Eigen::SimplicialLLT<Eigen::SparseMatrix<double> >;
+  using Linear_Solver_T = Eigen::SimplicialLLT<Eigen::SparseMatrix<double>>;
 #endif
   Linear_Solver_T linear_solver_;
 

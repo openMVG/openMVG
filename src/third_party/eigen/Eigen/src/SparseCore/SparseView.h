@@ -27,6 +27,20 @@ struct traits<SparseView<MatrixType> > : traits<MatrixType>
 
 } // end namespace internal
 
+/** \ingroup SparseCore_Module
+  * \class SparseView
+  *
+  * \brief Expression of a dense or sparse matrix with zero or too small values removed
+  *
+  * \tparam MatrixType the type of the object of which we are removing the small entries
+  *
+  * This class represents an expression of a given dense or sparse matrix with
+  * entries smaller than \c reference * \c epsilon are removed.
+  * It is the return type of MatrixBase::sparseView() and SparseMatrixBase::pruned()
+  * and most of the time this is the only way it is used.
+  *
+  * \sa MatrixBase::sparseView(), SparseMatrixBase::pruned()
+  */
 template<typename MatrixType>
 class SparseView : public SparseMatrixBase<SparseView<MatrixType> >
 {
@@ -190,6 +204,23 @@ struct unary_evaluator<SparseView<ArgType>, IndexBased>
 
 } // end namespace internal
 
+/** \ingroup SparseCore_Module
+  *
+  * \returns a sparse expression of the dense expression \c *this with values smaller than
+  * \a reference * \a epsilon removed.
+  *
+  * This method is typically used when prototyping to convert a quickly assembled dense Matrix \c D to a SparseMatrix \c S:
+  * \code
+  * MatrixXd D(n,m);
+  * SparseMatrix<double> S;
+  * S = D.sparseView();             // suppress numerical zeros (exact)
+  * S = D.sparseView(reference);
+  * S = D.sparseView(reference,epsilon);
+  * \endcode
+  * where \a reference is a meaningful non zero reference value,
+  * and \a epsilon is a tolerance factor defaulting to NumTraits<Scalar>::dummy_precision().
+  *
+  * \sa SparseMatrixBase::pruned(), class SparseView */
 template<typename Derived>
 const SparseView<Derived> MatrixBase<Derived>::sparseView(const Scalar& reference,
                                                           const typename NumTraits<Scalar>::Real& epsilon) const
@@ -198,7 +229,7 @@ const SparseView<Derived> MatrixBase<Derived>::sparseView(const Scalar& referenc
 }
 
 /** \returns an expression of \c *this with values smaller than
-  * \a reference * \a epsilon are removed.
+  * \a reference * \a epsilon removed.
   *
   * This method is typically used in conjunction with the product of two sparse matrices
   * to automatically prune the smallest values as follows:

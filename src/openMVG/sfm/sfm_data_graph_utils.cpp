@@ -20,35 +20,39 @@
 namespace openMVG {
 namespace sfm {
 
-/// Filter the toFilter iterable sequence into a new sequence without change the source sequence
-/// (keep only the element that share a common index with the provided Ids index list).
-/// See the reference: sfm_filters.hpp
-static void KeepOnlyReferencedElement(
+static void KeepOnlyReferencedElement
+(
   const std::set<IndexT> & set_remainingIds,
-  const matching::PairWiseMatches & map_matches_in,
-  matching::PairWiseMatches & map_matches_out)
+  const matching::PairWiseMatches & matches_in,
+  matching::PairWiseMatches & matches_out
+)
 {
-  matching::PairWiseMatches map_matches_E_infered;
-  for (const auto & iter_pairwise_matches : map_matches_in)
+  matching::PairWiseMatches kept_matches;
+  for (const auto & iter_pairwise_matches : matches_in)
   {
     if (set_remainingIds.count(iter_pairwise_matches.first.first) &&
-      set_remainingIds.count(iter_pairwise_matches.first.second))
+        set_remainingIds.count(iter_pairwise_matches.first.second))
     {
-      map_matches_E_infered.insert(iter_pairwise_matches);
+      kept_matches.insert(iter_pairwise_matches);
     }
   }
-  map_matches_out.swap(map_matches_E_infered);
+  matches_out.swap(kept_matches);
 }
 
-bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge, 
-  int min_nodes, std::map<IndexT, std::set<IndexT>>& subgraphs_ids)
+bool PairsToConnectedComponents
+(
+  const Pair_Set & pairs,
+  bool is_biedge,
+  int min_nodes,
+  std::map<IndexT, std::set<IndexT>>& subgraphs_ids
+)
 {
   subgraphs_ids.clear();
 
   using Graph = graph::indexedGraph::GraphT;
   graph::indexedGraph putativeGraph(pairs);
 
-  // For global SFM, firstly remove the not bi-edge element 
+  // For global SFM, firstly remove the not bi-edge element
   if (is_biedge)
   {
     using EdgeMapAlias = Graph::EdgeMap<bool>;
@@ -72,7 +76,7 @@ bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge,
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
   if (connectedComponentCount >= 1)
   {
-    const std::map<IndexT, std::set<Graph::Node> > map_subgraphs = graph::exportGraphToMapSubgraphs<Graph, IndexT>(putativeGraph.g);
+    const auto map_subgraphs = graph::exportGraphToMapSubgraphs<Graph, IndexT>(putativeGraph.g);
     for (const auto & iter_map_subgraphs : map_subgraphs)
     {
       if (iter_map_subgraphs.second.size() > min_nodes)
@@ -88,11 +92,17 @@ bool PairsToConnectedComponents(const Pair_Set & pairs, bool is_biedge,
       }
     }
   }
-  return true;
+  return !subgraphs_ids.empty();
 }
 
-bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::PairWiseMatches & matches, 
-  bool is_biedge, int min_nodes, std::vector<matching::PairWiseMatches> & subgraphs_matches)
+bool SplitMatchesIntoSubgraphMatches
+(
+  const Pair_Set & pairs,
+  const matching::PairWiseMatches & matches,
+  bool is_biedge,
+  int min_nodes,
+  std::vector<matching::PairWiseMatches> & subgraphs_matches
+)
 {
   if (pairs.size() == 0 || matches.size() == 0)
   {
@@ -100,15 +110,16 @@ bool SplitMatchesIntoSubgraphMatches(const Pair_Set & pairs, const matching::Pai
   }
   subgraphs_matches.clear();
   std::map<IndexT, std::set<IndexT>> subgraphs_ids;
-  PairsToConnectedComponents(pairs, is_biedge, min_nodes, subgraphs_ids);
-
-  for (const auto & iter_subgraphs_ids : subgraphs_ids)
+  if (PairsToConnectedComponents(pairs, is_biedge, min_nodes, subgraphs_ids))
   {
-    matching::PairWiseMatches subgraph_map_matches;
-    KeepOnlyReferencedElement(iter_subgraphs_ids.second, matches, subgraph_map_matches);
-    subgraphs_matches.emplace_back(subgraph_map_matches);
+    for (const auto & iter_subgraphs_ids : subgraphs_ids)
+    {
+      matching::PairWiseMatches component_matches;
+      KeepOnlyReferencedElement(iter_subgraphs_ids.second, matches, component_matches);
+      subgraphs_matches.emplace_back(component_matches);
+    }
   }
-  return true;
+  return !subgraphs_matches.empty();
 }
 
 } // namespace sfm

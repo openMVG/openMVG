@@ -219,14 +219,13 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   std::normal_distribution<double> d(0, noise);
 
   // Setup uniform distribution
-  std::uniform_int_distribution<int> dW(0, W);
-  std::uniform_int_distribution<int> dH(0, H);
+  std::uniform_int_distribution<int> dW(0, W), dH(0, H);
 
   for (size_t i = 0; i < nbPoints; ++i)
   {
     auto x = static_cast<double>(dW(random_generator));
     const float y =  d(random_generator) + (lineEq[1] * x + lineEq[0]) + d(random_generator);
-    points.col(i) = Vec2(x, y);
+    points.col(i) << x, y;
   }
 
   // generate outlier
@@ -236,8 +235,8 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
   UniformSample(count, nbPoints, random_generator, &vec_indexes);
   for (const auto & pos : vec_indexes)
   {
-    points.col(pos) = Vec2(static_cast<double>(dW(random_generator)) + d_outlier(random_generator),
-                           static_cast<double>(dH(random_generator)) - d_outlier(random_generator));
+    points.col(pos) << dW(random_generator) + d_outlier(random_generator),
+                       dH(random_generator) - d_outlier(random_generator);
   }
 }
 
@@ -264,7 +263,7 @@ struct IndMatchd
 // Test ACRANSAC adaptability to noise
 // Set a line with a increasing gaussian noise
 // See if the AContrario RANSAC is able to label the good point as inlier
-//  by having it's estimated confidence threshold growing.
+//  by having its estimated confidence threshold growing.
 TEST(RansacLineFitter, ACRANSACSimu) {
 
   const int S = 100;
@@ -272,7 +271,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
   std::vector<double> vec_gaussianValue;
   for (int i=0; i < 10; ++i)  {
-    vec_gaussianValue.push_back(i/10. * 5.);
+    vec_gaussianValue.push_back(i/10. * 5. + std::numeric_limits<double>::epsilon());
   }
 
   for (std::vector<double>::const_iterator iter = vec_gaussianValue.begin();

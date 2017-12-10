@@ -229,7 +229,7 @@ double RelRotationAvgError
     boost::accumulators::stats<
       boost::accumulators::tag::min,
       boost::accumulators::tag::mean,
-      boost::accumulators::tag::max> > acc;
+      boost::accumulators::tag::max>> acc;
 
   for (int i=0; i < RelRs.size(); ++i) {
     const RelativeRotation& relR = RelRs[i];
@@ -289,7 +289,7 @@ void InitRotationsMST
         const size_t edge = *pEdge;
         if (edge == link.parentID) {
           // compute the global rotation for the current node
-          assert(mapIJ2R.find(std::make_pair(link.parentID, link.ID)) != mapIJ2R.end());
+          assert(mapIJ2R.find({link.parentID, link.ID}) != mapIJ2R.end());
           const Matrix3x3& Rij = mapIJ2R[{link.parentID, link.ID}];
           Rs[link.ID] = Rij * Rs[link.parentID];
         } else {
@@ -298,7 +298,7 @@ void InitRotationsMST
         }
     }
     stack.pop();
-  } while(!stack.empty());
+  } while (!stack.empty());
 }
 
 // Robustly estimate global rotations from relative rotations as in:

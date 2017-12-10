@@ -84,8 +84,10 @@ static _EIGEN_DECLARE_CONST_Packet2d(cephes_exp_q3, 2.00000000000000000009e0);
 static _EIGEN_DECLARE_CONST_Packet2d(cephes_exp_C1, 0.693145751953125);
 static _EIGEN_DECLARE_CONST_Packet2d(cephes_exp_C2, 1.42860682030941723212e-6);
 
+#ifdef __POWER8_VECTOR__
 static Packet2l p2l_1023 = { 1023, 1023 };
 static Packet2ul p2ul_52 = { 52, 52 };
+#endif
 
 #endif
 
