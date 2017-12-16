@@ -11,6 +11,7 @@ install(TARGETS openMVG_linearProgramming DESTINATION lib EXPORT openMVG-targets
 set_target_properties(openMVG_linearProgramming PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 target_link_libraries(openMVG_linearProgramming
+  PUBLIC openMVG_numeric
   PRIVATE
     ${CLP_LIBRARIES}     # clp + solver wrapper
     ${COINUTILS_LIBRARY} # container tools

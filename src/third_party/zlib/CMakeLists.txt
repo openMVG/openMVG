@@ -16,6 +16,11 @@ else()
   set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/zlib")
 endif()
 
+target_include_directories(zlib PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+)
+
 install(FILES
   crc32.h      deflate.h    inffast.h    inffixed.h   inflate.h
   inftrees.h   trees.h      zconf.h      zconf.in.h   zlib.h       zutil.h

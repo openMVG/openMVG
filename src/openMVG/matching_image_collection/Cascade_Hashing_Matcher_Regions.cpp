@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
-#include "Eigen/Dense"
+
 #include "openMVG/matching/cascade_hasher.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/matching_filters.hpp"
