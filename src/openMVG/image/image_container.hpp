@@ -9,7 +9,7 @@
 #ifndef OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 #define OPENMVG_IMAGE_IMAGE_CONTAINER_HPP
 
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace openMVG
 {

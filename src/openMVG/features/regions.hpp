@@ -12,7 +12,7 @@
 #include <string>
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/feature_container.hpp>
-#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include <openMVG/numeric/eigen_alias_definition.hpp>
 
 namespace openMVG {
 namespace features {

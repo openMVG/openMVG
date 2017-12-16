@@ -5,8 +5,6 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
 
   if( Qt5Widgets_FOUND )
 
-    cmake_policy( SET CMP0025 OLD )
-
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
     set(CMAKE_AUTOMOC ON)
 
