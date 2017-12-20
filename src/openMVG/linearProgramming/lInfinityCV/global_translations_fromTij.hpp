@@ -42,7 +42,7 @@ void EncodeTi_from_tij
   sRMat & A, Vec & C,
   std::vector<LP_Constraints::eLP_SIGN> & vec_sign,
   std::vector<double> & vec_costs,
-  std::vector< std::pair<double,double> > & vec_bounds
+  std::vector<std::pair<double,double>> & vec_bounds
 );
 
 //-- Estimate the translation from heading relative translations of triplets.
@@ -52,7 +52,7 @@ struct Tifromtij_ConstraintBuilder
 {
   explicit Tifromtij_ConstraintBuilder
   (
-    const std::vector< openMVG::RelativeInfo_Vec > & vec_relative
+    const std::vector<openMVG::RelativeInfo_Vec > & vec_relative
   );
 
   /// Setup constraints for the global translations problem,
@@ -61,7 +61,7 @@ struct Tifromtij_ConstraintBuilder
 
   // Internal data
   size_t Ncam_;
-  const std::vector< openMVG::RelativeInfo_Vec > & vec_relative_; // /!\ memory Alias
+  const std::vector<openMVG::RelativeInfo_Vec > & vec_relative_; // /!\ memory Alias
 };
 
 } // namespace lInfinityCV

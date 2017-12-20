@@ -410,9 +410,9 @@ void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end )
  ** @param nb_split Number of desired split
  ** @param d_range Output splitted range
  **/
-template < typename T >
+template <typename T>
 void SplitRange( const T range_start , const T range_end , const int nb_split ,
-                 std::vector< T > & d_range )
+                 std::vector<T > & d_range )
 {
   const T range_length = range_end - range_start;
   if (range_length < nb_split )

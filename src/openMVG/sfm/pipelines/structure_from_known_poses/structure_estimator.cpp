@@ -90,7 +90,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
-  for (Pair_Set::const_iterator it = pairs.begin(); it != pairs.end(); ++it)
+  for (const Pair & pair : pairs)
   {
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp single nowait
@@ -103,16 +103,21 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
     // - by considering geometric error and descriptor distance ratio.
     std::vector<IndMatch> vec_corresponding_indexes;
 
-    const View * viewL = sfm_data.GetViews().at(it->first).get();
-    const Pose3 poseL = sfm_data.GetPoseOrDie(viewL);
-    const Intrinsics::const_iterator iterIntrinsicL = sfm_data.GetIntrinsics().find(viewL->id_intrinsic);
-    const View * viewR = sfm_data.GetViews().at(it->second).get();
-    const Pose3 poseR = sfm_data.GetPoseOrDie(viewR);
-    const Intrinsics::const_iterator iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
+    const View
+      * viewL = sfm_data.GetViews().at(pair.first).get(),
+      * viewR = sfm_data.GetViews().at(pair.second).get();
+
+    const Pose3
+      poseL = sfm_data.GetPoseOrDie(viewL),
+      poseR = sfm_data.GetPoseOrDie(viewR);
 
     if (sfm_data.GetIntrinsics().count(viewL->id_intrinsic) != 0 ||
         sfm_data.GetIntrinsics().count(viewR->id_intrinsic) != 0)
     {
+      const Intrinsics::const_iterator
+        iterIntrinsicL = sfm_data.GetIntrinsics().find(viewL->id_intrinsic),
+        iterIntrinsicR = sfm_data.GetIntrinsics().find(viewR->id_intrinsic);
+
       const Mat34
         P_L = iterIntrinsicL->second->get_projective_equivalent(poseL),
         P_R = iterIntrinsicR->second->get_projective_equivalent(poseR);
@@ -121,8 +126,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       const double thresholdF = max_reprojection_error_;
 
       const std::shared_ptr<features::Regions>
-        regionsL = regions_provider->get(it->first),
-        regionsR = regions_provider->get(it->second);
+        regionsL = regions_provider->get(pair.first),
+        regionsR = regions_provider->get(pair.second);
 
     #if defined(EXHAUSTIVE_MATCHING)
       geometry_aware::GuidedMatching
@@ -158,7 +163,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          putatives_matches[*it].insert(putatives_matches[*it].end(),
+          putatives_matches[pair].insert(putatives_matches[pair].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
         ++my_progress_bar;
@@ -177,7 +182,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   // Triangulate triplet tracks
   //  - keep valid one
 
-  using Triplets = std::vector< graph::Triplet >;
+  using Triplets = std::vector<graph::Triplet>;
   const Triplets triplets = graph::TripletListing(pairs);
 
   C_Progress_display my_progress_bar( triplets.size(), std::cout,
@@ -215,28 +220,57 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
           tracksBuilder.ExportToSTL(map_tracksCommon);
         }
 
-        std::map<IndexT, std::shared_ptr<openMVG::features::Regions> > regions;
-        regions[I] = regions_provider->get(I);
-        regions[J] = regions_provider->get(J);
-        regions[K] = regions_provider->get(K);
+        const std::map<IndexT, std::shared_ptr<openMVG::features::Regions>> regions =
+        {{I, regions_provider->get(I)},
+         {J, regions_provider->get(J)},
+         {K, regions_provider->get(K)},
+        };
 
         // Triangulate the tracks
-        for (tracks::STLMAPTracks::const_iterator iterTracks = map_tracksCommon.begin();
-          iterTracks != map_tracksCommon.end(); ++iterTracks)
+        for (const auto & track_it : map_tracksCommon)
         {
-          const tracks::submapTrack & subTrack = iterTracks->second;
-          Triangulation trianObj;
-          for (tracks::submapTrack::const_iterator iter = subTrack.begin(); iter != subTrack.end(); ++iter) {
-            const size_t imaIndex = iter->first;
-            const size_t featIndex = iter->second;
+          const tracks::submapTrack & subTrack = track_it.second;
+          std::vector<Vec3> bearing;
+          std::vector<Mat34> poses;
+          bearing.reserve(subTrack.size());
+          poses.reserve(subTrack.size());
+          for (const auto & observation_it : subTrack) {
+            const size_t imaIndex = observation_it.first;
+            const size_t featIndex = observation_it.second;
             const View * view = sfm_data.GetViews().at(imaIndex).get();
             const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
             const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
-            trianObj.add(cam->get_projective_equivalent(pose), cam->get_ud_pixel(pt));
+            bearing.emplace_back((*cam)(cam->get_ud_pixel(pt)));
+            poses.emplace_back(pose.asMatrix());
           }
-          trianObj.compute();
-          if (trianObj.minDepth() > 0 && trianObj.error()/(double)trianObj.size() < max_reprojection_error_)
+          const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
+          Vec4 Xhomogeneous;
+          TriangulateNViewAlgebraic(bearing_matrix, poses, &Xhomogeneous);
+          const Vec3 X = Xhomogeneous.hnormalized();
+
+          // Test validity of the hypothesis:
+          // - residual error
+          // - chierality
+          bool bChierality = true;
+          bool bReprojection_error = true;
+          int i(0);
+          for (tracks::submapTrack::const_iterator obs_it = subTrack.begin();
+            obs_it != subTrack.end() && bChierality && bReprojection_error; ++obs_it, ++i)
+          {
+            const View * view = sfm_data.views.at(obs_it->first).get();
+
+            const Pose3 pose = sfm_data.GetPoseOrDie(view);
+            bChierality &= CheiralityTest(bearing[i], pose, X);
+
+            const size_t imaIndex = obs_it->first;
+            const size_t featIndex = obs_it->second;
+            const Vec2 pt = regions.at(imaIndex)->GetRegionPosition(featIndex);
+            const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
+            const Vec2 residual = cam->residual(pose(X), pt);
+            bReprojection_error &= residual.squaredNorm() < max_reprojection_error_;
+          }
+          if (bChierality && bReprojection_error)
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
@@ -292,10 +326,10 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
       const tracks::submapTrack & track = itTracks->second;
 
       Observations obs;
-      for (tracks::submapTrack::const_iterator it = track.begin(); it != track.end(); ++it)
+      for (const auto & track_obs : track)
       {
-        const IndexT imaIndex = it->first;
-        const IndexT featIndex = it->second;
+        const IndexT imaIndex = track_obs.first;
+        const IndexT featIndex = track_obs.second;
         const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
         const Vec2 pt = regions->GetRegionPosition(featIndex);
         obs[imaIndex] = Observation(pt, featIndex);

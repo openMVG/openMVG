@@ -24,7 +24,7 @@ TEST(TripletFinder, test_no_triplet) {
   const int a = 0, b = 1, c = 2;
   const Pairs pairs = {{a, b}, {b, c}};
 
-  std::vector< Triplet > vec_triplets;
+  std::vector<Triplet> vec_triplets;
   EXPECT_FALSE(ListTriplets(pairs, vec_triplets));
   EXPECT_TRUE(vec_triplets.empty());
 }
@@ -40,7 +40,7 @@ TEST(TripletFinder, test_one_triplet) {
     const int a = 0, b = 1, c = 2;
     const Pairs pairs = {{a, b}, {a, c}, {b, c}};
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(1, vec_triplets.size());
     //Check the cycle values
@@ -57,7 +57,7 @@ TEST(TripletFinder, test_one_triplet) {
     const int a = 0, b = 1, c = 2, d = 3;
     const Pairs pairs = {{a, b}, {b, c}, {b, d}, {c, d}};
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(1, vec_triplets.size());
     //Check the cycle values
@@ -78,7 +78,7 @@ TEST(TripletFinder, test_two_triplet) {
     const int a = 0, b = 1, c = 2, d = 3;
     const Pairs pairs = {{a, b}, {a, c}, {a, d}, {c, d}, {b,d}};
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(2, vec_triplets.size());
   }
@@ -93,7 +93,7 @@ TEST(TripletFinder, test_two_triplet) {
     const int a = 0, b = 1, c = 2, d = 3, e = 4;
     const Pairs pairs = {{a, b}, {b,c}, {c,e}, {e,b}, {b,d}, {d,a}};
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(2, vec_triplets.size());
   }
@@ -108,7 +108,7 @@ TEST(TripletFinder, test_two_triplet) {
     const int a = 0, b = 1, c = 2, d = 3, e = 4, f = 5;
     const Pairs pairs = {{a,b}, {b,f}, {f,c}, {c,e}, {e,f}, {f,b}, {b,d}, {d,a}};
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(2, vec_triplets.size());
   }
@@ -126,7 +126,7 @@ TEST(TripletFinder, test_three_triplet) {
     const int a = 0, b = 1, c = 2, d = 3, e = 4, f = 5;
     const Pairs pairs = { {a,c}, {a,d}, {c,d}, {c,f}, {f,d}, {d,b}, {b,e}, {e,d} };
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(3, vec_triplets.size());
   }
@@ -147,7 +147,7 @@ TEST(TripletFinder, test_three_triplet) {
       {b,g},
       {g,h}, {h,i}, {i,g} };
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(3, vec_triplets.size());
   }
@@ -163,7 +163,7 @@ TEST(TripletFinder, test_three_triplet) {
     const int a = 0, b = 1, c = 2, d = 3, e = 4;
     const Pairs pairs = { {a,b}, {b,d}, {d,c}, {c,a}, {a,d}, {b,e}, {d,e} };
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(3, vec_triplets.size());
   }
@@ -181,7 +181,7 @@ TEST(TripletFinder, test_for_triplet) {
     const int a = 0, b = 1, c = 2, d = 3;
     const Pairs pairs = { {a,b}, {a,c}, {a,d}, {c,d}, {b,d}, {c,b} };
 
-    std::vector< Triplet > vec_triplets;
+    std::vector<Triplet> vec_triplets;
     EXPECT_TRUE(ListTriplets(pairs, vec_triplets));
     EXPECT_EQ(4, vec_triplets.size());
   }

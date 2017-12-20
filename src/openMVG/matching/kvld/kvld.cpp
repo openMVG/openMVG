@@ -17,7 +17,7 @@
 using namespace openMVG;
 using namespace openMVG::image;
 
-ImageScale::ImageScale( const Image< float >& I, double r )
+ImageScale::ImageScale( const Image<float>& I, double r )
 {
   IntegralImages inter( I );
   radius_size = r;
@@ -37,7 +37,7 @@ ImageScale::ImageScale( const Image< float >& I, double r )
 #endif
   for (int k = 1; k < number; k++ )
   {
-    Image< float > I2;
+    Image<float> I2;
     double ratio = 1 * pow( step, k );
     I2.resize( int( I.Width() / ratio ), int( I.Height() / ratio ) );
     angles[ k ].resize( int( I.Width() / ratio ), int( I.Height() / ratio ) );
@@ -55,10 +55,10 @@ ImageScale::ImageScale( const Image< float >& I, double r )
   }
 }
 
-void ImageScale::GradAndNorm( const Image< float >& I, Image< float >& angle, Image< float >& m )
+void ImageScale::GradAndNorm( const Image<float>& I, Image<float>& angle, Image<float>& m )
 {
-  angle = Image< float >( I.Width(), I.Height() );
-  m = Image< float >( I.Width(), I.Height() );
+  angle = Image<float>( I.Width(), I.Height() );
+  m = Image<float>( I.Width(), I.Height() );
   angle.fill( 0 );
   m.fill( 0 );
 #ifdef OPENMVG_USE_OPENMP
@@ -96,7 +96,7 @@ int ImageScale::getIndex( const double r )const
   }
 }
 
-template< typename T >
+template<typename T>
 VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 {
   //============== initializing============//
@@ -122,8 +122,8 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
 
   const int image_index = series.getIndex( radius );
 
-  const Image< float > & ang = series.angles[ image_index ];
-  const Image< float > & m   = series.magnitudes[ image_index ];
+  const Image<float> & ang = series.angles[ image_index ];
+  const Image<float> & m   = series.magnitudes[ image_index ];
   const double ratio = series.ratios[ image_index ];
 
   const int w = m.Width();
@@ -194,15 +194,15 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
   normalize_weight( weight );
 }
 
-float KVLD( const Image< float >& I1,
-            const Image< float >& I2,
+float KVLD( const Image<float>& I1,
+            const Image<float>& I2,
             const std::vector<features::SIOPointFeature> & F1,
             const std::vector<features::SIOPointFeature> & F2,
-            const std::vector< Pair >& matches,
-            std::vector< Pair >& matchesFiltered,
-            std::vector< double >& score,
+            const std::vector<Pair>& matches,
+            std::vector<Pair>& matchesFiltered,
+            std::vector<double>& score,
             openMVG::Mat& E,
-            std::vector< bool >& valide,
+            std::vector<bool>& valide,
             KvldParameters& kvldParameters )
 {
   matchesFiltered.clear();
@@ -238,8 +238,8 @@ float KVLD( const Image< float >& I1,
   }
 
   std::fill( valide.begin(), valide.end(), true );
-  std::vector< double > scoretable( size, 0.0 );
-  std::vector< size_t > result( size, 0 );
+  std::vector<double> scoretable( size, 0.0 );
+  std::vector<size_t> result( size, 0 );
 
 
 //============main iteration formatch verification==========//
@@ -369,7 +369,7 @@ float KVLD( const Image< float >& I1,
       for (size_t i = 0; i < size; i++ )
         scoretable[ i ]=0;
 
-      std::vector< bool > switching;
+      std::vector<bool> switching;
       for (size_t i = 0; i < size; i++ )
         switching.push_back( false );
 

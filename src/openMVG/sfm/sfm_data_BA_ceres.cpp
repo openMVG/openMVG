@@ -59,20 +59,18 @@ struct PoseCenterConstraintCostFunction
   )
   const
   {
-    const T * cam_R = &cam_extrinsics[0];
-    const T * cam_t = &cam_extrinsics[3];
-    const T cam_R_transpose[3] = {-cam_R[0], -cam_R[1], -cam_R[2]};
+    using Vec3T = Eigen::Matrix<T,3,1>;
+    Eigen::Map<const Vec3T> cam_R(&cam_extrinsics[0]);
+    Eigen::Map<const Vec3T> cam_t(&cam_extrinsics[3]);
+    const Vec3T cam_R_transpose(-cam_R);
 
-    T pose_center[3];
+    Vec3T pose_center;
     // Rotate the point according the camera rotation
-    ceres::AngleAxisRotatePoint(cam_R_transpose, cam_t, pose_center);
-    pose_center[0] *= T(-1);
-    pose_center[1] *= T(-1);
-    pose_center[2] *= T(-1);
+    ceres::AngleAxisRotatePoint(cam_R_transpose.data(), cam_t.data(), pose_center.data());
+    pose_center = pose_center * T(-1);
 
-    residuals[0] = T(weight_[0]) * (pose_center[0] - T(pose_center_constraint_[0]));
-    residuals[1] = T(weight_[1]) * (pose_center[1] - T(pose_center_constraint_[1]));
-    residuals[2] = T(weight_[2]) * (pose_center[2] - T(pose_center_constraint_[2]));
+    Eigen::Map<Vec3T> residuals_eigen(residuals);
+    residuals_eigen = weight_.cast<T>().cwiseProduct(pose_center - pose_center_constraint_.cast<T>());
 
     return true;
   }
@@ -153,7 +151,7 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 
 Bundle_Adjustment_Ceres::Bundle_Adjustment_Ceres
 (
-  Bundle_Adjustment_Ceres::BA_Ceres_options options
+  const Bundle_Adjustment_Ceres::BA_Ceres_options & options
 )
 : ceres_options_(options)
 {}
@@ -240,8 +238,8 @@ bool Bundle_Adjustment_Ceres::Adjust
   ceres::Problem problem;
 
   // Data wrapper for refinement:
-  Hash_Map<IndexT, std::vector<double> > map_intrinsics;
-  Hash_Map<IndexT, std::vector<double> > map_poses;
+  Hash_Map<IndexT, std::vector<double>> map_intrinsics;
+  Hash_Map<IndexT, std::vector<double>> map_poses;
 
   // Setup Poses data & subparametrization
   for (const auto & pose_it : sfm_data.poses)

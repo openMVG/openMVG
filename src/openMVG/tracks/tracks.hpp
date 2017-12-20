@@ -15,7 +15,7 @@
 // It tracks the position of features along the series of image from pairwise
 //  correspondences.
 //
-// From map< [imageI,ImageJ], [indexed matches array] > it builds tracks.
+// From map<[imageI,ImageJ], [indexed matches array] > it builds tracks.
 //
 // Usage :
 //  PairWiseMatches map_Matches;
@@ -57,7 +57,7 @@ namespace tracks  {
 //  The corresponding image points with their imageId and FeatureId.
 using submapTrack = std::map<uint32_t, uint32_t>;
 // A track is a collection of {trackId, submapTrack}
-using STLMAPTracks = std::map< uint32_t, submapTrack>;
+using STLMAPTracks = std::map<uint32_t, submapTrack>;
 
 struct TracksBuilder
 {
@@ -131,7 +131,7 @@ struct TracksBuilder
     // From the UF tree, create tracks of the image indexes.
     //  If an image index appears two time the track must disappear
     //  If a track is too short it has to be removed.
-    std::map<uint32_t, std::set<uint32_t> > tracks;
+    std::map<uint32_t, std::set<uint32_t>> tracks;
 
     std::set<uint32_t> problematic_track_id;
     // Build tracks from the UF tree, track problematic ids.
@@ -213,7 +213,7 @@ struct TracksBuilder
 struct SharedTrackVisibilityHelper
 {
   private:
-  using TrackIdsPerView = std::map< uint32_t, std::set<uint32_t>>;
+  using TrackIdsPerView = std::map<uint32_t, std::set<uint32_t>>;
 
   TrackIdsPerView track_ids_per_view_;
   const STLMAPTracks & tracks_;
@@ -414,7 +414,7 @@ struct TracksUtilsMap
       auto itF =
         find_if(
           map_tracks.begin(), map_tracks.end(),
-          [id] (const std::pair<uint32_t, submapTrack > & s) { return (id == s.first); }
+          [id] (const std::pair<uint32_t, submapTrack> & s) { return (id == s.first); }
         );
       // The current track.
       const submapTrack & map_ref = itF->second;

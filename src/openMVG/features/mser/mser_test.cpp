@@ -28,7 +28,7 @@ TEST( MSER , Extraction )
   // Inverted image
   Image<unsigned char> image4( 255 - image.array() );
 
-  std::vector< MSERRegion > regs;
+  std::vector<MSERRegion> regs;
 
   MSERExtractor extr4( 2 , 0.0005, 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
   extr4.Extract( image4 , regs );
@@ -78,7 +78,7 @@ TEST( MSER , Extraction_Synthetic )
     image.block<10,10>(15,15).setConstant(1);
     WriteImage( "in_1.png" , image );
 
-    std::vector< MSERRegion > regs;
+    std::vector<MSERRegion> regs;
     // Dark regions
     MSERExtractor extr( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
     extr.Extract( image , regs );
@@ -93,7 +93,7 @@ TEST( MSER , Extraction_Synthetic )
     WriteImage( "in_2.png" , image );
 
     // Dark regions
-    std::vector< MSERRegion > regs;
+    std::vector<MSERRegion> regs;
     MSERExtractor extr( 2 , 0.0005 , 0.1 , 0.5 , 0.5 , MSERExtractor::MSER_4_CONNECTIVITY );
     extr.Extract( Image<unsigned char>( 255 - image.array() ) , regs );
 

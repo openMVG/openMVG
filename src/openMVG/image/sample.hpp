@@ -311,7 +311,7 @@ struct SamplerSpline64
 /**
 * @brief Template class used to convert a pixel from a type to pixel in double format
 */
-template< typename T>
+template<typename T>
 struct RealPixel
 {
   using base_type = T;
@@ -408,8 +408,8 @@ struct RealPixel<float>
 /**
 * @brief overloading for Rgb
 */
-template< typename T >
-struct RealPixel< Rgb<T> >
+template<typename T>
+struct RealPixel<Rgb<T>>
 {
   using base_type = Rgb<T>;
   using real_type = Rgb<double>;
@@ -441,8 +441,8 @@ struct RealPixel< Rgb<T> >
 /**
 * @brief overloading for rgba
 */
-template< typename T>
-struct RealPixel< Rgba<T> >
+template<typename T>
+struct RealPixel<Rgba<T>>
 {
   using base_type = Rgba<T>;
   using real_type = Rgba<double>;
@@ -474,7 +474,7 @@ struct RealPixel< Rgba<T> >
 /**
  ** Generic sampling of image using a sampling function
  **/
-template< typename SamplerFunc>
+template<typename SamplerFunc>
 struct Sampler2d
 {
     explicit Sampler2d( const SamplerFunc & sampler = SamplerFunc() )

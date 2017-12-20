@@ -216,7 +216,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     const std::vector<IndMatch> & vec_matchesInd = iter->second;
 
     //-- Edges names:
-    std::pair< std::string, std::string > p_imaNames;
+    std::pair<std::string, std::string> p_imaNames;
     p_imaNames = make_pair( _vec_fileNames[ I ], _vec_fileNames[ J ] );
     std::cout << "Current edge : "
       << stlplus::filename_part(p_imaNames.first) << "\t"
@@ -536,11 +536,11 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
   if (connectedComponentCount > 1)  // If more than one CC, keep the largest
   {
     // Search the largest CC index
-    const std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs =
+    const std::map<IndexT, std::set<lemon::ListGraph::Node>> map_subgraphs =
       openMVG::graph::exportGraphToMapSubgraphs<lemon::ListGraph, IndexT>(putativeGraph.g);
     size_t count = std::numeric_limits<size_t>::min();
-    std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iterLargestCC = map_subgraphs.end();
-    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    std::map<IndexT, std::set<lemon::ListGraph::Node>>::const_iterator iterLargestCC = map_subgraphs.end();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node>>::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter->second.size() > count)  {
@@ -551,7 +551,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     }
 
     //-- Remove all nodes that are not listed in the largest CC
-    for (std::map<IndexT, std::set<lemon::ListGraph::Node> >::const_iterator iter = map_subgraphs.begin();
+    for (std::map<IndexT, std::set<lemon::ListGraph::Node>>::const_iterator iter = map_subgraphs.begin();
         iter != map_subgraphs.end(); ++iter)
     {
       if (iter == iterLargestCC) // Skip this CC since it's the one we want to keep

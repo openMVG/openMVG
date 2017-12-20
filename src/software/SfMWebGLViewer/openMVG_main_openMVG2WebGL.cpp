@@ -18,6 +18,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -153,7 +154,7 @@ bool ColorizeTracks(
         std::back_inserter(vec_cardinal),
         stl::RetrieveValue());
       using namespace stl::indexed_sort;
-      std::vector< sort_index_packet_descend< IndexT, IndexT> > packet_vec(vec_cardinal.size());
+      std::vector< sort_index_packet_descend< IndexT, IndexT>> packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
       // First image index with the most of occurence

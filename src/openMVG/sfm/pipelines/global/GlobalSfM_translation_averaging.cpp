@@ -338,7 +338,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   //
   Pair_Set rotation_pose_id_graph;
   std::set<IndexT> set_pose_ids;
-  std::transform(map_globalR.begin(), map_globalR.end(),
+  std::transform(map_globalR.cbegin(), map_globalR.cend(),
     std::inserter(set_pose_ids, set_pose_ids.begin()), stl::RetrieveKey());
   // List shared correspondences (pairs) between poses
   for (const auto & match_iterator : matches_provider->pairWise_matches_)
@@ -356,7 +356,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     }
   }
   // List putative triplets (from global rotations Ids)
-  const std::vector< graph::Triplet > vec_triplets =
+  const std::vector<graph::Triplet> vec_triplets =
     graph::TripletListing(rotation_pose_id_graph);
   std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
 
@@ -402,7 +402,10 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     }
     // Collect edges that are covered by the triplets
     std::vector<myEdge> vec_edges;
-    std::transform(map_tripletIds_perEdge.begin(), map_tripletIds_perEdge.end(), std::back_inserter(vec_edges), stl::RetrieveKey());
+    std::transform(map_tripletIds_perEdge.cbegin(),
+                   map_tripletIds_perEdge.cend(),
+                   std::back_inserter(vec_edges),
+                   stl::RetrieveKey());
 
     openMVG::sfm::MutexSet<myEdge> m_mutexSet;
 
@@ -412,9 +415,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
       "\nRelative translations computation (edge coverage algorithm)\n");
 
 #  ifdef OPENMVG_USE_OPENMP
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(omp_get_max_threads());
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(omp_get_max_threads());
 #  else
-    std::vector< std::vector<RelativeInfo_Vec> > initial_estimates(1);
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(1);
 #  endif
 
     #ifdef OPENMVG_USE_OPENMP
@@ -600,7 +603,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 {
   // List matches that belong to the triplet of poses
   PairWiseMatches map_triplet_matches;
-  const std::set<IndexT> set_pose_ids = {poses_id.i, poses_id.j, poses_id.k};
+  const std::set<IndexT> set_pose_ids {poses_id.i, poses_id.j, poses_id.k};
   // List shared correspondences (pairs) between poses
   for (const auto & match_iterator : matches_provider->pairWise_matches_)
   {
@@ -645,7 +648,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
       const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
       intrinsic_ids.insert(view->id_intrinsic);
       const features::PointFeature pt = features_provider->getFeatures(idx_view)[track_it.second];
-      xxx[index++]->col(cpt) = ((*cam)(cam->get_ud_pixel(pt.coords().cast<double>()))).hnormalized();
+      xxx[index++]->col(cpt) = ((*cam)(cam->get_ud_pixel(pt.coords().cast<double>()))).colwise().hnormalized();
     }
     ++cpt;
   }

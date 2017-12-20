@@ -32,7 +32,7 @@ namespace graph
 * @return Connected component of input graph
 */
 template <typename GraphT, typename IndexT>
-std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs
+std::map<IndexT, std::set<lemon::ListGraph::Node>>  exportGraphToMapSubgraphs
 (
   const GraphT & g
 )
@@ -41,7 +41,7 @@ std::map<IndexT, std::set<lemon::ListGraph::Node> >  exportGraphToMapSubgraphs
   IndexMap connectedNodeMap( g );
   lemon::connectedComponents( g, connectedNodeMap );
 
-  std::map<IndexT, std::set<lemon::ListGraph::Node> > map_subgraphs;
+  std::map<IndexT, std::set<lemon::ListGraph::Node>> map_subgraphs;
 
   // Create subgraphs' map
   using NodeIterator = lemon::ListGraph::NodeIt;

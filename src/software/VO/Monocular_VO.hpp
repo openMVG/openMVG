@@ -55,7 +55,7 @@ struct VO_Monocular
   std::vector<uint64_t> trackedLandmarkIds_;
 
   // Landmark Id per frame (for easier pairing)
-  std::deque< std::set<uint32_t> > landmarkListPerFrame_;
+  std::deque<std::set<uint32_t>> landmarkListPerFrame_;
 
   // Tracking
   Abstract_Tracker * tracker_;

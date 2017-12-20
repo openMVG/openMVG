@@ -289,14 +289,17 @@ else (SUITESPARSE)
 endif (SUITESPARSE)
 
 # CXSparse.
-IF (CXSPARSE)
+if (CXSPARSE)
   # openMVG: cxsparse already exists
-  SET(CXSPARSE_INCLUDE_DIRS ../cxsparse/Include) # OpenMVG
-  SET(CXSPARSE_FOUND ON)
-  MESSAGE("-- Found CXSparse in: ${CXSPARSE_INCLUDE_DIRS}, "
+  set(CXSPARSE_INCLUDE_DIRS ../cxsparse/Include) # OpenMVG
+  set(CXSPARSE_FOUND ON)
+  message("-- Found CXSparse in: ${CXSPARSE_INCLUDE_DIRS}, "
       "building with CXSparse.")
-  SET(CXSPARSE_LIBRARIES cxsparse)
-ENDIF (CXSPARSE)
+  set(CXSPARSE_LIBRARIES cxsparse)
+else (CXSPARSE)
+  message("-- Building without CXSPARSE.")
+  list(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)
+endif (CXSPARSE)
 
 # Ensure that the user understands they have disabled all sparse libraries.
 if (NOT SUITESPARSE AND NOT CXSPARSE AND NOT EIGENSPARSE)

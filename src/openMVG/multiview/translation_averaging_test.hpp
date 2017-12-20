@@ -100,10 +100,10 @@ openMVG::NViewDataSet Setup_RelativeTranslations_AndNviewDataset
   // Init the relative pair of motion depending of the asked configuration:
   // -2-view: bearing direction,
   // -3-view: triplet of bearing direction.
-  std::vector< openMVG::Pair_Vec > motion_group;
+  std::vector<openMVG::Pair_Vec > motion_group;
   if (bRelative_Translation_PerTriplet)
   {
-    std::vector< openMVG::graph::Triplet > vec_triplets;
+    std::vector<openMVG::graph::Triplet> vec_triplets;
     for (int i = 0; i < iNviews; ++i)
     {
       const openMVG::IndexT iPlus1 = modifiedMod(i+1,iNviews);

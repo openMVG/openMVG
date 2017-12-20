@@ -23,7 +23,7 @@ namespace image
  ** @param src input image
  ** @param out output image
  **/
-template < typename Image >
+template <typename Image>
 void ImageHalfSample( const Image & src , Image & out )
 {
   const int new_width  = src.Width() / 2;
@@ -46,7 +46,7 @@ void ImageHalfSample( const Image & src , Image & out )
 /**
 * @brief Image decimation (get only one pixel over two - no interpolation)
 */
-template< typename Image >
+template<typename Image>
 void ImageDecimate( const Image & src , Image & out )
 {
   const int new_width  = src.Width() / 2;
@@ -66,7 +66,7 @@ void ImageDecimate( const Image & src , Image & out )
 /**
 * @brief Image Upsample (by a factor of 2 by using linear interpolation)
 */
-template< typename Image >
+template<typename Image>
 void ImageUpsample( const Image & src , Image & out )
 {
   const int new_width  = src.Width() * 2;
@@ -98,7 +98,7 @@ void ImageUpsample( const Image & src , Image & out )
  **/
 template <typename Image , typename RessamplingFunctor>
 void GenericRessample( const Image & src ,
-                       const std::vector< std::pair< float , float > > & sampling_pos ,
+                       const std::vector<std::pair<float, float >> & sampling_pos ,
                        const int output_width ,
                        const int output_height ,
                        const RessamplingFunctor & sampling_func ,
@@ -108,7 +108,7 @@ void GenericRessample( const Image & src ,
 
   out.resize( output_width , output_height );
 
-  std::vector< std::pair< float , float > >::const_iterator it_pos = sampling_pos.begin();
+  std::vector<std::pair<float, float >>::const_iterator it_pos = sampling_pos.begin();
 
   for (int i = 0; i < output_height; ++i )
   {

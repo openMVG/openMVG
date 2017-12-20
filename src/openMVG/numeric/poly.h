@@ -49,7 +49,7 @@ int SolveCubicPolynomial( Real a, Real b, Real c,
       x[0] = -x[0];
   }
   else // Three roots: Viete's formula
-  { 
+  {
     if (3 * p >= -eps * tolp) // p=0 and d<=0 implies q=0: triple root 0
     {
       n = 1;
@@ -137,10 +137,10 @@ static void solveQuarticPolynomial
   const std::complex<double> Q7 = 2. * sqrt(Q4 / 12. + Q6);
 
   real_roots = {
-    (-b - Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
-    (-b - Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
-    (-b + Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.,
-    (-b + Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.};
+    {(-b - Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+      (-b - Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 - Q3 / Q7)).real() / 4.,
+      (-b + Q7 - sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.,
+      (-b + Q7 + sqrt(4. * Q4 / 6. - 4. * Q6 + Q3 / Q7)).real() / 4.}};
 }
 
 /// Refine the quartic roots

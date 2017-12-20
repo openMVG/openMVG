@@ -31,6 +31,8 @@
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/numeric/numeric.h"
 
+#include <array>
+
 namespace openMVG {
 
 // HZ 9.6 page 257 (formula 9.12)
@@ -69,15 +71,14 @@ void EssentialFromRt(const Mat3 &R1,
   Mat3 R;
   Vec3 t;
   RelativeCameraMotion(R1, t1, R2, t2, &R, &t);
-  Mat3 Tx = CrossProductMatrix(t);
+  const Mat3 Tx = CrossProductMatrix(t);
   *E = Tx * R;
 }
 
 // HZ 9.7 page 259 (Result 9.19)
 void MotionFromEssential(const Mat3 &E,
-                         std::vector<Mat3> *Rs,
-                         std::vector<Vec3> *ts) {
-  Eigen::  JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
+                         std::vector<geometry::Pose3> * relative_poses) {
+  Eigen::JacobiSVD<Mat3> USV(E, Eigen::ComputeFullU|Eigen::ComputeFullV);
   Mat3 U =  USV.matrixU();
   Mat3 Vt = USV.matrixV().transpose();
 
@@ -98,61 +99,17 @@ void MotionFromEssential(const Mat3 &E,
   const Mat3 U_W_Vt = U * W * Vt;
   const Mat3 U_Wt_Vt = U * W.transpose() * Vt;
 
-  Rs->resize(4);
-  ts->resize(4);
-  (*Rs)[0] = U_W_Vt;  (*ts)[0] =  U.col(2);
-  (*Rs)[1] = U_W_Vt;  (*ts)[1] = -U.col(2);
-  (*Rs)[2] = U_Wt_Vt; (*ts)[2] =  U.col(2);
-  (*Rs)[3] = U_Wt_Vt; (*ts)[3] = -U.col(2);
-}
-
-// HZ 9.6 pag 259 (9.6.3 Geometrical interpretation of the 4 solutions)
-int MotionFromEssentialChooseSolution(const std::vector<Mat3> &Rs,
-                                      const std::vector<Vec3> &ts,
-                                      const Mat3 &K1,
-                                      const Vec2 &x1,
-                                      const Mat3 &K2,
-                                      const Vec2 &x2) {
-  assert(Rs.size() == 4);
-  assert(ts.size() == 4);
-
-  Mat34 P1, P2;
-  // Set P1 = K1 [Id|0]
-  const Mat3 R1 = Mat3::Identity();
-  const Vec3 t1 = Vec3::Zero();
-  P_From_KRt(K1, R1, t1, &P1);
-
-  for (int i = 0; i < 4; ++i) {
-    const Mat3 &R2 = Rs[i];
-    const Vec3 &t2 = ts[i];
-    P_From_KRt(K2, R2, t2, &P2);
-    Vec3 X;
-    TriangulateDLT(P1, x1.homogeneous(), P2, x2.homogeneous(), &X);
-    // Test if point is front to the two cameras (positive depth)
-    if (Depth(R1, t1, X) > 0 && Depth(R2, t2, X) > 0) {
-      return i;
-    }
+  const std::array<Mat3, 2> R{{U_W_Vt, U_Wt_Vt}};
+  const std::array<Vec3, 2> t{{U.col(2), -U.col(2)}};
+  if (relative_poses)
+  {
+    relative_poses->clear();
+    relative_poses->reserve(4);
+    relative_poses->emplace_back(R[0], -R[0].transpose() * t[0]);
+    relative_poses->emplace_back(R[1], -R[1].transpose() * t[1]);
+    relative_poses->emplace_back(R[0], -R[0].transpose() * t[1]);
+    relative_poses->emplace_back(R[1], -R[1].transpose() * t[0]);
   }
-  return -1;
-}
-
-bool MotionFromEssentialAndCorrespondence(const Mat3 &E,
-                                          const Mat3 &K1,
-                                          const Vec2 &x1,
-                                          const Mat3 &K2,
-                                          const Vec2 &x2,
-                                          Mat3 *R,
-                                          Vec3 *t) {
-  std::vector<Mat3> Rs;
-  std::vector<Vec3> ts;
-  MotionFromEssential(E, &Rs, &ts);
-  const int solution = MotionFromEssentialChooseSolution(Rs, ts, K1, x1, K2, x2);
-  if (solution >= 0) {
-    *R = Rs[solution];
-    *t = ts[solution];
-    return true;
-  }
-  return false;
 }
 
 }  // namespace openMVG

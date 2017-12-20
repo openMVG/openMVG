@@ -26,7 +26,7 @@ TEST(Ressampling,SampleSamePosition)
 
 
   // Build sampling grid
-  std::vector< std::pair< float , float > > sampling_grid;
+  std::vector<std::pair<float , float >> sampling_grid;
   sampling_grid.reserve(image.Width()*image.Height());
   for (int i = 0; i < image.Height(); ++i )
   {
@@ -73,7 +73,7 @@ bool ImageRotation(
     const float cs = cosf( -cur_angle );
     const float ss = sinf( -cur_angle );
 
-    std::vector< std::pair<float,float> > sampling_grid;
+    std::vector<std::pair<float,float>> sampling_grid;
     sampling_grid.reserve(image.Width()*image.Height());
     // Compute sampling grid
     for (int i = 0; i < image.Height(); ++i )

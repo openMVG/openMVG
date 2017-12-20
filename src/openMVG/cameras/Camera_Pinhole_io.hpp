@@ -18,7 +18,7 @@ void openMVG::cameras::Pinhole_Intrinsic::save( Archive & ar ) const
 {
     IntrinsicBase::save(ar);
     ar( cereal::make_nvp( "focal_length", K_( 0, 0 ) ) );
-    const std::vector<double> pp = {K_( 0, 2 ), K_( 1, 2 )};
+    const std::vector<double> pp {K_( 0, 2 ), K_( 1, 2 )};
     ar( cereal::make_nvp( "principal_point", pp ) );
 }
 

@@ -46,7 +46,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       // Triplet inference (test over the composition error)
       //-------------------
       Pair_Set pairs = getPairs(relativeRotations);
-      std::vector< graph::Triplet > vec_triplets = graph::TripletListing(pairs);
+      std::vector<graph::Triplet> vec_triplets = graph::TripletListing(pairs);
 
       //-- Rejection triplet that are 'not' identity rotation (error to identity > 5°)
       TripletRotationRejection(5.0f, vec_triplets, relativeRotations);
@@ -156,7 +156,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
 ///  angular error once rotation composition have been computed.
 void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   const double max_angular_error,
-  std::vector< graph::Triplet > & vec_triplets,
+  std::vector<graph::Triplet> & vec_triplets,
   RelativeRotations & relativeRotations) const
 {
   const size_t edges_start_count = relativeRotations.size();
@@ -168,7 +168,7 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   // ROTATION OUTLIERS DETECTION
   //--
 
-  std::vector< graph::Triplet > vec_triplets_validated;
+  std::vector<graph::Triplet> vec_triplets_validated;
   vec_triplets_validated.reserve(vec_triplets.size());
 
   std::vector<float> vec_errToIdentityPerTriplet;
@@ -221,19 +221,19 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   // update to keep only useful triplets
   relativeRotations.clear();
   relativeRotations.reserve(map_relatives.size());
-  std::transform(map_relatives.begin(), map_relatives.end(), std::back_inserter(relativeRotations), stl::RetrieveValue());
-  std::transform(map_relatives.begin(), map_relatives.end(), std::inserter(used_pairs, used_pairs.begin()), stl::RetrieveKey());
+  std::transform(map_relatives.cbegin(), map_relatives.cend(), std::back_inserter(relativeRotations), stl::RetrieveValue());
+  std::transform(map_relatives.cbegin(), map_relatives.cend(), std::inserter(used_pairs, used_pairs.begin()), stl::RetrieveKey());
 
   // Display statistics about rotation triplets error:
   std::cout << "\nStatistics about rotation triplets:" << std::endl;
-  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
+  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend());
 
   std::sort(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
   if (!vec_errToIdentityPerTriplet.empty())
   {
-    Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end()), 20);
-    histo.Add(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
+    Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend()), 20);
+    histo.Add(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend());
     std::cout << histo.ToString() << std::endl;
   }
 

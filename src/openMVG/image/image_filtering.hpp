@@ -37,7 +37,7 @@ namespace image
  ** @param out Output image
  ** @param normalize true if kernel must be scaled by 1/2
  **/
-template< typename Image >
+template<typename Image>
 void ImageXDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel( -1.0, 0.0, 1.0 );
@@ -57,7 +57,7 @@ void ImageXDerivative( const Image & img , Image & out , const bool normalize = 
  ** @param out Output image
  ** @param normalize true if kernel must be normalized
  **/
-template< typename Image >
+template<typename Image>
 void ImageYDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel( -1.0, 0.0, 1.0 );
@@ -77,7 +77,7 @@ void ImageYDerivative( const Image & img , Image & out , const bool normalize = 
  ** @param out Output image
  ** @param normalize true if kernel must be scaled by 1/8
  **/
-template< typename Image >
+template<typename Image>
 void ImageSobelXDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel_horiz( -1.0, 0.0, 1.0 );
@@ -104,7 +104,7 @@ void ImageSobelXDerivative( const Image & img , Image & out , const bool normali
  ** @param out Output image
  ** @param normalize true if kernel must be scaled by 1/8
  **/
-template< typename Image >
+template<typename Image>
 void ImageSobelYDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel_horiz( 1.0, 2.0, 1.0 );
@@ -130,7 +130,7 @@ void ImageSobelYDerivative( const Image & img , Image & out , const bool normali
  ** @param out Output image
  ** @param normalize true if kernel must be scaled by 1/32
  **/
-template< typename Image >
+template<typename Image>
 void ImageScharrXDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel_horiz( -1.0, 0.0, 1.0 );
@@ -156,7 +156,7 @@ void ImageScharrXDerivative( const Image & img , Image & out , const bool normal
  ** @param out Output image
  ** @param normalize true if kernel must be scaled by 1/32
  **/
-template< typename Image >
+template<typename Image>
 void ImageScharrYDerivative( const Image & img , Image & out , const bool normalize = true )
 {
   Vec3 kernel_horiz( 3.0, 10.0, 3.0 );
@@ -184,7 +184,7 @@ void ImageScharrYDerivative( const Image & img , Image & out , const bool normal
  ** @param scale scale of filter (1 -> 3x3 filter; 2 -> 5x5, ...)
  ** @param bNormalize true if kernel must be normalized
  **/
-template< typename Image >
+template<typename Image>
 void ImageScaledScharrXDerivative( const Image & img , Image & out , const int scale , const bool bNormalize = true )
 {
   const int kernel_size = 3 + 2 * ( scale - 1 );
@@ -229,7 +229,7 @@ void ImageScaledScharrXDerivative( const Image & img , Image & out , const int s
  ** @param scale scale of filter (1 -> 3x3 filter; 2 -> 5x5, ...)
  ** @param bNormalize true if kernel must be normalized
  **/
-template< typename Image >
+template<typename Image>
 void ImageScaledScharrYDerivative( const Image & img , Image & out , const int scale , const bool bNormalize = true )
 {
   /*
@@ -275,7 +275,7 @@ void ImageScaledScharrYDerivative( const Image & img , Image & out , const int s
  ** @param k confidence interval param - kernel is width k * sigma * 2 + 1 -- using k = 3 gives 99% of gaussian curve
  ** @param border_mgmt either BORDER_COPY or BORDER_CROP to tell what to do with borders
  **/
-template< typename Image >
+template<typename Image>
 void ImageGaussianFilter( const Image & img , const double sigma , Image & out , const int k = 3 )
 {
   // Compute Gaussian filter
@@ -354,7 +354,7 @@ inline Vec ComputeGaussianKernel( const size_t size , const double sigma )
  ** @param kernel_size_x Size of horizontal kernel (must be an odd number or 0 for automatic computation)
  ** @param kernel_size_y Size of vertical kernel (must be an add number or 0 for automatic computation)
  **/
-template< typename Image >
+template<typename Image>
 void ImageGaussianFilter( const Image & img , const double sigma , Image & out ,
                           const size_t kernel_size_x , const size_t kernel_size_y )
 {

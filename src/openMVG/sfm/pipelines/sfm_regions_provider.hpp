@@ -19,6 +19,7 @@
 #include "openMVG/types.hpp"
 
 #include "third_party/progress/progress.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -139,7 +140,7 @@ public:
 
 protected:
   /// Regions per ViewId of the considered SfM_Data container
-  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions> > cache_;
+  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions>> cache_;
   std::unique_ptr<openMVG::features::Regions> region_type_;
 }; // Regions_Provider
 

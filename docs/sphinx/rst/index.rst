@@ -1,7 +1,3 @@
-.. openMVG documentation master file, created by
-   sphinx-quickstart on Wed Oct 30 11:05:58 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 ======================
 openMVG documentation!
@@ -10,14 +6,14 @@ openMVG documentation!
 .. toctree::
    :maxdepth: 1
    :hidden:
-   
-   openMVG/openMVG.rst
-   openMVG_Samples/openMVG_Samples.rst
-   software/softwares.rst
-   nonFree/patented.rst
-   dependencies/external_libs.rst
-   third_party/third_party.rst
-   FAQ/FAQ.rst
+
+   openMVG/openMVG
+   openMVG_Samples/openMVG_Samples
+   software/softwares
+   nonFree/patented
+   dependencies/external_libs
+   third_party/third_party
+   FAQ/FAQ
    bibliography
 
 
@@ -50,11 +46,11 @@ OpenMVG is cut in various modules:
 * **Libraries**, core modules,
 
   * comes with unit tests that assert algorithms results and show how use the code.
-  
+
 * **Samples**,
 
   * show how to use the library to build high_level algorithms.
-  
+
 * **Softwares**,
 
   *  ready to use tools to perform toolchain processing:
@@ -95,11 +91,10 @@ Dependencies
 OpenMVG comes as a standalone distribution, you don't need to install libraries to make it compiles
 and run.
 On Linux openMVG will use the local png, zlib and jpeg libraries if they are availables.
-   
+
 Indices and tables
 ----------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

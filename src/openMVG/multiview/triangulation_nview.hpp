@@ -22,58 +22,19 @@ namespace openMVG {
   void TriangulateNView
   (
     const Mat3X &x, // x's are landmark bearing vectors in each camera
-    const std::vector< Mat34 > &Ps, // Ps are projective cameras
+    const std::vector<Mat34> &Ps, // Ps are projective cameras
     Vec4 *X
   );
 
   // This method uses the algebraic distance approximation.
   // Note that this method works better when the 2D points are normalized
   // with an isotopic normalization.
-  void TriangulateNViewAlgebraic
+  bool TriangulateNViewAlgebraic
   (
     const Mat3X &x, // x's are landmark bearing vectors in each camera
-    const std::vector< Mat34 > &Ps, // Ps are projective cameras.
+    const std::vector<Mat34> &Ps, // Ps are projective cameras.
     Vec4 *X
   );
-
-  //Iterated linear method
-  class Triangulation
-  {
-    public:
-
-    size_t size() const;
-
-    void clear();
-
-    void add
-    (
-      const Mat34& projMatrix,
-      const Vec2 & p
-    );
-
-    // Return squared L2 sum of error
-    double error(const Vec3 &X) const;
-
-    // Compute the corresponding 3D point
-    Vec3 compute(int iter = 3) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Accessors
-
-    // These values are defined after a successful call to compute
-    double minDepth() const { return zmin; }
-    double maxDepth() const { return zmax; }
-    double error()    const { return err; }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Data members
-
-    protected:
-      mutable double zmin; // min depth, mutable since modified in compute(...) const;
-      mutable double zmax; // max depth, mutable since modified in compute(...) const;
-      mutable double err;  // re-projection error, mutable since modified in compute(...) const;
-      std::vector< std::pair<Mat34, Vec2>, Eigen::aligned_allocator<std::pair<Mat34, Vec2>> > views; // Proj matrix and associated image point
-  };
 
 }  // namespace openMVG
 

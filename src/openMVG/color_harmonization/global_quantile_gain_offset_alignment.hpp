@@ -78,7 +78,7 @@ static void Encode_histo_relation(
     sRMat & A, Vec & C,
     std::vector<linearProgramming::LP_Constraints::eLP_SIGN> & vec_sign,
     std::vector<double> & vec_costs,
-    std::vector< std::pair<double,double> > & vec_bounds)
+    std::vector<std::pair<double,double>> & vec_bounds)
 {
   const size_t Nima = (size_t) nImage;
   const size_t Nrelative = vec_relativeHistograms.size();
@@ -136,8 +136,8 @@ static void Encode_histo_relation(
 
     //-- compute the two cumulated and normalized histogram
 
-    const std::vector< size_t > & vec_histoI = edge.histoI;
-    const std::vector< size_t > & vec_histoJ = edge.histoJ;
+    const std::vector<size_t> & vec_histoI = edge.histoI;
+    const std::vector<size_t> & vec_histoJ = edge.histoJ;
 
     const size_t nBuckets = vec_histoI.size();
 
@@ -253,7 +253,7 @@ struct ConstraintBuilder_GainOffset
   }
   // Internal data
   size_t _Nima;
-  const std::vector< relativeColorHistogramEdge > & _vec_relative;
+  const std::vector<relativeColorHistogramEdge> & _vec_relative;
   const std::vector<size_t> & _vec_indexToFix;
 };
 

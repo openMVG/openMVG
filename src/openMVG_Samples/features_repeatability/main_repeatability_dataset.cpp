@@ -131,7 +131,7 @@ private:
 private:
   std::string folderPath_;
 
-  std::vector<image::Image<RGBColor> > vec_image_;
+  std::vector<image::Image<RGBColor>> vec_image_;
   std::vector<Mat3> vec_H_;
 };
 
@@ -162,7 +162,7 @@ void PointsToMat(
 
 struct RepeatabilityResults_Matching
 {
-  std::map< std::string, std::vector<double> > results;
+  std::map<std::string, std::vector<double>> results;
 
   bool exportToFile(const std::string & sFile, const std::string & sdatasetName) const
   {
@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 
       // For each image computes the regions:
       image::Image<unsigned char> imageGray;
-      Hash_Map<IndexT, std::unique_ptr<Regions> > map_regions;
+      Hash_Map<IndexT, std::unique_ptr<Regions>> map_regions;
       for (size_t i = 0; i < dataset.size(); ++i)
       {
         image::ConvertPixelType(dataset.image(i), &imageGray);

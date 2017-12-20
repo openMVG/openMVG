@@ -48,8 +48,10 @@
     EXPECT_MATRIX_NEAR( \
       ptImage, \
       /* (ptImage -> bearing -> projected image point -> remove the distortion) */ \
-      cam.cam2ima(cam.remove_disto(cam.ima2cam(cam.project(geometry::Pose3(), cam(ptImage))))), \
+      cam.cam2ima(cam.remove_disto(cam.ima2cam(cam.project(cam(ptImage))))), \
       epsilon); \
+    /* Cheirality test (positive depth) */ \
+    EXPECT_TRUE(CheiralityTest(cam(ptImage), geometry::Pose3{}, cam(ptImage)));\
+    EXPECT_FALSE(CheiralityTest(cam(ptImage), geometry::Pose3{}, -cam(ptImage)));\
   } \
 }
-

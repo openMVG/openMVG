@@ -135,16 +135,20 @@ public:
      Non-zero values depict the region of interest.
   @return regions The detected regions and attributes (the caller must delete the allocated data)
   */
-  std::unique_ptr<Regions_type> Describe_SURF_Anatomy(
+  std::unique_ptr<Regions_type> Describe_SIFT_Anatomy(
     const image::Image<unsigned char>& image,
     const image::Image<unsigned char>* mask = nullptr
   )
   {
+    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
+
+    if (image.size() == 0)
+      return regions;
+
     // Convert to float in range [0;1]
     const image::Image<float> If(image.GetMat().cast<float>()/255.0f);
 
     // compute sift keypoints
-    auto regions = std::unique_ptr<Regions_type>(new Regions_type);
     {
       const int supplementary_images = 3;
       // => in order to ensure each gaussian slice is used in the process 3 extra images are required:
@@ -211,7 +215,7 @@ public:
     const image::Image<unsigned char>* mask = nullptr
   ) override
   {
-    return Describe_SURF_Anatomy(image, mask);
+    return Describe_SIFT_Anatomy(image, mask);
   }
 
  private:

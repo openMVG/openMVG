@@ -51,5 +51,7 @@ UNIT_TEST(openMVG sfm_data_utils
 "openMVG_features;openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_filters
   "openMVG_features;openMVG_sfm")
-
+UNIT_TEST(openMVG sfm_data_graph_utils
+  "openMVG_features;openMVG_sfm")
+  
 add_subdirectory(pipelines)

@@ -47,7 +47,7 @@ private:
 
 TEST(ColorHarmonisation, Simple_offset) {
 
-  Histogram< double > histo( 0, 256, 255);
+  Histogram<double> histo( 0, 256, 255);
   for (size_t i=0; i < 6000; i++)
   {
     histo.Add(normal_distribution(127, 10)());
@@ -100,8 +100,8 @@ TEST(ColorHarmonisation, Simple_offset) {
 
 TEST(ColorHarmonisation, Offset_gain) {
 
-  Histogram< double > histo_ref( 0, 256, 255);
-  Histogram< double > histo_offset_gain( 0, 256, 255);
+  Histogram<double> histo_ref( 0, 256, 255);
+  Histogram<double> histo_offset_gain( 0, 256, 255);
   const double GAIN = 3.0;
   const double OFFSET = 160;
   //const double GAIN = 2.0;
@@ -173,7 +173,7 @@ TEST(ColorHarmonisation, Offset_gain) {
     jsxGraph.addYChart(histo_ref.GetHist(), "point");
     jsxGraph.UnsuspendUpdate();
     std::vector<double> xBin = histo_ref.GetXbinsValue();
-    std::pair< std::pair<double,double>, std::pair<double,double> > range = autoJSXGraphViewport<double>(xBin, histo_ref.GetHist());
+    const auto range = autoJSXGraphViewport<double>(xBin, histo_ref.GetHist());
     jsxGraph.setViewport(range);
     jsxGraph.close();
     _htmlDocStream.pushInfo(jsxGraph.toStr());
@@ -185,7 +185,7 @@ TEST(ColorHarmonisation, Offset_gain) {
     jsxGraph.addYChart(histo_offset_gain.GetHist(), "point");
     jsxGraph.UnsuspendUpdate();
     std::vector<double> xBin = histo_offset_gain.GetXbinsValue();
-    std::pair< std::pair<double,double>, std::pair<double,double> > range = autoJSXGraphViewport<double>(xBin, histo_offset_gain.GetHist());
+    const auto range = autoJSXGraphViewport<double>(xBin, histo_offset_gain.GetHist());
     jsxGraph.setViewport(range);
     jsxGraph.close();
     _htmlDocStream.pushInfo(jsxGraph.toStr());

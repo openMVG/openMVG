@@ -101,10 +101,10 @@ void ConvertPixelType( const ImageIn& imaIn, ImageOut *imaOut )
 * @param scaling factor applied to input color component
 * @tparam Tin Input color type
 * @tparam[out] Tout Output color type
-* @todo Use SFINAE to ensure input type is an intergral one
+* @todo Use SFINAE to ensure input type is an integral one
 * @todo Why not using RGBfColor as output type ?
 */
-template< typename Tin, typename Tout >
+template<typename Tin, typename Tout>
 inline void convertRGB2Float(
   const Tin& valIn,
   Tout& valOut,
@@ -124,7 +124,7 @@ inline void convertRGB2Float(
 * @tparam ImageIn Input image type
 * @todo Use SFINAE to ensure input type is an intergral one
 */
-template< typename ImageIn >
+template<typename ImageIn>
 void rgb2Float( const ImageIn& imaIn,
                 Image< RGBfColor > *imaOut, float factor = 1.0f / 255.f )
 {

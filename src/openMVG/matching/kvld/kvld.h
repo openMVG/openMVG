@@ -52,20 +52,20 @@ struct KvldParameters
 // magnitudes: store gradient norms of pixels of each scale image into a vector of images
 struct ImageScale
 {
-  std::vector< openMVG::image::Image< float > > angles;
-  std::vector< openMVG::image::Image< float > > magnitudes;
-  std::vector< double > ratios;
+  std::vector<openMVG::image::Image<float>> angles;
+  std::vector<openMVG::image::Image<float>> magnitudes;
+  std::vector<double> ratios;
   double radius_size;
   double step;
 
-  ImageScale(const openMVG::image::Image< float >& I, double r = 5.0);
+  ImageScale(const openMVG::image::Image<float>& I, double r = 5.0);
   int getIndex( const double r )const;
 
 private:
   void GradAndNorm(
-    const openMVG::image::Image< float >& I,
-    openMVG::image::Image< float >& angle,
-    openMVG::image::Image< float >& m);
+    const openMVG::image::Image<float>& I,
+    openMVG::image::Image<float>& angle,
+    openMVG::image::Image<float>& m);
 };
 
 //====== VLD structures ======//
@@ -84,7 +84,7 @@ class VLD
 public:
   inline double get_contrast()const{ return contrast; }
   //====================constructors=====================//
-  template< typename T >
+  template<typename T>
   VLD( const ImageScale& series, T const& P1, T const& P2 );
 //=========================================class functions==============================================//
   inline double get_orientation()const
@@ -170,15 +170,15 @@ public:
 //
 //kvldParameters: container of minimum inlier rate, the value of K (=3 initially) and geometric verification flag (true initially)
 
-float KVLD(const openMVG::image::Image< float >& I1,
-  const openMVG::image::Image< float >& I2,
+float KVLD(const openMVG::image::Image<float>& I1,
+  const openMVG::image::Image<float>& I2,
   const std::vector<openMVG::features::SIOPointFeature> & F1,
   const std::vector<openMVG::features::SIOPointFeature> & F2,
-  const std::vector< openMVG::Pair >& matches,
-  std::vector< openMVG::Pair >& matchesFiltered,
-  std::vector< double >& score,
+  const std::vector<openMVG::Pair>& matches,
+  std::vector<openMVG::Pair>& matchesFiltered,
+  std::vector<double>& score,
   openMVG::Mat& E,
-  std::vector< bool >& valide,
+  std::vector<bool>& valide,
   KvldParameters& kvldParameters );
 
 #endif // OPENMVG_MATCHING_KVLD_H

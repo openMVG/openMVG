@@ -23,7 +23,10 @@
 
 namespace htmlDocument
 {
-  inline const std::string htmlMarkup(const std::string & markup, const std::string & text)
+  inline const std::string htmlMarkup(
+    const std::string & markup,
+    const std::string & text
+  )
   {
     std::ostringstream os;
     os << '<'<< markup <<'>' << text << "</"<< markup <<'>' <<"\n";
@@ -47,7 +50,10 @@ namespace htmlDocument
 
   /// Return a chain in the form attributes="val"
   template<typename T>
-  inline const std::string quotedAttributes(const std::string & attributes, const T & val)
+  inline const std::string quotedAttributes(
+    const std::string & attributes,
+    const T & val
+  )
   {
     std::ostringstream os;
     os << attributes << "=\"" << val << '"';
@@ -64,7 +70,10 @@ namespace htmlDocument
   }
 
   template<typename T, typename T2>
-  static std::pair< std::pair<T,T>, std::pair<T,T> > autoJSXGraphViewport(const std::vector<T> & vec_x, const std::vector<T2> & vec_y)
+  static std::pair<std::pair<T,T>, std::pair<T,T>> autoJSXGraphViewport(
+    const std::vector<T> & vec_x,
+    const std::vector<T2> & vec_y
+  )
   {
     if (!vec_x.empty() && !vec_y.empty() && vec_x.size() == vec_y.size())
     {
@@ -88,7 +97,10 @@ namespace htmlDocument
   }
 
   template<typename T, typename T2>
-  static std::pair< std::pair<T,T>, std::pair<T,T> > autoJSXGraphViewport(const std::vector<T2> & vec_y, bool bForceY0 = true)
+  static std::pair<std::pair<T,T>, std::pair<T,T>> autoJSXGraphViewport(
+    const std::vector<T2> & vec_y,
+    bool bForceY0 = true
+  )
   {
     if (!vec_y.empty())
     {
@@ -179,7 +191,7 @@ namespace htmlDocument
     }
 
     template<typename T>
-    void setViewport(const std::pair< std::pair<T,T>, std::pair<T,T> > & range)
+    void setViewport(const std::pair<std::pair<T,T>, std::pair<T,T>> & range)
     {
       stream
         << "board.setBoundingBox(["
@@ -199,8 +211,11 @@ namespace htmlDocument
     }
 
     template<typename T, typename T2>
-    void addXYChart(const std::vector<T> & vec_x, const std::vector<T2> & vec_y,
-      const std::string & stype)
+    void addXYChart(
+      const std::vector<T> & vec_x,
+      const std::vector<T2> & vec_y,
+      const std::string & stype
+    )
     {
       const size_t index0 = cpt++;
       const size_t index1 = cpt++;
@@ -237,7 +252,7 @@ namespace htmlDocument
 
     void UnsuspendUpdate()
     {
-       stream << "board.unsuspendUpdate();\n";
+      stream << "board.unsuspendUpdate();\n";
     }
 
     void close()

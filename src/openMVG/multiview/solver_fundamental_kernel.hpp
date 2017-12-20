@@ -53,13 +53,13 @@ namespace kernel {
 struct SevenPointSolver {
   enum { MINIMUM_SAMPLES = 7 };
   enum { MAX_MODELS = 3 };
-  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *F);
+  static void Solve(const Mat2X &x1, const Mat2X &x2, std::vector<Mat3> *F);
 };
 
 struct EightPointSolver {
   enum { MINIMUM_SAMPLES = 8 };
   enum { MAX_MODELS = 1 };
-  static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *Fs);
+  static void Solve(const Mat2X &x1, const Mat2X &x2, std::vector<Mat3> *Fs);
 };
 
 /**
@@ -81,13 +81,16 @@ struct EightPointSolver {
  */
 template<typename TMatX, typename TMatA>
 inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+  assert(x1.rows() == 3);
   for (typename TMatX::Index i = 0; i < x1.cols(); ++i) {
     const auto xx1 = x1.col(i).homogeneous().transpose();
     const auto xx2 = x2.col(i).homogeneous().transpose();
     A->row(i) <<
-      xx2(0) * xx1,
-      xx2(1) * xx1,
-      xx1;
+      x2(0, i) * x1.col(i).transpose(),
+      x2(1, i) * x1.col(i).transpose(),
+      x2(2, i) * x1.col(i).transpose();
   }
 }
 

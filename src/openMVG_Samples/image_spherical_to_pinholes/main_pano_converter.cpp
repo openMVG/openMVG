@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   using CGeomFunctor = CsphericalMapping;
 
   //-- Generate N cameras along the X axis
-  std::vector< openMVG::PinholeCamera_R > vec_cam;
+  std::vector<openMVG::PinholeCamera_R> vec_cam;
 
   const double twoPi = M_PI * 2.0;
   const double alpha = twoPi / static_cast<double>(nb_split);

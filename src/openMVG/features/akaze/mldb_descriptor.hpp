@@ -33,7 +33,7 @@ namespace features {
   ** @param mean_Lx mean of Lx in each subdivision
   ** @param mean_Ly mean of Ly in each subdivision
   **/
-  template< typename Real>
+  template<typename Real>
   static inline void ComputeMeanValuesInSubdivisions(
       const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & samples_Li ,
       const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & samples_Lx ,
@@ -106,7 +106,7 @@ namespace features {
   ** @param outIndex input/ouput index to store description
   ** @param desc ouput vector (idealy a std::bitset) containing binary description of theses regions
   **/
-  template< typename DescriptorType , typename Real>
+  template<typename DescriptorType, typename Real>
   static inline void ComputeBinaryValues(
     const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Li ,
     const Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> & mean_Lx ,
@@ -143,7 +143,7 @@ namespace features {
     ** @param ipt Input interest point
     ** @param desc output descriptor (binary descriptor)
     **/
-  template< typename Real>
+  template<typename Real>
   void ComputeMLDBDescriptor(
     const image::Image<Real> & Li,
     const image::Image<Real> &Lx,

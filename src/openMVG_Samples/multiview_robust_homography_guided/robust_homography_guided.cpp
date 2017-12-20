@@ -54,7 +54,7 @@ int main() {
   using namespace openMVG::features;
   std::unique_ptr<Image_describer> image_describer
     (new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params(-1)));
-  std::map<IndexT, std::unique_ptr<features::Regions> > regions_perImage;
+  std::map<IndexT, std::unique_ptr<features::Regions>> regions_perImage;
   image_describer->Describe(imageL, regions_perImage[0]);
   image_describer->Describe(imageR, regions_perImage[1]);
 
@@ -182,7 +182,7 @@ int main() {
 
       // Display some statistics of reprojection errors
       float dMin, dMax, dMean, dMedian;
-      minMaxMeanMedian<float>(vec_residuals.begin(), vec_residuals.end(),
+      minMaxMeanMedian<float>(vec_residuals.cbegin(), vec_residuals.cend(),
                             dMin, dMax, dMean, dMedian);
 
       std::cout << std::endl
@@ -198,7 +198,7 @@ int main() {
       // Use the computed model to check valid correspondences
       // a. by considering only the geometric error,
       // b. by considering geometric error and descriptor distance ratio.
-      std::vector< IndMatches > vec_corresponding_indexes(2);
+      std::vector<IndMatches> vec_corresponding_indexes(2);
 
       Mat xL, xR;
       PointsToMat(featsL, xL);

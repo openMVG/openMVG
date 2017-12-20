@@ -229,7 +229,7 @@ double RelRotationAvgError
     boost::accumulators::stats<
       boost::accumulators::tag::min,
       boost::accumulators::tag::mean,
-      boost::accumulators::tag::max> > acc;
+      boost::accumulators::tag::max>> acc;
 
   for (int i=0; i < RelRs.size(); ++i) {
     const RelativeRotation& relR = RelRs[i];

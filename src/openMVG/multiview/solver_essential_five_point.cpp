@@ -34,7 +34,7 @@
 
 namespace openMVG {
 
-Mat FivePointsNullspaceBasis(const Mat2X &x1, const Mat2X &x2) {
+Mat FivePointsNullspaceBasis(const Mat3X &x1, const Mat3X &x2) {
   Mat epipolar_constraint = Eigen::Matrix<double,9, 9>::Constant(0.0);
   fundamental::kernel::EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
   Eigen::SelfAdjointEigenSolver<Mat> solver
@@ -169,8 +169,8 @@ Mat FivePointsPolynomialConstraints(const Mat &E_basis) {
   return M;
 }
 
-void FivePointsRelativePose(const Mat2X &x1,
-                            const Mat2X &x2,
+void FivePointsRelativePose(const Mat3X &x1,
+                            const Mat3X &x2,
                             std::vector<Mat3> *Es) {
   // Step 1: Nullspace Extraction.
   const Eigen::Matrix<double, 9, 4> E_basis = FivePointsNullspaceBasis(x1, x2);

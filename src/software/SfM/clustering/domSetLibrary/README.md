@@ -46,7 +46,7 @@ int main() {
   const size_t clusterSizeUpperBound = 15;
   domset.clusterViews(clusterSizeLowerBound, clusterSizeUpperBound);
 
-  std::vector<std::vector<size_t> > clusters;
+  std::vector<std::vector<size_t>> clusters;
   clusters = domset.getClusters();
 }
 

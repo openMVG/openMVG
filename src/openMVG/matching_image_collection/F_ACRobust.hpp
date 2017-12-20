@@ -56,7 +56,7 @@ struct GeometricFilter_FMatrix_AC
     // Get corresponding point regions arrays
     //--
 
-    Mat xI,xJ;
+    Mat2X xI,xJ;
     MatchesPairToMat(pairIndex, vec_PutativeMatches, sfm_data, regions_provider, xI, xJ);
 
     //--

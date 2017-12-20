@@ -276,7 +276,7 @@ TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_CompleteGraph_outliers)
 
   //Link each camera to the two next ones
   RelativeRotations vec_relativeRotEstimate;
-  std::vector<std::pair<size_t,size_t> > vec_unique;
+  std::vector<std::pair<size_t,size_t>> vec_unique;
   for (size_t i = 0; i < iNviews; ++i)
   {
     size_t index0 = i;

@@ -37,9 +37,9 @@ struct PointS
 //It is used to efficiently construct the pyramid of scale images in KVLD
 struct IntegralImages
 {
-  openMVG::image::Image< double > map;
+  openMVG::image::Image<double> map;
 
-  IntegralImages(const openMVG::image::Image< float >& I);
+  IntegralImages(const openMVG::image::Image<float>& I);
 
   inline double operator()( double x1, double y1, double x2, double y2 )const
   {
@@ -76,16 +76,16 @@ private:
 std::ofstream& writeDetector( std::ofstream& out, const openMVG::features::SIOPointFeature& vect );
 std::ifstream& readDetector( std::ifstream& in, openMVG::features::SIOPointFeature& point );
 //======================================elemetuary operations================================//
-template < typename T >
+template <typename T>
 inline T point_distance( const T x1, const T y1, const T x2, const T y2 )
 {//distance of points
   return std::hypot( x1 - x2, y1 - y2);
 }
 
-template < typename T >
+template <typename T>
 inline float point_distance( const T& P1, const T& P2 )
 {//distance of points
-  return point_distance< float >( P1.x(), P1.y(), P2.x(), P2.y() );
+  return point_distance<float>( P1.x(), P1.y(), P2.x(), P2.y() );
 }
 
 inline bool inside( int w, int h, int x,int y, double radius )
@@ -145,7 +145,7 @@ inline void max( double* list, double& weight, int size, int& index, int& second
   weight = best;
 }
 
-template< typename ARRAY >
+template<typename ARRAY>
 inline void normalize_weight( ARRAY & weight )
 {
   double total = weight.array().sum();
@@ -154,7 +154,7 @@ inline void normalize_weight( ARRAY & weight )
       weight[ i ] /= total;
 }
 
-template< typename T >
+template<typename T>
 inline float consistent( const T& a1, const T& a2, const T& b1, const T& b2 )
 {
   float ax = float( a1.x() - a2.x() );
@@ -182,6 +182,6 @@ inline float consistent( const T& a1, const T& a2, const T& b1, const T& b2 )
   float d = std::min( d1_error / std::min( d1, point_distance( b1, b2 ) ), d2_error / std::min( d2, point_distance( b1, b2 ) ) );
   return d;
 }
-float getRange(const openMVG::image::Image< float >& I, int a, const float p);
+float getRange(const openMVG::image::Image<float>& I, int a, const float p);
 
 #endif // OPENMVG_MATCHING_KVLD_ALGORITHM_H

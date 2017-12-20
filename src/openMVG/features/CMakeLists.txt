@@ -27,6 +27,7 @@ set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 UNIT_TEST(openMVG features "openMVG_features;stlplus")
 UNIT_TEST(openMVG image_describer "openMVG_features;stlplus")
 
+add_subdirectory(akaze)
 add_subdirectory(mser)
-add_subdirectory(tbmr)
 add_subdirectory(sift)
+add_subdirectory(tbmr)

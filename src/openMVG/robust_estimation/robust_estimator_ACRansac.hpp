@@ -210,7 +210,7 @@ NFA_Interface<Kernel>::ComputeNFA_and_inliers
     //   - to compute the NFA for every sample of the datum.
     const int nBins = 20;
     Histogram<double> histo(0.0f, m_max_threshold, nBins);
-    histo.Add(m_residuals.begin(), m_residuals.end());
+    histo.Add(m_residuals.cbegin(), m_residuals.cend());
 
     // Compute NFA scoring from the cumulative histogram
 
