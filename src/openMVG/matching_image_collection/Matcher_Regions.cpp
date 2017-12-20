@@ -26,7 +26,6 @@ Matcher_Regions::Matcher_Regions(
 }
 
 void Matcher_Regions::Match(
-  const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
   PairWiseMatchesContainer & map_PutativesMatches,
