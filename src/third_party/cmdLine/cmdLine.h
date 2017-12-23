@@ -134,13 +134,13 @@ inline bool OptionField<std::string>::read_param(const std::string& param) {
 }
 
 /// New switch option
-OptionSwitch make_switch(char c, std::string name="") {
+inline OptionSwitch make_switch(char c, std::string name="") {
     return OptionSwitch(c, name);
 }
 
 /// New option with argument.
 template <class T>
-OptionField<T> make_option(char c, T& field, std::string name="") {
+inline OptionField<T> make_option(char c, T& field, std::string name="") {
     return OptionField<T>(c, field, name);
 }
 
