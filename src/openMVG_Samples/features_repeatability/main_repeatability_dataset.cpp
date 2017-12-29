@@ -111,7 +111,7 @@ private:
 
       const std::string path = folderPath_ + "/H1to" + std::to_string(i+1) + "p";
       std::ifstream f(path.c_str());
-      if (!f.is_open())
+      if (!f)
       {
         std::cerr << "Error: unable to load ground truth homography:\n"
              << path << std::endl;

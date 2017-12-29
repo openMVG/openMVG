@@ -38,7 +38,7 @@ bool computeIndexFromImageNames(
 {
   if (initialPairName.first == initialPairName.second)
   {
-    std::cerr << "\nInvalid image names. You cannot use the same image to initialize a pair." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid image names. You cannot use the same image to initialize a pair.";
     return false;
   }
 
@@ -69,9 +69,8 @@ bool computeIndexFromImageNames(
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << "Sequential/Incremental reconstruction" << std::endl
-            << " Perform incremental SfM (Initial Pair Essential + Resection)." << std::endl
-            << std::endl;
+  OPENMVG_LOG_INFO << "Sequential/Incremental reconstruction"
+            << "\n\tPerform incremental SfM (Initial Pair Essential + Resection).";
 
   CmdLine cmd;
 
@@ -97,42 +96,41 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
-    << "[-o|--outdir] path where the output data will be stored\n"
-    << "\n[Optional]\n"
-    << "[-a|--initialPairA] filename of the first image (without path)\n"
-    << "[-b|--initialPairB] filename of the second image (without path)\n"
-    << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
-      << "\t 1: Pinhole \n"
-      << "\t 2: Pinhole radial 1\n"
-      << "\t 3: Pinhole radial 3 (default)\n"
-      << "\t 4: Pinhole radial 3 + tangential 2\n"
-      << "\t 5: Pinhole fisheye\n"
-    << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
-      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
-      << "\t NONE -> intrinsic parameters are held as constant\n"
-      << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
-      << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
-      << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
-      << "\t -> NOTE: options can be combined thanks to '|'\n"
-      << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
-      <<      "\t\t-> refine the focal length & the principal point position\n"
-      << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
-      <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
-      << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
-      <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
-    << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
-    << "[-M|--match_file] path to the match file to use.\n"
-    << std::endl;
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-m|--matchdir] path to the matches that corresponds to the provided SfM_Data scene\n"
+      << "[-o|--outdir] path where the output data will be stored\n"
+      << "\n[Optional]\n"
+      << "[-a|--initialPairA] filename of the first image (without path)\n"
+      << "[-b|--initialPairB] filename of the second image (without path)\n"
+      << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
+        << "\t 1: Pinhole \n"
+        << "\t 2: Pinhole radial 1\n"
+        << "\t 3: Pinhole radial 3 (default)\n"
+        << "\t 4: Pinhole radial 3 + tangential 2\n"
+        << "\t 5: Pinhole fisheye\n"
+      << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
+        << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+        << "\t NONE -> intrinsic parameters are held as constant\n"
+        << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+        << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+        << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+        << "\t -> NOTE: options can be combined thanks to '|'\n"
+        << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+        <<      "\t\t-> refine the focal length & the principal point position\n"
+        << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+        <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
+        << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+        <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+      << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
+      << "[-M|--match_file] path to the match file to use.";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
-    std::cerr << "\n Invalid camera type" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid camera type";
     return EXIT_FAILURE;
   }
 
@@ -140,15 +138,14 @@ int main(int argc, char **argv)
     cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
   if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
   {
-    std::cerr << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option";
     return EXIT_FAILURE;
   }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -158,16 +155,14 @@ int main(int argc, char **argv)
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
   if (!regions_type)
   {
-    std::cerr << "Invalid: "
-      << sImage_describer << " regions type file." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid: " << sImage_describer << " regions type file.";
     return EXIT_FAILURE;
   }
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, sMatchesDir, regions_type)) {
-    std::cerr << std::endl
-      << "Invalid features." << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << sMatchesDir << ".";
     return EXIT_FAILURE;
   }
   // Matches reading
@@ -179,13 +174,12 @@ int main(int argc, char **argv)
       matches_provider->load(sfm_data, stlplus::create_filespec(sMatchesDir, "matches.f.bin")))
   )
   {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot load the match file.";
     return EXIT_FAILURE;
   }
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "It is an invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -193,7 +187,7 @@ int main(int argc, char **argv)
   {
     if (!stlplus::folder_create(sOutDir))
     {
-      std::cerr << "\nCannot create the output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create the output directory";
     }
   }
 
@@ -223,8 +217,8 @@ int main(int argc, char **argv)
     Pair initialPairIndex;
     if (!computeIndexFromImageNames(sfm_data, initialPairString, initialPairIndex))
     {
-        std::cerr << "Could not find the initial pairs <" << initialPairString.first
-          <<  ", " << initialPairString.second << ">!\n";
+        OPENMVG_LOG_ERROR << "Could not find the initial pairs <" << initialPairString.first
+          <<  ", " << initialPairString.second << ">!";
       return EXIT_FAILURE;
     }
     sfmEngine.setInitialPair(initialPairIndex);
@@ -232,14 +226,14 @@ int main(int argc, char **argv)
 
   if (sfmEngine.Process())
   {
-    std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << " Total Ac-Sfm took (s): " << timer.elapsed();
 
-    std::cout << "...Generating SfM_Report.html" << std::endl;
+    OPENMVG_LOG_INFO << "...Generating SfM_Report.html";
     Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
 
     //-- Export to disk computed scene (data & visualizable results)
-    std::cout << "...Export SfM_Data to disk." << std::endl;
+    OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";
     Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
       ESfM_Data(ALL));

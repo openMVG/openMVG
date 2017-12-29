@@ -9,8 +9,8 @@
 #include "openMVG/features/mser/mser.hpp"
 #include "openMVG/features/mser/mser_region.hpp"
 #include "openMVG/image/image_container.hpp"
+#include "openMVG/system/logger.hpp"
 
-#include <iostream>
 #include <stack>
 
 namespace openMVG
@@ -144,7 +144,7 @@ namespace openMVG
         }
         default:
         {
-          std::cerr << "Unhandled pixel direction" << std::endl;
+          OPENMVG_LOG_ERROR << "Unhandled pixel direction";
           return false;
         }
         }

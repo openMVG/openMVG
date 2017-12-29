@@ -13,12 +13,13 @@
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
+#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <memory>
 #include <utility>
@@ -185,7 +186,7 @@ namespace sfm {
       {
         if (!optional_intrinsics)
         {
-          std::cerr << "Intrinsic data is required for P3P solvers." << std::endl;
+          OPENMVG_LOG_ERROR << "Intrinsic data is required for P3P solvers.";
           return false;
         }
         //--
@@ -215,7 +216,7 @@ namespace sfm {
       {
         if (!optional_intrinsics)
         {
-          std::cerr << "Intrinsic data is required for P3P solvers." << std::endl;
+          OPENMVG_LOG_ERROR << "Intrinsic data is required for P3P solvers.";
           return false;
         }
         //--
@@ -244,7 +245,7 @@ namespace sfm {
       break;
       default:
       {
-        std::cerr << "Unknown absolute pose solver type." << std::endl;
+        OPENMVG_LOG_ERROR << "Unknown absolute pose solver type.";
         return false;
       }
     }
@@ -261,14 +262,14 @@ namespace sfm {
       pose = geometry::Pose3(R, -R.transpose() * t);
     }
 
-    std::cout << "\n"
+    OPENMVG_LOG_INFO << "\n"
       << "-------------------------------" << "\n"
-      << "-- Robust Resection " << "\n"
+      << "-- Robust Resection statistics: " << "\n"
       << "-- Resection status: " << bResection << "\n"
       << "-- #Points used for Resection: " << resection_data.pt2D.cols() << "\n"
       << "-- #Points validated by robust Resection: " << resection_data.vec_inliers.size() << "\n"
       << "-- Threshold: " << resection_data.error_max << "\n"
-      << "-------------------------------" << std::endl;
+      << "-------------------------------";
 
     return bResection;
   }

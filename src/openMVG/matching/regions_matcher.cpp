@@ -12,6 +12,7 @@
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -93,7 +94,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
         }
         break;
         default:
-          std::cerr << "Using unknown matcher type" << std::endl;
+          OPENMVG_LOG_ERROR << "Using unknown matcher type";
       }
     }
     else if (database_regions.Type_id() == typeid(float).name())
@@ -123,7 +124,7 @@ Matcher_Regions_Database::Matcher_Regions_Database
         }
         break;
         default:
-          std::cerr << "Using unknown matcher type" << std::endl;
+          OPENMVG_LOG_ERROR << "Using unknown matcher type";
       }
     }
     else if (database_regions.Type_id() == typeid(double).name())
@@ -147,11 +148,11 @@ Matcher_Regions_Database::Matcher_Regions_Database
         break;
         case CASCADE_HASHING_L2:
         {
-          std::cerr << "Not implemented" << std::endl;
+          OPENMVG_LOG_ERROR << "CASCADE_HASHING_L2 matcher for double regions is not implemented";
         }
         break;
         default:
-          std::cerr << "Using unknown matcher type" << std::endl;
+          OPENMVG_LOG_ERROR << "Using unknown matcher type";
       }
     }
   }
@@ -167,13 +168,13 @@ Matcher_Regions_Database::Matcher_Regions_Database
       }
       break;
       default:
-          std::cerr << "Using unknown matcher type" << std::endl;
+          OPENMVG_LOG_ERROR << "Using unknown matcher type";
     }
   }
   else
   {
-    std::cerr << "Please consider add this region type_id to Matcher_Regions_Database::Match(...)\n"
-      << "typeid: " << database_regions.Type_id() << std::endl;
+    OPENMVG_LOG_ERROR << "Please consider add this region type_id to Matcher_Regions_Database::Match(...)\n"
+      << "typeid: " << database_regions.Type_id();
   }
 }
 

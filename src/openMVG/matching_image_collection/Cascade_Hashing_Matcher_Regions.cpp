@@ -13,9 +13,10 @@
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/progressinterface.hpp"
 #include "openMVG/types.hpp"
 
-#include "third_party/progress/progress.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -41,12 +42,12 @@ void Match
   const Pair_Set & pairs,
   float fDistRatio,
   PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
-  C_Progress * my_progress_bar
+  system::ProgressInterface * my_progress_bar
 )
 {
   if (!my_progress_bar)
-    my_progress_bar = &C_Progress::dummy();
-  my_progress_bar->restart(pairs.size(), "\n- Matching -\n");
+    my_progress_bar = &system::ProgressInterface::dummy();
+  my_progress_bar->Restart(pairs.size(), "- Matching -");
 
   // Collect used view indexes
   std::set<IndexT> used_index;
@@ -232,11 +233,11 @@ void Cascade_Hashing_Matcher_Regions::Match
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
   PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
-  C_Progress * my_progress_bar
+  system::ProgressInterface * my_progress_bar
 )const
 {
 #ifdef OPENMVG_USE_OPENMP
-  std::cout << "Using the OPENMP thread interface" << std::endl;
+  OPENMVG_LOG_INFO << "Using the OPENMP thread interface";
 #endif
   if (!regions_provider)
     return;
@@ -267,7 +268,7 @@ void Cascade_Hashing_Matcher_Regions::Match
   }
   else
   {
-    std::cerr << "Matcher not implemented for this region type" << std::endl;
+    OPENMVG_LOG_ERROR << "Matcher not implemented for this region type: " << regions_provider->Type_id();
   }
 }
 

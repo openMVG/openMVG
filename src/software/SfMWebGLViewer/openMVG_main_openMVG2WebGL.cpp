@@ -13,11 +13,11 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "config.h"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
@@ -99,9 +99,8 @@ bool ColorizeTracks(
   //    and iterate to provide a color to each 3D point
 
   {
-    C_Progress_display my_progress_bar(sfm_data.GetLandmarks().size(),
-                                       std::cout,
-                                       "\nCompute scene structure color\n");
+    system::LoggerProgress my_progress_bar(sfm_data.GetLandmarks().size(),
+                                           "Compute scene structure color");
 
     vec_tracksColor.resize(sfm_data.GetLandmarks().size());
     vec_3dPoints.resize(sfm_data.GetLandmarks().size());

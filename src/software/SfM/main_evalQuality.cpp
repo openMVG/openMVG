@@ -8,6 +8,7 @@
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "software/SfM/io_readGT.hpp"
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
@@ -45,7 +46,7 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--gt] path (where ground truth camera trajectory are saved)\n"
       << "[-c|--computed] path (openMVG SfM_Output directory)\n"
       << "[-o|--output] path (where statistics will be saved)\n"
@@ -53,15 +54,14 @@ int main(int argc, char **argv)
       << " -1: autoguess (try 1,2,3),\n"
       << "  1: openMVG (bin),\n"
       << "  2: Strechas 'png.camera' \n"
-      << "  3: Strechas 'jpg.camera' ]\n"
-      << std::endl;
+      << "  3: Strechas 'jpg.camera' ]\n";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "\nIt is an invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -90,18 +90,18 @@ int main(int argc, char **argv)
   switch (camType)
   {
     case 1:
-      std::cout << "\nusing openMVG Camera";
+      OPENMVG_LOG_INFO << "Using openMVG Camera";
       fcnReadCamPtr = &read_openMVG_Camera;
       suffix = "bin";
       break;
     case 2:
     case 3:
-      std::cout << "\nusing Strechas Camera";
+      OPENMVG_LOG_INFO << "Using Strechas Camera";
       fcnReadCamPtr = &read_Strecha_Camera;
       suffix = (camType == 2) ? "png.camera" : "jpg.camera";
       break;
     default:
-      std::cerr << "Unsupported camera type. Please write your camera reader." << std::endl;
+      OPENMVG_LOG_ERROR << "Unsupported camera type. Please write your camera reader.";
       return EXIT_FAILURE;
   }
 
@@ -116,26 +116,25 @@ int main(int argc, char **argv)
       Eigen::aligned_allocator<std::pair<const size_t, PinholeCamera>>> map_Cam_gt;
   // READ DATA FROM GT
   {
-    std::cout << "\nTry to read data from GT";
+    OPENMVG_LOG_INFO << "Try to read data from GT";
     std::vector<std::string> vec_fileNames;
     readGt(fcnReadCamPtr, sGTDirectory, suffix, vec_fileNames, map_Rt_gt, map_Cam_gt);
-    std::cout << map_Cam_gt.size() << " gt cameras have been found" << std::endl;
+    OPENMVG_LOG_INFO << map_Cam_gt.size() << " gt cameras have been found";
   }
 
   //-- Load the camera that we have to evaluate
   SfM_Data sfm_data;
   if (!Load(sfm_data, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read.";
     return EXIT_FAILURE;
   }
   // Assert that GT and loaded scene have the same camera count
   if (map_Cam_gt.size() != sfm_data.GetPoses().size())
   {
-    std::cerr << std::endl
+    OPENMVG_LOG_ERROR
       << "There is missing camera in the loaded scene." << "\n"
       << "#GT poses: " << map_Cam_gt.size() << "\n"
-      << "#Scene poses: " << sfm_data.GetPoses().size() << std::endl;
+      << "#Scene poses: " << sfm_data.GetPoses().size();
     return EXIT_FAILURE;
   }
 

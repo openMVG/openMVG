@@ -15,8 +15,7 @@
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
-
-#include "third_party/progress/progress_display.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -91,13 +90,12 @@ void SfM_Data_Structure_Computation_Blind::triangulate
 const
 {
   std::deque<IndexT> rejectedId;
-  std::unique_ptr<C_Progress> my_progress_bar;
+  std::unique_ptr<system::ProgressInterface> my_progress_bar;
   if (bConsole_verbose_)
     my_progress_bar.reset(
-      new C_Progress_display(
+      new system::LoggerProgress(
         sfm_data.structure.size(),
-        std::cout,
-        "Blind triangulation progress:\n" ));
+        "Blind triangulation progress" ));
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif
@@ -187,13 +185,12 @@ void SfM_Data_Structure_Computation_Robust::robust_triangulation
 const
 {
   std::deque<IndexT> rejectedId;
-  std::unique_ptr<C_Progress_display> my_progress_bar;
+  std::unique_ptr<system::ProgressInterface> my_progress_bar;
   if (bConsole_verbose_)
     my_progress_bar.reset(
-      new C_Progress_display(
+      new system::LoggerProgress(
         sfm_data.structure.size(),
-        std::cout,
-        "Robust triangulation progress:\n" ));
+        "Robust triangulation" ));
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif

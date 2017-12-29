@@ -62,7 +62,7 @@ void PairWiseMatchingToAdjacencyMatrixSVG
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
       svg::svgStyle().stroke("black", 1.0));
 
-    std::ofstream svgFileStream( sOutName.c_str());
+    std::ofstream svgFileStream( sOutName);
     svgFileStream << svgStream.closeSvgFile().str();
   }
 }

@@ -10,6 +10,7 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -32,22 +33,20 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutDir, "outdir") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-      << "[-o|--outdir] path.\n"
-      << std::endl;
+      << "[-o|--outdir] path.";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--sfmdata " << sSfM_Data_Filename << std::endl
-            << "--outdir " << sOutDir << std::endl;
+  OPENMVG_LOG_INFO << " You called : " << argv[0]
+    << "\n--sfmdata " << sSfM_Data_Filename
+    << "\n--outdir " << sOutDir;
 
   bool bOneHaveDisto = false;
 
@@ -58,8 +57,7 @@ int main(int argc, char **argv)
   // Read the SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -110,6 +108,6 @@ int main(int argc, char **argv)
   const std::string sUndistMsg = bOneHaveDisto ? "undistorded" : "";
   const std::string sQuitMsg = std::string("Your SfM_Data file was succesfully converted!\n") +
     "Now you can copy your " + sUndistMsg + " images in the \"" + sOutDir + "\" directory and run MVS Texturing";
-  std::cout << sQuitMsg << std::endl;
+  OPENMVG_LOG_INFO << sQuitMsg;
   return EXIT_SUCCESS;
 }

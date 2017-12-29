@@ -37,7 +37,7 @@ inline bool Save_PLY
 
   // Create the stream and check its status
   std::ofstream stream(filename.c_str(), std::ios::out | std::ios::binary);
-  if (!stream.is_open())
+  if (!stream)
     return false;
 
   bool bOk = false;

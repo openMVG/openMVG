@@ -14,6 +14,7 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -36,7 +37,7 @@ struct Matches_Provider
       return false;
     }
     if (!matching::Load(pairWise_matches_, matchesfile)) {
-      std::cerr<< "Unable to read the matches file:" << matchesfile << std::endl;
+      OPENMVG_LOG_ERROR<< "Unable to read the matches file:" << matchesfile;
       return false;
     }
     // Filter to keep only the one defined in SfM_Data

@@ -22,6 +22,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG {
@@ -75,9 +76,17 @@ struct GeometricFilter_EMatrix_AC
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
     if (!cam_I || !cam_J)
+    {
+      OPENMVG_LOG_WARNING << "Skip this pair. No intrinsic information: "
+        << '(' << iIndex << ',' << jIndex << ')';
       return false;
+    }
     if (!isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
+    {
+      OPENMVG_LOG_WARNING << "Skip this pair. Pinhole camera required: "
+        << '(' << iIndex << ',' << jIndex << ')';
       return false;
+    }
 
     //--
     // Get corresponding point regions arrays
@@ -156,10 +165,18 @@ struct GeometricFilter_EMatrix_AC
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (!cam_I || !cam_J)
+      {
+        OPENMVG_LOG_WARNING << "Skip this pair. No intrinsic information: "
+          << '(' << iIndex << ',' << jIndex << ')';
         return false;
+      }
 
       if ( !isPinhole(cam_I->getType()) || !isPinhole(cam_J->getType()))
+      {
+        OPENMVG_LOG_WARNING << "Skip this pair. Pinhole camera required: "
+          << '(' << iIndex << ',' << jIndex << ')';
         return false;
+      }
 
       const cameras::Pinhole_Intrinsic * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
       const cameras::Pinhole_Intrinsic * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);

@@ -12,6 +12,7 @@
 #include "CoinPackedVector.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -24,8 +25,9 @@ OSI_X_SolverWrapper::OSI_X_SolverWrapper(int nbParams) : LP_Solver(nbParams)
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
-  if ( si == nullptr )
+  if ( !si )
   {
+    OPENMVG_LOG_ERROR << "No solver is allocated";
     return false;
   }
   assert(nbParams_ == cstraints.nbParams_);
@@ -110,8 +112,9 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
-  if ( si == nullptr )
+  if ( !si )
   {
+    OPENMVG_LOG_ERROR << "No solver is allocated";
     return false;
   }
   assert(nbParams_ == cstraints.nbParams_);
@@ -215,6 +218,7 @@ bool OSI_X_SolverWrapper::solve()
     si->initialSolve();
     return si->isProvenOptimal();
   }
+  OPENMVG_LOG_ERROR << "Cannot solve if no solver is allocated";
   return false;
 }
 
@@ -227,6 +231,7 @@ bool OSI_X_SolverWrapper::getSolution(std::vector<double> & estimatedParams)
     std::memcpy(&estimatedParams[0], si->getColSolution(), n * sizeof(double));
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot get the solution if no solver is allocated";
   return false;
 }
 

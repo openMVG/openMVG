@@ -17,6 +17,7 @@
 #include <string>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {
@@ -129,18 +130,20 @@ inline bool loadDescsFromFile(
 {
   vec_desc.clear();
 
-  std::ifstream fileIn(sfileNameDescs.c_str());
-  if (!fileIn.is_open())
-    return false;
-
-  typename DescriptorsT::value_type value;
-  while (fileIn >> value) {
-    vec_desc.emplace_back(value);
+  std::ifstream stream(sfileNameDescs);
+  if (stream)
+  {
+    using desc_istream_iterator = std::istream_iterator<typename DescriptorsT::value_type>;
+    desc_istream_iterator beg(stream), end;
+    vec_desc.assign(beg, end);
+    return true;
   }
-
-  const bool bOk = !fileIn.bad();
-  fileIn.close();
-  return bOk;
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open the descriptor file: " << sfileNameDescs;
+    return false;
+  }
+  return static_cast<bool>(stream);
 }
 
 /// Write descriptors to file
@@ -149,14 +152,19 @@ inline bool saveDescsToFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
-  std::ofstream file(sfileNameDescs.c_str());
-  if (!file.is_open())
+  std::ofstream stream(sfileNameDescs);
+  if (stream)
+  {
+    std::copy(vec_desc.cbegin(), vec_desc.cend(),
+              std::ostream_iterator<typename DescriptorsT::value_type >(stream,"\n"));
+    stream.close();
+  }
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot save the descriptor file: " << sfileNameDescs;
     return false;
-  std::copy(vec_desc.begin(), vec_desc.end(),
-            std::ostream_iterator<typename DescriptorsT::value_type >(file,"\n"));
-  const bool bOk = file.good();
-  file.close();
-  return bOk;
+  }
+  return static_cast<bool>(stream);
 }
 
 
@@ -166,23 +174,27 @@ inline bool loadDescsFromBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
-  using VALUE = typename DescriptorsT::value_type;
-
   vec_desc.clear();
-  std::ifstream fileIn(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
-  if (!fileIn.is_open())
-    return false;
-  //Read the number of descriptor in the file
-  std::size_t cardDesc = 0;
-  fileIn.read(reinterpret_cast<char*>(&cardDesc), sizeof(std::size_t));
-  vec_desc.resize(cardDesc);
-  for (auto & it :vec_desc) {
-    fileIn.read(reinterpret_cast<char*>(it.data()),
-      VALUE::static_size*sizeof(typename VALUE::bin_type));
+  std::ifstream stream(sfileNameDescs.c_str(), std::ios::in | std::ios::binary);
+  if (stream)
+  {
+    // read the number of descriptors in the file
+    std::size_t cardDesc = 0;
+    stream.read(reinterpret_cast<char*>(&cardDesc), sizeof(std::size_t));
+    vec_desc.resize(cardDesc);
+    // read the descriptors
+    for (auto & it :vec_desc) {
+      stream.read(reinterpret_cast<char*>(it.data()),
+        DescriptorsT::value_type::static_size
+        * sizeof(typename DescriptorsT::value_type::bin_type));
+    }
+    stream.close();
   }
-  const bool bOk = !fileIn.bad();
-  fileIn.close();
-  return bOk;
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot save the descriptor file: " << sfileNameDescs;
+  }
+  return static_cast<bool>(stream);
 }
 
 /// Write descriptors to file (in binary mode)
@@ -191,22 +203,26 @@ inline bool saveDescsToBinFile(
   const std::string & sfileNameDescs,
   DescriptorsT & vec_desc)
 {
-  using VALUE = typename DescriptorsT::value_type;
-
-  std::ofstream file(sfileNameDescs.c_str(), std::ios::out | std::ios::binary);
-  if (!file.is_open())
-    return false;
-  //Write the number of descriptor
-  const std::size_t cardDesc = vec_desc.size();
-  file.write((const char*) &cardDesc,  sizeof(std::size_t));
-  for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
-    iter != vec_desc.end(); ++iter) {
-    file.write((const char*) (*iter).data(),
-      VALUE::static_size*sizeof(typename VALUE::bin_type));
+  std::ofstream stream(sfileNameDescs, std::ios::out | std::ios::binary);
+  if (stream)
+  {
+    //Write the number of descriptor
+    const std::size_t cardDesc = vec_desc.size();
+    stream.write((const char*) &cardDesc,  sizeof(std::size_t));
+    for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
+      iter != vec_desc.end(); ++iter) {
+      stream.write((const char*) (*iter).data(),
+        DescriptorsT::value_type::static_size
+        * sizeof(typename DescriptorsT::value_type::bin_type));
+    }
+    stream.close();
   }
-  const bool bOk = file.good();
-  file.close();
-  return bOk;
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open the descriptor file: " << sfileNameDescs;
+    return false;
+  }
+  return static_cast<bool>(stream);
 }
 
 } // namespace features

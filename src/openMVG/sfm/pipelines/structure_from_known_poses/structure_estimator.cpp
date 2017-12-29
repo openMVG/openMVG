@@ -19,9 +19,8 @@
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/tracks/tracks.hpp"
-
-#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -85,8 +84,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
   const Pair_Set & pairs,
   const std::shared_ptr<Regions_Provider> & regions_provider)
 {
-  C_Progress_display my_progress_bar( pairs.size(), std::cout,
-    "Compute pairwise fundamental guided matching:\n" );
+  system::LoggerProgress my_progress_bar( pairs.size(),
+    "Pairwise fundamental guided matching" );
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
@@ -185,8 +184,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   using Triplets = std::vector<graph::Triplet>;
   const Triplets triplets = graph::TripletListing(pairs);
 
-  C_Progress_display my_progress_bar( triplets.size(), std::cout,
-    "Per triplet tracks validation (discard spurious correspondences):\n" );
+  system::LoggerProgress my_progress_bar( triplets.size(),
+    "Per triplet tracks validation (discard spurious correspondences)" );
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
@@ -310,8 +309,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   sfm_data.structure.clear();
 
   SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_);
-  C_Progress_display my_progress_bar( map_tracksCommon.size(), std::cout,
-    "Tracks to structure conversion:\n" );
+  system::LoggerProgress my_progress_bar( map_tracksCommon.size(),
+    "Tracks to structure conversion" );
   // Fill sfm_data with the computed tracks (no 3D yet)
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)

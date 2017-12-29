@@ -16,6 +16,7 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -36,7 +37,7 @@ inline void KeepOnlyReferencedElement(
   const std::set<IndexT> & Ids,
   T & toFilter)
 {
-  std::cout << "Must be specialized for your type" << std::endl;
+  OPENMVG_LOG_ERROR << "Must be specialized for your type";
 }
 
 // Specialization for RelativeInfo_Map

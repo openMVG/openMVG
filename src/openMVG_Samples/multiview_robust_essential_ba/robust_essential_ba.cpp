@@ -276,7 +276,7 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K)
   // Load the K matrix
   ifstream in;
   in.open( fileName.c_str(), ifstream::in);
-  if (in.is_open())  {
+  if (in)  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)
         in >> K(j,i);

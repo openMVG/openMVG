@@ -44,22 +44,22 @@ int main( int argc, char **argv )
   }
   catch ( const std::string& s )
   {
-    std::cerr << "Usage: " << argv[ 0 ] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-m|--sMatchesFile path] i.e path/matches.(h/f/e).txt\n"
-    << "[-o|--outdir path]\n"
-    << "\n[Optional]\n"
-    << "[-s|--selectionMethod int]\n"
-    << "[-r|--referenceImage int]\n"
-    << std::endl;
+    OPENMVG_LOG_INFO
+      << "Usage: " << argv[ 0 ] << '\n'
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-m|--sMatchesFile path] i.e path/matches.(h/f/e).txt\n"
+      << "[-o|--outdir path]\n"
+      << "\n[Optional]\n"
+      << "[-s|--selectionMethod int]\n"
+      << "[-r|--referenceImage int]";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   if ( sSfM_Data_Filename.empty() )
   {
-    std::cerr << "\nIt is an invalid file input" << std::endl;
+    OPENMVG_LOG_ERROR << "\nIt is an invalid file input";
     return EXIT_FAILURE;
   }
 
@@ -83,13 +83,11 @@ int main( int argc, char **argv )
 
   if ( m_colorHarmonizeEngine->Process() )
   {
-    std::cout << std::endl
-      << " ColorHarmonization took (s): "
-      << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << "ColorHarmonization took (s): " << timer.elapsed();
 
     return EXIT_SUCCESS;
   }
 
-  std::cerr << "\n Something goes wrong in the process" << std::endl;
+  OPENMVG_LOG_ERROR << "Something goes wrong in the process";
   return EXIT_FAILURE;
 }

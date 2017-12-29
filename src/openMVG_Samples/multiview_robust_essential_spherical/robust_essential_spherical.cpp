@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
               residuals.emplace_back(residual_J.norm());
             }
             std::cout << "Residual statistics (pixels):" << std::endl;
-            minMaxMeanMedian<double>(residuals.cbegin(), residuals.cend());
+            minMaxMeanMedian<double>(residuals.cbegin(), residuals.cend(), std::cout);
 
             Save(tiny_scene, "EssentialGeometry_refined.ply", ESfM_Data(ALL));
           }

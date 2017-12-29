@@ -9,6 +9,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -106,7 +107,7 @@ double DepthCleaning
     }
     landmark_it.second.obs.swap(obs);
   }
-  std::cout << "#point depth filter: " << cpt << " measurements removed" <<std::endl;
+  OPENMVG_LOG_INFO << "#point depth filter: " << cpt << " measurements removed";
 
   // Remove orphans
   eraseUnstablePosesAndObservations(sfm_data, k_min_point_per_pose, k_min_track_length);
@@ -123,11 +124,10 @@ using namespace openMVG::sfm;
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << std::endl
-    << "-----------------------------------------------------------\n"
-    << "Filter Structure based on statistics computed per view    :\n"
-    << "-----------------------------------------------------------\n"
-    << std::endl;
+  OPENMVG_LOG_INFO
+    << "\n-----------------------------------------------------------"
+    << "\nFilter Structure based on statistics computed per view    :"
+    << "\n-----------------------------------------------------------";
 
   CmdLine cmd;
 
@@ -146,22 +146,20 @@ int main(int argc, char **argv)
   }
   catch (const std::string& s)
   {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] path to a SfM_Data scene\n"
       << "[-o|--output_file] path where the filtered SfM_data scene will be saved\n"
       << "\n[Optional]\n"
-      << "[-f|--factor] factor apply on the median depth per view for thresholding\n"
-      << std::endl;
+      << "[-f|--factor] factor apply on the median depth per view for thresholding";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sfm_data_filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sfm_data_filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sfm_data_filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -177,11 +175,10 @@ int main(int argc, char **argv)
     k_min_point_per_pose,
     k_min_track_length
   );
-  std::cout << "MIN MEDIAN DEPTH VALUE = " << k_min_median_depth << std::endl;
+  OPENMVG_LOG_INFO << "MIN MEDIAN DEPTH VALUE = " << k_min_median_depth;
 
   if (!Save(sfm_data, sfm_data_filename_out, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The output SfM_Data file \""<< sfm_data_filename_out << "\" cannot be saved." << std::endl;
+    OPENMVG_LOG_ERROR << "The output SfM_Data file \""<< sfm_data_filename_out << "\" cannot be saved.";
     return EXIT_FAILURE;
   }
 

@@ -9,11 +9,11 @@
 #ifndef OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 #define OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP
 
-#include <iostream>
 #include <string>
 #include <vector>
 
 #include "openMVG/stl/split.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG
 {
@@ -66,7 +66,7 @@ StringTo_Intrinsic_Parameter_Type
     }
     else
     {
-      std::cerr << "WARNING: Unknow KEY: " << item << std::endl;
+      OPENMVG_LOG_ERROR << "WARNING: Unknow KEY: " << item;
       intrinsics_opt = static_cast<cameras::Intrinsic_Parameter_Type>(0);
       break;
     }

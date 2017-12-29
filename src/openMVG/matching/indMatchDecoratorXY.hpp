@@ -153,12 +153,12 @@ public:
   */
   bool saveMatch(const char* nameFile) const
   {
-    std::ofstream f(nameFile);
-    if (f.is_open() ) {
-      std::copy(vecDecoredMatches_.begin(), vecDecoredMatches_.end(),
-        std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
+    std::ofstream stream(nameFile);
+    if (stream) {
+      std::copy(vecDecoredMatches_.cbegin(), vecDecoredMatches_.cend(),
+        std::ostream_iterator<IndMatchDecoratorStruct>(stream, ""));
     }
-    return f.is_open();
+    return static_cast<bool>(stream);
   }
 
   friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)

@@ -112,7 +112,7 @@ TEST( Sift_Keypoint , DetectionAndDescription )
       key.y + sin(key.sigma) * key.sigma, svgStyle().stroke("green", 2.0));
   }
   std::string out_filename = "Sift_Features.svg";
-  std::ofstream svgFile( out_filename.c_str() );
+  std::ofstream svgFile( out_filename );
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
 }

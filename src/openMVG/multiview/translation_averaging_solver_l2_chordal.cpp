@@ -8,6 +8,7 @@
 
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <ctime>
 
@@ -136,7 +137,7 @@ bool solve_translations_problem_l2_chordal
   Solver::Summary summary;
   Solve(options, &problem, &summary);
 
-  std::cout << summary.FullReport() << "\n";
+  OPENMVG_LOG_INFO << summary.FullReport();
 
   if (summary.IsSolutionUsable())
   {

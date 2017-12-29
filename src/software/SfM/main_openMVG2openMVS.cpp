@@ -11,13 +11,14 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #define _USE_EIGEN
 #include "InterfaceMVS.h"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -40,7 +41,7 @@ bool exportToOpenMVS(
     stlplus::folder_create(sOutDir);
     if (!stlplus::is_folder(sOutDir))
     {
-      std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot access to one of the desired output directory";
       return false;
     }
   }
@@ -50,7 +51,7 @@ bool exportToOpenMVS(
   size_t nPoses(0);
   const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
 
-  C_Progress_display my_progress_bar(nViews);
+  system::LoggerProgress my_progress_bar(nViews);
 
   // OpenMVG can have not contiguous index, use a map to create the required OpenMVS contiguous ID index
   std::map<openMVG::IndexT, uint32_t> map_intrinsic, map_view;
@@ -88,7 +89,7 @@ bool exportToOpenMVS(
     image.cameraID = 0;
     if (!stlplus::is_file(srcImage))
     {
-      std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
+      OPENMVG_LOG_INFO << "Cannot read the corresponding image: " << srcImage;
       return EXIT_FAILURE;
     }
     if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()) && stlplus::is_file(srcImage))
@@ -175,7 +176,7 @@ bool exportToOpenMVS(
       }
       if (pImage == nullptr)
       {
-        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
+        OPENMVG_LOG_ERROR << "error: no image using camera " << c << " of platform " << p;
         continue;
       }
       // read image meta-data
@@ -193,16 +194,16 @@ bool exportToOpenMVS(
   if (!MVS::ARCHIVE::SerializeSave(scene, sOutFile))
     return false;
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Scene saved to OpenMVS interface format:\n"
-    << " #platforms: " << scene.platforms.size() << std::endl;
+    << " #platforms: " << scene.platforms.size();
     for (int i = 0; i < scene.platforms.size(); ++i)
     {
-      std::cout << "  platform ( " << i << " ) #cameras: " << scene.platforms[i].cameras.size() << std::endl;
+      OPENMVG_LOG_INFO << "  platform ( " << i << " ) #cameras: " << scene.platforms[i].cameras.size();
     }
-  std::cout
+  OPENMVG_LOG_INFO
     << "  " << scene.images.size() << " images (" << nPoses << " calibrated)\n"
-    << "  " << scene.vertices.size() << " Landmarks\n";
+    << "  " << scene.vertices.size() << " Landmarks";
   return true;
 }
 
@@ -218,38 +219,35 @@ int main(int argc, char *argv[])
   cmd.add( make_option('d', sOutDir, "outdir") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outfile] OpenMVS scene file\n"
-      << "[-d|--outdir] undistorted images path\n"
-      << std::endl;
+      << "[-d|--outdir] undistorted images path";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
   if (stlplus::extension_part(sOutFile) != "mvs") {
-    std::cerr << std::endl
-      << "Invalid output file extension: " << sOutFile << std::endl
-      << "You must use a filename with a .mvs extension." << std::endl;
+    OPENMVG_LOG_ERROR
+      << "Invalid output file extension: " << sOutFile << "."
+      << "You must use a filename with a .mvs extension.";
       return EXIT_FAILURE;
   }
 
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
   if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir))
   {
-    std::cerr << std::endl
-      << "The output openMVS scene file cannot be written" << std::endl;
+    OPENMVG_LOG_ERROR << "The output openMVS scene file cannot be written";
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;

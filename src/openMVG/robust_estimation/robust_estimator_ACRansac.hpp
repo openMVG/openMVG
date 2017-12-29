@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/histogram/histogram.hpp"
 
 namespace openMVG {
@@ -427,15 +428,16 @@ std::pair<double, double> ACRANSAC
 
           if (bVerbose)
           {
-            std::cout << "  nfa=" << minNFA
+            std::ostringstream os;
+            os << "  nfa=" << minNFA
               << " inliers=" << vec_inliers.size() << "/" << nData
               << " precisionNormalized=" << errorMax
               << " precision=" << kernel.unormalizeError(errorMax)
               << " (iter=" << iter
               << " ,sample=";
             std::copy(vec_sample.begin(), vec_sample.end(),
-              std::ostream_iterator<uint32_t>(std::cout, ","));
-            std::cout << ")" << std::endl;
+              std::ostream_iterator<uint32_t>(os, ","));
+            OPENMVG_LOG_INFO << os.str() << ")";
           }
         }
       }

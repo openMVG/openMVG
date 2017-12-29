@@ -30,8 +30,7 @@
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
 #include "openMVG/system/timer.hpp"
-
-#include "third_party/progress/progress_display.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include <numeric>
 #include <iomanip>
@@ -392,7 +391,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   std::cout << "\n\nThere is :\n" << set_indeximage.size() << " images to transform." << std::endl;
 
   //-> convert solution to gain offset and creation of the LUT per image
-  C_Progress_display my_progress_bar( set_indeximage.size() );
+  system::LoggerProgress my_progress_bar( set_indeximage.size() );
   for (std::set<size_t>::const_iterator iterSet = set_indeximage.begin();
     iterSet != set_indeximage.end(); ++iterSet, ++my_progress_bar)
   {
@@ -448,29 +447,25 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
   if ( !stlplus::is_folder( _sMatchesPath) ||
       !stlplus::is_folder( _sOutDirectory) )
   {
-    std::cerr << std::endl
-      << "One of the required directory is not a valid directory" << std::endl;
+    OPENMVG_LOG_ERROR << "One of the required directory is not a valid directory.";
     return false;
   }
 
   if ( !stlplus::is_file( _sSfM_Data_Path ))
   {
-    std::cerr << std::endl
-      << "Invalid input sfm_data file: (" << _sSfM_Data_Path << ")" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid input sfm_data file: (" << _sSfM_Data_Path << ").";
     return false;
   }
   if (!stlplus::is_file( _sMatchesFile ))
   {
-    std::cerr << std::endl
-      << "Invalid match file: (" << _sMatchesFile << ")"<< std::endl;
+    OPENMVG_LOG_ERROR << "Invalid match file: (" << _sMatchesFile << ").";
     return false;
   }
 
   // a. Read input scenes views
   SfM_Data sfm_data;
   if (!Load(sfm_data, _sSfM_Data_Path, ESfM_Data(VIEWS))) {
-    std::cerr << std::endl
-      << "The input file \""<< _sSfM_Data_Path << "\" cannot be read" << std::endl;
+    OPENMVG_LOG_ERROR << "The input file \""<< _sSfM_Data_Path << "\" cannot be read.";
     return false;
   }
 
@@ -487,7 +482,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
 
   if ( !matching::Load(_map_Matches, _sMatchesFile) )
   {
-    std::cerr<< "Unable to read the geometric matrix matches" << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to read the geometric matrix matches.";
     return false;
   }
 
@@ -501,7 +496,7 @@ bool ColorHarmonizationEngineGlobal::ReadInputData()
                                       ".feat" ),
             _map_feats[ camIndex ] ) )
     {
-      std::cerr << "Bad reading of feature files" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot find the corresponding feature files.";
       return false;
     }
   }

@@ -24,8 +24,8 @@ static bool read_openMVG_Camera(const std::string & camName, cameras::PinholeCam
   if (stlplus::extension_part(camName) == "bin")
   {
     std::ifstream in(camName.c_str(), std::ios::in|std::ios::binary);
-    if (!in.is_open())  {
-      std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
+    if (!in)  {
+      OPENMVG_LOG_ERROR << "Error: failed to open file '" << camName << "' for reading";
       return false;
     }
     val.resize(12);
@@ -39,8 +39,8 @@ static bool read_openMVG_Camera(const std::string & camName, cameras::PinholeCam
   {
     std::ifstream ifs;
     ifs.open( camName.c_str(), std::ifstream::in);
-    if (!ifs.is_open()) {
-      std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
+    if (!ifs) {
+      OPENMVG_LOG_ERROR << "Error: failed to open file '" << camName << "' for reading";
       return false;
     }
     while (ifs.good())
@@ -77,8 +77,8 @@ static bool read_Strecha_Camera(const std::string & camName, cameras::PinholeCam
 {
   std::ifstream ifs;
   ifs.open( camName.c_str(), std::ifstream::in);
-  if (!ifs.is_open()) {
-    std::cerr << "Error: failed to open file '" << camName << "' for reading" << std::endl;
+  if (!ifs) {
+    OPENMVG_LOG_ERROR << "Error: failed to open file '" << camName << "' for reading";
     return false;
   }
   std::vector<double> val;
@@ -134,12 +134,12 @@ bool readGt(
 {
   // IF GT_Folder exists, perform evaluation of the quality of rotation estimates
   if (!stlplus::is_folder(sGTPath)) {
-    std::cout << std::endl << "There is not valid GT data to read from " << sGTPath << std::endl;
+    OPENMVG_LOG_ERROR << "There is not valid GT data to read from " << sGTPath;
     return false;
   }
   else
   {
-    std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
+    OPENMVG_LOG_INFO << "Read rotation and translation estimates.";
     // Load GT
     std::map<std::string, Mat3, Eigen::aligned_allocator<Mat3>> map_R_gt;
     //Try to read .suffix camera (parse camera names)

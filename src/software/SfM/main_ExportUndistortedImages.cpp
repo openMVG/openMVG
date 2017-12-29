@@ -10,10 +10,11 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
@@ -52,10 +53,10 @@ int main(int argc, char *argv[]) {
 #endif
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr
+    OPENMVG_LOG_INFO
       << "Export undistorted images related to a sfm_data file.\n"
       << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
@@ -64,9 +65,9 @@ int main(int argc, char *argv[]) {
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of thread(s)\n"
 #endif
-      << std::endl;
+      ;
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
@@ -76,8 +77,7 @@ int main(int argc, char *argv[]) {
 
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     // Export views as undistorted images (those with valid Intrinsics)
     Image<RGBColor> image, image_ud;
     Image<uint8_t> image_gray, image_gray_ud;
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXTRACT UNDISTORTED IMAGES -\n" );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size(), "- EXTRACT UNDISTORTED IMAGES -" );
 
     #ifdef OPENMVG_USE_OPENMP
     const unsigned int nb_max_thread = omp_get_max_threads();
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
       }
       ++my_progress_bar;
     }
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << "Task done in (s): " << timer.elapsed();
   }
 
   // Exit program

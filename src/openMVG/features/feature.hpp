@@ -10,13 +10,13 @@
 #define OPENMVG_FEATURES_FEATURE_HPP
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
 #include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {
@@ -144,41 +144,47 @@ protected:
 };
 
 /// Read feats from file
-template<typename FeaturesT >
+template<typename FeaturesT>
 static bool loadFeatsFromFile(
   const std::string & sfileNameFeats,
   FeaturesT & vec_feat)
 {
   vec_feat.clear();
 
-  std::ifstream fileIn(sfileNameFeats.c_str());
-  if (!fileIn.is_open())
+  std::ifstream stream(sfileNameFeats);
+  if (stream)
   {
-    return false;
+    using feature_istream_iterator = std::istream_iterator<typename FeaturesT::value_type>;
+    feature_istream_iterator beg(stream), end;
+    vec_feat.assign(beg, end);
+    stream.clear(); // necessary since we the iterator invalidate the stream status
+    stream.close();
   }
-  std::copy(
-    std::istream_iterator<typename FeaturesT::value_type >(fileIn),
-    std::istream_iterator<typename FeaturesT::value_type >(),
-    std::back_inserter(vec_feat));
-  const bool bOk = !fileIn.bad();
-  fileIn.close();
-  return bOk;
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot load the feature file: " << sfileNameFeats;
+  }
+  return static_cast<bool>(stream);
 }
 
 /// Write feats to file
-template<typename FeaturesT >
+template<typename FeaturesT>
 static bool saveFeatsToFile(
   const std::string & sfileNameFeats,
   FeaturesT & vec_feat)
 {
-  std::ofstream file(sfileNameFeats.c_str());
-  if (!file.is_open())
-    return false;
-  std::copy(vec_feat.begin(), vec_feat.end(),
-            std::ostream_iterator<typename FeaturesT::value_type >(file,"\n"));
-  const bool bOk = file.good();
-  file.close();
-  return bOk;
+  std::ofstream stream(sfileNameFeats);
+  if (stream)
+  {
+    std::copy(vec_feat.cbegin(), vec_feat.cend(),
+              std::ostream_iterator<typename FeaturesT::value_type >(stream,"\n"));
+    stream.close();
+  }
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open the feature file: " << sfileNameFeats;
+  }
+  return static_cast<bool>(stream);
 }
 
 /// Export point feature based vector to a matrix [(x,y)'T, (x,y)'T]
@@ -191,8 +197,8 @@ void PointsToMat(
   using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
-  for (typename FeaturesT::const_iterator iter = vec_feats.begin();
-    iter != vec_feats.end(); ++iter, ++i)
+  for (typename FeaturesT::const_iterator iter = vec_feats.cbegin();
+    iter != vec_feats.cend(); ++iter, ++i)
   {
     const ValueT & feat = *iter;
     m.col(i) << feat.x(), feat.y();

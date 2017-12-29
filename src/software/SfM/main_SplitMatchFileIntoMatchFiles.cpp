@@ -44,15 +44,14 @@ int main(int argc, char **argv)
     cmd.process(argc, argv);
   }
   catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file] path to a SfM_Data scene\n"
       << "[-m|--match_file] path to the matches that corresponds to the provided SfM_Data scene\n"
       << "[-o|--match_component_file] path to the matches components that corresponds to the provided SfM_Data scene\n"
       << "\n[Optional]\n"
       << "[-b|--biedge]\n"
-      << "[-n|--min_nodes] Note:value of n should larger than 3\n"
-      << std::endl;
-    std::cerr << s << std::endl;
+      << "[-n|--min_nodes] Note:value of n should larger than 3";
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
@@ -62,7 +61,7 @@ int main(int argc, char **argv)
     const bool folder_create_flag = stlplus::folder_create(match_component_dir);
     if (!folder_create_flag)
     {
-      std::cerr << "Cannot create the output directory: " << match_component_dir << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create the output directory: " << match_component_dir;
       return EXIT_FAILURE;
     }
   }
@@ -71,8 +70,7 @@ int main(int argc, char **argv)
   SfM_Data sfm_data;
   if (!Load(sfm_data, sfm_data_filename, ESfM_Data(VIEWS | INTRINSICS)))
   {
-    std::cerr << std::endl
-      << "The input SfM_Data file \"" << sfm_data_filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << sfm_data_filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -80,8 +78,7 @@ int main(int argc, char **argv)
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
   if (!(matches_provider->load(sfm_data, match_filename)))
   {
-    std::cerr << std::endl
-      << "Invalid matches file." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid matches file: " << match_filename;
     return EXIT_FAILURE;
   }
 
@@ -96,8 +93,7 @@ int main(int argc, char **argv)
                                     subgraphs_matches);
   if (!success_flag)
   {
-    std::cerr << std::endl
-      << "Failed to split matches file into subgraph matches." << std::endl;
+    OPENMVG_LOG_ERROR << "Failed to split matches file into subgraph matches.";
     return EXIT_SUCCESS;
   }
 
@@ -130,15 +126,14 @@ int main(int argc, char **argv)
 
   // Save the match file name of subgraph into a match component file
   std::ofstream stream(match_component_filename.c_str());
-  if (!stream.is_open())
+  if (!stream)
   {
-    std::cerr << std::endl
-      << "Cannot open match component file." << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot open match component file: " << match_component_filename;
     return EXIT_FAILURE;
   }
   for (const auto & iter_filename : set_filenames)
   {
-    stream << iter_filename << std::endl;
+    stream << iter_filename << "\n";
   }
   stream.close();
 

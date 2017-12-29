@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "openMVG/exif/exif_IO.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/easyexif/exif.h"
 
 namespace openMVG
@@ -78,6 +79,7 @@ class Exif_IO_EasyExif : public Exif_IO
       FILE *fp = fopen( sFileName.c_str(), "rb" );
       if ( !fp )
       {
+        OPENMVG_LOG_ERROR << "Cannot open the file: " << sFileName;
         return false;
       }
       fseek( fp, 0, SEEK_END );
@@ -87,6 +89,7 @@ class Exif_IO_EasyExif : public Exif_IO
       if ( fread( &buf[0], 1, fsize, fp ) != fsize )
       {
         fclose( fp );
+        OPENMVG_LOG_ERROR << "Read size is different from the file size";
         return false;
       }
       fclose( fp );
@@ -144,7 +147,7 @@ class Exif_IO_EasyExif : public Exif_IO
     }
 
     /**
-    * @brief Get FocalPlaneYResolution 
+    * @brief Get FocalPlaneYResolution
     * @return Number of pixels in the image height (Y) direction per
     *           FocalPlaneResolutionUnit on the camera focal plane.
     */
@@ -265,7 +268,7 @@ class Exif_IO_EasyExif : public Exif_IO
       return os.str();
     }
 
-        /**
+    /**
     * @brief Try to read and save the EXIF GPS latitude
     * @return If GPS Latitude can be read & exported, return true
     */

@@ -32,8 +32,8 @@ bool SaveAndLoad
 {
   const std::string sImage_describer = stlplus::create_filespec("./", "image_describer", "json");
   {
-    std::ofstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    std::ofstream stream(sImage_describer);
+    if (!stream)
       return false;
 
     try
@@ -55,8 +55,8 @@ bool SaveAndLoad
 
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
-    std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    std::ifstream stream(sImage_describer);
+    if (!stream)
       return false;
     try
     {

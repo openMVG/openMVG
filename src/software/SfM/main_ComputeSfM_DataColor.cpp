@@ -10,11 +10,12 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
 #include "software/SfM/SfMPlyHelper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 using namespace openMVG;
@@ -32,9 +33,9 @@ bool ColorizeTracks(
   //    and iterate to provide a color to each 3D point
 
   {
-    C_Progress_display my_progress_bar(sfm_data.GetLandmarks().size(),
-                                       std::cout,
-                                       "\nCompute scene structure color\n");
+    system::LoggerProgress my_progress_bar(
+      sfm_data.GetLandmarks().size(),
+      "Computing scene structure color");
 
     vec_tracksColor.resize(sfm_data.GetLandmarks().size());
     vec_3dPoints.resize(sfm_data.GetLandmarks().size());
@@ -105,7 +106,7 @@ bool ColorizeTracks(
         const bool b_gray_image = ReadImage(sView_filename.c_str(), &image_gray);
         if (!b_gray_image)
         {
-          std::cerr << "Cannot open provided the image." << std::endl;
+          OPENMVG_LOG_ERROR << "Cannot open provided the image.";
           return false;
         }
       }
@@ -173,19 +174,17 @@ int main(int argc, char **argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+      OPENMVG_LOG_ERROR << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
-        << "[-o|--output_file] path to the output PLY file\n"
-        << std::endl;
+        << "[-o|--output_file] path to the output PLY file";
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
   if (sOutputPLY_Out.empty())
   {
-    std::cerr << std::endl
-      << "No output PLY filename specified." << std::endl;
+    OPENMVG_LOG_ERROR << "No output PLY filename specified.";
     return EXIT_FAILURE;
   }
 
@@ -193,8 +192,7 @@ int main(int argc, char **argv)
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
   {
-    std::cerr << std::endl
-      << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 

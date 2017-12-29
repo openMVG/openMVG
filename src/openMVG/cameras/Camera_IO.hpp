@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG
@@ -65,10 +66,9 @@ static bool load(
   if ( stlplus::extension_part( scameraFile ) == "bin" )
   {
     std::ifstream in( scameraFile.c_str(), std::ios::in | std::ios::binary );
-    if ( !in.is_open() )
+    if ( !in )
     {
-      std::cerr << "Error: failed to open file '" << scameraFile
-                << "' for reading" << std::endl;
+      OPENMVG_LOG_ERROR << "Error: failed to open file '" << scameraFile << "' for reading";
       return false;
     }
     val.resize(12);

@@ -10,6 +10,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_filters_frustum.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -25,7 +26,7 @@ using namespace openMVG::sfm;
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << "Export camera frustums" << std::endl;
+  std::cout << "Export camera frustums";
 
   CmdLine cmd;
 
@@ -39,20 +40,18 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-o|--output_file] PLY file to store the camera frustums as triangle meshes.\n"
-    << std::endl;
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-o|--output_file] PLY file to store the camera frustums as triangle meshes.";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
