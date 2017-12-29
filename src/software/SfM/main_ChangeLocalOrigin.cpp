@@ -15,6 +15,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 
+#include <iomanip>
 #include <string>
 #include <vector>
 
