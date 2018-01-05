@@ -153,7 +153,6 @@ int main(int argc, char **argv)
 
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
-  std::vector<std::string> vec_gtpose = stlplus::folder_files ( sGroundTruthDir );
   std::sort(vec_image.begin(), vec_image.end());
 
 
