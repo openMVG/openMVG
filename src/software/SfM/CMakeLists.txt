@@ -12,6 +12,21 @@ target_link_libraries(openMVG_main_SfMInit_ImageListing
     openMVG_exif
 )
 
+ADD_EXECUTABLE(openMVG_main_SfMInit_ImageListingFromKnownPoses main_SfMInit_ImageListingFromKnownPoses.cpp 
+  io_readGTInterface.hpp 
+  io_readGTStrecha.hpp
+  io_readGTMiddleBury.hpp
+  io_readGTDTUMVS.hpp
+  io_readGTETH3D.hpp
+  io_readGTKitti.hpp)
+TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListingFromKnownPoses
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  easyexif
+  )
+
 #convert a v0.6 lists.txt file to the new sfm_data.X format
 add_executable(openMVG_main_ConvertList main_ConvertList.cpp)
 target_link_libraries(openMVG_main_ConvertList
@@ -22,10 +37,12 @@ target_link_libraries(openMVG_main_ConvertList
 )
 
 # Installation rules
-set_property(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION bin/)
-set_property(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ConvertList DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListingFromKnownPoses PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SfMInit_ImageListingFromKnownPoses DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 
 ###
 # Add executable that computes:
@@ -258,5 +275,9 @@ configure_file(${OPENMVG_TUTORIAL_IN_FILE}
 set(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_SequentialPipeline.py.in")
 configure_file(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_SequentialPipeline.py" @ONLY)
+
+SET(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/SfM_StructurePipeline.py.in")
+CONFIGURE_FILE(${OPENMVG_TUTORIAL_IN_FILE}
+    "${CMAKE_CURRENT_BINARY_DIR}/SfM_StructurePipeline.py" @ONLY)
 
 add_subdirectory(clustering)
