@@ -8,6 +8,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_multiview
   easyexif
   )
 
@@ -17,6 +18,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_multiview
   )
 
 # Installation rules
@@ -86,6 +88,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_matching
   stlplus
   )
 
@@ -95,6 +98,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_matching
   stlplus
   )
 
@@ -119,6 +123,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeStructureFromKnownPoses
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_geometry
+  openMVG_matching
   stlplus
   )
 
@@ -144,6 +150,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_ChangeLocalOrigin
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_geometry
   stlplus
   )
 
@@ -172,6 +179,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SplitMatchFileIntoMatchFiles
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_matching
   stlplus
   )
 
@@ -201,6 +209,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportMatches
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_matching
   stlplus
   )
 
@@ -211,6 +220,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_exportTracks
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_matching
   stlplus
   )
 
@@ -297,6 +307,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2MESHLAB
   openMVG_image
   openMVG_features
   openMVG_sfm
+  openMVG_multiview
   stlplus
   )
 
@@ -385,6 +396,9 @@ TARGET_LINK_LIBRARIES(openMVG_main_evalQuality
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_geometry
+  openMVG_multiview
+  openMVG_numeric
   stlplus
   )
 
