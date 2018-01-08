@@ -4,6 +4,8 @@ target_link_libraries(openMVG_main_geodesy_registration_to_gps_position
   openMVG_system
   openMVG_features
   openMVG_sfm
+  openMVG_matching
+  openMVG_geometry
   easyexif
   stlplus)
 

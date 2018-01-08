@@ -6,6 +6,7 @@ target_link_libraries(openMVG_sample_multiview_robustEssential_ba
   openMVG_matching
   openMVG_system
   openMVG_sfm
+  openMVG_multiview
   stlplus)
 target_compile_definitions(openMVG_sample_multiview_robustEssential_ba
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
