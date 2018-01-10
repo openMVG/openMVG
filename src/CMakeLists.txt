@@ -76,7 +76,7 @@ if (WIN32)
   register_definitions(-DVC_EXTRALEAN)
   register_definitions(-D_USE_MATH_DEFINES)
   if (MSVC)
-    register_definitions(/bigobj)
+    add_compile_options(/bigobj)
   endif (MSVC)
 endif (WIN32)
 
