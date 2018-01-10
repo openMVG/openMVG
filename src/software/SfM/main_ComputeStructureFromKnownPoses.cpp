@@ -178,7 +178,7 @@ int main(int argc, char **argv)
     }
     // Compute the tracks from the pairwise estimation
     // Compute tracks from matches
-    const int min_track_length = 2;
+    const int min_track_length = 3;
     openMVG::tracks::STLMAPTracks tracks;
     {
       // List of features matches for each couple of images
@@ -343,8 +343,8 @@ int main(int argc, char **argv)
       (
         sfm_data,
         Optimize_Options(
-          cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
-          Extrinsic_Parameter_Type::ADJUST_ALL,
+          cameras::Intrinsic_Parameter_Type::NONE,
+          Extrinsic_Parameter_Type::NONE,
           Structure_Parameter_Type::ADJUST_ALL)
       );
   }
