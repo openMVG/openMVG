@@ -13,4 +13,5 @@ if( Qt5Widgets_FOUND )
   target_link_libraries( openMVG_sample_image_undistort Qt5::Widgets openMVG_image openMVG_multiview )
 
    set_property(TARGET openMVG_sample_image_undistort PROPERTY CXX_STANDARD 11)
+   set_property(TARGET openMVG_sample_image_undistort PROPERTY FOLDER OpenMVG/Samples)
 endif( Qt5Widgets_FOUND)
