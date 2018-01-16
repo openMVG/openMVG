@@ -16,6 +16,10 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <mutex>
+
+#include <tbb/parallel_for.h>
+using namespace tbb;
 
 extern "C" {
 #include "nonFree/sift/vl/sift.h"
@@ -176,17 +180,14 @@ public:
       // Update gradient before launching parallel extraction
       vl_sift_update_gradient(filt);
 
-      #ifdef OPENMVG_USE_OPENMP
-      #pragma omp parallel for private(descr, descriptor)
-      #endif
-      for (int i = 0; i < nkeys; ++i) {
-
+      std::mutex regions_lock;
+      tbb::parallel_for(0, nkeys, [&](int i) {
         // Feature masking
         if (mask)
         {
           const image::Image<unsigned char> & maskIma = *mask;
           if (maskIma(keys[i].y, keys[i].x) == 0)
-            continue;
+            return;
         }
 
         double angles [4] = {0.0, 0.0, 0.0, 0.0};
@@ -202,15 +203,13 @@ public:
             keys[i].sigma, static_cast<float>(angles[q]));
 
           siftDescToUChar(&descr[0], descriptor, _params._root_sift);
-          #ifdef OPENMVG_USE_OPENMP
-          #pragma omp critical
-          #endif
           {
+            std::lock_guard<std::mutex> _(regions_lock);
             regions->Descriptors().push_back(descriptor);
             regions->Features().push_back(fp);
           }
         }
-      }
+      });
       if (vl_sift_process_next_octave(filt))
         break; // Last octave
     }

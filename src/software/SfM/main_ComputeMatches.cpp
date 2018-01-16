@@ -37,12 +37,15 @@
 #include <memory>
 #include <string>
 
+#include <tbb/task_scheduler_init.h>
+
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
 using namespace openMVG::matching_image_collection;
 using namespace std;
+using namespace tbb;
 
 enum EGeometricModel
 {
@@ -79,6 +82,7 @@ int main(int argc, char **argv)
   bool bGuided_matching = false;
   int imax_iteration = 2048;
   unsigned int ui_max_cache_size = 0;
+  int iNumThreads = 0;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -93,6 +97,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
+  cmd.add( make_option('n', iNumThreads, "numThreads") );
 
 
   try {
@@ -130,10 +135,11 @@ int main(int argc, char **argv)
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
-      << "  use the found model to improve the pairwise correspondences."
+      << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
-      << "  Use a regions cache (only cache_size regions will be stored in memory)"
-      << "  If not used, all regions will be load in memory."
+      << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
+      << "  If not used, all regions will be load in memory.\n"
+      << "[-n|--numThreads] number of parallel computations\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -152,7 +158,11 @@ int main(int argc, char **argv)
             << "--pair_list " << sPredefinedPairList << "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--guided_matching " << bGuided_matching << "\n"
-            << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
+            << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << "\n"
+            << "--numThreads " << iNumThreads << "\n"
+            << std::endl;
+  tbb::task_scheduler_init init(iNumThreads == 0 ? tbb::task_scheduler_init::automatic : iNumThreads);
+
 
   EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
 

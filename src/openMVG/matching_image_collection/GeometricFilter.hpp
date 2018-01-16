@@ -12,6 +12,10 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <mutex>
+
+#include <tbb/parallel_for.h>
+using namespace tbb;
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
@@ -77,18 +81,16 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
     my_progress_bar = &C_Progress::dummy();
   my_progress_bar->restart( putative_matches.size(), "\n- Geometric filtering -\n" );
 
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-  for (int i = 0; i < (int)putative_matches.size(); ++i)
-  {
+  tbb::parallel_for(0, (int)putative_matches.size(), [&](int i) {
     if (my_progress_bar->hasBeenCanceled())
-      continue;
+      return;
     auto iter = putative_matches.begin();
     advance(iter,i);
 
     Pair current_pair = iter->first;
     const std::vector<IndMatch> & vec_PutativeMatches = iter->second;
+
+    std::mutex map_GeometricMatches_mutex;
 
     //-- Apply the geometric filter (robust model estimation)
     {
@@ -116,16 +118,14 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
           std::swap(putative_inliers, guided_geometric_inliers);
         }
 
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp critical
-#endif
         {
+          std::lock_guard<std::mutex> _(map_GeometricMatches_mutex);
           _map_GeometricMatches.insert( {current_pair, std::move(putative_inliers)});
         }
       }
     }
     ++(*my_progress_bar);
-  }
+  });
 }
 
 } // namespace matching_image_collection

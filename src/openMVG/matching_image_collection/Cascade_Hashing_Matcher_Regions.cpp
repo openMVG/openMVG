@@ -17,6 +17,13 @@
 
 #include "third_party/progress/progress.hpp"
 
+#include <mutex>
+
+#include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
+
+using namespace tbb;
+
 namespace openMVG {
 namespace matching_image_collection {
 
@@ -101,11 +108,8 @@ void Match
   }
 
   // Index the input regions
-#ifdef OPENMVG_USE_OPENMP
-  #pragma omp parallel for schedule(dynamic)
-#endif
-  for (int i =0; i < used_index.size(); ++i)
-  {
+  std::mutex write_mutex;
+  tbb::parallel_for(0, (int)used_index.size(), [&](int i) {
     std::set<IndexT>::const_iterator iter = used_index.begin();
     std::advance(iter, i);
     const IndexT I = *iter;
@@ -115,20 +119,17 @@ void Match
     const size_t dimension = regionsI->DescriptorLength();
 
     Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp critical
-#endif
+    HashedDescriptions descriptions = cascade_hasher.CreateHashedDescriptions(mat_I, zero_mean_descriptor);
     {
-      hashed_base_[I] =
-        std::move(cascade_hasher.CreateHashedDescriptions(mat_I, zero_mean_descriptor));
+      std::lock_guard<std::mutex> _(write_mutex);
+      hashed_base_.emplace(I, std::move(descriptions));
     }
-  }
+  });
 
   // Perform matching between all the pairs
-  for (const auto & pairs : map_Pairs)
-  {
+  tbb::parallel_for_each(std::begin(map_Pairs), std::end(map_Pairs), [&](const Map_vectorT::value_type& pairs) {
     if (my_progress_bar->hasBeenCanceled())
-      break;
+      return;
     const IndexT I = pairs.first;
     const std::vector<IndexT> & indexToCompare = pairs.second;
 
@@ -136,7 +137,7 @@ void Match
     if (regionsI->RegionCount() == 0)
     {
       (*my_progress_bar) += indexToCompare.size();
-      continue;
+      return;
     }
 
     const std::vector<features::PointFeature> pointFeaturesI = regionsI->GetRegionsPositions();
@@ -145,20 +146,16 @@ void Match
     const size_t dimension = regionsI->DescriptorLength();
     Eigen::Map<BaseMat> mat_I( (ScalarT*)tabI, regionsI->RegionCount(), dimension);
 
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for schedule(dynamic)
-#endif
-    for (int j = 0; j < (int)indexToCompare.size(); ++j)
-    {
+    tbb::parallel_for(0, (int)indexToCompare.size(), [&](int j) {
       if (my_progress_bar->hasBeenCanceled())
-        continue;
+        return;
       const size_t J = indexToCompare[j];
       const std::shared_ptr<features::Regions> regionsJ = regions_provider.get(J);
 
       if (regionsI->Type_id() != regionsJ->Type_id())
       {
         ++(*my_progress_bar);
-        continue;
+        return;
       }
 
       // Matrix representation of the query input data;
@@ -206,10 +203,8 @@ void Match
         pointFeaturesI, pointFeaturesJ);
       matchDeduplicator.getDeduplicated(vec_putative_matches);
 
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp critical
-#endif
       {
+        std::lock_guard<std::mutex> _(write_mutex);
         if (!vec_putative_matches.empty())
         {
           map_PutativesMatches.insert(
@@ -220,8 +215,8 @@ void Match
         }
       }
       ++(*my_progress_bar);
-    }
-  }
+    });
+  });
 }
 } // namespace impl
 
@@ -233,9 +228,6 @@ void Cascade_Hashing_Matcher_Regions::Match
   C_Progress * my_progress_bar
 )const
 {
-#ifdef OPENMVG_USE_OPENMP
-  std::cout << "Using the OPENMP thread interface" << std::endl;
-#endif
   if (!regions_provider)
     return;
 

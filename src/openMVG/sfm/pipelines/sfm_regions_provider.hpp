@@ -12,6 +12,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
@@ -20,6 +21,9 @@
 
 #include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <tbb/parallel_for_each.h>
+using namespace tbb;
 
 namespace openMVG {
 namespace sfm {
@@ -99,22 +103,17 @@ public:
     my_progress_bar->restart(sfm_data.GetViews().size(), "\n- Regions Loading -\n");
     // Read for each view the corresponding regions and store them
     std::atomic<bool> bContinue(true);
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel
-#endif
-    for (Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end() && bContinue; ++iter)
-    {
-        if (my_progress_bar->hasBeenCanceled())
-        {
-          bContinue = false;
-          continue;
-        }
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp single nowait
-#endif
+    std::mutex cache_protect;
+
+    tbb::parallel_for_each(std::begin(sfm_data.views), std::end(sfm_data.views), [&](const Views::value_type& iter) {
+      if (my_progress_bar->hasBeenCanceled() || !bContinue)
       {
-        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter->second->s_Img_path);
+        bContinue = false;
+        return;
+      }
+
+      {
+        const std::string sImageName = stlplus::create_filespec(sfm_data.s_root_path, iter.second->s_Img_path);
         const std::string basename = stlplus::basename_part(sImageName);
         const std::string featFile = stlplus::create_filespec(feat_directory, basename, ".feat");
         const std::string descFile = stlplus::create_filespec(feat_directory, basename, ".desc");
@@ -122,19 +121,20 @@ public:
         std::unique_ptr<features::Regions> regions_ptr(region_type->EmptyClone());
         if (!regions_ptr->Load(featFile, descFile))
         {
+          std::cout << featFile << std::endl;
+          std::cout << descFile << std::endl;
           std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
           bContinue = false;
+          return;
         }
-        //else
-#ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-#endif
+
         {
-          cache_[iter->second->id_view] = std::move(regions_ptr);
+          std::lock_guard<std::mutex> _(cache_protect);
+          cache_[iter.second->id_view] = std::move(regions_ptr);
         }
         ++(*my_progress_bar);
       }
-    }
+    });
     return bContinue;
   }
 
