@@ -67,9 +67,11 @@ int main(int argc, char **argv)
 
   std::ofstream outfile(stlplus::create_filespec(sOutDir, "cameras", "xml").c_str());
 
-  outfile << "<document version = \"1.2.0\">\n";
-  outfile << "  <chunk>\n";
+  outfile << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  outfile << "<document version = \"1.3.0\">\n";
+  outfile << "<chunk>\n";
 
+  outfile << "<sensors>\n";
   for (const auto& intrinsic : sfm_data.GetIntrinsics())
   {
 	  if (isPinhole(intrinsic.second->getType()))
@@ -120,6 +122,7 @@ int main(int argc, char **argv)
 		  outfile << "</sensor>\n";
 	  }
   }
+  outfile << "</sensors>\n";
 
   outfile << "<cameras>\n";
   for (const auto& view : sfm_data.GetViews())
@@ -127,7 +130,7 @@ int main(int argc, char **argv)
 	  const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
 	  auto mat34 = poseMVG.asMatrix();
 
-	  outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"true\">\n";
+	  outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
 	  outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
 	  outfile << "</camera>\n";
   }
@@ -138,10 +141,6 @@ int main(int argc, char **argv)
 	  "<size>100 100 100 </size>\n"
 	  "<R>1 0 0 0 1 0 0 0 1 </R>\n"
 	  "</region>\n"
-	  "<transform>\n"
-	  "<rotation>1.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.0000000000000000e+00</rotation>\n"
-	  "<translation>0.0 0.0 0.0</translation>\n"
-	  "</transform>\n"
 	  "<settings>\n"
 	  "<property name=\"accuracy_tiepoints\" value=\"1\"/>\n"
 	  "<property name=\"accuracy_cameras\" value=\"10\" />\n"
