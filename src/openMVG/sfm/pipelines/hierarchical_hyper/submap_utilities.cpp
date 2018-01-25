@@ -10,9 +10,13 @@
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_io.hpp"
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
 #include <cereal/cereal.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/archives/json.hpp>
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/portable_binary.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -20,6 +24,7 @@
 namespace openMVG{
 namespace sfm{
 
+template <typename archiveType>
 bool SaveHsfmSubmap(
     const HsfmSubmap & submap,
     const std::string & filename)
@@ -31,7 +36,7 @@ bool SaveHsfmSubmap(
 
   try
   {
-    cereal::JSONOutputArchive archive(stream);
+    archiveType archive(stream);
     archive(cereal::make_nvp("submap", submap));
   }
   catch (const cereal::Exception & e)
@@ -44,6 +49,7 @@ bool SaveHsfmSubmap(
   return true;
 }
 
+template <typename archiveType>
 bool LoadHsfmSubmap(
     HsfmSubmap & submap,
     const std::string & filename)
@@ -55,7 +61,7 @@ bool LoadHsfmSubmap(
 
   try
   {
-    cereal::JSONInputArchive archive(stream);
+    archiveType archive(stream);
     archive(cereal::make_nvp("submap", submap));
   }
   catch (const cereal::Exception & e)
@@ -68,18 +74,54 @@ bool LoadHsfmSubmap(
   return true;
 }
 
-bool SaveSubmaps(
-    const HsfmSubmaps & submaps,
+bool Save(
+    const HsfmSubmap & submap,
+    const std::string & filename)
+{
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    return SaveHsfmSubmap<cereal::JSONOutputArchive>(submap, filename);
+  else if (ext == "bin")
+    return SaveHsfmSubmap<cereal::PortableBinaryOutputArchive>(submap, filename);
+  else if (ext == "xml")
+    return SaveHsfmSubmap<cereal::XMLOutputArchive>(submap, filename);
+  else
+  {
+    std::cerr << "Unknown submap export format: " << ext << std::endl;
+  }
+  return false;
+}
+
+bool Load(
+    HsfmSubmap & submap,
+    const std::string & filename)
+{
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    return LoadHsfmSubmap<cereal::JSONInputArchive>(submap, filename);
+  else if (ext == "bin")
+    return LoadHsfmSubmap<cereal::PortableBinaryInputArchive>(submap, filename);
+  else if (ext == "xml")
+    return LoadHsfmSubmap<cereal::XMLInputArchive>(submap, filename);
+  else
+  {
+    std::cerr << "Unknown submap import format: " << ext << std::endl;
+  }
+  return false;
+}
+
+template<typename archiveType>
+bool LoadSubmaps(HsfmSubmaps &submaps,
     const std::string & filename)
 {
   //Create the stream and check it is ok
-  std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
+  std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
   if (!stream.is_open())
     return false;
 
   try
   {
-    cereal::JSONOutputArchive archive(stream);
+    archiveType archive(stream);
     archive(cereal::make_nvp("submaps", submaps));
   }
   catch (const cereal::Exception & e)
@@ -92,18 +134,18 @@ bool SaveSubmaps(
   return true;
 }
 
-
-bool LoadSubmaps(HsfmSubmaps &submaps,
+template<typename archiveType>
+bool SaveSubmaps(const HsfmSubmaps &submaps,
     const std::string & filename)
 {
   //Create the stream and check it is ok
-  std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
+  std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
   if (!stream.is_open())
     return false;
 
   try
   {
-    cereal::JSONInputArchive archive(stream);
+    archiveType archive(stream);
     archive(cereal::make_nvp("submaps", submaps));
   }
   catch (const cereal::Exception & e)
@@ -114,6 +156,41 @@ bool LoadSubmaps(HsfmSubmaps &submaps,
 
   stream.close();
   return true;
+}
+
+bool Save(
+    const HsfmSubmaps & submaps,
+    const std::string & filename)
+{
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    return SaveSubmaps<cereal::JSONOutputArchive>(submaps, filename);
+  else if (ext == "bin")
+    return SaveSubmaps<cereal::PortableBinaryOutputArchive>(submaps, filename);
+  else if (ext == "xml")
+    return SaveSubmaps<cereal::XMLOutputArchive>(submaps, filename);
+  else
+  {
+    std::cerr << "Unknown submaps import format: " << ext << std::endl;
+  }
+  return false;
+}
+
+bool Load(HsfmSubmaps & submaps,
+    const std::string & filename)
+{
+  const std::string ext = stlplus::extension_part(filename);
+  if (ext == "json")
+    return LoadSubmaps<cereal::JSONInputArchive>(submaps, filename);
+  else if (ext == "bin")
+    return LoadSubmaps<cereal::PortableBinaryInputArchive>(submaps, filename);
+  else if (ext == "xml")
+    return LoadSubmaps<cereal::XMLInputArchive>(submaps, filename);
+  else
+  {
+    std::cerr << "Unknown submaps import format: " << ext << std::endl;
+  }
+  return false;
 }
 
 /**

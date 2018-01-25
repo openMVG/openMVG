@@ -207,7 +207,7 @@ int main(int argc, char **argv)
   }
 
   std::cout << "...Export Submaps Before Merge" << std::endl;
-  SaveSubmaps(submaps,
+  Save(submaps,
       stlplus::create_filespec(sOutDir, "submaps_before_merge", "json"));
 
   std::cout << "...Start Merging Submaps: " << timer << std::endl;
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
           stlplus::create_filespec(sOutDir, "sfm_data_" + std::to_string(smap.first)));
   }
 
-  SaveSubmaps(submaps,
+  Save(submaps,
       stlplus::create_filespec(sOutDir, "submaps", "json"));
 
   // one last bundle adjustment on the root submap (with intrinsics optimization)

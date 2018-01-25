@@ -39,3 +39,4 @@ UNIT_TEST(openMVG sfm_data_BA_fixed_points
 UNIT_TEST(openMVG hypercluster "openMVG_pipeline_hierarchical_hyper")
 UNIT_TEST(openMVG hypergraph_partitioning_scotch "openMVG_pipeline_hierarchical_hyper")
 UNIT_TEST(openMVG submap_threshold_checker "openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG submap_io "openMVG_pipeline_hierarchical_hyper")

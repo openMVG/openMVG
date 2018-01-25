@@ -23,18 +23,18 @@ enum eSubmapDiagnostic
   NO_COMMON_RECONSTRUCTED_SEPARATORS
 };
 
-bool SaveHsfmSubmap(
+bool Save(
     const HsfmSubmap & submap,
     const std::string & filename);
 
-bool LoadHsfmSubmap(
+bool Load(
     HsfmSubmap & submap,
     const std::string & filename);
 
-bool SaveSubmaps(const HsfmSubmaps &submaps,
+bool Save(const HsfmSubmaps &submaps,
     const std::string & filename);
 
-bool LoadSubmaps(
+bool Load(
     HsfmSubmaps & submaps,
     const std::string & filename);
 
