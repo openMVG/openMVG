@@ -115,6 +115,9 @@ int main(int argc, char **argv)
             "<p2>" << params[7] << "</p2>\n"
             "<k3>" << params[5] << "</k3>\n";
           break;
+        default:
+          std::cerr << "Unsupported camera model for export." << std::endl;
+          return EXIT_FAILURE;
         }
       }
 
