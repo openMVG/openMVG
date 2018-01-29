@@ -113,13 +113,8 @@ void MatchesPairToMat
 
   // Load features of Inth and Jnth images
   const features::PointFeatures
-<<<<<<< HEAD
-    & feature_I = features_provider->feats_per_view.at(pairIndex.first),
-    & feature_J = features_provider->feats_per_view.at(pairIndex.second);
-=======
 	  & feature_I = features_provider->feats_per_view.at(pairIndex.first),
 	  & feature_J = features_provider->feats_per_view.at(pairIndex.second);
->>>>>>> 2ad3402636ded886ee2d94c411e5beff47597162
 
   MatchesPointsToMat(
     putativeMatches,
