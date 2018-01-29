@@ -28,19 +28,22 @@ import os
 import subprocess
 import sys
 
-if len(sys.argv) < 4:
-    print ("Usage %s image_dir gt_dir output_dir" % sys.argv[0])
+if len(sys.argv) < 5:
+    print ("Usage %s image_dir gt_dir gt_type output_dir" % sys.argv[0])
+    print ("gt_type: %s 1:Strecha's Dataset 2:MiddleBury's Dataset 3:DTU MVS Dataset" % sys.argv[0])
     sys.exit(1)
 
 input_dir = sys.argv[1]
 gt_dir    = sys.argv[2]
-output_dir = sys.argv[3]
+gt_type   = sys.argv[3]
+output_dir = sys.argv[4]
 matches_dir = os.path.join(output_dir, "matches")
 reconstruction_dir = os.path.join(output_dir, "reconstruction_structure")
 camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_camera_database.txt")
 
 print ("Using input dir  : ", input_dir)
 print ("      gt_dir     : ", gt_dir)
+print ("      gt_type    : ", gt_type)
 print ("      output_dir : ", output_dir)
 
 # Create the ouput/matches folder if not present
@@ -54,7 +57,7 @@ if not os.path.exists(reconstruction_dir):
     os.mkdir(reconstruction_dir)
 
 print ("1. Load GT")
-pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListingFromKnownPoses"),  "-i", input_dir, "-g", gt_dir, "-o", output_dir] )
+pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListingFromKnownPoses"),  "-i", input_dir, "-g", gt_dir, "-t", gt_type, "-o", output_dir] )
 pIntrisics.wait()
 
 print ("2. Compute features")
