@@ -21,11 +21,14 @@
 namespace openMVG {
 namespace sfm {
 
+/// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
+using Intrinsics = Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase>>;
+
 /// Define a collection of Pose (indexed by View::id_pose)
 using Poses = Hash_Map<IndexT, geometry::Pose3>;
 
-/// Define a collection of IntrinsicParameter (indexed by View::id_intrinsic)
-using Intrinsics = Hash_Map<IndexT, std::shared_ptr<cameras::IntrinsicBase>>;
+/// Define a collection of View (indexed by View::id_view)
+using Views = Hash_Map<IndexT, std::shared_ptr<View>>;
 
 /// Generic SfM data container
 /// Store structure and camera properties:
