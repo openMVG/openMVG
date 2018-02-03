@@ -33,6 +33,19 @@
 #include <iostream>
 
 namespace openMVG {
+namespace essential {
+namespace kernel {
+
+void FivePointSolver::Solve(const Mat3X &x1, const Mat3X &x2, std::vector<Mat3> *E) {
+  assert(5 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  FivePointsRelativePose(x1, x2, E);
+}
+
+} // namespace essential
+} // namespace kernel
 
 Mat FivePointsNullspaceBasis(const Mat3X &x1, const Mat3X &x2) {
   Mat epipolar_constraint = Eigen::Matrix<double,9, 9>::Constant(0.0);

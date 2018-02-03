@@ -126,6 +126,8 @@ const
             obs_it != obs.end() && bChierality; ++obs_it)
           {
             const View * view = sfm_data.views.at(obs_it->first).get();
+            if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+              continue;
             const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
             bChierality &= CheiralityTest((*cam)(obs_it->second.x), pose, X);
@@ -240,7 +242,7 @@ bool SfM_Data_Structure_Computation_Robust::robust_triangulation
 )
 const
 {
-  if (obs.size() < min_required_inliers_)
+  if (obs.size() < min_required_inliers_ || obs.size() < min_sample_index_)
   {
     return false;
   }

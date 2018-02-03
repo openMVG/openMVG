@@ -95,6 +95,16 @@ target_link_libraries(openMVG_main_IncrementalSfM
     stlplus
 )
 
+add_executable(openMVG_main_IncrementalSfM2 main_IncrementalSfM2.cpp)
+target_link_libraries(openMVG_main_IncrementalSfM2
+  PRIVATE
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_sfm
+    stlplus
+)
+
 add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
 target_link_libraries(openMVG_main_GlobalSfM
   PRIVATE
@@ -164,6 +174,8 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
 # Installation rules
 set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
+set_property(TARGET openMVG_main_IncrementalSfM2 PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION bin/)
 set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)

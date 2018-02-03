@@ -46,8 +46,26 @@
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
-namespace openMVG
-{
+namespace openMVG {
+namespace essential {
+namespace kernel {
+
+// Solve the essential matrix problem for corresponding bearing vectors.
+struct FivePointSolver {
+  enum { MINIMUM_SAMPLES = 5 };
+  enum { MAX_MODELS = 10 };
+
+  ///  @brief Solve the essential matrix problem for 5 bearing vector correspondences.
+  ///
+  ///  @param [in] x1 Left bearing vectors.
+  ///  @param [in] x2 Right bearing vectors.
+  ///  @param [out] E The found essential matrices
+  ///
+  static void Solve(const Mat3X &x1, const Mat3X &x2, std::vector<Mat3> *E);
+};
+
+}  // namespace kernel
+}  // namespace essential
 
 /**
  * @brief Computes the relative pose of two calibrated cameras from 5 correspondences.

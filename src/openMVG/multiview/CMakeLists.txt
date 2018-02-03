@@ -46,10 +46,10 @@ UNIT_TEST(openMVG triangulation_nview "openMVG_multiview_test_data;openMVG_multi
 
 # Solvers
 UNIT_TEST(openMVG solver_affine "openMVG_multiview")
-UNIT_TEST(openMVG solver_fundamental_kernel "openMVG_multiview")
-UNIT_TEST(openMVG solver_essential_kernel "openMVG_multiview_test_data;openMVG_multiview")
-UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview_test_data;openMVG_multiview")
+UNIT_TEST(openMVG solver_essential_eight_point "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_essential_five_point "openMVG_multiview_test_data;openMVG_multiview")
+UNIT_TEST(openMVG solver_fundamental_kernel "openMVG_multiview")
+UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_resection_kernel "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview_test_data;openMVG_multiview")
 
