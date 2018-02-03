@@ -22,7 +22,7 @@ using namespace openMVG;
 using namespace openMVG::sfm;
 
 #include "nonFree/sift/SIFT_describer_io.hpp"
-#include "openMVG/features/image_describer_akaze_io.hpp"
+#include "openMVG/features/akaze/image_describer_akaze_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
