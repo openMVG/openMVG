@@ -24,7 +24,7 @@ OSI_X_SolverWrapper::OSI_X_SolverWrapper(int nbParams) : LP_Solver(nbParams)
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
-  if ( si == nullptr )
+  if (!si)
   {
     return false;
   }
@@ -110,7 +110,7 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
-  if ( si == nullptr )
+  if (!si)
   {
     return false;
   }

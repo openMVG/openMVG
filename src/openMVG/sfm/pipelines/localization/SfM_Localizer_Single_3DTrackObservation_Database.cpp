@@ -83,7 +83,7 @@ namespace sfm {
     Image_Localizer_Match_Data * resection_data_ptr
   ) const
   {
-    if (sfm_data_ == nullptr || matching_interface_ == nullptr)
+    if (!sfm_data_ || !matching_interface_)
     {
       return false;
     }

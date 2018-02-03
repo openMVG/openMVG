@@ -107,7 +107,7 @@ class ArrayMatcherCascadeHashing  : public ArrayMatcher<Scalar, Metric>
     size_t NN
   )
   {
-    if (memMapping.get() == nullptr)  {
+    if (!memMapping.get())  {
       return false;
     }
 

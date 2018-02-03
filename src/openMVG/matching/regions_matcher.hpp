@@ -141,7 +141,7 @@ public:
     matching::IndMatches & vec_putative_matches
   ) override
   {
-    if (regions_ == nullptr)
+    if (!regions_)
       return false;
 
     const Scalar * queries = reinterpret_cast<const Scalar *>(queryregions_.DescriptorRawData());

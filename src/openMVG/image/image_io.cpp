@@ -40,7 +40,7 @@ inline bool CmpFormatExt(const char *a, const char *b) {
 Format GetFormat(const char *c) {
   const char *p = strrchr (c, '.');
 
-  if (p == nullptr)
+  if (!p)
     return Unknown;
 
   if (CmpFormatExt(p, ".png")) return Png;
