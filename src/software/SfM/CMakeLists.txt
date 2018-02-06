@@ -239,6 +239,13 @@ target_link_libraries(openMVG_main_ExportUndistortedImages
   stlplus
 )
 
+add_executable(openMVG_main_ControlPointsRegistration main_ControlPointsRegistration.cpp)
+target_link_libraries(openMVG_main_ControlPointsRegistration
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  stlplus)
+  
 # installation rules
 set_property(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_exportKeypoints DESTINATION bin/)
@@ -248,6 +255,8 @@ set_property(TARGET openMVG_main_exportTracks PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_exportTracks DESTINATION bin/)
 set_property(TARGET openMVG_main_ExportUndistortedImages PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
+set_property(TARGET openMVG_main_ControlPointsRegistration PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_ControlPointsRegistration DESTINATION bin/)
 
 ###
 # SfM export to X
