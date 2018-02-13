@@ -131,7 +131,7 @@ int main(int argc, char **argv)
   for (const auto& view : sfm_data.GetViews())
   {
     const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
-    auto mat34 = poseMVG.asMatrix();
+    auto mat34 = poseMVG.inverse().asMatrix();
 
     outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
     outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
