@@ -70,6 +70,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('p', sPairFile, "pair_file") );
   cmd.add( make_option('o', sOutFile, "output_file") );
   cmd.add( make_switch('b', "bundle_adjustment"));
+  cmd.add( make_switch('e', "bundle_adjustment_ext"));
   cmd.add( make_option('r', dMax_reprojection_error, "residual_threshold"));
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
   cmd.add( make_switch('d', "direct_triangulation"));
@@ -95,9 +96,10 @@ int main(int argc, char **argv)
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
 
     << "\n[Optional]\n"
-    << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene (OFF by default)\n"
+    << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene, for intrinsics, extrinsics and structure (OFF by default)\n"
+    << "[-e|--bundle_adjustment_ext] (switch) perform a bundle adjustment on the scene, for extrinsics and structure (OFF by default)\n"
     << "[-r|--residual_threshold] maximal pixels reprojection error that will be considered for triangulations (4.0 by default)\n"
-        << "[-c|--cache_size]\n"
+    << "[-c|--cache_size]\n"
     << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
     << "  If not used, all regions will be load in memory.\n"
 
@@ -322,7 +324,7 @@ int main(int argc, char **argv)
   Generate_SfM_Report(sfm_data,
     stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
 
-  if (cmd.used('b'))
+  if (cmd.used('b') || cmd.used('e'))
   {
     // Check that poses & intrinsic cover some measures (after outlier removal)
     const IndexT minPointPerPose = 12; // 6 min
@@ -343,7 +345,7 @@ int main(int argc, char **argv)
       (
         sfm_data,
         Optimize_Options(
-          cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
+          cmd.used('b') ? cameras::Intrinsic_Parameter_Type::ADJUST_ALL : cameras::Intrinsic_Parameter_Type::NONE,
           Extrinsic_Parameter_Type::ADJUST_ALL,
           Structure_Parameter_Type::ADJUST_ALL)
       );
