@@ -344,6 +344,15 @@ target_link_libraries( openMVG_main_openMVG2NVM
   openMVG_sfm
   stlplus )
 
+# - Export SfM openMVG scene to Colmap format
+add_executable(openMVG_main_openMVG2Colmap main_openMVG2Colmap.cpp)
+target_link_libraries( openMVG_main_openMVG2Colmap
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus )
+
 # installation rules
 set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
@@ -361,6 +370,8 @@ set_property(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/so
 install(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
+set_property(TARGET openMVG_main_openMVG2Colmap PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_openMVG2Colmap DESTINATION bin/)
 
 # -
 # Use openCV Feature detector to describe the images
