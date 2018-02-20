@@ -24,7 +24,8 @@ target_include_directories(openMVG_features
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CEREAL_INCLUDE_DIRS}>
-    #$<INSTALL_INTERFACE:include/openMVG/>
+    $<INSTALL_INTERFACE:include/>
+    $<INSTALL_INTERFACE:include/openMVG/>
     #$<INSTALL_INTERFACE:include/openMVG/dependencies>
 )
 target_link_libraries(openMVG_features PRIVATE fast)

@@ -23,17 +23,19 @@ add_library(openMVG_multiview
   ${multiview_files_cpp})
 set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
 install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
-target_link_libraries(
-  openMVG_multiview
+target_link_libraries(openMVG_multiview
   PUBLIC
     openMVG_numeric
   PRIVATE
     openMVG_graph
-    ${CERES_LIBRARIES})
-target_include_directories(
-  openMVG_multiview
+    ${CERES_LIBRARIES}
+)
+target_include_directories(openMVG_multiview
   PRIVATE
-  ${CERES_INCLUDE_DIRS})
+    ${CERES_INCLUDE_DIRS}
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+)
 set_target_properties(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 add_library(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
