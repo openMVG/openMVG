@@ -23,11 +23,6 @@
 #include <iomanip>
 #include <cstdlib>
 #include <sstream>
-#include <stdlib.h>     /* exit, EXIT_FAILURE */
-
-#ifdef OPENMVG_USE_OPENMP
-#include <omp.h>
-#endif
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -43,7 +38,8 @@ bool CreateLineCameraFile(  const IndexT camera_id,
 {
   std::stringstream came_line_ss;
   EINTRINSIC current_type = intrinsic->getType();
-  switch(current_type) {
+  switch(current_type) 
+  {
     case PINHOLE_CAMERA: 
       //OpenMVG's PINHOLE_CAMERA corresponds to Colmap's SIMPLE_PINHOLE
       //Parameters: f, cx, cy  
@@ -56,7 +52,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
           pinhole_intrinsic->h() << " " <<
           pinhole_intrinsic->focal() << " " << 
           pinhole_intrinsic->principal_point().x() << " " << 
-          pinhole_intrinsic->principal_point().y() << std::endl;
+          pinhole_intrinsic->principal_point().y() << "\n";
       }
       break;
     case PINHOLE_CAMERA_RADIAL1:
@@ -73,7 +69,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
           pinhole_intrinsic_radial->focal() << " " << 
           pinhole_intrinsic_radial->principal_point().x() << " " << 
           pinhole_intrinsic_radial->principal_point().y() << " " << 
-          pinhole_intrinsic_radial->getParams().at(3) << std::endl;   //k1
+          pinhole_intrinsic_radial->getParams().at(3) << "\n";   //k1
       }
       break;      
     case PINHOLE_CAMERA_RADIAL3: 
@@ -109,28 +105,30 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
     std::cerr << "Cannot write file" << sCamerasFilename << std::endl;
     return false;
   }
-  camera_file << "# Camera list with one line of data per camera:" << std::endl;
-  camera_file << "#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]" << std::endl;
-  camera_file << "# Number of cameras: X" << std::endl;
+  camera_file << "# Camera list with one line of data per camera:\n";
+  camera_file << "#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n";
+  camera_file << "# Number of cameras: X\n";
 
   std::vector<std::string> camera_lines;
   C_Progress_display my_progress_bar( sfm_data.GetIntrinsics().size(), std::cout, "\n- CREATE CAMERA FILE -\n" );
   for (Intrinsics::const_iterator iter = sfm_data.GetIntrinsics().begin();
     iter != sfm_data.GetIntrinsics().end(); ++iter, ++my_progress_bar)
   {
-    std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic = iter->second;
     const IndexT camera_id = iter->first;
+    std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic = iter->second;
     std::string camera_line;
     if (CreateLineCameraFile(camera_id, intrinsic, camera_line)) 
     {
       camera_lines.push_back(camera_line);
-    } else {
+    } 
+    else 
+    {
       return false;
     }
   }
   for (auto const& camera_line: camera_lines)
   {
-    camera_file << camera_line << std::endl;
+    camera_file << camera_line << "\n";
   }
   return true;
 }
@@ -153,10 +151,10 @@ bool CreateImageFile( const SfM_Data & sfm_data,
     std::cerr << "Cannot write file" << sImagesFilename << std::endl;
     return false;
   }
-  images_file << "# Image list with two lines of data per image:" << std::endl;
-  images_file << "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME" << std::endl;
-  images_file << "#   POINTS2D[] as (X, Y, POINT3D_ID)" << std::endl;
-  images_file << "# Number of images: X, mean observations per image: Y" << std::endl;
+  images_file << "# Image list with two lines of data per image:\n";
+  images_file << "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n";
+  images_file << "#   POINTS2D[] as (X, Y, POINT3D_ID)\n";
+  images_file << "# Number of images: X, mean observations per image: Y\n";
 
   std::map< IndexT, std::vector< std::tuple<double, double, IndexT> > > viewIdToPoints2D;
   const Landmarks & landmarks = sfm_data.GetLandmarks();
@@ -190,11 +188,6 @@ bool CreateImageFile( const SfM_Data & sfm_data,
         continue;
       }
 
-      std::ostringstream padding;
-      padding << std::setw( 4 ) << std::setfill( '0' ) << view->id_view;
-      const std::string sAbsoluteOutputDir = stlplus::folder_append_separator("views") + "view_" + padding.str();
-      const std::string dstImage = stlplus::create_filespec( sAbsoluteOutputDir, "undistorted", "png");
-
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find( view->id_intrinsic );
       const IntrinsicBase * cam = iterIntrinsic->second.get();
       const Pose3 pose = sfm_data.GetPoseOrDie( view );
@@ -219,23 +212,21 @@ bool CreateImageFile( const SfM_Data & sfm_data,
       // first line per image
       //IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME
       images_file << image_id << " "
-
          << Qw << " "
          << Qx << " "
          << Qy << " "
          << Qz << " "
-
          << Tx << " "
          << Ty << " "
          << Tz << " "
-
          << camera_id << " "
          << image_name << " "     
          << "\n";
 
       // second line per image 
       //POINTS2D[] as (X, Y, POINT3D_ID)
-      for (auto point2D: viewIdToPoints2D[image_id]) {
+      for (auto point2D: viewIdToPoints2D[image_id]) 
+      {
         images_file << std::get<0>(point2D) << " " << 
         std::get<1>(point2D) << " " <<
         std::get<2>(point2D) << " ";
@@ -262,9 +253,9 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
     std::cerr << "Cannot write file" << sPoints3DFilename << std::endl;
     return false;
   }
-  points3D_file << "# 3D point list with one line of data per point:" << std::endl;
-  points3D_file << "#   POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)" << std::endl;
-  points3D_file << "# Number of points: X, mean track length: Y" << std::endl;
+  points3D_file << "# 3D point list with one line of data per point:\n";
+  points3D_file << "#   POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n";
+  points3D_file << "# Number of points: X, mean track length: Y\n";
 
   const Landmarks & landmarks = sfm_data.GetLandmarks();
 
@@ -273,16 +264,13 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
         iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar )
   {
     const Vec3 exportPoint = iterLandmarks->second.X;
-
     const IndexT point3d_id = iterLandmarks->first;
-
     points3D_file << point3d_id << " "
       << exportPoint.x() << " " 
       << exportPoint.y() << " " 
       << exportPoint.z() << " ";
     
     points3D_file << 250 << " " << 100 << " " << 150 << " ";  // Write arbitrary RGB color
-
     const double error = 0.0;     // Some error
     points3D_file << error;
 
@@ -322,13 +310,16 @@ bool CreateColmapFolder( const SfM_Data & sfm_data,
       images.txt
       points3D.txt
   */
-  if (!CreateCameraFile(sfm_data, sCamerasFilename)) {
+  if (!CreateCameraFile(sfm_data, sCamerasFilename)) 
+  {
     return false;
   }
-  if (!CreateImageFile(sfm_data, sImagesFilename)) {
+  if (!CreateImageFile(sfm_data, sImagesFilename)) 
+  {
     return false;
   }
-  if (! CreatePoint3DFile(sfm_data, sPoints3DFilename)) {
+  if (! CreatePoint3DFile(sfm_data, sPoints3DFilename)) 
+  {
     return false;
   }
   return true;
@@ -377,15 +368,10 @@ int main( int argc , char ** argv )
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
-#ifdef OPENMVG_USE_OPENMP
-  int iNumThreads = 1;
-#endif
 
   cmd.add( make_option( 'i', sSfM_Data_Filename, "sfmdata" ) );
   cmd.add( make_option( 'o', sOutDir, "outdir" ) );
-#ifdef OPENMVG_USE_OPENMP
-  cmd.add( make_option('n', iNumThreads, "numThreads") );
-#endif
+
   std::cout << "Note:  this program writes output in Colmap file format.\n";
 
   try
@@ -411,16 +397,6 @@ int main( int argc , char ** argv )
   {
     stlplus::folder_create( sOutDir );
   }
-
-#ifdef OPENMVG_USE_OPENMP
-    const unsigned int nb_max_thread = omp_get_max_threads();
-
-    if (iNumThreads > 0) {
-        omp_set_num_threads(iNumThreads);
-    } else {
-        omp_set_num_threads(nb_max_thread);
-    }
-#endif
 
   // Read the input SfM scene
   SfM_Data sfm_data;
