@@ -82,7 +82,8 @@ int main(int argc, char **argv)
         "<sensor id=\"" << intrinsic.first << "\" label=\"sensor_" << intrinsic.first << "\" type=\"frame\">\n" <<
         "<resolution width=\"" << cam->w() << "\" height=\"" << cam->h() << "\"/>\n" <<
         "<property name=\"fixed\" value=\"false\"/>\n" <<
-        "<calibration type=\"frame\" class=\"adjusted\">\n";
+        "<calibration type=\"frame\" class=\"adjusted\">\n" <<
+        "<resolution width=\"" << cam->w() << "\" height=\"" << cam->h() << "\"/>\n";
 
       outfile <<
         "<fx>" << cam->focal() << "</fx>\n" <<
