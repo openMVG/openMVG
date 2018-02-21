@@ -194,7 +194,7 @@ add_executable(main main.cpp)
 target_link_libraries(main ${OPENMVG_LIBRARIES})
 ```
 
-or with modern target-based approch (CMake 3.0+)
+or with modern target-based approach (CMake 3.0+)
 
 ```
 find_package(OpenMVG REQUIRED)

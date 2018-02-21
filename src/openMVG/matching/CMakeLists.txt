@@ -26,8 +26,8 @@ add_library(openMVG_matching
 target_include_directories(openMVG_matching
   PUBLIC
     $<BUILD_INTERFACE:${FLANN_INCLUDE_DIRS}>
-    $<INSTALL_INTERFACE:include/>
-    $<INSTALL_INTERFACE:include/openMVG/>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/openMVG>
 )
 target_link_libraries(openMVG_matching
   PRIVATE
