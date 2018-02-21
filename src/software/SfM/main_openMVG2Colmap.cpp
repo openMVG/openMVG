@@ -189,7 +189,6 @@ bool CreateImageFile( const SfM_Data & sfm_data,
       }
 
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find( view->id_intrinsic );
-      const IntrinsicBase * cam = iterIntrinsic->second.get();
       const Pose3 pose = sfm_data.GetPoseOrDie( view );
       const Mat3 rotation = pose.rotation();
       const Vec3 translation = pose.translation();
@@ -202,7 +201,6 @@ bool CreateImageFile( const SfM_Data & sfm_data,
       const double Qy = q.y();
       const double Qz = q.z();
       const double Qw = q.w();
-      const double d0 = 0.0;
 
       const IndexT image_id = view->id_view;
       // Colmap's camera_ids correspond to openMVG's intrinsic ids
@@ -279,7 +277,6 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
     {
       const IndexT viewId = itObs->first;
       const IndexT featId = itObs->second.id_feat;
-      const Observation & ob = itObs->second;
 
       points3D_file << " " 
       << viewId << " " 
