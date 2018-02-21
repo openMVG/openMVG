@@ -74,85 +74,85 @@ int main(int argc, char **argv)
   outfile << "<sensors>\n";
   for (const auto& intrinsic : sfm_data.GetIntrinsics())
   {
-	  if (isPinhole(intrinsic.second->getType()))
-	  {
-		  const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
+    if (isPinhole(intrinsic.second->getType()))
+    {
+      const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
 
-		  outfile << std::setprecision(16) << 
-			  "<sensor id=\"" << intrinsic.first << "\" label=\"sensor_" << intrinsic.first << "\" type=\"frame\">\n" <<
-			  "<resolution width=\"" << cam->w() << "\" height=\"" << cam->h() << "\"/>\n" <<
-			  "<property name=\"fixed\" value=\"false\"/>\n" <<
-			  "<calibration type=\"frame\" class=\"adjusted\">\n";
+      outfile << std::setprecision(16) << 
+        "<sensor id=\"" << intrinsic.first << "\" label=\"sensor_" << intrinsic.first << "\" type=\"frame\">\n" <<
+        "<resolution width=\"" << cam->w() << "\" height=\"" << cam->h() << "\"/>\n" <<
+        "<property name=\"fixed\" value=\"false\"/>\n" <<
+        "<calibration type=\"frame\" class=\"adjusted\">\n";
 
-		  outfile <<
-			  "<fx>" << cam->focal() << "</fx>\n" <<
-			  "<fy>" << cam->focal() << "</fy>\n";
+      outfile <<
+        "<fx>" << cam->focal() << "</fx>\n" <<
+        "<fy>" << cam->focal() << "</fy>\n";
 
-		  outfile <<
-			  "<cx>" << cam->principal_point()[0] << "</cx>\n" <<
-			  "<cy>" << cam->principal_point()[1] << "</cy>\n";
+      outfile <<
+        "<cx>" << cam->principal_point()[0] << "</cx>\n" <<
+        "<cy>" << cam->principal_point()[1] << "</cy>\n";
 
-		  if (cam->have_disto())
-		  {
-			  auto params = cam->getParams();
-			  switch (cam->getType())
-			  {
-			  case PINHOLE_CAMERA_RADIAL1:
-				  outfile <<
-					  "<k1>" << params[3] << "</k1>\n";
-				  break;
-			  case PINHOLE_CAMERA_RADIAL3:
-				  outfile <<
-					  "<k1>" << params[3] << "</k1>\n"
-					  "<k2>" << params[4] << "</k2>\n"
-					  "<k3>" << params[5] << "</k3>\n";
-				  break;
-			  case PINHOLE_CAMERA_BROWN:
-				  outfile <<
-					  "<k1>" << params[3] << "</k1>\n"
-					  "<k2>" << params[4] << "</k2>\n"
-					  "<p1>" << params[6] << "</p1>\n"
-					  "<p2>" << params[7] << "</p2>\n"
-					  "<k3>" << params[5] << "</k3>\n";
-				  break;
-			  }
-		  }
+      if (cam->have_disto())
+      {
+        auto params = cam->getParams();
+        switch (cam->getType())
+        {
+        case PINHOLE_CAMERA_RADIAL1:
+          outfile <<
+            "<k1>" << params[3] << "</k1>\n";
+          break;
+        case PINHOLE_CAMERA_RADIAL3:
+          outfile <<
+            "<k1>" << params[3] << "</k1>\n"
+            "<k2>" << params[4] << "</k2>\n"
+            "<k3>" << params[5] << "</k3>\n";
+          break;
+        case PINHOLE_CAMERA_BROWN:
+          outfile <<
+            "<k1>" << params[3] << "</k1>\n"
+            "<k2>" << params[4] << "</k2>\n"
+            "<p1>" << params[6] << "</p1>\n"
+            "<p2>" << params[7] << "</p2>\n"
+            "<k3>" << params[5] << "</k3>\n";
+          break;
+        }
+      }
 
-		  outfile << "</calibration>\n";
-		  outfile << "</sensor>\n";
-	  }
+      outfile << "</calibration>\n";
+      outfile << "</sensor>\n";
+    }
   }
   outfile << "</sensors>\n";
 
   outfile << "<cameras>\n";
   for (const auto& view : sfm_data.GetViews())
   {
-	  const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
-	  auto mat34 = poseMVG.asMatrix();
+    const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
+    auto mat34 = poseMVG.asMatrix();
 
-	  outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
-	  outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
-	  outfile << "</camera>\n";
+    outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
+    outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
+    outfile << "</camera>\n";
   }
   outfile << "</cameras>\n";
 
   outfile << "<region>\n"
-	  "<center>0 0 0 </center>\n"
-	  "<size>100 100 100 </size>\n"
-	  "<R>1 0 0 0 1 0 0 0 1 </R>\n"
-	  "</region>\n"
-	  "<settings>\n"
-	  "<property name=\"accuracy_tiepoints\" value=\"1\"/>\n"
-	  "<property name=\"accuracy_cameras\" value=\"10\" />\n"
-	  "<property name=\"accuracy_cameras_ypr\" value=\"2\" />\n"
-	  "<property name=\"accuracy_markers\" value=\"0.005\" />\n"
-	  "<property name=\"accuracy_scalebars\" value=\"0.001\" />\n"
-	  "<property name=\"accuracy_projections\" value=\"0.1\" />\n"
-	  "</settings>\n";
+    "<center>0 0 0 </center>\n"
+    "<size>100 100 100 </size>\n"
+    "<R>1 0 0 0 1 0 0 0 1 </R>\n"
+    "</region>\n"
+    "<settings>\n"
+    "<property name=\"accuracy_tiepoints\" value=\"1\"/>\n"
+    "<property name=\"accuracy_cameras\" value=\"10\" />\n"
+    "<property name=\"accuracy_cameras_ypr\" value=\"2\" />\n"
+    "<property name=\"accuracy_markers\" value=\"0.005\" />\n"
+    "<property name=\"accuracy_scalebars\" value=\"0.001\" />\n"
+    "<property name=\"accuracy_projections\" value=\"0.1\" />\n"
+    "</settings>\n";
 
   outfile << 
-	  "</chunk>\n"
-	  "</document>\n";
+    "</chunk>\n"
+    "</document>\n";
 
   outfile.close();
 
