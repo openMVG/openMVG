@@ -46,6 +46,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
       {
         std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic> pinhole_intrinsic(
           dynamic_cast<openMVG::cameras::Pinhole_Intrinsic * >(intrinsic->clone()));
+        
         came_line_ss << camera_id << " " << 
           "SIMPLE_PINHOLE" << " " <<
           pinhole_intrinsic->w() << " " << 
@@ -61,7 +62,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
       {
         std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K1> pinhole_intrinsic_radial(
             dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K1 * >(intrinsic->clone()));
-        
+
         came_line_ss << camera_id << " " << 
           "SIMPLE_RADIAL" << " " <<
           pinhole_intrinsic_radial->w() << " " << 
@@ -73,9 +74,30 @@ bool CreateLineCameraFile(  const IndexT camera_id,
       }
       break;      
     case PINHOLE_CAMERA_RADIAL3: 
-      std::cout << "PINHOLE_CAMERA_RADIAL3 is not supported. Aborting ..." << std::endl;
-      return false;
-      break;  
+      //OpenMVG's PINHOLE_CAMERA_RADIAL3 corresponds to Colmap's FULL_OPENCV
+      //Parameters: fx, fy, cx, cy, k1, k2, p1, p2, k3, k4, k5, k6
+      {
+        std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K3> pinhole_intrinsic_radial(
+            dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K3 * >(intrinsic->clone()));
+        
+        came_line_ss << camera_id << " " << 
+          "FULL_OPENCV" << " " <<
+          pinhole_intrinsic_radial->w() << " " << 
+          pinhole_intrinsic_radial->h() << " " <<
+          pinhole_intrinsic_radial->focal() << " " << 
+          pinhole_intrinsic_radial->focal() << " " << 
+          pinhole_intrinsic_radial->principal_point().x() << " " << 
+          pinhole_intrinsic_radial->principal_point().y() << " " << 
+          pinhole_intrinsic_radial->getParams().at(3) << " " << //k1
+          pinhole_intrinsic_radial->getParams().at(4) << " " << //k2
+          0.0 << " " << //p1
+          0.0 << " " << //p2
+          pinhole_intrinsic_radial->getParams().at(5) << " " << //k3
+          0.0 << " " << // k4
+          0.0 << " " << // k5
+          0.0 << "\n";  // k6
+      }
+      break; 
     case PINHOLE_CAMERA_BROWN: 
       std::cout << "PINHOLE_CAMERA_BROWN is not supported. Aborting ..." << std::endl;
       return false;

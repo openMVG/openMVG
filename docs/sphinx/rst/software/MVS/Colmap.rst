@@ -19,7 +19,7 @@ This will create the following files in Dataset/ColmapSfM/model:
     ├-images.txt
     ├-points3D.txt
 
-Note: Colmap supports OpenMVG's PINHOLE_CAMERA and PINHOLE_CAMERA_RADIAL1 camera models, only.
+Note: Colmap supports OpenMVG's PINHOLE_CAMERA, PINHOLE_CAMERA_RADIAL1 and PINHOLE_CAMERA_RADIAL3 camera models.
 
 To apply Colmap's MVS pipeline:
 
