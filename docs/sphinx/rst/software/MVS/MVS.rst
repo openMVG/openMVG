@@ -14,4 +14,4 @@ Since OpenMVG does not have itself a MVS module it proposes exporter to various 
    ./MVE.rst
    ./OpenMVS.rst
    ./PMVS.rst
-
+   ./Colmap.rst
