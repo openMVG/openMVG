@@ -210,7 +210,6 @@ bool CreateImageFile( const SfM_Data & sfm_data,
         continue;
       }
 
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find( view->id_intrinsic );
       const Pose3 pose = sfm_data.GetPoseOrDie( view );
       const Mat3 rotation = pose.rotation();
       const Vec3 translation = pose.translation();
