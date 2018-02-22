@@ -405,7 +405,7 @@ int main( int argc , char ** argv )
   {
     std::cerr << "Usage: " << argv[0] << '\n'
               << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-              << "[-o|--outdir] path where the cameras.bin, images.bin and points3D.bin will be saved\n"
+              << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved\n"
               << std::endl;
 
     std::cerr << s << std::endl;
