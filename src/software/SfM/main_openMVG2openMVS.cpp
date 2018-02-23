@@ -28,10 +28,15 @@ using namespace openMVG::sfm;
 #include <cstdlib>
 #include <string>
 
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
 bool exportToOpenMVS(
   const SfM_Data & sfm_data,
   const std::string & sOutFile,
-  const std::string & sOutDir
+  const std::string & sOutDir,
+  const int iNumThreads = 0
   )
 {
   // Create undistorted images directory structure
@@ -50,7 +55,8 @@ bool exportToOpenMVS(
   size_t nPoses(0);
   const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
 
-  C_Progress_display my_progress_bar(nViews);
+  C_Progress_display my_progress_bar(nViews,
+      std::cout, "\n- PROCESS VIEWS -\n");
 
   // OpenMVG can have not contiguous index, use a map to create the required OpenMVS contiguous ID index
   std::map<openMVG::IndexT, uint32_t> map_intrinsic, map_view;
@@ -91,28 +97,13 @@ bool exportToOpenMVS(
       std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
       return EXIT_FAILURE;
     }
-    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()) && stlplus::is_file(srcImage))
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
     {
       MVS::Interface::Platform::Pose pose;
       image.poseID = platform.poses.size();
       const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
       pose.R = poseMVG.rotation();
       pose.C = poseMVG.center();
-      // export undistorted images
-      const openMVG::cameras::IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view.second->id_intrinsic).get();
-      if (cam->have_disto())
-      {
-        // undistort image and save it
-        Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
-        ReadImage(srcImage.c_str(), &imageRGB);
-        UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
-        WriteImage(image.name.c_str(), imageRGB_ud);
-      }
-      else
-      {
-        // just copy image
-        stlplus::file_copy(srcImage, image.name);
-      }
       platform.poses.push_back(pose);
       ++nPoses;
     }
@@ -121,12 +112,66 @@ bool exportToOpenMVS(
       // image have not valid pose, so set an undefined pose
       image.poseID = NO_ID;
       // just copy the image
-      stlplus::file_copy(srcImage, image.name);
+      //stlplus::file_copy(srcImage, image.name);
     }
     scene.images.emplace_back(image);
     ++my_progress_bar;
   }
 
+  // Export undistorted images
+  C_Progress_display my_progress_bar_images(sfm_data.views.size(),
+      std::cout, "\n- UNDISTORT IMAGES -\n" );
+#ifdef OPENMVG_USE_OPENMP
+  const unsigned int nb_max_thread = omp_get_max_threads();
+
+  if (iNumThreads > 0) {
+      omp_set_num_threads(iNumThreads);
+  } else {
+      omp_set_num_threads(nb_max_thread);
+  }
+  #pragma omp parallel for schedule(dynamic)
+#endif
+  for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
+  {
+    Views::const_iterator iterViews = sfm_data.views.begin();
+    std::advance(iterViews, i);
+    const View * view = iterViews->second.get();
+
+    // Get image paths
+    const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
+    const std::string imageName = stlplus::create_filespec(sOutDir, view->s_Img_path);
+    
+    if (!stlplus::is_file(srcImage))
+    {
+      std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
+      continue;
+    }
+    if (sfm_data.IsPoseAndIntrinsicDefined(view))
+    {
+      // export undistorted images
+      const openMVG::cameras::IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+      if (cam->have_disto())
+      {
+        // undistort image and save it
+        Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
+        ReadImage(srcImage.c_str(), &imageRGB);
+        UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
+        WriteImage(imageName.c_str(), imageRGB_ud);
+      }
+      else
+      {
+        // just copy image
+        stlplus::file_copy(srcImage, imageName);
+      }
+    }
+    else
+    {
+      // just copy the image
+      stlplus::file_copy(srcImage, imageName);
+    }
+    ++my_progress_bar_images;
+  }
+  
   // define structure
   scene.vertices.reserve(sfm_data.GetLandmarks().size());
   for (const auto& vertex: sfm_data.GetLandmarks())
@@ -212,10 +257,16 @@ int main(int argc, char *argv[])
   std::string sSfM_Data_Filename;
   std::string sOutFile = "scene.mvs";
   std::string sOutDir = "undistorted_images";
+#ifdef OPENMVG_USE_OPENMP
+  int iNumThreads = 0;
+#endif
 
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutFile, "outfile") );
   cmd.add( make_option('d', sOutDir, "outdir") );
+#ifdef OPENMVG_USE_OPENMP
+  cmd.add( make_option('n', iNumThreads, "numThreads") );
+#endif
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -225,6 +276,9 @@ int main(int argc, char *argv[])
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outfile] OpenMVS scene file\n"
       << "[-d|--outdir] undistorted images path\n"
+#ifdef OPENMVG_USE_OPENMP
+      << "[-n|--numThreads] number of thread(s)\n"
+#endif
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -246,11 +300,15 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir))
+  // Export OpenMVS data structure
+  if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir, iNumThreads))
   {
     std::cerr << std::endl
       << "The output openMVS scene file cannot be written" << std::endl;
     return EXIT_FAILURE;
   }
+
+
+  
   return EXIT_SUCCESS;
 }
