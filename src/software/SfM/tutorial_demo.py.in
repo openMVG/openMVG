@@ -19,10 +19,10 @@ import subprocess
 import sys
 
 def get_parent_dir(directory):
-    import os
     return os.path.dirname(directory)
 
-input_eval_dir = os.path.dirname(os.path.abspath(__file__)) + "/ImageDataset_SceauxCastle"
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+input_eval_dir = os.path.abspath("./ImageDataset_SceauxCastle")
 # Checkout an OpenMVG image dataset with Git
 if not os.path.exists(input_eval_dir):
   pImageDataCheckout = subprocess.Popen([ "git", "clone", "https://github.com/openMVG/ImageDataset_SceauxCastle.git" ])
