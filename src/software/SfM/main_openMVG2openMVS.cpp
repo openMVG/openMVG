@@ -25,6 +25,7 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
+#include <atomic>
 #include <cstdlib>
 #include <string>
 
@@ -121,18 +122,19 @@ bool exportToOpenMVS(
   // Export undistorted images
   C_Progress_display my_progress_bar_images(sfm_data.views.size(),
       std::cout, "\n- UNDISTORT IMAGES -\n" );
+  std::atomic<bool> bOk(true); // Use a boolean to track the status of the loop process
 #ifdef OPENMVG_USE_OPENMP
-  const unsigned int nb_max_thread = omp_get_max_threads();
+  const unsigned int nb_max_thread = (iNumThreads > 0)? iNumThreads : omp_get_max_threads();
 
-  if (iNumThreads > 0) {
-      omp_set_num_threads(iNumThreads);
-  } else {
-      omp_set_num_threads(nb_max_thread);
-  }
-  #pragma omp parallel for schedule(dynamic)
+  #pragma omp parallel for schedule(dynamic) num_threads(nb_max_thread)
 #endif
   for (int i = 0; i < static_cast<int>(sfm_data.views.size()); ++i)
   {
+    ++my_progress_bar_images;
+
+    if (!bOk)
+      continue;
+
     Views::const_iterator iterViews = sfm_data.views.begin();
     std::advance(iterViews, i);
     const View * view = iterViews->second.get();
@@ -140,10 +142,11 @@ bool exportToOpenMVS(
     // Get image paths
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
     const std::string imageName = stlplus::create_filespec(sOutDir, view->s_Img_path);
-    
+
     if (!stlplus::is_file(srcImage))
     {
-      std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
+      std::cerr << "Cannot read the corresponding image: " << srcImage << std::endl;
+      bOk = false;
       continue;
     }
     if (sfm_data.IsPoseAndIntrinsicDefined(view))
@@ -154,9 +157,22 @@ bool exportToOpenMVS(
       {
         // undistort image and save it
         Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
-        ReadImage(srcImage.c_str(), &imageRGB);
-        UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
-        WriteImage(imageName.c_str(), imageRGB_ud);
+        try
+        {
+          if (ReadImage(srcImage.c_str(), &imageRGB))
+          {
+            UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
+            bOk = WriteImage(imageName.c_str(), imageRGB_ud);
+          }
+          else
+          {
+            bOk = false;
+          }
+        }
+        catch (const std::bad_alloc& e)
+        {
+          bOk = false;
+        }
       }
       else
       {
@@ -169,9 +185,15 @@ bool exportToOpenMVS(
       // just copy the image
       stlplus::file_copy(srcImage, imageName);
     }
-    ++my_progress_bar_images;
   }
-  
+
+  if (!bOk)
+  {
+    std::cerr << "Catched a memory error in the image conversion."
+     << " Please consider to use less threads ([-n|--numThreads])." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   // define structure
   scene.vertices.reserve(sfm_data.GetLandmarks().size());
   for (const auto& vertex: sfm_data.GetLandmarks())
@@ -218,7 +240,7 @@ bool exportToOpenMVS(
           break;
         }
       }
-      if (pImage == nullptr)
+      if (!pImage)
       {
         std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
         continue;
@@ -308,7 +330,5 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-
-  
   return EXIT_SUCCESS;
 }
