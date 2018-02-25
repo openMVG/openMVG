@@ -279,9 +279,7 @@ int main(int argc, char *argv[])
   std::string sSfM_Data_Filename;
   std::string sOutFile = "scene.mvs";
   std::string sOutDir = "undistorted_images";
-#ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
-#endif
 
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutFile, "outfile") );
