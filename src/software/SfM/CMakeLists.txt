@@ -11,6 +11,18 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   easyexif
   )
 
+###
+# AR image analysis and SfM_Data container initialization
+###
+ADD_EXECUTABLE(openMVG_main_SfMInit_ARImageListing main_SfMInit_ARImageListing.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ARImageListing
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  easyexif
+  )
+
 #convert a v0.6 lists.txt file to the new sfm_data.X format
 ADD_EXECUTABLE(openMVG_main_ConvertList main_ConvertList.cpp)
 TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
@@ -22,6 +34,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_SfMInit_ARImageListing PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SfMInit_ARImageListing DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
 
