@@ -27,7 +27,7 @@ target_include_directories(openMVG_features
     #$<INSTALL_INTERFACE:include/openMVG/>
     #$<INSTALL_INTERFACE:include/openMVG/dependencies>
 )
-target_link_libraries(openMVG_features PRIVATE fast)
+target_link_libraries(openMVG_features PRIVATE fast PRIVATE ${TBB_LIBRARIES})
 if (MSVC)
   target_compile_options(openMVG_features PUBLIC "/bigobj")
 endif ()
