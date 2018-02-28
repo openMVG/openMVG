@@ -253,13 +253,12 @@ class Pinhole_Intrinsic : public IntrinsicBase
       if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
            || param & (int)Intrinsic_Parameter_Type::NONE )
       {
-        constant_index.push_back(0);
+        constant_index.insert(constant_index.end(), 0);
       }
       if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
           || param & (int)Intrinsic_Parameter_Type::NONE )
       {
-        constant_index.push_back(1);
-        constant_index.push_back(2);
+        constant_index.insert(constant_index.end(), {1, 2});
       }
       return constant_index;
     }
