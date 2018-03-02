@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013, 2015 Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -119,29 +119,28 @@ int main(int argc, char **argv)
 
 
   // Configure an empty scene with Views and their corresponding cameras
-  std::shared_ptr<SfM_Data_GT> sfm_data_gt;
+  std::shared_ptr<SfM_Data_GT_Loader_Interface> sfm_data_gt;
   switch(ground_truth_Dataset)
   {
     case 1:
-      sfm_data_gt = std::make_shared<SfM_Data_Strecha>();
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_Strecha>();
       break;
     case 2:
-      sfm_data_gt = std::make_shared<SfM_Data_MiddleBury>();
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_MiddleBury>();
       break;
     case 3:
-      sfm_data_gt = std::make_shared<SfM_Data_DTUMVS>();
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_DTU_MVS>();
       break;
     default:
       std::cerr<<"Error: Not Support Dataset \n";
       return EXIT_FAILURE;
   }
 
-  //load the gt data
+  // Load the gt data
   if(!sfm_data_gt->run(sGroundTruthDir,sImageDir))
   {
     return EXIT_FAILURE;
   }
-
 
   // Store SfM_Data views & intrinsic data
   if (!Save(

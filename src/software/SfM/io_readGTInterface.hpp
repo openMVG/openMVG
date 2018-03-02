@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2012, 2013, 2014 Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,49 +24,47 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 
-class SfM_Data_GT
+class SfM_Data_GT_Loader_Interface
 {
 protected:
-    SfM_Data sfm_data_;
-    std::string gt_dir_;
-    std::string image_dir_;
-    std::vector<std::string> images_;//get image lists from the ground truth 
+  SfM_Data sfm_data_;
+  std::string gt_dir_; // Path store the ground truth 
+  std::string image_dir_; // Path store the images
+  std::vector<std::string> images_; // Store image lists from the ground truth 
 
-    //load ground truth from gt_dir
-    virtual bool loadGT() = 0;
-    //load images information 
-    virtual bool loadImages() = 0;
+  virtual bool loadGT() = 0; // Load ground truth from gt_dir and get all the images name need to load
+  virtual bool loadImages() = 0; // Load images from image_dir 
 
 public:
-    bool run(const std::string &gt_dir,const std::string &image_dir)
+  bool run(const std::string &gt_dir,const std::string &image_dir)
+  {
+  
+    this->gt_dir_ = gt_dir;
+    this->image_dir_ = image_dir;
+
+    if (!loadGT())
     {
-
-        this->gt_dir_ = gt_dir;
-        this->image_dir_ = image_dir;
-
-        if(!loadGT())
-        {
-            std::cerr<<"Failed to Load Ground Truth!"<<std::endl;
-            return false;
-        };
-        if(!loadImages())
-        {
-            std::cerr<<"Failed to Load Images!"<<std::endl;
-            return false;
-        };
-
-        return true;
-    }
-
-    SfM_Data GetSfMData()
+      std::cerr<<"Failed to Load Ground Truth!"<<std::endl;
+      return false;
+    };
+    if (!loadImages())
     {
-        return this->sfm_data_;
+      std::cerr<<"Failed to Load Images!"<<std::endl;
+      return false;
     };
 
-    int GetImageNumber()
-    {
-        return this->images_.size();
-    };
+    return true;
+  }
+
+  SfM_Data GetSfMData()
+  {
+    return this->sfm_data_;
+  };
+
+  int GetImageNumber()
+  {
+    return this->images_.size();
+  };
 };
 
 #endif // IO_READ_GT_INTERFACE_HPP
