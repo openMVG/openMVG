@@ -74,6 +74,7 @@ Solve_stellar_translation_scales_averaging
   // Assert that the relative scales pose ids defined a unique connected component
   if (!Relative_scales_are_one_cc(vec_relative_scales))
   {
+    std::cerr << "The stellar edges are not giving a single connected component." << std::endl;
     return false;
   }
 
@@ -129,7 +130,6 @@ Solve_stellar_translation_scales_averaging
 
       // Make the log of the distances negative, such that all distances are <= 1
       const double maxLogDistance = x.maxCoeff();
-      std::cout << x << std::endl;
       x_scales = (x.array() - maxLogDistance).array().exp();
     }
     break;
@@ -217,6 +217,11 @@ Solve_stellar_translation_scales_averaging
         x << 0.0, l1solution_vec;
         const double maxLogDistance = x.maxCoeff();
         x_scales = (x.array() - maxLogDistance).array().exp();
+      }
+      else
+      {
+        std::cerr << "Sparse system cannot be solved" << std::endl;
+        return false;
       }
     }
     break;

@@ -48,11 +48,16 @@ bool EstimateTripletRelativeScale
   {
     return false;
   }
-  // Assert that at least there is 3 poses => Required condition to compute a scaling factor
+  // Assert that:
+  // - at least there is 3 poses => Required condition to compute a scaling factor
+  // - that we have valid relative pose for triplet edges. 
   Hash_Map<IndexT, IndexT> pose_count;
   std::set<IndexT> set_pose;
   for (const Pair & it : pairs)
   {
+    if (relative_poses.count(it) == 0)
+      return false;
+
     ++pose_count[it.first];
     ++pose_count[it.second];
     set_pose.insert(it.first);
@@ -187,7 +192,6 @@ bool EstimateTripletRelativeScale
   {
     return false;
   }
-  std::cout << "depths.size(): " << depths.size() << std::endl;
 
   // Compute median depths
   std::vector<float> median_depths;
@@ -295,6 +299,7 @@ bool EstimateTripletRelativeScale
       return false;
     }
   } // end -- b_refine_triplet
+
   return true;
 }
 
@@ -431,7 +436,7 @@ bool Stellar_Solver::SolveStellarPoses
     relative_scales,
     relative_poses_,
     triplet_poses,
-    Stellar_Translation_Averaging_Solver_Type::SCALING_SOLVER_L1))
+    Stellar_Translation_Averaging_Solver_Type::SCALING_SOLVER_L2_FULL))
   {
     return false;
   }
