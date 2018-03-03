@@ -113,8 +113,8 @@ int main(int argc, char **argv)
     Vec4 Xhomogeneous;
     if (!TriangulateNViewAlgebraic(bearing_matrix, poses, &Xhomogeneous))
     {
-      std::cout << "Invalid triangulation" << std::endl;
-      return EXIT_FAILURE;
+      std::cout << "Invalid triangulation, ignoring control point" << std::endl;
+      continue;
     }
     const Vec3 X = Xhomogeneous.hnormalized();
     // Test validity of the hypothesis (front of the cameras):
@@ -144,7 +144,6 @@ int main(int argc, char **argv)
     else
     {
       std::cout << "Control Point cannot be triangulated (not in front of the cameras)" << std::endl;
-      return EXIT_FAILURE;
     }
   }
 
