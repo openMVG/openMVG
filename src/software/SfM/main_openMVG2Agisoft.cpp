@@ -55,7 +55,13 @@ int main(int argc, char **argv)
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
-    stlplus::folder_create( sOutDir );
+  {
+    if (!stlplus::folder_create( sOutDir ))
+    {
+      std::cerr << "Cannot create the destination folder." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
 
   // Read the SfM scene
   SfM_Data sfm_data;
@@ -66,6 +72,12 @@ int main(int argc, char **argv)
   }
 
   std::ofstream outfile(stlplus::create_filespec(sOutDir, "cameras", "xml").c_str());
+
+  if (!outfile)
+  {
+    std::cerr << "Cannot open the destination file." << std::endl;
+    return EXIT_FAILURE;
+  }
 
   outfile << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   outfile << "<document version = \"1.3.0\">\n";
@@ -78,7 +90,7 @@ int main(int argc, char **argv)
     {
       const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
 
-      outfile << std::setprecision(16) << 
+      outfile << std::setprecision(16) <<
         "<sensor id=\"" << intrinsic.first << "\" label=\"sensor_" << intrinsic.first << "\" type=\"frame\">\n" <<
         "<resolution width=\"" << cam->w() << "\" height=\"" << cam->h() << "\"/>\n" <<
         "<property name=\"fixed\" value=\"false\"/>\n" <<
@@ -131,12 +143,15 @@ int main(int argc, char **argv)
   outfile << "<cameras>\n";
   for (const auto& view : sfm_data.GetViews())
   {
-    const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
-    auto mat34 = poseMVG.inverse().asMatrix();
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+    {
+      const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
+      auto mat34 = poseMVG.inverse().asMatrix();
 
-    outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
-    outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
-    outfile << "</camera>\n";
+      outfile << "<camera id=\"" << view.first << "\" label=\"" << view.second->s_Img_path << "\" sensor_id=\"" << view.second->id_intrinsic << "\" enabled=\"1\">\n";
+      outfile << "<transform>" << mat34 << " 0.0 0.0 0.0 1.0</transform>\n";
+      outfile << "</camera>\n";
+    }
   }
   outfile << "</cameras>\n";
 
@@ -154,11 +169,15 @@ int main(int argc, char **argv)
     "<property name=\"accuracy_projections\" value=\"0.1\" />\n"
     "</settings>\n";
 
-  outfile << 
+  outfile <<
     "</chunk>\n"
     "</document>\n";
 
-  outfile.close();
+  if (!outfile)
+  {
+    std::cerr << "Something went wrong during the export." << std::endl;
+    return EXIT_FAILURE;
+  }
 
   return EXIT_SUCCESS;
 }
