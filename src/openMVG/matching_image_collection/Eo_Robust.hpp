@@ -56,28 +56,29 @@ struct GeometricFilter_EOMatrix_RA
       matching::IndMatches & geometric_inliers
     )
     {
-      using namespace openMVG;
-      using namespace openMVG::robust;
       geometric_inliers.clear();
 
       // Get back corresponding view index
-      const IndexT iIndex = pairIndex.first;
-      const IndexT jIndex = pairIndex.second;
+      const IndexT
+        iIndex = pairIndex.first,
+        jIndex = pairIndex.second;
 
       //--
       // Reject pair with missing Intrinsic information
       //--
 
-      const sfm::View * view_I = sfm_data->views.at(iIndex).get();
-      const sfm::View * view_J = sfm_data->views.at(jIndex).get();
+      const sfm::View
+        * view_I = sfm_data->views.at(iIndex).get(),
+        * view_J = sfm_data->views.at(jIndex).get();
 
-      // Check that valid cameras can be retrieved for the pair of views
-      const cameras::IntrinsicBase * cam_I =
-        sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
-        sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr;
-      const cameras::IntrinsicBase * cam_J =
+       // Check that valid cameras can be retrieved for the pair of views
+      const cameras::IntrinsicBase
+        * cam_I =
+          sfm_data->GetIntrinsics().count(view_I->id_intrinsic) ?
+            sfm_data->GetIntrinsics().at(view_I->id_intrinsic).get() : nullptr,
+        * cam_J =
           sfm_data->GetIntrinsics().count(view_J->id_intrinsic) ?
-          sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
+            sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
       if (!cam_I || !cam_J)
         return false;
@@ -105,23 +106,18 @@ struct GeometricFilter_EOMatrix_RA
       // Define the Kernel
       // --- using KernelType = essential::kernel::ThreePointKernel;
       using KernelType =
-        ACKernelAdaptorEssentialOrtho<
+        robust::ACKernelAdaptorEssentialOrtho<
           essential::kernel::ThreePointKernel,
           essential::kernel::OrthographicSymmetricEpipolarDistanceError,
           Mat3>;
 
-      const auto * ptrPinhole_I = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_I);
-      const auto * ptrPinhole_J = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam_J);
-
       const KernelType kernel(
-        xI,
+        (*cam_I)(xI),
         sfm_data->GetViews().at(iIndex)->ui_width,
         sfm_data->GetViews().at(iIndex)->ui_height,
-        xJ,
+        (*cam_J)(xJ),
         sfm_data->GetViews().at(jIndex)->ui_width,
-        sfm_data->GetViews().at(jIndex)->ui_height,
-        ptrPinhole_I->K(),
-        ptrPinhole_J->K()
+        sfm_data->GetViews().at(jIndex)->ui_height
       );
 
       // Robustly estimate the model with AC-RANSAC

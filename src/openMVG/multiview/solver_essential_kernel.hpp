@@ -79,7 +79,7 @@ struct OrthographicSymmetricEpipolarDistanceError {
 
 //-- Generic Solver for the 5pt Essential Matrix Estimation.
 //-- Need a new Class that inherit of two_view::kernel::kernel.
-//    Error must be overwrite in order to compute F from E and K's.
+//    Error must be overwritten in order to compute F from E and K's.
 //-- Fitting must normalize image values to camera values.
 template<typename SolverArg,
   typename ErrorArg,
@@ -94,8 +94,8 @@ public:
     const Mat2X &x2,
     const Mat3 &K1,
     const Mat3 &K2
-   ):
-    two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
+  ):
+    two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1, x2),
     K1_(K1),
     K2_(K2),
     bearing_x1_(K1_.inverse() * x1.colwise().homogeneous()),
