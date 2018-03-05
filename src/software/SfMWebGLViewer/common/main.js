@@ -245,7 +245,7 @@ function onMouseMove( e )
       var new_rad = d * Math.sin( arad * 0.5 ); 
       trackball.setRadius( new_rad * 0.8 ); 
     }
-    else if (e.altKey )
+    else if (e.altKey || e.ctrlKey)
     {
       // Pan 
       var p_old = camera.pointOnPlane( mouseLastPosition.x , canvas.height - mouseLastPosition.y );

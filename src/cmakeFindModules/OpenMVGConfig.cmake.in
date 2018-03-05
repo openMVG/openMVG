@@ -43,7 +43,7 @@ macro(OPENMVG_REPORT_NOT_FOUND REASON_MSG)
   # FindPackage() use the camelcase library name, not uppercase.
   if (OPENMVG_FIND_QUIETLY)
     message(STATUS "Failed to find OPENMVG - " ${REASON_MSG} ${ARGN})
-  else (OPENMVG_FIND_REQUIRED)
+  elseif (OPENMVG_FIND_REQUIRED)
     message(FATAL_ERROR "Failed to find OPENMVG - " ${REASON_MSG} ${ARGN})
   else()
     # Neither QUIETLY nor REQUIRED, use SEND_ERROR which emits an error

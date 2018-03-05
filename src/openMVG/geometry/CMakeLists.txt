@@ -17,8 +17,15 @@ add_library(openMVG_geometry ${geometry_files_header} ${geometry_files_cpp})
 set_target_properties(openMVG_geometry PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 target_link_libraries(openMVG_geometry
-  PUBLIC openMVG_numeric
-  PRIVATE openMVG_linearProgramming)
+  PUBLIC
+    openMVG_numeric
+  PRIVATE
+    openMVG_linearProgramming
+)
+target_include_directories(openMVG_geometry
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+)
 
 install(TARGETS openMVG_geometry DESTINATION lib EXPORT openMVG-targets)
 

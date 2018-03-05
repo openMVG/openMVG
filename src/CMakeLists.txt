@@ -579,7 +579,10 @@ message("\n")
 
 install(EXPORT openMVG-targets DESTINATION lib)
 install(EXPORT openMVG-targets
-        DESTINATION share/openMVG/cmake FILE OpenMVGTargets.cmake)
+  FILE OpenMVGTargets.cmake
+  NAMESPACE OpenMVG::
+  DESTINATION share/openMVG/cmake
+)
 
 #Adapt build include paths to install path
 set(OpenMVG_INCLUDE_DIRS

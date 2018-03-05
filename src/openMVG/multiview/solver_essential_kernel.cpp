@@ -27,6 +27,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/multiview/solver_essential_three_point.hpp"
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
@@ -45,6 +46,15 @@ void FivePointSolver::Solve(const Mat3X &x1, const Mat3X &x2, std::vector<Mat3> 
   assert(x1.cols() == x2.cols());
 
   FivePointsRelativePose(x1, x2, E);
+}
+
+void ThreePointSolver::Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E) {
+  assert(2 == x1.rows());
+  assert(3 <= x1.cols());
+  assert(x1.rows() == x2.rows());
+  assert(x1.cols() == x2.cols());
+
+  ThreePointsRelativePose(x1, x2, E);
 }
 
 }  // namespace kernel

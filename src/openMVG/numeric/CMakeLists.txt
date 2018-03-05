@@ -15,9 +15,11 @@ list(REMOVE_ITEM numeric_files_cpp ${REMOVEFILESUNITTEST})
 add_library(openMVG_numeric
   ${numeric_files_header}
   ${numeric_files_cpp})
-target_include_directories(openMVG_numeric PUBLIC
-  $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+target_include_directories(openMVG_numeric
+  PUBLIC
+    $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   target_include_directories(openMVG_numeric PUBLIC

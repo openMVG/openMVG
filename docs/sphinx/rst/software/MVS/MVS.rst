@@ -10,6 +10,7 @@ Since OpenMVG does not have itself a MVS module it proposes exporter to various 
 .. toctree::
    :maxdepth: 1
 
+   ./AgisoftPhotoscan.rst
    ./CMPMVS.rst
    ./MVE.rst
    ./OpenMVS.rst

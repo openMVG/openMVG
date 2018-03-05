@@ -255,6 +255,7 @@ install(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
 # - OpenMVS
 # - CMPMVS
 # - Meshlab
+# - Agisoft Photoscan
 # - MVE (File format v2)
 ###
 
@@ -314,6 +315,17 @@ target_link_libraries(openMVG_main_openMVG2MESHLAB
   stlplus
 )
 
+# - Export a SfM openMVG scene to Agisoft Photoscan
+# -
+ADD_EXECUTABLE(openMVG_main_openMVG2Agisoft main_openMVG2Agisoft.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_openMVG2Agisoft
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+  
 # - Export a SfM openMVG scene to mvs-texturing scene folder
 # -
 add_executable(openMVG_main_openMVG2MVSTEXTURING main_openMVG2MVSTEXTURING.cpp)
@@ -362,6 +374,8 @@ set_property(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software
 install(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION bin/)
+set_property(TARGET openMVG_main_openMVG2Agisoft PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_openMVG2Agisoft DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVG2MVSTEXTURING PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVG2MVE2 PROPERTY FOLDER OpenMVG/software)

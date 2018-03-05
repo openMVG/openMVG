@@ -21,8 +21,10 @@ target_link_libraries(openMVG_matching_image_collection
   PUBLIC
     openMVG_matching
     openMVG_multiview)
-target_include_directories(openMVG_matching_image_collection PUBLIC
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/openMVG/>
+target_include_directories(openMVG_matching_image_collection
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/openMVG>
 )
 set_target_properties(openMVG_matching_image_collection PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_matching_image_collection PROPERTY FOLDER OpenMVG)
