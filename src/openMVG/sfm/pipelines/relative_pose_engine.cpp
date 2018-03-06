@@ -161,24 +161,21 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
         tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_J->id_intrinsic));
 
         // Init poses
-        const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = {Mat3::Identity(), Vec3::Zero()};
-        const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+        const Pose3 & pose_I = tiny_scene.poses[view_I->id_pose] = {Mat3::Identity(), Vec3::Zero()};
+        const Pose3 & pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
 
         // Init structure
-        const Mat34
-          P1 = cam_I->get_projective_equivalent(Pose_I),
-          P2 = cam_J->get_projective_equivalent(Pose_J);
         Landmarks & landmarks = tiny_scene.structure;
         for (Mat::Index k = 0; k < x1.cols(); ++k)
         {
-          const Vec2
-            x1_ = features_provider_->feats_per_view.at(I)[matches[k].i_].coords().cast<double>(),
-            x2_ = features_provider_->feats_per_view.at(J)[matches[k].j_].coords().cast<double>();
           Vec3 X;
-          TriangulateDLT(P1, x1_.homogeneous(), P2, x2_.homogeneous(), &X);
+          TriangulateDLT(pose_I.asMatrix(), (*cam_I)(x1.col(k)),
+                         pose_J.asMatrix(), (*cam_J)(x2.col(k)), &X);
           Observations obs;
-          obs[view_I->id_view] = Observation(x1_, matches[k].i_);
-          obs[view_J->id_view] = Observation(x2_, matches[k].j_);
+          const Vec2 obs_I = features_provider_->feats_per_view.at(I)[matches[k].i_].coords().cast<double>();
+          const Vec2 obs_J = features_provider_->feats_per_view.at(J)[matches[k].j_].coords().cast<double>();
+          obs[view_I->id_view] = {obs_I, matches[k].i_};
+          obs[view_J->id_view] = {obs_J, matches[k].j_};
           landmarks[k].obs = obs;
           landmarks[k].X = X;
         }
