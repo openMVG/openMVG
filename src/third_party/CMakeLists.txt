@@ -119,4 +119,10 @@ install(
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
+add_library(${inDirectory} INTERFACE)
+target_include_directories(${inDirectory} INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${inDirectory}>
+  $<INSTALL_INTERFACE:include/openMVG/third_party/${inDirectory}>
+)
+install(TARGETS ${inDirectory} EXPORT openMVG-targets)
 endforeach(inDirectory)

@@ -377,6 +377,10 @@ if (OpenMVG_USE_OPENCV)
   endif (NOT OpenCV_FOUND)
 endif (OpenMVG_USE_OPENCV)
 
+# ==============================================================================
+# Dependency libraries:
+# ==============================================================================
+add_subdirectory(dependencies/cereal)
 
 # ==============================================================================
 # Third-party libraries:

@@ -20,7 +20,9 @@ add_library(openMVG_matching_image_collection
 target_link_libraries(openMVG_matching_image_collection
   PUBLIC
     openMVG_matching
-    openMVG_multiview)
+    openMVG_multiview
+    progress
+)
 target_include_directories(openMVG_matching_image_collection
   PUBLIC
     $<INSTALL_INTERFACE:include>
