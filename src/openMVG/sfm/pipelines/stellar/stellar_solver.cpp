@@ -50,7 +50,7 @@ bool EstimateTripletRelativeScale
   }
   // Assert that:
   // - at least there is 3 poses => Required condition to compute a scaling factor
-  // - that we have valid relative pose for triplet edges. 
+  // - that we have valid relative pose for triplet edges.
   Hash_Map<IndexT, IndexT> pose_count;
   std::set<IndexT> set_pose;
   for (const Pair & it : pairs)
@@ -124,7 +124,7 @@ bool EstimateTripletRelativeScale
   // Store track depth per pose pair
   // Compute relative the median depth scale ratio factor
   //
-  Hash_Map<Pair, std::vector<double>> depths;
+  std::map<Pair, std::vector<double>> depths;
   for (const auto & tracks : map_tracksCommon)
   {
     const tracks::submapTrack & track = tracks.second;
@@ -207,9 +207,10 @@ bool EstimateTripletRelativeScale
       depth_it.second.end());
     const double median = depth_it.second[depth_it.second.size()/2];
     median_depths.push_back(median);
-    std::cout << "(" << depth_it.first.first << "," << depth_it.first.second << ") : " << median << ", "
-      << depth_it.second.size() << " points." << std::endl;
+    //std::cout << "(" << depth_it.first.first << "," << depth_it.first.second << ") : " << median << ", "
+    //  << depth_it.second.size() << " points." << std::endl;
   }
+
   const double depth_ratio = median_depths[0] / median_depths[1];
 
   // Return the computed triplet depth ratio:
