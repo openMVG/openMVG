@@ -253,7 +253,7 @@ private:
       const double r  = sqrt(r2);
       if(r<eps)
       {
-        return {p( 0 ), p( 1 )};
+        return {0, 0};
       }
       const double theta = atan(sqrt(r));
       const double theta_divide_r = theta/r;
@@ -266,7 +266,7 @@ private:
       const double u_n = u_d * t_r + 2 * p1 * u_d * v_d + p_2 * (r2 + 2 * u_d * u_d) + sx1 * r2;
       const double v_n = v_d * t_r + 2 * p2 * u_d * v_d + p_1 * (r2 + 2 * v_d * v_d) + sx2 * r2;
 
-      return { u_n, v_n};
+      return { u_n - p( 0 ), v_n - p( 1 )};
     }
 };
 
