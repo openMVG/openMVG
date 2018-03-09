@@ -15,7 +15,8 @@ ADD_EXECUTABLE(openMVG_main_SfMInit_ImageListingFromKnownPoses main_SfMInit_Imag
   io_readGTInterface.hpp 
   io_readGTStrecha.hpp
   io_readGTMiddleBury.hpp
-  io_readGTDTUMVS.hpp)
+  io_readGTDTUMVS.hpp
+  io_readGTETH3D.hpp)
 TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListingFromKnownPoses
   openMVG_system
   openMVG_image

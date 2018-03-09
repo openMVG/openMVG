@@ -34,6 +34,7 @@
 #include "io_readGTStrecha.hpp"
 #include "io_readGTMiddleBury.hpp"
 #include "io_readGTDTUMVS.hpp"
+#include "io_readGTETH3D.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -75,6 +76,7 @@ int main(int argc, char **argv)
       << "\t 1: Strcha's Dataset\n"
       << "\t 2: MiddleBury's Dataset\n"
       << "\t 3: DTU MVS Dataset\n"
+      << "\t 4: ETH 3D Dataset\n"
       << "[-o|--outputDirectory]\n"
       << std::endl;
 
@@ -130,6 +132,9 @@ int main(int argc, char **argv)
       break;
     case 3:
       sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_DTU_MVS>();
+      break;
+    case 4:
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_ETH_3D>();
       break;
     default:
       std::cerr<<"Error: Not Support Dataset \n";
