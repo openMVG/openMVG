@@ -50,7 +50,7 @@ void PreconditionerFromPoints( const Mat &points, Mat3 *T );
 * @brief Normalize input point for a given T transform matrix
 * @param points Input points to normalize
 * @param T Input conditioning matrix
-* @param[out] transformed_points transformed (ie: conditioned ) points
+* @param[out] transformed_points transformed (i.e.: conditioned ) points
 */
 void ApplyTransformationToPoints( const Mat &points,
                                   const Mat3 &T,
@@ -98,7 +98,7 @@ struct UnnormalizerI
   /**
   * @brief Denormalize the results.
   * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
-  * @see HZ page 109, H = T-1 H T
+  * @see HZ page 109, H = T2^{-1} H T1
   * @param T1 Input transformation of first dataset
   * @param T2 Input transformation of second dataset
   * @param H Denormalization transformation
@@ -114,7 +114,7 @@ struct UnnormalizerT
   /**
   * @brief Denormalize the results.
   * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman
-  * @see HZ page 109, H = T-1 H T
+  * @see HZ page 282, H = T2^T H T1
   * @param T1 Input transformation of first dataset
   * @param T2 Input transformation of second dataset
   * @param H Denormalization transformation
