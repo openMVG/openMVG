@@ -25,8 +25,6 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_multiview
-    openMVG_system
-    progress
 )
 
 target_link_libraries(openMVG_sfm
