@@ -27,7 +27,10 @@ target_include_directories(openMVG_features
     $<INSTALL_INTERFACE:include/openMVG>
     #$<INSTALL_INTERFACE:include/openMVG/dependencies>
 )
-target_link_libraries(openMVG_features PRIVATE fast PUBLIC cereal)
+target_link_libraries(openMVG_features PRIVATE fast)
+if (OpenMVG_USE_INTERNAL_CEREAL)
+  target_link_libraries(openMVG_features PUBLIC cereal)
+endif (OpenMVG_USE_INTERNAL_CEREAL)
 if (MSVC)
   target_compile_options(openMVG_features PUBLIC "/bigobj")
 endif ()

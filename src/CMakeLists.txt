@@ -380,7 +380,9 @@ endif (OpenMVG_USE_OPENCV)
 # ==============================================================================
 # Dependency libraries:
 # ==============================================================================
-add_subdirectory(dependencies/cereal)
+if (OpenMVG_USE_INTERNAL_CEREAL)
+  add_subdirectory(dependencies/cereal)
+endif (OpenMVG_USE_INTERNAL_CEREAL)
 
 # ==============================================================================
 # Third-party libraries:

@@ -1,10 +1,14 @@
 
 add_library(openMVG_camera INTERFACE)
-target_link_libraries(openMVG_camera INTERFACE openMVG_numeric openMVG_geometry cereal)
+target_link_libraries(openMVG_camera INTERFACE openMVG_numeric openMVG_geometry)
+if (OpenMVG_USE_INTERNAL_CEREAL)
+  target_link_libraries(openMVG_camera INTERFACE cereal)
+endif (OpenMVG_USE_INTERNAL_CEREAL)
+
 install(TARGETS openMVG_camera DESTINATION lib EXPORT openMVG-targets)
 
 add_library(openMVG_camera_test INTERFACE)
-target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera openMVG_multiview cereal)
+target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera openMVG_multiview)
 
 UNIT_TEST(openMVG Camera_IO "openMVG_camera_test;stlplus")
 
