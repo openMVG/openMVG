@@ -602,6 +602,13 @@ foreach(d ${OpenMVG_DEFINITIONS})
   list(APPEND OpenMVG_CFLAGS "-D${d}")
 endforeach()
 
+set(OpenMVG_LIBRARIES_NAMESPACED "")
+foreach(lib ${OpenMVG_LIBRARIES})
+  string(REPLACE "openMVG" "OpenMVG::openMVG" lib ${lib})
+  list(APPEND OpenMVG_LIBRARIES_NAMESPACED ${lib})
+endforeach()
+set(OpenMVG_LIBRARIES ${OpenMVG_LIBRARIES_NAMESPACED})
+
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # find_package() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
