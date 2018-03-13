@@ -8,13 +8,15 @@
 
 
 #include "openMVG/sfm/sfm_data_colorization.hpp"
-#include "openMVG/image/image_io.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "third_party/progress/progress_display.hpp"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "openMVG/image/image_container.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/image/pixel_types.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/stl/stl.hpp"
+
+#include "third_party/progress/progress_display.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -60,17 +62,13 @@ bool ColorizeTracks(
       //  b. Sort to find the most representative view index
 
       std::map<IndexT, IndexT> map_IndexCardinal; // ViewId, Cardinal
-      for (std::set<IndexT>::const_iterator
-        iterT = remainingTrackToColor.begin();
-        iterT != remainingTrackToColor.end();
-        ++iterT)
+      for (const auto & track_to_color_it : remainingTrackToColor)
       {
-        const size_t trackId = *iterT;
+        const auto trackId = track_to_color_it;
         const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
-        for (Observations::const_iterator iterObs = obs.begin();
-          iterObs != obs.end(); ++iterObs)
+        for (const auto & obs_it : obs)
         {
-          const size_t viewId = iterObs->first;
+          const auto viewId = obs_it.first;
           if (map_IndexCardinal.find(viewId) == map_IndexCardinal.end())
             map_IndexCardinal[viewId] = 1;
           else
@@ -97,7 +95,7 @@ bool ColorizeTracks(
         view->s_Img_path);
       image::Image<image::RGBColor> image_rgb;
       image::Image<unsigned char> image_gray;
-      const bool b_rgb_image = true; // ReadImage(sView_filename.c_str(), &image_rgb);  // TODO FIX
+      const bool b_rgb_image = ReadImage(sView_filename.c_str(), &image_rgb);
       if (!b_rgb_image) //try Gray level
       {
         const bool b_gray_image = ReadImage(sView_filename.c_str(), &image_gray);
@@ -111,12 +109,9 @@ bool ColorizeTracks(
       // Iterate through the remaining track to color
       // - look if the current view is present to color the track
       std::set<IndexT> set_toRemove;
-      for (std::set<IndexT>::const_iterator
-        iterT = remainingTrackToColor.begin();
-        iterT != remainingTrackToColor.end();
-        ++iterT)
+      for (const auto & track_to_color_it : remainingTrackToColor)
       {
-        const size_t trackId = *iterT;
+        const auto trackId = track_to_color_it;
         const Observations & obs = sfm_data.GetLandmarks().at(trackId).obs;
         Observations::const_iterator it = obs.find(view_index);
 
@@ -124,18 +119,21 @@ bool ColorizeTracks(
         {
           // Color the track
           const Vec2 & pt = it->second.x;
-          const image::RGBColor color = b_rgb_image ? image_rgb(pt.y(), pt.x()) : image::RGBColor(image_gray(pt.y(), pt.x()));
+          const image::RGBColor color =
+            b_rgb_image
+            ? image_rgb(pt.y(), pt.x())
+            : image::RGBColor(image_gray(pt.y(), pt.x()));
 
-          vec_tracksColor[ trackIds_to_contiguousIndexes[trackId] ] = Vec3(color.r(), color.g(), color.b());
+          vec_tracksColor[trackIds_to_contiguousIndexes.at(trackId)] =
+            Vec3(color.r(), color.g(), color.b());
           set_toRemove.insert(trackId);
           ++my_progress_bar;
         }
       }
       // Remove colored track
-      for (std::set<IndexT>::const_iterator iter = set_toRemove.begin();
-        iter != set_toRemove.end(); ++iter)
+      for (const auto & to_remove_it : set_toRemove)
       {
-        remainingTrackToColor.erase(*iter);
+        remainingTrackToColor.erase(to_remove_it);
       }
     }
   }

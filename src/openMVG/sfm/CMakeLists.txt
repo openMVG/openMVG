@@ -31,6 +31,7 @@ target_link_libraries(openMVG_sfm
   PRIVATE
     ${CERES_LIBRARIES}
     openMVG_graph
+    openMVG_image
     openMVG_lInftyComputerVision
     openMVG_system
     stlplus

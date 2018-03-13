@@ -10,8 +10,7 @@
 #ifndef OPENMVG_SFM_SFM_DATA_COLORIZATION_HPP
 #define OPENMVG_SFM_SFM_DATA_COLORIZATION_HPP
 
-
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace sfm {
