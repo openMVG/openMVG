@@ -15,8 +15,8 @@ namespace openMVG {
 namespace euclidean_resection {
 
 struct P3PSolver_Ke {
-  enum { MINIMUM_SAMPLES = 6 };
-  enum { MAX_MODELS = 1 };
+  enum { MINIMUM_SAMPLES = 3 };
+  enum { MAX_MODELS = 4 };
 
   // Solve the absolute camera pose problem.
   // Use "An Efficient Algebraic Solution to the Perspective-Three-Point Problem".
