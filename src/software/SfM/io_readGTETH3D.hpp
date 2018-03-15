@@ -28,9 +28,9 @@ struct Cameras_Data
 };
 
 
-// The feature of the Strecha's Data:
-// 1. each gt file only stores one view's pose information
-// 2. the gt file's name is image file name plus ".camera"
+// The feature of the ETH3D's Data:
+// 1. all the gt information are stored in one file
+// 2. the cameras' intrinsic information are stored in camera.txt
 class SfM_Data_GT_Loader_ETH_3D : public SfM_Data_GT_Loader_Interface
 {
 private:
@@ -43,28 +43,25 @@ public:
     std::vector<std::string> gt_files = stlplus::folder_files( this->gt_dir_ );
     std::sort(gt_files.begin(), gt_files.end());
 
-    // Because the MiddleBury's Data store all the data in one file
-    // So make sure there is only one file under the gt_dir
+    // Because the ETH3D's Data store all the data in one file
+    // So make sure there is only two file under the gt_dir
     if (gt_files.size()!=2)
     {
       std::cerr << "Error: Maybe give wrong gt_dir!"<<std::endl
-        <<"Make sure there in only two files under the gt_dir!"<<std::endl;
+        <<"Make sure there in only two files(images.txt cameras.txt) under the gt_dir!"<<std::endl;
       return false;
     }
-
-    cameras_data_.reserve(100);
 
     // Read the camera file
     // Fix name "cameras.txt"
     // Reference:https://github.com/ETH3D/format-loader
-    std::ifstream camera_data_file;
-    camera_data_file.open( stlplus::create_filespec(this->gt_dir_,"cameras.txt"), std::ifstream::in);
-    if (!camera_data_file.is_open()) 
+    std::ifstream camera_data_file( stlplus::create_filespec(this->gt_dir_,"cameras.txt"), std::ifstream::in);
+    if (!camera_data_file) 
     {
-      std::cerr << "Error: failed to open file '" << stlplus::create_filespec(this->gt_dir_,"cameras.txt") << "' for reading" << std::endl;
+      std::cerr << "Error: Failed to open file '" << stlplus::create_filespec(this->gt_dir_,"cameras.txt") << "' for reading" << std::endl;
       return false;
     }
-    while (!camera_data_file.eof() && !camera_data_file.bad()) 
+    while (camera_data_file) 
     {
       std::string line;
       std::getline(camera_data_file, line);
@@ -77,48 +74,48 @@ public:
       std::istringstream line_stream(line);
       line_stream >> temp_camera.id_ >> temp_camera.model_name_ 
                   >> temp_camera.width_ >> temp_camera.height_;
-      while (!line_stream.eof() && !line_stream.bad()) 
+      while (line_stream) 
       {
         temp_camera.parameter_.emplace_back();
         line_stream >> temp_camera.parameter_.back();
       }
-      camera_datas.insert(std::make_pair(temp_camera.id_,temp_camera));
+      camera_datas.insert({temp_camera.id_,temp_camera});
     }
     camera_data_file.close();
 
-    // Read the gt file
-    std::ifstream gt_images_file;
-    gt_images_file.open( stlplus::create_filespec(this->gt_dir_,"images.txt"), std::ifstream::in);
-    if (!gt_images_file) 
+    // Load the gt_data from the file
+    std::ifstream gt_file( stlplus::create_filespec(this->gt_dir_,"images.txt"), std::ifstream::in);
+    if (!gt_file) 
     {
       return false;
     }
-    int image_number_count = 1;
-    while (!gt_images_file.eof() && !gt_images_file.bad()) 
+    int image_number_count = 0;
+    while (gt_file) 
     {
       std::string line;
-      std::getline(gt_images_file, line);
+      std::getline(gt_file, line);
       if (line.size() == 0 || line[0] == '#') 
       {
         continue;
       }
       image_number_count++;
-      std::getline(gt_images_file, line);
+      std::getline(gt_file, line);
     }
     cameras_data_.reserve(image_number_count);
-    gt_images_file.clear(std::ios::goodbit);
-    gt_images_file.seekg(std::ios::beg);
-    while (!gt_images_file.eof() && !gt_images_file.bad()) 
+
+    gt_file.clear(std::ios::goodbit);
+    gt_file.seekg(std::ios::beg);
+
+    while (gt_file) 
     {
       std::string line;
-      std::getline(gt_images_file, line);
+      std::getline(gt_file, line);
       if (line.size() == 0 || line[0] == '#') 
       {
-          std::cout<<line<<std::endl;
+        std::cout<<line<<std::endl;
         continue;
       }
-      
-      
+         
       // Read image info line.
       Mat3 K, R;
       Vec3 t;
@@ -141,21 +138,21 @@ public:
 
       Cameras_Data temp_camera = camera_datas[camera_id];
       double focus = (temp_camera.parameter_[0]+temp_camera.parameter_[1])/2;
-      K(0,0) = focus, K(0,1) = 0    , K(0,2) = temp_camera.parameter_[2];
-      K(1,0) = 0    , K(1,1) = focus, K(1,2) = temp_camera.parameter_[3];
-      K(2,0) = 0    , K(2,1) = 0    , K(2,2) = 1                        ;
+      K << focus, 0, temp_camera.parameter_[2],
+           0, focus, temp_camera.parameter_[3],
+           0,0,1;                        
       
       // Read feature observations line.
       // No use for us
-      std::getline(gt_images_file, line);
+      std::getline(gt_file, line);
       
-      PinholeCamera cam = cameras::PinholeCamera(K, R, t);
-      cameras_data_.push_back(cam);
+      cameras::PinholeCamera camera_temp(K,R,t);        
+      cameras_data_.push_back(camera_temp);
 
       // Parse image name
       images_.push_back( stlplus::filename_part(image_name) );
     }
-    gt_images_file.close();
+    gt_file.close();
 
     return true;
   };

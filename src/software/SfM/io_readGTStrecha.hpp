@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2018 Yan Qingsong,Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong,Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,10 +15,11 @@
 #include "openMVG/cameras/PinholeCamera.hpp"
 #include "openMVG/geometry/pose3.hpp"
 
+#include <vector>
 
 // The feature of the Strecha's Data:
 // 1. each gt file only stores one view's pose information
-// 2. the gt file's name is image file name plus ".camera"
+// 2. the gt file's name is the image file name plus ".camera"
 class SfM_Data_GT_Loader_Strecha : public SfM_Data_GT_Loader_Interface
 {
 private:
@@ -32,48 +33,47 @@ public:
 
     cameras_data_.reserve(gt_files.size());
 
-    // Read all the gt files and store them in the system
+    // Load the gt_data from the file
     for ( std::vector<std::string>::const_iterator iter_gt_file = gt_files.begin();
       iter_gt_file != gt_files.end();
       ++iter_gt_file)
     {
-      std::ifstream ifs;
-      ifs.open( stlplus::create_filespec(this->gt_dir_,(*iter_gt_file)).c_str(), std::ifstream::in);
-      if (!ifs.is_open()) 
+      std::ifstream gt_file( stlplus::create_filespec(this->gt_dir_,(*iter_gt_file)).c_str(), std::ifstream::in);
+      if (!gt_file) 
       {
-        std::cerr << "Failed to open file '" << *iter_gt_file << "' for reading" << std::endl;
+        std::cerr << "Error:Failed to open file '" << *iter_gt_file << "' for reading" << std::endl;
         continue;
       }
       std::vector<double> val;
-      while (ifs.good() && !ifs.eof())
+      while (gt_file)
       {
         double valT;
-        ifs >> valT;
-        if (!ifs.fail())
+        gt_file >> valT;
         val.push_back(valT);
       }
-      ifs.close();
+      gt_file.close();
 
       if (val.size() == 3*3 +3 +3*3 +3 + 3 || val.size() == 26) // Strecha cam
       {
         Mat3 K, R;
         K << val[0], val[1], val[2],
-        val[3], val[4], val[5],
-        val[6], val[7], val[8];
+             val[3], val[4], val[5],
+             val[6], val[7], val[8];
         R << val[12], val[13], val[14],
-        val[15], val[16], val[17],
-        val[18], val[19], val[20];
-
+             val[15], val[16], val[17],
+             val[18], val[19], val[20];
         Vec3 C (val[21], val[22], val[23]);
+        
         // Strecha model is P = K[R^T|-R^T t];
         // My model is P = K[R|t], t = - RC
         const Vec3 t (-R.transpose() * C);
         R.transposeInPlace();
 
-        PinholeCamera cam = cameras::PinholeCamera(K, R, t);
-        cameras_data_.push_back(cam);
+        cameras::PinholeCamera camera_temp(K, R, t);
+        cameras_data_.push_back(camera_temp);
 
-        images_.push_back( stlplus::basename_part(stlplus::create_filespec(this->gt_dir_,(*iter_gt_file))) ); // Parse image name
+        // Parse image name
+        images_.push_back( stlplus::basename_part(stlplus::create_filespec(this->gt_dir_,(*iter_gt_file))) ); 
       }
       else
       {

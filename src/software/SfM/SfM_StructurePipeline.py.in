@@ -30,7 +30,7 @@ import sys
 
 if len(sys.argv) < 5:
     print ("Usage %s image_dir gt_dir gt_type output_dir" % sys.argv[0])
-    print ("gt_type: %s 1:Strecha's Dataset 2:MiddleBury's Dataset 3:DTU MVS Dataset" % sys.argv[0])
+    print ("gt_type: %s 1:Strecha's Dataset 2:MiddleBury's Dataset 3:DTU MVS Dataset 4:ETH 3D Dataset 5:Kitti Odometry Dataset" % sys.argv[0])
     sys.exit(1)
 
 input_dir = sys.argv[1]

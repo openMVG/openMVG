@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2018 Yan Qingsong,Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong,Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,7 @@
 #include "io_readGTMiddleBury.hpp"
 #include "io_readGTDTUMVS.hpp"
 #include "io_readGTETH3D.hpp"
+#include "io_readGTKitti.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -77,6 +78,7 @@ int main(int argc, char **argv)
       << "\t 2: MiddleBury's Dataset\n"
       << "\t 3: DTU MVS Dataset\n"
       << "\t 4: ETH 3D Dataset\n"
+      << "\t 5: Kitti Odometry Dataset\n"
       << "[-o|--outputDirectory]\n"
       << std::endl;
 
@@ -135,6 +137,9 @@ int main(int argc, char **argv)
       break;
     case 4:
       sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_ETH_3D>();
+      break;
+    case 5:
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_Kitti>();
       break;
     default:
       std::cerr<<"Error: Not Support Dataset \n";

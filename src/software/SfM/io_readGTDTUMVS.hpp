@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2018 Yan Qingsong,Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong,Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 // The feature of the DTU_MVS's Data:
 // 1. each gt file only stores one view's pose information 
 // 2. the gt file's name contains number that matches with the image
+// 3. the gt files' number(64) doesn't match the number of the images(49,64)
 class SfM_Data_GT_Loader_DTU_MVS : public SfM_Data_GT_Loader_Interface
 {
 private:
@@ -36,30 +37,28 @@ public:
 
     cameras_data_.reserve(gt_files.size());
 
-    // Read all the files and store them in the system
+    // Load the gt_data from the file
     for ( std::vector<std::string>::const_iterator iter_gt_file = gt_files.begin();
       iter_gt_file != gt_files.end();
       ++iter_gt_file)
     {
-      std::ifstream ifs;
-      ifs.open( stlplus::create_filespec(this->gt_dir_,(*iter_gt_file)).c_str(), std::ifstream::in);
-      if (!ifs.is_open()) 
+      std::ifstream gt_file( stlplus::create_filespec(this->gt_dir_,(*iter_gt_file)), std::ifstream::in);
+      if (!gt_file) 
       {
-        std::cerr << "Error: failed to open file '" << *iter_gt_file << "' for reading" << std::endl;
+        std::cerr << "Error: Failed to open file '" << *iter_gt_file << "' for reading" << std::endl;
         continue;
       }
 
       std::vector<double> val;
-      while (ifs.good() && !ifs.eof())
+      while (gt_file)
       {
         double valT;
-        ifs >> valT;
-        if (!ifs.fail())
-        val.push_back(valT);
+        gt_file >> valT;
+        if(!gt_file.fail())
+          val.push_back(valT);
       }
 
-      ifs.close();
-
+      gt_file.close();
       if (val.size() == 12)
       {
         Mat34 P;
@@ -67,8 +66,8 @@ public:
              val[4], val[5], val[6], val[7],
              val[8], val[9], val[10], val[11];
 
-        PinholeCamera cam = cameras::PinholeCamera(P);
-        cameras_data_.push_back(cam);
+        cameras::PinholeCamera camera_temp = cameras::PinholeCamera(P);        
+        cameras_data_.push_back(camera_temp);
 
         // Parse image name
         std::string index = stlplus::basename_part(stlplus::create_filespec(this->gt_dir_,(*iter_gt_file))).substr(4,3); 

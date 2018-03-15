@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2018 Yan Qingsong,Pierre MOULON.
+// Copyright (c) 2018 Yan Qingsong,Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -44,12 +44,12 @@ public:
 
     if (!loadGT())
     {
-      std::cerr<<"Failed to Load Ground Truth!"<<std::endl;
+      std::cerr<<"Error:Failed to Load Ground Truth!"<<std::endl;
       return false;
     };
     if (!loadImages())
     {
-      std::cerr<<"Failed to Load Images!"<<std::endl;
+      std::cerr<<"Error:Failed to Load Images!"<<std::endl;
       return false;
     };
 
