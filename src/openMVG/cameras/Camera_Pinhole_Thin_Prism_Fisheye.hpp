@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// This is an adaptation of the Fisheye distortion model implemented in OpenCV
-// https://github.com/Itseez/opencv/blob/master/modules/calib3d/src/fisheye.cpp
+// This is an adaptation of the Thin_Prism_Fisheye distortion model
+// https://www.eth3d.net/documentation#camera-models
 
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_THIN_PRISM_FISHEYE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_THIN_PRISM_FISHEYE_HPP
@@ -24,7 +24,6 @@ namespace cameras
 
 /**
 * @brief Implement a thin_prism_fisheye camera model
-* reference: https://www.eth3d.net/documentation#camera-models
 */
 class Pinhole_Intrinsic_Thin_Prism_Fisheye : public Pinhole_Intrinsic
 {
@@ -169,25 +168,17 @@ class Pinhole_Intrinsic_Thin_Prism_Fisheye : public Pinhole_Intrinsic
       if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
           || param & (int)Intrinsic_Parameter_Type::NONE )
       {
-        constant_index.push_back(0);
+        constant_index.insert(constant_index.end(), 0);
       }
       if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
           || param & (int)Intrinsic_Parameter_Type::NONE )
       {
-        constant_index.push_back(1);
-        constant_index.push_back(2);
+        constant_index.insert(constant_index.end(), {1, 2});
       }
       if ( !(param & (int)Intrinsic_Parameter_Type::ADJUST_DISTORTION)
           || param & (int)Intrinsic_Parameter_Type::NONE )
       {
-        constant_index.push_back(3);
-        constant_index.push_back(4);
-        constant_index.push_back(5);
-        constant_index.push_back(6);
-        constant_index.push_back(7);
-        constant_index.push_back(8);
-        constant_index.push_back(9);
-        constant_index.push_back(10);
+        constant_index.insert(constant_index.end(), {3, 4, 5, 6, 7, 8,9, 10});
       }
       return constant_index;
     }
