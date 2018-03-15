@@ -435,11 +435,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             const Pose3 pose_J = relativePose_info.relativePose;
             for (const uint32_t & inlier_idx : relativePose_info.vec_inliers)
             {
-              Vec3 X;
-              TriangulateDLT(
-                pose_I.asMatrix(), (*cam_I)(xI.col(inlier_idx)),
-                pose_J.asMatrix(), (*cam_J)(xJ.col(inlier_idx)), &X);
-
               openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
               std::advance(iterT, inlier_idx);
               tracks::submapTrack::const_iterator iter = iterT->second.begin();
