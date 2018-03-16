@@ -15,6 +15,7 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_colorization.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
@@ -278,7 +279,13 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
 
   const Landmarks & landmarks = sfm_data.GetLandmarks();
 
+  std::vector<Vec3> vec_3dPoints, vec_tracksColor;
+  if (!ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor)) {
+    return false;
+  }
+
   C_Progress_display my_progress_bar( landmarks.size(), std::cout, "\n- CREATE POINT3D FILE  -\n" );
+  int point_index = 0;
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin();
         iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar )
   {
@@ -287,9 +294,14 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
     points3D_file << point3d_id << " "
       << exportPoint.x() << " " 
       << exportPoint.y() << " " 
-      << exportPoint.z() << " ";
+      << exportPoint.z() << " "
     
-    points3D_file << 250 << " " << 100 << " " << 150 << " ";  // Write arbitrary RGB color
+      << static_cast<int>(vec_tracksColor.at(point_index)(0)) << " " 
+      << static_cast<int>(vec_tracksColor.at(point_index)(1)) << " " 
+      << static_cast<int>(vec_tracksColor.at(point_index)(2)) << " ";
+
+    ++point_index;
+
     const double error = 0.0;     // Some error
     points3D_file << error;
 
