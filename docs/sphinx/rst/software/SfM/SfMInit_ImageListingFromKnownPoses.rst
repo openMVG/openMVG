@@ -43,10 +43,15 @@ Arguments description:
 Demo: Load From Strecha's Dataset
 ========================
 1. Download one of the Strecha's datasets from https://icwww.epfl.ch/~marquez/multiview/denseMVS.html
+
 2. Put the images and ground truth file in separate folder
+
 3. Launch the openMVG_main_SfMInit_ImageListingFromKnownPoses 
+
 .. code-block:: c++
+
   $ openMVG_main_SfMInit_ImageListingFromKnownPoses -i /home/user/Dataset/Strcha/images -g /home/user/Dataset/Strcha/gt -t 1 -o /home/user/Dataset/Strcha/result
+  
 4. A sfm_data.json file will be produced that is used by openMVG as a scene description.
 
 
