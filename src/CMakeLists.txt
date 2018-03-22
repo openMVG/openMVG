@@ -377,6 +377,12 @@ if (OpenMVG_USE_OPENCV)
   endif (NOT OpenCV_FOUND)
 endif (OpenMVG_USE_OPENCV)
 
+# ==============================================================================
+# Dependency libraries:
+# ==============================================================================
+if (OpenMVG_USE_INTERNAL_CEREAL)
+  add_subdirectory(dependencies/cereal)
+endif (OpenMVG_USE_INTERNAL_CEREAL)
 
 # ==============================================================================
 # Third-party libraries:
@@ -587,7 +593,7 @@ install(EXPORT openMVG-targets
 #Adapt build include paths to install path
 set(OpenMVG_INCLUDE_DIRS
   "${OpenMVG_INCLUDE_DIRS}"
-  "${CMAKE_INSTALL_PREFIX}/include;${CMAKE_INSTALL_PREFIX}/include/openMVG_dependencies")
+  "${CMAKE_INSTALL_PREFIX}/include/openMVG;${CMAKE_INSTALL_PREFIX}/include/openMVG_dependencies")
 
 
 # Build OpenMVG_CFLAGS variable for export
@@ -595,6 +601,13 @@ set(OpenMVG_CFLAGS "")
 foreach(d ${OpenMVG_DEFINITIONS})
   list(APPEND OpenMVG_CFLAGS "-D${d}")
 endforeach()
+
+set(OpenMVG_LIBRARIES_NAMESPACED "")
+foreach(lib ${OpenMVG_LIBRARIES})
+  string(REPLACE "openMVG" "OpenMVG::openMVG" lib ${lib})
+  list(APPEND OpenMVG_LIBRARIES_NAMESPACED ${lib})
+endforeach()
+set(OpenMVG_LIBRARIES ${OpenMVG_LIBRARIES_NAMESPACED})
 
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # find_package() automatically. We configure that file so that we can put any

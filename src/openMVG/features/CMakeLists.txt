@@ -23,12 +23,14 @@ target_include_directories(openMVG_features
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${CEREAL_INCLUDE_DIRS}>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
     #$<INSTALL_INTERFACE:include/openMVG/dependencies>
 )
 target_link_libraries(openMVG_features PRIVATE fast)
+if (OpenMVG_USE_INTERNAL_CEREAL)
+  target_link_libraries(openMVG_features PUBLIC cereal)
+endif (OpenMVG_USE_INTERNAL_CEREAL)
 if (MSVC)
   target_compile_options(openMVG_features PUBLIC "/bigobj")
 endif ()
