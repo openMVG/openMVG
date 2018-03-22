@@ -440,7 +440,7 @@ int main( int argc , char ** argv )
   if ( ! exportToColmap( sfm_data , sOutDir ) )
   {
     std::cerr << "There was an error during export of the file" << std::endl;
-    exit( EXIT_FAILURE );
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
