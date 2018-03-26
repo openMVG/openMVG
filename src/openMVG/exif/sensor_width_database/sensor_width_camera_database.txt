@@ -1183,6 +1183,7 @@ HP Photosmart C500;8.8
 HP Photosmart C200;8.8
 HP Photosmart C30;8.8
 HP Photosmart C20;8.8
+ILCE-7M2;35.8
 Jenoptik JD 8.0 exclusiv;7.11
 Jenoptik JD 8.0z3 EasyShot;7.11
 Jenoptik JD C 3.1 LI;6.4
