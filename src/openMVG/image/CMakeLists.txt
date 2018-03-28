@@ -26,6 +26,10 @@ target_link_libraries(openMVG_image
 target_include_directories(openMVG_image
   PUBLIC
     $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${JPEG_INCLUDE_DIR}
+    ${PNG_INCLUDE_DIRS}
+    ${TIFF_INCLUDE_DIR}
 )
 set_target_properties(openMVG_image PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 install(TARGETS openMVG_image DESTINATION lib EXPORT openMVG-targets)
