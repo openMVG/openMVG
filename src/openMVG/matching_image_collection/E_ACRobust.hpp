@@ -22,6 +22,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG {
