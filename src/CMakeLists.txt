@@ -286,7 +286,7 @@ endif()
 # ==============================================================================
 if (NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
   set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
-  set(OpenMVG_USE_INTERNAL_FLANN ON)
+#  set(OpenMVG_USE_INTERNAL_FLANN ON)
 endif()
 find_package(Flann QUIET)
 if (NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
