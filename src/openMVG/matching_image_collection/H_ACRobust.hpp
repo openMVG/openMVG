@@ -20,6 +20,7 @@
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG {
@@ -39,7 +40,7 @@ struct GeometricFilter_HMatrix_AC
     uint32_t iteration = 1024
   ):
     m_dPrecision(dPrecision),
-    m_stIteration(iteration), 
+    m_stIteration(iteration),
     m_H(Mat3::Identity()),
     m_dPrecision_robust(std::numeric_limits<double>::infinity())
   {
