@@ -1,6 +1,6 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2018 Yan Qingsong,Pierre Moulon.
+// Copyright (c) 2018 Yan Qingsong, Pierre Moulon.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
       << "[-i|--imageDirectory]\n"
       << "[-g|--groundTruthDirectory]\n"
       << "[-t]--groundTruthDataset]\n"
-      << "\t 1: Strcha's Dataset\n"
+      << "\t 1: Strecha's Dataset\n"
       << "\t 2: MiddleBury's Dataset\n"
       << "\t 3: DTU MVS Dataset\n"
       << "\t 4: ETH 3D Dataset\n"
