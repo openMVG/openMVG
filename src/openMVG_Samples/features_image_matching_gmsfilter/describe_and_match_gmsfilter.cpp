@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
       << "  (choose an image_describer interface):\n"
       << "   SIFT: SIFT keypoint & descriptor,\n"
       << "   AKAZE: AKAZE keypoint & floating point descriptor]\n"
+      << "   AKAZE_MLDB: AKAZE keypoint & binary descriptor]\n"
       << "[-d|distance_ratio] Use distance ratio filter before GMS, else 1-1 matching is used."
       << std::endl;
 
