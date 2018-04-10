@@ -308,6 +308,9 @@ struct ImageHeader
 
   /// Height of the image
   int height;
+
+  /// number of channel
+  unsigned char channels;
 };
 
 /**

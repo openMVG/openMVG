@@ -696,10 +696,13 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   png_get_IHDR(png_ptr, info_ptr, &wPNG, &hPNG, &iBitDepth,
     &iColorType, nullptr, nullptr, nullptr);
 
+  int depth = png_get_channels(png_ptr, info_ptr);
+
   if (imgheader)
   {
     imgheader->width = wPNG;
     imgheader->height = hPNG;
+    imgheader->channels = depth;
     bStatus = true;
   }
 
@@ -737,6 +740,7 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
   {
     imgheader->width = cinfo.output_width;
     imgheader->height = cinfo.output_height;
+    imgheader->channels = cinfo.output_components;
     bStatus = true;
   }
 
@@ -770,7 +774,10 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
   switch (magicnumber)
   {
     case 5:
+      imgheader->channels = 1;
+      break;
     case 6:
+      imgheader->channels = 3;
       break;
     default:
       fclose(file);
@@ -852,6 +859,12 @@ bool Read_TIFF_ImageHeader(const char * filename, ImageHeader * imgheader)
   {
     TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &imgheader->width);
     TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &imgheader->height);
+
+    uint16 bps, spp;
+    TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bps);
+    TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &spp);
+    imgheader->channels = bps * spp / 8;
+
     bStatus = true;
   }
 
