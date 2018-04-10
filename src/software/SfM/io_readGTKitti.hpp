@@ -36,7 +36,6 @@ public:
   {  
     // Look into the image dir to detect gray or rgb
     // Load the first image and detect the channel number
-    std::cout<<stlplus::create_filespec(this->image_dir_,"image_0")<<std::endl;
     bool left_camera = stlplus::folder_exists(stlplus::create_filespec(this->image_dir_,"image_0"));
     bool left_camera_gray = true;
 
@@ -105,6 +104,8 @@ public:
       std::getline(gt_file, line);
       image_number_count++;
     }
+    if(left_camera && right_camera)
+      image_number_count *= 2;
     cameras_data_.reserve(image_number_count);
 
     gt_file.clear(std::ios::goodbit);
@@ -175,9 +176,17 @@ public:
 	    image_name.append(10-image_name_code.size(), '0');
 	    image_name += image_name_code;
       if(left_camera)
-        images_.push_back( "image_0/"+image_name );
+      {
+        stlplus::file_copy( stlplus::create_filespec(this->image_dir_,"image_0/"+image_name), stlplus::create_filespec(this->image_dir_,"left_"+image_name));
+        images_.push_back( stlplus::filename_part("left_"+image_name) );
+      }
+        
       if(right_camera)
-        images_.push_back( "image_1/"+image_name );
+      {
+        stlplus::file_copy( stlplus::create_filespec(this->image_dir_,"image_1/"+image_name), stlplus::create_filespec(this->image_dir_,"right_"+image_name));
+        images_.push_back( stlplus::filename_part("right_"+image_name) );
+      }
+        
 
       frame_index++;
     }
