@@ -398,7 +398,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   {
     const size_t imaNum = *iterSet;
     using Vec256 = Eigen::Matrix<double, 256, 1>;
-    std::vector< Vec256 > vec_map_lut(3);
+    std::vector< Vec256,Eigen::aligned_allocator<Vec256> > vec_map_lut(3);
 
     const size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);
 
