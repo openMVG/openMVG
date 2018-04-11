@@ -9,7 +9,6 @@
 #ifndef IO_READ_GT_STRECHA_HPP
 #define IO_READ_GT_STRECHA_HPP
 
-
 #include "io_readGTInterface.hpp"
 #include "io_loadImages.hpp"
 
@@ -28,20 +27,24 @@ public:
   bool loadGT() override
   {
     // Check all the files under the path
-    std::vector<std::string> gt_files = stlplus::folder_files( this->gt_dir_ );
+    std::vector<std::string> gt_files = stlplus::folder_wildcard(this->gt_dir_, "*.camera");
     std::sort(gt_files.begin(), gt_files.end());
+
+    if (gt_files.empty())
+    {
+      std::cerr << "The provided GT directory does not have any *.camera file." << std::endl;
+      return false;
+    }
 
     cameras_data_.reserve(gt_files.size());
 
     // Load the gt_data from the file
-    for ( std::vector<std::string>::const_iterator iter_gt_file = gt_files.begin();
-      iter_gt_file != gt_files.end();
-      ++iter_gt_file)
+    for ( const auto & iter_gt_file : gt_files)
     {
-      std::ifstream gt_file( stlplus::create_filespec(this->gt_dir_,(*iter_gt_file)).c_str(), std::ifstream::in);
+      std::ifstream gt_file( stlplus::create_filespec(this->gt_dir_, iter_gt_file).c_str(), std::ifstream::in);
       if (!gt_file)
       {
-        std::cerr << "Error:Failed to open file '" << *iter_gt_file << "' for reading" << std::endl;
+        std::cerr << "Error: Failed to open file '" << iter_gt_file << "' for reading" << std::endl;
         continue;
       }
       std::vector<double> val;
@@ -72,7 +75,7 @@ public:
         cameras_data_.emplace_back(K, R, t);
 
         // Parse image name
-        images_.emplace_back( stlplus::basename_part(stlplus::create_filespec(this->gt_dir_,(*iter_gt_file))) );
+        images_.emplace_back( stlplus::basename_part(stlplus::create_filespec(this->gt_dir_, iter_gt_file)) );
       }
       else
       {

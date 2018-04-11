@@ -9,7 +9,6 @@
 #ifndef IO_READ_GT_MIDDLEBURY_HPP
 #define IO_READ_GT_MIDDLEBURY_HPP
 
-
 #include "io_readGTInterface.hpp"
 #include "io_loadImages.hpp"
 

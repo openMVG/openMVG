@@ -10,8 +10,10 @@
 #define IO_LOAD_IMAGES_HPP
 
 #include "openMVG/cameras/PinholeCamera.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_utils.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -85,11 +87,11 @@ bool LoadImages
     const double pyy   = K(1,2);
 
     const Pose3 pose(iter_camera->_R, iter_camera->_C);
-    auto view      = std::make_shared<sfm::View>(
+    const auto view      = std::make_shared<sfm::View>(
       *iter_image,
       views.size(), views.size(), views.size(),
       imgHeader.width, imgHeader.height);
-    auto intrinsic = std::make_shared<cameras::Pinhole_Intrinsic>(
+    const auto intrinsic = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(
       imgHeader.width, imgHeader.height,
       focal, pxx, pyy);
 

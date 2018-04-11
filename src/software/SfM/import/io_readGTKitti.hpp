@@ -9,7 +9,6 @@
 #ifndef IO_READ_GT_KITTI_HPP
 #define IO_READ_GT_KITTI_HPP
 
-
 #include "io_readGTInterface.hpp"
 #include "io_loadImages.hpp"
 
@@ -22,7 +21,7 @@
 // 1. all the gt information are stored in two file:
 //  - ID.txt for the camera poses,
 //  - calib.txt for the camera intrinsic parameters.
-// 2. the gt information's line number is the same with the corresponded image file name
+// 2. the gt information's line number is the same with the corresponding image file name
 class SfM_Data_GT_Loader_Kitti : public SfM_Data_GT_Loader_Interface
 {
 private:

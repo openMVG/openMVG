@@ -147,7 +147,7 @@ int main(int argc, char **argv)
   }
 
   // Load the gt data
-  if(!sfm_data_gt->run(sGroundTruthDir,sImageDir))
+  if (!sfm_data_gt->run(sGroundTruthDir, sImageDir))
   {
     return EXIT_FAILURE;
   }

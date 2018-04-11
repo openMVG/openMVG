@@ -15,9 +15,6 @@
 #include "openMVG/cameras/PinholeCamera.hpp"
 
 #include <algorithm>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
 
 struct Cameras_Data
 {
