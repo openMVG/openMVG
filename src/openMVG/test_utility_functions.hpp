@@ -2,6 +2,7 @@
 #include <random>
 #include "third_party/ceres-solver/include/ceres/rotation.h"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/geometry/Similarity3.hpp"
 
 inline int randomPositiveInteger(int boundary = 100)
 {
@@ -28,7 +29,7 @@ inline openMVG::Vec3 randomVector(double boundary = 100.0)
   return openMVG::Vec3(distr(eng), distr(eng), distr(eng));
 }
 
-inline openMVG::Mat3 randomRotationMatrix()
+inline openMVG::Mat3 randomRotationMatrix(double angleBoundary = 2*M_PI)
 {
   // generate random unitary vector
   openMVG::Vec3 rotation_axis = randomVector(1.0);
@@ -37,7 +38,7 @@ inline openMVG::Mat3 randomRotationMatrix()
   // generate random angle
   std::random_device rd;
   std::mt19937 eng(rd());
-  std::uniform_real_distribution<double> distr(-2*M_PI, 2*M_PI);
+  std::uniform_real_distribution<double> distr(-angleBoundary, angleBoundary);
 
   // create rotation matrix from angle axis representation
   rotation_axis *= distr(eng);
@@ -47,7 +48,7 @@ inline openMVG::Mat3 randomRotationMatrix()
   return rotation_matrix;
 }
 
-inline std::vector<double> randomQuaternion()
+inline openMVG::Vec4 randomQuaternion()
 {
   // generate random unitary vector
   openMVG::Vec3 rotation_axis = randomVector();
@@ -60,10 +61,38 @@ inline std::vector<double> randomQuaternion()
   rotation_axis *= distr(eng);
 
   // create quaternion from angle axis
-  std::vector<double> quaternion(4);
-  ceres::AngleAxisToQuaternion(rotation_axis.data(), &quaternion[0]);
+  openMVG::Vec4 quaternion;
+  ceres::AngleAxisToQuaternion(rotation_axis.data(), quaternion.data());
 
   return quaternion;
+}
+
+inline openMVG::geometry::Pose3 randomPose(double rotBoundary, double translationBoundary)
+{
+  return openMVG::geometry::Pose3(randomRotationMatrix(rotBoundary), randomVector(translationBoundary));
+}
+
+inline openMVG::geometry::Similarity3 randomSimilarity(double rotBoundary = 2*M_PI, double translationBoundary = 100.0, double scalingBoundary = 10.0)
+{
+  return openMVG::geometry::Similarity3(randomPose(rotBoundary, translationBoundary), randomPositiveDouble(scalingBoundary));
+}
+
+/**
+ * @brief creates a similarity that is not too "extreme",
+ * that is a relatively small scall change and an "easy" rotation
+ * For the purpose of submap merging/scene aligning, the similarity here is designed to be "easy" enough to guarantee solvability.
+ * Also use this when you want deterministic results in your tests instead of randomSimilarity.
+ */
+inline openMVG::geometry::Similarity3 easySimilarity()
+{
+  double arbitrary_angle_axis[3] = {1.0, 0.5, 0.5};
+  openMVG::Mat3 arbitrary_rotation_matrix;
+  ceres::AngleAxisToRotationMatrix(&arbitrary_angle_axis[0], arbitrary_rotation_matrix.data());
+  const openMVG::Vec3 arbitrary_translation = {0.2, -1.5, 0.8};
+  const double arbitrary_scaling_factor = 0.85;
+  return openMVG::geometry::Similarity3(
+        openMVG::geometry::Pose3(arbitrary_rotation_matrix, arbitrary_translation),
+        arbitrary_scaling_factor);
 }
 
 inline openMVG::sfm::Poses generateRandomPoses(const int n_poses)

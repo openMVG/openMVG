@@ -81,15 +81,7 @@ TEST(SubmapMerger, MergingTwoSubmaps_GivesComparableResultsToSingleReconstructio
   }
 
   // submap B is not in the same referential as A
-  double arbitrary_angle_axis[3] = {1.0, 0.5, 0.5};
-  Mat3 arbitrary_rotation_matrix;
-  ceres::AngleAxisToRotationMatrix(&arbitrary_angle_axis[0], arbitrary_rotation_matrix.data());
-  const Vec3 arbitrary_translation = {0.2, -1.5, 0.8};
-  const double arbitrary_scaling_factor = 0.85;
-
-  const geometry::Similarity3 arbitrary_transformation =
-    {openMVG::geometry::Pose3(arbitrary_rotation_matrix, arbitrary_translation),
-     arbitrary_scaling_factor};
+  const geometry::Similarity3 arbitrary_transformation = easySimilarity();
   ApplySimilarity(arbitrary_transformation, sfm_data_B);
 
   HsfmSubmap submap_A;

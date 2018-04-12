@@ -77,7 +77,7 @@ void Bundle_Adjustment_Fixed_Points::configureProblem(ceres::Problem & problem, 
       itObs != obs.end(); ++itObs)
     {
       // Build the residual block corresponding to the track observation:
-      const View * view = sfm_data.views.at(itObs->first).get();
+      const auto view = sfm_data.views.at(itObs->first).get();
 
       // Each Residual block takes a point and a camera as input and outputs a 2
       // dimensional residual. Internally, the cost function stores the observed

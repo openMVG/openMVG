@@ -26,37 +26,32 @@ void printBaseNodeCoords(const openMVG::Vec3 Translation_gt, openMVG::Vec3 base_
     << " scale : " << scaling_factor_gt << std::endl;
 }
 
+void printBaseNodeCoords(const openMVG::geometry::Similarity3& sim_gt, const openMVG::geometry::Similarity3& sim)
+{
+  std::cout << "new base node coords : \n"
+            << sim.pose_.center() << std::endl << std::endl
+            << sim.pose_.rotation() << std::endl
+            << "scale : " << sim.scale_ << std::endl;
+  std::cout << "ground truth : \n"
+            << sim_gt.pose_.center() << std::endl << std::endl
+            << sim_gt.pose_.rotation() << std::endl
+            << "scale : " << sim_gt.scale_ << std::endl;
+}
+
 struct TwoScenesConfig
 {
   openMVG::sfm::SfM_Data parent_sfm_data;
   openMVG::sfm::SfM_Data sfm_data_A;
   openMVG::sfm::SfM_Data sfm_data_B;
-  openMVG::Vec3 Rotation;
-  openMVG::Vec3 Translation;
-  double scaling_factor_;
-  std::vector<size_t> common_track_ids;
+  openMVG::geometry::Similarity3 sim;
+  std::set<openMVG::IndexT> common_track_ids;
 };
 
-inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_poses = 0)
+void addLandmarksToTwoScenes(TwoScenesConfig & two_scenes)
 {
-  TwoScenesConfig two_scenes;
-
-  openMVG::sfm::Landmarks & landmarks_A = two_scenes.sfm_data_A.structure;
-  openMVG::sfm::Landmarks & landmarks_B = two_scenes.sfm_data_B.structure;
-  openMVG::sfm::Landmarks & landmarks_parent = two_scenes.parent_sfm_data.structure;
-  openMVG::sfm::Poses & poses_A = two_scenes.sfm_data_A.poses;
-  openMVG::sfm::Poses & poses_B = two_scenes.sfm_data_B.poses;
-  openMVG::sfm::Poses & poses_parent = two_scenes.parent_sfm_data.poses;
-
-  if (n_poses != 0)
-  {
-    const openMVG::sfm::Poses generated_poses = generateRandomPoses(n_poses);
-    poses_A = generated_poses;
-    poses_B = generated_poses;
-    poses_parent = generated_poses;
-  }
-
-  // generate some simple (i.e. non-cluttered together) 3d data
+  auto& landmarks_parent = two_scenes.parent_sfm_data.structure;
+  auto& landmarks_A      = two_scenes.sfm_data_A.structure;
+  auto& landmarks_B      = two_scenes.sfm_data_B.structure;
   landmarks_A[0].X = {1,0,0};
   landmarks_A[1].X = {1,1,0};
   landmarks_A[2].X = {-2,0,2};
@@ -66,7 +61,7 @@ inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_pos
   landmarks_B = landmarks_A;
   for (const auto & landmark : landmarks_A)
   {
-    two_scenes.common_track_ids.push_back(landmark.first);
+    two_scenes.common_track_ids.insert(landmark.first);
   }
 
   // add some landmarks exclusive to each scene (they should not have the same id)
@@ -77,64 +72,96 @@ inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_pos
   landmarks_B[last_id+3].X = randomVector(5);
   landmarks_parent = landmarks_A;
   landmarks_parent.insert(landmarks_B.begin(), landmarks_B.end());
+}
 
-  // transformation parameters
-  const openMVG::Vec3 rotation_ground_truth = randomVector(M_PI/(2.0 * 1.8)); // 1.8 > sqrt(3)
-  two_scenes.Rotation = rotation_ground_truth;
-  const openMVG::Vec3 translation_ground_truth = randomVector(2.0);
-  two_scenes.Translation = translation_ground_truth;
-  const double scaling_factor_ground_truth = randomPositiveDouble(10.0);
-  two_scenes.scaling_factor_ = scaling_factor_ground_truth;
-
-  // transform landmarks
-  for (auto & lmk_B : landmarks_B)
+void addNoiseToTwoScenes(TwoScenesConfig& two_scenes)
+{
+  auto& landmarks_A = two_scenes.sfm_data_A.structure;
+  auto& poses_A     = two_scenes.sfm_data_A.poses;
+  auto& landmarks_B = two_scenes.sfm_data_B.structure;
+  auto& poses_B     = two_scenes.sfm_data_B.poses;
+  for (auto & lmk : landmarks_A)
   {
-    // translation
-    lmk_B.second.X += translation_ground_truth;
-
-    // rotation
-    const openMVG::Vec3 point = lmk_B.second.X;
-    ceres::AngleAxisRotatePoint((const double*)rotation_ground_truth.data(), (const double*)point.data(), (double*)lmk_B.second.X.data());
-
-    // scaling
-    lmk_B.second.X *= scaling_factor_ground_truth;
-
-    //add some noise
-    lmk_B.second.X += randomVector(1e-4);
+    lmk.second.X += randomVector(1e-4);
   }
-
-  // transform poses
+  for (auto & lmk : landmarks_B)
+  {
+    lmk.second.X += randomVector(1e-4);
+  }
+  for (auto & mapped_pose : poses_A)
+  {
+    mapped_pose.second.center() += randomVector(1e-4);
+  }
   for (auto & mapped_pose : poses_B)
   {
-    openMVG::geometry::Pose3 & pose = mapped_pose.second;
-
-    // translation
-    openMVG::Vec3 new_center;
-    new_center = pose.center() + translation_ground_truth;
-
-    // rotation on z axis
-    const openMVG::Vec3 point = new_center;
-    ceres::AngleAxisRotatePoint((const double*)rotation_ground_truth.data(), (const double*)point.data(), (double*)new_center.data());
-    openMVG::Mat3 new_rotation;
-    ceres::AngleAxisToRotationMatrix((const double*)rotation_ground_truth.data(), (double*)new_rotation.data());
-    new_rotation = pose.rotation() * new_rotation.inverse();
-
-    // scaling
-    new_center *= scaling_factor_ground_truth;
-
-    //add some noise
-    new_center += randomVector(1e-4);
-
-    pose = openMVG::geometry::Pose3(new_rotation, new_center);
+    mapped_pose.second.center() += randomVector(1e-4);
   }
+}
 
+void dispatchPosesInChildrenScenes(TwoScenesConfig& two_scenes)
+{
   // put half of the poses on one scene, the other half on the other scene
+  auto& poses_A = two_scenes.sfm_data_A.poses;
+  auto& poses_B = two_scenes.sfm_data_B.poses;
   int n_total_cams = poses_B.size();
   for (int i(0); i < n_total_cams; i += 2)
   {
     poses_A.erase(i);
     poses_B.erase(i + 1);
   }
+}
+
+inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_poses = 0)
+{
+  TwoScenesConfig two_scenes;
+
+  auto & poses_A           = two_scenes.sfm_data_A.poses;
+  auto & poses_B           = two_scenes.sfm_data_B.poses;
+  auto & poses_parent      = two_scenes.parent_sfm_data.poses;
+  auto & views_A           = two_scenes.sfm_data_A.views;
+  auto & views_B           = two_scenes.sfm_data_B.views;
+  auto & views_parent      = two_scenes.parent_sfm_data.views;
+  auto & intrinsics_A      = two_scenes.sfm_data_A.intrinsics;
+  auto & intrinsics_B      = two_scenes.sfm_data_B.intrinsics;
+  auto & intrinsics_parent = two_scenes.parent_sfm_data.intrinsics;
+
+  if (n_poses != 0)
+  {
+    const openMVG::sfm::Poses generated_poses = generateRandomPoses(n_poses);
+    poses_A = generated_poses;
+    poses_B = generated_poses;
+    poses_parent = generated_poses;
+    for (const auto & pose : generated_poses)
+    {
+      const openMVG::IndexT id = pose.first;
+      openMVG::sfm::View v("v_" + std::to_string(id),
+                           id, 0, id);
+      std::shared_ptr<openMVG::sfm::View> v_ptr =
+          std::make_shared<openMVG::sfm::View>(v);
+      views_A[id] = v_ptr;
+      views_B[id] = v_ptr;
+      views_parent[id] = v_ptr;
+    }
+  }
+
+  std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic_ptr =
+      std::make_shared<openMVG::cameras::Pinhole_Intrinsic>
+            (1000, 1000, 1000, 500, 500);
+  intrinsics_A[0] = intrinsic_ptr;
+  intrinsics_B[0] = intrinsic_ptr;
+  intrinsics_parent[0] = intrinsic_ptr;
+
+  // generate some simple (i.e. non-cluttered together) 3d data
+  addLandmarksToTwoScenes(two_scenes);
+
+  // transform scene B
+  const openMVG::geometry::Similarity3 sim_ground_truth = easySimilarity();
+  two_scenes.sim = sim_ground_truth;
+  ApplySimilarity(sim_ground_truth, two_scenes.sfm_data_B);
+
+  addNoiseToTwoScenes(two_scenes);
+
+  dispatchPosesInChildrenScenes(two_scenes);
 
   return two_scenes;
 }

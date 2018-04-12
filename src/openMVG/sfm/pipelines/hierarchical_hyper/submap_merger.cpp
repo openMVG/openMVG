@@ -16,21 +16,17 @@
 namespace openMVG{
 namespace sfm{
 
-std::vector<size_t> findCommonReconstructedSeparatorTracks(HsfmSubmap& parent_submap, const openMVG::sfm::SfM_Data& first_sfm_data, const openMVG::sfm::SfM_Data& second_sfm_data)
+std::set<IndexT> findCommonReconstructedSeparatorTracks(HsfmSubmap& parent_submap, const openMVG::sfm::SfM_Data& sfm_dataA, const openMVG::sfm::SfM_Data& sfm_dataB)
 {
-  std::vector<size_t> common_track_ids;
-  const Landmarks & first_landmarks = first_sfm_data.GetLandmarks();
-  const Landmarks & second_landmarks = second_sfm_data.GetLandmarks();
-  std::cout << first_landmarks.size() << " " << second_landmarks.size() << std::endl;
-  for (const auto & track_id : parent_submap.separator)
-  {
-    if (first_landmarks.find(track_id) == first_landmarks.end()
-        || second_landmarks.find(track_id) == second_landmarks.end())
-      continue;
-
-    // if the landmark is reconstructed in both submaps -> add it to the common tracks
-    common_track_ids.push_back(track_id);
-  }
+  std::set<IndexT> common_track_ids;
+  const Landmarks & landmarksA = sfm_dataA.GetLandmarks();
+  const Landmarks & landmarksB = sfm_dataB.GetLandmarks();
+  std::cout << landmarksA.size() << " " << landmarksB.size() << std::endl;
+  std::copy_if(parent_submap.separator.cbegin(), parent_submap.separator.cend(),
+               std::inserter(common_track_ids, common_track_ids.begin()),
+               [&](const IndexT & trackId)
+                {return landmarksA.count(trackId) > 0
+                     && landmarksB.count(trackId) > 0;});
   std::cout << common_track_ids.size() << " tracks in common" << std::endl;
   return common_track_ids;
 }
@@ -101,7 +97,7 @@ bool SubmapMerger::MergeSubmapPair(const IndexT parent_id, const std::string &de
 
   // find all common reconstructed tracks in both submaps
   // (note that this is a subset of the separator tracks)
-  const std::vector<size_t> common_track_ids = findCommonReconstructedSeparatorTracks(parent_submap, first_sfm_data, second_sfm_data);
+  const auto common_track_ids = findCommonReconstructedSeparatorTracks(parent_submap, first_sfm_data, second_sfm_data);
 
   // --- OPTIMIZATION OF THE BASE NODE POSES + SEPARATOR LANDMARKS POSITIONS ---
   //

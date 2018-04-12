@@ -9,6 +9,7 @@
 #include "openMVG/sfm/pipelines/hierarchical_hyper/scene_aligner.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/scene_aligner_residuals.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
 #include "openMVG/types.hpp"
 
 #include "ceres/ceres.h"
@@ -28,22 +29,31 @@ bool MergeScenesUsingCommonTracks
   SfM_Data & destination_sfm_data,
   const SfM_Data & sfm_data_first, // first submap scene
   const SfM_Data & sfm_data_second, // second submap scene
-  const std::vector<size_t> & common_track_ids,
+  const std::set<IndexT> & common_track_ids,
   SceneAligner *smap_aligner
 )
 {
   // 1. Find separator landmarks and transformation between two scenes
-  std::vector<double> second_base_node_pose(6, 0.0);
-  double scaling_factor(1.0);
-  Landmarks separator_landmarks = sfm_data_first.structure;
+  Similarity3 sim;
+
+  Landmarks separator_landmarks;
+  std::copy_if(sfm_data_first.structure.cbegin(), sfm_data_first.structure.cend(),
+               std::inserter(separator_landmarks, separator_landmarks.begin()),
+               [&common_track_ids](const std::pair<IndexT, Landmark>& landmark_pair)
+                  {return common_track_ids.count(landmark_pair.first) > 0;});
+
   const bool alignment_successful =
       smap_aligner->computeTransformAndCommonLandmarks(
         separator_landmarks, sfm_data_first, sfm_data_second,
-        second_base_node_pose, scaling_factor, common_track_ids);
+        sim, common_track_ids);
 
   // 2. transform second scene and merge it with first scene
   if (alignment_successful)
   {
+    destination_sfm_data.intrinsics.clear();
+    destination_sfm_data.poses.clear();
+    destination_sfm_data.structure.clear();
+
     // initialize destination sfm data
     destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
     for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
@@ -51,22 +61,15 @@ bool MergeScenesUsingCommonTracks
       if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
         destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
     }
+    destination_sfm_data.views = sfm_data_first.views; // TODO : should we really deal with views here ?
     destination_sfm_data.poses = sfm_data_first.poses;
-    destination_sfm_data.structure = separator_landmarks;
+    destination_sfm_data.structure = sfm_data_first.structure;
+    // overwrite separators with newly computed data
+    destination_sfm_data.structure.insert(separator_landmarks.cbegin(), separator_landmarks.cend());
 
-    Vec3 second_base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
-    Mat3 second_base_node_RMat;
-    ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
-
-    std::cout << " new aligned base node coords : \n"
-    << second_base_node_t << std::endl
-    << second_base_node_RMat << std::endl
-    << " scale : " << scaling_factor << std::endl;
-
-    // update the landmarks and poses from the second
+    // update the landmarks, poses and views from the second
     // scene transformed into the destination scene.
-    transformSfMDataScene(destination_sfm_data, sfm_data_second,
-                          second_base_node_RMat, second_base_node_t, scaling_factor);
+    transformSfMDataSceneInto(destination_sfm_data, sfm_data_second, sim);
     return true;
   }
   else
@@ -75,7 +78,14 @@ bool MergeScenesUsingCommonTracks
   }
 }
 
-bool scenesAreAlignable(const SfM_Data & sfm_data_first, const SfM_Data & sfm_data_second, const std::vector<size_t> & common_track_ids)
+SceneAligner::SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options)
+  : ceres_options_(options)
+{}
+
+bool SceneAligner::checkScenesAreAlignable(
+    const SfM_Data &sfm_data_first,
+    const SfM_Data &sfm_data_second,
+    const std::set<IndexT> &common_track_ids)
 {
   if (common_track_ids.empty())
     return false;
@@ -92,25 +102,27 @@ bool scenesAreAlignable(const SfM_Data & sfm_data_first, const SfM_Data & sfm_da
   return true;
 }
 
-SceneAligner::SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options)
-  : ceres_options_(options)
-{}
-
-bool SceneAligner::computeTransformAndCommonLandmarks(
-    Landmarks &destination_landmarks,
+bool SceneAligner::computeTransformAndCommonLandmarks(Landmarks &destination_landmarks,
     const SfM_Data &sfm_data_first,
     const SfM_Data &sfm_data_second,
-    std::vector<double> &second_base_node_pose,
-    double &scaling_factor,
-    const std::vector<size_t> & common_track_ids)
+    Similarity3& sim,
+    const std::set<IndexT> & common_track_ids)
 {
   // check precondition for function to run normally
-  if (!scenesAreAlignable(sfm_data_first, sfm_data_second, common_track_ids))
+  if (!checkScenesAreAlignable(sfm_data_first, sfm_data_second, common_track_ids))
   {
     return false;
   }
 
   ceres::Problem problem;
+
+  const Mat3 R = sim.pose_.rotation();
+  const Vec3 t = sim.pose_.center();
+  double angleAxis[3];
+  ceres::RotationMatrixToAngleAxis((const double*)R.data(), angleAxis);
+  std::vector<double> second_base_node_pose =
+    {angleAxis[0], angleAxis[1], angleAxis[2], t(0), t(1), t(2)};
+  double scaling_factor = sim.scale_;
 
   // note : configureProblem is a virtual method !
   configureProblem(
@@ -163,6 +175,19 @@ bool SceneAligner::computeTransformAndCommonLandmarks(
         << " Time (s): " << summary.total_time_in_seconds << "\n"
         << std::endl;
     }
+
+    // update similarity
+    Vec3 second_base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
+    Mat3 second_base_node_RMat;
+    ceres::AngleAxisToRotationMatrix(&second_base_node_pose[0], second_base_node_RMat.data());
+    std::cout << " new aligned base node coords : \n"
+              << second_base_node_t << std::endl
+              << second_base_node_RMat << std::endl
+              << " scale : " << scaling_factor << std::endl;
+
+    sim.pose_ = {second_base_node_RMat.transpose(), second_base_node_t};
+    sim.scale_ = scaling_factor;
+
     return true;
   }
 }
@@ -173,7 +198,7 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
     const SfM_Data & sfm_data_second,
     std::vector<double> & second_base_node_pose,
     double & scaling_factor,
-    const std::vector<size_t> & common_track_ids
+    const std::set<IndexT> & common_track_ids
     )
 {
   const Landmarks & landmarks_first = sfm_data_first.structure;
@@ -217,42 +242,30 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
   }
 }
 
-void transformSfMDataScene(
+/**
+ * @brief takes a SfM_Data scene and transforms it into a destination scene, with a geometric transformation.
+ * @note mostly used for merging submaps together
+ * @warning landmarks, poses and views from original scene will overwrite conflicting data
+ * (i.e. map elements with same keys) in the destination scene ! Use with caution
+ * @param destination_sfm_data : the destination scene, can already contain views, landmarks ... etc
+ * @param original_sfm_data : the scene to be transformed into the destination scene
+ * @param rotation
+ * @param translation
+ * @param scaling_factor
+ */
+void transformSfMDataSceneInto(
     SfM_Data & destination_sfm_data,
     const SfM_Data & original_sfm_data,
-    const Mat3 & rotation,
-    const Vec3 & translation,
-    const double scaling_factor)
+    const Similarity3& sim
+    )
 {
-  // update camera poses
-  const Poses & original_poses = original_sfm_data.poses;
-  Poses & destination_poses = destination_sfm_data.poses;
-  for (const auto & pose : original_poses)
-  {
-    geometry::Pose3 new_pose = pose.second;
-    const Vec3 original_position = new_pose.center();
-    const Mat3 original_rotation = new_pose.rotation();
+  SfM_Data transformed_sfm_data = original_sfm_data;
+  ApplySimilarity(sim.inverse(), transformed_sfm_data);
 
-    new_pose = geometry::Pose3(original_rotation * rotation.transpose(),
-        (rotation * ((1.0/scaling_factor)*original_position) + translation));
-
-    // push to parent sfm data
-    destination_poses[pose.first] = new_pose;
-  }
-
-  // update landmarks
-  const Landmarks & original_landmarks = original_sfm_data.structure;
-  Landmarks & destination_landmarks = destination_sfm_data.structure;
-  for (const auto & landmark : original_landmarks)
-  {
-    const Vec3 original_position = landmark.second.X;
-
-    Landmark new_landmark = landmark.second;
-    new_landmark.X = rotation * ((1.0/scaling_factor) * original_position) + translation;
-
-    // push to destination sfm data
-    destination_landmarks[landmark.first] = new_landmark;
-  }
+  destination_sfm_data.views.insert(transformed_sfm_data.views.cbegin(), transformed_sfm_data.views.cend());
+  destination_sfm_data.poses.insert(transformed_sfm_data.poses.cbegin(), transformed_sfm_data.poses.cend());
+  destination_sfm_data.structure.insert(transformed_sfm_data.structure.cbegin(), transformed_sfm_data.structure.cend());
+  destination_sfm_data.control_points.insert(transformed_sfm_data.control_points.cbegin(), transformed_sfm_data.control_points.cend());
 }
 
 } // namespace sfm

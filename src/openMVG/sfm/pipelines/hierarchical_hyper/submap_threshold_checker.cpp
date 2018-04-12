@@ -11,7 +11,6 @@
 namespace openMVG{
 namespace sfm{
 
-
 SubmapTracksThresholdChecker::SubmapTracksThresholdChecker(int tracks_threshold)
   : SubmapThresholdChecker(), tracks_threshold_(tracks_threshold)
 {}

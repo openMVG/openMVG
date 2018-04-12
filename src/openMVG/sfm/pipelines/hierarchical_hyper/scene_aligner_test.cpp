@@ -22,18 +22,6 @@ using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 using namespace std;
 
-// return an angle axis vector that corresponds to the same rotation but with a
-// norm bound by 2pi
-Vec3 rescaleAngleAxis(const Vec3 & angle_axis_rot)
-{
-  Vec3 rescaled_rot = angle_axis_rot;
-  while (rescaled_rot.norm() > 2*M_PI)
-  {
-    rescaled_rot = rescaled_rot - 2*M_PI*rescaled_rot/rescaled_rot.norm();
-  }
-  return rescaled_rot;
-}
-
 TEST(MergeScenesUsingCommonTracks, normalScene_destinationSceneContainsEverything)
 {
   TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(3);
@@ -46,6 +34,7 @@ TEST(MergeScenesUsingCommonTracks, normalScene_destinationSceneContainsEverythin
   EXPECT_EQ(destination_sfm_data.GetLandmarks().size(), two_scenes.parent_sfm_data.GetLandmarks().size());
   EXPECT_EQ(destination_sfm_data.GetPoses().size(), two_scenes.parent_sfm_data.GetPoses().size());
   EXPECT_EQ(destination_sfm_data.GetIntrinsics().size(), two_scenes.parent_sfm_data.GetIntrinsics().size());
+  EXPECT_EQ(destination_sfm_data.GetViews().size(), two_scenes.parent_sfm_data.GetViews().size());
 }
 
 TEST(MergeScenesUsingCommonTracks, normalScene_firstSceneOnlyLandmarksKeptConstant)
@@ -64,8 +53,7 @@ TEST(MergeScenesUsingCommonTracks, normalScene_firstSceneOnlyLandmarksKeptConsta
     const auto landmark = mapped_landmark.second;
 
     // separator landmarks are not kept constant by definition
-    if (std::find(two_scenes.common_track_ids.begin(), two_scenes.common_track_ids.end(), landmark_id)
-          != two_scenes.common_track_ids.end())
+    if (two_scenes.common_track_ids.count(landmark_id) > 0)
       continue;
 
     EXPECT_MATRIX_EQ(landmark.X, destination_sfm_data.structure.at(landmark_id).X);
@@ -75,12 +63,9 @@ TEST(MergeScenesUsingCommonTracks, normalScene_firstSceneOnlyLandmarksKeptConsta
 TEST(SceneAligner, sceneWithLandmarksOnly_SubmapAlignmentWorks)
 {
   TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise();
-  const double scaling_factor_gt = two_scenes.scaling_factor_;
-  const Vec3 Rotation_gt = two_scenes.Rotation;
-  const Vec3 Translation_gt = two_scenes.Translation;
 
-  std::vector<double> base_node_coords(6 ,0.0);
-  double scaling_factor(1.0);
+  const Similarity3 sim_gt = two_scenes.sim;
+  Similarity3 sim;
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
   Landmarks & destination_landmarks = destination_sfm_data.structure;
@@ -90,21 +75,14 @@ TEST(SceneAligner, sceneWithLandmarksOnly_SubmapAlignmentWorks)
       std::unique_ptr<SceneAligner>(new SceneAligner);
   smap_aligner->computeTransformAndCommonLandmarks(
       destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
-      base_node_coords, scaling_factor, two_scenes.common_track_ids);
+      sim, two_scenes.common_track_ids);
 
-  const Vec3 base_node_R = Vec3(base_node_coords[0],base_node_coords[1],base_node_coords[2]);
-  const Vec3 base_node_t = Vec3(base_node_coords[3],base_node_coords[4],base_node_coords[5]);
-
-  printBaseNodeCoords(Translation_gt, base_node_R, base_node_t, Rotation_gt, scaling_factor, scaling_factor_gt);
+  printBaseNodeCoords(sim_gt, sim);
 
   // test if the bundle adjustment did a good job on evaluating the transformation
-  EXPECT_NEAR(scaling_factor_gt, scaling_factor, 1e-2);
-  const double modulo_rotation = fmod(base_node_R.norm(), M_PI);
-  EXPECT_NEAR(modulo_rotation, Rotation_gt.norm(), 1e-2);
-  Vec3 inverse_Rotation_gt = -Rotation_gt;
-  Vec3 inverse_translation_gt = -Translation_gt;
-  EXPECT_MATRIX_NEAR(rescaleAngleAxis(base_node_R), rescaleAngleAxis(inverse_Rotation_gt), 1e-2);
-  EXPECT_MATRIX_NEAR(base_node_t, inverse_translation_gt, 1e-2);
+  EXPECT_NEAR(sim_gt.scale_, sim.scale_, 1e-2);
+  EXPECT_MATRIX_NEAR(sim_gt.pose_.center(), sim.pose_.center(), 1e-2);
+  EXPECT_MATRIX_NEAR(sim_gt.pose_.rotation(), sim.pose_.rotation(), 1e-2);
 }
 
 TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationWorks)
@@ -112,33 +90,22 @@ TEST(SceneAligner, fullyCalibratedSceneWithLandmarksAndPoses_SubmapRegistrationW
   TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(3);
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
   Landmarks & destination_landmarks = destination_sfm_data.structure;
-  const double scaling_factor_gt = two_scenes.scaling_factor_;
-  const Vec3 Rotation_gt = two_scenes.Rotation;
-  const Vec3 Translation_gt = two_scenes.Translation;
-
-  std::vector<double> second_base_node_pose(6, 0.0);
-  double scaling_factor(1.0);
+  const Similarity3 sim_gt = two_scenes.sim;
+  Similarity3 sim;
 
   std::unique_ptr<SceneAligner> smap_aligner =
       std::unique_ptr<SceneAligner>(new SceneAligner);
 
   smap_aligner->computeTransformAndCommonLandmarks(
       destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
-      second_base_node_pose, scaling_factor, two_scenes.common_track_ids);
+      sim, two_scenes.common_track_ids);
 
-  const Vec3 base_node_R = Vec3(second_base_node_pose[0],second_base_node_pose[1],second_base_node_pose[2]);
-  const Vec3 base_node_t = Vec3(second_base_node_pose[3],second_base_node_pose[4],second_base_node_pose[5]);
-
-  printBaseNodeCoords(Translation_gt, base_node_R, base_node_t, Rotation_gt, scaling_factor, scaling_factor_gt);
+  printBaseNodeCoords(sim_gt, sim);
 
   // test if the bundle adjustment did a good job on evaluating the transformation
-  Vec3 inverse_Rotation_gt = -Rotation_gt;
-  Vec3 inverse_translation_gt = -Translation_gt;
-  const double modulo_rotation = fmod(base_node_R.norm(), M_PI);
-  EXPECT_NEAR(modulo_rotation, Rotation_gt.norm(), 1e-2);
-  EXPECT_MATRIX_NEAR(base_node_t, inverse_translation_gt, 1e-3);
-  EXPECT_MATRIX_NEAR(rescaleAngleAxis(base_node_R), rescaleAngleAxis(inverse_Rotation_gt), 1e-3);
-  EXPECT_NEAR(scaling_factor_gt, scaling_factor, 1e-3);
+  EXPECT_NEAR(sim_gt.scale_, sim.scale_, 1e-2);
+  EXPECT_MATRIX_NEAR(sim_gt.pose_.center(), sim.pose_.center(), 1e-2);
+  EXPECT_MATRIX_NEAR(sim_gt.pose_.rotation(), sim.pose_.rotation(), 1e-2);
 }
 
 TEST(SceneAligner, twoScenesWithNoCommonTracks_returnFalse)
@@ -146,11 +113,11 @@ TEST(SceneAligner, twoScenesWithNoCommonTracks_returnFalse)
   TwoScenesConfig two_scenes = createTwoScenesWithTransformationAndNoise(10);
 
   // remove common tracks from each scene
-  for (std::vector<size_t>::iterator track_id = two_scenes.common_track_ids.begin(); !two_scenes.common_track_ids.empty();)
+  for (auto & track_id : two_scenes.common_track_ids)
   {
-    two_scenes.sfm_data_A.structure.erase(*track_id);
-    two_scenes.sfm_data_B.structure.erase(*track_id);
-    track_id = two_scenes.common_track_ids.erase(track_id);
+    two_scenes.sfm_data_A.structure.erase(track_id);
+    two_scenes.sfm_data_B.structure.erase(track_id);
+    two_scenes.common_track_ids.erase(track_id);
   }
 
   std::unique_ptr<SceneAligner> smap_aligner =
@@ -158,12 +125,11 @@ TEST(SceneAligner, twoScenesWithNoCommonTracks_returnFalse)
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
   Landmarks & destination_landmarks = destination_sfm_data.structure;
-  std::vector<double> second_base_node_pose(6, 0.0);
-  double scaling_factor(1.0);
+  Similarity3 sim;
 
   EXPECT_FALSE(smap_aligner->computeTransformAndCommonLandmarks(
       destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
-      second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
+      sim, two_scenes.common_track_ids));
 }
 
 TEST(SceneAligner, twoScenesWithNoCommonRECONSTRUCTEDTracks_returnFalse)
@@ -182,21 +148,18 @@ TEST(SceneAligner, twoScenesWithNoCommonRECONSTRUCTEDTracks_returnFalse)
 
   SfM_Data destination_sfm_data = initializeDestinationSfMData(two_scenes);
   Landmarks & destination_landmarks = destination_sfm_data.structure;
-  std::vector<double> second_base_node_pose(6, 0.0);
-  double scaling_factor(1.0);
+  Similarity3 sim;
 
   EXPECT_FALSE(smap_aligner->computeTransformAndCommonLandmarks(
       destination_landmarks, two_scenes.sfm_data_A, two_scenes.sfm_data_B,
-      second_base_node_pose, scaling_factor, two_scenes.common_track_ids));
+      sim, two_scenes.common_track_ids));
 }
 
 // checks that distances are conserved (up to a scale) when
 // transforming a sfm data scene
-TEST(transformSfMDataScene, genericScene_transformationLeavesDistancesConserved)
+TEST(transformSfMDataSceneInto, genericScene_transformationLeavesDistancesConserved)
 {
-  const openMVG::Mat3 rotation = randomRotationMatrix();
-  const openMVG::Vec3 translation = randomVector();
-  const double scaling_factor = randomPositiveDouble();
+  const Similarity3 sim = randomSimilarity();
 
   const openMVG::IndexT n_poses(20), n_landmarks(1000);
   const openMVG::sfm::SfM_Data original_sfm_data = generate_random_poses_and_landmarks_in_scene(n_poses, n_landmarks);
@@ -204,13 +167,12 @@ TEST(transformSfMDataScene, genericScene_transformationLeavesDistancesConserved)
 
   const openMVG::Mat distances_before = computeDistancesBetweenPosesAndLandmarks(original_sfm_data);
 
-  openMVG::sfm::transformSfMDataScene(destination_sfm_data, original_sfm_data,
-      rotation, translation, scaling_factor);
+  openMVG::sfm::transformSfMDataSceneInto(destination_sfm_data, original_sfm_data, sim);
 
   openMVG::Mat distances_after = computeDistancesBetweenPosesAndLandmarks(destination_sfm_data);
 
-  std::cout << scaling_factor << std::endl;
-  distances_after *= scaling_factor;
+  std::cout << sim.scale_ << std::endl;
+  distances_after *= sim.scale_;
   EXPECT_MATRIX_NEAR(distances_before, distances_after, 1e-7);
 }
 

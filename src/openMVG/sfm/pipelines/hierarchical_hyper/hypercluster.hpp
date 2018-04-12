@@ -14,6 +14,7 @@
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_threshold_checker.hpp"
+#include "openMVG/sfm/pipelines/hierarchical_hyper/submap_io.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 /*

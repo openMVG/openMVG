@@ -14,6 +14,8 @@
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
+#include "openMVG/geometry/Similarity3.hpp"
+
 namespace ceres {
   class Problem;
 }
@@ -37,7 +39,7 @@ class SceneAligner;
 bool MergeScenesUsingCommonTracks(SfM_Data & destination_sfm_data,
     const SfM_Data & sfm_data_first, // first submap scene
     const SfM_Data & sfm_data_second, // second submap scene
-    const std::vector<size_t> & common_track_ids, // which tracks id are commonly reconstructed in both submaps
+    const std::set<IndexT> &common_track_ids, // which tracks id are commonly reconstructed in both submaps
     SceneAligner *smap_aligner);
 
 /**
@@ -51,12 +53,12 @@ class SceneAligner
 public:
 
   bool computeTransformAndCommonLandmarks
-  (Landmarks &destination_landmarks,
+  (
+    Landmarks &destination_landmarks,
     const SfM_Data & sfm_data_first, // first submap scene
     const SfM_Data & sfm_data_second, // second submap scene
-    std::vector<double> & second_base_node_pose, // second base node pose with respect to the first base node (what we're looking for)
-    double & scaling_factor, // scaling factor to complete the transformation
-    const std::vector<size_t> & common_track_ids // which tracks id are commonly reconstructed in both submaps
+    geometry::Similarity3 &sim, // similarity transformation between two scenes
+    const std::set<IndexT> & common_track_ids // which tracks id are commonly reconstructed in both submaps
   );
 
   explicit SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options = Bundle_Adjustment_Ceres::BA_Ceres_options());
@@ -64,13 +66,17 @@ public:
 protected:
   Bundle_Adjustment_Ceres::BA_Ceres_options ceres_options_;
 
+  virtual bool checkScenesAreAlignable(
+      const SfM_Data & sfm_data_first,
+      const SfM_Data & sfm_data_second,
+      const std::set<IndexT> & common_track_ids);
+
   virtual void configureProblem(ceres::Problem & problem,
     Landmarks &destination_landmarks,
     const SfM_Data &sfm_data_first,
     const SfM_Data & sfm_data_second,
-    std::vector<double> & second_base_node_pose,
-    double & scaling_factor,
-    const std::vector<size_t> & common_track_ids
+    std::vector<double> &second_base_node_pose, double &scaling_factor,
+    const std::set<IndexT> & common_track_ids
     );
 };
 
@@ -85,11 +91,9 @@ protected:
  * @note both poses and landmarks are transformed, note that they will be overwritten
  * into the destination scene !
  */
-void transformSfMDataScene(SfM_Data & destination_sfm_data,
+void transformSfMDataSceneInto(SfM_Data & destination_sfm_data,
     const SfM_Data & original_sfm_data,
-    const Mat3 & rotation,
-    const Vec3 & translation,
-    const double scaling_factor);
+    const geometry::Similarity3 &sim);
 
 } // namespace sfm
 } // namespace openMVG
