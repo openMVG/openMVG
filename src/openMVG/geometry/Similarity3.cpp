@@ -37,7 +37,7 @@ Pose3 Similarity3::operator () ( const Pose3 & pose ) const
 
 Similarity3 Similarity3::inverse() const
 {
-  return Similarity3(Pose3(pose_.rotation(),-pose_.rotation()*pose_.center()*scale_), 1.0 / scale_);
+  return Similarity3(Pose3(pose_.rotation().transpose(),-pose_.rotation()*pose_.center()*scale_), 1.0 / scale_);
 }
 
 } // namespace geometry
