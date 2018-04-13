@@ -239,16 +239,16 @@ else (BUILD_SHARED_LIBS)
   target_link_libraries(ceres ${CERES_LIBRARY_DEPENDENCIES})
 endif (BUILD_SHARED_LIBS)
 
-install(TARGETS ceres
-        EXPORT  CeresExport
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX})
-INSTALL(TARGETS ceres
-        EXPORT  openMVG-targets
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX})
+#install(TARGETS ceres
+#        EXPORT  CeresExport
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib${LIB_SUFFIX}
+#        ARCHIVE DESTINATION lib${LIB_SUFFIX})
+#INSTALL(TARGETS ceres
+#        EXPORT  openMVG-targets
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib${LIB_SUFFIX}
+#        ARCHIVE DESTINATION lib${LIB_SUFFIX})
 
 if (BUILD_TESTING AND GFLAGS)
   add_library(gtest gmock_gtest_all.cc gmock_main.cc)
