@@ -94,20 +94,7 @@ add_library(tiff STATIC ${lib_srcs} ${lib_headers})
 target_link_libraries(tiff PUBLIC zlib)
 SET_PROPERTY(TARGET tiff PROPERTY FOLDER OpenMVG/3rdParty)
 
-if(TIFF_INCLUDE_INSTALL_DIR)
-  set(INCLUDE_INSTALL_DIR ${TIFF_INCLUDE_INSTALL_DIR})
-else()
-  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/tiff")
-endif()
-
 target_include_directories(zlib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
 )
-
-install(FILES
-  ${lib_headers}
-  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
-)
-INSTALL(TARGETS tiff DESTINATION lib EXPORT openMVG-targets)
