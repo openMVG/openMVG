@@ -27,8 +27,8 @@ add_subdirectory(stlplus3)
 # Add graph library
 if(DEFINED OpenMVG_USE_INTERNAL_LEMON)
   add_subdirectory(lemon)
-  set_property(TARGET lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
-  set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+  set_property(TARGET openMVG_lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+  #set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 endif()
 
 ##

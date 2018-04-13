@@ -360,7 +360,7 @@ if (NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   set(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
     ${PROJECT_BINARY_DIR}/third_party/lemon)
-  set(LEMON_LIBRARY lemon)
+  set(LEMON_LIBRARY openMVG_lemon)
 endif()
 
 # ==============================================================================
