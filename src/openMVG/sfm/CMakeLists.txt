@@ -28,7 +28,7 @@ target_link_libraries(openMVG_sfm
 )
 
 target_link_libraries(openMVG_sfm
-  PRIVATE
+  LINK_PRIVATE
     ${CERES_LIBRARIES}
     openMVG_graph
     openMVG_image

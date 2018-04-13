@@ -27,7 +27,7 @@ target_include_directories(openMVG_features
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )
-target_link_libraries(openMVG_features PRIVATE fast stlplus)
+target_link_libraries(openMVG_features LINK_PRIVATE fast stlplus)
 if (MSVC)
   target_compile_options(openMVG_features PUBLIC "/bigobj")
 endif ()
