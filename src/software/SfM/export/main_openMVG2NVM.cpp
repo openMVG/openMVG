@@ -12,6 +12,7 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_colorization.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
@@ -204,13 +205,24 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   const Landmarks & landmarks = sfm_data.GetLandmarks();
   const size_t featureCount = landmarks.size();
   file << featureCount << std::endl;
+
+  std::vector<Vec3> vec_3dPoints, vec_tracksColor;
+  if (!ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor)) {
+    return false;
+  }
+  int point_index = 0;
   C_Progress_display my_progress_bar( featureCount, std::cout, "\n- EXPORT LANDMARKS DATA -\n" );
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin();
         iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar )
   {
     const Vec3 exportPoint = iterLandmarks->second.X;
     file << exportPoint.x() << " " << exportPoint.y() << " " << exportPoint.z() << " ";
-    file << 250 << " " << 100 << " " << 150 << " ";  // Write arbitrary RGB color
+
+    file 
+      << static_cast<int>(vec_tracksColor.at(point_index)(0)) << " " 
+      << static_cast<int>(vec_tracksColor.at(point_index)(1)) << " " 
+      << static_cast<int>(vec_tracksColor.at(point_index)(2)) << " ";
+    ++point_index;
 
     // Tally set of feature observations
     const Observations & obs = iterLandmarks->second.obs;

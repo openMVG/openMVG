@@ -55,7 +55,7 @@ solve_translations_problem_l2_chordal
 *             N-Uplets: N-view estimates => i.e. 3 view estimations means a triplet of relative motion
 
 * @param[out] translations found global camera translations
-* @param[in] d_l1_loss_threshold optionnal threshold for SoftL1 loss (-1: no loss function)
+* @param[in] d_l1_loss_threshold optional threshold for SoftL1 loss (-1: no loss function)
 * @return True if the registration can be solved
 */
 bool

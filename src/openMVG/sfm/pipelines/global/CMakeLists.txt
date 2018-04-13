@@ -31,4 +31,3 @@ set_target_properties(openMVG_pipeline_global PROPERTIES SOVERSION ${OPENMVG_VER
 install(TARGETS openMVG_pipeline_global DESTINATION lib EXPORT openMVG-targets)
 UNIT_TEST(openMVG global_SfM
   "openMVG_multiview_test_data;openMVG_features;openMVG_multiview;openMVG_pipeline_global;openMVG_system;stlplus")
-

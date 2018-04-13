@@ -1,3 +1,2 @@
 
-UNIT_TEST(openMVG tracks "")
-
+UNIT_TEST(openMVG tracks "openMVG_testing")

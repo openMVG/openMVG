@@ -51,9 +51,35 @@ struct FivePointSolver {
   static void Solve(const Mat3X &x1, const Mat3X &x2, std::vector<Mat3> *E);
 };
 
+/**
+ * three-point algorithm to solve the orthographic Essential matrix from 3 points
+ * correspondences. It solves the relative pose problem.
+ * Input point must be normalized one.
+ */
+struct ThreePointSolver {
+    enum { MINIMUM_SAMPLES = 3 };
+    enum { MAX_MODELS = 2 };
+    static void Solve(const Mat &x1, const Mat &x2, std::vector<Mat3> *E);
+};
+
+/**
+ * Specialized Error functor for Ortho Essential
+ * x et y must be normalized
+ */
+struct OrthographicSymmetricEpipolarDistanceError {
+    static double Error(const Mat3 &E, const Vec2 &x, const Vec2 &y)
+    {
+      return std::abs( E(2,2)
+                       + x(0) * E(0,2)
+                       + x(1) * E(1,2)
+                       + y(0) * E(2,0)
+                       + y(1) * E(2,1) );
+    }
+};
+
 //-- Generic Solver for the 5pt Essential Matrix Estimation.
 //-- Need a new Class that inherit of two_view::kernel::kernel.
-//    Error must be overwrite in order to compute F from E and K's.
+//    Error must be overwritten in order to compute F from E and K's.
 //-- Fitting must normalize image values to camera values.
 template<typename SolverArg,
   typename ErrorArg,
@@ -68,8 +94,8 @@ public:
     const Mat2X &x2,
     const Mat3 &K1,
     const Mat3 &K2
-   ):
-    two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1,x2),
+  ):
+    two_view::kernel::Kernel<SolverArg,ErrorArg, ModelArg>(x1, x2),
     K1_(K1),
     K2_(K2),
     bearing_x1_(K1_.inverse() * x1.colwise().homogeneous()),
@@ -110,10 +136,48 @@ protected:
   Mat3X bearing_x1_, bearing_x2_;
 };
 
+//-- Generic Solver for the Orthographic Essential Matrix Estimation.
+//-- Need a new Class that inherit of two_view::kernel::kernel.
+//    Error must be overwriten
+template<typename SolverArg,
+        typename ErrorArg,
+        typename ModelArg = Mat3>
+class EssentialOrthoKernel :
+        public EssentialKernel<SolverArg,ErrorArg, ModelArg>
+{
+public:
+  EssentialOrthoKernel
+  (
+    const Mat &x1,
+    const Mat &x2,
+    const Mat3 &K1,
+    const Mat3 &K2
+  ):
+  EssentialKernel<SolverArg,ErrorArg, ModelArg>(x1, x2, K1, K2)
+  {}
+
+  double Error
+  (
+    size_t sample,
+    const ModelArg &model
+  )
+  const
+  {
+    return ErrorArg::Error(model,
+                           x1_normalized_.col(sample),
+                           x2_normalized_.col(sample));
+  }
+protected:
+  Mat x1_normalized_, x2_normalized_; // Normalized points
+};
+
 //-- Solver kernel for the 5pt Essential Matrix Estimation
 using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
   fundamental::kernel::SampsonError, Mat3>;
 
+//-- Solver kernel for the 3pt Orthographic Essential Matrix Estimation
+using ThreePointKernel = essential::kernel::EssentialOrthoKernel<ThreePointSolver,
+        essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
 
 }  // namespace kernel
 }  // namespace essential

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
-#include "Eigen/Dense"
+
 #include "openMVG/matching/cascade_hasher.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/matching_filters.hpp"
@@ -36,7 +36,6 @@ namespace impl
 template <typename ScalarT>
 void Match
 (
-  const sfm::SfM_Data & sfm_data,
   const sfm::Regions_Provider & regions_provider,
   const Pair_Set & pairs,
   float fDistRatio,
@@ -228,7 +227,6 @@ void Match
 
 void Cascade_Hashing_Matcher_Regions::Match
 (
-  const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
   PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
@@ -247,7 +245,6 @@ void Cascade_Hashing_Matcher_Regions::Match
   if (regions_provider->Type_id() == typeid(unsigned char).name())
   {
     impl::Match<unsigned char>(
-      sfm_data,
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,
@@ -258,7 +255,6 @@ void Cascade_Hashing_Matcher_Regions::Match
   if (regions_provider->Type_id() == typeid(float).name())
   {
     impl::Match<float>(
-      sfm_data,
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,

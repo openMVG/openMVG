@@ -19,18 +19,22 @@ namespace matching_image_collection {
 using namespace openMVG::matching;
 using namespace openMVG::features;
 
-Matcher_Regions::Matcher_Regions(
-  float distRatio, EMatcherType eMatcherType)
-  :Matcher(), f_dist_ratio_(distRatio), eMatcherType_(eMatcherType)
+Matcher_Regions::Matcher_Regions
+(
+  float distRatio, EMatcherType eMatcherType
+):
+  Matcher(),
+  f_dist_ratio_(distRatio),
+  eMatcherType_(eMatcherType)
 {
 }
 
 void Matcher_Regions::Match(
-  const sfm::SfM_Data & sfm_data,
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
   PairWiseMatchesContainer & map_PutativesMatches,
-  C_Progress * my_progress_bar)const
+  C_Progress * my_progress_bar
+) const
 {
   if (!my_progress_bar)
     my_progress_bar = &C_Progress::dummy();
@@ -45,18 +49,18 @@ void Matcher_Regions::Match(
   // Sort pairs according the first index to minimize the MatcherT build operations
   using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
   Map_vectorT map_Pairs;
-  for (const auto & pair_idx : pairs)
+  for (const auto & pair_it : pairs)
   {
-    map_Pairs[pair_idx.first].push_back(pair_idx.second);
+    map_Pairs[pair_it.first].push_back(pair_it.second);
   }
 
   // Perform matching between all the pairs
-  for (const auto & pairs : map_Pairs)
+  for (const auto & pairs_it : map_Pairs)
   {
     if (my_progress_bar->hasBeenCanceled())
       continue;
-    const IndexT I = pairs.first;
-    const auto & indexToCompare = pairs.second;
+    const IndexT I = pairs_it.first;
+    const auto & indexToCompare = pairs_it.second;
 
     const std::shared_ptr<features::Regions> regionsI = regions_provider->get(I);
     if (regionsI->RegionCount() == 0)
@@ -66,12 +70,15 @@ void Matcher_Regions::Match(
     }
 
     // Initialize the matching interface
-    matching::Matcher_Regions_Database matcher(eMatcherType_, *regionsI.get());
+    const std::unique_ptr<RegionsMatcher> matcher =
+      RegionMatcherFactory(eMatcherType_, *regionsI.get());
+    if (!matcher)
+      continue;
 
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic) if (b_multithreaded_pair_search)
 #endif
-    for (int j = 0; j < (int)indexToCompare.size(); ++j)
+    for (int j = 0; j < static_cast<int>(indexToCompare.size()); ++j)
     {
       const IndexT J = indexToCompare[j];
 
@@ -84,7 +91,7 @@ void Matcher_Regions::Match(
       }
 
       IndMatches vec_putatives_matches;
-      matcher.Match(f_dist_ratio_, *regionsJ.get(), vec_putatives_matches);
+      matcher->MatchDistanceRatio(f_dist_ratio_, *regionsJ.get(), vec_putatives_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical

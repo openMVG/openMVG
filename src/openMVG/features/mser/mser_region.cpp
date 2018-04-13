@@ -248,7 +248,7 @@ namespace openMVG
         // Ensure the region could be qualified as stable
         const bool stable =
           // Hierarchy MSER criterion
-          ( ( ref == nullptr ) || m_variation <= ref->m_variation ) && // Top level region or less variation than its parent
+          ( ( !ref ) || m_variation <= ref->m_variation ) && // Top level region or less variation than its parent
           // Basic MSER criterion
           ( ( m_variation <= maxVariation ) && ( m_area >= minimumArea ) && ( m_area <= maximumArea ) );
 

@@ -9,7 +9,7 @@ target_link_libraries(openMVG_main_SfM_Localization
   openMVG_features
   openMVG_matching_image_collection
   openMVG_sfm
-  easyexif
+  openMVG_exif
   vlsift
   )
 
