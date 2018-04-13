@@ -80,6 +80,7 @@ endif (WIN32)
 # Set shared or static mode
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
