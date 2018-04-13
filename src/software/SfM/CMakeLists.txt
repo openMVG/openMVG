@@ -10,7 +10,7 @@ target_link_libraries(openMVG_main_SfMInit_ImageListing
     openMVG_features
     openMVG_sfm
     openMVG_exif
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 #convert a v0.6 lists.txt file to the new sfm_data.X format
@@ -20,7 +20,7 @@ target_link_libraries(openMVG_main_ConvertList
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
@@ -43,7 +43,7 @@ target_link_libraries(openMVG_main_ComputeFeatures
     openMVG_features
     openMVG_multiview
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
     vlsift
 )
 
@@ -54,7 +54,7 @@ target_link_libraries(openMVG_main_ListMatchingPairs
     openMVG_multiview
     openMVG_sfm
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
@@ -66,7 +66,7 @@ target_link_libraries(openMVG_main_ComputeMatches
     openMVG_multiview
     openMVG_sfm
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
@@ -94,7 +94,7 @@ target_link_libraries(openMVG_main_IncrementalSfM
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
@@ -104,7 +104,7 @@ target_link_libraries(openMVG_main_GlobalSfM
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
@@ -113,7 +113,7 @@ target_link_libraries(openMVG_main_ConvertSfM_DataFormat
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
@@ -122,7 +122,7 @@ target_link_libraries(openMVG_main_FrustumFiltering
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ComputeStructureFromKnownPoses main_ComputeStructureFromKnownPoses.cpp)
@@ -131,7 +131,7 @@ target_link_libraries(openMVG_main_ComputeStructureFromKnownPoses
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
@@ -141,7 +141,7 @@ target_link_libraries(openMVG_main_ComputeSfM_DataColor
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_PointsFiltering main_PointsFiltering.cpp)
@@ -149,7 +149,7 @@ target_link_libraries(openMVG_main_PointsFiltering
   PRIVATE
     openMVG_system
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 target_include_directories(openMVG_main_PointsFiltering PRIVATE ${EIGEN_INCLUDE_DIRS})
 
@@ -160,7 +160,7 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
@@ -188,7 +188,7 @@ target_link_libraries(openMVG_main_SplitMatchFileIntoMatchFiles
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
@@ -207,7 +207,7 @@ if(OpenMVG_USE_OPENCV)
     openMVG_features
     openMVG_multiview
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
     vlsift
     ${OpenCV_LIBS})
   target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
@@ -232,7 +232,7 @@ target_link_libraries(openMVG_main_evalQuality
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 #installation rules

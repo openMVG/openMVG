@@ -27,7 +27,7 @@ target_include_directories(openMVG_features
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )
-target_link_libraries(openMVG_features LINK_PRIVATE fast stlplus)
+target_link_libraries(openMVG_features LINK_PRIVATE openMVG_fast ${STLPLUS_LIBRARY})
 if (MSVC)
   target_compile_options(openMVG_features PUBLIC "/bigobj")
 endif ()
@@ -36,7 +36,7 @@ install(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
 set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 
 UNIT_TEST(openMVG features "openMVG_features")
-UNIT_TEST(openMVG image_describer "openMVG_features;stlplus")
+UNIT_TEST(openMVG image_describer "openMVG_features;${STLPLUS_LIBRARY}")
 
 add_subdirectory(akaze)
 add_subdirectory(mser)

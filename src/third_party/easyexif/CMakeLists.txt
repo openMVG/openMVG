@@ -1,6 +1,6 @@
-PROJECT (easyexif CXX)
+project (openMVG_easyexif CXX)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+add_library(openMVG_easyexif STATIC exif.h exif.cpp)
+set_property(TARGET openMVG_easyexif PROPERTY FOLDER OpenMVG/3rdParty)
 
-ADD_LIBRARY (easyexif STATIC exif.h exif.cpp)
-SET_PROPERTY(TARGET easyexif PROPERTY FOLDER OpenMVG/3rdParty)
+install(TARGETS openMVG_easyexif DESTINATION lib EXPORT openMVG-targets)

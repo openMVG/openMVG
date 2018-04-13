@@ -8,7 +8,7 @@ target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera openMVG_multi
 target_include_directories(openMVG_camera_test
   INTERFACE $<BUILD_INTERFACE:${CEREAL_INCLUDE_DIRS}>)
 
-UNIT_TEST(openMVG Camera_IO "openMVG_camera_test;stlplus")
+UNIT_TEST(openMVG Camera_IO "openMVG_camera_test;${STLPLUS_LIBRARY}")
 
 UNIT_TEST(openMVG Camera_Pinhole "openMVG_camera_test")
 

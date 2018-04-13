@@ -63,11 +63,17 @@ set(libpng_sources
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
 endif(MSVC)
-add_library(png STATIC ${libpng_sources})
-target_link_libraries(png PUBLIC zlib ${M_LIBRARY})
-set_property(TARGET png PROPERTY FOLDER OpenMVG/3rdParty)
+add_library(openMVG_png STATIC ${libpng_sources})
+target_link_libraries(openMVG_png PUBLIC openMVG_zlib ${M_LIBRARY})
+set_property(TARGET openMVG_png PROPERTY FOLDER OpenMVG/3rdParty)
 
-target_include_directories(png PUBLIC
+target_include_directories(openMVG_png PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/config/>
+)
+
+install(
+  TARGETS openMVG_png
+  DESTINATION lib
+  EXPORT openMVG-targets
 )

@@ -23,10 +23,16 @@ if(WIN32)
   add_definitions( -DJPEGSTATIC -D_CRT_SECURE_NO_WARNINGS)
 endif(WIN32)
 
-add_library (jpeg STATIC ${SRC} ${HEADERS})
-set_property(TARGET jpeg PROPERTY FOLDER OpenMVG/3rdParty)
+add_library (openMVG_jpeg STATIC ${SRC} ${HEADERS})
+set_property(TARGET openMVG_jpeg PROPERTY FOLDER OpenMVG/3rdParty)
 
-target_include_directories(jpeg PUBLIC
+target_include_directories(openMVG_jpeg PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/config>
+)
+
+install(
+  TARGETS openMVG_jpeg
+  DESTINATION lib
+  EXPORT openMVG-targets
 )

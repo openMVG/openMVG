@@ -267,7 +267,7 @@ if (NOT Ceres_FOUND)
     ${PROJECT_BINARY_DIR}/third_party/ceres-solver/config)
     FILE(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ceres-solver/VERSION" CERES_CONFIG)
     STRING(REGEX REPLACE "version ([0-9.]+).*" "\\1" CERES_VERSION ${CERES_CONFIG})
-  set(CERES_LIBRARIES ceres)
+  set(CERES_LIBRARIES openMVG_ceres)
 endif()
 
 # ==============================================================================
@@ -390,42 +390,6 @@ add_subdirectory(testing)
 # ==============================================================================
 # The openMVG library itself
 add_subdirectory(openMVG)
-
-# ==============================================================================
-# openMVG libraries
-# ==============================================================================
-set(OpenMVG_LIBRARIES
-  openMVG_camera
-  openMVG_exif
-  openMVG_features
-  openMVG_geodesy
-  openMVG_geometry
-  openMVG_graph
-  openMVG_image
-  openMVG_kvld
-  openMVG_lInftyComputerVision
-  openMVG_matching
-  openMVG_matching_image_collection
-  openMVG_multiview
-  openMVG_sfm
-  openMVG_system
-)
-
-foreach(omvglib ${OpenMVG_LIBRARIES})
-  get_property(target_type TARGET ${omvglib} PROPERTY TYPE)
-  if (target_type STREQUAL STATIC_LIBRARY)
-    set_property(TARGET ${omvglib} PROPERTY FOLDER OpenMVG/OpenMVG)
-    set_property(TARGET ${omvglib} APPEND PROPERTY
-      INTERFACE_COMPILE_DEFINITIONS ${OpenMVG_DEFINITIONS})
-    string(REPLACE " " ";" REPLACED_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-    target_compile_options(${omvglib} INTERFACE ${REPLACED_CMAKE_CXX_FLAGS})
-
-    check_cxx_compiler_flag("-std=c++11" COMPILER_HAS_CXX11_FLAG)
-    if (COMPILER_HAS_CXX11_FLAG)
-      target_compile_options(${omvglib} INTERFACE "-std=c++11")
-    endif(COMPILER_HAS_CXX11_FLAG)
-  endif()
-endforeach()
 
 # openMVG tutorial examples
 if (OpenMVG_BUILD_EXAMPLES)

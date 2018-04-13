@@ -16,7 +16,7 @@ target_link_libraries(openMVG_main_openMVG2PMVS
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export a SfM openMVG scene to openMVS format
@@ -27,7 +27,7 @@ target_link_libraries(openMVG_main_openMVG2openMVS
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export a SfM openMVG scene to CMPMVS format
@@ -38,7 +38,7 @@ target_link_libraries(openMVG_main_openMVG2CMPMVS
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 
@@ -50,7 +50,7 @@ target_link_libraries(openMVG_main_openMVG2MVE2
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export a SfM openMVG scene to meshlab scene with rasters
@@ -61,7 +61,7 @@ target_link_libraries(openMVG_main_openMVG2MESHLAB
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export a SfM openMVG scene to Agisoft Photoscan
@@ -72,7 +72,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2Agisoft
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
   )
 
 # - Export a SfM openMVG scene to mvs-texturing scene folder
@@ -83,7 +83,7 @@ target_link_libraries(openMVG_main_openMVG2MVSTEXTURING
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export SfM openMVG scene to NVM (N-View Match) file
@@ -93,7 +93,7 @@ target_link_libraries( openMVG_main_openMVG2NVM
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus )
+  ${STLPLUS_LIBRARY} )
 
 # - Export SfM openMVG scene to Colmap format
 add_executable(openMVG_main_openMVG2Colmap main_openMVG2Colmap.cpp)
@@ -102,7 +102,7 @@ target_link_libraries( openMVG_main_openMVG2Colmap
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus )
+  ${STLPLUS_LIBRARY} )
 
 # installation rules
 set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
@@ -135,7 +135,7 @@ target_link_libraries(openMVG_main_exportKeypoints
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 
@@ -146,7 +146,7 @@ target_link_libraries(openMVG_main_exportMatches
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - View tracks per image pair
@@ -156,7 +156,7 @@ target_link_libraries(openMVG_main_exportTracks
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # - Export undistorted images related to a sfm_data file
@@ -167,7 +167,7 @@ target_link_libraries(openMVG_main_ExportUndistortedImages
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # installation rules
@@ -188,7 +188,7 @@ target_link_libraries(openMVG_main_ExportCameraFrustums
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 set_property(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)

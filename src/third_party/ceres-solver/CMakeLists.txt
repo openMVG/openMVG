@@ -295,7 +295,7 @@ if (CXSPARSE)
   set(CXSPARSE_FOUND ON)
   message("-- Found CXSparse in: ${CXSPARSE_INCLUDE_DIRS}, "
       "building with CXSparse.")
-  set(CXSPARSE_LIBRARIES cxsparse)
+  set(CXSPARSE_LIBRARIES openMVG_cxsparse)
 else (CXSPARSE)
   message("-- Building without CXSPARSE.")
   list(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)

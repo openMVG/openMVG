@@ -31,7 +31,7 @@ target_include_directories(openMVG_matching
 )
 target_link_libraries(openMVG_matching
   PRIVATE
-    stlplus
+    ${STLPLUS_LIBRARY}
   PUBLIC
     openMVG_features
     Threads::Threads

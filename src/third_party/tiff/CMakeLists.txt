@@ -90,11 +90,17 @@ if(UNIX AND (CMAKE_COMPILER_IS_GNUCXX OR CV_ICC))
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
-add_library(tiff STATIC ${lib_srcs} ${lib_headers})
-target_link_libraries(tiff PUBLIC zlib)
-SET_PROPERTY(TARGET tiff PROPERTY FOLDER OpenMVG/3rdParty)
+add_library(openMVG_tiff STATIC ${lib_srcs} ${lib_headers})
+target_link_libraries(openMVG_tiff PUBLIC openMVG_zlib)
+set_property(TARGET openMVG_tiff PROPERTY FOLDER OpenMVG/3rdParty)
 
-target_include_directories(zlib PUBLIC
+target_include_directories(openMVG_tiff PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
+
+install(
+  TARGETS openMVG_tiff
+  DESTINATION lib
+  EXPORT openMVG-targets
 )

@@ -24,9 +24,9 @@ add_library(openMVG_multiview
 set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
 install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 target_link_libraries(openMVG_multiview
-  LINK_PUBLIC
+  PUBLIC
     openMVG_numeric
-  LINK_PRIVATE
+  PRIVATE
     openMVG_graph
     ${CERES_LIBRARIES}
 )

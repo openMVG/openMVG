@@ -51,9 +51,6 @@ ENDIF()
 #ENDIF()
 
 ADD_LIBRARY(openMVG_lemon ${LEMON_SOURCES})
-IF(UNIX)
-  SET_TARGET_PROPERTIES(openMVG_lemon PROPERTIES OUTPUT_NAME lemon)
-ENDIF()
 
 target_include_directories(openMVG_lemon PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>

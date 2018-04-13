@@ -34,7 +34,7 @@ target_link_libraries(openMVG_sfm
     openMVG_image
     openMVG_lInftyComputerVision
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 target_include_directories(openMVG_sfm
   PRIVATE
@@ -47,9 +47,9 @@ set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} 
 
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG sfm_data_io "openMVG_sfm;stlplus")
-UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;stlplus")
-UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm;stlplus")
+UNIT_TEST(openMVG sfm_data_io "openMVG_sfm;${STLPLUS_LIBRARY}")
+UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;${STLPLUS_LIBRARY}")
+UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm")
 
