@@ -46,8 +46,7 @@ set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MA
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 
 if (USE_AVX2)
-  set_property(TARGET openMVG_matching APPEND PROPERTY
-    INTERFACE_COMPILE_DEFINITIONS OPENMVG_USE_AVX2)
+  target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX2")
   if (UNIX)
     target_compile_options(openMVG_matching PUBLIC "-mavx2")
   endif (UNIX)

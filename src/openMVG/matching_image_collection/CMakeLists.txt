@@ -27,7 +27,7 @@ target_include_directories(openMVG_matching_image_collection
     $<INSTALL_INTERFACE:include/openMVG>
 )
 set_target_properties(openMVG_matching_image_collection PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
-set_property(TARGET openMVG_matching_image_collection PROPERTY FOLDER OpenMVG)
+set_property(TARGET openMVG_matching_image_collection PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_matching_image_collection DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG Pair_Builder "openMVG_matching_image_collection")

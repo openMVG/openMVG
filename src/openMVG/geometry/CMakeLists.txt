@@ -15,6 +15,7 @@ list(REMOVE_ITEM geometry_files_cpp ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_geometry ${geometry_files_header} ${geometry_files_cpp})
 set_target_properties(openMVG_geometry PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+set_property(TARGET openMVG_geometry PROPERTY FOLDER OpenMVG/OpenMVG)
 
 target_link_libraries(openMVG_geometry
   PUBLIC

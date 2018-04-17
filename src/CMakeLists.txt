@@ -71,12 +71,6 @@ MACRO(register_definitions DEF)
   list(APPEND OpenMVG_DEFINITIONS ${STRIPPED_DEF})
 ENDMACRO()
 
-if (WIN32)
-  register_definitions(-DNOMINMAX)
-  register_definitions(-DVC_EXTRALEAN)
-  register_definitions(-D_USE_MATH_DEFINES)
-endif (WIN32)
-
 # Set shared or static mode
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)

@@ -10,4 +10,4 @@ install(TARGETS openMVG_system DESTINATION lib/ EXPORT openMVG-targets)
 add_library(openMVG_progress_test INTERFACE)
 target_include_directories(openMVG_progress_test INTERFACE ${EIGEN_INCLUDE_DIRS})
 
-UNIT_TEST(openMVG progress "openMVG_system;openMVG_progress_test")
+UNIT_TEST(openMVG progress "openMVG_system;openMVG_progress_test;openMVG_testing")

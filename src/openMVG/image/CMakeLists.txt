@@ -31,7 +31,11 @@ target_include_directories(openMVG_image
     ${PNG_INCLUDE_DIRS}
     ${TIFF_INCLUDE_DIR}
 )
+if (MSVC)
+  target_compile_options(openMVG_image PUBLIC "-DNOMINMAX")
+endif (MSVC)
 set_target_properties(openMVG_image PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+set_property(TARGET openMVG_image PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_image DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG image "openMVG_image")
