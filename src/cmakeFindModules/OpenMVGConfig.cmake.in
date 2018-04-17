@@ -18,13 +18,6 @@
 #
 # OPENMVG_VERSION: Version of OpenMVG found.
 #
-# OPENMVG_INCLUDE_DIRS: Include directories for OpenMVG and the
-#                       dependencies which appear in the OpenMVG public
-#                       API and are thus required to use OpenMVG.
-#
-# OPENMVG_LIBRARIES: Libraries for OpenMVG and all
-#                    dependencies against which OpenMVG was
-#                    compiled.
 
 # Called if we failed to find OpenMVG or any of it's required dependencies,
 # unsets all public (designed to be used externally) variables and reports
@@ -90,7 +83,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # Import exported OpenMVG targets
-set(OPENMVG_LIBRARIES @OpenMVG_LIBRARIES@)
 include(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
 
 # As we use OPENMVG_REPORT_NOT_FOUND() to abort, if we reach this point we have

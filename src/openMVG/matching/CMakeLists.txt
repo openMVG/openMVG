@@ -23,6 +23,7 @@ set_source_files_properties(${matching_files_cpp} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_matching
   ${matching_files_header}
   ${matching_files_cpp})
+target_compile_features(openMVG_matching INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_matching
   PUBLIC
     $<BUILD_INTERFACE:${FLANN_INCLUDE_DIRS}>

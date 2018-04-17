@@ -19,6 +19,7 @@ list(REMOVE_ITEM features_files_sources ${REMOVEFILESUNITTEST})
 
 set_source_files_properties(${features_files_sources} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_features ${features_files_sources} ${features_files_headers})
+target_compile_features(openMVG_features INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_features
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>

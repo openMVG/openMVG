@@ -15,6 +15,7 @@ file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 list(REMOVE_ITEM image_files_cpp ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_image ${image_files_header} ${image_files_cpp})
+target_compile_features(openMVG_image INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_image
   PUBLIC
     openMVG_numeric

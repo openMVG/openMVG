@@ -21,6 +21,7 @@ list(REMOVE_ITEM multiview_files_cpp ${MULTIVIEWTESTDATA})
 add_library(openMVG_multiview
   ${multiview_files_header}
   ${multiview_files_cpp})
+target_compile_features(openMVG_multiview INTERFACE ${CXX11_FEATURES})
 set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 target_link_libraries(openMVG_multiview

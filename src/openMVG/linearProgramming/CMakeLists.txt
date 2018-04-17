@@ -5,6 +5,7 @@ add_library(openMVG_linearProgramming
   linearProgrammingOSI_X.cpp
   linearProgrammingOSI_X.hpp
   linearProgramming.hpp)
+target_compile_features(openMVG_linearProgramming INTERFACE ${CXX11_FEATURES})
 
 set_property(TARGET openMVG_linearProgramming PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_linearProgramming DESTINATION lib EXPORT openMVG-targets)

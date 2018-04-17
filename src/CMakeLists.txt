@@ -543,11 +543,6 @@ install(EXPORT openMVG-targets
   DESTINATION share/openMVG/cmake
 )
 
-#Adapt build include paths to install path
-set(OpenMVG_INCLUDE_DIRS
-  "${OpenMVG_INCLUDE_DIRS}"
-  "${CMAKE_INSTALL_PREFIX}/include;${CMAKE_INSTALL_PREFIX}/include/openMVG_dependencies")
-
 
 # Build OpenMVG_CFLAGS variable for export
 set(OpenMVG_CFLAGS "")

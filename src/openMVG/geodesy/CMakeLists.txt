@@ -1,5 +1,6 @@
 
 add_library(openMVG_geodesy INTERFACE)
+target_compile_features(openMVG_geodesy INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_geodesy
   INTERFACE
     openMVG_numeric

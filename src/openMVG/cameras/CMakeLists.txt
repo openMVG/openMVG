@@ -1,5 +1,6 @@
 
 add_library(openMVG_camera INTERFACE)
+target_compile_features(openMVG_camera INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_camera INTERFACE openMVG_numeric openMVG_geometry)
 install(TARGETS openMVG_camera DESTINATION lib EXPORT openMVG-targets)
 

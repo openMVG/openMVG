@@ -17,7 +17,7 @@ file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.hpp)
 list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
-
+target_compile_features(openMVG_sfm INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_sfm
   PUBLIC
     openMVG_geometry

@@ -15,6 +15,7 @@ list(REMOVE_ITEM numeric_files_cpp ${REMOVEFILESUNITTEST})
 add_library(openMVG_numeric
   ${numeric_files_header}
   ${numeric_files_cpp})
+target_compile_features(openMVG_numeric INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_numeric
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>

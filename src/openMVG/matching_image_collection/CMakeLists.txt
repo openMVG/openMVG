@@ -17,6 +17,8 @@ list(REMOVE_ITEM matching_collection_images_files_cpp ${REMOVEFILESUNITTEST})
 add_library(openMVG_matching_image_collection
   ${matching_collection_images_files_header}
   ${matching_collection_images_files_cpp})
+target_compile_features(openMVG_matching_image_collection INTERFACE ${CXX11_FEATURES})
+
 target_link_libraries(openMVG_matching_image_collection
   PUBLIC
     openMVG_matching
