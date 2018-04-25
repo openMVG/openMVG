@@ -388,6 +388,9 @@ bool Bundle_Adjustment_Ceres::Adjust
         // Build the residual block corresponding to the track observation:
         const View * view = sfm_data.views.at(obs_it.first).get();
 
+        if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+          continue;
+
         // Each Residual block takes a point and a camera as input and outputs a 2
         // dimensional residual. Internally, the cost function stores the observed
         // image location and compares the reprojection against the observation.
