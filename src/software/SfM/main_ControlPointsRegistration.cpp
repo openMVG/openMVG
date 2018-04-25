@@ -94,6 +94,13 @@ int main(int argc, char **argv)
     const Landmark & landmark = control_point_it.second;
     //Triangulate the observations:
     const Observations & obs = landmark.obs;
+
+    if (obs.empty()) // Error if this control point has no observation (never seen in any of the images)
+    {
+      std::cout << "Control point has no observations, ignoring control point" << std::endl;
+      continue;
+    }
+
     std::vector<Vec3> bearing;
     std::vector<Mat34> poses;
     bearing.reserve(obs.size());
@@ -158,10 +165,17 @@ int main(int argc, char **argv)
     // data conversion to appropriate container
     Mat x1(3, vec_control_points.size()),
       x2(3, vec_control_points.size());
-    for (size_t i = 0; i < vec_control_points.size(); ++i)
+
+    size_t i = 0;
+    for (const auto & control_point_it : sfm_data.control_points)
     {
-      x1.col(i) = vec_triangulated[i];
-      x2.col(i) = vec_control_points[i];
+      const IndexT CPIndex = control_point_it.first;
+      if (vec_triangulated.find(CPIndex) != vec_triangulated.end())
+      {
+        x1.col(i) = vec_triangulated[CPIndex];
+        x2.col(i) = vec_control_points[CPIndex];
+        i++;
+      }
     }
 
     std::cout
