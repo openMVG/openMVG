@@ -6,22 +6,39 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/cameras/Camera_Spherical.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
+
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/sample.hpp"
-#include "./panorama_helper.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
-#include <string>
+#include <fstream>
 #include <iostream>
 #include <iterator>
-#include <fstream>
+#include <string>
 #include <vector>
 
 using namespace std;
 using namespace svg;
+
+/// Compute a rectilinear camera focal from a given angular desired FoV
+double focalFromPinholeHeight
+(
+  int h,
+  double thetaMax = openMVG::D2R(60) // Camera FoV
+)
+{
+  float f = 1.f;
+  while ( thetaMax < atan2( h / (2 * f) , 1))
+  {
+    ++f;
+  }
+  return f;
+}
 
 // Convert spherical panorama to rectilinear images
 int main(int argc, char **argv)
@@ -105,63 +122,58 @@ int main(int argc, char **argv)
   //   -- Save resulting images to disk
   //-----------------
 
-  using CGeomFunctor = CsphericalMapping;
 
-  //-- Generate N cameras along the X axis
-  std::vector<openMVG::PinholeCamera_R> vec_cam;
+  //-- Simulate a camera with many rotations along the Y axis
+  const int pinhole_width = image_resolution, pinhole_height = image_resolution;
+  const double focal = focalFromPinholeHeight(pinhole_height, openMVG::D2R(120.0/2.0));
+  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera(
+    //w, h, focal, ppx, ppy
+    pinhole_width, pinhole_height, focal, pinhole_width/2., pinhole_height/2.);
 
-  const double twoPi = M_PI * 2.0;
-  const double alpha = twoPi / static_cast<double>(nb_split);
-
-  const int wIma = image_resolution, hIma = image_resolution;
-  const double focal = openMVG::focalFromPinholeHeight(hIma, openMVG::D2R(60));
-  double angle = 0.0;
-  for (int i = 0; i < nb_split; ++i, angle += alpha)
+  const double alpha = (M_PI * 2.0) / static_cast<double>(nb_split); // 360 / split_count
+  std::vector<Mat3> camera_rotations;
+  for (int i = 0; i < nb_split; ++i)
   {
-    vec_cam.emplace_back(focal, wIma, hIma, RotationAroundY(angle));
+    camera_rotations.emplace_back(RotationAroundY(alpha * i));
   }
 
   if (cmd.used('D')) // Demo mode:
   {
-    const int wPano = 4096, hPano = wPano / 2;
+    // Create a spherical camera:
+    const int pano_width = 4096, pano_height = pano_width / 2;
+    const openMVG::cameras::Intrinsic_Spherical sphere_camera(pano_width, pano_height);
 
-    svgDrawer svgStream(wPano, hPano);
-    svgStream.drawLine(0,0,wPano,hPano, svgStyle());
-    svgStream.drawLine(wPano,0, 0, hPano, svgStyle());
+    svgDrawer svgStream(pano_width, pano_height);
+    svgStream.drawLine(0, 0, pano_width, pano_height, svgStyle());
+    svgStream.drawLine(pano_width, 0, 0, pano_height, svgStyle());
 
     //--> For each cam, reproject the image borders onto the panoramic image
 
-    for (const openMVG::PinholeCamera_R & cam_it : vec_cam)
+    for (const Mat3 & cam_rotation : camera_rotations)
     {
-      //draw the shot border with the givenStep:
+      // Draw the shot border with the givenStep:
       const int step = 10;
-      Vec3 ray;
+      // Store the location of the pinhole bearing vector projection in the spherical image
+      Vec2 sphere_proj;
 
       // Vertical rectilinear image border:
       for (double j = 0; j <= image_resolution; j += image_resolution/(double)step)
       {
-        Vec2 pt(0.,j);
-        ray = cam_it.getRay(pt(0), pt(1));
-        Vec2 x = CGeomFunctor::Get2DPoint( ray, wPano, hPano);
-        svgStream.drawCircle(x(0), x(1), 4, svgStyle().fill("green"));
+        // Project the pinhole bearing vector to the sphere
+        sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(0., j)));
+        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("green"));
 
-        pt[0] = image_resolution;
-        ray = cam_it.getRay(pt(0), pt(1));
-        x = CGeomFunctor::Get2DPoint( ray, wPano, hPano);
-        svgStream.drawCircle(x(0), x(1), 4, svgStyle().fill("green"));
+        sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(image_resolution, j)));
+        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("green"));
       }
       // Horizontal rectilinear image border:
       for (double j = 0; j <= image_resolution; j += image_resolution/(double)step)
       {
-        Vec2 pt(j,0.);
-        ray = cam_it.getRay(pt(0), pt(1));
-        Vec2 x = CGeomFunctor::Get2DPoint( ray, wPano, hPano);
-        svgStream.drawCircle(x(0), x(1), 4, svgStyle().fill("yellow"));
+        sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(j, 0.)));
+        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("yellow"));
 
-        pt[1] = image_resolution;
-        ray = cam_it.getRay(pt(0), pt(1));
-        x = CGeomFunctor::Get2DPoint( ray, wPano, hPano);
-        svgStream.drawCircle(x(0), x(1), 4, svgStyle().fill("yellow"));
+        sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(j, image_resolution)));
+        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("yellow"));
       }
     }
 
@@ -171,38 +183,34 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
   }
 
-
   //-- For each input image extract multiple pinhole images
   for (const std::string & filename_it : vec_filenames)
   {
-    image::Image<image::RGBColor> imageSource;
-    if (!ReadImage(stlplus::create_filespec(s_directory_in,filename_it).c_str(), &imageSource))
+    image::Image<image::RGBColor> spherical_image;
+    if (!ReadImage(stlplus::create_filespec(s_directory_in, filename_it).c_str(), &spherical_image))
     {
-      std::cerr << "Cannot read the image" << std::endl;
+      std::cerr << "Cannot read the image: " << stlplus::create_filespec(s_directory_in, filename_it) << std::endl;
       continue;
     }
 
-    const int
-      wPano = imageSource.Width(),
-      hPano = imageSource.Height();
+    const openMVG::cameras::Intrinsic_Spherical sphere_camera(spherical_image.Width(), spherical_image.Height());
 
     const image::Sampler2d<image::SamplerLinear> sampler;
-    image::Image<image::RGBColor> imaOut(wIma, hIma, image::BLACK);
+    image::Image<image::RGBColor> sampled_image(image_resolution, image_resolution, image::BLACK);
 
     size_t index = 0;
-    for (const PinholeCamera_R & cam_it : vec_cam)
+    for (const Mat3 & cam_rotation : camera_rotations)
     {
-      imaOut.fill(image::BLACK);
+      sampled_image.fill(image::BLACK);
 
       // Backward mapping:
       // - Find for each pixels of the pinhole image where it comes from the panoramic image
-      for (int j = 0; j < hIma; ++j)
+      for (int j = 0; j < sampled_image.Height(); ++j)
       {
-        for (int i = 0; i < wIma; ++i)
+        for (int i = 0; i < sampled_image.Width(); ++i)
         {
-          const Vec3 ray = cam_it.getRay(i, j);
-          const Vec2 x = CGeomFunctor::Get2DPoint(ray, wPano, hPano);
-          imaOut(j,i) = sampler(imageSource, x(1), x(0));
+          const Vec2 sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(i, j)));
+          sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
         }
       }
       //-- save image
@@ -212,7 +220,7 @@ int main(int argc, char **argv)
 
       std::ostringstream os;
       os << s_directory_out << "/" << basename << "_" << index << ".jpg";
-      WriteImage(os.str().c_str(), imaOut);
+      WriteImage(os.str().c_str(), sampled_image);
 
       ++index;
     }
