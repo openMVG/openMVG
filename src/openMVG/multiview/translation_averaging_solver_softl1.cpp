@@ -213,7 +213,9 @@ bool solve_translations_problem_softl1
   options.logging_type = ceres::SILENT;
 #ifdef OPENMVG_USE_OPENMP
   options.num_threads = omp_get_max_threads();
+#if CERES_VERSION_MAJOR < 2
   options.num_linear_solver_threads = omp_get_max_threads();
+#endif
 #endif // OPENMVG_USE_OPENMP
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);

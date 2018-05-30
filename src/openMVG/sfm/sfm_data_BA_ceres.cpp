@@ -465,7 +465,9 @@ bool Bundle_Adjustment_Ceres::Adjust
   ceres_config_options.minimizer_progress_to_stdout = ceres_options_.bVerbose_;
   ceres_config_options.logging_type = ceres::SILENT;
   ceres_config_options.num_threads = ceres_options_.nb_threads_;
+#if CERES_VERSION_MAJOR < 2
   ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
+#endif
   ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
 
   // Solve BA

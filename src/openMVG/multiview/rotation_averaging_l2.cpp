@@ -298,7 +298,9 @@ bool L2RotationAveraging_Refine
   }
 #ifdef OPENMVG_USE_OPENMP
   solverOptions.num_threads = omp_get_max_threads();
+#if CERES_VERSION_MAJOR < 2
   solverOptions.num_linear_solver_threads = omp_get_max_threads();
+#endif
 #endif // OPENMVG_USE_OPENMP
 
   ceres::Solver::Summary summary;
