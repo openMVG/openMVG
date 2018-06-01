@@ -228,34 +228,39 @@ ENDMACRO(UNIT_TEST)
 # ==============================================================================
 # cereal
 # ==============================================================================
-# - internal by default,
-# - external if CEREAL_INCLUDE_DIR_HINTS is defined
+# - external by default
+# - internal if cereal not found
 # ==============================================================================
-if (NOT DEFINED CEREAL_INCLUDE_DIR_HINTS)
+find_package(cereal QUIET CONFIG)
+if (NOT cereal_FOUND)
   set(CEREAL_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include)
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
 else()
-  set(CEREAL_INCLUDE_DIRS ${CEREAL_INCLUDE_DIR_HINTS})
+  get_target_property(CEREAL_INCLUDE_DIRS cereal INTERFACE_INCLUDE_DIRECTORIES)
 endif()
 
 # ==============================================================================
 # Eigen
 # ==============================================================================
-# - internal by default,
+# - external by default
 # - external if EIGEN_INCLUDE_DIR_HINTS is defined
+# - internal if Eigen not found
 # ==============================================================================
-if (NOT DEFINED EIGEN_INCLUDE_DIR_HINTS)
+find_package(eigen3 QUIET)
+if (NOT eigen3_FOUND)
   set(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
   set(OpenMVG_USE_INTERNAL_EIGEN ON)
+  find_package(Eigen QUIET)
+else()
+  set(EIGEN_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endif()
-find_package(Eigen QUIET)
 
 # ==============================================================================
 # Ceres
 # ==============================================================================
-# - internal by default (ceres-solver+cxsparse+miniglog),
-# - external if CERES_DIR_HINTS and find_package return a valid Ceres setup
+# - external by default if CERES_DIR_HINTS or find_package found a valid Ceres
+# - internal if ceres not found (ceres-solver+cxsparse+miniglog)
 # ==============================================================================
 find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 if (NOT Ceres_FOUND)
