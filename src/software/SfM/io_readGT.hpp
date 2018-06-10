@@ -141,7 +141,8 @@ bool readGt(
   {
     std::cout << std::endl << "Read rotation and translation estimates" << std::endl;
     // Load GT
-    std::map<std::string, Mat3, Eigen::aligned_allocator<Mat3>> map_R_gt;
+    std::map<std::string, Mat3, std::less<std::string>,
+        Eigen::aligned_allocator<std::pair<const std::string, Mat3>>> map_R_gt;
     //Try to read .suffix camera (parse camera names)
     std::vector<std::string> vec_camfilenames =
       stlplus::folder_wildcard(sGTPath, "*." + suffix, false, true);
