@@ -10,10 +10,43 @@ Required tools:
 - Git
 - C/C++ compiler (GCC, Visual Studio or Clang)
 
-
 Optional tools:
 
 - QT version >= v5.4
+
+As OpenMVG uses some C++11 features, you must have a C++11 ready compiler:
+
+- Visual Studio >= 2015 (recommended)
+- GCC >= 4.8.1
+- Clang >= 3.3
+
+Note:
+
+- CMAKE OpenMVG variables you can configure:
+
+  - OpenMVG_BUILD_TESTS (ON/OFF(default))
+      - Build OpenMVG unit tests
+  - OpenMVG_BUILD_EXAMPLES (ON/OFF(default))
+      - Build OpenMVG example applications.
+  - OpenMVG_BUILD_SOFTWARES (ON(default)/OFF)
+      - Build OpenMVG applications.
+
+- General information for OpenMVG SfM pipelines:
+
+  - OpenMVG can export graphs as Graphviz .dot files and render them as SVG files. If you want this graph visualization feature, please install Graphviz.
+
+Checking out the project and build it
+--------------------------------------
+
+- [Getting the project](#checkout)
+- [Compiling on Linux](#linux)
+- [Compiling on Windows](#windows)
+- [Compiling on MacOS](#macos)
+- [Compiling using VCPKG](#vcpkg)
+
+Getting the project
+--------------------
+<a name="checkout"></a>
 
 Getting the sources (and the submodules):
 ```shell
@@ -27,39 +60,11 @@ $ git submodule init
 $ git submodule update
 ```
 
-As OpenMVG uses some C++11 features, you must have a C++11 ready compiler:
-
-- Visual Studio >= 2015 (recommended)
-- GCC >= 4.8.1
-- Clang >= 3.3
-
-General information for OpenMVG CMake options:
-
-- OpenMVG_BUILD_TESTS (ON/OFF(default))
-    - Build OpenMVG unit tests
-- OpenMVG_BUILD_EXAMPLES (ON/OFF(default))
-    - Build OpenMVG example applications.
-
-Note: options does not affect binaries under 'software'
-
-
-General information for OpenMVG SfM pipelines:
-
-- OpenMVG can export graphs as Graphviz .dot files and render them as SVG files. If you want this graph visualization feature, please install Graphviz.
-
-Compilation
-----------------
-
-- [Linux](#linux)
-- [Windows](#windows)
-- [MacOS](#macos)
-
-
-Linux compilation
------------------
+Compiling on Linux
+-------------------
 <a name="linux"></a>
 
-Install the required external libraries.
+1. Install the required external libraries.
 ```shell
 $ sudo apt-get install libpng-dev libjpeg-dev libtiff-dev libxxf86vm1 libxxf86vm-dev libxi-dev libxrandr-dev
 ```
@@ -68,53 +73,29 @@ If you want see the view graph svg logs, install Graphviz.
 $ sudo apt-get install graphviz
 ```
 
-Build OpenMVG.
+2. Checkout OpenMVG.
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
-$ cd openMVG
-$ ls
- AUTHORS BUILD  docs  logo  README  src  ...
-$ cd ..
-$ mkdir openMVG_Build
-$ cd openMVG_Build
-```
-If you want to add unit tests and examples to the build, run
-```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON . ../openMVG/src/
-```
-otherwise
-```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
-```
-If you want to have an IDE openable project with Code::Blocks:
-```shell
-$ cmake -G "CodeBlocks - Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
+$ mkdir openMVG_Build && cd openMVG_Build
 ```
 
-Compile the project
+3. Configure and build
 ```shell
-$ make
-```
-or for a multi-core compilation. (Replace NBcore with the number of threads)
-```shell
-$ make -j NBcore
+$ cmake -DCMAKE_BUILD_TYPE=RELEASE ../openMVG/src/
+$ cmake --build . --target install
 ```
 
-Run tests (if requested at CMake step)
+Run tests using make or ctest (if requested in the CMake command line with `-DOpenMVG_BUILD_TESTS=ON`)
 ```shell
 $ make test
+$ ctest --output-on-failure -j
 ```
 
-Have fun with the samples
-```shell
-$ cd openMVG_Samples
-```
-
-Windows compilation
--------------------
+Compiling on Windows
+---------------------
 <a name="windows"></a>
 
-Checkout the project
+1. Checkout the project
 ```shell
 $ git clone --recursive https://github.com/openMVG/openMVG.git
 ```
@@ -127,17 +108,9 @@ $ git clone --recursive https://github.com/openMVG/openMVG.git
 6. Change the target to Release.
 7. Compile the libraries and binaries samples.
 
-Another options is to build with cmake in console. I recommend launching `VS2015 x64 Native Tools Command Prompt` which has build environment already set up.
+Another options is to build with cmake in console. I recommend launching `VS2015/VS2017 x64 Native Tools Command Prompt` which has build environment already set up or to use the [VCPKG](#vcpkg) alternative.
 
-```shell
-git clone --recursive https://github.com/openMVG/openMVG.git
-mkdir openMVG-build
-cd openMVG-build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="c:/openMVG" -G "NMake Makefiles" ../openMVG/src/
-cmake --build . --target install
-```
-
-Mac compilation
+Compiling on Mac
 -------------------
 <a name="macos"></a>
 
@@ -156,14 +129,35 @@ If you want to use Xcode and compile by using the command line, run
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
 $ xcodebuild -configuration Release
 ```
-If you want to add unit tests and examples to the build, run
-```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -G "Xcode" . ../openMVG/src/
-```
-
 otherwise you can use standard makefiles
 ```shell
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
+```
+
+Compiling using VCPKG
+-----------------------
+<a name="vcpkg"></a>
+
+Checking and build VCPKG
+```shell
+$ git clone https://github.com/Microsoft/vcpkg
+$ cd vcpkg
+$ ./bootstrap-vcpkg.sh/bat
+```
+
+Checking OpenMVG 3rd party dependencies by using VCPKG (configure your build triplet if needed see `--triplet`)
+```shell
+$ ./vcpkg install cereal ceres eigen3 libjpeg-turbo libpng tiff  
+```
+Note: If you want to use ceres with a sparse back end, please use one of this choice `ceres[cxsparse]` or `ceres[suitesparse]` or `ceres[eigensparse]`.
+
+Checking out OpenMVG and build it
+```shell
+$ git clone --recursive https://github.com/openMVG/openMVG.git
+$ mkdir openMVG_Build
+$ cd openMVG_Build
+$ cmake ../openMVG/src/ -DCMAKE_TOOLCHAIN_FILE=<VCPK_ROOT>/scripts/buildsystems/vcpkg.cmake
+$ cmake --build .
 ```
 
 Using OpenCV sample
@@ -210,4 +204,3 @@ Specify in CMake where OpenMVG has been installed by using the CMake OpenMVG_DIR
 e.g. `-DOpenMVG_DIR:STRING="YourInstallPath"/share/openMVG/cmake`
 
 A message will be displayed if OpenMVG is found or not at the CMake configure step.
-
