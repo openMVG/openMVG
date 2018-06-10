@@ -183,19 +183,19 @@ bool exportToMVE2Format(
         stlplus::folder_create(sOutViewIteratorDirectory);
 
       Image<RGBColor> image, image_ud, thumbnail;
+      // Undistort and save the image
+      if (!ReadImage(srcImage.c_str(), &image))
+      {
+         std::cerr
+           << "Unable to read the input image as a RGB image:\n"
+           << srcImage << std::endl;
+         bOk = false;
+         continue;
+      }
       Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
       const IntrinsicBase * cam = iterIntrinsic->second.get();
       if (cam->have_disto())
       {
-        // Undistort and save the image
-        if (!ReadImage(srcImage.c_str(), &image))
-        {
-          std::cerr
-            << "Unable to read the input image as a RGB image:\n"
-            << srcImage << std::endl;
-          bOk = false;
-          continue;
-        }
         UndistortImage(image, cam, image_ud, BLACK);
         if (!WriteImage(dstImage.c_str(), image_ud))
         {

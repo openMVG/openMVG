@@ -275,3 +275,4 @@ configure_file(${OPENMVG_TUTORIAL_IN_FILE}
 
 add_subdirectory(clustering)
 add_subdirectory(export)
+add_subdirectory(import)
