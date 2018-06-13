@@ -46,6 +46,9 @@ target_link_libraries(openMVG_main_ComputeFeatures
     ${STLPLUS_LIBRARY}
     vlsift
 )
+if (MSVC)
+  set_target_properties(openMVG_main_ComputeFeatures PROPERTIES COMPILE_FLAGS "/bigobj")
+endif (MSVC)
 
 add_executable(openMVG_main_ListMatchingPairs main_ListMatchingPairs.cpp)
 target_link_libraries(openMVG_main_ListMatchingPairs
