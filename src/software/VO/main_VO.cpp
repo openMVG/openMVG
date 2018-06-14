@@ -16,6 +16,9 @@
 #include "software/VO/Tracker_opencv_klt.hpp"
 #endif
 
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -32,10 +35,15 @@ int main(int argc, char **argv)
   CmdLine cmd;
 
   std::string sImaDirectory = "";
+  std::string sOutFile = "";
   unsigned int uTracker = 0;
+  unsigned int uTrackerPointCount = 1500;
 
   cmd.add( make_option('i', sImaDirectory, "imadir") );
   cmd.add( make_option('t', uTracker, "tracker") );
+  cmd.add( make_option('o', sOutFile, "output_file") );
+  cmd.add( make_option('p', uTrackerPointCount, "point_count") );
+  cmd.add( make_switch('d', "disable_tracking_display") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -43,20 +51,27 @@ int main(int argc, char **argv)
   } catch (const std::string& s) {
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--imadir path] \n"
+    << "[-o|--output_file path] The output tracking saved as a sfm_data file (landmark observations).\n"
     << "[-t|--tracker Used tracking interface] \n"
-    << "\t 0 (default) description based Tracking -> Fast detector + Dipole descriptor\n"
+    << "\t 0: Feature matching based tracking (default); Fast detector + Dipole descriptor, \n"
 #if defined HAVE_OPENCV
-    << "\t 1 image based Tracking -> use OpenCV Pyramidal KLT Tracking\n"
+    << "\t 1: Feature tracking based tracking; Fast + KLT pyramidal tracking. \n"
 #endif
+    << "[-p|--point_count] Number of points to track. (default: " << uTrackerPointCount << ")\n"
+    << "[-d|--disable_tracking_display] Disable tracking display \n"
     << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
 
-   std::cout << " You called : " <<std::endl
+   std::cout << " You called : " << std::endl
             << argv[0] << std::endl
-            << "--imageDirectory " << sImaDirectory << std::endl;
+            << "--imageDirectory " << sImaDirectory << std::endl
+            << "--output_file " << sOutFile << std::endl
+            << "--point_count " << uTrackerPointCount << std::endl
+            << "--tracker " << uTracker << std::endl
+            << "--disable_tracking_display " << static_cast<int>(cmd.used('d')) << std::endl;
 
   if (sImaDirectory.empty() || !stlplus::is_folder(sImaDirectory))
   {
@@ -64,10 +79,18 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  if (sOutFile.empty())
+  {
+    std::cerr << "\nPlease use a valid filename for the output_file option (i.e: <PATH>/sfm_data.bin)." << std::endl;
+    return EXIT_FAILURE;
+  }
+
   if ( !glfwInit() )
   {
     return EXIT_FAILURE;
   }
+
+  const bool disable_tracking_display = cmd.used('d');
 
   //--
 
@@ -124,7 +147,7 @@ int main(int argc, char **argv)
   }
 
   // Initialize the monocular tracking framework
-  VO_Monocular monocular_vo(tracker_ptr.get(), 1500);
+  VO_Monocular monocular_vo(tracker_ptr.get(), uTrackerPointCount);
 
   size_t frameId = 0;
   for (std::vector<std::string>::const_iterator iterFile = vec_image.begin();
@@ -137,9 +160,9 @@ int main(int argc, char **argv)
       {
         // no window created yet, initialize it with the first frame
 
-        const double aspect_ratio = currentImage.Width()/(double)currentImage.Height();
-        window.Init(640, 640/aspect_ratio, "VisualOdometry--TrackingViewer");
-        glGenTextures(1,&text2D);             //allocate the memory for texture
+        const double aspect_ratio = currentImage.Width() / (double)currentImage.Height();
+        window.Init(640, 640 / aspect_ratio, "VisualOdometry--TrackingViewer");
+        glGenTextures(1, &text2D);             //allocate the memory for texture
         glBindTexture(GL_TEXTURE_2D, text2D); //Binding the texture
         glEnable(GL_TEXTURE_2D);              //Enable texture
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -178,64 +201,73 @@ int main(int argc, char **argv)
       glColor3f(0.f, 1.f, 0.f);
       glLineWidth(2.f);
 
-      for (size_t idx = 0; idx < monocular_vo.landmark_.size(); ++idx)
+      if (!disable_tracking_display)
       {
-        if (std::find(monocular_vo.trackedLandmarkIds_.begin(),
-                      monocular_vo.trackedLandmarkIds_.end(), idx)
-            == monocular_vo.trackedLandmarkIds_.end())
-          continue;
-
-        const Landmark & landmark = monocular_vo.landmark_[idx];
-        if (landmark.obs_.back().frameId_ == frameId && landmark.obs_.size() > 1 )
+        for (size_t idx = 0; idx < monocular_vo.landmark_.size(); ++idx)
         {
-          const std::deque<Measurement> & obs = landmark.obs_;
+          if (std::find(monocular_vo.trackedLandmarkIds_.cbegin(),
+                        monocular_vo.trackedLandmarkIds_.cend(), idx)
+              == monocular_vo.trackedLandmarkIds_.cend())
+            continue;
 
-          std::deque<Measurement>::const_reverse_iterator
-            iter = obs.rbegin(),
-            iterEnd = obs.rend();
-
-          int limit = 10;
-          glBegin(GL_LINE_STRIP);
-          glColor3f(0.f, 1.f, 0.f);
-          for (; iter != iterEnd && limit >=0; ++iter, --limit)
-          {
-            const Vec2f & p0 = iter->pos_;
-            glVertex2f(p0(0), p0(1));
-          }
-          glEnd();
-
-          // draw the current tracked point
-          {
-            std::deque<Measurement>::const_reverse_iterator iter = obs.rbegin();
-            glPointSize(4.0f);
-            glBegin(GL_POINTS);
-            glColor3f(1.f, 1.f, 0.f); // Yellow
-            const Vec2f & p0 = iter->pos_;
-            glVertex2f(p0(0), p0(1));
-            glEnd();
-          }
-        }
-        else // Draw the new initialized point
-        {
-          glPointSize(10.0f);
-          if ( landmark.obs_.size() == 1 )
+          const Landmark & landmark = monocular_vo.landmark_[idx];
+          if (landmark.obs_.back().frameId_ == frameId && landmark.obs_.size() > 1 )
           {
             const std::deque<Measurement> & obs = landmark.obs_;
-            glBegin(GL_POINTS);
-            glColor3f(0.f, 0.f, 1.f); // Blue
-            std::deque<Measurement>::const_iterator iter = obs.begin();
-            const Vec2f & p0 = iter->pos_;
-            glVertex2f(p0(0), p0(1));
+
+            std::deque<Measurement>::const_reverse_iterator
+              iter = obs.rbegin(),
+              iterEnd = obs.rend();
+
+            int limit = 10;
+            glBegin(GL_LINE_STRIP);
+            glColor3f(0.f, 1.f, 0.f);
+            for (; iter != iterEnd && limit >=0; ++iter, --limit)
+            {
+              const Vec2f & p0 = iter->pos_;
+              glVertex2f(p0(0), p0(1));
+            }
             glEnd();
+
+            // draw the current tracked point
+            {
+              std::deque<Measurement>::const_reverse_iterator iter = obs.rbegin();
+              glPointSize(4.0f);
+              glBegin(GL_POINTS);
+              glColor3f(1.f, 1.f, 0.f); // Yellow
+              const Vec2f & p0 = iter->pos_;
+              glVertex2f(p0(0), p0(1));
+              glEnd();
+            }
+          }
+          else // Draw the new initialized point
+          {
+            glPointSize(10.0f);
+            if ( landmark.obs_.size() == 1 )
+            {
+              const std::deque<Measurement> & obs = landmark.obs_;
+              glBegin(GL_POINTS);
+              glColor3f(0.f, 0.f, 1.f); // Blue
+              std::deque<Measurement>::const_iterator iter = obs.begin();
+              const Vec2f & p0 = iter->pos_;
+              glVertex2f(p0(0), p0(1));
+              glEnd();
+            }
           }
         }
-
       }
+
       glFlush();
 
       window.Swap(); // Swap openGL buffer
     }
   }
+
+  openMVG::sfm::SfM_Data sfm_data;
+  ConvertVOLandmarkToSfMDataLandmark(monocular_vo.landmark_, sfm_data.structure);
+  std::cout << "Found SFM #landmarks: " << sfm_data.structure.size() << std::endl;
+  if (!Save(sfm_data, sOutFile, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL)))
+    return EXIT_FAILURE;
 
   glfwTerminate();
   return 0;

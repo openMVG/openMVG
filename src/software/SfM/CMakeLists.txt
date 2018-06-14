@@ -10,6 +10,7 @@ target_link_libraries(openMVG_main_SfMInit_ImageListing
     openMVG_features
     openMVG_sfm
     openMVG_exif
+    stlplus
 )
 
 #convert a v0.6 lists.txt file to the new sfm_data.X format
@@ -19,6 +20,7 @@ target_link_libraries(openMVG_main_ConvertList
     openMVG_system
     openMVG_features
     openMVG_sfm
+    stlplus
 )
 
 # Installation rules
@@ -67,6 +69,16 @@ target_link_libraries(openMVG_main_ComputeMatches
     stlplus
 )
 
+add_executable(openMVG_main_MatchesToTracks main_MatchesToTracks.cpp)
+target_link_libraries(openMVG_main_MatchesToTracks
+  PRIVATE
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_sfm
+    stlplus
+)
+
 # Installation rules
 set_property(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
@@ -74,6 +86,8 @@ set_property(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/softw
 install(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
 set_property(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
+set_property(TARGET openMVG_main_MatchesToTracks PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_MatchesToTracks DESTINATION bin/)
 
 ###
 # SfM Pipelines
@@ -273,3 +287,4 @@ configure_file(${OPENMVG_TUTORIAL_IN_FILE}
 
 add_subdirectory(clustering)
 add_subdirectory(export)
+add_subdirectory(import)
