@@ -21,7 +21,12 @@ namespace sfm{
 : ceres_options_(options)
 {}
 
-void Bundle_Adjustment_Fixed_Points::configureProblem(ceres::Problem & problem, SfM_Data& sfm_data, const std::set<IndexT>& fixed_tracks_ids, Hash_Map<IndexT, std::vector<double> > & map_intrinsics, Hash_Map<IndexT, std::vector<double> > & map_poses)
+void Bundle_Adjustment_Fixed_Points::configureProblem(
+    ceres::Problem & problem, SfM_Data &sfm_data,
+    const std::set<IndexT>& fixed_tracks_ids,
+    Hash_Map<IndexT, std::vector<double> > &map_intrinsics,
+    Hash_Map<IndexT, std::vector<double> > &map_poses,
+    const Optimize_Options & options)
 {
   for (Poses::const_iterator itPose = sfm_data.poses.begin(); itPose != sfm_data.poses.end(); ++itPose)
   {
@@ -42,17 +47,31 @@ void Bundle_Adjustment_Fixed_Points::configureProblem(ceres::Problem & problem, 
 
   // Setup Intrinsics data
   // TODO : do we want to modify the intrinsics during this phase ???
-  for (Intrinsics::const_iterator itIntrinsic = sfm_data.intrinsics.begin();
-    itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+  for (const auto & intrinsic_it : sfm_data.intrinsics)
   {
-    const IndexT indexCam = itIntrinsic->first;
+    const IndexT indexCam = intrinsic_it.first;
 
-    if (isValid(itIntrinsic->second->getType()))
+    if (isValid(intrinsic_it.second->getType()))
     {
-      map_intrinsics[indexCam] = itIntrinsic->second->getParams();
-      double * parameter_block = &map_intrinsics[indexCam][0];
+      map_intrinsics[indexCam] = intrinsic_it.second->getParams();
+      double * parameter_block = &map_intrinsics.at(indexCam)[0];
       problem.AddParameterBlock(parameter_block, map_intrinsics[indexCam].size());
-      problem.SetParameterBlockConstant(parameter_block);
+      if (options.intrinsics_opt == cameras::Intrinsic_Parameter_Type::NONE)
+      {
+        problem.SetParameterBlockConstant(parameter_block);
+      }
+      else
+      {
+        const std::vector<int> vec_constant_intrinsic =
+          intrinsic_it.second->subsetParameterization(options.intrinsics_opt);
+        if (!vec_constant_intrinsic.empty())
+        {
+          ceres::SubsetParameterization *subset_parameterization =
+            new ceres::SubsetParameterization(
+              map_intrinsics.at(indexCam).size(), vec_constant_intrinsic);
+          problem.SetParameterization(parameter_block, subset_parameterization);
+        }
+      }
     }
     else
     {
@@ -99,7 +118,8 @@ void Bundle_Adjustment_Fixed_Points::configureProblem(ceres::Problem & problem, 
 }
 
 bool Bundle_Adjustment_Fixed_Points::Adjust(SfM_Data & sfm_data, // scene to refine
-   const std::set<IndexT> & fixed_tracks_ids)
+   const std::set<IndexT> & fixed_tracks_ids,
+   const Optimize_Options & options)
 {
   //----------
   // Add camera parameters
@@ -115,7 +135,7 @@ bool Bundle_Adjustment_Fixed_Points::Adjust(SfM_Data & sfm_data, // scene to ref
   Hash_Map<IndexT, std::vector<double> > map_intrinsics;
   Hash_Map<IndexT, std::vector<double> > map_poses;
 
-  configureProblem(problem, sfm_data, fixed_tracks_ids, map_intrinsics, map_poses);
+  configureProblem(problem, sfm_data, fixed_tracks_ids, map_intrinsics, map_poses, options);
 
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
@@ -178,13 +198,12 @@ bool Bundle_Adjustment_Fixed_Points::Adjust(SfM_Data & sfm_data, // scene to ref
     }
 
     // Update camera intrinsics with refined data
-    for (Intrinsics::iterator itIntrinsic = sfm_data.intrinsics.begin();
-      itIntrinsic != sfm_data.intrinsics.end(); ++itIntrinsic)
+    for (auto & intrinsic_it : sfm_data.intrinsics)
     {
-      const IndexT indexCam = itIntrinsic->first;
+      const IndexT indexCam = intrinsic_it.first;
 
       const std::vector<double> & vec_params = map_intrinsics[indexCam];
-      itIntrinsic->second.get()->updateFromParams(vec_params);
+      intrinsic_it.second.get()->updateFromParams(vec_params);
     }
     // Structure is already updated directly if needed (no data wrapping)
     return true;

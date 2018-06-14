@@ -24,6 +24,9 @@ std::set<IndexT> Get_Valid_Views
   const SfM_Data & sfm_data
 );
 
+/// List the intrinsic indices that have a valid view associated to them
+std::set<IndexT> Get_Valid_Intrinsics_Ids ( const SfM_Data & sfm_data );
+
 /// Filter a list of pair: Keep only the pairs that are defined by the index list
 template <typename IterablePairs, typename IterableIndex>
 Pair_Set Pair_filter

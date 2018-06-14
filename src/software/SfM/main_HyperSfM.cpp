@@ -31,12 +31,12 @@ std::unique_ptr<SubmapThresholdChecker> getThresholdChecker(const int tracks_thr
 {
   if (tracks_threshold < 0)
   {
-    std::cout << "View threshold chosen: " << view_threshold << std::endl;
+    std::cout << "View threshold chosen : " << view_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapViewThresholdChecker(view_threshold));
   }
   else
   {
-    std::cout << "Tracks threshold chosen: " << tracks_threshold << std::endl;
+    std::cout << "Tracks threshold chosen : " << tracks_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapTracksThresholdChecker(tracks_threshold));
   }
 }
@@ -51,6 +51,7 @@ int main(int argc, char **argv)
   int view_threshold_clustering = -1;
   int tracks_threshold_clustering = -1;
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  std::string sIntrinsic_refinement_options = "ADJUST_ALL";
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -58,6 +59,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('v', view_threshold_clustering, "views_threshold") );
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
+  cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -69,26 +71,49 @@ int main(int argc, char **argv)
     << "[-o|--outdir] path where the output data will be stored\n"
     << "[-v|--views_threshold] clustering threshold in number of views per submap\n"
     << "[-t|--tracks_threshold] clustering threshold in number of tracks per submap\n"
-    << "NOTE: if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority!\n"
+    << "NOTE : if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority !\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole radial 3 + tangential 2\n"
-      << "\t 5: Pinhole fisheye\n";
+      << "\t 5: Pinhole fisheye\n"
+    << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> intrinsic parameters are held as constant\n"
+      << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+      << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+      << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+      << "\t -> NOTE: options can be combined thanks to '|'\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+      <<      "\t\t-> refine the focal length & the principal point position\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+      <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
+      << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+      <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+    << std::endl;
+    std::cerr << s << std::endl;
+    return EXIT_FAILURE;
   }
 
   // verify threshold input
   if (tracks_threshold_clustering < 0 && view_threshold_clustering < 0)
   {
     std::cerr << std::endl
-      << "Could not find any valid input threshold value! Threshold must be positive!" << std::endl
-      << "Views threshold: " << view_threshold_clustering << std::endl
-      << "tracks threshold: " << tracks_threshold_clustering << std::endl
+      << "Could not find any valid input threshold value ! Threshold must be positive !" << std::endl
+      << "Views threshold : " << view_threshold_clustering << std::endl
+      << "tracks threshold : " << tracks_threshold_clustering << std::endl
       << "add a tracks threshold with -t, a view threshold with -v" << std::endl;
     return EXIT_FAILURE;
   }
 
+  const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
+    cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
+  if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
+  {
+    std::cerr << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option" << std::endl;
+    return EXIT_FAILURE;
+  }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
@@ -167,15 +192,15 @@ int main(int argc, char **argv)
   std::unique_ptr<SubmapThresholdChecker> threshold_checker = getThresholdChecker(tracks_threshold_clustering, view_threshold_clustering);
 
   // cluster the scene into submaps
-  std::cout << "...Start Clustering: "<< timer << std::endl;
+  std::cout << "...Start Clustering : "<< timer << std::endl;
   HyperCluster clusterer(sfm_data, map_tracks, std::move(threshold_checker));
   clusterer.recursivePartitioning();
   clusterer.exportTreeGraph(stlplus::create_filespec(sOutDir, "hyperCluster"));
   HsfmSubmaps submaps = clusterer.getSubMaps();
-  std::cout << "Clustering Done: " << timer << std::endl;
+  std::cout << "Clustering Done : " << timer << std::endl;
 
   // reconstruct each leaf submap separately
-  std::cout << "...Start Reconstruction of Leaf Submaps: " << timer << std::endl;
+  std::cout << "...Start Reconstruction of Leaf Submaps : " << timer << std::endl;
   for (auto & smap : submaps)
   {
     if (smap.second.is_parent)
@@ -184,16 +209,17 @@ int main(int argc, char **argv)
     const IndexT & submap_id = smap.first;
     HsfmSubmap & submap = smap.second;
 
-    SubmapSfMReconstructionEngine sfmEngine(submap, map_tracks, sOutDir, stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
+    SubmapSfMReconstructionEngine sfmEngine(
+        submap,
+        map_tracks,
+        sOutDir,
+        stlplus::create_filespec(sOutDir, "Reconstruction_Report_smap_" + std::to_string(submap_id) + ".html"));
 
     // configure feature and matches provider
     sfmEngine.SetFeaturesProvider(feats_provider.get());
     sfmEngine.SetMatchesProvider(matches_provider.get());
 
     // Configure reconstruction parameters
-    std::string sIntrinsic_refinement_options = "NONE";
-    const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
-      cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
     sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
     sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
 
@@ -210,8 +236,8 @@ int main(int argc, char **argv)
   Save(submaps,
       stlplus::create_filespec(sOutDir, "submaps_before_merge", "json"));
 
-  std::cout << "...Start Merging Submaps: " << timer << std::endl;
-  SubmapMerger merger(submaps);
+  std::cout << "...Start Merging Submaps : " << timer << std::endl;
+  SubmapMerger merger(submaps, intrinsic_refinement_options);
   merger.Merge();
   submaps = merger.getSubmaps();
 

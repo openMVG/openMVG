@@ -52,6 +52,7 @@ void addLandmarksToTwoScenes(TwoScenesConfig & two_scenes)
   auto& landmarks_parent = two_scenes.parent_sfm_data.structure;
   auto& landmarks_A      = two_scenes.sfm_data_A.structure;
   auto& landmarks_B      = two_scenes.sfm_data_B.structure;
+
   landmarks_A[0].X = {1,0,0};
   landmarks_A[1].X = {1,1,0};
   landmarks_A[2].X = {-2,0,2};
@@ -163,20 +164,20 @@ inline TwoScenesConfig createTwoScenesWithTransformationAndNoise(const int n_pos
 
   dispatchPosesInChildrenScenes(two_scenes);
 
+  const std::string common_root_path = "/some/path";
+  two_scenes.parent_sfm_data.s_root_path = common_root_path;
+  two_scenes.sfm_data_A.s_root_path = common_root_path;
+  two_scenes.sfm_data_B.s_root_path = common_root_path;
+
   return two_scenes;
 }
 
-inline openMVG::sfm::SfM_Data initializeDestinationSfMData(const TwoScenesConfig & two_scenes)
+inline openMVG::sfm::Landmarks findCommonLandmarks(const openMVG::sfm::SfM_Data & sfm_data_1, const openMVG::sfm::SfM_Data& sfm_data_2)
 {
-  openMVG::sfm::SfM_Data destination_sfm_data;
-  destination_sfm_data.intrinsics = two_scenes.sfm_data_A.intrinsics;
-  for (const auto & intrinsic : two_scenes.sfm_data_B.GetIntrinsics())
-  {
-    if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
-      destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
-  }
-  destination_sfm_data.poses = two_scenes.sfm_data_A.poses;
-  destination_sfm_data.structure = two_scenes.sfm_data_A.structure;
-
-  return destination_sfm_data;
+  openMVG::sfm::Landmarks common_landmarks;
+  std::copy_if(sfm_data_1.structure.cbegin(), sfm_data_1.structure.cend(),
+               std::inserter(common_landmarks, common_landmarks.begin()),
+               [&sfm_data_2](const std::pair<openMVG::IndexT, openMVG::sfm::Landmark>& lmk_pair)
+                {return sfm_data_2.structure.count(lmk_pair.first) > 0;});
+  return common_landmarks;
 }

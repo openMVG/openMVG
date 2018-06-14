@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/scene_aligner.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/scene_aligner_residuals.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_transform.hpp"
 #include "openMVG/types.hpp"
 
 #include "ceres/ceres.h"
@@ -24,28 +25,113 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
+std::shared_ptr<cameras::IntrinsicBase> findBestIntrinsic(const SfM_Data& sfm_data_A, const SfM_Data& sfm_data_B, openMVG::IndexT cam_id)
+{
+  // both alternatives for the intrinsic
+  const auto intrinsicA = sfm_data_A.intrinsics.at(cam_id);
+  const auto intrinsicB = sfm_data_B.intrinsics.at(cam_id);
+
+  // quick escape in case intrinsics are equal
+  // TODO ? here we only check for pointer equality should we do more ?
+  if (intrinsicA == intrinsicB)
+    return std::shared_ptr<cameras::IntrinsicBase>(intrinsicA->clone());
+
+  double RMSE_A(0.0), RMSE_B(0.0);
+  int n_totalResiduals(0);
+  for (const auto & sfm_data : {sfm_data_A, sfm_data_B})
+  {
+    for (const auto & landmark : sfm_data.GetLandmarks())
+    {
+      const Observations & observations = landmark.second.obs;
+      for (const auto & obs: observations)
+      {
+        // we have to do the following check because observations of common landmarks are not pruned out when
+        // clustering a submap in two...which makes it simpler to merge back together
+        const auto & view = sfm_data.GetViews().find(obs.first);
+        if (view == sfm_data.GetViews().end())
+          continue;
+
+        const IndexT & intrinsic_id = sfm_data.GetViews().at(obs.first)->id_intrinsic;
+        if (intrinsic_id != cam_id)
+          continue;
+
+        const IndexT & pose_id = sfm_data.GetViews().at(obs.first)->id_pose;
+        const auto & pose = sfm_data.GetPoses().at(pose_id);
+        const Vec3 X = pose(landmark.second.X);
+        const Vec2 residualA = intrinsicA->residual(X, obs.second.x);
+        const Vec2 residualB = intrinsicB->residual(X, obs.second.x);
+        RMSE_A += residualA(0) * residualA(0);
+        RMSE_A += residualA(1) * residualA(1);
+        RMSE_B += residualB(0) * residualB(0);
+        RMSE_B += residualB(1) * residualB(1);
+        ++n_totalResiduals;
+      }
+    }
+  }
+
+  RMSE_A = std::sqrt((RMSE_A)/(n_totalResiduals));
+  RMSE_B = std::sqrt((RMSE_B)/(n_totalResiduals));
+  std::cout << "RMSE_A : " << RMSE_A << " RMSE_B : "  << RMSE_B << std::endl;
+
+  if (RMSE_A < RMSE_B)
+    return std::shared_ptr<cameras::IntrinsicBase>(intrinsicA->clone());
+  else
+    return std::shared_ptr<cameras::IntrinsicBase>(intrinsicB->clone());
+}
+
+std::set<IndexT> getCommonCameraIds(const SfM_Data& sfm_data_1, const SfM_Data& sfm_data_2)
+{
+  const std::set<IndexT> cam_ids_1 = Get_Valid_Intrinsics_Ids(sfm_data_1);
+  const std::set<IndexT> cam_ids_2 = Get_Valid_Intrinsics_Ids(sfm_data_2);
+
+  std::set<IndexT> common_cam_ids;
+  std::set_intersection(cam_ids_1.cbegin(), cam_ids_1.cend(),
+                        cam_ids_2.cbegin(), cam_ids_2.cend(),
+                        std::inserter(common_cam_ids, common_cam_ids.begin()));
+  return common_cam_ids;
+}
+
+Landmarks getCommonReconstructedLandmarks(const SfM_Data& sfm_data_1, const SfM_Data& sfm_data_2, const std::set<IndexT>& track_ids)
+{
+  Landmarks common_landmarks;
+
+  for (const auto & track_id : track_ids)
+  {
+    if (sfm_data_1.structure.count(track_id) > 0
+        && sfm_data_2.structure.count(track_id) > 0)
+    {
+      // we copy from the first scene because we want the landmarks to be in the same referential
+      Landmark separator = sfm_data_1.structure.at(track_id);
+
+      // we don't want observations in the separator landmarks, we will only be interested
+      // in the position of the landmark. later on observations are added to it via the copySfMDataSceneInto
+      // function
+      separator.obs.clear();
+
+      common_landmarks[track_id] = separator;
+    }
+  }
+
+  return common_landmarks;
+}
+
 bool MergeScenesUsingCommonTracks
 (
   SfM_Data & destination_sfm_data,
-  const SfM_Data & sfm_data_first, // first submap scene
-  const SfM_Data & sfm_data_second, // second submap scene
-  const std::set<IndexT> & common_track_ids,
+  const SfM_Data & sfm_data_fst, // first submap scene
+  const SfM_Data & sfm_data_snd, // second submap scene
+  const std::set<IndexT> & separator_track_ids,
   SceneAligner *smap_aligner
 )
 {
   // 1. Find separator landmarks and transformation between two scenes
   Similarity3 sim;
 
-  Landmarks separator_landmarks;
-  std::copy_if(sfm_data_first.structure.cbegin(), sfm_data_first.structure.cend(),
-               std::inserter(separator_landmarks, separator_landmarks.begin()),
-               [&common_track_ids](const std::pair<IndexT, Landmark>& landmark_pair)
-                  {return common_track_ids.count(landmark_pair.first) > 0;});
+  Landmarks separator_landmarks = getCommonReconstructedLandmarks(sfm_data_fst, sfm_data_snd, separator_track_ids);
 
   const bool alignment_successful =
       smap_aligner->computeTransformAndCommonLandmarks(
-        separator_landmarks, sfm_data_first, sfm_data_second,
-        sim, common_track_ids);
+        separator_landmarks, sfm_data_fst, sfm_data_snd, sim);
 
   // 2. transform second scene and merge it with first scene
   if (alignment_successful)
@@ -54,22 +140,24 @@ bool MergeScenesUsingCommonTracks
     destination_sfm_data.poses.clear();
     destination_sfm_data.structure.clear();
 
-    // initialize destination sfm data
-    destination_sfm_data.intrinsics = sfm_data_first.intrinsics;
-    for (const auto & intrinsic : sfm_data_second.GetIntrinsics())
-    {
-      if (destination_sfm_data.intrinsics.find(intrinsic.first) == destination_sfm_data.intrinsics.end())
-        destination_sfm_data.intrinsics[intrinsic.first] = intrinsic.second;
-    }
-    destination_sfm_data.views = sfm_data_first.views; // TODO : should we really deal with views here ?
-    destination_sfm_data.poses = sfm_data_first.poses;
-    destination_sfm_data.structure = sfm_data_first.structure;
-    // overwrite separators with newly computed data
-    destination_sfm_data.structure.insert(separator_landmarks.cbegin(), separator_landmarks.cend());
+    // destination sfm data is in the same referential as first submap
+    copySfMDataSceneInto(destination_sfm_data, sfm_data_fst, Similarity3());
+    copySfMDataSceneInto(destination_sfm_data, sfm_data_snd, sim);
 
-    // update the landmarks, poses and views from the second
-    // scene transformed into the destination scene.
-    transformSfMDataSceneInto(destination_sfm_data, sfm_data_second, sim);
+    // find best common intrinsics and update those in destination scene
+    const auto common_cam_ids = getCommonCameraIds(sfm_data_fst, sfm_data_snd);
+    for (const auto & cam_id : common_cam_ids)
+    {
+      destination_sfm_data.intrinsics[cam_id] = findBestIntrinsic(sfm_data_fst, sfm_data_snd, cam_id);
+    }
+
+    // update position of separator landmarks
+    for (const auto & lmk : separator_landmarks)
+    {
+      // separator landmarks are in the referential of the first scene and the parent scene
+      destination_sfm_data.structure.at(lmk.first).X = lmk.second.X;
+    }
+
     return true;
   }
   else
@@ -85,13 +173,14 @@ SceneAligner::SceneAligner(Bundle_Adjustment_Ceres::BA_Ceres_options options)
 bool SceneAligner::checkScenesAreAlignable(
     const SfM_Data &sfm_data_first,
     const SfM_Data &sfm_data_second,
-    const std::set<IndexT> &common_track_ids)
+    const Landmarks &common_landmarks)
 {
-  if (common_track_ids.empty())
+  if (common_landmarks.empty())
     return false;
 
-  for (const auto & track_id : common_track_ids)
+  for (const auto & mapped_lmk : common_landmarks)
   {
+    const auto track_id = mapped_lmk.first;
     if (sfm_data_first.structure.count(track_id) == 0
         || sfm_data_second.structure.count(track_id) == 0)
     {
@@ -105,11 +194,10 @@ bool SceneAligner::checkScenesAreAlignable(
 bool SceneAligner::computeTransformAndCommonLandmarks(Landmarks &destination_landmarks,
     const SfM_Data &sfm_data_first,
     const SfM_Data &sfm_data_second,
-    Similarity3& sim,
-    const std::set<IndexT> & common_track_ids)
+    Similarity3& sim)
 {
-  // check precondition for function to run normally
-  if (!checkScenesAreAlignable(sfm_data_first, sfm_data_second, common_track_ids))
+  // check precondition for function to run normally (note : careful, this is a virtual method)
+  if (!checkScenesAreAlignable(sfm_data_first, sfm_data_second, destination_landmarks))
   {
     return false;
   }
@@ -131,8 +219,7 @@ bool SceneAligner::computeTransformAndCommonLandmarks(Landmarks &destination_lan
     sfm_data_first,
     sfm_data_second,
     second_base_node_pose,
-    scaling_factor,
-    common_track_ids
+    scaling_factor
     );
 
   // Configure a BA engine and run it
@@ -197,8 +284,7 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
     const SfM_Data & sfm_data_first,
     const SfM_Data & sfm_data_second,
     std::vector<double> & second_base_node_pose,
-    double & scaling_factor,
-    const std::set<IndexT> & common_track_ids
+    double & scaling_factor
     )
 {
   const Landmarks & landmarks_first = sfm_data_first.structure;
@@ -219,12 +305,13 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
       : nullptr;
 
   // For all landmarks that are common to both submaps, add 3d error / residuals
-  for (const auto & track_id : common_track_ids)
+  for (auto & mapped_separator_landmark : destination_landmarks)
   {
     // measurements of the landmark in each submap
+    const IndexT track_id = mapped_separator_landmark.first;
     const Landmark & first_measurement = landmarks_first.at(track_id);
     const Landmark & second_measurement = landmarks_second.at(track_id);
-    Landmark & separator_landmark = destination_landmarks.at(track_id);
+    Landmark & separator_landmark = mapped_separator_landmark.second;
 
     // Build the residual block corresponding to the landmark:
     ceres::CostFunction * cost_function =
@@ -242,18 +329,7 @@ void SceneAligner::configureProblem(ceres::Problem & problem,
   }
 }
 
-/**
- * @brief takes a SfM_Data scene and transforms it into a destination scene, with a geometric transformation.
- * @note mostly used for merging submaps together
- * @warning landmarks, poses and views from original scene will overwrite conflicting data
- * (i.e. map elements with same keys) in the destination scene ! Use with caution
- * @param destination_sfm_data : the destination scene, can already contain views, landmarks ... etc
- * @param original_sfm_data : the scene to be transformed into the destination scene
- * @param rotation
- * @param translation
- * @param scaling_factor
- */
-void transformSfMDataSceneInto(
+void copySfMDataSceneInto(
     SfM_Data & destination_sfm_data,
     const SfM_Data & original_sfm_data,
     const Similarity3& sim
@@ -264,8 +340,28 @@ void transformSfMDataSceneInto(
 
   destination_sfm_data.views.insert(transformed_sfm_data.views.cbegin(), transformed_sfm_data.views.cend());
   destination_sfm_data.poses.insert(transformed_sfm_data.poses.cbegin(), transformed_sfm_data.poses.cend());
-  destination_sfm_data.structure.insert(transformed_sfm_data.structure.cbegin(), transformed_sfm_data.structure.cend());
   destination_sfm_data.control_points.insert(transformed_sfm_data.control_points.cbegin(), transformed_sfm_data.control_points.cend());
+  destination_sfm_data.s_root_path = original_sfm_data.s_root_path; // TODO : dangerous...should we check and find common directory + modify local view paths ?...
+
+  // for the intrinsics we do a deep copy
+  std::transform(transformed_sfm_data.intrinsics.cbegin(), transformed_sfm_data.intrinsics.cend(),
+                 std::inserter(destination_sfm_data.intrinsics, destination_sfm_data.intrinsics.begin()),
+                 [](const std::pair<IndexT, std::shared_ptr<cameras::IntrinsicBase>>& intrinsic_pair)
+                    {auto deep_copy = std::shared_ptr<cameras::IntrinsicBase>(intrinsic_pair.second->clone());
+                      return std::make_pair(intrinsic_pair.first, deep_copy);});
+
+  // find common landmarks (we want to update observations on those)
+  for (auto & lmk : destination_sfm_data.structure)
+  {
+    const auto lmk_id = lmk.first;
+    const auto new_lmk = transformed_sfm_data.structure.find(lmk_id);
+    if (new_lmk != transformed_sfm_data.structure.end())
+    {
+      lmk.second.obs.insert(new_lmk->second.obs.cbegin(), new_lmk->second.obs.cend());
+    }
+  }
+  // the rest of the landmarks we insert directly
+  destination_sfm_data.structure.insert(transformed_sfm_data.structure.cbegin(), transformed_sfm_data.structure.cend());
 }
 
 } // namespace sfm

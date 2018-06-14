@@ -59,28 +59,38 @@ TEST(HYPERCLUSTER, simple_partitioning_successful)
     const auto & smap = submap.second;
     if (!smap.is_parent)
       continue;
-    const int first_child_id = smap.children_submaps.first;
-    const int second_child_id = smap.children_submaps.second;
+    const auto fst_child_id = smap.children_submaps.first;
+    const auto snd_child_id = smap.children_submaps.second;
 
     // the sum of the views of the children submaps should be equal to their parent's number of views
-    EXPECT_EQ(submaps.at(first_child_id).sfm_data.GetViews().size()
-        + submaps.at(second_child_id).sfm_data.GetViews().size(),
+    EXPECT_EQ(submaps.at(fst_child_id).sfm_data.GetViews().size()
+        + submaps.at(snd_child_id).sfm_data.GetViews().size(),
         smap.sfm_data.GetViews().size());
 
     // the sum of the tracks of the children submaps should be equal to their parent's number of tracks
-    // (we have to subtrackt once the separator tracks otherwise they are counted twice)
-    EXPECT_EQ(submaps.at(first_child_id).track_ids.size()
-        + submaps.at(second_child_id).track_ids.size() - smap.separator.size(),
+    // (we have to subtract once the separator tracks otherwise they are counted twice)
+    EXPECT_EQ(submaps.at(fst_child_id).track_ids.size()
+        + submaps.at(snd_child_id).track_ids.size() - smap.separator.size(),
         smap.track_ids.size());
 
     // check that siblings submaps are made of ALL the tracks from the parent submap
     std::set<openMVG::IndexT> union_siblings_track_ids;
-    std::set_union(submaps.at(first_child_id).track_ids.begin(), submaps.at(first_child_id).track_ids.end(),
-        submaps.at(second_child_id).track_ids.begin(), submaps.at(second_child_id).track_ids.end(), std::inserter(union_siblings_track_ids, union_siblings_track_ids.begin()));
+    std::set_union(submaps.at(fst_child_id).track_ids.begin(), submaps.at(fst_child_id).track_ids.end(),
+        submaps.at(snd_child_id).track_ids.begin(), submaps.at(snd_child_id).track_ids.end(), std::inserter(union_siblings_track_ids, union_siblings_track_ids.begin()));
 
-    const std::set<openMVG::IndexT> & parent_track_ids = smap.track_ids;
+    const auto & parent_track_ids = smap.track_ids;
 
-    CHECK(union_siblings_track_ids == parent_track_ids);
+    EXPECT_TRUE(union_siblings_track_ids == parent_track_ids);
+
+    // check that new intrinsics are actually created for the clustered submaps
+    // this is important because optimizing intrinsics later on in a submap should
+    // not influence intriniscs in other submaps.
+    const auto parent_intrinsics = smap.sfm_data.GetIntrinsics().at(0);
+    const auto fst_intrinsics = submaps.at(fst_child_id).sfm_data.GetIntrinsics().at(0);
+    const auto snd_intrinsics = submaps.at(snd_child_id).sfm_data.GetIntrinsics().at(0);
+    EXPECT_TRUE(fst_intrinsics != snd_intrinsics);
+    EXPECT_TRUE(fst_intrinsics != parent_intrinsics);
+    EXPECT_TRUE(snd_intrinsics != parent_intrinsics);
   }
 }
 
@@ -97,6 +107,8 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
     sfm_data.views[i] = std::make_shared<openMVG::sfm::View>("", id_view, id_intrinsic, id_pose, 2000, 2000);
     all_view_ids.insert(i);
   }
+
+  sfm_data.intrinsics[0] = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>();
 
   // tracks
   for (int i(0); i < n_points; i++)

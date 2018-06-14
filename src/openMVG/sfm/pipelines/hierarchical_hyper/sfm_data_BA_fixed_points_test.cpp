@@ -38,7 +38,11 @@ TEST(Bundle_Adjustment_Fixed_Points, effectiveMinimization)
 
   Bundle_Adjustment_Fixed_Points bundle_adjustment_obj;
 
-  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids);
+  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids,
+        Optimize_Options(
+          cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
+          Extrinsic_Parameter_Type::ADJUST_ALL,
+          Structure_Parameter_Type::ADJUST_ALL));
 
   const double dResidual_after = RMSE(sfm_data);
   EXPECT_TRUE( dResidual_before > dResidual_after);
@@ -61,7 +65,11 @@ TEST(Bundle_Adjustment_Fixed_Points, leavesFixedTracksConstant)
 
   Bundle_Adjustment_Fixed_Points bundle_adjustment_obj;
 
-  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids);
+  bundle_adjustment_obj.Adjust(sfm_data, fixed_tracks_ids,
+      Optimize_Options(
+          cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
+          Extrinsic_Parameter_Type::ADJUST_ALL,
+          Structure_Parameter_Type::ADJUST_ALL));
 
   const Landmarks landmarks_after = sfm_data.GetLandmarks();
 

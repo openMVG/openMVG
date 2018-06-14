@@ -15,9 +15,21 @@
 namespace openMVG {
 namespace sfm {
 
+/**
+ * @brief creates a subset of the input sfm data scene based on the view ids passed as arguments. Prunes out
+ * unused views and intrinsics.
+ * @warning does not do any particular treatment for landmarks/cp...at least for now because traditionally
+ * we use this function when sfm_data is still empty (before any reconstruction)
+ * @param parent_sfm_data : the scene from which to create the subscene
+ * @param view_ids : the ids of the views we want to keep in the subscene
+ * @return
+ */
 SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<IndexT> & view_ids)
 {
   SfM_Data out_sfm_data = parent_sfm_data;
+
+  // NOTE : Views are shared pointers. That is not a problem when we want to work with submaps independently
+  // because views are never modified later on.
   for (sfm::Views::iterator view_it = out_sfm_data.views.begin();
       view_it != out_sfm_data.views.end();)
   {
@@ -29,27 +41,22 @@ SfM_Data create_sub_sfm_data(const SfM_Data & parent_sfm_data, const std::set<In
     ++view_it;
   }
 
-  // remove unused intrinsics
-  for (sfm::Intrinsics::iterator intrinsic_it = out_sfm_data.intrinsics.begin();
-      intrinsic_it != out_sfm_data.intrinsics.end();)
+  // NOTE : Intrinsics are shared pointers. If we want to be able to modify submaps independently, we need
+  // to make deep copies of the intrinsics for each submaps.
+  out_sfm_data.intrinsics.clear();
+
+  for (const auto & view : out_sfm_data.GetViews())
   {
-    const IndexT & id_intrinsic = intrinsic_it->first;
+    const IndexT intrinsic_id = view.second->id_intrinsic;
 
-    bool found_intrinsic = false;
+    if (out_sfm_data.intrinsics.count(intrinsic_id) > 0)
+      continue;
 
-    for (const auto & view : out_sfm_data.views)
-    {
-      if (view.second->id_intrinsic == id_intrinsic)
-      {
-        found_intrinsic = true;
-        break;
-      }
-    }
-    if (!found_intrinsic)
-      intrinsic_it = out_sfm_data.intrinsics.erase(intrinsic_it);
-    else
-      ++intrinsic_it;
+    // make deep copy
+    std::shared_ptr<cameras::IntrinsicBase> copied_intrinsics(parent_sfm_data.intrinsics.at(intrinsic_id)->clone());
+    out_sfm_data.intrinsics[intrinsic_id] = copied_intrinsics;
   }
+
   return out_sfm_data;
 }
 

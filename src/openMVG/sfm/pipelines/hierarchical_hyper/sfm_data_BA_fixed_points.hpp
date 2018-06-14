@@ -42,7 +42,8 @@ class Bundle_Adjustment_Fixed_Points
   bool Adjust
   (
    SfM_Data & sfm_data, // scene to refine
-   const std::set<IndexT> & fixed_tracks_ids
+   const std::set<IndexT> & fixed_tracks_ids,
+   const Optimize_Options & options
   );
 
 protected:
@@ -51,7 +52,8 @@ protected:
       SfM_Data & sfm_data,
       const std::set<IndexT>& fixed_tracks_ids,
       Hash_Map<IndexT, std::vector<double> > & map_intrinsics,
-      Hash_Map<IndexT, std::vector<double> > & map_poses);
+      Hash_Map<IndexT, std::vector<double> > & map_poses,
+      const Optimize_Options & options);
 };
 
 

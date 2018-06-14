@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "submap_merger.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/sfm_data_BA_fixed_points.hpp"
 #include "openMVG/sfm/pipelines/hierarchical_hyper/submap_utilities.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "ceres/types.h"
@@ -16,23 +18,8 @@
 namespace openMVG{
 namespace sfm{
 
-std::set<IndexT> findCommonReconstructedSeparatorTracks(HsfmSubmap& parent_submap, const openMVG::sfm::SfM_Data& sfm_dataA, const openMVG::sfm::SfM_Data& sfm_dataB)
-{
-  std::set<IndexT> common_track_ids;
-  const Landmarks & landmarksA = sfm_dataA.GetLandmarks();
-  const Landmarks & landmarksB = sfm_dataB.GetLandmarks();
-  std::cout << landmarksA.size() << " " << landmarksB.size() << std::endl;
-  std::copy_if(parent_submap.separator.cbegin(), parent_submap.separator.cend(),
-               std::inserter(common_track_ids, common_track_ids.begin()),
-               [&](const IndexT & trackId)
-                {return landmarksA.count(trackId) > 0
-                     && landmarksB.count(trackId) > 0;});
-  std::cout << common_track_ids.size() << " tracks in common" << std::endl;
-  return common_track_ids;
-}
-
-SubmapMerger::SubmapMerger(const HsfmSubmaps & submaps)
-  : submaps_(submaps), scene_aligner_(new SceneAligner)
+SubmapMerger::SubmapMerger(const HsfmSubmaps & submaps, const cameras::Intrinsic_Parameter_Type & intrinsic_refinement_options)
+  : submaps_(submaps), scene_aligner_(new SceneAligner), intrinsic_refinement_options_(intrinsic_refinement_options)
 {}
 
 bool SubmapMerger::Merge(const std::string & debug_out_dir)
@@ -59,7 +46,8 @@ bool SubmapMerger::Merge(const std::string & debug_out_dir)
     // Loop over submaps left to merge
     for (std::set<IndexT>::iterator smap_id = submaps_to_merge.begin(); smap_id != submaps_to_merge.end();)
     {
-      HsfmSubmap & smap = submaps_.at(*smap_id);
+      const HsfmSubmap & smapA = submaps_.at(*smap_id);
+      const openMVG::IndexT parent_id = smapA.parent_id;
 
       const IndexT sister_smap_id = getSiblingSubmapId(submaps_, *smap_id);
 
@@ -69,18 +57,17 @@ bool SubmapMerger::Merge(const std::string & debug_out_dir)
         ++smap_id;
         continue;
       }
-
       std::cout << "Merging submap " << *smap_id << " with submap " << sister_smap_id << std::endl;
 
       // Merge the two submaps together
-      MergeSubmapPair(smap.parent_id, debug_out_dir);
+      MergeSubmapPair(parent_id, debug_out_dir);
 
       // remove indices from the to-merge list !
       submaps_to_merge.erase(sister_smap_id);
       smap_id = submaps_to_merge.erase(smap_id);
 
       // add parent submap to the to-merge list !
-      submaps_to_merge.insert(smap.parent_id);
+      submaps_to_merge.insert(parent_id);
     }
   }
   return true;
@@ -95,25 +82,21 @@ bool SubmapMerger::MergeSubmapPair(const IndexT parent_id, const std::string &de
   const openMVG::sfm::SfM_Data & first_sfm_data = first_submap.sfm_data;
   const openMVG::sfm::SfM_Data & second_sfm_data = second_submap.sfm_data;
 
-  // find all common reconstructed tracks in both submaps
-  // (note that this is a subset of the separator tracks)
-  const auto common_track_ids = findCommonReconstructedSeparatorTracks(parent_submap, first_sfm_data, second_sfm_data);
-
   // --- OPTIMIZATION OF THE BASE NODE POSES + SEPARATOR LANDMARKS POSITIONS ---
   //
-  // We have to find the best transformation between the first and the second
+  // We have to find the best similarity transform between the first and the second
   // submap. This transformation is a classic combination of translation (3 parameters),
   // rotation (3 parameters, ceres uses angle-axis representation), and scaling (1 parameter).
   // Using a 3d Bundle adjustment step, we refine these 7 parameters and find the relative
   // pose+scaling of the second submap with respect to the first one.
   // For this optimization, we use the landmarks that are common to both submaps (a subset of
-  // the separators landmarks, contained in common_track_ids), and minimize the error of the distance
+  // the separators landmarks), and minimize the error of the distance
   // between the separator landmarks and the base node positions.
 
   Bundle_Adjustment_Ceres::BA_Ceres_options options;
   options.linear_solver_type_ = ceres::DENSE_SCHUR;
 
-  if (!MergeScenesUsingCommonTracks(parent_sfm_data, first_sfm_data, second_sfm_data, common_track_ids, scene_aligner_.get()))
+  if (!MergeScenesUsingCommonTracks(parent_sfm_data, first_sfm_data, second_sfm_data, parent_submap.separator, scene_aligner_.get()))
   {
     std::cerr << "Submaps merging failed !" << std::endl;
     return false;
@@ -129,14 +112,41 @@ bool SubmapMerger::MergeSubmapPair(const IndexT parent_id, const std::string &de
   // the submaps due to losing some information while clustering ? (i.e. a few more resections
   // in the parent submap with all the data from the two children submaps).
 
+  std::cout << "\n Optimize newly merged parent submap ! \n";
   // --- ADDITIONAL OPTIMIZATION OF THE NEWLY FILLED PARENT SUBMAP ---
   // This is like a normal bundle adjustment step of the whole parent
   // submap where we keep the position of the separator landmarks as FIXED. (as advised in master thesis [TODO ref])
 
-  std::cout << "\n Optimize newly merged parent submap ! \n";
-  BundleAdjustment_FixedSeparators(parent_id);
+  // note : parameters copied from sequential sfm
+  const double requiredPixelResidualError = 4.0;
+  const size_t outlierNumberThreshold = 50;
+
+  do
+  {
+    BundleAdjustment_FixedSeparators(parent_id);
+  }
+  while (badTrackRejector(requiredPixelResidualError, outlierNumberThreshold, parent_sfm_data));
+  eraseUnstablePosesAndObservations(parent_sfm_data);
 
   return true;
+}
+
+/**
+ * @brief Discard tracks with too large residual error
+ *
+ * Remove observation/tracks that have:
+ *  - too large residual error
+ *  - too small angular value
+ *
+ * @note copied over from sequential sfm !
+ * @return True if more than 'count' outliers have been removed.
+ */
+bool SubmapMerger::badTrackRejector(double dPrecision, size_t count, SfM_Data& scene)
+{
+  const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(scene, dPrecision, 2);
+  const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(scene, 2.0);
+
+  return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
 bool SubmapMerger::BundleAdjustment_FixedSeparators(const IndexT smap_id)
@@ -161,7 +171,15 @@ bool SubmapMerger::BundleAdjustment_FixedSeparators(const IndexT smap_id)
   }
   const std::unique_ptr<Bundle_Adjustment_Fixed_Points> bundle_adjustment_ptr =
       std::unique_ptr<Bundle_Adjustment_Fixed_Points>(new Bundle_Adjustment_Fixed_Points(options));
-  return bundle_adjustment_ptr->Adjust(sfm_data, submap.separator);
+
+  const Optimize_Options ba_refine_options
+    ( intrinsic_refinement_options_,
+      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
+      Control_Point_Parameter(),
+      false // no motion prior for now... TODO add this ?
+    );
+  return bundle_adjustment_ptr->Adjust(sfm_data, submap.separator, ba_refine_options);
 }
 
 }
