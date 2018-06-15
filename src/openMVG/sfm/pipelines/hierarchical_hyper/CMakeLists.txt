@@ -1,0 +1,46 @@
+file(
+  GLOB
+  hierarchical_hyper_headers
+  *.hpp)
+
+file(
+  GLOB
+  hierarchical_hyper_cpp
+  *.cpp)
+
+file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
+#Remove the future main files
+list(REMOVE_ITEM hierarchical_hyper_cpp ${REMOVEFILESUNITTEST})
+
+add_library(openMVG_pipeline_hierarchical_hyper ${hierarchical_hyper_headers} ${hierarchical_hyper_cpp})
+
+target_link_libraries(
+  openMVG_pipeline_hierarchical_hyper
+  PUBLIC
+    openMVG_pipeline_sequential
+    myScotch
+)
+
+target_include_directories(
+  openMVG_pipeline_hierarchical_hyper
+  PRIVATE
+  ${CERES_INCLUDE_DIRS}
+  PUBLIC
+   $<INSTALL_INTERFACE:include>
+   $<INSTALL_INTERFACE:include/openMVG>
+)
+
+set_target_properties(openMVG_pipeline_hierarchical_hyper PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+
+install(TARGETS openMVG_pipeline_hierarchical_hyper DESTINATION lib EXPORT openMVG-targets)
+
+UNIT_TEST(openMVG scene_aligner
+  "openMVG_features;openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG submap_merger
+  "openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG sfm_data_BA_fixed_points
+  "openMVG_features;openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG hypercluster "openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG hypergraph_partitioning_scotch "openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG submap_threshold_checker "openMVG_multiview_test_data;openMVG_pipeline_hierarchical_hyper")
+UNIT_TEST(openMVG submap_io "openMVG_testing;openMVG_pipeline_hierarchical_hyper")

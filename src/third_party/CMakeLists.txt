@@ -120,3 +120,8 @@ install(
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
 endforeach(inDirectory)
+
+SET(scotch_out_dir ${PROJECT_BINARY_DIR}/third_party/scotch_6.0.4)
+SET(SCOTCH_INCLUDE_DIR ${scotch_out_dir}/include PARENT_SCOPE)
+
+add_subdirectory(scotch_6.0.4)

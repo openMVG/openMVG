@@ -1,13 +1,19 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   sfm_files_header
   *.hpp
+  pipelines/*.hpp
+  pipelines/localization/*.hpp
+  pipelines/structure_from_known_poses/*.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   sfm_files_cpp
   *.cpp
+  pipelines/*.cpp
+  pipelines/localization/*.cpp
+  pipelines/structure_from_known_poses/*.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 #Remove the future main files
@@ -18,23 +24,18 @@ list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 
-target_link_libraries(openMVG_sfm
+target_link_libraries(
+  openMVG_sfm
   PUBLIC
     openMVG_geometry
-    openMVG_features
-    openMVG_graph
-    openMVG_matching
-    openMVG_multiview
-)
-
-target_link_libraries(openMVG_sfm
-  PRIVATE
-    ${CERES_LIBRARIES}
-    openMVG_graph
     openMVG_image
+    openMVG_multiview
+    stlplus
+    ${CERES_LIBRARIES}
     openMVG_lInftyComputerVision
     openMVG_system
-    stlplus
+    openMVG_matching
+    lemon
 )
 target_include_directories(openMVG_sfm
   PRIVATE

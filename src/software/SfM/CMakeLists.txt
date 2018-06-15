@@ -93,31 +93,41 @@ install(TARGETS openMVG_main_MatchesToTracks DESTINATION bin/)
 # SfM Pipelines
 # - Incremental/Sequential
 # - Global
+# - Hierarchical HyperSfM
 ###
 # - Convert SfM_Data format (from one to another)
 # - Pair filtering (from frustum)
 # - Compute structure from known camera poses
 # - Compute structure color
 ###
-add_executable(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
-target_link_libraries(openMVG_main_IncrementalSfM
+ADD_EXECUTABLE(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_IncrementalSfM
   PRIVATE
     openMVG_system
     openMVG_image
     openMVG_features
-    openMVG_sfm
+    openMVG_pipeline_sequential
     stlplus
-)
+  )
 
-add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
-target_link_libraries(openMVG_main_GlobalSfM
+ADD_EXECUTABLE(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_GlobalSfM
   PRIVATE
     openMVG_system
     openMVG_image
     openMVG_features
-    openMVG_sfm
+    openMVG_pipeline_global
     stlplus
-)
+  )
+
+ADD_EXECUTABLE(openMVG_main_HyperSfM main_HyperSfM.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_HyperSfM
+  PRIVATE
+    openMVG_system
+    openMVG_features
+    openMVG_pipeline_hierarchical_hyper
+    stlplus
+  )
 
 add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
 target_link_libraries(openMVG_main_ConvertSfM_DataFormat
@@ -180,6 +190,8 @@ set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software
 install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
 set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+set_property(TARGET openMVG_main_HyperSfM PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_HyperSfM DESTINATION bin/)
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)

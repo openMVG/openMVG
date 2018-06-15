@@ -389,6 +389,9 @@ endif (OpenMVG_USE_OPENCV)
 add_subdirectory(third_party)
 add_subdirectory(testing)
 
+# scotch cannot be included in the list above for some reason ?!
+include_directories(${SCOTCH_INCLUDE_DIR})
+
 # ==============================================================================
 # openMVG modules
 # ==============================================================================
@@ -411,6 +414,9 @@ set(OpenMVG_LIBRARIES
   openMVG_matching
   openMVG_matching_image_collection
   openMVG_multiview
+  openMVG_pipeline_sequential
+  openMVG_pipeline_global
+  openMVG_pipeline_hierarchical_hyper
   openMVG_sfm
   openMVG_system
 )

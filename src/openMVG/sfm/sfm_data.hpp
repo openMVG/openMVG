@@ -11,12 +11,18 @@
 
 #include <string>
 
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
 #include "openMVG/sfm/sfm_view_priors.hpp"
 #include "openMVG/types.hpp"
+
+#include "openMVG/geometry/pose3_io.hpp"
+#include "openMVG/sfm/sfm_landmark_io.hpp"
+
+#include "cereal/cereal.hpp"
+#include "cereal/types/vector.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -47,6 +53,18 @@ struct SfM_Data
 
   /// Root Views path
   std::string s_root_path;
+
+  template <class Archive>
+  void serialize ( Archive & ar )
+  {
+    ar(cereal::make_nvp("root_path", s_root_path),
+       cereal::make_nvp("views", views),
+       cereal::make_nvp("intrinsics", intrinsics),
+       cereal::make_nvp("extrinsics", poses),
+       cereal::make_nvp("structure", structure),
+       cereal::make_nvp("control_points", control_points));
+  }
+  
 
   //--
   // Accessors

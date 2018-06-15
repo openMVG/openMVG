@@ -49,7 +49,7 @@ public:
   }
 
   /// Initialize tracks
-  bool InitLandmarkTracks();
+  virtual bool InitLandmarkTracks();
 
   /// Select a candidate initial pair
   bool ChooseInitialPair(Pair & initialPairIndex) const;
@@ -73,9 +73,6 @@ public:
 
 protected:
 
-
-private:
-
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
@@ -90,6 +87,9 @@ private:
 
   /// Discard track with too large residual error
   bool badTrackRejector(double dPrecision, size_t count = 0);
+
+  /// Protected constructor for subclasses
+  SequentialSfMReconstructionEngine(const SfM_Data &sfm_data, const tracks::STLMAPTracks & map_tracks, const std::string &soutDirectory, const std::string &loggingFile = {});
 
   //----
   //-- Data

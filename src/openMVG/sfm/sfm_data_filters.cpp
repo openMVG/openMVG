@@ -371,5 +371,19 @@ void KeepLargestViewCCTracks
   }
 }
 
+std::set<IndexT> Get_Valid_Intrinsics_Ids(const SfM_Data &sfm_data)
+{
+  std::set<IndexT> valid_intrinsics;
+  for (const auto & view : sfm_data.GetViews())
+  {
+    const openMVG::IndexT intrinsic_id = view.second->id_intrinsic;
+    if (sfm_data.intrinsics.count(intrinsic_id) > 0)
+    {
+      valid_intrinsics.insert(intrinsic_id);
+    }
+  }
+  return valid_intrinsics;
+}
+
 } // namespace sfm
 } // namespace openMVG

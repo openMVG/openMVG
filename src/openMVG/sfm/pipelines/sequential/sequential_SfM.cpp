@@ -1234,5 +1234,11 @@ bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
+SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(const SfM_Data & sfm_data, const tracks::STLMAPTracks & map_tracks, const std::string & soutDirectory, const std::string & loggingFile)
+  : SequentialSfMReconstructionEngine(sfm_data, soutDirectory, loggingFile)
+{
+  map_tracks_ = map_tracks;
+}
+
 } // namespace sfm
 } // namespace openMVG
