@@ -100,15 +100,18 @@ void generate_sfm_data_and_tracks(openMVG::sfm::SfM_Data & sfm_data, openMVG::tr
   // in the views.
 
   // Views
+  const unsigned int w(2000), h(1000);
   std::set<openMVG::IndexT> all_view_ids;
   for (int i(0); i < n_views; i++)
   {
     const openMVG::IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
-    sfm_data.views[i] = std::make_shared<openMVG::sfm::View>("", id_view, id_intrinsic, id_pose, 2000, 2000);
+    sfm_data.views[i] = std::make_shared<openMVG::sfm::View>("", id_view, id_intrinsic, id_pose, w, h);
     all_view_ids.insert(i);
   }
 
-  sfm_data.intrinsics[0] = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>();
+  // intrinsics
+  const unsigned int f(1500), ppx(w/2), ppy(h/2);
+  sfm_data.intrinsics[0] = std::make_shared<openMVG::cameras::Pinhole_Intrinsic>(w, h, f, ppx, ppy);
 
   // tracks
   for (int i(0); i < n_points; i++)

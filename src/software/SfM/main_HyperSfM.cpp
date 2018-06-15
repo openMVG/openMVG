@@ -31,12 +31,12 @@ std::unique_ptr<SubmapThresholdChecker> getThresholdChecker(const int tracks_thr
 {
   if (tracks_threshold < 0)
   {
-    std::cout << "View threshold chosen : " << view_threshold << std::endl;
+    std::cout << "View threshold chosen: " << view_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapViewThresholdChecker(view_threshold));
   }
   else
   {
-    std::cout << "Tracks threshold chosen : " << tracks_threshold << std::endl;
+    std::cout << "Tracks threshold chosen: " << tracks_threshold << std::endl;
     return std::unique_ptr<SubmapThresholdChecker>(new SubmapTracksThresholdChecker(tracks_threshold));
   }
 }
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     << "[-o|--outdir] path where the output data will be stored\n"
     << "[-v|--views_threshold] clustering threshold in number of views per submap\n"
     << "[-t|--tracks_threshold] clustering threshold in number of tracks per submap\n"
-    << "NOTE : if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority !\n"
+    << "NOTE: if user selects both a track_threshold and a view_threshold, the tracks threshold gets priority !\n"
     << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t 1: Pinhole \n"
       << "\t 2: Pinhole radial 1\n"
@@ -101,8 +101,8 @@ int main(int argc, char **argv)
   {
     std::cerr << std::endl
       << "Could not find any valid input threshold value ! Threshold must be positive !" << std::endl
-      << "Views threshold : " << view_threshold_clustering << std::endl
-      << "tracks threshold : " << tracks_threshold_clustering << std::endl
+      << "Views threshold: " << view_threshold_clustering << std::endl
+      << "tracks threshold: " << tracks_threshold_clustering << std::endl
       << "add a tracks threshold with -t, a view threshold with -v" << std::endl;
     return EXIT_FAILURE;
   }
@@ -192,15 +192,15 @@ int main(int argc, char **argv)
   std::unique_ptr<SubmapThresholdChecker> threshold_checker = getThresholdChecker(tracks_threshold_clustering, view_threshold_clustering);
 
   // cluster the scene into submaps
-  std::cout << "...Start Clustering : "<< timer << std::endl;
+  std::cout << "...Start Clustering: "<< timer << std::endl;
   HyperCluster clusterer(sfm_data, map_tracks, std::move(threshold_checker));
   clusterer.recursivePartitioning();
   clusterer.exportTreeGraph(stlplus::create_filespec(sOutDir, "hyperCluster"));
   HsfmSubmaps submaps = clusterer.getSubMaps();
-  std::cout << "Clustering Done : " << timer << std::endl;
+  std::cout << "Clustering Done: " << timer << std::endl;
 
   // reconstruct each leaf submap separately
-  std::cout << "...Start Reconstruction of Leaf Submaps : " << timer << std::endl;
+  std::cout << "...Start Reconstruction of Leaf Submaps: " << timer << std::endl;
   for (auto & smap : submaps)
   {
     if (smap.second.is_parent)
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
   Save(submaps,
       stlplus::create_filespec(sOutDir, "submaps_before_merge", "json"));
 
-  std::cout << "...Start Merging Submaps : " << timer << std::endl;
+  std::cout << "...Start Merging Submaps: " << timer << std::endl;
   SubmapMerger merger(submaps, intrinsic_refinement_options);
   merger.Merge();
   submaps = merger.getSubmaps();

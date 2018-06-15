@@ -32,8 +32,9 @@ std::shared_ptr<cameras::IntrinsicBase> findBestIntrinsic(const SfM_Data& sfm_da
   const auto intrinsicB = sfm_data_B.intrinsics.at(cam_id);
 
   // quick escape in case intrinsics are equal
-  // TODO ? here we only check for pointer equality should we do more ?
-  if (intrinsicA == intrinsicB)
+  if (intrinsicA == intrinsicB // check pointer equality
+      || (intrinsicA->getType() == intrinsicB->getType() // check intrinsics equality
+         && intrinsicA->hashValue() == intrinsicB->hashValue()))
     return std::shared_ptr<cameras::IntrinsicBase>(intrinsicA->clone());
 
   double RMSE_A(0.0), RMSE_B(0.0);
