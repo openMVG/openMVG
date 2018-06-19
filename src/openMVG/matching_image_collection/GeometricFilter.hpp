@@ -19,6 +19,7 @@
 #include "third_party/progress/progress_display.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 

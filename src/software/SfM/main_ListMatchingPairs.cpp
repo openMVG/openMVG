@@ -243,27 +243,27 @@ int main(int argc, char **argv)
           << std::endl;
       }
       // Compute i_neighbor_count neighbor(s) for each pose
+      matching::ArrayMatcherBruteForce<double> matcher;
+      if (!matcher.Build(vec_pose_centers[0].data(), vec_pose_centers.size(), 3))
+      {
+        return EXIT_FAILURE;
+      }
       size_t contiguous_pose_id = 0;
       for (const Vec3 pose_it : vec_pose_centers)
       {
-        matching::ArrayMatcherBruteForce<double> matcher;
-        if (matcher.Build(vec_pose_centers[0].data(), vec_pose_centers.size(), 3))
+        const double * query = pose_it.data();
+        IndMatches vec_indices;
+        std::vector<double> vec_distance;
+        const int NN = i_neighbor_count + 1; // since itself will be found
+        if (matcher.SearchNeighbours(query, 1, &vec_indices, &vec_distance, NN))
         {
-          const double * query = pose_it.data();
-
-          IndMatches vec_indices;
-          std::vector<double> vec_distance;
-          const int NN = i_neighbor_count + 1; // since itself will be found
-          if (matcher.SearchNeighbours(query, 1, &vec_indices, &vec_distance, NN))
+          for (size_t i = 1; i < vec_indices.size(); ++i)
           {
-            for (size_t i = 1; i < vec_indices.size(); ++i)
-            {
-              IndexT idxI = contiguous_to_pose_id.at(contiguous_pose_id);
-              IndexT idxJ = contiguous_to_pose_id.at(vec_indices[i].j_);
-              if (idxI > idxJ)
-                std::swap(idxI, idxJ);
-              pose_pairs.insert(Pair(idxI, idxJ));
-            }
+            IndexT idxI = contiguous_to_pose_id.at(contiguous_pose_id);
+            IndexT idxJ = contiguous_to_pose_id.at(vec_indices[i].j_);
+            if (idxI > idxJ)
+              std::swap(idxI, idxJ);
+            pose_pairs.insert(Pair(idxI, idxJ));
           }
         }
         ++contiguous_pose_id;

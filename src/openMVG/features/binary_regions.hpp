@@ -72,7 +72,7 @@ public:
 
   PointFeatures GetRegionsPositions() const override
   {
-    return PointFeatures(vec_feats_.begin(), vec_feats_.end());
+    return {vec_feats_.cbegin(), vec_feats_.cend()};
   }
 
   Vec2 GetRegionPosition(size_t i) const override

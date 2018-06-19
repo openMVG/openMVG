@@ -5,12 +5,6 @@
 find_package( Qt5Widgets )
 
 if(Qt5Widgets_FOUND)
-  # CMake version control
-  CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-
-  if(POLICY CMP0020)
-  cmake_policy(SET CMP0020 OLD)
-  endif(POLICY CMP0020)
 
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
   set(CMAKE_AUTOMOC ON)

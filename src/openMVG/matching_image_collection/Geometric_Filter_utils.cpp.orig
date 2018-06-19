@@ -123,5 +123,5 @@ void MatchesPairToMat
     x_I, x_J);
 }
 
-} //namespace matching_image_collection
+} // namespace matching_image_collection
 } // namespace openMVG

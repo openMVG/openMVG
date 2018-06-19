@@ -21,7 +21,6 @@ namespace openMVG {
 
 namespace sfm {
   struct Regions_Provider;
-  struct SfM_Data;
 } // namespace sfm
 
 namespace matching_image_collection {
@@ -37,7 +36,6 @@ class Matcher
 
   /// Find corresponding points between some pair of view Ids
   virtual void Match(
-    const sfm::SfM_Data & sfm_data,
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
     matching::PairWiseMatchesContainer & map_putatives_matches, // the output pairwise photometric corresponding points

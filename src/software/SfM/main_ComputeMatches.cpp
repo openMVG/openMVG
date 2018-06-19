@@ -366,7 +366,7 @@ int main(int argc, char **argv)
           break;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match(sfm_data, regions_provider, pairs, map_PutativesMatches, &progress);
+      collectionMatcher->Match(regions_provider, pairs, map_PutativesMatches, &progress);
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
