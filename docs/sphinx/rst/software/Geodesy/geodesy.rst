@@ -141,7 +141,7 @@ Since MVS frameworks does not like large double values (raw GPS coordinates) you
 Use-case: command line used for a flat UAV survey
 ====================================================
 
-Launched on the dataset Swiss Quarry `Geotagged multispectral images <http://chuqavct.preview.infomaniak.com/postflight-examples/06-mining-quarry-switzerland/geotagged-images.zip>`_.
+Launched on the dataset Swiss Quarry `Geotagged multispectral images <https://senseflycom.s3.amazonaws.com/datasets/quarry-switzerland/geotagged-images.zip>`_.
 
   .. code-block:: c++
 
