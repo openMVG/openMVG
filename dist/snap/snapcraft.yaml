@@ -1,7 +1,7 @@
 # This recipe is known to work under Ubuntu 16.04 (yet, the generated .snap
 # file will work on any Linux distribution having snap installed).
 name: openmvg
-version: '1.3-0'
+version: '1.4-0'
 summary: OpenMVG (open Multiple View Geometry)
 description: |
   OpenMVG (Multiple View Geometry) "open Multiple View Geometry" is a library
@@ -117,7 +117,7 @@ parts:
   openmvg:
     plugin: cmake
     source: https://github.com/openMVG/openMVG.git
-    source-tag: v1.3
+    source-tag: v1.4
     build-packages:
       - build-essential
       - libpng12-dev
