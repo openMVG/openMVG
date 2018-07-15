@@ -14,7 +14,8 @@ target_link_libraries(openMVG_main_SfMInit_ImageListingFromKnownPoses
     openMVG_image
     openMVG_features
     openMVG_sfm
-    easyexif
+    openMVG_exif
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules

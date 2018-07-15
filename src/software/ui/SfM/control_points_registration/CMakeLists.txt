@@ -40,7 +40,7 @@ if(Qt5Widgets_FOUND)
   TARGET_LINK_LIBRARIES(${ProjectName}
   Qt5::Widgets Qt5::Gui
   openMVG_sfm
-  stlplus)
+  ${STLPLUS_LIBRARY})
 
   SET_PROPERTY(TARGET ${ProjectName} PROPERTY FOLDER OpenMVG/software/ui)
   INSTALL(TARGETS ${ProjectName} DESTINATION bin/)

@@ -14,7 +14,6 @@
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/multiview/projection.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG
@@ -205,9 +204,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     Mat34 get_projective_equivalent( const geometry::Pose3 & pose ) const override
     {
-      Mat34 P;
-      P_From_KRt( K(), pose.rotation(), pose.translation(), &P );
-      return P;
+      return K_ * (Mat34() << pose.rotation(), pose.translation()).finished();
     }
 
 

@@ -23,6 +23,7 @@ set_source_files_properties(${matching_files_cpp} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_matching
   ${matching_files_header}
   ${matching_files_cpp})
+target_compile_features(openMVG_matching INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_matching
   PUBLIC
     $<BUILD_INTERFACE:${FLANN_INCLUDE_DIRS}>
@@ -31,7 +32,7 @@ target_include_directories(openMVG_matching
 )
 target_link_libraries(openMVG_matching
   PRIVATE
-    stlplus
+    ${STLPLUS_LIBRARY}
   PUBLIC
     openMVG_features
     Threads::Threads
@@ -46,8 +47,7 @@ set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MA
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 
 if (USE_AVX2)
-  set_property(TARGET openMVG_matching APPEND PROPERTY
-    INTERFACE_COMPILE_DEFINITIONS OPENMVG_USE_AVX2)
+  target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX2")
   if (UNIX)
     target_compile_options(openMVG_matching PUBLIC "-mavx2")
   endif (UNIX)

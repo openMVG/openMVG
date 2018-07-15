@@ -21,7 +21,8 @@ list(REMOVE_ITEM multiview_files_cpp ${MULTIVIEWTESTDATA})
 add_library(openMVG_multiview
   ${multiview_files_header}
   ${multiview_files_cpp})
-set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG)
+target_compile_features(openMVG_multiview INTERFACE ${CXX11_FEATURES})
+set_property(TARGET openMVG_multiview PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 target_link_libraries(openMVG_multiview
   PUBLIC
@@ -58,4 +59,4 @@ UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview_tes
 
 # Averaging routines
 UNIT_TEST(openMVG rotation_averaging "openMVG_multiview_test_data;openMVG_multiview")
-UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_multiview;lemon")
+UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_multiview")

@@ -14,7 +14,9 @@ file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 list(REMOVE_ITEM geometry_files_cpp ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_geometry ${geometry_files_header} ${geometry_files_cpp})
+target_compile_features(openMVG_geometry INTERFACE ${CXX11_FEATURES})
 set_target_properties(openMVG_geometry PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+set_property(TARGET openMVG_geometry PROPERTY FOLDER OpenMVG/OpenMVG)
 
 target_link_libraries(openMVG_geometry
   PUBLIC

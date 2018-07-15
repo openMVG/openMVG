@@ -8,7 +8,7 @@ target_link_libraries(openMVG_main_openMVG2WebGL
   openMVG_features
   openMVG_image
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
   )
 
 target_include_directories( openMVG_main_openMVG2WebGL PRIVATE ${CMAKE_CURRENT_BINARY_DIR} )
