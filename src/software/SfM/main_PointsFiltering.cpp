@@ -54,7 +54,7 @@ double DepthCleaning
       if (sfm_data.IsPoseAndIntrinsicDefined(view))
       {
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        const double depth = pose.depth(landmark_it.second.X);
+        const double depth = Depth(pose.rotation(), pose.translation(), landmark_it.second.X);
         if (depth > 0)
         {
           map_depth_accumulator[view->id_view].push_back(depth);
@@ -95,7 +95,7 @@ double DepthCleaning
       if (sfm_data.IsPoseAndIntrinsicDefined(view))
       {
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        const double depth = pose.depth(landmark_it.second.X);
+        const double depth = Depth(pose.rotation(), pose.translation(), landmark_it.second.X);
         if ( depth > 0
             && map_median_depth.count(view->id_view)
             && depth < map_median_depth[view->id_view])

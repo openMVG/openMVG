@@ -170,8 +170,8 @@ int main(int argc, char **argv) {
     }
 
     //-- Convert planar to spherical coordinates
-    Mat xL_spherical = cameraL(xL),
-        xR_spherical = cameraR(xR);
+    const Mat xL_spherical = cameraL(xL),
+              xR_spherical = cameraR(xR);
 
     //-- Essential matrix robust estimation from spherical bearing vectors
     {

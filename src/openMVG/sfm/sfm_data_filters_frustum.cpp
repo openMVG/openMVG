@@ -236,7 +236,7 @@ void Frustum_Filter::init_z_near_z_far_depth
           continue;
 
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        const double z = pose.depth(X);
+        const double z = Depth(pose.rotation(), pose.translation(), X);
         NearFarPlanesT::iterator itZ = z_near_z_far_perView.find(id_view);
         if (itZ != z_near_z_far_perView.end())
         {
