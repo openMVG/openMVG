@@ -14,6 +14,9 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
+#ifdef OPENMVG_USE_CUDA
+#include "openMVG/matching_image_collection/GPU_Matcher_Regions.hpp"
+#endif
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
@@ -129,6 +132,9 @@ int main(int argc, char **argv)
       << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
+#ifdef OPENMVG_USE_CUDA
+      << "    GPUBRUTEFORCEHAMMING512: GPU BruteForce Hamming matching (512-bit).\n"
+#endif
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences."
       << "[-c|--cache_size]\n"
@@ -326,6 +332,14 @@ int main(int argc, char **argv)
       std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
     }
+#ifdef OPENMVG_USE_CUDA
+    else
+    if (sNearestMatchingMethod == "GPUBRUTEFORCEHAMMING512")
+    {
+      std::cout << "Using GPU_BRUTE_FORCE_HAMMING_512 matcher" << std::endl;
+      collectionMatcher.reset(new GPU_Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
+    }
+#endif
     else
     if (sNearestMatchingMethod == "ANNL2")
     {

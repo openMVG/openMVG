@@ -102,6 +102,10 @@ add_subdirectory(easyexif)
 set(FAST_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/fast)
 add_subdirectory(fast)
 
+# KORAL detector/descriptor
+set(KORAL_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/koral)
+add_subdirectory(koral)
+
 ##
 # Install Header only libraries if necessary
 ##
