@@ -21,11 +21,12 @@ struct SfM_Data;
 
 enum ESfM_Data
 {
-  VIEWS           = 0x01,
-  EXTRINSICS      = 0x02,
-  INTRINSICS      = 0x04,
-  STRUCTURE       = 0x08,
-  CONTROL_POINTS  = 0x16,
+  // Note: Use power of two values in order to use bitwise operators.
+  VIEWS           =  1,
+  EXTRINSICS      =  2,
+  INTRINSICS      =  4,
+  STRUCTURE       =  8,
+  CONTROL_POINTS  = 16,
   ALL = VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE | CONTROL_POINTS
 };
 
