@@ -40,7 +40,7 @@ target_include_directories(openMVG_multiview
 set_target_properties(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 add_library(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
-target_link_libraries(openMVG_multiview_test_data PRIVATE openMVG_numeric)
+target_link_libraries(openMVG_multiview_test_data PRIVATE openMVG_numeric openMVG_multiview)
 set_property(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
 
 # Triangulation routines
