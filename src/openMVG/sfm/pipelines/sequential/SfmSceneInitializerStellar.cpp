@@ -136,7 +136,7 @@ bool SfMSceneInitializerStellar::Process()
     return false;
   }
 
-  std::cout << "The choosen stellar pod has " << selected_stellar_pod.size() << " pairs." << std::endl;
+  std::cout << "The chosen stellar pod has " << selected_stellar_pod.size() << " pairs." << std::endl;
 
   // Configure the stellar pod optimization to use all the matches relating to the considered view id.
   // The found camera poses will be better thanks to the larger point support.
