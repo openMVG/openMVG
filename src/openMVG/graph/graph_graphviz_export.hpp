@@ -17,6 +17,10 @@
 #include <map>
 #include <string>
 
+#if __APPLE__
+#include "TargetConditionals.h"
+#endif
+
 #include "openMVG/types.hpp"
 
 namespace openMVG {
@@ -77,8 +81,10 @@ inline void exportToGraphvizData
 
   //Use Graphviz
   const std::string cmd = "neato -Tsvg -O -Goverlap=scale -Gsplines=false " + sfile;
+#ifndef TARGET_OS_IPHONE
   const int ret = std::system(cmd.c_str());
   (void)ret;
+#endif
 }
 
 } // namespace graph
