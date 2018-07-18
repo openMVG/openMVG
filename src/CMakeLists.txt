@@ -369,13 +369,13 @@ endif()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 if (OpenMVG_USE_OPENCV)
-  find_package( OpenCV 3.0 QUIET )
-  if (NOT OpenCV_FOUND)
-    message(STATUS "OpenCV was not found. Disabling OpenCV support.")
+  find_package( OpenCV QUIET )
+  if (NOT OpenCV_FOUND OR OpenCV_VERSION VERSION_LESS "3.0.0")
+    message(STATUS "OpenCV was not found (note that OpenCV version >= 3.0.0 is required). -> Disabling OpenCV support.")
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OCVSIFT OFF)
-  endif (NOT OpenCV_FOUND)
-endif (OpenMVG_USE_OPENCV)
+  endif()
+endif()
 
 
 # ==============================================================================

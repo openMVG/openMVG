@@ -40,7 +40,7 @@ target_include_directories(openMVG_multiview
 set_target_properties(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 add_library(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
-target_link_libraries(openMVG_multiview_test_data PRIVATE openMVG_numeric)
+target_link_libraries(openMVG_multiview_test_data PRIVATE openMVG_numeric openMVG_multiview)
 set_property(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
 
 # Triangulation routines
@@ -49,11 +49,11 @@ UNIT_TEST(openMVG triangulation_nview "openMVG_multiview_test_data;openMVG_multi
 
 # Solvers
 UNIT_TEST(openMVG solver_affine "openMVG_multiview")
-UNIT_TEST(openMVG solver_fundamental_kernel "openMVG_multiview")
-UNIT_TEST(openMVG solver_essential_kernel "openMVG_multiview_test_data;openMVG_multiview")
-UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview_test_data;openMVG_multiview")
+UNIT_TEST(openMVG solver_essential_eight_point "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_essential_five_point "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_essential_three_point "openMVG_multiview")
+UNIT_TEST(openMVG solver_fundamental_kernel "openMVG_multiview")
+UNIT_TEST(openMVG solver_homography_kernel "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_resection_kernel "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview_test_data;openMVG_multiview")
 

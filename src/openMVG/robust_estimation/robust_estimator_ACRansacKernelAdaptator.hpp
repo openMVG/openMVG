@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"
+#include "openMVG/multiview/essential.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
 
 namespace openMVG {
