@@ -119,7 +119,7 @@ target_link_libraries(openMVG_main_IncrementalSfM2
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
