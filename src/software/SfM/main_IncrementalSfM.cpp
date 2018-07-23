@@ -82,6 +82,7 @@ int main(int argc, char **argv)
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool b_use_motion_priors = false;
+  bool pba_option = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -91,6 +92,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_switch('p', "pba_option"));
   cmd.add( make_switch('P', "prior_usage") );
 
   try {
@@ -124,13 +126,20 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
+    << "[-p|--pba_option] Enable usage of pba(default: false)\n"   
     << "[-M|--match_file] path to the match file to use.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
-
+  
+  pba_option = cmd.used('p');
+  if(pba_option){
+    //pba don't adjust Intrinsic
+    sIntrinsic_refinement_options = "NONE";
+  }
+  
   if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
@@ -208,6 +217,7 @@ int main(int argc, char **argv)
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
   // Configure the features_provider & the matches_provider
+  sfmEngine.setPba(pba_option);
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
@@ -247,6 +257,10 @@ int main(int argc, char **argv)
     Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
       ESfM_Data(ALL));
+
+    Save(sfmEngine.Get_SfM_Data(),
+      stlplus::create_filespec(sOutDir, "sfm_data", ".json"),
+      ESfM_Data(VIEWS | EXTRINSICS | INTRINSICS));
 
     return EXIT_SUCCESS;
   }

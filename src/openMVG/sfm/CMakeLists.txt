@@ -20,6 +20,7 @@ add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 target_link_libraries(
   openMVG_sfm
   PRIVATE
+    pbaCPU
     openMVG_geometry
     openMVG_multiview
     stlplus
