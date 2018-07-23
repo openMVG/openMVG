@@ -1,0 +1,45 @@
+1.0.6
+Added CMakeFile
+Fix compile warnings
+
+1.0.5
+Fixed a bug (rarely happens) in CUDA kernel configuration
+	* Symptom: ComputeJtE<Point>: invalid configuration argument(9)
+	  Triggers when npoint is within (2 * n * 65505 ~ 2 * n * 65535) for n >= 2
+Changed the CUDA error handling
+	* from exit(0) to throw "error location string"
+Added Support for constraints of camera clusters having equal focal lengths
+	* Call ParallelBA::SetFocalMask(cluster_id_for_each_camera, weight);
+	* For example, a vector of 0 means all camera should have the same focal length.
+	* For example, <0,0,1,1,1> gives two groups (0,1,2) and (3,4) for the constraint.
+Improved memory allocation
+	* Reset device and deallocate all data when ReserveStorage(0, 0, 0);
+
+1.0.4
+Added AVX-based implementation (Use Release_AVX for MSVC, or #define CPUPBA_USE_AVX)
+Added function ParallelBA_GetVersion for future changes.
+Fixed minor bug in the profiling program
+
+1.0.3
+Added support of constant cameras (CameraT::SetConstantCamera)
+	* Causes slight slow-down of standard pipeline 
+	* Can be disabled by defining PBA_DISABLE_CONST_CAMERA
+Automatic switching from GPU to CPU if CUDA is not supported
+	* Will not switch back 
+Fixed a problem with Windows DLL function name
+	
+1.0.2
+Choosing thread count accoding to the number of CPU cores. 
+	* This might be slightly better than the fixed parameters
+	* This is still very heruristic and not really optimal.
+	* The settings are still tunned for very large data. 
+Added two additional Bundle Adjustment Modes (Motion only & Structure only)
+	* Call ParallelBA::SetNextBundleMode() to set the mode
+
+1.0.1
+Converted MSVC solution files to visual studio 2010
+Added the first draft of manual
+Added CMakeFile (Provided by Pierre Moulon)
+
+1.0.0 (06/2011)
+The first release

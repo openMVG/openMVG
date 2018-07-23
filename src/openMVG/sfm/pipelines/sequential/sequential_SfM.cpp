@@ -25,11 +25,15 @@
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
+#include "third_party/pba/src/pba/pba.h"
 
 #include <ceres/types.h>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <utility>
+#include <third_party/ceres-solver/include/ceres/rotation.h>
+#include <third_party/pba/src/pba/util.h>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -100,7 +104,9 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  // Initial pair choice
+
+  std::cout<<sfm_data_.views.size()<<std::endl;
+
   if (initial_pair_ == Pair(0,0))
   {
     if (!AutomaticInitialPairChoice(initial_pair_))
@@ -112,6 +118,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
     }
   }
+  std::cout<<"initial_pair:"<<initial_pair_.first<<" "<<initial_pair_.second<<std::endl;
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
@@ -146,6 +153,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
       while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_);
+      //Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
     }
     ++resectionGroupIndex;
   }
@@ -294,7 +302,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 {
   // Compute tracks from matches
   tracks::TracksBuilder tracksBuilder;
-
+  //std::cout<<"\n"<<"time:"<<clock()<<std::endl;
   {
     // List of features matches for each couple of images
     const openMVG::matching::PairWiseMatches & map_Matches = matches_provider_->pairWise_matches_;
@@ -334,6 +342,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
       std::cout << osTrack.str();
     }
   }
+  //std::cout<<"\n"<<"time:"<<clock()<<std::endl;
   // Initialize the shared track visibility helper
   shared_track_visibility_helper_.reset(new openMVG::tracks::SharedTrackVisibilityHelper(map_tracks_));
   return map_tracks_.size() > 0;
@@ -914,6 +923,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Localize the image inside the SfM reconstruction
   Image_Localizer_Match_Data resection_data;
+  //adjust ac-ransanc times 4096 -> 50 to reduce time cost
+  resection_data.max_iteration = 50;
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
 
@@ -1193,33 +1204,119 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   return true;
 }
 
-/// Bundle adjustment to refine Structure; Motion and Intrinsics
 bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
-  Bundle_Adjustment_Ceres::BA_Ceres_options options;
-  if ( sfm_data_.GetPoses().size() > 100 &&
-      (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
-      )
-  // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
-  {
-    options.preconditioner_type_ = ceres::JACOBI;
-    options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+
+/// Bundle adjustment to refine Structure; Motion and Intrinsics
+  if(pba_option) {
+    ParallelBA::DeviceT device = ParallelBA::PBA_CUDA_DEVICE_DEFAULT;
+    //device = ParallelBA::PBA_CPU_FLOAT; use cpu
+    ParallelBA pba(device);
+    pba.SetFixedIntrinsics(true);
+    int i = 0;
+    std::cout << "data to pba start" << std::endl;
+    camera_data.resize(sfm_data_.poses.size());
+    for (const auto &camera_openmvg : sfm_data_.poses) {
+      camera_data[i] = CameraT();
+      const Mat3 &camera_R = camera_openmvg.second.rotation();
+      const Vec3 &camera_T = camera_openmvg.second.translation();
+      for (int j = 0; j < 9; j++) camera_data[i].m[j / 3][j % 3] = static_cast<float>(camera_R(j / 3, j % 3));
+      for (int j = 0; j < 3; j++) camera_data[i].t[j] = static_cast<float>(camera_T(j));
+      camera_data[i].f = static_cast<float>(sfm_data_.intrinsics[0].get()->getParams().at(0));
+      i++;
+    }
+    i = 0;
+    point_data.resize(sfm_data_.structure.size());
+    for (const auto &structure_openmvg : sfm_data_.structure) {
+      point_data[i] = Point3D();
+      for (int j = 0; j < 3; j++) point_data[i].xyz[j] = static_cast<float>(structure_openmvg.second.X[j]);
+      i++;
+    }
+
+    //transform camera and point id
+    //example: 1 3 5 9 --> 0 1 2 3
+    std::map<unsigned long, unsigned long> camera_map;
+    camera_map.clear();
+    vector<unsigned long> camera_id;
+    camera_id.clear();
+    measurements.clear();
+    camidx.clear();
+    ptidx.clear();
+    i = 0;
+    for (const auto &structure_openmvg : sfm_data_.structure) {
+      for (auto &obs : structure_openmvg.second.obs) {
+        camidx.push_back(obs.first);
+        if (camera_map.find(obs.first) == camera_map.end()) {
+          camera_id.push_back(obs.first);
+          camera_map[obs.first] = camera_map.size();
+        }
+        ptidx.push_back(i);
+        double principal_x = sfm_data_.intrinsics[0].get()->getParams().at(1);
+        double principal_y = sfm_data_.intrinsics[0].get()->getParams().at(2);
+        measurements.emplace_back(Point2D(obs.second.x.x() - principal_x, obs.second.x.y() - principal_y));
+      }
+      i++;
+    }
+    camera_map.clear();
+    sort(camera_id.begin(), camera_id.end());
+    for (auto id : camera_id) if (camera_map.find(id) == camera_map.end()) camera_map[id] = camera_map.size();
+    for (auto &id : camidx) id = static_cast<int>(camera_map[id]);
+
+    SaveBundlerModel("./test_output", camera_data, point_data, measurements, ptidx, camidx);
+    std::ifstream fin("./test_output");
+    LoadBundlerModel(fin, camera_data, point_data, measurements, ptidx, camidx);
+    pba.SetCameraData(camera_data.size(), &camera_data[0]);                        //set camera parameters
+    pba.SetPointData(point_data.size(), &point_data[0]);                            //set 3D point data
+    pba.SetProjection(measurements.size(), &measurements[0], &ptidx[0], &camidx[0]);//set the projections
+
+    std::cout << "data to pba end" << std::endl;
+    pba.RunBundleAdjustment();
+
+    std::cout << "data to openmvg start" << std::endl;
+    i = 0;
+    for (auto &camera_openmvg : sfm_data_.poses) {
+      Mat3 camera_R;
+      Vec3 camera_T;
+      for (int j = 0; j < 9; j++) camera_R(j / 3, j % 3) = camera_data[i].m[j / 3][j % 3];
+      for (int j = 0; j < 3; j++) camera_T(j) = camera_data[i].t[j];
+      camera_openmvg.second = Pose3(camera_R, -camera_R.transpose() * camera_T);
+      i++;
+    }
+    i = 0;
+    for (auto &point_openmvg : sfm_data_.structure) {
+      for (int j = 0; j < 3; j++) point_openmvg.second.X[j] = point_data[i].xyz[j];
+      i++;
+    }
+    std::cout << "data to openmvg end" << std::endl;
+    return true;
+  } else {
+      Bundle_Adjustment_Ceres::BA_Ceres_options options;
+      if ( sfm_data_.GetPoses().size() > 100 &&
+           (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+            ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+            ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+              )
+        // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+      {
+        options.preconditioner_type_ = ceres::JACOBI;
+        options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+        std::cout<<"enable sparse BA!"<<std::endl;
+      }
+      else
+      {
+        options.linear_solver_type_ = ceres::DENSE_SCHUR;
+        std::cout<<"dense BA!"<<std::endl;
+      }
+      Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+      const Optimize_Options ba_refine_options
+              ( ReconstructionEngine::intrinsic_refinement_options_,
+                Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+                Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
+                Control_Point_Parameter(),
+                this->b_use_motion_prior_
+              );
+      return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   }
-  else
-  {
-    options.linear_solver_type_ = ceres::DENSE_SCHUR;
-  }
-  Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  const Optimize_Options ba_refine_options
-    ( ReconstructionEngine::intrinsic_refinement_options_,
-      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
-      Control_Point_Parameter(),
-      this->b_use_motion_prior_
-    );
-  return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 }
 
 /**
@@ -1234,7 +1331,8 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size_t count)
 {
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(sfm_data_, dPrecision, 2);
-  const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(sfm_data_, 2.0);
+  //too long time for it, can use hash to improve it or just ignore it
+  const size_t nbOutliers_angleErr = 0; //RemoveOutliers_AngleError(sfm_data_, 2.0);
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }

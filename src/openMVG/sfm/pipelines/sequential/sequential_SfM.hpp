@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <third_party/pba/src/pba/DataInterface.h>
 
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
@@ -46,6 +47,9 @@ public:
   void setInitialPair(const Pair & initialPair)
   {
     initial_pair_ = initialPair;
+  }
+  void setPba(bool pba_option_){
+    pba_option = pba_option_;
   }
 
   /// Initialize tracks
@@ -116,6 +120,14 @@ private:
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
   std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
+  
+  //pba option
+  bool pba_option;
+  //pba data
+  std::vector<CameraT>        camera_data;    //camera (input/ouput)
+  std::vector<Point3D>        point_data;     //3D point(iput/output)
+  std::vector<Point2D>        measurements;   //measurment/projection vector
+  std::vector<int>            camidx, ptidx;  //index of camera/point for each projection
 };
 
 } // namespace sfm

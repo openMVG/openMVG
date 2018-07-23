@@ -5,6 +5,8 @@
 # libs should be static
 set(BUILD_SHARED_LIBS OFF)
 
+add_subdirectory(./pba)
+
 # use PIC code for link into shared lib
 if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
