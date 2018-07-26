@@ -51,6 +51,12 @@ public:
   void SetPba(bool b_use_pba){
     b_use_pba_ = b_use_pba;
   }
+  void SetAngleError(bool b_use_angle_error){
+    b_use_angle_error_ = b_use_angle_error;
+  }
+  void SetACRANSAC_times(uint32_t t){
+    b_use_acransaac_times_ = t;
+  }
 
   /// Initialize tracks
   bool InitLandmarkTracks();
@@ -123,6 +129,11 @@ private:
   
   //pba option
   bool b_use_pba_;
+
+  //enable angle error, it will cost much time. (sfm refine data)
+  bool b_use_angle_error_;
+  //acransac times control
+  uint32_t b_use_acransaac_times_;
 };
 
 } // namespace sfm

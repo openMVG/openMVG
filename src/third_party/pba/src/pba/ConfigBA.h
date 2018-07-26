@@ -22,6 +22,7 @@
 #ifndef CONFIG_BA_H
 #define CONFIG_BA_H
 #include <vector>
+#include <cstddef>
 using std::vector;
 
 class ConfigBA
