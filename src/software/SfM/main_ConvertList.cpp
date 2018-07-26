@@ -160,6 +160,9 @@ int main(int argc, char **argv)
         case PINHOLE_CAMERA_FISHEYE:
         intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>(width, height, focal, ppx, ppy);
         break;
+        case PINHOLE_CAMERA_RADIAL1_PBA:
+          intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>(width, height, focal, ppx, ppy);
+        break;
         default:
           std::cerr << "Invalid camera model." << std::endl;
           return EXIT_FAILURE;

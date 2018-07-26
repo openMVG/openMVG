@@ -34,6 +34,7 @@
 #include <utility>
 #include <third_party/ceres-solver/include/ceres/rotation.h>
 #include <third_party/pba/src/pba/util.h>
+#include <third_party/pba/src/pba/SparseBundleCPU.h>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -105,8 +106,6 @@ bool SequentialSfMReconstructionEngine::Process() {
     return false;
 
 
-  std::cout<<sfm_data_.views.size()<<std::endl;
-
   if (initial_pair_ == Pair(0,0))
   {
     if (!AutomaticInitialPairChoice(initial_pair_))
@@ -118,7 +117,6 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
     }
   }
-  std::cout<<"initial_pair:"<<initial_pair_.first<<" "<<initial_pair_.second<<std::endl;
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
@@ -153,7 +151,6 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
       while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_);
-      //Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
     }
     ++resectionGroupIndex;
   }
@@ -1040,6 +1037,10 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 std::make_shared<Pinhole_Intrinsic_Fisheye>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
+        case PINHOLE_CAMERA_RADIAL1_PBA:
+            optional_intrinsic =
+                std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>
+            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         default:
           std::cerr << "Try to create an unknown camera type." << std::endl;
           return false;
@@ -1208,13 +1209,31 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
 
 /// Bundle adjustment to refine Structure; Motion and Intrinsics
-  if(pba_option) {
+  if(b_use_pba_) {
     ParallelBA::DeviceT device = ParallelBA::PBA_CUDA_DEVICE_DEFAULT;
     //device = ParallelBA::PBA_CPU_FLOAT; use cpu
     ParallelBA pba(device);
-    pba.SetFixedIntrinsics(true);
+    if(intrinsic_refinement_options_ == cameras::Intrinsic_Parameter_Type::NONE) pba.SetFixedIntrinsics(true);
+    else {
+      if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1)
+        pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION);
+      else if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1_PBA)
+        pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION);
+      if((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_DISTORTION)
+          == static_cast<cameras::Intrinsic_Parameter_Type>(0))
+        pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_NO_DISTORTION);
+      if((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
+          == static_cast<cameras::Intrinsic_Parameter_Type>(0))
+        pba.SetFocalLengthFixed(true);
+    }
+
+    vector<CameraT> camera_data;
+    vector<Point2D> measurements;
+    vector<Point3D> point_data;
+    vector<int> camidx, ptidx;
+
     int i = 0;
-    std::cout << "data to pba start" << std::endl;
+    //Data to pba begin
     camera_data.resize(sfm_data_.poses.size());
     for (const auto &camera_openmvg : sfm_data_.poses) {
       camera_data[i] = CameraT();
@@ -1223,6 +1242,10 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
       for (int j = 0; j < 9; j++) camera_data[i].m[j / 3][j % 3] = static_cast<float>(camera_R(j / 3, j % 3));
       for (int j = 0; j < 3; j++) camera_data[i].t[j] = static_cast<float>(camera_T(j));
       camera_data[i].f = static_cast<float>(sfm_data_.intrinsics[0].get()->getParams().at(0));
+      if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1_PBA)
+        camera_data[i].SetMeasumentDistortion(static_cast<float>(sfm_data_.intrinsics[0].get()->getParams().at(3)));
+      else if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1)
+        camera_data[i].SetProjectionDistortion(static_cast<float>(sfm_data_.intrinsics[0].get()->getParams().at(3)));
       i++;
     }
     i = 0;
@@ -1261,18 +1284,23 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
     sort(camera_id.begin(), camera_id.end());
     for (auto id : camera_id) if (camera_map.find(id) == camera_map.end()) camera_map[id] = camera_map.size();
     for (auto &id : camidx) id = static_cast<int>(camera_map[id]);
-
-    SaveBundlerModel("./test_output", camera_data, point_data, measurements, ptidx, camidx);
-    std::ifstream fin("./test_output");
-    LoadBundlerModel(fin, camera_data, point_data, measurements, ptidx, camidx);
+//    if you want to debug, you can export your data or load your own data use bellow
+//    SaveBundlerModel("./test_output", camera_data, point_data, measurements, ptidx, camidx);
+//    std::ifstream fin("./test_output");
+//    LoadBundlerModel(fin, camera_data, point_data, measurements, ptidx, camidx);
     pba.SetCameraData(camera_data.size(), &camera_data[0]);                        //set camera parameters
+
+    int focalmask[sfm_data_.poses.size()];                                        //set mask to share model, mask must set after camera
+    memset(focalmask, 0, sizeof(focalmask));
+    pba.SetFocalMask(focalmask, 1);
+
     pba.SetPointData(point_data.size(), &point_data[0]);                            //set 3D point data
     pba.SetProjection(measurements.size(), &measurements[0], &ptidx[0], &camidx[0]);//set the projections
 
-    std::cout << "data to pba end" << std::endl;
+    //Data to pba end
     pba.RunBundleAdjustment();
 
-    std::cout << "data to openmvg start" << std::endl;
+    //Data to openmvg start
     i = 0;
     for (auto &camera_openmvg : sfm_data_.poses) {
       Mat3 camera_R;
@@ -1282,12 +1310,16 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
       camera_openmvg.second = Pose3(camera_R, -camera_R.transpose() * camera_T);
       i++;
     }
+    vector<double> params(4);
+    params[0] = camera_data[0].f; params[1] =  sfm_data_.intrinsics[0].get()->getParams().at(1);
+    params[2] = sfm_data_.intrinsics[0].get()->getParams().at(2); params[3] = camera_data[0].radial;
+    sfm_data_.intrinsics[0].get()->updateFromParams(params);
     i = 0;
     for (auto &point_openmvg : sfm_data_.structure) {
       for (int j = 0; j < 3; j++) point_openmvg.second.X[j] = point_data[i].xyz[j];
       i++;
     }
-    std::cout << "data to openmvg end" << std::endl;
+    //Data to openmvg end
     return true;
   } else {
       Bundle_Adjustment_Ceres::BA_Ceres_options options;

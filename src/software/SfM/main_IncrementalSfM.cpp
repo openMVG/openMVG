@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool b_use_motion_priors = false;
-  bool pba_option = false;
+  bool b_use_pba = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -112,6 +112,7 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t 5: Pinhole fisheye\n"
+      << "\t 6: Pinhole radial 1 pba\n"
     << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
@@ -134,11 +135,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
   
-  pba_option = cmd.used('p');
-  if(pba_option){
-    //pba don't adjust Intrinsic
-    sIntrinsic_refinement_options = "NONE";
-  }
+  b_use_pba = cmd.used('p');
   
   if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
@@ -159,6 +156,17 @@ int main(int argc, char **argv)
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
+  }
+
+  if(b_use_pba && !(i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1_PBA
+                    || i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1)) {
+    std::cerr << "\n If you want to use PBA, please set camera type PINHOLE_CAMERA_RADIAL1_PBA or PINHOLE_CAMERA_RADIAL1" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if(b_use_pba && ((intrinsic_refinement_options & cameras::Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+                   != static_cast<cameras::Intrinsic_Parameter_Type>(0))){
+    std::cout<< "Warning: PBA can not adjust principle point!" <<std::endl;
   }
 
   // Init the regions_type from the image describer file (used for image regions extraction)
@@ -217,7 +225,7 @@ int main(int argc, char **argv)
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
   // Configure the features_provider & the matches_provider
-  sfmEngine.setPba(pba_option);
+  sfmEngine.SetPba(b_use_pba);
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 

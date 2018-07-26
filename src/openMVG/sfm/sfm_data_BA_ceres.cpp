@@ -99,6 +99,8 @@ ceres::CostFunction * IntrinsicsToCostFunction
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     case CAMERA_SPHERICAL:
       return ResidualErrorFunctor_Intrinsic_Spherical::Create(intrinsic, observation, weight);
+    case PINHOLE_CAMERA_RADIAL1_PBA:
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA::Create(observation, weight);
     default:
       return {};
   }

@@ -232,6 +232,10 @@ int main(int argc, char **argv) {
       intrinsic = std::make_shared<Intrinsic_Spherical>
         (width, height);
       break;
+    case PINHOLE_CAMERA_RADIAL1_PBA:
+      intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>
+        (width, height, focal, ppx, ppy, 0.0);
+      break;
     default:
       std::cerr << "Error: unknown camera model: " << (int)e_User_camera_model << std::endl;
       return EXIT_FAILURE;

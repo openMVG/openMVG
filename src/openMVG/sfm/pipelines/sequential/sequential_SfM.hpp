@@ -48,8 +48,8 @@ public:
   {
     initial_pair_ = initialPair;
   }
-  void setPba(bool pba_option_){
-    pba_option = pba_option_;
+  void SetPba(bool b_use_pba){
+    b_use_pba_ = b_use_pba;
   }
 
   /// Initialize tracks
@@ -122,12 +122,7 @@ private:
   std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
   
   //pba option
-  bool pba_option;
-  //pba data
-  std::vector<CameraT>        camera_data;    //camera (input/ouput)
-  std::vector<Point3D>        point_data;     //3D point(iput/output)
-  std::vector<Point2D>        measurements;   //measurment/projection vector
-  std::vector<int>            camidx, ptidx;  //index of camera/point for each projection
+  bool b_use_pba_;
 };
 
 } // namespace sfm

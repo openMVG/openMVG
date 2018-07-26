@@ -178,7 +178,8 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole brown 2\n"
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
-      << "\t 7: Spherical camera\n"
+      << "\t 6: Pinhole radial 1 pba\n"
+      << "\t 8: Spherical camera\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -396,6 +397,10 @@ int main(int argc, char **argv)
            intrinsic = std::make_shared<Intrinsic_Spherical>
              (width, height);
         break;
+        case PINHOLE_CAMERA_RADIAL1_PBA:
+           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>
+             (width, height, focal, ppx, ppy, 0.0);
+           break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
           return EXIT_FAILURE;
