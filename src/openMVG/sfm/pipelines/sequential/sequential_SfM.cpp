@@ -25,11 +25,17 @@
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/progress/progress.hpp"
+#include "third_party/pba/src/pba/pba.h"
 
 #include <ceres/types.h>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <utility>
+#include <third_party/ceres-solver/include/ceres/rotation.h>
+#include <third_party/pba/src/pba/util.h>
+#include <third_party/pba/src/pba/SparseBundleCPU.h>
+#include <openMVG/sfm/sfm_data_PBA.hpp>
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -100,7 +106,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  // Initial pair choice
+
   if (initial_pair_ == Pair(0,0))
   {
     if (!AutomaticInitialPairChoice(initial_pair_))
@@ -294,7 +300,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
 {
   // Compute tracks from matches
   tracks::TracksBuilder tracksBuilder;
-
+  //std::cout<<"\n"<<"time:"<<clock()<<std::endl;
   {
     // List of features matches for each couple of images
     const openMVG::matching::PairWiseMatches & map_Matches = matches_provider_->pairWise_matches_;
@@ -334,6 +340,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
       std::cout << osTrack.str();
     }
   }
+  //std::cout<<"\n"<<"time:"<<clock()<<std::endl;
   // Initialize the shared track visibility helper
   shared_track_visibility_helper_.reset(new openMVG::tracks::SharedTrackVisibilityHelper(map_tracks_));
   return map_tracks_.size() > 0;
@@ -914,6 +921,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Localize the image inside the SfM reconstruction
   Image_Localizer_Match_Data resection_data;
+  //adjust ac-ransanc times 4096 -> 50 to reduce time cost
+  resection_data.max_iteration = b_use_acransaac_times_;
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
 
@@ -1029,6 +1038,10 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 std::make_shared<Pinhole_Intrinsic_Fisheye>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
+        case PINHOLE_CAMERA_RADIAL1_PBA:
+            optional_intrinsic =
+                std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>
+            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         default:
           std::cerr << "Try to create an unknown camera type." << std::endl;
           return false;
@@ -1193,33 +1206,42 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   return true;
 }
 
-/// Bundle adjustment to refine Structure; Motion and Intrinsics
 bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
-  Bundle_Adjustment_Ceres::BA_Ceres_options options;
-  if ( sfm_data_.GetPoses().size() > 100 &&
-      (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
-      )
-  // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
-  {
-    options.preconditioner_type_ = ceres::JACOBI;
-    options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+
+/// Bundle adjustment to refine Structure; Motion and Intrinsics
+  if(b_use_pba_) {
+    ParallelBA::DeviceT device = ParallelBA::PBA_CUDA_DEVICE_DEFAULT;
+    //device = ParallelBA::PBA_CPU_FLOAT; use cpu
+    sfm_data_PBA sfm_data_pba(device);
+    sfm_data_pba.DataToPBA(sfm_data_, intrinsic_refinement_options_, cam_type_);
+    return sfm_data_pba.Adjust(sfm_data_);
+  } else {
+      Bundle_Adjustment_Ceres::BA_Ceres_options options;
+      if ( sfm_data_.GetPoses().size() > 100 &&
+           (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+            ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+            ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+              )
+        // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+      {
+        options.preconditioner_type_ = ceres::JACOBI;
+        options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+      }
+      else
+      {
+        options.linear_solver_type_ = ceres::DENSE_SCHUR;
+      }
+      Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+      const Optimize_Options ba_refine_options
+              ( ReconstructionEngine::intrinsic_refinement_options_,
+                Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+                Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
+                Control_Point_Parameter(),
+                this->b_use_motion_prior_
+              );
+      return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   }
-  else
-  {
-    options.linear_solver_type_ = ceres::DENSE_SCHUR;
-  }
-  Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-  const Optimize_Options ba_refine_options
-    ( ReconstructionEngine::intrinsic_refinement_options_,
-      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
-      Control_Point_Parameter(),
-      this->b_use_motion_prior_
-    );
-  return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 }
 
 /**
@@ -1234,7 +1256,8 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size_t count)
 {
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(sfm_data_, dPrecision, 2);
-  const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(sfm_data_, 2.0);
+  //too long time for it, can use hash to improve it or just ignore it
+  const size_t nbOutliers_angleErr = b_use_angle_error_ ? 0 : RemoveOutliers_AngleError(sfm_data_, 2.0);
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }

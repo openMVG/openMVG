@@ -81,7 +81,10 @@ int main(int argc, char **argv)
   std::pair<std::string,std::string> initialPairString("","");
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  uint32_t b_use_acransac_times = 50;
+  bool b_use_angle_error = false;
   bool b_use_motion_priors = false;
+  bool b_use_pba = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -91,6 +94,9 @@ int main(int argc, char **argv)
   cmd.add( make_option('b', initialPairString.second, "initialPairB") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_option('A', b_use_acransac_times, "ACRANSAC_times"));
+  cmd.add( make_switch('e', "b_use_angle_error"));
+  cmd.add( make_switch('p', "pba_option"));
   cmd.add( make_switch('P', "prior_usage") );
 
   try {
@@ -110,6 +116,7 @@ int main(int argc, char **argv)
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t 5: Pinhole fisheye\n"
+      << "\t 6: Pinhole radial 1 pba\n"
     << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
@@ -124,13 +131,18 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
+    << "[-p|--pba_option] Enable usage of pba(default: false)\n"   
     << "[-M|--match_file] path to the match file to use.\n"
+    << "[-e|--b_use_angle_error] Enable usage of angle error(default false)\n"
+    << "[-A|--b_use_acransac_times] Adjust AC-RANSAC times(default 50)\n"
     << std::endl;
 
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
-
+  
+  b_use_pba = cmd.used('p');
+  
   if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
@@ -150,6 +162,17 @@ int main(int argc, char **argv)
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
     return EXIT_FAILURE;
+  }
+
+  if(b_use_pba && !(i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1_PBA
+                    || i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1)) {
+    std::cerr << "\n If you want to use PBA, please set camera type PINHOLE_CAMERA_RADIAL1_PBA or PINHOLE_CAMERA_RADIAL1" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if(b_use_pba && ((intrinsic_refinement_options & cameras::Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+                   != static_cast<cameras::Intrinsic_Parameter_Type>(0))){
+    std::cout<< "Warning: PBA can not adjust principle point!" <<std::endl;
   }
 
   // Init the regions_type from the image describer file (used for image regions extraction)
@@ -208,6 +231,7 @@ int main(int argc, char **argv)
     stlplus::create_filespec(sOutDir, "Reconstruction_Report.html"));
 
   // Configure the features_provider & the matches_provider
+  sfmEngine.SetPba(b_use_pba);
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
 
@@ -216,6 +240,9 @@ int main(int argc, char **argv)
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
   b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
+  b_use_angle_error = cmd.used('e');
+  sfmEngine.SetAngleError(b_use_angle_error);
+  sfmEngine.SetACRANSAC_times(b_use_acransac_times);
 
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())

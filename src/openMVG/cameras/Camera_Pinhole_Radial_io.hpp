@@ -28,6 +28,21 @@ inline void openMVG::cameras::Pinhole_Intrinsic_Radial_K1::load( Archive & ar )
 }
 
 template <class Archive>
+inline void openMVG::cameras::Pinhole_Intrinsic_Radial_K1_PBA::save( Archive & ar ) const
+{
+    Pinhole_Intrinsic::save( ar );
+    ar( cereal::make_nvp( "disto_k1_pba", params_ ) );
+}
+
+template <class Archive>
+inline void openMVG::cameras::Pinhole_Intrinsic_Radial_K1_PBA::load( Archive & ar )
+{
+    Pinhole_Intrinsic::load(ar);
+    ar( cereal::make_nvp( "disto_k1_pba", params_ ) );
+}
+
+
+template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Radial_K3::save( Archive & ar ) const
 {
     Pinhole_Intrinsic::save(ar);
@@ -43,6 +58,8 @@ inline void openMVG::cameras::Pinhole_Intrinsic_Radial_K3::load( Archive & ar )
 
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K1, "pinhole_radial_k1");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K1);
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K1_PBA, "pinhole_radial_k1_pba");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K1_PBA);
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::cameras::Pinhole_Intrinsic_Radial_K3, "pinhole_radial_k3");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::cameras::IntrinsicBase, openMVG::cameras::Pinhole_Intrinsic_Radial_K3);
 

@@ -9,8 +9,10 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
+
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
+#include <openMVG/cameras/Camera_Pinhole_Radial.hpp>
 
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
@@ -100,8 +102,114 @@ struct WeightedCostFunction
  */
 struct ResidualErrorFunctor_Pinhole_Intrinsic
 {
-  explicit ResidualErrorFunctor_Pinhole_Intrinsic(const double* const pos_2dpoint)
-  :m_pos_2dpoint(pos_2dpoint)
+explicit ResidualErrorFunctor_Pinhole_Intrinsic(const double* const pos_2dpoint)
+:m_pos_2dpoint(pos_2dpoint)
+{
+}
+
+// Enum to map intrinsics parameters between openMVG & ceres camera data parameter block.
+enum : uint8_t {
+  OFFSET_FOCAL_LENGTH = 0,
+  OFFSET_PRINCIPAL_POINT_X = 1,
+  OFFSET_PRINCIPAL_POINT_Y = 2
+};
+
+/**
+ * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y] )
+ * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
+ *   - 3 for rotation(angle axis), 3 for translation
+ * @param[in] pos_3dpoint
+ * @param[out] out_residuals
+ */
+template <typename T>
+bool operator()(
+  const T* const cam_intrinsics,
+  const T* const cam_extrinsics,
+  const T* const pos_3dpoint,
+  T* out_residuals) const
+{
+  //--
+  // Apply external parameters (Pose)
+  //--
+
+  const T * cam_R = cam_extrinsics;
+  Eigen::Map<const Eigen::Matrix<T, 3, 1>> cam_t(&cam_extrinsics[3]);
+
+  Eigen::Matrix<T, 3, 1> transformed_point;
+  // Rotate the point according the camera rotation
+  ceres::AngleAxisRotatePoint(cam_R, pos_3dpoint, transformed_point.data());
+
+  // Apply the camera translation
+  transformed_point += cam_t;
+
+  // Transform the point from homogeneous to euclidean (undistorted point)
+  const Eigen::Matrix<T, 2, 1> projected_point = transformed_point.hnormalized();
+
+  //--
+  // Apply intrinsic parameters
+  //--
+
+  const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
+  const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
+  const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+
+  // Apply focal length and principal point to get the final image coordinates
+
+  // Compute and return the error is the difference between the predicted
+  //  and observed position
+  Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
+  Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
+  residuals << principal_point_x + projected_point.x() * focal - m_pos_2dpoint[0],
+               principal_point_y + projected_point.y() * focal - m_pos_2dpoint[1];
+  return true;
+}
+
+static int num_residuals() { return 2; }
+
+// Factory to hide the construction of the CostFunction object from
+// the client code.
+static ceres::CostFunction* Create
+(
+  const Vec2 & observation,
+  const double weight = 0.0
+)
+{
+  if (weight == 0.0)
+  {
+    return
+      (new ceres::AutoDiffCostFunction
+        <ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
+          new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data())));
+  }
+  else
+  {
+    return
+      (new ceres::AutoDiffCostFunction
+        <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>, 2, 3, 6, 3>
+        (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>
+          (new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()), weight)));
+  }
+}
+
+const double * m_pos_2dpoint; // The 2D observation
+};
+
+/**
+* @brief Ceres functor to use a Pinhole_Intrinsic_Radial_K1
+*
+*  Data parameter blocks are the following <2,4,6,3>
+*  - 2 => dimension of the residuals,
+*  - 4 => the intrinsic data block [focal, principal point x, principal point y, K1],
+*  - 6 => the camera extrinsic data block (camera orientation and position) [R;t],
+*         - rotation(angle axis), and translation [rX,rY,rZ,tx,ty,tz].
+*  - 3 => a 3D point data block.
+*
+*/
+
+struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA
+{
+  explicit ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA(const double* const pos_2dpoint)
+          :m_pos_2dpoint(pos_2dpoint)
   {
   }
 
@@ -109,11 +217,12 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
   enum : uint8_t {
     OFFSET_FOCAL_LENGTH = 0,
     OFFSET_PRINCIPAL_POINT_X = 1,
-    OFFSET_PRINCIPAL_POINT_Y = 2
+    OFFSET_PRINCIPAL_POINT_Y = 2,
+    OFFSET_DISTO_K1 = 3
   };
 
   /**
-   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y] )
+   * @param[in] cam_intrinsics: Camera intrinsics( focal, principal point [x,y], K1 )
    * @param[in] cam_extrinsics: Camera parameterized using one block of 6 parameters [R;t]:
    *   - 3 for rotation(angle axis), 3 for translation
    * @param[in] pos_3dpoint
@@ -121,10 +230,10 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
    */
   template <typename T>
   bool operator()(
-    const T* const cam_intrinsics,
-    const T* const cam_extrinsics,
-    const T* const pos_3dpoint,
-    T* out_residuals) const
+          const T* const cam_intrinsics,
+          const T* const cam_extrinsics,
+          const T* const pos_3dpoint,
+          T* out_residuals) const
   {
     //--
     // Apply external parameters (Pose)
@@ -150,15 +259,17 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
     const T& focal = cam_intrinsics[OFFSET_FOCAL_LENGTH];
     const T& principal_point_x = cam_intrinsics[OFFSET_PRINCIPAL_POINT_X];
     const T& principal_point_y = cam_intrinsics[OFFSET_PRINCIPAL_POINT_Y];
+    const T& k1 = cam_intrinsics[OFFSET_DISTO_K1];
 
-    // Apply focal length and principal point to get the final image coordinates
+    const T r2 = (m_pos_2dpoint[0] - principal_point_x)*(m_pos_2dpoint[0] - principal_point_x) +
+            (m_pos_2dpoint[1] - principal_point_y)*(m_pos_2dpoint[1] - principal_point_y);
+    const T r_coeff = 1.0 + k1 * r2;
 
-    // Compute and return the error is the difference between the predicted
-    //  and observed position
     Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
-    residuals << principal_point_x + projected_point.x() * focal - m_pos_2dpoint[0],
-                 principal_point_y + projected_point.y() * focal - m_pos_2dpoint[1];
+    residuals << (projected_point.x()) * focal - (m_pos_2dpoint[0] - principal_point_x)*r_coeff,
+           (projected_point.y()) * focal - (m_pos_2dpoint[1] - principal_point_y)*r_coeff;
+
     return true;
   }
 
@@ -167,42 +278,31 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
   // Factory to hide the construction of the CostFunction object from
   // the client code.
   static ceres::CostFunction* Create
-  (
-    const Vec2 & observation,
-    const double weight = 0.0
-  )
+          (
+                  const Vec2 & observation,
+                  const double weight = 0.0
+          )
   {
     if (weight == 0.0)
     {
       return
-        (new ceres::AutoDiffCostFunction
-          <ResidualErrorFunctor_Pinhole_Intrinsic, 2, 3, 6, 3>(
-            new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data())));
+              (new ceres::AutoDiffCostFunction
+                      <ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA, 2, 4, 6, 3>(
+                      new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA(observation.data())));
     }
     else
     {
       return
-        (new ceres::AutoDiffCostFunction
-          <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>, 2, 3, 6, 3>
-          (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic>
-            (new ResidualErrorFunctor_Pinhole_Intrinsic(observation.data()), weight)));
+              (new ceres::AutoDiffCostFunction
+                      <WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA>, 2, 4, 6, 3>
+                      (new WeightedCostFunction<ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA>
+                               (new ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1_PBA(observation.data()), weight)));
     }
   }
 
   const double * m_pos_2dpoint; // The 2D observation
 };
 
-/**
- * @brief Ceres functor to use a Pinhole_Intrinsic_Radial_K1
- *
- *  Data parameter blocks are the following <2,4,6,3>
- *  - 2 => dimension of the residuals,
- *  - 4 => the intrinsic data block [focal, principal point x, principal point y, K1],
- *  - 6 => the camera extrinsic data block (camera orientation and position) [R;t],
- *         - rotation(angle axis), and translation [rX,rY,rZ,tx,ty,tz].
- *  - 3 => a 3D point data block.
- *
- */
 struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
 {
   explicit ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1(const double* const pos_2dpoint)

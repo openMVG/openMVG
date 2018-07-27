@@ -20,6 +20,7 @@ add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
 target_link_libraries(
   openMVG_sfm
   PRIVATE
+    pbaCPU
     openMVG_geometry
     openMVG_multiview
     stlplus
@@ -32,6 +33,7 @@ target_link_libraries(
 target_include_directories(
   openMVG_sfm
   PRIVATE
+  pbaCPU
   ${CERES_INCLUDE_DIRS})
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
