@@ -311,7 +311,7 @@ namespace sfm {
     {
       pose = sfm_data.poses[0];
       if (b_refine_intrinsic)
-        *intrinsics = *shared_intrinsics;
+        intrinsics->updateFromParams(shared_intrinsics->getParams());
     }
 
     return b_BA_Status;
