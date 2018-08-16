@@ -107,11 +107,20 @@ bool exportToOpenMVS(
         ReadImage(srcImage.c_str(), &imageRGB);
         UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
         WriteImage(image.name.c_str(), imageRGB_ud);
+        // undistort mask and save it
+        auto maskFileName = srcImage + ".mask.png";
+        if (stlplus::is_file(maskFileName)) {
+          Image<openMVG::image::RGBColor> maskRGB, maskRGB_ud;
+          ReadImage(maskFileName.c_str(), &maskRGB);
+          UndistortImage(maskRGB, cam, maskRGB_ud, BLACK);
+          WriteImage((image.name + ".mask.png").c_str(), maskRGB_ud);
+        }
       }
       else
       {
         // just copy image
         stlplus::file_copy(srcImage, image.name);
+        stlplus::file_copy(srcImage + ".mask.png", image.name + ".mask.png");
       }
       platform.poses.push_back(pose);
       ++nPoses;
