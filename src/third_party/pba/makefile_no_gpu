@@ -1,0 +1,56 @@
+#To use AVX instead of SSE, you need to add -DCPUPBA_USE_AVX to CFLAGS
+#################################################################
+
+
+# detect OS
+OSUPPER = $(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
+OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+DARWIN = $(strip $(findstring DARWIN, $(OSUPPER)))
+
+
+SHELL = /bin/sh
+BIN_DIR = ./bin
+SRC_PBA = ./src/pba
+SRC_DRIVER = ./src/driver
+OUT_PBA = ./bin/out_no_gpu
+
+CC = g++
+CFLAGS =  -DPBA_NO_GPU -fPIC -L/usr/lib64 -L/usr/lib -L$(BIN_DIR) -O2 -Wall -Wno-deprecated -pthread -march=native -mfpmath=sse -fpermissive
+
+
+# siftgpu header files
+_HEADER_PBA = pba.h ConfigBA.h CuTexImage.h DataInterface.h SparseBundleCU.h
+_HEADER_PBA_LIB = pba.h 
+_OBJ_PBA = pba.o ConfigBA.o SparseBundleCPU.o
+
+all: makepath pba driver 
+ 
+#the dependencies of SiftGPU library 
+DEPS_PBA = $(patsubst %, $(SRC_PBA)/%, $(_HEADER_PBA))
+
+#rules for the rest of the object files
+$(OUT_PBA)/%.o: $(SRC_PBA)/%.cpp $(DEPS_PBA) 
+	$(CC) -o $@ $< $(CFLAGS) -c 
+
+
+OBJ_PBA  = $(patsubst %,$(OUT_PBA)/%,$(_OBJ_PBA))
+LIBS_DRIVER = $(BIN_DIR)/libpba_no_gpu.a $(LIBS_PBA) 
+
+pba: makepath $(OBJ_PBA)
+	ar rcs $(BIN_DIR)/libpba_no_gpu.a $(OBJ_PBA)
+	$(CC) -o $(BIN_DIR)/libpba_no_gpu.so $(OBJ_PBA) $(LIBS_PBA) $(CFLAGS) -shared -fPIC
+ 
+driver: makepath 
+	$(CC) -o $(BIN_DIR)/driver_no_gpu $(SRC_DRIVER)/driver.cpp -lpba_no_gpu  $(CFLAGS) 
+	
+makepath:
+	mkdir -p $(OUT_PBA)
+	mkdir -p $(BIN_DIR) 
+ 
+clean:
+	rm -f $(OUT_PBA)/*.o
+	rm -f $(BIN_DIR)/libpba_no_gpu.a
+	rm -f $(BIN_DIR)/libpba_no_gpu.so
+	rm -f $(BIN_DIR)/driver_no_gpu
+
+
