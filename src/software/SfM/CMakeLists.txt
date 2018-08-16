@@ -280,6 +280,15 @@ TARGET_LINK_LIBRARIES(openMVG_main_openMVG2openMVS
   stlplus
   )
 
+add_executable(undistort undistort.cpp)
+target_link_libraries(undistort
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  stlplus
+  )
+
 # - Export a SfM openMVG scene to CMPMVS format
 #
 ADD_EXECUTABLE(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
