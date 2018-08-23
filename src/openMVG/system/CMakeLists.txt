@@ -9,6 +9,7 @@ set_property(TARGET openMVG_system PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_system DESTINATION lib/ EXPORT openMVG-targets)
 
 add_library(openMVG_progress_test INTERFACE)
+target_link_libraries(openMVG_progress_test INTERFACE ${OPENMVG_LIBRARY_DEPENDENCIES})
 target_include_directories(openMVG_progress_test INTERFACE ${EIGEN_INCLUDE_DIRS})
 
 UNIT_TEST(openMVG progress "openMVG_system;openMVG_progress_test;openMVG_testing")

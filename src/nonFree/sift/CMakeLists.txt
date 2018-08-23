@@ -14,7 +14,7 @@ endif()
 add_definitions(-DVL_DISABLE_THREADS)
 
 include_directories(./vl)
-set(FEATS 
+set(FEATS
   vl/generic.c
   vl/imopv_sse2.c
   vl/sift.c

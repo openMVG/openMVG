@@ -212,7 +212,7 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
                                ${CMAKE_SOURCE_DIR}/third_party)
     target_link_libraries(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
-                          CppUnitLite ${OPENMVG_LIBRARY_DEPENDENCIES})
+                          CppUnitLite)
     add_test(NAME ${NAMESPACE}_test_${NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
              COMMAND $<TARGET_FILE:${NAMESPACE}_test_${NAME}>)
   target_compile_definitions(${NAMESPACE}_test_${NAME}

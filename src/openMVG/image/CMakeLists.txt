@@ -19,6 +19,7 @@ target_compile_features(openMVG_image INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_image
   PUBLIC
     openMVG_numeric
+    ${OPENMVG_LIBRARY_DEPENDENCIES}
   PRIVATE
     ${JPEG_LIBRARIES}
     ${PNG_LIBRARIES}

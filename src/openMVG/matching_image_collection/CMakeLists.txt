@@ -22,7 +22,8 @@ target_compile_features(openMVG_matching_image_collection INTERFACE ${CXX11_FEAT
 target_link_libraries(openMVG_matching_image_collection
   PUBLIC
     openMVG_matching
-    openMVG_multiview)
+    openMVG_multiview
+    ${OPENMVG_LIBRARY_DEPENDENCIES})
 target_include_directories(openMVG_matching_image_collection
   PUBLIC
     $<INSTALL_INTERFACE:include>
