@@ -156,7 +156,7 @@ Checking out OpenMVG and build it
 $ git clone --recursive https://github.com/openMVG/openMVG.git
 $ mkdir openMVG_Build
 $ cd openMVG_Build
-$ cmake ../openMVG/src/ -DCMAKE_TOOLCHAIN_FILE=<VCPK_ROOT>/scripts/buildsystems/vcpkg.cmake
+$ cmake -DCMAKE_TOOLCHAIN_FILE=<VCPK_ROOT>/scripts/buildsystems/vcpkg.cmake ../openMVG/src/
 $ cmake --build .
 ```
 
