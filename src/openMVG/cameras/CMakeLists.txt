@@ -20,6 +20,6 @@ UNIT_TEST(openMVG Camera_Spherical openMVG_camera)
 UNIT_TEST(openMVG Camera_Subset_Parametrization openMVG_camera)
 
 add_library(openMVG_camera_test INTERFACE)
-target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera cereal)
+target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera)
 
 UNIT_TEST(openMVG Camera_IO "openMVG_camera_test;${STLPLUS_LIBRARY}")
