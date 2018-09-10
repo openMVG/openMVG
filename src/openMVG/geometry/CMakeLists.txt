@@ -21,6 +21,7 @@ set_property(TARGET openMVG_geometry PROPERTY FOLDER OpenMVG/OpenMVG)
 target_link_libraries(openMVG_geometry
   PUBLIC
     openMVG_numeric
+    cereal
   PRIVATE
     openMVG_linearProgramming
 )
