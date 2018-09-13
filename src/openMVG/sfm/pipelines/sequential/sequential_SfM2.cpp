@@ -115,8 +115,8 @@ bool SequentialSfMReconstructionEngine2::Process() {
     {
       const bool bTriangulation = Triangulation();
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, "Initialization", ".ply"), ESfM_Data(ALL));
-      RemoveOutliers_AngleError(sfm_data_, Square(2.0));
-      RemoveOutliers_PixelResidualError(sfm_data_, Square(4.0));
+      RemoveOutliers_AngleError(sfm_data_, 2.0);
+      RemoveOutliers_PixelResidualError(sfm_data_, 4.0);
 
       //-- Display some statistics
       std::cout << "\n\n-------------------------------" << "\n"
