@@ -378,7 +378,6 @@ const
       continue;
 
     std::deque<IndexT> inlier_set;
-    bool bChierality_obs = true;
     double current_error = 0.0;
     // inlier/outlier classification according pixel residual errors.
     for (const auto & obs_it : obs)
@@ -390,9 +389,8 @@ const
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       const Vec2 residual = intrinsic->residual(pose(X), obs_it.second.x);
       const double residual_d = residual.squaredNorm();
-      bChierality_obs &= CheiralityTest((*intrinsic)(obs_it.second.x), pose, X);
-      if (!bChierality_obs) break;
-      if (residual_d < dSquared_pixel_threshold)
+      if (residual_d < dSquared_pixel_threshold && 
+          CheiralityTest((*intrinsic)(obs_it.second.x), pose, X))
       {
         inlier_set.push_front(obs_it.first);
         current_error += residual_d;
@@ -403,8 +401,7 @@ const
       }
     }
     // Does the hypothesis is the best one we have seen and have sufficient inliers.
-    if (bChierality_obs && 
-      current_error < best_error && 
+    if (current_error < best_error && 
       inlier_set.size() >= min_required_inliers_)
     {
       best_model = X;
