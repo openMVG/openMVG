@@ -251,17 +251,17 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
 
           // Test validity of the hypothesis:
           // - residual error
-          // - chierality
-          bool bChierality = true;
+          // - cheirality
+          bool bCheirality = true;
           bool bReprojection_error = true;
           int i(0);
           for (tracks::submapTrack::const_iterator obs_it = subTrack.begin();
-            obs_it != subTrack.end() && bChierality && bReprojection_error; ++obs_it, ++i)
+            obs_it != subTrack.end() && bCheirality && bReprojection_error; ++obs_it, ++i)
           {
             const View * view = sfm_data.views.at(obs_it->first).get();
 
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
-            bChierality &= CheiralityTest(bearing[i], pose, X);
+            bCheirality &= CheiralityTest(bearing[i], pose, X);
 
             const size_t imaIndex = obs_it->first;
             const size_t featIndex = obs_it->second;
@@ -270,7 +270,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
             const Vec2 residual = cam->residual(pose(X), pt);
             bReprojection_error &= residual.squaredNorm() < max_reprojection_error_;
           }
-          if (bChierality && bReprojection_error)
+          if (bCheirality && bReprojection_error)
           // TODO: Add an angular check ?
           {
             #ifdef OPENMVG_USE_OPENMP
