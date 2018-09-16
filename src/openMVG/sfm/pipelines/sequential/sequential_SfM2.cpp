@@ -153,6 +153,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
   const std::array<float, 2> track_inlier_ratios = {0.2, 0.0};
   for (const float track_inlier_ratio : track_inlier_ratios)
   {
+    IndexT pose_before = sfm_data_.GetPoses().size();
     while (AddingMissingView(track_inlier_ratio))
     {
       // Create new 3D points
@@ -167,6 +168,13 @@ bool SequentialSfMReconstructionEngine2::Process() {
       os << std::setw(8) << std::setfill('0') << resection_round << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
       ++resection_round;
+
+      // Stop if no cameras have been added
+      // Note: some cameras could have been removed due to instable camera positions.
+      const IndexT pose_after = sfm_data_.GetPoses().size();
+      if (pose_before >= pose_after)
+        break;
+      pose_before = sfm_data_.GetPoses().size();
     }
   }
 
