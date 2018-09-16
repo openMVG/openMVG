@@ -160,19 +160,19 @@ const
         Vec3 X;
         if (track_full_triangulation(sfm_data, obs, X))
         {
-          bool bChierality = true;
+          bool bCheirality = true;
           for (Observations::const_iterator obs_it = obs.begin();
-            obs_it != obs.end() && bChierality; ++obs_it)
+            obs_it != obs.end() && bCheirality; ++obs_it)
           {
             const View * view = sfm_data.views.at(obs_it->first).get();
             if (!sfm_data.IsPoseAndIntrinsicDefined(view))
               continue;
             const IntrinsicBase * cam = sfm_data.intrinsics.at(view->id_intrinsic).get();
             const Pose3 pose = sfm_data.GetPoseOrDie(view);
-            bChierality &= CheiralityTest((*cam)(obs_it->second.x), pose, X);
+            bCheirality &= CheiralityTest((*cam)(obs_it->second.x), pose, X);
           }
 
-          if (bChierality) // Keep the point only if it has a positive depth
+          if (bCheirality) // Keep the point only if it has a positive depth
           {
             tracks_it.second.X = X;
             bKeep = true;
@@ -298,23 +298,23 @@ const
     {
       // Test validity of the hypothesis:
       // - residual error
-      // - chierality
-      bool bChierality = true;
+      // - cheirality
+      bool bCheirality = true;
       bool bReprojection_error = true;
       for (Observations::const_iterator itObs = obs.begin();
-        itObs != obs.end() && bChierality && bReprojection_error; ++itObs)
+        itObs != obs.end() && bCheirality && bReprojection_error; ++itObs)
       {
         const View * view = sfm_data.views.at(itObs->first).get();
         if (!sfm_data.IsPoseAndIntrinsicDefined(view))
           continue;
         const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
         const Pose3 pose = sfm_data.GetPoseOrDie(view);
-        bChierality &= CheiralityTest((*cam)(itObs->second.x), pose, X);
+        bCheirality &= CheiralityTest((*cam)(itObs->second.x), pose, X);
         const Vec2 residual = cam->residual(pose(X), itObs->second.x);
         bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
       }
 
-      if (bChierality && bReprojection_error)
+      if (bCheirality && bReprojection_error)
       {
         landmark.X = X;
         landmark.obs = obs;
@@ -351,14 +351,14 @@ const
       continue;
 
     // Test validity of the hypothesis
-    // - chierality (for the samples)
+    // - cheirality (for the samples)
     // - residual error
 
-    bool bChierality = true;
+    bool bCheirality = true;
     bool bReprojection_error = true;
     IndexT validity_test_count = 0;
     for (std::set<IndexT>::const_iterator it = samples.begin();
-      it != samples.end() && bChierality && bReprojection_error; ++it)
+      it != samples.end() && bCheirality && bReprojection_error; ++it)
     {
       Observations::const_iterator itObs = obs.begin();
       std::advance(itObs, *it);
@@ -367,13 +367,13 @@ const
         continue;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      bChierality &= CheiralityTest((*cam)(itObs->second.x), pose, X);
+      bCheirality &= CheiralityTest((*cam)(itObs->second.x), pose, X);
       const Vec2 residual = cam->residual(pose(X), itObs->second.x);
       bReprojection_error &= residual.squaredNorm() < dSquared_pixel_threshold;
-      validity_test_count += (bChierality && bReprojection_error) ? 1 : 0;
+      validity_test_count += (bCheirality && bReprojection_error) ? 1 : 0;
     }
 
-    if (!bChierality || !bReprojection_error ||
+    if (!bCheirality || !bReprojection_error ||
         validity_test_count < min_required_inliers_)
       continue;
 
