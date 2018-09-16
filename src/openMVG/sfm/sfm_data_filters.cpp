@@ -102,7 +102,7 @@ IndexT RemoveOutliers_AngleError
 
         const double angle = AngleBetweenRay(
           pose1, intrinsic1, pose2, intrinsic2,
-          itObs1->second.x, itObs2->second.x);
+          intrinsic1->get_ud_pixel(itObs1->second.x), intrinsic2->get_d_pixel(itObs2->second.x));
         max_angle = std::max(angle, max_angle);
       }
     }
