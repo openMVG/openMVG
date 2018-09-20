@@ -148,8 +148,8 @@ bool SequentialSfMReconstructionEngine2::Process() {
 
   // Incrementally estimate the pose of the cameras based on a confidence score.
   // The confidence score is based on the track_inlier_ratio.
-  // First the camera with the most of 2D-3D overlap are added the we added
-  // the one with lower confidence.
+  // First the camera with the most of 2D-3D overlap are added then we add
+  // ones with lower confidence.
   const std::array<float, 2> track_inlier_ratios = {0.2, 0.0};
   for (auto track_inlier_ratio = track_inlier_ratios.cbegin(); 
     track_inlier_ratio < track_inlier_ratios.cend(); ++track_inlier_ratio)
@@ -177,7 +177,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
       if (pose_before >= pose_after)
         break;
       pose_before = sfm_data_.GetPoses().size();
-      // Since we have augmented our set of pose we can reset our track inlier ratio iterator 
+      // Since we have augmented our set of poses we can reset our track inlier ratio iterator 
       track_inlier_ratio = track_inlier_ratios.cbegin();
     }
   }
