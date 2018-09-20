@@ -151,10 +151,11 @@ bool SequentialSfMReconstructionEngine2::Process() {
   // First the camera with the most of 2D-3D overlap are added the we added
   // the one with lower confidence.
   const std::array<float, 2> track_inlier_ratios = {0.2, 0.0};
-  for (const float track_inlier_ratio : track_inlier_ratios)
+  for (auto track_inlier_ratio = track_inlier_ratios.cbegin(); 
+    track_inlier_ratio < track_inlier_ratios.cend(); ++track_inlier_ratio)
   {
     IndexT pose_before = sfm_data_.GetPoses().size();
-    while (AddingMissingView(track_inlier_ratio))
+    while (AddingMissingView(*track_inlier_ratio))
     {
       // Create new 3D points
       Triangulation();
@@ -164,6 +165,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
       RemoveOutliers_AngleError(sfm_data_, 2.0);
       RemoveOutliers_PixelResidualError(sfm_data_, 4.0);
       eraseUnstablePosesAndObservations(sfm_data_);
+
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resection_round << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
@@ -175,6 +177,8 @@ bool SequentialSfMReconstructionEngine2::Process() {
       if (pose_before >= pose_after)
         break;
       pose_before = sfm_data_.GetPoses().size();
+      // Since we have augmented our set of pose we can reset our track inlier ratio iterator 
+      track_inlier_ratio = track_inlier_ratios.cbegin();
     }
   }
 
