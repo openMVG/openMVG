@@ -100,7 +100,6 @@ endif()
 set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
-AutodetectHostArchitecture()
 OptimizeForArchitecture()
 
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
