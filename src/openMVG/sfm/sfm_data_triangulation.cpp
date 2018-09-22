@@ -86,7 +86,7 @@ bool track_sample_triangulation
 (
   const SfM_Data & sfm_data,
   const Observations & obs,
-  const std::set<IndexT> & samples,
+  const std::vector<IndexT> & samples,
   Vec3 & X
 )
 {
@@ -341,9 +341,8 @@ const
   // - Ransac loop
   for (IndexT i = 0; i < nbIter; ++i)
   {
-    std::vector<uint32_t> vec_samples;
-    robust::UniformSample(min_sample_index_, obs.size(), random_generator, &vec_samples);
-    const std::set<IndexT> samples(vec_samples.begin(), vec_samples.end());
+    std::vector<uint32_t> samples;
+    robust::UniformSample(min_sample_index_, obs.size(), random_generator, &samples);
 
     // Hypothesis generation
     Vec3 X;
@@ -353,11 +352,10 @@ const
     // Test validity of the hypothesis
     // - cheirality (for the samples)
     // - residual error
-
     bool bCheirality = true;
     bool bReprojection_error = true;
     IndexT validity_test_count = 0;
-    for (std::set<IndexT>::const_iterator it = samples.begin();
+    for (std::vector<IndexT>::const_iterator it = samples.begin();
       it != samples.end() && bCheirality && bReprojection_error; ++it)
     {
       Observations::const_iterator itObs = obs.begin();
