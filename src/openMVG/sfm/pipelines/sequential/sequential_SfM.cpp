@@ -633,7 +633,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         ob_xJ_ud = cam_J->get_ud_pixel(ob_xJ.x);
 
       const double angle = AngleBetweenRay(
-        pose_I, cam_I, pose_J, cam_J, cam_I->get_ud_pixel(ob_xI.x), cam_J->get_ud_pixel(ob_xJ.x));
+        pose_I, cam_I, pose_J, cam_J, ob_xI_ud, ob_xJ_ud);
       const Vec2 residual_I = cam_I->residual(pose_I(landmark.X), ob_xI.x);
       const Vec2 residual_J = cam_J->residual(pose_J(landmark.X), ob_xJ.x);
       if (angle > 2.0 &&
@@ -1130,7 +1130,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                              &X);
               // Check triangulation result
               const double angle = AngleBetweenRay(
-                pose_I, cam_I, pose_J, cam_J, cam_I->get_ud_pixel(xI), cam_J->get_ud_pixel(xJ));
+                pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
               const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
               const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
               if (
