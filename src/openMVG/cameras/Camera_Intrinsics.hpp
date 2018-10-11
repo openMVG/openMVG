@@ -274,9 +274,8 @@ inline double AngleBetweenRay
   // ray = X - C = R.t() * K.inv() * x
   const Vec3 ray1 = ( pose1.rotation().transpose() * intrinsic1->operator()( x1 ) ).normalized();
   const Vec3 ray2 = ( pose2.rotation().transpose() * intrinsic2->operator()( x2 ) ).normalized();
-  const double mag = ray1.norm() * ray2.norm();
   const double dotAngle = ray1.dot( ray2 );
-  return R2D( acos( clamp( dotAngle / mag, -1.0 + 1.e-8, 1.0 - 1.e-8 ) ) );
+  return R2D( acos( clamp( dotAngle, -1.0 + 1.e-8, 1.0 - 1.e-8 ) ) );
 }
 
 /**
