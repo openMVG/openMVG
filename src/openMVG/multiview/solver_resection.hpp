@@ -17,6 +17,7 @@ enum class SolverType
   DLT_6POINTS = 0,
   P3P_KE_CVPR17 = 1,
   P3P_KNEIP_CVPR11 = 2,
+  P3P_NORDBERG_ECCV18 = 3
 };
 
 }  // namespace resection
