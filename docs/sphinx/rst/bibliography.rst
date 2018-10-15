@@ -99,6 +99,9 @@ Bibliography
 .. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers**
    Magnus Oskarsson. In Journal of Mathematical Imaging and Vision, 2017.
 
+-- [Persson] **"Lambda Twist: An Accurate Fast Robust Perspective Three Point (P3P) Solver**
+   Persson, Mikael; Nordberg, Kahl. ECCV 2018
+
 .. [Ceres] **Ceres Solver**
     Sameer Agarwal and Keir Mierle and Others, http://ceres-solver.org
 

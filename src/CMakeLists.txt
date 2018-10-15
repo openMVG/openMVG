@@ -260,7 +260,7 @@ endif()
 # - external by default if CERES_DIR_HINTS or find_package found a valid Ceres
 # - internal if ceres not found (ceres-solver+cxsparse+miniglog)
 # ==============================================================================
-find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
+#find_package(Ceres QUIET HINTS ${CERES_DIR_HINTS})
 if (NOT Ceres_FOUND)
   set(OpenMVG_USE_INTERNAL_CERES ON)
   set(CERES_INCLUDE_DIRS

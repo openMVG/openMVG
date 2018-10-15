@@ -121,11 +121,12 @@ It consists in estimating the camera parameters of the right camera that minimiz
 	
    Residual error.
 
-openMVG provides 3 different solvers for this problem:
+openMVG provides 4 different solvers for this problem:
 
 * 6pt Direct Linear Transform [HZ]_,
-* 3pt with intrinsic EPnP [Ke]_,  
+* 3pt with intrinsic P3P [Ke]_,  
 * 3pt with intrinsic P3P [Kneip]_.
+* 3pt with intrinsic P3P [Persson]_,
 
 Kernel concept
 ---------------------
