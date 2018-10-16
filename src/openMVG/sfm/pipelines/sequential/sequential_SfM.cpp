@@ -921,8 +921,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Localize the image inside the SfM reconstruction
   Image_Localizer_Match_Data resection_data;
-  //adjust ac-ransanc times 4096 -> 50 to reduce time cost
-  resection_data.max_iteration = b_use_acransaac_times_;
+  // adjust ac-ransanc times 4096 -> 50 to reduce time cost
+  resection_data.max_iteration = u_acransac_times_;
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
 
@@ -1256,8 +1256,8 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size_t count)
 {
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(sfm_data_, dPrecision, 2);
-  //too long time for it, can use hash to improve it or just ignore it
-  const size_t nbOutliers_angleErr = b_use_angle_error_ ? 0 : RemoveOutliers_AngleError(sfm_data_, 2.0);
+  // too long time for it, can use hash to improve it or just ignore it
+  const size_t nbOutliers_angleErr = b_omit_angle_error_ ? 0 : RemoveOutliers_AngleError(sfm_data_, 2.0);
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }

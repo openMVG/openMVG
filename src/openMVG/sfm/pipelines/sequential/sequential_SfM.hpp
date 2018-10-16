@@ -48,14 +48,17 @@ public:
   {
     initial_pair_ = initialPair;
   }
-  void SetPba(bool b_use_pba){
+
+  void SetPba(bool b_use_pba) {
     b_use_pba_ = b_use_pba;
   }
-  void SetAngleError(bool b_use_angle_error){
-    b_use_angle_error_ = b_use_angle_error;
+
+  void SetAngleError(bool b_omit_angle_error) {
+    b_omit_angle_error_ = b_omit_angle_error;
   }
-  void SetACRANSAC_times(uint32_t t){
-    b_use_acransaac_times_ = t;
+
+  void SetACRANSAC_times(uint32_t t) {
+    u_acransac_times_ = t;
   }
 
   /// Initialize tracks
@@ -131,9 +134,9 @@ private:
   bool b_use_pba_;
 
   //enable angle error, it will cost much time. (sfm refine data)
-  bool b_use_angle_error_;
+  bool b_omit_angle_error_;
   //acransac times control
-  uint32_t b_use_acransaac_times_;
+  uint32_t u_acransac_times_;
 };
 
 } // namespace sfm
