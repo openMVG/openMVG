@@ -31,6 +31,12 @@ TARGET_LINK_LIBRARIES(openMVG_main_ConvertList
   openMVG_sfm
   )
 
+#select and merge multiple SfM_Data
+ADD_EXECUTABLE(openMVG_main_SelectSfM main_SelectSfM.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_SelectSfM
+  openMVG_system
+  openMVG_sfm)
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION bin/)
@@ -38,6 +44,8 @@ SET_PROPERTY(TARGET openMVG_main_SfMInit_ARImageListing PROPERTY FOLDER OpenMVG/
 INSTALL(TARGETS openMVG_main_SfMInit_ARImageListing DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ConvertList DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_SelectSfM PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SelectSfM DESTINATION bin/)
 
 ###
 # Add executable that computes:
@@ -53,6 +61,15 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeFeatures
   openMVG_multiview
   openMVG_sfm
   stlplus
+  vlsift
+  )
+
+ADD_EXECUTABLE(openMVG_main_MaskFeatures main_MaskFeatures.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_MaskFeatures
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
   vlsift
   )
 
@@ -79,6 +96,8 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_MaskFeatures PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_MaskFeatures DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
