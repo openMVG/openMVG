@@ -36,8 +36,8 @@ struct Synthetic_Features_Provider : public Features_Provider
       for (Mat2X::Index i = 0; i < synthetic_data._x[j].cols(); ++i)
       {
         const Vec2 pt = synthetic_data._x[j].col(i);
-        feats_per_view[j].push_back(
-          features::PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
+        feats_per_view[j].emplace_back(pt(0) + noise(generator),
+                                       pt(1) + noise(generator));
       }
     }
     return true;

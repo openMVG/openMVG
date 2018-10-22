@@ -10,14 +10,14 @@
 #define OPENMVG_VERSION_HPP
 
 #define OPENMVG_VERSION_MAJOR 1
-#define OPENMVG_VERSION_MINOR 3
+#define OPENMVG_VERSION_MINOR 4
 #define OPENMVG_VERSION_REVISION 0
 
 // Preprocessor to string conversion
 #define OPENMVG_TO_STRING_HELPER(x) #x
 #define OPENMVG_TO_STRING(x) OPENMVG_TO_STRING_HELPER(x)
 
-// OpenMVG version as a string; for example "1.3.0".
+// OpenMVG version as a string; for example "1.4.0".
 #define OPENMVG_VERSION_STRING OPENMVG_TO_STRING(OPENMVG_VERSION_MAJOR) "." \
   OPENMVG_TO_STRING(OPENMVG_VERSION_MINOR) "." \
   OPENMVG_TO_STRING(OPENMVG_VERSION_REVISION)

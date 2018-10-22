@@ -25,6 +25,7 @@ openMVG provides solver for the following geometric estimation:
 
   * 8 to n pt (Direct Linear Transform) [HZ]_,
   * 5pt + intrinsic [Stewenius]_, [Nister]_.
+  * 3pt orthographic [Magnus]_.
 
 N-View geometry estimation
 ============================

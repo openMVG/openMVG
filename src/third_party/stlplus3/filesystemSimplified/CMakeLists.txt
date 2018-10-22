@@ -1,6 +1,6 @@
 project(stlplus)
 
-FILE(GLOB LIBSLTPLUS_HPP *.hpp )
-FILE(GLOB LIBSLTPLUS_CPP *.cpp )
+file(GLOB LIBSLTPLUS_HPP *.hpp )
+file(GLOB LIBSLTPLUS_CPP *.cpp )
 
-ADD_LIBRARY(stlplus ${LIBSLTPLUS_HPP} ${LIBSLTPLUS_CPP})
+add_library(stlplus ${LIBSLTPLUS_HPP} ${LIBSLTPLUS_CPP})

@@ -9,7 +9,7 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/features/image_describer_akaze_io.hpp"
+#include "openMVG/features/akaze/image_describer_akaze_io.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "openMVG/features/regions_factory_io.hpp"
 

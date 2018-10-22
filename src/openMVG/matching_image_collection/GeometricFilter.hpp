@@ -18,6 +18,7 @@
 #include "openMVG/system/progressinterface.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
+namespace openMVG { namespace sfm { struct SfM_Data; } }
 
 namespace openMVG {
 

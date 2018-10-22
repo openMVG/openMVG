@@ -9,6 +9,8 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
+#include <memory>
+
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
@@ -83,7 +85,7 @@ struct WeightedCostFunction
     return false;
   }
 
-  ceres::internal::scoped_ptr<CostFunctor> functor_;
+  std::unique_ptr<CostFunctor> functor_;
   const double weight_;
 };
 
@@ -155,7 +157,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic
 
     // Compute and return the error is the difference between the predicted
     //  and observed position
-    Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
     residuals << principal_point_x + projected_point.x() * focal - m_pos_2dpoint[0],
                  principal_point_y + projected_point.y() * focal - m_pos_2dpoint[1];
@@ -261,7 +262,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K1
     const T r2 = projected_point.squaredNorm();
     const T r_coeff = 1.0 + k1 * r2;
 
-    Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
     residuals << principal_point_x + (projected_point.x() * r_coeff) * focal - m_pos_2dpoint[0],
                  principal_point_y + (projected_point.y() * r_coeff) * focal - m_pos_2dpoint[1];
@@ -374,7 +374,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3
     const T r6 = r4 * r2;
     const T r_coeff = (1.0 + k1 * r2 + k2 * r4 + k3 * r6);
 
-    Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
     residuals << principal_point_x + (projected_point.x() * r_coeff) * focal - m_pos_2dpoint[0],
                  principal_point_y + (projected_point.y() * r_coeff) * focal - m_pos_2dpoint[1];
@@ -496,7 +495,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2
     const T t_x = t2 * (r2 + 2.0 * x_u * x_u) + 2.0 * t1 * x_u * y_u;
     const T t_y = t1 * (r2 + 2.0 * y_u * y_u) + 2.0 * t2 * x_u * y_u;
 
-    Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
     residuals << principal_point_x + (projected_point.x() * r_coeff + t_x) * focal - m_pos_2dpoint[0],
                  principal_point_y + (projected_point.y() * r_coeff + t_y) * focal - m_pos_2dpoint[1];
@@ -623,7 +621,6 @@ struct ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye
     const T inv_r = r > T(1e-8) ? T(1.0)/r : T(1.0);
     const T cdist = r > T(1e-8) ? theta_dist * inv_r : T(1.0);
 
-    Eigen::Map<const Eigen::Matrix<double, 2, 1>> feature(m_pos_2dpoint);
     Eigen::Map<Eigen::Matrix<T, 2, 1>> residuals(out_residuals);
     residuals << principal_point_x + (projected_point.x() * cdist) * focal - m_pos_2dpoint[0],
                  principal_point_y + (projected_point.y() * cdist) * focal - m_pos_2dpoint[1];

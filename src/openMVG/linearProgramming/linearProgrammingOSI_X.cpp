@@ -25,7 +25,7 @@ OSI_X_SolverWrapper::OSI_X_SolverWrapper(int nbParams) : LP_Solver(nbParams)
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-> constraints
 {
-  if ( !si )
+  if (!si)
   {
     OPENMVG_LOG_ERROR << "No solver is allocated";
     return false;
@@ -112,7 +112,7 @@ bool OSI_X_SolverWrapper::setup(const LP_Constraints & cstraints) //cstraints <-
 
 bool OSI_X_SolverWrapper::setup(const LP_Constraints_Sparse & cstraints) //cstraints <-> constraints
 {
-  if ( !si )
+  if (!si)
   {
     OPENMVG_LOG_ERROR << "No solver is allocated";
     return false;

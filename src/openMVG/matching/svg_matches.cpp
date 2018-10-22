@@ -69,12 +69,12 @@ std::string Matches2SVGString
 {
   const size_t svg_w =
     b_vertical_display ?
-    left_image_size.first :
+    std::max(left_image_size.first, right_image_size.first) :
     left_image_size.first + right_image_size.first;
   const size_t svg_h =
     b_vertical_display ?
     left_image_size.second + right_image_size.second :
-    left_image_size.second;
+    std::max(left_image_size.second, right_image_size.second);
   const size_t svg_offset_x =
     b_vertical_display ?
     0 :

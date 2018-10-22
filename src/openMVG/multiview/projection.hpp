@@ -61,11 +61,13 @@ void KRt_From_P( const Mat34 &P, Mat3 *Kp, Mat3 *Rp, Vec3 *tp );
 * @param P1 Projection matrix of first camera
 * @param P2 Projection matrix of second camera
 * @return Fundamental matrix between the two camera
+* @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
+* @see  HZ Equation (17.3), page 412.
 */
 Mat3 F_from_P( const Mat34 & P1, const Mat34 & P2 );
 
 /**
-* @brief Compute the depth of the X point. R*X[2]+t[2]
+* @brief Compute the depth of the X point. (R*X)[2]+t[2]
 * @param R Rotation matrix
 * @param t Translation vector
 * @param X 3d points
@@ -90,7 +92,7 @@ Vec2 Project( const Mat34 &P, const Vec3 &X );
 void Project( const Mat34 &P, const Mat3X &X, Mat2X *x );
 
 /**
-* @brief Compute P*[X|1.0] for the X list of point (4D point)
+* @brief Compute P*X for the X list of point (4D point)
 * @param P Camera projection matrix
 * @param X Input 4d points
 * @param[out] x Projected points
@@ -106,7 +108,7 @@ void Project( const Mat34 &P, const Mat4X &X, Mat2X *x );
 Mat2X Project( const Mat34 &P, const Mat3X &X );
 
 /**
-* @brief Return P*[X|1.0] for the X list of point (4D point)
+* @brief Return P*X for the X list of point (4D point)
 * @param P Camera projection matrix
 * @param X Input 4d points
 * @return Projected points
@@ -131,7 +133,7 @@ double RootMeanSquareError( const Mat2X &x_image,
 * @param K Intrinsic matrix
 * @param R Rotation matrix
 * @param t translation vector
-* @note KRt defines a projection
+* @note K[R|t] defines a projection
 */
 double RootMeanSquareError( const Mat2X &x_image,
                             const Mat3X &X_world,
