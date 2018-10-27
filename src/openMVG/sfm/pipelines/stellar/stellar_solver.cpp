@@ -20,6 +20,7 @@
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/types.hpp"
@@ -357,11 +358,11 @@ bool Stellar_Solver::Solve(Poses & poses)
 
   const std::vector<Pair_Set> edge_two_uplets = ListEdge2Uplets();
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Stellar pod details:\n"
     << "#central pose id: " << central_node_id << "\n"
     << "#pairs: " << stellar_pod_.size() << "\n"
-    << "#2-uplets: " << edge_two_uplets.size() << std::endl;
+    << "#2-uplets: " << edge_two_uplets.size();
 
   std::vector<Relative_Scale> relative_scales;
   if (!Solve2UpletsRelativeScales(edge_two_uplets, relative_scales))

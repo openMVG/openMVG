@@ -14,6 +14,7 @@
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stlMap.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 
@@ -102,7 +103,7 @@ bool SfMSceneInitializerStellar::Process()
         matches_provider_,
         selected_putative_stellar_pod))
   {
-    std::cerr << "Unable to find a valid stellar configuration." << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to find a valid stellar configuration.";
     return false;
   }
 
@@ -132,11 +133,11 @@ bool SfMSceneInitializerStellar::Process()
         matches_provider_,
         selected_stellar_pod))
   {
-    std::cerr << "Unable to select a valid stellar configuration from the computed relative poses." << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to select a valid stellar configuration from the computed relative poses.";
     return false;
   }
 
-  std::cout << "The chosen stellar pod has " << selected_stellar_pod.size() << " pairs." << std::endl;
+  OPENMVG_LOG_INFO << "The chosen stellar pod has " << selected_stellar_pod.size() << " pairs.";
 
   // Configure the stellar pod optimization to use all the matches relating to the considered view id.
   // The found camera poses will be better thanks to the larger point support.

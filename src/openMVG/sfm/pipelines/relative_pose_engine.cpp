@@ -17,6 +17,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "ceres/ceres.h"
@@ -213,7 +214,7 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
       }
     }
   }
-  std::cout << "Relative motion computation took: " << t.elapsedMs() << "(ms)" << std::endl;
+  OPENMVG_LOG_INFO << "Relative motion computation took: " << t.elapsedMs() << "(ms)";
   return !relative_poses_.empty();
 }
 
