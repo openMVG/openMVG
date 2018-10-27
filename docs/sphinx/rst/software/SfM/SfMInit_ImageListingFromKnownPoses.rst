@@ -1,6 +1,6 @@
-**********************************
+***********************************************
 openMVG_main_SfMInit_ImageListingFromKnownPoses
-**********************************
+***********************************************
 
 Load datasets with ground truth position and orientation information and pack them into sfm_data.json.
 Now support `Strecha's Dataset <https://icwww.epfl.ch/~marquez/multiview/denseMVS.html>`_, `MiddleBury's Dataset <http://vision.middlebury.edu/mview/data/>`_, `DTU MVS Dataset <http://roboimagedata.compute.dtu.dk/?page_id=36>`_, `ETH 3D Dataset <https://www.eth3d.net/datasets>`_ and `Kitti Odometry Dataset <http://www.cvlibs.net/datasets/kitti/eval_odometry.php>`_.
@@ -47,7 +47,7 @@ Arguments description:
     - Path store the sfm_data.json
 
 Demo: Load From Strecha's Dataset
-========================
+=================================
 1. Download one of the Strecha's datasets from `Strecha's Dataset <https://icwww.epfl.ch/~marquez/multiview/denseMVS.html>`_
 
 2. Put the images and ground truth file in separate folder

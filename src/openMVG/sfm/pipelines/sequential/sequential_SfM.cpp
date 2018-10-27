@@ -230,7 +230,7 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
       return false;
     }
 
-    std::cout
+    OPENMVG_LOG_INFO
       << "\n----------------------------------------------------\n"
       << "SequentialSfMReconstructionEngine::ChooseInitialPair\n"
       << "----------------------------------------------------\n"

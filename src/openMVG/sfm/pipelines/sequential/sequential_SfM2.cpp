@@ -18,6 +18,7 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
@@ -98,12 +99,12 @@ bool SequentialSfMReconstructionEngine2::Process() {
   {
     if (!scene_initializer_ || !scene_initializer_->Process())
     {
-      std::cout << "Initialization status: Failed" << std::endl;
+      OPENMVG_LOG_ERROR << "Initialization status: Failed";
       return false;
     }
     else
     {
-      std::cout << "Initialization status : Success" << std::endl;
+      OPENMVG_LOG_INFO << "Initialization status : Success";
       sfm_data_.poses = scene_initializer_->Get_sfm_data().GetPoses();
     }
 
@@ -118,12 +119,13 @@ bool SequentialSfMReconstructionEngine2::Process() {
       RemoveOutliers_PixelResidualError(sfm_data_, Square(4.0));
 
       //-- Display some statistics
-      std::cout << "\n\n-------------------------------" << "\n"
+      OPENMVG_LOG_INFO
+        << "\n\n-------------------------------" << "\n"
         << "-- Starting Structure from Motion (statistics) with:\n"
         << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
         << " from " << sfm_data_.GetViews().size() << " input images.\n"
         << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "\n"
-        << "-------------------------------" << "\n";
+        << "-------------------------------";
 
       if (!bTriangulation)
       {
@@ -150,7 +152,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
   // First the camera with the most of 2D-3D overlap are added then we add
   // ones with lower confidence.
   const std::array<float, 2> track_inlier_ratios = {0.2, 0.0};
-  for (auto track_inlier_ratio = track_inlier_ratios.cbegin(); 
+  for (auto track_inlier_ratio = track_inlier_ratios.cbegin();
     track_inlier_ratio < track_inlier_ratios.cend(); ++track_inlier_ratio)
   {
     IndexT pose_before = sfm_data_.GetPoses().size();
@@ -176,7 +178,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
       if (pose_before >= pose_after)
         break;
       pose_before = sfm_data_.GetPoses().size();
-      // Since we have augmented our set of poses we can reset our track inlier ratio iterator 
+      // Since we have augmented our set of poses we can reset our track inlier ratio iterator
       track_inlier_ratio = track_inlier_ratios.cbegin();
     }
   }
@@ -188,13 +190,14 @@ bool SequentialSfMReconstructionEngine2::Process() {
 
   //-- Reconstruction done.
   //-- Display some statistics
-  std::cout << "\n\n-------------------------------" << "\n"
+  OPENMVG_LOG_INFO
+    << "\n\n-------------------------------" << "\n"
     << "-- Structure from Motion (statistics):\n"
     << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
     << " from " << sfm_data_.GetViews().size() << " input images.\n"
     << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "\n"
     << "-- #Poses loop used: " << resection_round << "\n"
-    << "-------------------------------" << "\n";
+    << "-------------------------------";
 
   return true;
 }
@@ -208,7 +211,7 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks_);
 
-    std::cout << "\n" << "Track stats" << std::endl;
+    OPENMVG_LOG_INFO << "\n" << "Track stats";
     {
       std::ostringstream osTrack;
       //-- Display stats :
@@ -233,7 +236,7 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
         osTrack << "\t" << it.first << "\t" << it.second << "\n";
       }
       osTrack << "\n";
-      std::cout << osTrack.str();
+      OPENMVG_LOG_INFO << osTrack.str();
     }
   }
 
@@ -346,11 +349,10 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
       }();
 
       const double track_ratio = track_id_for_resection.size() / static_cast<float>(view_tracks_ids.size() + 1);
-      std::cout
+      OPENMVG_LOG_INFO
         << "ViewId: " << view_id
         << "; #number of 2D-3D matches: " << track_id_for_resection.size()
-        << "; " << track_ratio * 100 << " % of the view track coverage."
-        << std::endl;
+        << "; " << track_ratio * 100 << " % of the view track coverage.";
 
       if (!track_id_for_resection.empty() && track_ratio > track_inlier_ratio)
       {
@@ -403,7 +405,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
         resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 
         const float inlier_ratio = resection_data.vec_inliers.size()/static_cast<float>(feature_id_for_resection.size());
-        std::cout
+        OPENMVG_LOG_INFO
           << std::endl
           << "-------------------------------" << "\n"
           << "-- Robust Resection of camera index: <" << view_id << "> image: "
@@ -414,7 +416,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
           << "-- Nb points validated by robust estimation: " << resection_data.vec_inliers.size() << "\n"
           << "-- % points validated: "
           << inlier_ratio * 100 << "\n"
-          << "-------------------------------" << std::endl;
+          << "-------------------------------";
 
         // Refine the pose of the found camera pose by using a BA and fix 3D points.
         if (bResection && inlier_ratio > 0.5)
@@ -457,7 +459,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
                   (view->ui_width, view->ui_height, focal, principal_point(0), principal_point(1));
               break;
               default:
-                std::cerr << "Try to create an unknown camera type." << std::endl;
+                OPENMVG_LOG_ERROR << "Try to create an unknown camera type.";
             }
           }
           const bool b_refine_pose = true;
