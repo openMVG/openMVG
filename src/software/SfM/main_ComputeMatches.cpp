@@ -133,9 +133,9 @@ int main(int argc, char **argv)
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
       << "[-m|--guided_matching]\n"
-      << "  use the found model to improve the pairwise correspondences."
+      << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
-      << "  Use a regions cache (only cache_size regions will be stored in memory)"
+      << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
       << "  If not used, all regions will be load in memory."
       << std::endl;
 
