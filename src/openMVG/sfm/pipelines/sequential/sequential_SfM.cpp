@@ -111,11 +111,8 @@ bool SequentialSfMReconstructionEngine::Process() {
   {
     if (!AutomaticInitialPairChoice(initial_pair_))
     {
-      // Cannot find a valid initial pair, try to set it by hand?
-      if (!ChooseInitialPair(initial_pair_))
-      {
-        return false;
-      }
+      // Cannot find a valid initial pair
+      return false;
     }
   }
   // Else a starting pair was already initialized before
