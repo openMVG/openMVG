@@ -94,11 +94,12 @@ int main(int argc, char *argv[]) {
     }
 
     // load mask
+    bool has_mask = true;
     string mask_file = create_filespec(sfm_data.s_root_path, it->second->s_Img_path, ".mask.png");
     Image<unsigned char> mask_image;
     if (!ReadImage(mask_file.c_str(), &mask_image)) {
       cerr << "\nFailed to read mask " << mask_file << endl;
-      continue;
+      has_mask = false;
     }
 
     // copy features in the mask to new regions
@@ -106,7 +107,7 @@ int main(int argc, char *argv[]) {
     vector<size_t> old_indices;
     for (size_t i = 0; i < regions->RegionCount(); ++i) {
       auto pos = regions->GetRegionPosition(i);
-      if (mask_image((int)pos.y(), (int)pos.x())) {
+      if (has_mask && mask_image((int)pos.y(), (int)pos.x())) {
         regions->CopyRegion(i, new_regions.get());
         old_indices.push_back(i);
       }
