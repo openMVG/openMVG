@@ -66,24 +66,23 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
-    unique_ptr<Image_describer> this_describer;
+    describer.reset();
     try {
       cereal::JSONInputArchive archive(istream);
-      archive(cereal::make_nvp("image_describer", this_describer));
+      archive(cereal::make_nvp("image_describer", describer));
     } catch (const cereal::Exception &e) {
       cerr << e.what() << endl << "Failed to load image describer" << endl;
       continue;
     }
 
-    if (describer) {
-      auto this_regions = this_describer->Allocate();
+    if (regions) {
+      auto this_regions = describer->Allocate();
       if (this_regions->Type_id() != regions->Type_id() ||
         this_regions->DescriptorLength() != regions->DescriptorLength()) {
         cerr << "Different describer type, abandoning " << folder << endl;
         continue;
       }
     } else {
-      describer = move(this_describer);
       regions = describer->Allocate();
     }
 
@@ -145,10 +144,12 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    cereal::JSONOutputArchive archive(stream);
-    archive(cereal::make_nvp("image_describer", describer));
-    regions = describer->Allocate();
-    archive(cereal::make_nvp("regions_type", regions));
+    {
+      cereal::JSONOutputArchive archive(stream);
+      archive(cereal::make_nvp("image_describer", describer));
+      regions = describer->Allocate();
+      archive(cereal::make_nvp("regions_type", regions));
+    }
 
     cout << "Describer saved to " << describer_file << endl;
     return 0;
