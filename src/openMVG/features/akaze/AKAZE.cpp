@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/features/akaze/AKAZE.hpp"
-#include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/image_diffusion.hpp"
 #include "openMVG/image/image_resampling.hpp"

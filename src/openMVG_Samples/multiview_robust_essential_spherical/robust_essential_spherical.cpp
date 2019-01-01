@@ -20,7 +20,7 @@
 #include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
+#include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
@@ -170,8 +170,8 @@ int main(int argc, char **argv) {
     }
 
     //-- Convert planar to spherical coordinates
-    Mat xL_spherical = cameraL(xL),
-        xR_spherical = cameraR(xR);
+    const Mat xL_spherical = cameraL(xL),
+              xR_spherical = cameraR(xR);
 
     //-- Essential matrix robust estimation from spherical bearing vectors
     {
@@ -250,7 +250,6 @@ int main(int argc, char **argv) {
 
           Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));
 
-          std::vector<double> residuals;
           // Perform Bundle Adjustment of the scene
           Bundle_Adjustment_Ceres bundle_adjustment_obj;
           if (bundle_adjustment_obj.Adjust(tiny_scene,
@@ -259,6 +258,7 @@ int main(int argc, char **argv) {
               Extrinsic_Parameter_Type::ADJUST_ALL,
               Structure_Parameter_Type::ADJUST_ALL)))
           {
+            std::vector<double> residuals;
             // Compute reprojection error
             const Pose3 pose0 = tiny_scene.poses[tiny_scene.views[0]->id_pose];
             const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose];

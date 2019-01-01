@@ -89,7 +89,7 @@ using class_type = Intrinsic_Spherical;
   */
   virtual Vec2 cam2ima(const Vec2 &p) const override
   {
-    const size_t size = std::max(w(), h());
+    const double size(std::max(w(), h()));
     return {
       p.x() * size + w() / 2.0,
       p.y() * size + h() / 2.0 };
@@ -102,7 +102,7 @@ using class_type = Intrinsic_Spherical;
   */
   virtual Vec2 ima2cam(const Vec2 &p) const override
   {
-    const size_t size = std::max(w(), h());
+    const double size(std::max(w(), h()));
     return {
       (p.x() - w() / 2.0) / size,
       (p.y() - h() / 2.0) / size };

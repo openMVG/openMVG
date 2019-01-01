@@ -10,7 +10,6 @@
 
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
@@ -21,10 +20,8 @@ namespace openMVG {
 namespace sfm {
 
   SfM_Localization_Single_3DTrackObservation_Database::
-  SfM_Localization_Single_3DTrackObservation_Database():
-    SfM_Localizer(),
-    sfm_data_(nullptr),
-    matching_interface_(nullptr)
+  SfM_Localization_Single_3DTrackObservation_Database()
+  :SfM_Localizer()
   {}
 
   bool
@@ -61,8 +58,12 @@ namespace sfm {
       }
     }
     OPENMVG_LOG_INFO << "Init retrieval database ... ";
-    matching_interface_.reset(new
-      matching::Matcher_Regions_Database(matching::ANN_L2, *landmark_observations_descriptors_));
+    // Initialize the matching interface
+    matching_interface_ =
+      RegionMatcherFactory(matching::ANN_L2, *landmark_observations_descriptors_);
+    if (!matching_interface_)
+      return false;
+
     OPENMVG_LOG_INFO << "Retrieval database initialized with:\n"
       << "#landmarks: " << sfm_data.GetLandmarks().size() << "\n"
       << "#descriptors: " << landmark_observations_descriptors_->RegionCount();
@@ -90,7 +91,7 @@ namespace sfm {
     }
 
     matching::IndMatches vec_putative_matches;
-    if (!matching_interface_->Match(0.8, query_regions, vec_putative_matches))
+    if (!matching_interface_->MatchDistanceRatio(0.8, query_regions, vec_putative_matches))
     {
       return false;
     }

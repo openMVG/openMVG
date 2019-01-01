@@ -157,10 +157,8 @@ TEST(translation_averaging, globalTi_from_tijs_l2_chordal) {
       vec_edges.push_back(rel.first.first);
       vec_edges.push_back(rel.first.second);
 
-      const Vec3 EdgeDirection = -(d._R[rel.first.second].transpose() * rel.second.second.normalized());
-      vec_poses.push_back(EdgeDirection(0));
-      vec_poses.push_back(EdgeDirection(1));
-      vec_poses.push_back(EdgeDirection(2));
+      const Vec3 edge_dir = -(d._R[rel.first.second].transpose() * rel.second.second.normalized());
+      vec_poses.insert(vec_poses.end(), {edge_dir(0), edge_dir(1), edge_dir(2)});
 
       vec_weights.push_back(1.0);
     }

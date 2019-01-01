@@ -209,7 +209,8 @@ int main() {
         P1, LL.coords().cast<double>().homogeneous(),
         P2, RR.coords().cast<double>().homogeneous(), &X);
       // Reject point that is behind the camera
-      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
+      if (Depth(pose0.rotation(), pose0.translation(), X) < 0 &&
+          Depth(pose1.rotation(), pose1.translation(), X) < 0)
         continue;
 
       const Vec2 residual0 = intrinsic0.residual(pose0(X), LL.coords().cast<double>());

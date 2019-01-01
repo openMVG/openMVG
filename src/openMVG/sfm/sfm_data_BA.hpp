@@ -19,9 +19,10 @@ struct SfM_Data;
 /// Enum to control which parameter(s) of the Camera motion must be refined or not
 enum class Extrinsic_Parameter_Type : int
 {
-  NONE                = 0x01,     // Extrinsic parameters will be considered as FIXED
-  ADJUST_ROTATION     = 0x02,
-  ADJUST_TRANSLATION  = 0x04,
+  // Note: Use power of two values in order to use bitwise operators.
+  NONE                = 1,     // Extrinsic parameters will be considered as FIXED
+  ADJUST_ROTATION     = 2,
+  ADJUST_TRANSLATION  = 4,
   ADJUST_ALL = ADJUST_ROTATION | ADJUST_TRANSLATION
 };
 

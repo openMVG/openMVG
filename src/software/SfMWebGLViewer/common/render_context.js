@@ -52,7 +52,6 @@ RenderContext.prototype.initGLContext = function( )
   {
     alert( "Error Initialization of the gl context" );
   }
-  var ext = getExtensionWithKnownPrefixes( this.m_gl , "EXT_frag_depth" );
 
   this.setClearColor( 0.0 , 0.0 , 0.0 , 1.0 );
   this.m_gl.enable(this.m_gl.DEPTH_TEST);

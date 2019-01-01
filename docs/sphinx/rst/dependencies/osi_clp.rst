@@ -8,7 +8,7 @@ USAGE
 
 openMVG uses the [OSI]_ and the [CLP]_ solver in order to solve linear programs [LP]_.
 
-CLP has been choosen because it is known to support problems of up to 1.5 million constraints [CLP FAQ]_.
+CLP has been chosen because it is known to support problems of up to 1.5 million constraints [CLP FAQ]_.
 
 [LPSOLVE]_ has been tested but tests shown that it is less reliable (sometimes, there is no convergence to a solution).
 

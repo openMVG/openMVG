@@ -10,6 +10,7 @@
 #include "pairgraphicsitem.h"
 #include "mainframe.h"
 
+#include <QByteArray>
 #include <QSvgWidget>
 #ifndef QT_NO_WHEELEVENT
 #include <QWheelEvent>
@@ -86,7 +87,7 @@ void MatchingPairGraphicsView::mousePressEvent(QMouseEvent * event)
             bVertical
           );
         QSvgWidget *svg = new QSvgWidget;
-        svg->load(QString::fromStdString(svg_string));
+        svg->load(QByteArray(svg_string.c_str()));
 
         std::ostringstream ofs;
         ofs << view_I->s_Img_path << " " << view_J->s_Img_path

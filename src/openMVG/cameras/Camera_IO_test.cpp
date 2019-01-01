@@ -9,8 +9,11 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/cameras/Camera_IO.hpp"
 #include "openMVG/cameras/cameras_io.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -18,22 +21,6 @@ using namespace openMVG::cameras;
 #include "testing/testing.h"
 
 using std::string;
-
-TEST(Camera_IO, PinholeSaveRead) {
-
-  const Mat3 R = Mat3
-    (Eigen::AngleAxisd(rand(), Vec3::UnitX())
-    * Eigen::AngleAxisd(rand(), Vec3::UnitY())
-    * Eigen::AngleAxisd(rand(), Vec3::UnitZ()));
-  const PinholeCamera camGT( Mat3::Identity(), R, Vec3(0,1,2));
-
-  EXPECT_TRUE( save( "pinholeCam.bin", camGT));
-  EXPECT_FALSE( save( "pinholeCam.txt", camGT)); // extension must be .bin
-
-  PinholeCamera cam;
-  EXPECT_TRUE( load( "pinholeCam.bin", cam));
-  EXPECT_MATRIX_NEAR(camGT._P, cam._P, 1e-3);
-}
 
 TEST(Camera_IO_ceral, SaveRead) {
 

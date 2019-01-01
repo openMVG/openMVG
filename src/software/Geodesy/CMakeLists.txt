@@ -7,7 +7,7 @@ target_link_libraries(openMVG_main_geodesy_registration_to_gps_position
     openMVG_geodesy
     openMVG_sfm
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 set_property(TARGET openMVG_main_geodesy_registration_to_gps_position PROPERTY FOLDER OpenMVG/software)

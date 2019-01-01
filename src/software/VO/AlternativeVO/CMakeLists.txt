@@ -21,7 +21,7 @@ if ( OpenMVG_BUILD_GUI_SOFTWARES )
       endif( WIN32 )
     endif( APPLE )
 
-    target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features stlplus )
+    target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features ${STLPLUS_LIBRARY} )
 
     if ( OpenMVG_USE_OPENCV )
       target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )

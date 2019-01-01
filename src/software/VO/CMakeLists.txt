@@ -38,7 +38,9 @@ if (OpenMVG_BUILD_OPENGL_EXAMPLES)
     ${OPENGL_gl_LIBRARY}
     glfw
     ${GLFW_LIBRARIES}
-    ${OpenMVG_LIBRARIES}
+    openMVG_sfm
+    ${STLPLUS_LIBRARY}
+    openMVG_image
   )
 
   if(OpenMVG_USE_OPENCV)

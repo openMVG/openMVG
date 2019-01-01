@@ -63,7 +63,7 @@ MainFrame::MainFrame(const QString &name, const Document & doc, QWidget *parent)
   QHBoxLayout *label_layout = new QHBoxLayout;
   QLabel *label = new QLabel(name);
   QLabel *label2 = new QLabel(tr("Pointer Mode"));
-  QToolButton *select_mode_button = new QToolButton;
+  select_mode_button = new QToolButton;
   select_mode_button->setText(tr("Select"));
   select_mode_button->setCheckable(true);
   select_mode_button->setChecked(true);
@@ -71,7 +71,7 @@ MainFrame::MainFrame(const QString &name, const Document & doc, QWidget *parent)
   drag_mode_button->setText(tr("Drag"));
   drag_mode_button->setCheckable(true);
   drag_mode_button->setChecked(false);
-  QToolButton * antialias_button = new QToolButton;
+  antialias_button = new QToolButton;
   antialias_button->setText(tr("Antialiasing"));
   antialias_button->setCheckable(true);
   antialias_button->setChecked(false);

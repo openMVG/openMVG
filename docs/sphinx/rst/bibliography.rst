@@ -64,6 +64,9 @@ Bibliography
 .. [Waechter2014] **Let There Be Color! Large-Scale Texturing of 3D Reconstructions.**
     M. Waechter, N. Moehrle, and M. Goesele, ECCV 2014.
 
+.. [Schoeneberger2016] **Pixelwise View Selection for Unstructured Multi-View Stereo.**
+    J. Schoeneberger, E. Zheng, M. Pollefeys, and. J. Frahm, ECCV 2016.
+
 .. [FLANN] **Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration.**
     Muja, Marius, and David G. Lowe.  VISAPP (1). 2009.
 
@@ -92,6 +95,9 @@ Bibliography
 
 .. [CASCADEHASHING] **Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction**
    Jian Cheng, Cong Leng, Jiaxiang Wu, Hainan Cui, Hanqing Lu. CVPR 2014.
+   
+.. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers**
+   Magnus Oskarsson. In Journal of Mathematical Imaging and Vision, 2017.
 
 .. [Ceres] **Ceres Solver**
     Sameer Agarwal and Keir Mierle and Others, http://ceres-solver.org

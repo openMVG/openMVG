@@ -28,7 +28,7 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 configuration:
-  - Debug
+  # - Debug
   - Release
 
 before_build:

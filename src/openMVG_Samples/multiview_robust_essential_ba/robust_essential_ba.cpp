@@ -248,7 +248,8 @@ int main() {
         P1, LL.coords().cast<double>().homogeneous(),
         P2, RR.coords().cast<double>().homogeneous(), &X);
       // Reject point that is behind the camera
-      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
+      if (Depth(pose0.rotation(), pose0.translation(), X) < 0 &&
+          Depth(pose1.rotation(), pose1.translation(), X) < 0)
         continue;
       // Add a new landmark (3D point with it's 2d observations)
       landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_);

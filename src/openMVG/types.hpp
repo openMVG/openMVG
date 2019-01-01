@@ -86,9 +86,9 @@ using Hash_Map = std::unordered_map<Key, Value>;
 * @tparam K type of the keys
 * @tparam V type of the values
 */
-template<typename K, typename V>
-using Hash_Map = std::map<K, V, std::less<K>,
-  Eigen::aligned_allocator<std::pair<const K, V>>>;
+template<typename Key, typename Value>
+using Hash_Map = std::map<Key, Value, std::less<Key>,
+  Eigen::aligned_allocator<std::pair<const Key, Value>>>;
 
 #endif // OPENMVG_STD_UNORDERED_MAP
 

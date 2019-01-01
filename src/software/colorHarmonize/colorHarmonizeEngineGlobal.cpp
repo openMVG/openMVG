@@ -30,6 +30,7 @@
 #include "openMVG/color_harmonization/global_quantile_gain_offset_alignment.hpp"
 
 #include "openMVG/system/timer.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
 #include <numeric>
@@ -97,7 +98,7 @@ bool ColorHarmonizationEngineGlobal::Process()
     return false;
   if (_map_Matches.size() == 0 )
   {
-    std::cout << std::endl << "Matches file is empty" <<std:: endl;
+    OPENMVG_LOG_ERROR << "\nMatches file is empty";
     return false;
   }
 
@@ -128,7 +129,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   //-------------------
   if (!CleanGraph())
   {
-    std::cout << std::endl << "There is no largest CC in the graph" << std::endl;
+    OPENMVG_LOG_ERROR << "\nThere is no largest CC in the graph";
     return false;
   }
 
@@ -191,8 +192,9 @@ bool ColorHarmonizationEngineGlobal::Process()
     map_cameraNodeToCameraIndex[*iterSet] = std::distance(set_indeximage.begin(), iterSet);
   }
 
-  std::cout << "\n Remaining cameras after CC filter : \n"
-    << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size() << std::endl;
+  OPENMVG_LOG_INFO
+    << "\n Remaining cameras after CC filter : \n"
+    << map_cameraIndexTocameraNode.size() << " from a total of " << _vec_fileNames.size();
 
   size_t bin      = 256;
   double minvalue = 0.0;
@@ -217,9 +219,10 @@ bool ColorHarmonizationEngineGlobal::Process()
     //-- Edges names:
     std::pair<std::string, std::string> p_imaNames;
     p_imaNames = make_pair( _vec_fileNames[ I ], _vec_fileNames[ J ] );
-    std::cout << "Current edge : "
+    OPENMVG_LOG_INFO 
+      << "Current edge : "
       << stlplus::filename_part(p_imaNames.first) << "\t"
-      << stlplus::filename_part(p_imaNames.second) << std::endl;
+      << stlplus::filename_part(p_imaNames.second);
 
     //-- Compute the masks from the data selection:
     Image< unsigned char > maskI ( _vec_imageSize[ I ].first, _vec_imageSize[ I ].second );
@@ -268,7 +271,7 @@ bool ColorHarmonizationEngineGlobal::Process()
       }
       break;
       default:
-        std::cout << "Selection method unsupported" << std::endl;
+        OPENMVG_LOG_ERROR << "Selection method unsupported";
         return false;
     }
 
@@ -323,7 +326,7 @@ bool ColorHarmonizationEngineGlobal::Process()
       histoI.GetHist(), histoJ.GetHist());
   }
 
-  std::cout << "\n -- \n SOLVE for color consistency with linear programming\n --" << std::endl;
+  OPENMVG_LOG_INFO << "\n -- \n SOLVE for color consistency with linear programming\n --";
   //-- Solve for the gains and offsets:
   std::vector<size_t> vec_indexToFix;
   vec_indexToFix.push_back(map_cameraNodeToCameraIndex[_imgRef]);
@@ -370,25 +373,24 @@ bool ColorHarmonizationEngineGlobal::Process()
     lpSolver.getSolution(vec_solution_b);
   }
 
-  std::cout << std::endl
-    << " ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took (s): "
+  OPENMVG_LOG_INFO
+    << "\n ColorHarmonization solving on a graph with: " << _map_Matches.size() << " edges took (s): "
     << timer.elapsed() << std::endl
     << "LInfinity fitting error: \n"
-    << "- for the red channel is: " << vec_solution_r.back() << " gray level(s)" <<std::endl
-    << "- for the green channel is: " << vec_solution_g.back() << " gray level(s)" << std::endl
-    << "- for the blue channel is: " << vec_solution_b.back() << " gray level(s)" << std::endl;
+    << "- for the red channel is: " << vec_solution_r.back() << " gray level(s)\n"
+    << "- for the green channel is: " << vec_solution_g.back() << " gray level(s)\n"
+    << "- for the blue channel is: " << vec_solution_b.back() << " gray level(s)";
 
-  std::cout << "\n\nFound solution_r:\n";
+  OPENMVG_LOG_INFO << "\n\nFound solution_r:";
   std::copy(vec_solution_r.begin(), vec_solution_r.end(), std::ostream_iterator<double>(std::cout, " "));
 
-  std::cout << "\n\nFound solution_g:\n";
+  OPENMVG_LOG_INFO << "\n\nFound solution_g:";
   std::copy(vec_solution_g.begin(), vec_solution_g.end(), std::ostream_iterator<double>(std::cout, " "));
 
-  std::cout << "\n\nFound solution_b:\n";
+  OPENMVG_LOG_INFO << "\n\nFound solution_b:";
   std::copy(vec_solution_b.begin(), vec_solution_b.end(), std::ostream_iterator<double>(std::cout, " "));
-  std::cout << std::endl;
 
-  std::cout << "\n\nThere is :\n" << set_indeximage.size() << " images to transform." << std::endl;
+  OPENMVG_LOG_INFO << "\n\nThere is :\n" << set_indeximage.size() << " images to transform.";
 
   //-> convert solution to gain offset and creation of the LUT per image
   system::LoggerProgress my_progress_bar( set_indeximage.size() );
@@ -524,9 +526,10 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     putativeGraph);
 
   const int connectedComponentCount = lemon::countConnectedComponents(putativeGraph.g);
-  std::cout << "\n"
+  OPENMVG_LOG_INFO 
+    << "\n"
     << "ColorHarmonizationEngineGlobal::CleanGraph() :: => connected Component cardinal: "
-    << connectedComponentCount << std::endl;
+    << connectedComponentCount;
 
   if (connectedComponentCount > 1)  // If more than one CC, keep the largest
   {
@@ -542,7 +545,7 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
         count = iter->second.size();
         iterLargestCC = iter;
       }
-      std::cout << "Connected component of size : " << iter->second.size() << std::endl;
+      OPENMVG_LOG_INFO << "Connected component of size : " << iter->second.size();
     }
 
     //-- Remove all nodes that are not listed in the largest CC
@@ -583,10 +586,10 @@ bool ColorHarmonizationEngineGlobal::CleanGraph()
     stlplus::create_filespec(_sOutDirectory, "cleanedGraph"),
     putativeGraph);
 
-  std::cout << "\n"
+  OPENMVG_LOG_INFO
+    << "\n"
     << "Cardinal of nodes: " << lemon::countNodes(putativeGraph.g) << "\n"
-    << "Cardinal of edges: " << lemon::countEdges(putativeGraph.g) << std::endl
-    << std::endl;
+    << "Cardinal of edges: " << lemon::countEdges(putativeGraph.g);
 
   return true;
 }

@@ -295,7 +295,7 @@ if (CXSPARSE)
   set(CXSPARSE_FOUND ON)
   message("-- Found CXSparse in: ${CXSPARSE_INCLUDE_DIRS}, "
       "building with CXSparse.")
-  set(CXSPARSE_LIBRARIES cxsparse)
+  set(CXSPARSE_LIBRARIES openMVG_cxsparse)
 else (CXSPARSE)
   message("-- Building without CXSPARSE.")
   list(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)
@@ -735,23 +735,23 @@ else (BUILD_EXAMPLES)
 endif (BUILD_EXAMPLES)
 
 # Setup installation of Ceres public headers.
-file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
-install(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
+#file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
+#install(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
 
-file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
-install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+#file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
+#install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
 # Also setup installation of Ceres config.h configured with the current
 # build options into the installed headers directory.
-install(FILES ${Ceres_BINARY_DIR}/config/ceres/internal/config.h
-        DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+#install(FILES ${Ceres_BINARY_DIR}/config/ceres/internal/config.h
+#        DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
-if (MINIGLOG)
-  # Install miniglog header if being used as logging #includes appear in
-  # installed public Ceres headers.
-  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
-          DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
-endif (MINIGLOG)
+#if (MINIGLOG)
+#  # Install miniglog header if being used as logging #includes appear in
+#  # installed public Ceres headers.
+#  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
+#          DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
+#endif (MINIGLOG)
 
 message("   ===============================================================")
 message("   Ceres-solver configuration end.")

@@ -36,6 +36,7 @@ target_link_libraries(openMVG_main_sfmViewer
   openMVG_features
   openMVG_multiview
   openMVG_sfm
+  ${STLPLUS_LIBRARY}
   ${OPENGL_gl_LIBRARY}
   glfw
   ${GLFW_LIBRARIES})

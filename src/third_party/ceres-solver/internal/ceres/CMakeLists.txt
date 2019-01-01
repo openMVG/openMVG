@@ -196,8 +196,8 @@ if (MINIGLOG)
   list(APPEND CERES_LIBRARY_SOURCE miniglog/glog/logging.cc)
 endif (MINIGLOG)
 
-add_library(ceres ${CERES_LIBRARY_SOURCE})
-set_target_properties(ceres PROPERTIES
+add_library(openMVG_ceres STATIC ${CERES_LIBRARY_SOURCE})
+set_target_properties(openMVG_ceres PROPERTIES
   VERSION ${CERES_VERSION}
   SOVERSION ${CERES_VERSION_MAJOR})
 
@@ -210,11 +210,11 @@ if (NOT WIN32 AND NOT BUILD_SHARED_LIBS)
   # that support it (>= 2.8.9).  Otherwise, manually add the -fPIC flag as an
   # additional compile definitions for the target.
   if (CMAKE_VERSION VERSION_LESS "2.8.9")
-    append_target_property(ceres COMPILE_FLAGS "-fPIC")
+    append_target_property(openMVG_ceres COMPILE_FLAGS "-fPIC")
   else()
     # Use set_target_properties() not append_target_property() here as
     # POSITION_INDEPENDENT_CODE is a binary ON/OFF switch.
-    set_target_properties(ceres PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(openMVG_ceres PROPERTIES POSITION_INDEPENDENT_CODE ON)
   endif()
 endif()
 
@@ -226,7 +226,7 @@ endif()
 if (BUILD_SHARED_LIBS)
   # When building a shared library, mark all external libraries as
   # PRIVATE so they don't show up as a dependency.
-  target_link_libraries(ceres
+  target_link_libraries(openMVG_ceres
         LINK_PUBLIC ${CERES_LIBRARY_PUBLIC_DEPENDENCIES}
         LINK_PRIVATE ${CERES_LIBRARY_PRIVATE_DEPENDENCIES})
 else (BUILD_SHARED_LIBS)
@@ -236,15 +236,15 @@ else (BUILD_SHARED_LIBS)
   set(CERES_LIBRARY_DEPENDENCIES
         ${CERES_LIBRARY_PUBLIC_DEPENDENCIES}
         ${CERES_LIBRARY_PRIVATE_DEPENDENCIES})
-  target_link_libraries(ceres ${CERES_LIBRARY_DEPENDENCIES})
+  target_link_libraries(openMVG_ceres ${CERES_LIBRARY_DEPENDENCIES})
 endif (BUILD_SHARED_LIBS)
 
-install(TARGETS ceres
-        EXPORT  CeresExport
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX})
-INSTALL(TARGETS ceres
+#install(TARGETS ceres
+#        EXPORT  CeresExport
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib${LIB_SUFFIX}
+#        ARCHIVE DESTINATION lib${LIB_SUFFIX})
+INSTALL(TARGETS openMVG_ceres
         EXPORT  openMVG-targets
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib${LIB_SUFFIX}

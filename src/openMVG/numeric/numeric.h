@@ -297,11 +297,11 @@ inline double FrobeniusDistance( const TMat &A, const TMat &B )
 
 
 /**
-* @brief Compute similarity of matrices given cosine similarity mesure
+* @brief Compute similarity of matrices given cosine similarity measure
 * \f$ \cos( A , B ) = \frac{ A . B }{ \| A \|_2 \| B \|_2 } \f$
 * @param a First matrix
 * @param b Second matrix
-* @return cosine similarity mesure between the input matrices
+* @return cosine similarity measure between the input matrices
 */
 template<class TMat>
 double CosinusBetweenMatrices( const TMat &a, const TMat &b )

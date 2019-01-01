@@ -84,7 +84,7 @@ void NormalizePoints(const Mat &points,
   ApplyTransformationToPoints(points, *T, normalized_points);
 }
 
-// Denormalize the results. See HZ page 109.
+// Denormalize the results. See HZ page 282.
 void UnnormalizerT::Unnormalize(const Mat3 &T1, const Mat3 &T2, Mat3 *H)  {
   *H = T2.transpose() * (*H) * T1;
 }

@@ -264,7 +264,7 @@ void MainWindow::registerProject()
     }
     const Vec3 X = Xhomogeneous.hnormalized();
     // Test validity of the hypothesis (front of the cameras):
-    bool bChierality = true;
+    bool bCheirality = true;
     int i(0);
     double reprojection_error_sum(0.0);
     for (const auto & obs_it : obs)
@@ -274,14 +274,14 @@ void MainWindow::registerProject()
         continue;
 
       const Pose3 pose = m_doc._sfm_data.GetPoseOrDie(view);
-      bChierality &= CheiralityTest(bearing[i], pose, X);
+      bCheirality &= CheiralityTest(bearing[i], pose, X);
       const openMVG::cameras::IntrinsicBase * cam = m_doc._sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Vec2 pt = obs_it.second.x;
       const Vec2 residual = cam->residual(pose(X), pt);
       reprojection_error_sum += residual.norm();
       ++i;
     }
-    if (bChierality) // Keep the point only if it has a positive depth
+    if (bCheirality) // Keep the point only if it has a positive depth
     {
       vec_triangulated[control_point_it.first] = X;
       vec_control_points[control_point_it.first] = landmark.X;

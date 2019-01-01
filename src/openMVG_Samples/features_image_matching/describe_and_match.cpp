@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     image_describer = AKAZE_Image_describer::create
       (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB));
 
-  if (image_describer == nullptr)
+  if (!image_describer)
   {
     std::cerr << "Invalid Image_describer type" << std::endl;
     return EXIT_FAILURE;

@@ -6,14 +6,21 @@ file(GLOB LIBSLTPLUS_CPP_FILESYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/filesystemSimpl
 list(APPEND LIBSLTPLUS_SRCS
   ${LIBSLTPLUS_HPP_FILESYSTEM} ${LIBSLTPLUS_CPP_FILESYSTEM})
 
-add_library(stlplus ${LIBSLTPLUS_SRCS})
-target_include_directories(stlplus PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/stlplus>)
-set_property(TARGET stlplus PROPERTY FOLDER OpenMVG/3rdParty)
+add_library(openMVG_stlplus ${LIBSLTPLUS_SRCS})
+if(STLPLUS_INCLUDE_INSTALL_DIR)
+  target_include_directories(openMVG_stlplus PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/openMVG>
+    $<INSTALL_INTERFACE:${STLPLUS_INCLUDE_INSTALL_DIR}>/filesystemSimplified)
+else()
+  target_include_directories(openMVG_stlplus PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/stlplus>)
+endif()
+set_property(TARGET openMVG_stlplus PROPERTY FOLDER OpenMVG/3rdParty)
 
 install(
-  TARGETS stlplus
+  TARGETS openMVG_stlplus
   DESTINATION lib
   EXPORT openMVG-targets
 )

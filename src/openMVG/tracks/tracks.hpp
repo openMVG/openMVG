@@ -212,7 +212,7 @@ struct TracksBuilder
 // Thank to an additional array in memory this solution is faster than TracksUtilsMap::GetTracksInImages.
 struct SharedTrackVisibilityHelper
 {
-  private:
+private:
   using TrackIdsPerView = std::map<uint32_t, std::set<uint32_t>>;
 
   TrackIdsPerView track_ids_per_view_;

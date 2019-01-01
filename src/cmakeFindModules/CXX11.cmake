@@ -16,18 +16,20 @@ macro(check_for_cxx11_compiler _VAR)
   endif()
 endmacro()
 
-# Sets the appropriate flag to enable C++11 support
-macro(enable_cxx11)
-  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
-    include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag(--std=c++11 SUPPORTS_STD_CXX11)
-    check_cxx_compiler_flag(--std=c++0x SUPPORTS_STD_CXX01)
-    if(SUPPORTS_STD_CXX11)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11")
-    elseif(SUPPORTS_STD_CXX01)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x")
-    else()
-      message(ERROR "Compiler does not support --std=c++11 or --std=c++0x.")
-    endif()
-  endif()
-endmacro()
+if(NOT (${CMAKE_VERSION} VERSION_LESS "3.8.0"))
+  # For CMake 3.8 and above, we can use meta features directly provided by CMake itself
+  set(CXX11_FEATURES cxx_std_11)
+  set(CXX14_FEATURES cxx_std_14)
+  set(CXX17_FEATURES cxx_std_17)
+  return()
+endif()
+
+set(CXX11_FEATURES
+  cxx_auto_type
+  cxx_constexpr
+  cxx_lambdas
+  cxx_nullptr
+  cxx_override
+  cxx_range_for
+  cxx_strong_enums
+)
