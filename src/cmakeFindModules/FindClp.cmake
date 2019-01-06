@@ -4,8 +4,8 @@
 
 FIND_PATH(CLP_DIR ClpConfig.h
     HINTS "${CLP_ROOT}" "$ENV{CLP_ROOT}" "${CLP_INCLUDE_DIR_HINTS}"
-    PATHS "$ENV{PROGRAMFILES}/Clp" "$ENV{PROGRAMW6432}/Clp" "/usr" "/usr/local"
-    PATH_SUFFIXES Clp
+    PATHS "$ENV{PROGRAMFILES}" "$ENV{PROGRAMW6432}" "/usr" "/usr/local"
+    PATH_SUFFIXES coin
     DOC "Root directory of CLP includes")
 
 ##====================================================
@@ -61,10 +61,9 @@ IF(EXISTS "${CLP_DIR}" AND NOT "${CLP_DIR}" STREQUAL "")
 
         MESSAGE(STATUS "Clp ${CLP_VERSION} found (include: ${CLP_INCLUDE_DIRS})")
 ELSE()
-  MESSAGE(FATAL_ERROR "You are attempting to build without Clp. "
+  MESSAGE(STATUS "You are attempting to build without Clp. "
           "Please use cmake variable -DCLP_INCLUDE_DIR_HINTS:STRING=\"PATH\" "
           "or CLP_INCLUDE_DIR_HINTS env. variable to a valid Clp path. "
           "Or install last Clp version.")
-  package_report_not_found(CLP "Clp cannot be found")
 ENDIF()
 ##====================================================

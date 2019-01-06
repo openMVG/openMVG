@@ -293,12 +293,11 @@ endif()
 # - internal by default (CoinUtils),
 # - external if COINUTILS_INCLUDE_DIR_HINTS and a valid CoinUtils setup is found
 # ==============================================================================
-if (NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
+find_package(CoinUtils QUIET)
+if (NOT COINUTILS_FOUND)
   set(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(OpenMVG_USE_INTERNAL_COINUTILS ON)
-endif()
-find_package(CoinUtils QUIET)
-if (NOT COINUTILS_FOUND OR OpenMVG_USE_INTERNAL_COINUTILS)
+  find_package(CoinUtils QUIET)
   set(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(COINUTILS_LIBRARY lib_CoinUtils)
 endif()
@@ -309,12 +308,11 @@ endif()
 ## - internal by default (Clp),
 ## - external if CLP_INCLUDE_DIR_HINTS and a valid Clp setup is found
 ## ==============================================================================
-if (NOT DEFINED CLP_INCLUDE_DIR_HINTS)
+find_package(Clp QUIET)
+if (NOT CLP_FOUND)
   set(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
   set(OpenMVG_USE_INTERNAL_CLP ON)
-endif()
-find_package(Clp QUIET)
-if (NOT CLP_FOUND OR OpenMVG_USE_INTERNAL_CLP)
+  find_package(Clp QUIET)
   set(CLP_INCLUDE_DIRS
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
@@ -327,12 +325,11 @@ endif()
 # - internal by default (Osi),
 # - external if OSI_INCLUDE_DIR_HINTS and a valid Osi setup is found
 # ==============================================================================
-if (NOT DEFINED OSI_INCLUDE_DIR_HINTS)
+find_package(Osi QUIET)
+if (NOT OSI_FOUND)
   set(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
   set(OpenMVG_USE_INTERNAL_OSI ON)
-endif()
-find_package(Osi QUIET)
-if (NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
+  find_package(Osi QUIET)
   set(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
   set(OSI_LIBRARY lib_Osi)
 endif()
