@@ -1207,12 +1207,11 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
 {
 
 /// Bundle adjustment to refine Structure; Motion and Intrinsics
-  if(b_use_pba_) {
+  if (b_use_pba_) {
     ParallelBA::DeviceT device = ParallelBA::PBA_CUDA_DEVICE_DEFAULT;
     //device = ParallelBA::PBA_CPU_FLOAT; use cpu
     sfm_data_PBA sfm_data_pba(device);
-    sfm_data_pba.DataToPBA(sfm_data_, intrinsic_refinement_options_, cam_type_);
-    return sfm_data_pba.Adjust(sfm_data_);
+    return sfm_data_pba.DataToPBA(sfm_data_, intrinsic_refinement_options_) && sfm_data_pba.Adjust(sfm_data_);
   } else {
       Bundle_Adjustment_Ceres::BA_Ceres_options options;
       if ( sfm_data_.GetPoses().size() > 100 &&

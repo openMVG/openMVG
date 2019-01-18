@@ -18,9 +18,8 @@ namespace openMVG {
       ) {
       }
 
-      void DataToPBA(SfM_Data &sfm_data,
-                     cameras::Intrinsic_Parameter_Type intrinsic_refinement_options,
-                     cameras::EINTRINSIC cam_type);
+      bool DataToPBA(SfM_Data &sfm_data,
+                     cameras::Intrinsic_Parameter_Type intrinsic_refinement_options);
       bool Adjust(SfM_Data &sfm_data);
 
     private:
