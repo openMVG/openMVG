@@ -5,40 +5,59 @@
 #include "sfm_data_PBA.hpp"
 namespace openMVG {
   namespace sfm {
-    void sfm_data_PBA::DataToPBA(SfM_Data &sfm_data_,
-                                 cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_,
-                                 cameras::EINTRINSIC cam_type_) {
-      if(intrinsic_refinement_options_ == cameras::Intrinsic_Parameter_Type::NONE) pba.SetFixedIntrinsics(true);
-      else {
-        if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1)
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION);
-        else if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1_PBA)
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION);
-        if((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_DISTORTION)
-           == static_cast<cameras::Intrinsic_Parameter_Type>(0))
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_NO_DISTORTION);
-        if((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
-           == static_cast<cameras::Intrinsic_Parameter_Type>(0))
-          pba.SetFocalLengthFixed(true);
+    bool sfm_data_PBA::DataToPBA(SfM_Data &sfm_data_,
+                                 cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_) {
+      if (sfm_data_.intrinsics.size() != 1) {
+          std::cerr << "SfMEnginePBA: Only support shared intrinsics adjustment" << std::endl;
+          return false;
       }
 
+      auto intrinsics = sfm_data_.intrinsics.begin()->second;
+      auto cam_type = intrinsics->getType();
+      if (cam_type == cameras::PINHOLE_CAMERA_RADIAL1) {
+          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION);
+      } else if (cam_type == cameras::PINHOLE_CAMERA_RADIAL1_PBA) {
+          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION);
+      } else {
+          std::cerr << "SfMEnginePBA: Only support PINHOLE_CAMERA_RADIAL1 and PINHOLE_CAMERA_RADIAL1_PBA" << std::endl;
+          return false;
+      }
+
+      if (intrinsic_refinement_options_ == cameras::Intrinsic_Parameter_Type::NONE) {
+        pba.SetFixedIntrinsics(true);
+      } else {
+        if ((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_DISTORTION)
+          == (cameras::Intrinsic_Parameter_Type)0) {
+          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_NO_DISTORTION);
+        }
+
+        if ((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
+          == (cameras::Intrinsic_Parameter_Type)0) {
+          pba.SetFocalLengthFixed(true);
+        }
+      }
 
       int i = 0;
       //Data to pba begin
+      auto params = intrinsics->getParams();
+      // cameras
       camera_data.resize(sfm_data_.poses.size());
       for (const auto &camera_openmvg : sfm_data_.poses) {
         camera_data[i] = CameraT();
+
+        // extrinsics
         const Mat3 &camera_R = camera_openmvg.second.rotation();
         const Vec3 &camera_T = camera_openmvg.second.translation();
         for (int j = 0; j < 9; j++) camera_data[i].m[j / 3][j % 3] = (float) camera_R(j / 3, j % 3);
         for (int j = 0; j < 3; j++) camera_data[i].t[j] = (float) (camera_T(j));
-        camera_data[i].f = static_cast<float>(sfm_data_.intrinsics[0].get()->getParams().at(0));
-        if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1_PBA)
-          camera_data[i].SetMeasumentDistortion(sfm_data_.intrinsics[0].get()->getParams().at(3));
-        else if(cam_type_ == cameras::PINHOLE_CAMERA_RADIAL1)
-          camera_data[i].SetProjectionDistortion((sfm_data_.intrinsics[0].get()->getParams().at(3)));
+
+        // intrinsics
+        camera_data[i].f = params[0];
+        camera_data[i].SetProjectionDistortion(params[3]);
         i++;
       }
+
+      // points
       i = 0;
       point_data.resize(sfm_data_.structure.size());
       for (const auto &structure_openmvg : sfm_data_.structure) {
@@ -71,8 +90,8 @@ namespace openMVG {
             camera_map[obs.first] = sz++;
           }
           ptidx[tot] = i;
-          double principal_x = sfm_data_.intrinsics[0].get()->getParams().at(1);
-          double principal_y = sfm_data_.intrinsics[0].get()->getParams().at(2);
+          double principal_x = params[1];
+          double principal_y = params[2];
           measurements[tot++].SetPoint2D(obs.second.x.x() - principal_x, obs.second.x.y() - principal_y);
         }
         i++;
@@ -102,6 +121,7 @@ namespace openMVG {
     bool sfm_data_PBA::Adjust(SfM_Data &sfm_data_){
       pba.RunBundleAdjustment();
       //Data to openmvg start
+      // extrinsics
       int i = 0;
       for (auto &camera_openmvg : sfm_data_.poses) {
         Mat3 camera_R;
@@ -111,11 +131,16 @@ namespace openMVG {
         camera_openmvg.second = Pose3(camera_R, -camera_R.transpose() * camera_T);
         i++;
       }
-      vector<double> params(4);
-      params[0] = camera_data[0].f; params[1] =  sfm_data_.intrinsics[0].get()->getParams().at(1);
-      params[2] = sfm_data_.intrinsics[0].get()->getParams().at(2); params[3] = camera_data[0].radial;
-      sfm_data_.intrinsics[0].get()->updateFromParams(params);
+
+      // intrinsics
+      auto intrinsics = sfm_data_.intrinsics.begin()->second;
+      auto params = intrinsics->getParams();
+      params[0] = camera_data[0].f;
+      params[3] = camera_data[0].radial;
+      intrinsics->updateFromParams(params);
       i = 0;
+
+      // points
       for (auto &point_openmvg : sfm_data_.structure) {
         for (int j = 0; j < 3; j++) point_openmvg.second.X[j] = point_data[i].xyz[j];
         i++;

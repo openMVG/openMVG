@@ -164,13 +164,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if(b_use_pba && !(i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1_PBA
-                    || i_User_camera_model == openMVG::cameras::PINHOLE_CAMERA_RADIAL1)) {
-    std::cerr << "\n If you want to use PBA, please set camera type PINHOLE_CAMERA_RADIAL1_PBA or PINHOLE_CAMERA_RADIAL1" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  if(b_use_pba && ((intrinsic_refinement_options & cameras::Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
+  if (b_use_pba && ((intrinsic_refinement_options & cameras::Intrinsic_Parameter_Type::ADJUST_PRINCIPAL_POINT)
                    != static_cast<cameras::Intrinsic_Parameter_Type>(0))){
     std::cout<< "Warning: PBA can not adjust principle point!" <<std::endl;
   }
