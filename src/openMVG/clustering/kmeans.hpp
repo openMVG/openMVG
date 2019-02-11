@@ -110,6 +110,7 @@ std::vector< DataType > ComputeCenterOfMass( const std::vector< DataType > & pts
   }
 
   // Compute mean of centers based on the number of points affected to each centers
+  #pragma omp parallel for
   for( uint32_t id_center = 0; id_center < nb_center; ++id_center )
   {
     trait::divide( new_centers[id_center], nb_per_center[id_center] );
@@ -193,6 +194,7 @@ void KMeans( const std::vector< DataType > & source_data,
     changed = false;
 
     // 2.1 affect center to each points
+    #pragma omp parallel for
     for( size_t id_pt = 0; id_pt < source_data.size(); ++id_pt )
     {
       const DataType & cur_pt = source_data[id_pt];
