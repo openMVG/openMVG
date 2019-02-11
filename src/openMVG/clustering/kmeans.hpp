@@ -26,9 +26,9 @@ namespace clustering
 */
 enum KMeansInitType
 {
-  KMEANS_INIT_RANDOM , /* Standard Llyod algoritm */
-  KMEANS_INIT_PP ,     /* Kmeans++ initialisation */
-} ;
+  KMEANS_INIT_RANDOM, /* Standard Llyod algoritm */
+  KMEANS_INIT_PP,     /* Kmeans++ initialisation */
+};
 
 /**
 * @brief Compute minimum distance to any center
@@ -37,21 +37,21 @@ enum KMeansInitType
 * @param[out] dists computed (minimum) distence to any center
 */
 template< typename DataType >
-void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts ,
-                                 const std::vector< DataType > & centers ,
+void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts,
+                                 const std::vector< DataType > & centers,
                                  std::vector< typename KMeansVectorDataTrait<DataType>::scalar_type > & dists )
 {
   using trait = KMeansVectorDataTrait<DataType>;
 
-  dists.resize( pts.size() , std::numeric_limits<typename trait::scalar_type>::max() ) ;
+  dists.resize( pts.size(), std::numeric_limits<typename trait::scalar_type>::max() );
 
-  for( size_t id_pt = 0 ; id_pt < pts.size() ; ++id_pt )
+  for( size_t id_pt = 0; id_pt < pts.size(); ++id_pt )
   {
-    const auto & pt = pts[ id_pt ] ;
+    const auto & pt = pts[ id_pt ];
     for( const auto & c : centers )
     {
-      const typename trait::scalar_type cur_d = trait::L2( pt , c ) ;
-      dists[ id_pt ] = std::min( dists[ id_pt ] , cur_d ) ;
+      const typename trait::scalar_type cur_d = trait::L2( pt, c );
+      dists[ id_pt ] = std::min( dists[ id_pt ], cur_d );
     }
   }
 }
@@ -63,25 +63,25 @@ void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts ,
 * @return id of the nearest center (0-based)
 */
 template< typename DataType >
-uint32_t NearestCenterID( const DataType & pt ,
+uint32_t NearestCenterID( const DataType & pt,
                           const std::vector< DataType > & centers )
 {
   using trait = KMeansVectorDataTrait<DataType>;
-  const uint32_t nb_cluster = static_cast<uint32_t>( centers.size() ) ;
+  const uint32_t nb_cluster = static_cast<uint32_t>( centers.size() );
 
-  typename trait::scalar_type min_dist = std::numeric_limits<typename trait::scalar_type>::max() ;
-  uint32_t nearest_center = nb_cluster ;
+  typename trait::scalar_type min_dist = std::numeric_limits<typename trait::scalar_type>::max();
+  uint32_t nearest_center = nb_cluster;
 
-  for( uint32_t cur_center = 0 ; cur_center < nb_cluster ; ++cur_center )
+  for( uint32_t cur_center = 0; cur_center < nb_cluster; ++cur_center )
   {
-    const typename trait::scalar_type cur_dist = trait::L2( pt , centers[ cur_center ] ) ;
+    const typename trait::scalar_type cur_dist = trait::L2( pt, centers[ cur_center ] );
     if( cur_dist < min_dist )
     {
-      min_dist = cur_dist ;
-      nearest_center = cur_center ;
+      min_dist = cur_dist;
+      nearest_center = cur_center;
     }
   }
-  return nearest_center ;
+  return nearest_center;
 }
 
 /**
@@ -92,30 +92,30 @@ uint32_t NearestCenterID( const DataType & pt ,
 * @return New centers of mass
 */
 template< typename DataType >
-std::vector< DataType > ComputeCenterOfMass( const std::vector< DataType > & pts ,
-    const std::vector< uint32_t > & assigned_center ,
+std::vector< DataType > ComputeCenterOfMass( const std::vector< DataType > & pts,
+    const std::vector< uint32_t > & assigned_center,
     const uint32_t nb_center )
 {
   using trait = KMeansVectorDataTrait<DataType>;
 
-  std::vector< DataType > new_centers( nb_center , trait::null( pts[0] ) ) ;
-  std::vector< uint32_t > nb_per_center( nb_center , 0 ) ;
+  std::vector< DataType > new_centers( nb_center, trait::null( pts[0] ) );
+  std::vector< uint32_t > nb_per_center( nb_center, 0 );
 
   // Affect points to centers
-  for( size_t id_pt = 0 ; id_pt < pts.size() ; ++id_pt )
+  for( size_t id_pt = 0; id_pt < pts.size(); ++id_pt )
   {
-    const uint32_t id_center = assigned_center[id_pt] ;
-    trait::accumulate( new_centers[ id_center ] , pts[id_pt] ) ;
-    ++nb_per_center[id_center] ;
+    const uint32_t id_center = assigned_center[id_pt];
+    trait::accumulate( new_centers[ id_center ], pts[id_pt] );
+    ++nb_per_center[id_center];
   }
 
   // Compute mean of centers based on the number of points affected to each centers
-  for( uint32_t id_center = 0 ; id_center < nb_center ; ++id_center )
+  for( uint32_t id_center = 0; id_center < nb_center; ++id_center )
   {
-    trait::divide( new_centers[id_center] , nb_per_center[id_center] ) ;
+    trait::divide( new_centers[id_center], nb_per_center[id_center] );
   }
 
-  return new_centers ;
+  return new_centers;
 }
 
 /**
@@ -128,89 +128,89 @@ std::vector< DataType > ComputeCenterOfMass( const std::vector< DataType > & pts
 * @note This is the standard llyod algorithm
 */
 template< typename DataType >
-void KMeans( const std::vector< DataType > & source_data ,
-             std::vector< uint32_t > & cluster_assignment ,
-             std::vector< DataType > & centers ,
-             const uint32_t nb_cluster ,
-             const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max() ,
+void KMeans( const std::vector< DataType > & source_data,
+             std::vector< uint32_t > & cluster_assignment,
+             std::vector< DataType > & centers,
+             const uint32_t nb_cluster,
+             const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max(),
              const KMeansInitType init_type = KMEANS_INIT_PP )
 {
   if( source_data.size() == 0 )
   {
-    return ;
+    return;
   }
 
   using trait = KMeansVectorDataTrait<DataType>;
 
-  std::mt19937_64 rng ;
+  std::mt19937_64 rng;
 
 
   // 1 - init center of mass
   if( init_type == KMEANS_INIT_PP )
   {
-    // Kmeans++ init :
+    // Kmeans++ init:
     // first one is a random one
-    // the others based on the importance probability (Di / \sum_i Di) where :
+    // the others based on the importance probability (Di / \sum_i Di) where:
     // Di is the minimum distance to any created centers already created
-    std::uniform_int_distribution<size_t> distrib_first( 0 , source_data.size() - 1 ) ;
-    centers.emplace_back( source_data[ distrib_first( rng ) ] ) ;
+    std::uniform_int_distribution<size_t> distrib_first( 0, source_data.size() - 1 );
+    centers.emplace_back( source_data[ distrib_first( rng ) ] );
 
-    std::vector< typename trait::scalar_type > dists ;
+    std::vector< typename trait::scalar_type > dists;
 
-    for( uint32_t id_center = 1 ; id_center < nb_cluster ; ++id_center )
+    for( uint32_t id_center = 1; id_center < nb_cluster; ++id_center )
     {
       // Compute Di / \sum Di pdf
-      MinimumDistanceToAnyCenter( source_data , centers , dists ) ;
-      std::discrete_distribution<size_t> distrib_c( dists.begin() , dists.end() );
+      MinimumDistanceToAnyCenter( source_data, centers, dists );
+      std::discrete_distribution<size_t> distrib_c( dists.begin(), dists.end() );
 
       // Sample a point from this distribution
-      centers.emplace_back( source_data[distrib_c( rng )] ) ; 
+      centers.emplace_back( source_data[distrib_c( rng )] );
     }
   }
   else
   {
-    DataType min , max ;
-    trait::minMax( source_data , min , max ) ;
+    DataType min, max;
+    trait::minMax( source_data, min, max );
 
     // Standard Llyod init
-    centers.resize( nb_cluster ) ; 
-    std::uniform_int_distribution<size_t> distrib( 0 , source_data.size() - 1 ) ;
-    for( auto & cur_center : centers  ) 
+    centers.resize( nb_cluster );
+    std::uniform_int_distribution<size_t> distrib( 0, source_data.size() - 1 );
+    for( auto & cur_center : centers  )
     {
-      cur_center = source_data[distrib( rng )] ;
+      cur_center = source_data[distrib( rng )];
     }
   }
 
   // Assign all element to the first center
-  cluster_assignment.resize( source_data.size() , nb_cluster ) ;
+  cluster_assignment.resize( source_data.size(), nb_cluster );
 
-  bool changed ;
-  uint32_t id_iteration = 0 ;
+  bool changed;
+  uint32_t id_iteration = 0;
 
   // 2 - Perform kmeans
   do
   {
-    changed = false ;
+    changed = false;
 
     // 2.1 affect center to each points
-    for( size_t id_pt = 0 ; id_pt < source_data.size() ; ++id_pt )
+    for( size_t id_pt = 0; id_pt < source_data.size(); ++id_pt )
     {
-      const DataType & cur_pt = source_data[id_pt] ;
+      const DataType & cur_pt = source_data[id_pt];
       // Compute nearest center of this point
-      const uint32_t nearest_center = NearestCenterID( cur_pt , centers ) ;
+      const uint32_t nearest_center = NearestCenterID( cur_pt, centers );
       if( cluster_assignment[id_pt] != nearest_center )
       {
-        cluster_assignment[id_pt] = nearest_center ;
-        changed = true ;
+        cluster_assignment[id_pt] = nearest_center;
+        changed = true;
       }
     }
 
     // 2.2 Compute new centers of mass
-    centers = ComputeCenterOfMass( source_data , cluster_assignment , nb_cluster ) ;
+    centers = ComputeCenterOfMass( source_data, cluster_assignment, nb_cluster );
 
-    ++id_iteration ;
+    ++id_iteration;
   }
-  while( changed && id_iteration < max_nb_iteration ) ;
+  while( changed && id_iteration < max_nb_iteration );
 }
 
 } // namespace clustering

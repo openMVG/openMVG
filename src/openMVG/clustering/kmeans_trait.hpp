@@ -32,17 +32,17 @@ class KMeansVectorDataTrait
 {
   public:
     /// base type
-    typedef VectorType type ;
+    typedef VectorType type;
 
     /// Type of a scalar element
-    typedef VectorType scalar_type ;
+    typedef VectorType scalar_type;
 
     /**
     * @brief number of element in the vector
     * @param aVector a Vector
     * @return number of scalar element in the vector
     */
-    static size_t size( const type & aVector ) ;
+    static size_t size( const type & aVector );
 
     /**
     * @brief Square euclidean distance between two vectors
@@ -50,7 +50,7 @@ class KMeansVectorDataTrait
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 ) ;
+    static scalar_type L2( const type & aVec1, const type & aVec2 );
 
     /**
     * @brief Draw a random vector in a range
@@ -60,7 +60,7 @@ class KMeansVectorDataTrait
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng ) ;
+    static type random( const type & min, const type & max, RngType & rng );
 
     /**
     * @brief Compute minimum and maximum value of a set of points
@@ -68,14 +68,14 @@ class KMeansVectorDataTrait
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max );
+    static void minMax( const std::vector<type> & elts, type & min, type & max );
 
     /**
     * @brief get a zero valued vector data
     * @param dummy a dummy vector
     * @return a null vector
     */
-    static type null( const type & dummy ) ;
+    static type null( const type & dummy );
 
     /**
     * @brief Accumulate value inside a vector
@@ -83,7 +83,7 @@ class KMeansVectorDataTrait
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data ) ;
+    static void accumulate( type & self, const type & data );
 
     /**
     * @brief Scalar division
@@ -91,18 +91,18 @@ class KMeansVectorDataTrait
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val ) ;
-} ;
+    static void divide( type & self, const size_t val );
+};
 
 /**
 * @brief overloading for std::array
 */
-template< typename T , size_t N >
+template< typename T, size_t N >
 class KMeansVectorDataTrait<std::array<T, N>>
 {
   public:
     // base type
-    typedef std::array<T, N> type ;
+    typedef std::array<T, N> type;
 
     typedef T scalar_type;
 
@@ -113,7 +113,7 @@ class KMeansVectorDataTrait<std::array<T, N>>
     */
     static size_t size( const type & aVector )
     {
-      return N ;
+      return N;
     }
 
     /**
@@ -122,10 +122,10 @@ class KMeansVectorDataTrait<std::array<T, N>>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      static const matching::L2<T> metric ;
-      return metric( aVec1.cbegin() , aVec2.cbegin() , N ) ;
+      static const matching::L2<T> metric;
+      return metric( aVec1.cbegin(), aVec2.cbegin(), N );
     }
 
 
@@ -137,15 +137,15 @@ class KMeansVectorDataTrait<std::array<T, N>>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
       type res;
-      for( size_t id_dim = 0 ; id_dim < N; ++id_dim )
+      for( size_t id_dim = 0; id_dim < N; ++id_dim )
       {
-        std::uniform_real_distribution<scalar_type> distrib( min[id_dim] , max[id_dim] ) ;
+        std::uniform_real_distribution<scalar_type> distrib( min[id_dim], max[id_dim] );
         res[ id_dim ] = distrib( rng );
       }
-      return res ;
+      return res;
     }
 
 
@@ -156,26 +156,26 @@ class KMeansVectorDataTrait<std::array<T, N>>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      std::fill( min.begin() , min.end() , std::numeric_limits<scalar_type>::max() ) ;
-      std::fill( max.begin() , max.end() , std::numeric_limits<scalar_type>::lowest() ) ;
+      std::fill( min.begin(), min.end(), std::numeric_limits<scalar_type>::max() );
+      std::fill( max.begin(), max.end(), std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < cur_elt.size() ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < cur_elt.size(); ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -187,9 +187,9 @@ class KMeansVectorDataTrait<std::array<T, N>>
     */
     static type null( const type & dummy )
     {
-      type res ;
-      res.fill( scalar_type( 0 ) ) ;
-      return res ;
+      type res;
+      res.fill( scalar_type( 0 ) );
+      return res;
     }
 
 
@@ -199,11 +199,11 @@ class KMeansVectorDataTrait<std::array<T, N>>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      for( size_t id_dim = 0 ; id_dim < N ; ++id_dim )
+      for( size_t id_dim = 0; id_dim < N; ++id_dim )
       {
-        self[id_dim] += data[id_dim] ;
+        self[id_dim] += data[id_dim];
       }
     }
 
@@ -213,15 +213,15 @@ class KMeansVectorDataTrait<std::array<T, N>>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      for( size_t id_dim = 0 ; id_dim < N ; ++id_dim )
+      for( size_t id_dim = 0; id_dim < N; ++id_dim )
       {
-        self[id_dim] /= static_cast<scalar_type>( val ) ;
+        self[id_dim] /= static_cast<scalar_type>( val );
       }
     }
 
-} ;
+};
 
 /**
 * @brief Overloading for std::vector
@@ -231,7 +231,7 @@ class KMeansVectorDataTrait<std::vector<T>>
 {
   public:
     // base type
-    typedef std::vector<T> type ;
+    typedef std::vector<T> type;
 
     typedef T scalar_type;
 
@@ -242,7 +242,7 @@ class KMeansVectorDataTrait<std::vector<T>>
     */
     static size_t size( const type & aVector )
     {
-      return aVector.size() ;
+      return aVector.size();
     }
 
     /**
@@ -251,10 +251,10 @@ class KMeansVectorDataTrait<std::vector<T>>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      static const matching::L2<T> metric ;
-      return metric( aVec1.cbegin() , aVec2.cbegin() , aVec1.size() ) ;
+      static const matching::L2<T> metric;
+      return metric( aVec1.cbegin(), aVec2.cbegin(), aVec1.size() );
     }
 
 
@@ -266,15 +266,15 @@ class KMeansVectorDataTrait<std::vector<T>>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
       type res( min );
-      for( size_t id_dim = 0 ; id_dim < res.size() ; ++id_dim )
+      for( size_t id_dim = 0; id_dim < res.size(); ++id_dim )
       {
-        std::uniform_real_distribution<scalar_type> distrib( min[id_dim] , max[id_dim] ) ;
+        std::uniform_real_distribution<scalar_type> distrib( min[id_dim], max[id_dim] );
         res[ id_dim ] = distrib( rng );
       }
-      return res ;
+      return res;
     }
 
 
@@ -284,26 +284,26 @@ class KMeansVectorDataTrait<std::vector<T>>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min.resize( elts[0].size() , std::numeric_limits<scalar_type>::max() );
-      max.resize( elts[0].size() , std::numeric_limits<scalar_type>::lowest() ) ;
+      min.resize( elts[0].size(), std::numeric_limits<scalar_type>::max() );
+      max.resize( elts[0].size(), std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < cur_elt.size() ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < cur_elt.size(); ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -315,8 +315,8 @@ class KMeansVectorDataTrait<std::vector<T>>
     */
     static type null( const type & dummy )
     {
-      type res( dummy.size() , scalar_type( 0 ) ) ;
-      return res ;
+      type res( dummy.size(), scalar_type( 0 ) );
+      return res;
     }
 
 
@@ -326,11 +326,11 @@ class KMeansVectorDataTrait<std::vector<T>>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      for( size_t id_dim = 0 ; id_dim < self.size() ; ++id_dim )
+      for( size_t id_dim = 0; id_dim < self.size(); ++id_dim )
       {
-        self[id_dim] += data[id_dim] ;
+        self[id_dim] += data[id_dim];
       }
     }
 
@@ -341,14 +341,15 @@ class KMeansVectorDataTrait<std::vector<T>>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      for( size_t id_dim = 0 ; id_dim < self.size() ; ++id_dim )
+      for( size_t id_dim = 0; id_dim < self.size(); ++id_dim )
       {
-        self[id_dim] /= static_cast<scalar_type>( val ) ;
+        self[id_dim] /= static_cast<scalar_type>( val );
       }
     }
 };
+
 
 /**
 * @brief Overloading for Vec2
@@ -358,7 +359,7 @@ class KMeansVectorDataTrait<Vec2>
 {
   public:
     // base type
-    typedef Vec2 type ;
+    typedef Vec2 type;
 
     typedef double scalar_type;
 
@@ -369,7 +370,7 @@ class KMeansVectorDataTrait<Vec2>
     */
     static size_t size( const type & aVector )
     {
-      return 2 ;
+      return 2;
     }
 
     /**
@@ -378,9 +379,9 @@ class KMeansVectorDataTrait<Vec2>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -392,12 +393,12 @@ class KMeansVectorDataTrait<Vec2>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      std::uniform_real_distribution<scalar_type> distrib_x( min[0] , max[0] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_y( min[1] , max[1] ) ;
+      std::uniform_real_distribution<scalar_type> distrib_x( min[0], max[0] );
+      std::uniform_real_distribution<scalar_type> distrib_y( min[1], max[1] );
 
-      return type( distrib_x( rng ) , distrib_y( rng ) ) ;
+      return type( distrib_x( rng ), distrib_y( rng ) );
     }
 
 
@@ -408,28 +409,26 @@ class KMeansVectorDataTrait<Vec2>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec2( std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec2( std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ) ;
+      min.Constant( std::numeric_limits<scalar_type>::max() );
+      max.Constant( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < 2 ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < 2; ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -442,7 +441,7 @@ class KMeansVectorDataTrait<Vec2>
     */
     static type null( const type & dummy )
     {
-      return type( 0 , 0 ) ;
+      return type( 0, 0 );
     }
 
     /**
@@ -451,9 +450,9 @@ class KMeansVectorDataTrait<Vec2>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
 
@@ -463,9 +462,9 @@ class KMeansVectorDataTrait<Vec2>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 
 };
@@ -478,7 +477,7 @@ class KMeansVectorDataTrait<Vec3>
 {
   public:
     // base type
-    typedef Vec3 type ;
+    typedef Vec3 type;
 
     typedef double scalar_type;
 
@@ -489,7 +488,7 @@ class KMeansVectorDataTrait<Vec3>
     */
     static size_t size( const type & aVector )
     {
-      return 3 ;
+      return 3;
     }
 
     /**
@@ -498,9 +497,9 @@ class KMeansVectorDataTrait<Vec3>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -512,13 +511,13 @@ class KMeansVectorDataTrait<Vec3>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      std::uniform_real_distribution<scalar_type> distrib_x( min[0] , max[0] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_y( min[1] , max[1] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_z( min[2] , max[2] ) ;
+      std::uniform_real_distribution<scalar_type> distrib_x( min[0], max[0] );
+      std::uniform_real_distribution<scalar_type> distrib_y( min[1], max[1] );
+      std::uniform_real_distribution<scalar_type> distrib_z( min[2], max[2] );
 
-      return type( distrib_x( rng ) , distrib_y( rng ) , distrib_z( rng ) ) ;
+      return type( distrib_x( rng ), distrib_y( rng ), distrib_z( rng ) );
     }
 
     /**
@@ -527,30 +526,26 @@ class KMeansVectorDataTrait<Vec3>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec3( std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec3( std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ) ;
+      min.Constant( std::numeric_limits<scalar_type>::max() );
+      max.Constant( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < 3 ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < 3; ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -563,7 +558,7 @@ class KMeansVectorDataTrait<Vec3>
     */
     static type null( const type & dummy )
     {
-      return type( 0 , 0 , 0 ) ;
+      return type( 0, 0, 0 );
     }
 
 
@@ -573,9 +568,9 @@ class KMeansVectorDataTrait<Vec3>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
 
@@ -585,9 +580,9 @@ class KMeansVectorDataTrait<Vec3>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 };
 
@@ -599,7 +594,7 @@ class KMeansVectorDataTrait<Vec4>
 {
   public:
     // base type
-    typedef Vec4 type ;
+    typedef Vec4 type;
 
     typedef double scalar_type;
 
@@ -610,7 +605,7 @@ class KMeansVectorDataTrait<Vec4>
     */
     static size_t size( const type & aVector )
     {
-      return 4 ;
+      return 4;
     }
 
     /**
@@ -619,9 +614,9 @@ class KMeansVectorDataTrait<Vec4>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -633,14 +628,14 @@ class KMeansVectorDataTrait<Vec4>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      std::uniform_real_distribution<scalar_type> distrib_x( min[0] , max[0] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_y( min[1] , max[1] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_z( min[2] , max[2] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_w( min[3] , max[3] ) ;
+      std::uniform_real_distribution<scalar_type> distrib_x( min[0], max[0] );
+      std::uniform_real_distribution<scalar_type> distrib_y( min[1], max[1] );
+      std::uniform_real_distribution<scalar_type> distrib_z( min[2], max[2] );
+      std::uniform_real_distribution<scalar_type> distrib_w( min[3], max[3] );
 
-      return type( distrib_x( rng ) , distrib_y( rng ) , distrib_z( rng ) , distrib_w( rng ) ) ;
+      return type( distrib_x( rng ), distrib_y( rng ), distrib_z( rng ), distrib_w( rng ) );
     }
 
     /**
@@ -649,32 +644,26 @@ class KMeansVectorDataTrait<Vec4>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec4( std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ,
-                  std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec4( std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ,
-                  std::numeric_limits<scalar_type>::lowest() ) ;
+      min.Constant( std::numeric_limits<scalar_type>::max() );
+      max.Constant( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < 4 ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < 4; ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -686,7 +675,7 @@ class KMeansVectorDataTrait<Vec4>
     */
     static type null( const type & dummy )
     {
-      return type( 0 , 0 , 0 , 0 ) ;
+      return type( 0, 0, 0, 0 );
     }
 
 
@@ -696,9 +685,9 @@ class KMeansVectorDataTrait<Vec4>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
 
@@ -708,9 +697,9 @@ class KMeansVectorDataTrait<Vec4>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 };
 
@@ -723,7 +712,7 @@ class KMeansVectorDataTrait<Vec2f>
 {
   public:
     // base type
-    typedef Vec2f type ;
+    typedef Vec2f type;
 
     typedef float scalar_type;
 
@@ -734,7 +723,7 @@ class KMeansVectorDataTrait<Vec2f>
     */
     static size_t size( const type & aVector )
     {
-      return 2 ;
+      return 2;
     }
 
     /**
@@ -743,9 +732,9 @@ class KMeansVectorDataTrait<Vec2f>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -757,12 +746,12 @@ class KMeansVectorDataTrait<Vec2f>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      std::uniform_real_distribution<scalar_type> distrib_x( min[0] , max[0] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_y( min[1] , max[1] ) ;
+      std::uniform_real_distribution<scalar_type> distrib_x( min[0], max[0] );
+      std::uniform_real_distribution<scalar_type> distrib_y( min[1], max[1] );
 
-      return type( distrib_x( rng ) , distrib_y( rng ) );
+      return type( distrib_x( rng ), distrib_y( rng ) );
     }
 
 
@@ -772,28 +761,26 @@ class KMeansVectorDataTrait<Vec2f>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec2f( std::numeric_limits<scalar_type>::max() ,
-                   std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec2f( std::numeric_limits<scalar_type>::lowest() ,
-                   std::numeric_limits<scalar_type>::lowest() ) ;
+      min.Constant( std::numeric_limits<scalar_type>::max() );
+      max.Constant( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < 2 ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < 2; ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -805,7 +792,7 @@ class KMeansVectorDataTrait<Vec2f>
     */
     static type null( const type & dummy )
     {
-      return type( 0 , 0 ) ;
+      return type( 0, 0 );
     }
 
 
@@ -815,9 +802,9 @@ class KMeansVectorDataTrait<Vec2f>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
 
@@ -827,9 +814,9 @@ class KMeansVectorDataTrait<Vec2f>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 };
 
@@ -841,7 +828,7 @@ class KMeansVectorDataTrait<Vec3f>
 {
   public:
     // base type
-    typedef Vec3f type ;
+    typedef Vec3f type;
 
     typedef float scalar_type;
 
@@ -852,7 +839,7 @@ class KMeansVectorDataTrait<Vec3f>
     */
     static size_t size( const type & aVector )
     {
-      return 3 ;
+      return 3;
     }
 
     /**
@@ -861,9 +848,9 @@ class KMeansVectorDataTrait<Vec3f>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -875,13 +862,13 @@ class KMeansVectorDataTrait<Vec3f>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      std::uniform_real_distribution<scalar_type> distrib_x( min[0] , max[0] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_y( min[1] , max[1] ) ;
-      std::uniform_real_distribution<scalar_type> distrib_z( min[2] , max[2] ) ;
+      std::uniform_real_distribution<scalar_type> distrib_x( min[0], max[0] );
+      std::uniform_real_distribution<scalar_type> distrib_y( min[1], max[1] );
+      std::uniform_real_distribution<scalar_type> distrib_z( min[2], max[2] );
 
-      return type( distrib_x( rng ) , distrib_y( rng ) , distrib_z( rng ) ) ;
+      return type( distrib_x( rng ), distrib_y( rng ), distrib_z( rng ) );
     }
 
     /**
@@ -890,30 +877,26 @@ class KMeansVectorDataTrait<Vec3f>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec3f( std::numeric_limits<scalar_type>::max() ,
-                   std::numeric_limits<scalar_type>::max() ,
-                   std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec3f( std::numeric_limits<scalar_type>::lowest() ,
-                   std::numeric_limits<scalar_type>::lowest() ,
-                   std::numeric_limits<scalar_type>::lowest() ) ;
+      min.Constant( std::numeric_limits<scalar_type>::max() );
+      max.Constant( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        for( size_t id_dim = 0 ; id_dim < 3 ; ++id_dim )
+        const type & cur_elt = elts[ id_pt ];
+        for( size_t id_dim = 0; id_dim < 3; ++id_dim )
         {
           // Get min_max for ith dim
-          min[ id_dim ] = std::min( min[id_dim] , cur_elt[ id_dim ] ) ;
-          max[ id_dim ] = std::max( max[id_dim] , cur_elt[ id_dim ] ) ;
+          min[ id_dim ] = std::min( min[id_dim], cur_elt[ id_dim ] );
+          max[ id_dim ] = std::max( max[id_dim], cur_elt[ id_dim ] );
         }
       }
     }
@@ -926,7 +909,7 @@ class KMeansVectorDataTrait<Vec3f>
     */
     static type null( const type & dummy )
     {
-      return type( 0 , 0 , 0 ) ;
+      return type( 0, 0, 0 );
     }
 
 
@@ -936,9 +919,9 @@ class KMeansVectorDataTrait<Vec3f>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
 
@@ -948,9 +931,9 @@ class KMeansVectorDataTrait<Vec3f>
     * @param val scalar divisor
     * @note this perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 };
 
@@ -966,7 +949,7 @@ class KMeansVectorDataTrait<Vec>
 {
   public:
     // base type
-    typedef Vec type ;
+    typedef Vec type;
 
     typedef double scalar_type;
 
@@ -977,7 +960,7 @@ class KMeansVectorDataTrait<Vec>
     */
     static size_t size( const type & aVector )
     {
-      return aVector.size() ;
+      return aVector.size();
     }
 
     /**
@@ -986,10 +969,9 @@ class KMeansVectorDataTrait<Vec>
     * @param aVec2 second vector
     * @return square euclidean distance
     */
-    static scalar_type L2( const type & aVec1 , const type & aVec2 )
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      // TODO: see with @pmoulon if we need to replace with L2<> call
-      return ( aVec1 - aVec2 ).squaredNorm() ;
+      return ( aVec1 - aVec2 ).squaredNorm();
     }
 
 
@@ -1001,15 +983,15 @@ class KMeansVectorDataTrait<Vec>
     * @return a Random vector in the given range
     */
     template < typename RngType >
-    static type random( const type & min , const type & max , RngType & rng )
+    static type random( const type & min, const type & max, RngType & rng )
     {
-      Vec res( min.size() ) ;
-      for( size_t id_dim = 0 ; id_dim < res.size() ; ++id_dim )
+      Vec res( min.size() );
+      for( size_t id_dim = 0; id_dim < res.size(); ++id_dim )
       {
-        std::uniform_real_distribution<scalar_type> distrib( min[0] , max[0] ) ;
-        res[id_dim] = distrib( rng ) ;
+        std::uniform_real_distribution<scalar_type> distrib( min[0], max[0] );
+        res[id_dim] = distrib( rng );
       }
-      return res ;
+      return res;
     }
 
     /**
@@ -1018,25 +1000,25 @@ class KMeansVectorDataTrait<Vec>
     * @param[out] min minimum (component-wise) of the points
     * @param[out] max maximum (component-wise) of the points
     */
-    static void minMax( const std::vector<type> & elts , type & min , type & max )
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
     {
       if( elts.size() == 0 )
       {
-        return ;
+        return;
       }
 
       // Init
-      min = Vec( elts[0].size() ) ;
-      min.fill( std::numeric_limits<scalar_type>::max() ) ;
-      max = Vec( elts[0].size() ) ;
-      max.fill( std::numeric_limits<scalar_type>::lowest() ) ;
+      min = Vec( elts[0].size() );
+      min.fill( std::numeric_limits<scalar_type>::max() );
+      max = Vec( elts[0].size() );
+      max.fill( std::numeric_limits<scalar_type>::lowest() );
 
       // min/max search
-      for( size_t id_pt = 0 ; id_pt < elts.size() ; ++id_pt )
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
       {
-        const type & cur_elt = elts[ id_pt ] ;
-        min = min.cwiseMin( cur_elt ) ;
-        max = max.cwiseMax( cur_elt ) ;
+        const type & cur_elt = elts[ id_pt ];
+        min = min.cwiseMin( cur_elt );
+        max = max.cwiseMax( cur_elt );
       }
     }
 
@@ -1047,9 +1029,9 @@ class KMeansVectorDataTrait<Vec>
     */
     static type null( const type & dummy )
     {
-      Vec res( dummy.size() ) ;
-      res.fill( scalar_type( 0 ) ) ;
-      return res ;
+      Vec res( dummy.size() );
+      res.fill( scalar_type( 0 ) );
+      return res;
     }
 
 
@@ -1059,9 +1041,9 @@ class KMeansVectorDataTrait<Vec>
     * @param data vector to add to the self vector
     * @note this perform self += data (component-wise)
     */
-    static void accumulate( type & self , const type & data )
+    static void accumulate( type & self, const type & data )
     {
-      self += data ;
+      self += data;
     }
 
     /**
@@ -1070,9 +1052,9 @@ class KMeansVectorDataTrait<Vec>
     * @param val scalar divisor
     * @note this  perform self /= data (component-wise)
     */
-    static void divide( type & self , const size_t val )
+    static void divide( type & self, const size_t val )
     {
-      self /= static_cast<scalar_type>( val ) ;
+      self /= static_cast<scalar_type>( val );
     }
 };
 
