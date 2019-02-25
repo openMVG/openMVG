@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <cctype>
 
 extern "C" {
   #include "png.h"
@@ -52,6 +53,7 @@ Format GetFormat(const char *c) {
   if (CmpFormatExt(p, ".jpeg")) return Jpg;
   if (CmpFormatExt(p, ".tif")) return Tiff;
   if (CmpFormatExt(p, ".tiff")) return Tiff;
+  if (CmpFormatExt(p, ".pfm")) return Pfm;
 
   return Unknown;
 }
@@ -72,6 +74,8 @@ int ReadImage(const char *filename,
       return ReadJpg(filename, ptr, w, h, depth);
     case Tiff:
       return ReadTiff(filename, ptr, w, h, depth);
+    case Pfm:
+      return ReadPfm(filename, ptr, w, h, depth);
     default:
       return 0;
   };
@@ -93,6 +97,8 @@ int WriteImage(const char * filename,
       return WriteJpg(filename, ptr, w, h, depth);
     case Tiff:
       return WriteTiff(filename, ptr, w, h, depth);
+    case Pfm:
+      return WritePfm(filename, ptr, w, h, depth);
     default:
       return 0;
   };
@@ -628,6 +634,153 @@ int WriteTiff(const char * filename,
   }
   TIFFClose(tiff);
   return 1;
+}
+
+
+// helper function for skipping a line
+void skipline(FILE *file) {
+    while (int c = fgetc(file)) {
+        if (c == '\n' || c == EOF)
+            break;
+    }
+}
+
+int ReadPfm(const char * filename,
+            std::vector<unsigned char> * array,
+            int * w,
+            int * h,
+            int * depth) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+        return 0;
+    }
+    const int res = ReadPfmStream(file, array, w, h, depth);
+    fclose(file);
+    return res;
+}
+
+
+int ReadPfmStream(FILE *file,
+                  std::vector<unsigned char> * array,
+                  int * w,
+                  int * h,
+                  int * depth) {
+    const int NUM_VALUES = 4;
+    const int INT_BUFFER_SIZE = 256;
+    int scale = 0.f;
+    size_t res = 0;
+
+    // the following loop parses the PFM header one character at a time, looking
+    // for the tokens "Pfx", width, height and scale (in that order), and
+    // discarding all comment (everything from '#' to '\n' inclusive), where
+    // comments *may occur inside tokens*. Each token must be terminate with a
+    // whitespace character, and only one whitespace char is eaten after the
+    // third int token is parsed.
+    char buffer[INT_BUFFER_SIZE];
+    int valuesIndex = 0, bufferIndex = 0, inToken = 0;
+    while (valuesIndex < NUM_VALUES) {
+        char nextChar;
+        res = fread(&nextChar, 1, 1, file);
+        if (res == 0) return 0; // read failed, EOF?
+
+        if (isspace(nextChar)) {
+            if (inToken) { // we were reading a token, so this white space delimits it
+                inToken = 0;
+                if (valuesIndex == 0) { // "Pfx" token
+                    if (buffer[0] != 'P') {
+                        return 0; // Must starts with 'P'
+                    }
+                    if (buffer[1] == 'f') { // single channel
+                        *depth = 1;
+                    } else if (buffer[1] == 'F') {
+                        if (valuesIndex > 2 && buffer[2] == '4') { // 4-channel extension
+                            *depth = 4;
+                        } else {
+                            *depth = 3;
+                        }
+                    } else { // Must be 'Pf' or 'PF'
+                        return 0;
+                    }
+                } else { // number token
+                    buffer[bufferIndex] = 0; // nullptr-terminate the string
+                    if (valuesIndex == 1) { // width token
+                        *w = atoi(buffer);
+                    } else if (valuesIndex == 2) { // height token
+                        *h = atoi(buffer);
+                    } else if (valuesIndex == 3) { // scale token
+                        scale = atof(buffer);
+                    }
+                }
+                bufferIndex = 0; // reset for next int token
+                ++valuesIndex;
+            }
+        } else if (isalnum(nextChar) || nextChar == '.' || nextChar == '-') {
+            inToken = 1; // in case it's not already set
+            buffer[bufferIndex++] = nextChar;
+            if (bufferIndex == INT_BUFFER_SIZE) // tokens should never be this long
+                return 0;
+        } else if (nextChar == '#') {
+            do { // eat all characters from input stream until newline
+                res = fread(&nextChar, 1, 1, file);
+            } while (res == 1 && nextChar != '\n');
+            if (res == 0) return 0; // read failed, EOF?
+        } else {
+            // Encountered a non-whitespace, non-digit outside a comment - bail out.
+            return 0;
+        }
+    }
+
+    // Read pixels.
+    (*array).resize(*w * *h * *depth * sizeof(float));
+    res = fread(&(*array)[0], 1, array->size(), file);
+    if (res != array->size()) {
+        return 0;
+    }
+    return 1;
+}
+
+int WritePfm(const char * filename,
+              const std::vector<unsigned char> & array,
+              int w,
+              int h,
+              int depth) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+        return 0;
+    }
+    const int res = WritePfmStream(file, array, w, h, depth);
+    fclose(file);
+    return res;
+}
+
+
+int WritePfmStream(FILE * file,
+                   const std::vector<unsigned char> & array,
+                   int w,
+                   int h,
+                   int depth) {
+    // Write magic number.
+    if (depth == 1) {
+        fprintf(file, "Pf\n");
+    } else if (depth == 3) {
+        fprintf(file, "PF\n");
+    } else if (depth == 4) {
+        fprintf(file, "PF4\n");
+    } else {
+        return 0;
+    }
+
+    // Write sizes.
+    fprintf(file, "%d %d\n%f\n", w, h, -1.f);
+
+    // Write pixels.
+    const size_t res = fwrite(&array[0], 1, static_cast<int>(array.size()), file);
+    if (res != array.size()) {
+        return 0;
+    }
+    return 1;
 }
 
 bool ReadImageHeader(const char * filename, ImageHeader * imgheader)
