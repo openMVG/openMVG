@@ -72,6 +72,18 @@ target_link_libraries(openMVG_main_ComputeMatches
     ${STLPLUS_LIBRARY}
 )
 
+add_executable(openMVG_main_GeometricFilter main_GeometricFilter.cpp)
+target_link_libraries(openMVG_main_GeometricFilter
+  PRIVATE
+    openMVG_graph
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
 add_executable(openMVG_main_MatchesToTracks main_MatchesToTracks.cpp)
 target_link_libraries(openMVG_main_MatchesToTracks
   PRIVATE
