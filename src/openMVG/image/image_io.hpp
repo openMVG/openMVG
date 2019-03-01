@@ -39,7 +39,7 @@ extern template class Image<RGBAColor>;
 */
 enum Format
 {
-  Pnm, Png, Jpg, Tiff, Unknown
+  Pnm, Png, Jpg, Tiff, Pfm, Unknown
 };
 
 
@@ -294,6 +294,57 @@ int ReadTiff( const char * path , std::vector<unsigned char> * array, int * w, i
 */
 int WriteTiff( const char * path , const std::vector<unsigned char>& array, int w, int h, int depth );
 
+//--
+// PFM I/O
+//--
+/**
+* @brief Read PFM file
+* @param[in] path Input image path
+* @param[out] array Output image data
+* @param[out] w Width of the image
+* @param[out] h Height of the image
+* @param[out] depth Depth of the image
+* @retval 0 if there was an error during read operation
+* @return non nul value if there was an error during read operation
+*/
+int ReadPfm(const char * path, std::vector<unsigned char> * array, int * w, int * h, int * depth);
+
+/**
+* @brief Read PFM from a stream
+* @param[in] stream Input image stream data
+* @param[out] array Output image data
+* @param[out] w Width of the image
+* @param[out] h Height of the image
+* @param[out] depth Depth of the image
+* @retval 0 if there was an error during read operation
+* @return non nul value if there was an error during read operation
+*/
+int ReadPfmStream(FILE * stream, std::vector<unsigned char> * array, int * w, int * h, int * depth);
+
+/**
+* @brief Write PFM from to a file
+* @param[in] path Output image path
+* @param array input image data
+* @param w Width of the image
+* @param h Height of the image
+* @param depth Depth of the image
+* @retval 0 if there was an error during write operation
+* @return non nul value if there was an error during write operation
+*/
+int WritePfm(const char * path, const std::vector<unsigned char>& array, int w, int h, int depth);
+
+/**
+* @brief Write PFM to a stream
+* @param[in] stream Output image stream data
+* @param array input image data
+* @param w Width of the image
+* @param h Height of the image
+* @param depth Depth of the image
+* @retval 0 if there was an error during write operation
+* @return non nul value if there was an error during write operation
+*/
+int WritePfmStream(FILE *, const std::vector<unsigned char>& array, int w, int h, int depth);
+
 /**
 * @brief  structure used to know the size of an image
 * @note: can be extented later to support the pixel data type and the number of channel:
@@ -461,6 +512,29 @@ inline int ReadImage( const char * path, Image<RGBAColor> * im )
   return res;
 }
 
+/**
+* @brief Generic Image read from file (overload for float)
+* @param[in] path Input image path
+* @param[out] im Ouput image
+* @retval 0 if there was an errir during read operation
+* @retval 1 if read is correct
+*/
+template<>
+inline int ReadImage(const char * path, Image<float> * im) {
+    std::vector<unsigned char> ptr;
+    int w, h, depth;
+    const int res = ReadImage(path, &ptr, &w, &h, &depth);
+    if (depth != 1) {
+        return 0;
+    }
+    if (res == 1) {
+        float * ptrFloat = reinterpret_cast<float*>(&ptr[0]);
+        //convert raw array to Image
+        (*im) = Eigen::Map<Image<float>::Base>(ptrFloat, h, w);
+    }
+    return res;
+}
+
 //--------
 //-- Image Writing
 //--------
@@ -482,6 +556,24 @@ int WriteImage( const char * filename, const Image<T>& im )
   const int w = im.Width(), h = im.Height();
   return WriteImage( filename, array, w, h, depth );
 }
+
+/// Write float image to disk
+/**
+* @brief Generic Write Image (overload for float)
+* @param filename Output image file path
+* @param im Input image
+* @retval 0 if there was an error during write operation
+* @return non null if there was no error during write operation
+*/
+template<>
+inline int WriteImage(const char * filename, const Image<float>& im) {
+    const unsigned char * ptr = (unsigned char*)(im.GetMat().data());
+    const int depth = 1;
+    std::vector<unsigned char> array(ptr, ptr + im.Width()*im.Height()*sizeof(float));
+    const int w = im.Width(), h = im.Height();
+    return WriteImage(filename, array, w, h, depth);
+}
+
 
 /**
 * @brief Generic JPEG write

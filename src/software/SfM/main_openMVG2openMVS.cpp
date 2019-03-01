@@ -115,6 +115,23 @@ bool exportToOpenMVS(
           UndistortImage(maskRGB, cam, maskRGB_ud, BLACK);
           WriteImage((image.name + ".mask.png").c_str(), maskRGB_ud);
         }
+        // undistort depth and save it
+        auto depthFileBasename = view.second->s_Img_path;
+        auto pos = depthFileBasename.find("rgb");
+        if (pos != std::string::npos) {
+            depthFileBasename.replace(pos, 3, "depth");
+        }
+        pos = depthFileBasename.find(".png");
+        if (pos != std::string::npos) {
+            depthFileBasename.replace(pos, 4, ".pfm");
+        }
+        auto depthFileName = stlplus::create_filespec(sfm_data.s_root_path, depthFileBasename);
+        if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
+          Image<float> depth_float, depth_float_ud;
+          ReadImage(depthFileName.c_str(), &depth_float);
+          UndistortImage(depth_float, cam, depth_float_ud, 0.f);
+          WriteImage((image.name + ".ref.pfm").c_str(), depth_float_ud);
+        }
       }
       else
       {
