@@ -14,10 +14,11 @@ namespace openMVG {
 
       auto intrinsics = sfm_data_.intrinsics.begin()->second;
       auto cam_type = intrinsics->getType();
+      auto distortion_type = ParallelBA::DistortionT::PBA_NO_DISTORTION;
       if (cam_type == cameras::PINHOLE_CAMERA_RADIAL1) {
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION);
+          distortion_type = ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION;
       } else if (cam_type == cameras::PINHOLE_CAMERA_RADIAL1_PBA) {
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION);
+          distortion_type = ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION;
       } else {
           std::cerr << "SfMEnginePBA: Only support PINHOLE_CAMERA_RADIAL1 and PINHOLE_CAMERA_RADIAL1_PBA" << std::endl;
           return false;
@@ -28,7 +29,7 @@ namespace openMVG {
       } else {
         if ((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_DISTORTION)
           == (cameras::Intrinsic_Parameter_Type)0) {
-          pba.EnableRadialDistortion(ParallelBA::DistortionT::PBA_NO_DISTORTION);
+          distortion_type = ParallelBA::DistortionT::PBA_NO_DISTORTION;
         }
 
         if ((intrinsic_refinement_options_ & cameras::Intrinsic_Parameter_Type::ADJUST_FOCAL_LENGTH)
@@ -36,6 +37,7 @@ namespace openMVG {
           pba.SetFocalLengthFixed(true);
         }
       }
+      pba.EnableRadialDistortion(distortion_type);
 
       int i = 0;
       //Data to pba begin
@@ -52,8 +54,12 @@ namespace openMVG {
         for (int j = 0; j < 3; j++) camera_data[i].t[j] = (float) (camera_T(j));
 
         // intrinsics
-        camera_data[i].f = params[0];
-        camera_data[i].SetProjectionDistortion(params[3]);
+        camera_data[i].f = (float)params[0];
+        if (distortion_type == ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION) {
+          camera_data[i].SetProjectionDistortion(params[3]);
+        } else if (distortion_type == ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION) {
+          camera_data[i].SetMeasumentDistortion(params[3]);
+        }
         i++;
       }
 
@@ -115,6 +121,7 @@ namespace openMVG {
       pba.SetProjection(measurements.size(), &measurements[0], &ptidx[0], &camidx[0]);//set the projections
 
       //Data to pba end
+      return true;
     }
 
 
