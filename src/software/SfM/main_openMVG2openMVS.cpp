@@ -81,8 +81,10 @@ bool exportToOpenMVS(
   {
     map_view[view.first] = scene.images.size();
     MVS::Interface::Image image;
+    // store relative path because we going to feed mvs resized images
+    image.name = view.second->s_Img_path;
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
-    image.name = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
+    const std::string outputImage = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
     image.platformID = map_intrinsic.at(view.second->id_intrinsic);
     MVS::Interface::Platform& platform = scene.platforms[image.platformID];
     image.cameraID = 0;
@@ -106,14 +108,14 @@ bool exportToOpenMVS(
         Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
         ReadImage(srcImage.c_str(), &imageRGB);
         UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
-        WriteImage(image.name.c_str(), imageRGB_ud);
+        WriteImage(outputImage.c_str(), imageRGB_ud);
         // undistort mask and save it
         auto maskFileName = srcImage + ".mask.png";
         if (stlplus::is_file(maskFileName)) {
           Image<openMVG::image::RGBColor> maskRGB, maskRGB_ud;
           ReadImage(maskFileName.c_str(), &maskRGB);
           UndistortImage(maskRGB, cam, maskRGB_ud, BLACK);
-          WriteImage((image.name + ".mask.png").c_str(), maskRGB_ud);
+          WriteImage((outputImage + ".mask.png").c_str(), maskRGB_ud);
         }
         // undistort depth and save it
         auto depthFileBasename = view.second->s_Img_path;
@@ -130,14 +132,15 @@ bool exportToOpenMVS(
           Image<float> depth_float, depth_float_ud;
           ReadImage(depthFileName.c_str(), &depth_float);
           UndistortImage(depth_float, cam, depth_float_ud, 0.f);
-          WriteImage((image.name + ".ref.pfm").c_str(), depth_float_ud);
+          WriteImage((outputImage + ".ref.pfm").c_str(), depth_float_ud);
         }
       }
       else
       {
         // just copy image
-        stlplus::file_copy(srcImage, image.name);
-        stlplus::file_copy(srcImage + ".mask.png", image.name + ".mask.png");
+        stlplus::file_copy(srcImage, outputImage);
+        stlplus::file_copy(srcImage + ".mask.png", outputImage + ".mask.png");
+        stlplus::file_copy(srcImage + ".ref.pfm", outputImage + ".ref.pfm");
       }
       platform.poses.push_back(pose);
       ++nPoses;
@@ -147,7 +150,7 @@ bool exportToOpenMVS(
       // image have not valid pose, so set an undefined pose
       image.poseID = NO_ID;
       // just copy the image
-      stlplus::file_copy(srcImage, image.name);
+      stlplus::file_copy(srcImage, outputImage);
     }
     scene.images.emplace_back(image);
     ++my_progress_bar;
@@ -206,7 +209,7 @@ bool exportToOpenMVS(
       }
       // read image meta-data
       ImageHeader imageHeader;
-      ReadImageHeader(pImage->name.c_str(), &imageHeader);
+      ReadImageHeader(stlplus::create_filespec(sOutDir, pImage->name).c_str(), &imageHeader);
       const double fScale(1.0/std::max(imageHeader.width, imageHeader.height));
       camera.K(0, 0) *= fScale;
       camera.K(1, 1) *= fScale;
