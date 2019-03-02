@@ -63,9 +63,17 @@ int main(int argc, char **argv)
 {
   CmdLine cmd;
 
+  // The scene 
   std::string sSfM_Data_Filename;
-  std::string sPutativePairsFilename;
-  std::string sFilteredPairsFilename;
+  // The input matches 
+  std::string sPutativeMatchesFilename;
+  // The output matches 
+  std::string sFilteredMatchesFilename;
+  // The input pairs 
+  std::string sInputPairsFilename;
+  // The output pairs
+  std::string sOutputPairsFilename;
+
   std::string sGeometricModel = "f";
   bool bForce = false;
   bool bGuided_matching = false;
@@ -74,12 +82,14 @@ int main(int argc, char **argv)
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
-  cmd.add( make_option('o', sFilteredPairsFilename, "output_file") );
-  cmd.add( make_option('p', sPutativePairsFilename, "pairs") );
+  cmd.add( make_option('o', sFilteredMatchesFilename, "output_file") );
+  cmd.add( make_option('m', sPutativeMatchesFilename, "matches") );
   // Options
+  cmd.add( make_option('p', sInputPairsFilename, "input_pairs") );
+  cmd.add( make_option('s', sOutputPairsFilename, "output_pairs" ) );
   cmd.add( make_option('g', sGeometricModel, "geometric_model") );
   cmd.add( make_option('f', bForce, "force") );
-  cmd.add( make_option('m', bGuided_matching, "guided_matching") );
+  cmd.add( make_option('r', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
 
@@ -89,11 +99,13 @@ int main(int argc, char **argv)
       cmd.process(argc, argv);
   } catch (const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--input_file] a SfM_Data file\n"
-      << "[-p|--pairs] initial pairs filename to use\n"
-      << "[-o|--output_file] output filtered pairs filename\n"
+      << "[-i|--input_file]       A SfM_Data file\n"
+      << "[-m|--matches]          (Input) matches filename\n"
+      << "[-o|--output_file]      (Output) filtered matches filename\n"
       << "\n[Optional]\n"
-      << "[-f|--force] Force to recompute data]\n"
+      << "[-p|--input_pairs]      (Input) pairs filename\n"
+      << "[-s|--output_pairs]     (Output) filtered pairs filename\n"
+      << "[-f|--force]            Force to recompute data\n"
       << "[-g|--geometric_model]\n"
       << "  (pairwise correspondences filtering thanks to robust model estimation):\n"
       << "   f: (default) fundamental matrix,\n"
@@ -101,8 +113,7 @@ int main(int argc, char **argv)
       << "   h: homography matrix.\n"
       << "   a: essential matrix with an angular parametrization,\n"
       << "   o: orthographic essential matrix.\n"
-      << "[-m|--guided_matching]\n"
-      << "  use the found model to improve the pairwise correspondences.\n"
+      << "[-r|--guided_matching]  Use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
       << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
       << "  If not used, all regions will be load in memory."
@@ -114,18 +125,20 @@ int main(int argc, char **argv)
 
   std::cout << " You called : " << "\n"
             << argv[0] << "\n"
-            << "--input_file: " << sSfM_Data_Filename << "\n"
-            << "--pairs: " << sPutativePairsFilename << "\n"
-            << "--output_file: " << sFilteredPairsFilename << "\n"
-            << "Optional parameters:" << "\n"
-            << "--force " << bForce << "\n"
-            << "--geometric_model " << sGeometricModel << "\n"
-            << "--guided_matching " << bGuided_matching << "\n"
-            << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
+            << "--input_file:        " << sSfM_Data_Filename << "\n"
+            << "--matches:           " << sPutativeMatchesFilename << "\n"
+            << "--output_file:       " << sFilteredMatchesFilename << "\n"
+            << "Optional parameters: " << "\n"
+            << "--input_pairs        " << sInputPairsFilename << "\n" 
+            << "--output_pairs       " << sOutputPairsFilename << "\n"
+            << "--force              " << (bForce ? "true" : "false") << "\n"
+            << "--geometric_model    " << sGeometricModel << "\n"
+            << "--guided_matching    " << bGuided_matching << "\n"
+            << "--cache_size         " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
 
 
 
-  if (sFilteredPairsFilename.empty() )  
+  if (sFilteredMatchesFilename.empty() )  
   {
     std::cerr << "\nIt is an invalid output file" << std::endl;
     return EXIT_FAILURE;
@@ -135,9 +148,9 @@ int main(int argc, char **argv)
     std::cerr << "\nIt is an invalid SfM file" << std::endl; 
     return EXIT_FAILURE;
   }
-  if( sPutativePairsFilename.empty() )
+  if( sPutativeMatchesFilename.empty() )
   {
-    std::cerr << "\nIt is an invalid putative pairs file" << std::endl; 
+    std::cerr << "\nIt is an invalid putative matche file" << std::endl; 
     return EXIT_FAILURE;
   }
 
@@ -170,6 +183,7 @@ int main(int argc, char **argv)
   // -----------------------------
   // - Load SfM_Data Views & intrinsics data
   // a. Load putative descriptor matches
+  // [a.1] Filter matches with input pairs
   // b. Geometric filtering of putative matches
   // + Export some statistics
   // -----------------------------
@@ -231,10 +245,22 @@ int main(int argc, char **argv)
   //---------------------------------------
   // A. Load initial matches 
   //---------------------------------------
-  if( ! Load( map_PutativesMatches, sPutativePairsFilename) ) 
+  if( ! Load( map_PutativesMatches, sPutativeMatchesFilename) ) 
   {
-    std::cerr << "Filed to load the initial pairs" ;
+    std::cerr << "Failed to load the initial matches file." ;
     return EXIT_FAILURE;
+  }
+
+  if( ! sInputPairsFilename.empty() )
+  {
+    // Load input pairs 
+    std::cout << "Loading input pairs ..." << std::endl; 
+    Pair_Set input_pairs;
+    loadPairs( sfm_data.GetViews().size(), sInputPairsFilename , input_pairs );
+
+    // Filter matches with the given pairs 
+    std::cout << "Filtering matches with the given pairs." << std::endl;
+    map_PutativesMatches = getPairs( map_PutativesMatches , input_pairs );
   }
 
 
@@ -320,11 +346,11 @@ int main(int argc, char **argv)
     //---------------------------------------
     //-- Export geometric filtered matches
     //---------------------------------------
-    if (!Save(map_GeometricMatches, sFilteredPairsFilename) )
+    if (!Save(map_GeometricMatches, sFilteredMatchesFilename) )
     {
       std::cerr
           << "Cannot save filtered matches in: " 
-          << sFilteredPairsFilename ;
+          << sFilteredMatchesFilename ;
       return EXIT_FAILURE;
     }
 
@@ -337,16 +363,30 @@ int main(int argc, char **argv)
       map_GeometricMatches,
       stlplus::create_filespec(sMatchesDirectory, "GeometricAdjacencyMatrix", "svg"));
 
+    const Pair_Set outputPairs = getPairs(map_GeometricMatches);
+
     //-- export view pair graph once geometric filter have been done
     {
       std::set<IndexT> set_ViewIds;
       std::transform(sfm_data.GetViews().begin(), sfm_data.GetViews().end(),
         std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
-      graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_GeometricMatches));
+      graph::indexedGraph putativeGraph(set_ViewIds, outputPairs );
       graph::exportToGraphvizData(
         stlplus::create_filespec(sMatchesDirectory, "geometric_matches"),
         putativeGraph);
     }
+    
+    // Write pairs 
+    if( !sOutputPairsFilename.empty() )
+    {
+      std::cout << "Saving pairs to :" << sOutputPairsFilename << std::endl; 
+      if( ! savePairs( sOutputPairsFilename , outputPairs ) )
+      {
+        std::cerr << "Failed to write pairs file" << std::endl; 
+        return EXIT_FAILURE;
+      }
+    }
+
   }
   return EXIT_SUCCESS;
 }
