@@ -379,7 +379,7 @@ int main(int argc, char **argv)
     // Write pairs 
     if( !sOutputPairsFilename.empty() )
     {
-      std::cout << "Saving pairs to :" << sOutputPairsFilename << std::endl; 
+      std::cout << "Saving pairs to: " << sOutputPairsFilename << std::endl; 
       if( ! savePairs( sOutputPairsFilename , outputPairs ) )
       {
         std::cerr << "Failed to write pairs file" << std::endl; 
