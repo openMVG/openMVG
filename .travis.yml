@@ -55,8 +55,13 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
+    # works on macOS 10.13
     - os: osx
-      osx_image: xcode8.3
+      osx_image: xcode9.4
+    
+    # works on macOS 10.14
+    - os: osx
+      osx_image: xcode10.2
 
     # works on Precise and Trusty
     - os: linux
