@@ -60,8 +60,8 @@ target_link_libraries(openMVG_main_ListMatchingPairs
     ${STLPLUS_LIBRARY}
 )
 
-add_executable( openMVG_main_PairsGenerator main_PairsGenerator.cpp )
-target_link_libraries( openMVG_main_PairsGenerator 
+add_executable( openMVG_main_PairGenerator main_PairGenerator.cpp )
+target_link_libraries( openMVG_main_PairGenerator 
   PRIVATE
     openMVG_features
     openMVG_multiview
@@ -107,14 +107,14 @@ target_link_libraries(openMVG_main_MatchesToTracks
 # Installation rules
 set_property( TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_ComputeFeatures   PROPERTY FOLDER OpenMVG/software )
-set_property( TARGET openMVG_main_PairsGenerator    PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_PairGenerator    PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_ComputeMatches    PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_GeometricFilter   PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_MatchesToTracks   PROPERTY FOLDER OpenMVG/software )
 
 install( TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/ )
 install( TARGETS openMVG_main_ComputeFeatures   DESTINATION bin/ )
-install( TARGETS openMVG_main_PairsGenerator    DESTINATION bin/ )
+install( TARGETS openMVG_main_PairGenerator    DESTINATION bin/ )
 install( TARGETS openMVG_main_ComputeMatches    DESTINATION bin/ )
 install( TARGETS openMVG_main_GeometricFilter   DESTINATION bin/ )
 install( TARGETS openMVG_main_MatchesToTracks   DESTINATION bin/ )

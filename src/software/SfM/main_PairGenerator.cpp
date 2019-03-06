@@ -16,7 +16,7 @@
 #include <iostream>
 
 /**
- * @brief Current list of pair mode available
+ * @brief Current list of available pair mode
  * 
  */
 enum EPairMode
@@ -127,29 +127,29 @@ int main( int argc, char** argv )
   const size_t NImage = sfm_data.GetViews().size();
 
   // 2. Compute pairs
-  std::cout << "Computing pairs.";
+  std::cout << "Computing pairs." << std::endl;
   Pair_Set pairs;
   switch ( pairMode )
   {
-  case PAIR_EXHAUSTIVE:
-  {
-    pairs = exhaustivePairs( NImage );
-    break;
-  }
-  case PAIR_CONTIGUOUS:
-  {
-    pairs = contiguousWithOverlap( NImage, iContiguousCount );
-    break;
-  }
-  default:
-  {
-    std::cerr << "Unknown pair mode";
-    exit( EXIT_FAILURE );
-  }
+    case PAIR_EXHAUSTIVE:
+    {
+      pairs = exhaustivePairs( NImage );
+      break;
+    }
+    case PAIR_CONTIGUOUS:
+    {
+      pairs = contiguousWithOverlap( NImage, iContiguousCount );
+      break;
+    }
+    default:
+    {
+      std::cerr << "Unknown pair mode" << std::endl;
+      exit( EXIT_FAILURE );
+    }
   }
 
   // 3. Save pairs
-  std::cout << "Saving pairs.";
+  std::cout << "Saving pairs." << std::endl;
   if ( !savePairs( sOutputPairsFilename, pairs ) )
   {
     std::cerr << "Failed to save pairs to file: \"" << sOutputPairsFilename << "\"" << std::endl;
