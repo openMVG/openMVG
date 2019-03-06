@@ -60,6 +60,16 @@ target_link_libraries(openMVG_main_ListMatchingPairs
     ${STLPLUS_LIBRARY}
 )
 
+add_executable( openMVG_main_PairsGenerator main_PairsGenerator.cpp )
+target_link_libraries( openMVG_main_PairsGenerator 
+  PRIVATE
+    openMVG_features
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
 add_executable(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 target_link_libraries(openMVG_main_ComputeMatches
   PRIVATE
@@ -95,14 +105,19 @@ target_link_libraries(openMVG_main_MatchesToTracks
 )
 
 # Installation rules
-set_property(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
-set_property(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
-set_property(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
-set_property(TARGET openMVG_main_MatchesToTracks PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_MatchesToTracks DESTINATION bin/)
+set_property( TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_ComputeFeatures   PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_PairsGenerator    PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_ComputeMatches    PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_GeometricFilter   PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_MatchesToTracks   PROPERTY FOLDER OpenMVG/software )
+
+install( TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/ )
+install( TARGETS openMVG_main_ComputeFeatures   DESTINATION bin/ )
+install( TARGETS openMVG_main_PairsGenerator    DESTINATION bin/ )
+install( TARGETS openMVG_main_ComputeMatches    DESTINATION bin/ )
+install( TARGETS openMVG_main_GeometricFilter   DESTINATION bin/ )
+install( TARGETS openMVG_main_MatchesToTracks   DESTINATION bin/ )
 
 ###
 # SfM Pipelines
