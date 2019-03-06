@@ -257,8 +257,8 @@ class KMeansVectorDataTrait<std::vector<T>>
     {
       typedef Eigen::Matrix<scalar_type, 1, Eigen::Dynamic> VecType;
       typedef Eigen::Map<const VecType> VecTypeConst;
-      VecTypeConst map_aVec1( &aVec1[0], aVec1.size() );
-      VecTypeConst map_aVec2( &aVec2[0], aVec2.size() );
+      VecTypeConst map_aVec1(aVec1.data(), aVec1.size());
+      VecTypeConst map_aVec2(aVec2.data(), aVec2.size());
       return ( map_aVec1 - map_aVec2 ).squaredNorm();
     }
 
