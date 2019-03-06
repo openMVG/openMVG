@@ -16,917 +16,310 @@
 using namespace openMVG;
 using namespace clustering;
 
-TEST( clustering, threeClustersRandomInitVec2 )
+// Define test constant:
+static const int NB_CLUSTER = 3;
+static const int NB_POINT = 1e4;
+static const std::array<int, 3> POINTS_PER_CLUSTER =
+  {NB_POINT, NB_POINT, NB_POINT};
+static const std::array<KMeansInitType, 2> KMEAN_INIT_TYPES =
+  {KMeansInitType::KMEANS_INIT_RANDOM, KMeansInitType::KMEANS_INIT_PP};
+
+// Initialize NB_CLUSTER centers and POINTS_PER_CLUSTER[i] points around each centroid
+// Note: Clusters and points are column based
+// The function return all the points randomly initialized around the centroid.
+Mat InitRandom3ClusterDataset
+(
+  Mat & centers,
+  const int dimension
+)
 {
-  std::vector< Vec2 > pts;
+  centers.resize(dimension, NB_CLUSTER);
+  centers.col(0).setConstant(-5.0);
+  centers.col(1).setConstant(5.0);
+  centers.col(2).setConstant(0.0);
 
-  const Vec2 center1( -5.0, -5.0 );
-  const Vec2 center2( 5.0, 5.0 );
-  const Vec2 center3( 0.0, 0.0 );
+  // Initialize a list of points around the centroids
+  Mat points(dimension,
+             std::accumulate(POINTS_PER_CLUSTER.cbegin(),
+                             POINTS_PER_CLUSTER.cend(),
+                             0));
 
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
+  std::mt19937_64 rng(std::mt19937_64::default_seed);
+  std::uniform_real_distribution<double> distrib(-2.0, 2.0);
 
   // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
+  int point_id = 0;
+  for (int cluster_id = 0; cluster_id < NB_CLUSTER; ++cluster_id)
   {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-
-    pts.push_back( center1 + Vec2( dx, dy ) );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-
-    pts.push_back( center2 + Vec2( dx, dy  ) );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-
-    pts.push_back( center3 + Vec2( dx, dy  ) );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec2 > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_RANDOM );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
-}
-
-TEST( clustering, threeClustersRandomInitVec3 )
-{
-  std::vector< Vec3 > pts;
-
-  const Vec3 center1( -5.0, -5.0, -5.0 );
-  const Vec3 center2( 5.0, 5.0, 5.0 );
-  const Vec3 center3( 0.0, 0.0, 0.0 );
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center1 + Vec3( dx, dy, dz ) );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center2 + Vec3( dx, dy, dz  ) );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center3 + Vec3( dx, dy, dz ) );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec3 > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_RANDOM );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
-}
-
-
-TEST( clustering, threeClustersRandomInitStdArray )
-{
-  std::vector< std::array<double, 5> > pts;
-
-  const std::array<double, 5> center1 = { -5.0, -5.0, -5.0, -5.0, -5.0 };
-  const std::array<double, 5> center2 = { 5.0, 5.0, 5.0, 5.0, 5.0 };
-  const std::array<double, 5> center3 = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< std::array<double, 5> > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_RANDOM );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    for( const auto & val : it )
+    for (int id = 0; id < POINTS_PER_CLUSTER[cluster_id]; ++id)
     {
-      std::cout << val << " ";
+      Vec random_point(dimension);
+      for (int i = 0; i < dimension; ++i)
+        random_point(i) = distrib(rng);
+      points.col(point_id) = random_point + centers.col(cluster_id);
+      ++point_id;
     }
-    std::cout << std::endl;
   }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
+  return points;
 }
 
-TEST( clustering, threeClustersRandomInitStdVector )
+// Template function to convert the data_point dataset to various type
+template <typename T> T ConvertMat2T(const Mat & mat);
+
+// Predicate to test if two element are the same
+bool EqualPredicate (uint32_t i, uint32_t j) {
+  return (i==j);
+}
+
+// Template function to make the testing of KMeans easier
+// It avoids some code duplication
+template<typename ContainerType>
+void KMeanTesting
+(
+  std::vector< uint32_t > & ids,
+  std::vector< typename ContainerType::value_type > & centers,
+  const int dimension,
+  const KMeansInitType k_mean_init_type,
+  const uint32_t k_mean_centers = 3
+)
 {
-  std::vector< std::vector<double> > pts;
+  // Data initialization (centers and data_points)
+  Mat mat_centers;
+  const Mat mat_points =
+    InitRandom3ClusterDataset(mat_centers, dimension);
+  const ContainerType pts =
+    ConvertMat2T<ContainerType>(mat_points);
 
-  const std::vector<double> center1 = { -5.0, -5.0, -5.0, -5.0, -5.0, -5.0 };
-  const std::vector<double> center2 = { 5.0, 5.0, 5.0, 5.0, 5.0, 5.0 };
-  const std::vector<double> center3 = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+  // K-Means clustering:
+  KMeans(pts, ids, centers, k_mean_centers,
+         std::numeric_limits<uint32_t>::max(), k_mean_init_type );
+}
 
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
+// Check the result of the KMean Ids classification
+#define KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids) \
+{\
+  /* Does the right number of cluster are found?*/\
+  EXPECT_EQ(NB_CLUSTER, centers.size());\
+\
+  /* Does points are labelled to valid cluster ids?*/\
+  {\
+    std::vector< uint32_t > ids_cpy(ids.size());\
+    const auto it = std::unique_copy (ids.cbegin(),ids.cend(),ids_cpy.begin(), EqualPredicate);\
+    ids_cpy.resize( std::distance(ids_cpy.begin(), it) );\
+    EXPECT_EQ(NB_CLUSTER, ids_cpy.size());\
+  }\
+\
+  /* Does points are labelled to the right centroid id?*/\
+  int counter = 0;\
+  for (const auto nb_point_in_cluster : POINTS_PER_CLUSTER)\
+  {\
+    const int id_to_check = ids[counter];\
+    for (int i = 0; i < nb_point_in_cluster; ++i)\
+    {\
+      EXPECT_EQ(id_to_check, ids[counter]);\
+      ++counter;\
+    }\
+  }\
+}
 
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
+// std::vector<Vec2> specialization
+template <>
+std::vector< Vec2 > ConvertMat2T<std::vector< Vec2 >>
+(
+  const Mat & mat
+)
+{
+  std::vector< Vec2 > pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    pts[i] = mat.col(i);
+  return pts;
+}
 
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
+TEST( clustering, threeClustersVec2 )
+{
+  const int dimension = 2;
+  using DataPointType = Vec2;
+  using ContainerType = std::vector<DataPointType>;
+
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
   {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
 
-    std::vector<double> tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
 
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    std::vector<double> tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    std::vector<double> tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< std::vector<double> > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_RANDOM );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    for( const auto & val : it )
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & it : centers )
     {
-      std::cout << val << " ";
+      std::cout << it.transpose() << std::endl;
     }
-    std::cout << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
   }
 }
 
-
-TEST( clustering, threeClustersRandomInitEigenVec )
+// std::vector<Vec3> specialization
+template <>
+std::vector< Vec3 > ConvertMat2T<std::vector< Vec3 >>(const Mat & mat)
 {
-  std::vector< Vec > pts;
-
-  Vec center1( 6 ), center2( 6 ), center3( 6 );
-  center1 << -5.0, -5.0, -5.0, -5.0, -5.0, -5.0 ;
-  center2 <<  5.0, 5.0, 5.0, 5.0, 5.0, 5.0;
-  center3 <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    Vec tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    Vec tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    Vec tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_RANDOM );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
+  std::vector< Vec3 > pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    pts[i] = mat.col(i);
+  return pts;
 }
 
-
-// --
-TEST( clustering, threeClustersKmeansPPInitVec2 )
+TEST( clustering, threeClustersVec3 )
 {
-  std::vector< Vec2 > pts;
+  const int dimension = 3;
+  using DataPointType = Vec3;
+  using ContainerType = std::vector<DataPointType>;
 
-  const Vec2 center1( -5.0, -5.0 );
-  const Vec2 center2( 5.0, 5.0 );
-  const Vec2 center3( 0.0, 0.0 );
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
   {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
 
-    pts.push_back( center1 + Vec2( dx, dy ) );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
 
-    pts.push_back( center2 + Vec2( dx, dy  ) );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-
-    pts.push_back( center3 + Vec2( dx, dy  ) );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec2 > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_PP );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
-}
-
-TEST( clustering, threeClustersKmeansPPInitVec3 )
-{
-  std::vector< Vec3 > pts;
-
-  const Vec3 center1( -5.0, -5.0, -5.0 );
-  const Vec3 center2( 5.0, 5.0, 5.0 );
-  const Vec3 center3( 0.0, 0.0, 0.0 );
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center1 + Vec3( dx, dy, dz ) );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center2 + Vec3( dx, dy, dz  ) );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-
-    pts.push_back( center3 + Vec3( dx, dy, dz ) );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec3 > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_PP );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
-  }
-}
-
-
-TEST( clustering, threeClustersKmeansPPInitStdArray )
-{
-  std::vector< std::array<double, 5> > pts;
-
-  const std::array<double, 5> center1 = { -5.0, -5.0, -5.0, -5.0, -5.0 };
-  const std::array<double, 5> center2 = { 5.0, 5.0, 5.0, 5.0, 5.0 };
-  const std::array<double, 5> center3 = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-
-    std::array<double, 5> tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< std::array<double, 5> > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_PP );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    for( const auto & val : it )
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & it : centers )
     {
-      std::cout << val << " ";
+      std::cout << it.transpose() << std::endl;
     }
-    std::cout << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
   }
 }
 
-TEST( clustering, threeClustersKmeansPPInitStdVector )
+// std::vector<std::array<double, 5>> specialization
+template <>
+std::vector<std::array<double, 5>>
+ConvertMat2T<std::vector<std::array<double, 5>>>(const Mat & mat)
 {
-  std::vector< std::vector<double> > pts;
+  std::vector<std::array<double, 5>> pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    std::copy(mat.col(i).data(), mat.col(i).data()+5, pts[i].data());
+  return pts;
+}
 
-  const std::vector<double> center1 = { -5.0, -5.0, -5.0, -5.0, -5.0, -5.0 };
-  const std::vector<double> center2 = { 5.0, 5.0, 5.0, 5.0, 5.0, 5.0 };
-  const std::vector<double> center3 = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+TEST( clustering, threeClustersStdArray )
+{
+  const int dimension = 5;
+  using DataPointType = std::array<double, 5>;
+  using ContainerType = std::vector<DataPointType>;
 
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
   {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
 
-    std::vector<double> tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
 
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    std::vector<double> tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    std::vector<double> tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< std::vector<double> > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_PP );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    for( const auto & val : it )
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & center : centers )
     {
-      std::cout << val << " ";
+      for (const auto val : center)
+        std::cout << val << " ";
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
   }
 }
 
-
-TEST( clustering, threeClustersKmeansPPInitEigenVec )
+// std::vector<std::vector<double>> specialization
+template <>
+std::vector<std::vector<double>>
+ConvertMat2T<std::vector<std::vector<double>>>(const Mat & mat)
 {
-  std::vector< Vec > pts;
+  std::vector<std::vector<double>> pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    pts[i].assign(mat.col(i).data(), mat.col(i).data() + mat.rows());
+  return pts;
+}
 
-  Vec center1( 6 ), center2( 6 ), center3( 6 );
-  center1 << -5.0, -5.0, -5.0, -5.0, -5.0, -5.0 ;
-  center2 <<  5.0, 5.0, 5.0, 5.0, 5.0, 5.0;
-  center3 <<  0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+TEST( clustering, threeClustersStdVector )
+{
+  const int dimension = 12;
+  using DataPointType = std::vector<double>;
+  using ContainerType = std::vector<DataPointType>;
 
-  const int nb_pts_1 = 10000;
-  const int nb_pts_2 = 10000;
-  const int nb_pts_3 = 10000;
-
-  std::mt19937_64 rng;
-  std::uniform_real_distribution<double> distrib( -2.0, 2.0 );
-
-  // Generate points on each centers
-  for( int id_pt_1 = 0; id_pt_1 < nb_pts_1; ++id_pt_1 )
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
   {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
 
-    Vec tmp = center1;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
 
-    pts.push_back( tmp );
-  }
-  for( int id_pt_2 = 0; id_pt_2 < nb_pts_2; ++id_pt_2 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    Vec tmp = center2;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-  for( int id_pt_3 = 0; id_pt_3 < nb_pts_3; ++id_pt_3 )
-  {
-    const double dx = distrib( rng );
-    const double dy = distrib( rng );
-    const double dz = distrib( rng );
-    const double dw = distrib( rng );
-    const double dt = distrib( rng );
-    const double ds = distrib( rng );
-
-    Vec tmp = center3;
-    tmp[0] += dx;
-    tmp[1] += dy;
-    tmp[2] += dz;
-    tmp[3] += dw;
-    tmp[4] += dt;
-    tmp[5] += ds;
-
-    pts.push_back( tmp );
-  }
-
-  std::vector< uint32_t > ids;
-  std::vector< Vec > centers;
-  KMeans( pts, ids, centers, 3, std::numeric_limits<uint32_t>::max(), KMEANS_INIT_PP );
-
-  std::cout << "Centers : " << std::endl;
-  for( const auto & it : centers )
-  {
-    std::cout << it << std::endl;
-  }
-
-  // First set
-  const uint32_t id_0 = ids[ 0 ];
-  for( int id_pt_1 = 1; id_pt_1 < nb_pts_1; ++id_pt_1 )
-  {
-    EXPECT_EQ( ids[id_pt_1], id_0 );
-  }
-  // Second set
-  const uint32_t id_1 = ids[ nb_pts_1 ];
-  for( int id_pt_2 = nb_pts_1; id_pt_2 < nb_pts_1 + nb_pts_2; ++id_pt_2 )
-  {
-    EXPECT_EQ( ids[id_pt_2], id_1 );
-  }
-  // Third set
-  const uint32_t id_2 = ids[ nb_pts_1 + nb_pts_2 ];
-  for( int id_pt_3 = nb_pts_1 + nb_pts_2; id_pt_3 < ids.size(); ++id_pt_3 )
-  {
-    EXPECT_EQ( ids[id_pt_3], id_2 );
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & center : centers )
+    {
+      for (const auto val : center)
+        std::cout << val << " ";
+      std::cout << std::endl;
+    }
   }
 }
 
+// std::vector<Vec> specialization
+template <>
+std::vector< Vec > ConvertMat2T<std::vector< Vec >>(const Mat & mat)
+{
+  std::vector< Vec > pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    pts[i] = mat.col(i);
+  return pts;
+}
 
+TEST( clustering, threeClustersEigenVec )
+{
+  const int dimension = 6;
+  using DataPointType = Vec;
+  using ContainerType = std::vector<DataPointType>;
 
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
+  {
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
 
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
+
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & it : centers )
+    {
+      std::cout << it.transpose() << std::endl;
+    }
+  }
+}
 
 /* ************************************************************************* */
 int main()

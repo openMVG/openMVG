@@ -24,17 +24,17 @@ namespace clustering
 /**
 * @brief Kind of initialization of the kmeans centers
 */
-enum KMeansInitType
+enum class KMeansInitType
 {
   KMEANS_INIT_RANDOM, /* Standard Llyod algoritm */
-  KMEANS_INIT_PP,     /* Kmeans++ initialisation */
+  KMEANS_INIT_PP,     /* Kmeans++ initialization */
 };
 
 /**
 * @brief Compute minimum distance to any center
 * @param pts Input points
 * @param centers Centers
-* @param[out] dists computed (minimum) distence to any center
+* @param[out] dists computed (minimum) distance to any center
 */
 template< typename DataType >
 void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts,
@@ -45,6 +45,7 @@ void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts,
 
   dists.resize( pts.size(), std::numeric_limits<typename trait::scalar_type>::max() );
 
+  #pragma omp parallel for
   for( size_t id_pt = 0; id_pt < pts.size(); ++id_pt )
   {
     const auto & pt = pts[ id_pt ];
@@ -134,7 +135,7 @@ void KMeans( const std::vector< DataType > & source_data,
              std::vector< DataType > & centers,
              const uint32_t nb_cluster,
              const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max(),
-             const KMeansInitType init_type = KMEANS_INIT_PP )
+             const KMeansInitType init_type = KMeansInitType::KMEANS_INIT_PP )
 {
   if( source_data.size() == 0 )
   {
@@ -143,17 +144,18 @@ void KMeans( const std::vector< DataType > & source_data,
 
   using trait = KMeansVectorDataTrait<DataType>;
 
-  std::mt19937_64 rng;
+  std::mt19937_64 rng(std::mt19937_64::default_seed);
 
 
   // 1 - init center of mass
-  if( init_type == KMEANS_INIT_PP )
+  if( init_type == KMeansInitType::KMEANS_INIT_PP )
   {
     // Kmeans++ init:
     // first one is a random one
     // the others based on the importance probability (Di / \sum_i Di) where:
     // Di is the minimum distance to any created centers already created
     std::uniform_int_distribution<size_t> distrib_first( 0, source_data.size() - 1 );
+    centers.reserve( nb_cluster );
     centers.emplace_back( source_data[ distrib_first( rng ) ] );
 
     std::vector< typename trait::scalar_type > dists;
@@ -162,13 +164,13 @@ void KMeans( const std::vector< DataType > & source_data,
     {
       // Compute Di / \sum Di pdf
       MinimumDistanceToAnyCenter( source_data, centers, dists );
-      std::discrete_distribution<size_t> distrib_c( dists.begin(), dists.end() );
+      std::discrete_distribution<size_t> distrib_c( dists.cbegin(), dists.cend() );
 
       // Sample a point from this distribution
       centers.emplace_back( source_data[distrib_c( rng )] );
     }
   }
-  else
+  else if (init_type == KMeansInitType::KMEANS_INIT_RANDOM)
   {
     DataType min, max;
     trait::minMax( source_data, min, max );
@@ -180,6 +182,10 @@ void KMeans( const std::vector< DataType > & source_data,
     {
       cur_center = source_data[distrib( rng )];
     }
+  }
+  else // Invalid Kmeans initialization type
+  {
+    return;
   }
 
   // Assign all element to the first center
@@ -194,7 +200,7 @@ void KMeans( const std::vector< DataType > & source_data,
     changed = false;
 
     // 2.1 affect center to each points
-    #pragma omp parallel for
+    #pragma omp parallel for shared(changed)
     for( size_t id_pt = 0; id_pt < source_data.size(); ++id_pt )
     {
       const DataType & cur_pt = source_data[id_pt];

@@ -9,7 +9,6 @@
 #ifndef _OPENMVG_KMEANS_TRAIT_HPP_
 #define _OPENMVG_KMEANS_TRAIT_HPP_
 
-#include "openMVG/matching/metric.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 #include <algorithm>
@@ -124,8 +123,11 @@ class KMeansVectorDataTrait<std::array<T, N>>
     */
     static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      static const matching::L2<T> metric;
-      return metric( aVec1.cbegin(), aVec2.cbegin(), N );
+      typedef Eigen::Matrix<scalar_type, 1, Eigen::Dynamic> VecType;
+      typedef Eigen::Map<const VecType> VecTypeConst;
+      VecTypeConst map_aVec1(aVec1.data(), aVec1.size());
+      VecTypeConst map_aVec2(aVec2.data(), aVec2.size());
+      return ( map_aVec1 - map_aVec2 ).squaredNorm();
     }
 
 
@@ -253,8 +255,11 @@ class KMeansVectorDataTrait<std::vector<T>>
     */
     static scalar_type L2( const type & aVec1, const type & aVec2 )
     {
-      static const matching::L2<T> metric;
-      return metric( aVec1.cbegin(), aVec2.cbegin(), aVec1.size() );
+      typedef Eigen::Matrix<scalar_type, 1, Eigen::Dynamic> VecType;
+      typedef Eigen::Map<const VecType> VecTypeConst;
+      VecTypeConst map_aVec1( &aVec1[0], aVec1.size() );
+      VecTypeConst map_aVec2( &aVec2[0], aVec2.size() );
+      return ( map_aVec1 - map_aVec2 ).squaredNorm();
     }
 
 
