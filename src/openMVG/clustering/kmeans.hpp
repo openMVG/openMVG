@@ -46,7 +46,7 @@ void MinimumDistanceToAnyCenter( const std::vector< DataType > & pts,
   dists.resize( pts.size(), std::numeric_limits<typename trait::scalar_type>::max() );
 
   #pragma omp parallel for
-  for( size_t id_pt = 0; id_pt < pts.size(); ++id_pt )
+  for( int id_pt = 0; id_pt < static_cast<int>(pts.size()); ++id_pt )
   {
     const auto & pt = pts[ id_pt ];
     for( const auto & c : centers )
@@ -112,7 +112,7 @@ std::vector< DataType > ComputeCenterOfMass( const std::vector< DataType > & pts
 
   // Compute mean of centers based on the number of points affected to each centers
   #pragma omp parallel for
-  for( uint32_t id_center = 0; id_center < nb_center; ++id_center )
+  for( int id_center = 0; id_center < static_cast<int>(nb_center); ++id_center )
   {
     trait::divide( new_centers[id_center], nb_per_center[id_center] );
   }
@@ -201,7 +201,7 @@ void KMeans( const std::vector< DataType > & source_data,
 
     // 2.1 affect center to each points
     #pragma omp parallel for shared(changed)
-    for( size_t id_pt = 0; id_pt < source_data.size(); ++id_pt )
+    for( int id_pt = 0; id_pt < static_cast<int>(source_data.size()); ++id_pt )
     {
       const DataType & cur_pt = source_data[id_pt];
       // Compute nearest center of this point
