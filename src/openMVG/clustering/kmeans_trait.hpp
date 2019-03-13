@@ -343,7 +343,7 @@ class KMeansVectorDataTrait<std::vector<T>>
 /*
 ** @brief overloading for Eigen::Matrix<scalar_type, N, 1>
 */
-template< typename T, size_t N >
+template< typename T, int N >
 class KMeansVectorDataTrait<Eigen::Matrix<T, N, 1>>
 {
   public:
@@ -457,7 +457,7 @@ class KMeansVectorDataTrait<Vec>
 {
   public:
     using scalar_type = Vec::Scalar;
-    using type       = Vec;
+    using type        = Vec;
 
     /**
     * @brief number of element in the vector
