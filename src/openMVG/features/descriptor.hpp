@@ -31,8 +31,9 @@ template <typename T, uint32_t N>
 class Descriptor : public Eigen::Matrix<T, N, 1>
 {
 public:
-  using bin_type = T;
-  using size_type = uint32_t;
+  using bin_type       = T;
+  using size_type      = uint32_t;
+  using container_type = Eigen::Matrix<T, N, 1>;
 
   /// Compile-time length of the descriptor
   static const uint32_t static_size = N;
@@ -56,6 +57,22 @@ public:
     std::array<T, N> array;
     archive( array );
     std::memcpy(this->data(), array.data(), sizeof(T)*N);
+  }
+
+  Descriptor():container_type() {}
+
+  // This constructor allows you to construct Descriptor from Eigen expressions
+  template<typename OtherDerived>
+  explicit Descriptor(const Eigen::MatrixBase<OtherDerived>& other)
+    :container_type(other)
+  {}
+
+  // This method allows you to assign Eigen expressions to Descriptor
+  template<typename OtherDerived>
+  Descriptor& operator=(const Eigen::MatrixBase<OtherDerived>& other)
+  {
+    this->container_type::operator=(other);
+    return *this;
   }
 };
 
