@@ -242,8 +242,8 @@ endif()
 # - external if EIGEN_INCLUDE_DIR_HINTS is defined
 # - internal if Eigen not found
 # ==============================================================================
-find_package(eigen3 QUIET)
-if (NOT eigen3_FOUND)
+find_package(Eigen3 QUIET)
+if (NOT Eigen3_FOUND)
   set(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
   set(OpenMVG_USE_INTERNAL_EIGEN ON)
   find_package(Eigen QUIET)
