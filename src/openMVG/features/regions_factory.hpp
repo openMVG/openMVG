@@ -18,6 +18,9 @@ namespace features {
 /// Define the classic SIFT Keypoint
 using SIFT_Regions = Scalar_Regions<SIOPointFeature, unsigned char, 128>;
 
+/// Define the CUSTOMIZE SIFT Keypoint
+using Rich_SIFT_Regions = Scalar_Regions<Rich_SIOPointFeature, unsigned char, 128>;
+
 /// Define the AKAZE Keypoint (with a float descriptor)
 using AKAZE_Float_Regions = Scalar_Regions<SIOPointFeature, float, 64>;
 /// Define the AKAZE Keypoint (with a LIOP descriptor)
@@ -29,6 +32,7 @@ using AKAZE_Binary_Regions = Binary_Regions<SIOPointFeature, 64>;
 } // namespace openMVG
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::SIFT_Regions)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::Rich_SIFT_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Float_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Liop_Regions)
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(openMVG::features::AKAZE_Binary_Regions)

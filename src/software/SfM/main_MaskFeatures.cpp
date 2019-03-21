@@ -6,6 +6,7 @@
 #include "openMVG/features/image_describer_akaze_io.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "nonFree/sift/SIFT_describer_io.hpp"
+#include "nonFree/rich_sift/Rich_SIFT_describer_io.hpp"
 #include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -111,6 +112,9 @@ int main(int argc, char *argv[]) {
         old_indices.push_back(i);
       }
     }
+
+    describer->Describe(mask_image, new_regions);
+
 
     // save features
     string basename = basename_part(it->second->s_Img_path);

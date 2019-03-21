@@ -93,6 +93,59 @@ protected:
   float orientation_;  // In radians.
 };
 
+/**
+ * Another Class for ScaleInvariant Oriented Point features.
+ * Add additional info to SIOPointFeature.
+ */
+class Rich_SIOPointFeature : public SIOPointFeature {
+
+  friend std::ostream& operator<<(std::ostream& out, const Rich_SIOPointFeature& obj);
+  friend std::istream& operator>>(std::istream& in, Rich_SIOPointFeature& obj);
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  ~Rich_SIOPointFeature() = default;
+
+  Rich_SIOPointFeature(float x=0.0f, float y=0.0f,
+                  float scale=0.0f, float orient=0.0f, int octave = 0,
+                  int ix = 0, int iy = 0, int is = 0, float o = 0.0f);
+
+  int octave() const;
+  int& octave();
+  int ix() const;
+  int& ix();
+  int iy() const;
+  int& iy();
+  int is() const;
+  int& is();
+  float s() const;
+  float& s();
+
+  bool operator ==(const Rich_SIOPointFeature& b) const;
+
+  bool operator !=(const Rich_SIOPointFeature& b) const;
+
+  template<class Archive>
+  void serialize(Archive & ar)
+  {
+    ar (
+      coords_(0), coords_(1),
+      scale_,
+      orientation_,
+      octave_,
+      ix_, iy_,
+      is_, s_);
+  }
+
+protected:
+    int octave_;
+    int ix_;
+    int iy_;
+    int is_;
+    float s_;
+};
+
 /// Return the coterminal angle between [0;2*PI].
 /// Angle value must be in Radian.
 float getCoterminalAngle(float angle);
