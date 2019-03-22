@@ -110,7 +110,7 @@ public:
     }
     else
     {
-      DescribeSIFTGivenRegion(image, regions, mask);
+      DescribeSIFTGivenRegion(image, regions);
     }
     return regions != nullptr;
   }
@@ -139,8 +139,7 @@ public:
   */
   void DescribeSIFTGivenRegion(
       const image::Image<unsigned char> &image,
-      std::unique_ptr<Regions> &regions,
-      const image::Image<unsigned char>* mask = nullptr
+      std::unique_ptr<Regions> &regions
   )
   {
     Regions_type *regions_type = static_cast<Regions_type*>(regions.get());
@@ -165,7 +164,7 @@ public:
     // reserve some memory for faster keypoint saving
     auto& features = regions_type->Features();
     regions_type->Descriptors().clear();
-    regions_type->Descriptors().reserve(2000);
+    regions_type->Descriptors().resize(features.size());
 
     int curr_feature_index = 0;
     int octave_index = 0;
@@ -196,16 +195,6 @@ public:
         key.s = f.s();
         key.sigma = f.scale();
 
-        // Feature masking
-        if (mask)
-        {
-          const image::Image<unsigned char> & maskIma = *mask;
-          if (maskIma(key.y, key.x) == 0)
-          {
-            continue;
-          }
-        }
-
         vl_sift_calc_keypoint_descriptor(filt, &descr[0], &key, f.orientation());
 
         siftDescToUChar(&descr[0], descriptor, _params._root_sift);
@@ -213,7 +202,7 @@ public:
         #pragma omp critical
         #endif
         {
-          regions_type->Descriptors().push_back(descriptor);
+          regions_type->Descriptors()[i] = (descriptor);
         }
       }
       if (vl_sift_process_next_octave(filt))
@@ -290,7 +279,7 @@ public:
         }
 
         for (int q=0 ; q < nangles ; ++q) {
-          vl_sift_calc_keypoint_descriptor(filt, &descr[0], keys+i, angles[q]);
+          vl_sift_calc_keypoint_descriptor(filt, &descr[0], keys+i, static_cast<float>(angles[q]));
           const Rich_SIOPointFeature fp(keys[i].x, keys[i].y,
             keys[i].sigma, static_cast<float>(angles[q]), keys[i].o,
             keys[i].ix, keys[i].iy, keys[i].is, keys[i].s);
