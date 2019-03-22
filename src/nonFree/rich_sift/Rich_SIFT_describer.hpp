@@ -161,9 +161,7 @@ public:
     // Process SIFT computation
     vl_sift_process_first_octave(filt, If.data());
 
-    // reserve some memory for faster keypoint saving
     auto& features = regions_type->Features();
-    regions_type->Descriptors().clear();
     regions_type->Descriptors().resize(features.size());
 
     int curr_feature_index = 0;
