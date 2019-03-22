@@ -102,7 +102,7 @@ int main(int argc, char **argv)
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
-      << "   CUSTOMIZE_SIFT\n"
+      << "   RICH_SIFT\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
         (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight);
     }
     else
-    if (sImage_Describer_Method == "CUSTOMIZE_SIFT")
+    if (sImage_Describer_Method == "RICH_SIFT")
     {
        image_describer.reset(new Rich_SIFT_Image_describer
          (Rich_SIFT_Image_describer::Params(), !bUpRight));

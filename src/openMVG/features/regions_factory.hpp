@@ -18,7 +18,7 @@ namespace features {
 /// Define the classic SIFT Keypoint
 using SIFT_Regions = Scalar_Regions<SIOPointFeature, unsigned char, 128>;
 
-/// Define the CUSTOMIZE SIFT Keypoint
+/// Define the RICH SIFT Keypoint
 using Rich_SIFT_Regions = Scalar_Regions<Rich_SIOPointFeature, unsigned char, 128>;
 
 /// Define the AKAZE Keypoint (with a float descriptor)
