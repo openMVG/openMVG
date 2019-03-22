@@ -109,7 +109,7 @@ public:
 
   Rich_SIOPointFeature(float x=0.0f, float y=0.0f,
                   float scale=0.0f, float orient=0.0f, int octave = 0,
-                  int ix = 0, int iy = 0, int is = 0, float o = 0.0f);
+                  int ix = 0, int iy = 0, int is = 0, float s = 0.0f);
 
   int octave() const;
   int& octave();

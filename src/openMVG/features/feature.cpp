@@ -132,16 +132,15 @@ bool Rich_SIOPointFeature::operator !=(const Rich_SIOPointFeature& b) const {
 
 std::ostream& operator<<(std::ostream& out, const Rich_SIOPointFeature& obj)
 {
-  const PointFeature *pf = static_cast<const PointFeature*>(&obj);
-  return out << *pf << " " << obj.scale_ << " " << obj.orientation_ << " " << obj.octave_ <<
-         " " << obj.ix_ << " " << obj.iy_ << " " << obj.is_ << " " << obj.s_;
+  const SIOPointFeature *spf = static_cast<const SIOPointFeature*>(&obj);
+  return out << *spf << " " << obj.octave_ << " " << obj.ix_ <<
+    " " << obj.iy_ << " " << obj.is_ << " " << obj.s_;
 }
 
 std::istream& operator>>(std::istream& in, Rich_SIOPointFeature& obj)
 {
-  PointFeature *pf = static_cast<PointFeature*>(&obj);
-  return in >> *pf >> obj.scale_ >> obj.orientation_ >> obj.octave_ >>
-         obj.ix_ >> obj.iy_ >> obj.is_ >> obj.s_;
+  SIOPointFeature *spf = static_cast<SIOPointFeature*>(&obj);
+  return in >> *spf >> obj.octave_ >> obj.ix_ >> obj.iy_ >> obj.is_ >> obj.s_;
 }
 
 /// Return the coterminal angle between [0;2*PI].

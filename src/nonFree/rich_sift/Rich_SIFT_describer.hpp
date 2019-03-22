@@ -173,10 +173,19 @@ public:
       // Update gradient before launching parallel extraction
       vl_sift_update_gradient(filt);
 
-      while (curr_feature_index < features.size() &&
-        features[curr_feature_index].octave() == octave_index) {
+      int begin = curr_feature_index;
+      int& end = curr_feature_index;
+      while (end < features.size() && features[end].octave() == octave_index)
+      {
+        ++end;
+      }
 
-        const auto& f = features[curr_feature_index];
+      #ifdef OPENMVG_USE_OPENMP
+      #pragma omp parallel for private(descr, descriptor)
+      #endif
+      for (int i = begin; i < end; ++i) {
+
+        const auto& f = features[i];
         VlSiftKeypoint key;
         key.o = f.octave();
         key.ix = f.ix();
@@ -193,7 +202,6 @@ public:
           const image::Image<unsigned char> & maskIma = *mask;
           if (maskIma(key.y, key.x) == 0)
           {
-            ++curr_feature_index;
             continue;
           }
         }
@@ -201,9 +209,12 @@ public:
         vl_sift_calc_keypoint_descriptor(filt, &descr[0], &key, f.orientation());
 
         siftDescToUChar(&descr[0], descriptor, _params._root_sift);
-        regions_type->Descriptors().push_back(descriptor);
-
-        ++curr_feature_index;
+        #ifdef OPENMVG_USE_OPENMP
+        #pragma omp critical
+        #endif
+        {
+          regions_type->Descriptors().push_back(descriptor);
+        }
       }
       if (vl_sift_process_next_octave(filt))
         break; // Last octave

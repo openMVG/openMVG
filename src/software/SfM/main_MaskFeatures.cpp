@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
     // load mask
     bool has_mask = true;
-    string mask_file = create_filespec(sfm_data.s_root_path, it->second->s_Img_path, ".mask.png");
+    string mask_file = create_filespec(sfm_data.s_root_path, it->second->s_Img_path);//, ".mask.png");
     Image<unsigned char> mask_image;
     if (!ReadImage(mask_file.c_str(), &mask_image)) {
       cerr << "\nFailed to read mask " << mask_file << endl;
