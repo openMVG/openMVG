@@ -133,8 +133,7 @@ public:
   /**
   @brief compute given regions' attributes (description)
   @param image Image.
-  @param mask 8-bit gray image for keypoint filtering (optional).
-     Non-zero values depict the region of interest.
+  @param regions The input regions, and the output attributes
   (the caller must delete the allocated data)
   */
   void DescribeSIFTGivenRegion(
@@ -171,16 +170,15 @@ public:
       vl_sift_update_gradient(filt);
 
       int begin = curr_feature_index;
-      int& end = curr_feature_index;
-      while (end < features.size() && features[end].octave() == octave_index)
+      while (curr_feature_index < features.size() && features[curr_feature_index].octave() == octave_index)
       {
-        ++end;
+        ++curr_feature_index;
       }
 
       #ifdef OPENMVG_USE_OPENMP
       #pragma omp parallel for private(descr, descriptor)
       #endif
-      for (int i = begin; i < end; ++i) {
+      for (int i = begin; i < curr_feature_index; ++i) {
 
         const auto& f = features[i];
         VlSiftKeypoint key;
@@ -196,12 +194,7 @@ public:
         vl_sift_calc_keypoint_descriptor(filt, &descr[0], &key, f.orientation());
 
         siftDescToUChar(&descr[0], descriptor, _params._root_sift);
-        #ifdef OPENMVG_USE_OPENMP
-        #pragma omp critical
-        #endif
-        {
-          regions_type->Descriptors()[i] = (descriptor);
-        }
+        regions_type->Descriptors()[i] = (descriptor);
       }
       if (vl_sift_process_next_octave(filt))
         break; // Last octave
