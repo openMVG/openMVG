@@ -23,6 +23,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "nonFree/sift/SIFT_describer_io.hpp"
+#include "nonFree/rich_sift/Rich_SIFT_describer_io.hpp"
 
 #include <cereal/details/helpers.hpp>
 
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
+      << "   RICH_SIFT\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
@@ -208,6 +210,12 @@ int main(int argc, char **argv)
     {
       image_describer = AKAZE_Image_describer::create
         (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight);
+    }
+    else
+    if (sImage_Describer_Method == "RICH_SIFT")
+    {
+       image_describer.reset(new Rich_SIFT_Image_describer
+         (Rich_SIFT_Image_describer::Params(), !bUpRight));
     }
     if (!image_describer)
     {
@@ -325,7 +333,8 @@ int main(int argc, char **argv)
         }
 
         // Compute features and descriptors and export them to files
-        auto regions = image_describer->Describe(imageGray, mask);
+        std::unique_ptr<Regions> regions;
+        image_describer->Describe(imageGray, regions, mask);
         if (regions && !image_describer->Save(regions.get(), sFeat, sDesc)) {
           std::cerr << "Cannot save regions for images: " << sView_filename << std::endl
                     << "Stopping feature extraction." << std::endl;

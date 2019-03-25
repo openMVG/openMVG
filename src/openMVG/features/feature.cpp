@@ -81,6 +81,68 @@ std::istream& operator>>(std::istream& in, SIOPointFeature& obj)
   return in >> *pf >> obj.scale_ >> obj.orientation_;
 }
 
+
+Rich_SIOPointFeature::Rich_SIOPointFeature
+(
+  float x,
+  float y,
+  float scale,
+  float orient,
+  int octave,
+  int ix,
+  int iy,
+  int is,
+  float s
+):
+  SIOPointFeature(x,y,scale,orient),
+  octave_(octave),
+  ix_(ix),
+  iy_(iy),
+  is_(is),
+  s_(s)
+{
+
+}
+
+int Rich_SIOPointFeature::octave() const { return octave_; }
+int& Rich_SIOPointFeature::octave() { return octave_; }
+int Rich_SIOPointFeature::ix() const { return ix_; }
+int& Rich_SIOPointFeature::ix() { return ix_; }
+int Rich_SIOPointFeature::iy() const { return iy_; }
+int& Rich_SIOPointFeature::iy() { return iy_; }
+int Rich_SIOPointFeature::is() const { return is_; }
+int& Rich_SIOPointFeature::is() { return is_; }
+float Rich_SIOPointFeature::s() const { return s_; }
+float& Rich_SIOPointFeature::s() { return s_; }
+
+bool Rich_SIOPointFeature::operator ==(const Rich_SIOPointFeature& b) const {
+  return (scale_ == b.scale()) &&
+         (orientation_ == b.orientation()) &&
+         (x() == b.x()) && (y() == b.y()) &&
+         (octave_ == b.octave_) &&
+         (ix_ == b.ix_) &&
+         (iy_ == b.iy_) &&
+         (is_ == b.is_) &&
+         (s_ == b.s_);
+};
+
+bool Rich_SIOPointFeature::operator !=(const Rich_SIOPointFeature& b) const {
+  return !((*this)==b);
+};
+
+std::ostream& operator<<(std::ostream& out, const Rich_SIOPointFeature& obj)
+{
+  const SIOPointFeature *spf = static_cast<const SIOPointFeature*>(&obj);
+  return out << *spf << " " << obj.octave_ << " " << obj.ix_ <<
+    " " << obj.iy_ << " " << obj.is_ << " " << obj.s_;
+}
+
+std::istream& operator>>(std::istream& in, Rich_SIOPointFeature& obj)
+{
+  SIOPointFeature *spf = static_cast<SIOPointFeature*>(&obj);
+  return in >> *spf >> obj.octave_ >> obj.ix_ >> obj.iy_ >> obj.is_ >> obj.s_;
+}
+
 /// Return the coterminal angle between [0;2*PI].
 /// Angle value must be in Radian.
 float getCoterminalAngle(float angle)

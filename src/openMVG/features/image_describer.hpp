@@ -50,7 +50,7 @@ public:
   @param mask 8-bit gray image for keypoint filtering (optional).
      Non-zero values depict the region of interest.
   */
-  bool Describe
+  virtual bool Describe
   (
     const image::Image<unsigned char> & image,
     std::unique_ptr<Regions> &regions,

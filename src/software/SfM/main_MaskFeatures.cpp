@@ -6,6 +6,7 @@
 #include "openMVG/features/image_describer_akaze_io.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "nonFree/sift/SIFT_describer_io.hpp"
+#include "nonFree/rich_sift/Rich_SIFT_describer_io.hpp"
 #include "openMVG/features/regions_factory_io.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_io.hpp"
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]) {
 
     // load mask
     bool has_mask = true;
-    string mask_file = create_filespec(sfm_data.s_root_path, it->second->s_Img_path, ".mask.png");
+    string mask_file = create_filespec(sfm_data.s_root_path, it->second->s_Img_path);//, ".mask.png");
     Image<unsigned char> mask_image;
     if (!ReadImage(mask_file.c_str(), &mask_image)) {
       cerr << "\nFailed to read mask " << mask_file << endl;
@@ -111,6 +112,9 @@ int main(int argc, char *argv[]) {
         old_indices.push_back(i);
       }
     }
+
+    describer->Describe(mask_image, new_regions);
+
 
     // save features
     string basename = basename_part(it->second->s_Img_path);
