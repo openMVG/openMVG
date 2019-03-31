@@ -11,4 +11,5 @@
 *.db
 build*
 *.out
+build/
 docs/openmvg.pdf
