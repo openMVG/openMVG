@@ -1,3 +1,7 @@
+if(OpenMVG_USE_CUDA)
+  add_definitions(-DOPENMVG_HAVE_CUDA)
+endif(OpenMVG_USE_CUDA)
+
 add_subdirectory(cameras_undisto_Brown)
 
 add_subdirectory(multiview_robust_estimation_tutorial)

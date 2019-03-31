@@ -26,6 +26,7 @@ option(OpenMVG_BUILD_SOFTWARES "Build OpenMVG softwares" ON)
 option(OpenMVG_BUILD_GUI_SOFTWARES "Build OpenMVG GUI softwares (QT5)" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
+option(OpenMVG_USE_CUDA "Enable CUDA features" ON)
 # ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
@@ -466,7 +467,7 @@ message("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 message("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
-
+message("** Use CUDA GPU accelerated features: " ${OpenMVG_USE_CUDA})
 message("\n")
 
 if (DEFINED OpenMVG_USE_INTERNAL_CEREAL)

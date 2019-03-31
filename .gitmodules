@@ -7,3 +7,4 @@
 [submodule "src/dependencies/cereal"]
 	path = src/dependencies/cereal
 	url = https://github.com/openMVG-thirdparty/cereal.git
+

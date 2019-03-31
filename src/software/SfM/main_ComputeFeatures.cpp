@@ -22,6 +22,10 @@
 #include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#ifdef OPENMVG_HAVE_CUDA
+#include "openMVG/features/cudasift/image_describer_cudasift.hpp"
+#endif
+
 #include "nonFree/sift/SIFT_describer_io.hpp"
 
 #include <cereal/details/helpers.hpp>
@@ -98,6 +102,9 @@ int main(int argc, char **argv)
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
       << "   SIFT (default),\n"
+#ifdef OPENMVG_HAVE_CUDA
+      << "   CSIFT: CUDA accelerated SIFT, \n"
+#endif
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
@@ -190,6 +197,15 @@ int main(int argc, char **argv)
     {
       image_describer.reset(new SIFT_Image_describer
         (SIFT_Image_describer::Params(), !bUpRight));
+    }
+    else
+    if (sImage_Describer_Method == "CSIFT")
+    {
+#ifdef OPENMVG_HAVE_CUDA
+      image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
+#else
+      std::cerr << "Cannot create CUDA SIFT image describer: CUDA libraries not linked." << std::endl;
+#endif
     }
     else
     if (sImage_Describer_Method == "SIFT_ANATOMY")

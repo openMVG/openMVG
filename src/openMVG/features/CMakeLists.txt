@@ -30,9 +30,19 @@ target_include_directories(openMVG_features
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )
-target_link_libraries(openMVG_features
-  PRIVATE openMVG_fast ${STLPLUS_LIBRARY}
-  PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES})
+# target_link_libraries(openMVG_features
+#   PRIVATE openMVG_fast ${STLPLUS_LIBRARY}
+#   PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES})
+if(OpenMVG_USE_CUDA)
+    #target_link_libraries(openMVG_features fast cudasift)
+   target_link_libraries(openMVG_features
+    PRIVATE openMVG_fast openMVG_cudasift ${STLPLUS_LIBRARY} 
+    PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES} )
+else(OpenMVG_USE_CUDA)
+    target_link_libraries(openMVG_features
+    PRIVATE openMVG_fast ${STLPLUS_LIBRARY}
+    PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES})
+endif(OpenMVG_USE_CUDA)
 if (MSVC)
   set_target_properties(openMVG_features PROPERTIES COMPILE_FLAGS "/bigobj")
   target_compile_options(openMVG_features PUBLIC "-D_USE_MATH_DEFINES")
