@@ -67,7 +67,7 @@ int main(int argc, char **argv)
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
   bool bUpRight = false;
-  std::string sImage_Describer_Method = "SIFT";
+  std::string sImage_Describer_Method = "RICH_SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
 #ifdef OPENMVG_USE_OPENMP
@@ -98,11 +98,11 @@ int main(int argc, char **argv)
       << "[-f|--force] Force to recompute data\n"
       << "[-m|--describerMethod]\n"
       << "  (method to use to describe an image):\n"
-      << "   SIFT (default),\n"
+      << "   SIFT,\n"
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
-      << "   RICH_SIFT\n"
+      << "   RICH_SIFT (default)\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
