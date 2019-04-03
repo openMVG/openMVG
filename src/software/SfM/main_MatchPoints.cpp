@@ -37,14 +37,10 @@ bool load_featmap(const string &featmap_file, map<int, int> &featmap)
   stream.close();
 }
 
-bool load_data(const string &data_dir, const string &prefix,
+bool load_data(const string &sfm_data_file, const string &matches_dir, const string &output_dir, const string &prefix,
                SfM_Data &sfm_data, DescsT &good_descs, vector<Rich_SIOPointFeature> &good_feats,
                vector<int> &good_points, vector<int> &views_indices)
 {
-  string sfm_data_file = create_filespec(data_dir, prefix + "/output/reconstruction_sequential/sfm_data_all", "json");
-  string matches_dir = create_filespec(data_dir, "merge/output/matches");
-  string output_dir = create_filespec(data_dir, "merge");
-
   // load sfm_data
   if (!Load(sfm_data, sfm_data_file, ESfM_Data(VIEWS|STRUCTURE)))
   {
@@ -138,13 +134,12 @@ bool load_data(const string &data_dir, const string &prefix,
 
 int main(int argc, char *argv[])
 {
-  if (argc < 2)
+  if (argc < 5)
   {
-    cerr << "Usage: openMVG_main_MatchPoints root_data_dir" << endl;
+    cerr << "Usage: openMVG_main_MatchPoints front_sfm_data_all back_sfm_data_all merge_matches_dir output_dir" << endl;
     return 1;
   }
-  string root_data_dir = argv[1];
-  string output_dir = create_filespec(root_data_dir, "merge");
+  string output_dir = argv[4];
 
   // load sfm_data_all, build good feat info: descs, feats, point map, view map
   // front
@@ -153,7 +148,7 @@ int main(int argc, char *argv[])
   vector<Rich_SIOPointFeature> front_feats;
   vector<int> front_points;
   vector<int> front_views;
-  if (!load_data(root_data_dir, "front", front_sfm_data, front_descs, front_feats, front_points, front_views))
+  if (!load_data(argv[1], argv[3], output_dir, "front", front_sfm_data, front_descs, front_feats, front_points, front_views))
     return 1;
   // back
   SfM_Data back_sfm_data;
@@ -161,7 +156,7 @@ int main(int argc, char *argv[])
   vector<Rich_SIOPointFeature> back_feats;
   vector<int> back_points;
   vector<int> back_views;
-  if (!load_data(root_data_dir, "back", back_sfm_data, back_descs, back_feats, back_points, back_views))
+  if (!load_data(argv[2], argv[3], output_dir, "back", back_sfm_data, back_descs, back_feats, back_points, back_views))
     return 1;
 
 
