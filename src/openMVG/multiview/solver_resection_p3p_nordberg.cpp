@@ -3,7 +3,9 @@
 // Copyright (c) 2018 Michael Persson
 // Adapted to openMVG by Romain Janvier
 
-// This source code is subject to the GPL 3.0 licence
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include "openMVG/multiview/solver_resection_p3p_persson.hpp"
 #include "openMVG/multiview/projection.hpp"
 

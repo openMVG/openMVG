@@ -127,7 +127,7 @@ TEST(P3P_Ke_CVPR17, Multiview) {
 }
 
 
-TEST(P3P_Persson, Multiview) {
+TEST(P3P_Nordberg_ECCV18, Multiview) {
 
   const int nViews = 3;
   const int nbPoints = 3;

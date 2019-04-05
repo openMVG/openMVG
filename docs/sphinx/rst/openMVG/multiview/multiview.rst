@@ -126,7 +126,7 @@ openMVG provides 4 different solvers for this problem:
 * 6pt Direct Linear Transform [HZ]_,
 * 3pt with intrinsic P3P [Ke]_,  
 * 3pt with intrinsic P3P [Kneip]_.
-* 3pt with intrinsic P3P [Persson]_,
+* 3pt with intrinsic P3P [Nordberg]_,
 
 Kernel concept
 ---------------------
