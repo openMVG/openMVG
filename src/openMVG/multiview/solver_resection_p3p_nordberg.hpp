@@ -16,7 +16,7 @@ namespace openMVG
 namespace euclidean_resection
 {
 
-struct P3PSolver_Persson
+struct P3PSolver_Nordberg
 {
   enum
   {
@@ -46,8 +46,8 @@ struct P3PSolver_Persson
 //-- Usable solver for robust estimation framework
 using PoseResectionKernel_P3P_Persson =
     two_view::kernel::Kernel<
-        P3PSolver_Persson, // Model estimator
-        P3PSolver_Persson, // Error metric
+        P3PSolver_Nordberg, // Model estimator
+        P3PSolver_Nordberg, // Error metric
         Mat34>;
 
 static void gauss_newton_refineL(Vec3 &L,

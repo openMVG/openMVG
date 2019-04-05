@@ -6,7 +6,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#include "openMVG/multiview/solver_resection_p3p_persson.hpp"
+#include "openMVG/multiview/solver_resection_p3p_nordberg.hpp"
 #include "openMVG/multiview/projection.hpp"
 
 namespace openMVG
@@ -14,7 +14,7 @@ namespace openMVG
 namespace euclidean_resection
 {
 
-bool computePosesPersson(
+bool computePosesNordberg(
     const Mat &bearing_vectors,
     const Mat &X,
     std::vector<std::tuple<Mat3, Vec3>> &rotation_translation_solutions)
@@ -250,7 +250,7 @@ bool computePosesPersson(
   return valid;
 }
 
-void P3PSolver_Persson::Solve(
+void P3PSolver_Nordberg::Solve(
     const Mat &bearing_vectors,
     const Mat &X, // 3D points
     std::vector<Mat34> *models)
@@ -260,7 +260,7 @@ void P3PSolver_Persson::Solve(
   assert(bearing_vectors.cols() == X.cols());
   Mat34 P;
   std::vector<std::tuple<Mat3, Vec3>> rotation_translation_solutions;
-  if (computePosesPersson(bearing_vectors, X, rotation_translation_solutions))
+  if (computePosesNordberg(bearing_vectors, X, rotation_translation_solutions))
   {
     for (const auto & rot_trans_it : rotation_translation_solutions) {
       Mat34 P;
@@ -274,7 +274,7 @@ void P3PSolver_Persson::Solve(
   Mat solutions = Mat(3, 4 * 4);
 };
 
-double P3PSolver_Persson::Error
+double P3PSolver_Nordberg::Error
 (
   const Mat34 & P,
   const Vec3 & bearing_vector,
