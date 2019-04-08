@@ -27,14 +27,18 @@ using IntPair = pair<int, int>;
 bool load_featmap(const string &featmap_file, map<int, int> &featmap)
 {
   ifstream stream(featmap_file, std::ios::in);
-  int new_feat_index = 0;
-  while (!stream.eof())
+  if (!stream.is_open())
   {
-    int old_feat_index;
-    stream >> old_feat_index;
+      return false;
+  }
+  int old_feat_index = 0;
+  int new_feat_index = 0;
+  while (stream >> old_feat_index)
+  {
     featmap[old_feat_index] = new_feat_index++;
   }
   stream.close();
+  return true;
 }
 
 bool load_data(const string &sfm_data_file, const string &matches_dir, const string &output_dir, const string &prefix,
