@@ -271,7 +271,6 @@ void P3PSolver_Nordberg::Solve(
       models->push_back(P);
     }
   }
-  Mat solutions = Mat(3, 4 * 4);
 };
 
 double P3PSolver_Nordberg::Error

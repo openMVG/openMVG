@@ -126,8 +126,8 @@ static inline bool root2real(const double & b, const double & c, double & r1, do
         r1 = 0.5 * (-b +y);
         r2 = 0.5 * (-b -y);
     }else{
-        r1= 2.0 * c / (-b + y);
-        r2= 2.0 * c / (-b - y);
+        r1 = 2.0 * c / (-b + y);
+        r2 = 2.0 * c / (-b - y);
     }
     return true;
 };
@@ -139,22 +139,22 @@ static double cubick(const double & b, const double & c, const double & d){
     if (b * b >= 3.0 * c){
         // h has two stationary points, compute them
         // double t1 = t - std::sqrt(diff);
-        double v = std::sqrt(b*b -3.0*c);
-        double t1 = (-b - v)/(3.0);
+        double v = std::sqrt(b*b -3.0 * c);
+        double t1 = (-b - v) / (3.0);
 
         // Check if h(t1) > 0, in this case make a 2-order approx of h around t1
-        double k = ((t1+b)*t1+c)*t1+d;
+        double k = ((t1 + b) * t1 + c) * t1 + d;
 
         if (k > 0.0) {
             // Find leftmost root of 0.5*(r0 -t1)^2*(6*t1+2*b) +  k = 0
-            r0 = t1 - std::sqrt(-k/(3.0*t1 + b));
+            r0 = t1 - std::sqrt(-k / (3.0 * t1 + b));
             // or use the linear comp too
             // r0 = t1 -
         } else {
             double t2 = (-b + v) / 3.0;
             k = ((t2 + b) * t2 + c) * t2 + d;
             // Find rightmost root of 0.5 * (r0 - t2)^2 * (6 * t2 +2 * b) + k1 = 0
-            r0 = t2 + std::sqrt(-k/(3.0*t2 + b));
+            r0 = t2 + std::sqrt(-k / (3.0 * t2 + b));
         }
     }
     else{
@@ -162,7 +162,7 @@ static double cubick(const double & b, const double & c, const double & d){
         // about half work...
         // if(std::abs((((r0+b)*r0+c)*r0+d))>1e-10)
         r0 = -b / 3.0;
-        if(std::abs(((3.0 *r0 + 2.0 *b) * r0 + c)) < 1e-4) r0+=1;
+        if(std::abs(((3.0 * r0 + 2.0 * b) * r0 + c)) < 1e-4) r0 += 1;
         //else r0-=1;
         //double fx=(((r0+b)*r0+c)*r0+d); r0-=10; if(fx<0) r0+=20;
 
@@ -188,7 +188,7 @@ static double cubick(const double & b, const double & c, const double & d){
 static void eigwithknown0(const Mat3& x, Mat3& E, Vec3 & L){
     // one eigenvalue is known to be 0.
     // the known one...
-    L(2)=0.0;
+    L(2) = 0.0;
 
     Vec3  v3(x(3) * x(7) - x(6) * x(4),
              x(6) * x(1) - x(7) * x(0),
@@ -218,16 +218,16 @@ static void eigwithknown0(const Mat3& x, Mat3& E, Vec3 & L){
     double tmp = 1.0 / (e * (x(0,0) + x(1,1)) + mx0011 - e * e + x01_squared);
     double a1 = -(e * x(0,2) + prec_0) * tmp;
     double a2 = -(e * x(1,2) + prec_1) * tmp;
-    double rnorm= 1.0 / std::sqrt(a1*a1 +a2*a2 + 1.0);
+    double rnorm = 1.0 / std::sqrt(a1 * a1 + a2 * a2 + 1.0);
     a1 *= rnorm;
     a2 *= rnorm;
-    Vec3 v1(a1,a2,rnorm);
+    Vec3 v1(a1, a2, rnorm);
 
     // e = e2;
     double tmp2 = 1.0 / (e2 * (x(0,0) + x(1,1)) + mx0011 - e2 * e2 + x01_squared);
     double a21 = -(e2 * x(0,2) + prec_0) * tmp2;
     double a22 = -(e2 * x (1,2) + prec_1) * tmp2;
-    double rnorm2 = 1.0 / std::sqrt(a21*a21 +a22*a22 + 1.0);
+    double rnorm2 = 1.0 / std::sqrt(a21 * a21 + a22 * a22 + 1.0);
     a21 *= rnorm2;
     a22 *= rnorm2;
     Vec3 v2(a21, a22, rnorm2);
