@@ -175,8 +175,8 @@ static double cubick(const double & b, const double & c, const double & d)
     // Do ITER Newton-Raphson iterations
     // Break if position of root changes less than 1e-13
     // double starterr=std::abs(r0*(r0*(r0 + b) + c) + d);
-    // TODO(RJ:) I have hardcoded the number of iteration here, it's a define in the orginal implementation 
-    // increasing it could lead to a
+    // TODO(RJ:) I have hardcoded the number of iteration here, it's a hardcoded in a define in the orginal implementation 
+    // according to the author, increasing it could lead to a better solution (more robust)
     double fx,fpx;
     for (unsigned int cnt = 0; cnt < 50; ++cnt) { 
         fx = (((r0 + b) * r0 + c) * r0 + d);
