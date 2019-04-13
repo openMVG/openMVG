@@ -30,7 +30,7 @@ namespace euclidean_resection {
 *
 * @param[in] bearing_vectors 3x3 matrix with UNITARY feature vectors (each column is a vector)
 * @param[in] X_observations  3x3 matrix with corresponding 3D world points (each column is a point)
-* @param[in] rotation_translation_solutions vector that will contain the solutions (up to 4 solutions)
+* @param[out] rotation_translation_solutions vector that will contain the solutions (up to 4 solutions)
 *
 * @return true if at least one solution is found, false if no solution was found
 *

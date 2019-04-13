@@ -255,6 +255,19 @@ static void eigwithknown0(const Mat3& x, Mat3& E, Vec3 & L)
          v1(2),v2(2),v3(2);
 };
 
+/**
+* @brief Compute the absolute pose of a camera using three 3D-to-2D correspondences.
+*  Implementation of the paper "Lambda Twist: An Accurate Fast Robust Perspective Three Point (P3P) Solver". Persson, M. and Nordberg, K. ECCV 2018
+* 
+* @authors Mikael Persson and Klas Nordberg
+* 
+* @param[in] bearing_vectors 3x3 matrix with UNITARY feature vectors (each column is a vector)
+* @param[in] X  3x3 matrix with corresponding 3D world points (each column is a point)
+* @param[out] rotation_translation_solutions vector that will contain the solutions (up to 4 solutions)
+*
+* @return true if at least one solution is found, false if no solution was found
+*
+*/
 bool computePosesNordberg(
     const Mat &bearing_vectors,
     const Mat &X,
@@ -303,7 +316,7 @@ bool computePosesNordberg(
   double p1 = a23 * (a13 - a23) * s12_squared - a12 * a12 * s23_squared - 2.0 * a12 * (blob * a23 + a13 * s23_squared);
   double p0 = a12 * (a12 * s23_squared - a23 * s12_squared);
 
-  double g = 0.0;
+  // double g = 0.0;
 
   // p3 is essentially det(D2) so it is definietly > 0 or it is degen
   //if (std::abs(p3) >= std::abs(p0) || true)
@@ -314,7 +327,7 @@ bool computePosesNordberg(
   p0 *= p3;
 
   // get sharpest real root of above...
-  g = cubick(p2, p1, p0);
+  double g = cubick(p2, p1, p0);
   //}
   // else
   //{
