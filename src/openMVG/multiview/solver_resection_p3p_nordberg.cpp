@@ -6,8 +6,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "openMVG/multiview/solver_resection_p3p_nordberg.hpp"
 #include "openMVG/multiview/projection.hpp"
+
+#include <array>
 
 namespace openMVG
 {
@@ -501,7 +504,8 @@ bool computePosesNordberg(
     Mat3 Rs = Ymat * Xmat;
     rotation_translation_solutions.emplace_back(Rs, ry1 - Rs * P1);
   }
-  return valid;
+  
+  return valid > 0;
 }
 
 void P3PSolver_Nordberg::Solve(
