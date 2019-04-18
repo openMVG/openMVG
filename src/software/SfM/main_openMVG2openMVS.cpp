@@ -158,7 +158,7 @@ bool exportToUndistortImages(
                 if (pos != std::string::npos) {
                     depthFileBasename.replace(pos, 3, "depth");
                 }
-                pos = depthFileBasename.find(".png");
+                pos = depthFileBasename.find(".jpg");
                 if (pos != std::string::npos) {
                     depthFileBasename.replace(pos, 4, ".pfm");
                 }
@@ -183,6 +183,33 @@ bool exportToUndistortImages(
         {
             // just copy the image
             stlplus::file_copy(srcImage, outputImage);
+            const openMVG::cameras::IntrinsicBase* cam = sfm_data.GetIntrinsics().at(view.second->id_intrinsic).get();
+            auto iterMapCam = map_cam_remap.find(cam);
+            if (map_cam_remap.end() == iterMapCam)
+            {
+              // map row and col have not been cached
+              CalcCameraDistortionMap(cam, map_cam_remap[cam][0], map_cam_remap[cam][1]);  
+            }
+            auto& map_row = map_cam_remap[cam][0];
+            auto& map_col = map_cam_remap[cam][1];
+            auto depthFileBasename = view.second->s_Img_path;
+            auto pos = depthFileBasename.find("rgb");
+            if (pos != std::string::npos) {
+            	depthFileBasename.replace(pos, 3, "depth");
+            }
+            pos = depthFileBasename.find(".jpg");
+            if (pos != std::string::npos) {
+                depthFileBasename.replace(pos, 4, ".pfm");
+            }
+            auto depthFileName = stlplus::create_filespec(sfm_data.s_root_path, depthFileBasename);
+            std::cout << depthFileName << std::endl;
+            if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
+                Image<float> depth_float, depth_float_ud;
+                ReadImage(depthFileName.c_str(), &depth_float);
+                UndistortImage(depth_float, depth_float_ud, map_row, map_col, 0.0f);
+                std::cout << outputImage << std::endl;
+                WriteImage((outputImage + ".ref.pfm").c_str(), depth_float_ud);
+            }
         }
     }
 
