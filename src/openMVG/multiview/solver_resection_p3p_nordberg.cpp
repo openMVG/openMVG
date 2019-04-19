@@ -96,20 +96,20 @@ static void gauss_newton_refineL(Vec3 &L,
 
 static inline bool root2real(const double & b, const double & c, double & r1, double & r2)
 {
-    double v = b * b -4.0 * c;
-    if (v < 0.0) {
-        r1 = r2 = 0.5 * b;
-        return false;
-    }
-    double y = std::sqrt(v);
-    if (b < 0.0) {
-        r1 = 0.5 * (-b + y);
-        r2 = 0.5 * (-b - y);
-    } else {
-        r1 = 2.0 * c / (-b + y);
-        r2 = 2.0 * c / (-b - y);
-    }
-    return true;
+  double v = b * b -4.0 * c;
+  if (v < 0.0) {
+      r1 = r2 = 0.5 * b;
+      return false;
+  }
+  double y = std::sqrt(v);
+  if (b < 0.0) {
+      r1 = 0.5 * (-b + y);
+      r2 = 0.5 * (-b - y);
+  } else {
+      r1 = 2.0 * c / (-b + y);
+      r2 = 2.0 * c / (-b - y);
+  }
+  return true;
 };
 
 /**
@@ -138,59 +138,66 @@ static inline bool root2real(const double & b, const double & c, double & r1, do
  * as the leftmost or rightmost root of these approximations, depending on
  * whether two, one, or both of h(t1) and h(t2) are > 0.
 */
-static double cubick(const double & b, const double & c, const double & d)
+static double cubick(const double &b, const double &c, const double &d)
 {
-    // Choose an initial solution
-    double r0;
-    // not monotonic
-    if (b * b >= 3.0 * c) {
-        // h has two stationary points, compute them
-        // double t1 = t - std::sqrt(diff);
-        double v = std::sqrt(b*b -3.0 * c);
-        double t1 = (-b - v) / (3.0);
+  // Choose an initial solution
+  double r0;
+  // not monotonic
+  if (b * b >= 3.0 * c)
+  {
+    // h has two stationary points, compute them
+    // double t1 = t - std::sqrt(diff);
+    double v = std::sqrt(b * b - 3.0 * c);
+    double t1 = (-b - v) / (3.0);
 
-        // Check if h(t1) > 0, in this case make a 2-order approx of h around t1
-        double k = ((t1 + b) * t1 + c) * t1 + d;
+    // Check if h(t1) > 0, in this case make a 2-order approx of h around t1
+    double k = ((t1 + b) * t1 + c) * t1 + d;
 
-        if (k > 0.0) {
-            // Find leftmost root of 0.5*(r0 -t1)^2*(6*t1+2*b) +  k = 0
-            r0 = t1 - std::sqrt(-k / (3.0 * t1 + b));
-            // or use the linear comp too
-            // r0 = t1 -
-        } else {
-            double t2 = (-b + v) / 3.0;
-            k = ((t2 + b) * t2 + c) * t2 + d;
-            // Find rightmost root of 0.5 * (r0 - t2)^2 * (6 * t2 +2 * b) + k1 = 0
-            r0 = t2 + std::sqrt(-k / (3.0 * t2 + b));
-        }
+    if (k > 0.0)
+    {
+      // Find leftmost root of 0.5*(r0 -t1)^2*(6*t1+2*b) +  k = 0
+      r0 = t1 - std::sqrt(-k / (3.0 * t1 + b));
+      // or use the linear comp too
+      // r0 = t1 -
     }
-    else {
-        // r0=1.0/(cubick_inv(c/d,b/d,1.0/d));
-        // about half work...
-        // if(std::abs((((r0+b)*r0+c)*r0+d))>1e-10)
-        r0 = -b / 3.0;
-        if(std::abs(((3.0 * r0 + 2.0 * b) * r0 + c)) < 1e-4) r0 += 1;
-        //else r0-=1;
-        //double fx=(((r0+b)*r0+c)*r0+d); r0-=10; if(fx<0) r0+=20;
-
+    else
+    {
+      double t2 = (-b + v) / 3.0;
+      k = ((t2 + b) * t2 + c) * t2 + d;
+      // Find rightmost root of 0.5 * (r0 - t2)^2 * (6 * t2 +2 * b) + k1 = 0
+      r0 = t2 + std::sqrt(-k / (3.0 * t2 + b));
     }
+  }
+  else
+  {
+    // r0=1.0/(cubick_inv(c/d,b/d,1.0/d));
+    // about half work...
+    // if(std::abs((((r0+b)*r0+c)*r0+d))>1e-10)
+    r0 = -b / 3.0;
+    if (std::abs(((3.0 * r0 + 2.0 * b) * r0 + c)) < 1e-4)
+      r0 += 1;
+    //else r0-=1;
+    //double fx=(((r0+b)*r0+c)*r0+d); r0-=10; if(fx<0) r0+=20;
+  }
 
-    // Do ITER Newton-Raphson iterations
-    // Break if position of root changes less than 1e-13
-    // double starterr=std::abs(r0*(r0*(r0 + b) + c) + d);
-    // TODO(RJ:) I have hardcoded the number of iteration here, it's a hardcoded in a define in the orginal implementation 
-    // according to the author, increasing it could lead to a better solution (more robust)
-    for (unsigned int cnt = 0; cnt < 50; ++cnt) { 
-        double fx = (((r0 + b) * r0 + c) * r0 + d);
+  // Do ITER Newton-Raphson iterations
+  // Break if position of root changes less than 1e-13
+  // double starterr=std::abs(r0*(r0*(r0 + b) + c) + d);
+  // TODO(RJ:) I have hardcoded the number of iteration here, it's a hardcoded in a define in the orginal implementation
+  // according to the author, increasing it could lead to a better solution (more robust)
+  for (unsigned int cnt = 0; cnt < 50; ++cnt)
+  {
+    double fx = (((r0 + b) * r0 + c) * r0 + d);
 
-        if((cnt < 7 || std::abs(fx) > 1e-13)) {
-            double fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
-            r0 -= fx / fpx;
-        }
-        else
-            break;
+    if ((cnt < 7 || std::abs(fx) > 1e-13))
+    {
+      double fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
+      r0 -= fx / fpx;
     }
-    return r0;
+    else
+      break;
+  }
+  return r0;
 };
 
 /**
@@ -199,62 +206,62 @@ static double cubick(const double & b, const double & c, const double & d)
  * @param E eigenvectors
  * @param L eigenvalues
  */
-static void eigwithknown0(const Mat3& x, Mat3& E, Vec3 & L)
+static void eigwithknown0(const Mat3 &x, Mat3 &E, Vec3 &L)
 {
-    // one eigenvalue is known to be 0.
-    // the known one...
-    L(2) = 0.0;
+  // one eigenvalue is known to be 0.
+  // the known one...
+  L(2) = 0.0;
 
-    Vec3  v3(x(3) * x(7) - x(6) * x(4),
-             x(6) * x(1) - x(7) * x(0),
-             x(4) * x(0)- x(3) * x(1));
+  Vec3 v3(x(3) * x(7) - x(6) * x(4),
+          x(6) * x(1) - x(7) * x(0),
+          x(4) * x(0) - x(3) * x(1));
 
-    v3.normalize();
+  v3.normalize();
 
-    double x01_squared = x(0,1) * x(0,1);
-    // get the two other...
-    double b = -x(0,0) - x(1,1) - x(2,2);
-    double c = -x01_squared - x(0,2) * x(0,2) - x(1,2) * x(1,2) +
-                x(0,0) * (x(1,1) + x(2,2)) + x(1,1) * x(2,2);
-    double e1, e2;
-    // roots(poly(x))
-    root2real(b,c,e1,e2);
+  double x01_squared = x(0, 1) * x(0, 1);
+  // get the two other...
+  double b = -x(0, 0) - x(1, 1) - x(2, 2);
+  double c = -x01_squared - x(0, 2) * x(0, 2) - x(1, 2) * x(1, 2) +
+             x(0, 0) * (x(1, 1) + x(2, 2)) + x(1, 1) * x(2, 2);
+  double e1, e2;
+  // roots(poly(x))
+  root2real(b, c, e1, e2);
 
-    if(std::abs(e1) < std::abs(e2))
-        std::swap(e1,e2);
-    L(0) = e1;
-    L(1) = e2;
+  if (std::abs(e1) < std::abs(e2))
+    std::swap(e1, e2);
+  L(0) = e1;
+  L(1) = e2;
 
-    double mx0011 = -x(0,0) * x(1,1);
-    double prec_0 = x(0,1) * x(1,2) - x(0,2) * x(1,1);
-    double prec_1 = x(0,1) * x(0,2) - x(0,0) * x(1,2);
+  double mx0011 = -x(0, 0) * x(1, 1);
+  double prec_0 = x(0, 1) * x(1, 2) - x(0, 2) * x(1, 1);
+  double prec_1 = x(0, 1) * x(0, 2) - x(0, 0) * x(1, 2);
 
-    double e = e1;
-    double tmp = 1.0 / (e * (x(0,0) + x(1,1)) + mx0011 - e * e + x01_squared);
-    double a1 = -(e * x(0,2) + prec_0) * tmp;
-    double a2 = -(e * x(1,2) + prec_1) * tmp;
-    double rnorm = 1.0 / std::sqrt(a1 * a1 + a2 * a2 + 1.0);
-    a1 *= rnorm;
-    a2 *= rnorm;
-    Vec3 v1(a1, a2, rnorm);
+  double e = e1;
+  double tmp = 1.0 / (e * (x(0, 0) + x(1, 1)) + mx0011 - e * e + x01_squared);
+  double a1 = -(e * x(0, 2) + prec_0) * tmp;
+  double a2 = -(e * x(1, 2) + prec_1) * tmp;
+  double rnorm = 1.0 / std::sqrt(a1 * a1 + a2 * a2 + 1.0);
+  a1 *= rnorm;
+  a2 *= rnorm;
+  Vec3 v1(a1, a2, rnorm);
 
-    // e = e2;
-    double tmp2 = 1.0 / (e2 * (x(0,0) + x(1,1)) + mx0011 - e2 * e2 + x01_squared);
-    double a21 = -(e2 * x(0,2) + prec_0) * tmp2;
-    double a22 = -(e2 * x (1,2) + prec_1) * tmp2;
-    double rnorm2 = 1.0 / std::sqrt(a21 * a21 + a22 * a22 + 1.0);
-    a21 *= rnorm2;
-    a22 *= rnorm2;
-    Vec3 v2(a21, a22, rnorm2);
+  // e = e2;
+  double tmp2 = 1.0 / (e2 * (x(0, 0) + x(1, 1)) + mx0011 - e2 * e2 + x01_squared);
+  double a21 = -(e2 * x(0, 2) + prec_0) * tmp2;
+  double a22 = -(e2 * x(1, 2) + prec_1) * tmp2;
+  double rnorm2 = 1.0 / std::sqrt(a21 * a21 + a22 * a22 + 1.0);
+  a21 *= rnorm2;
+  a22 *= rnorm2;
+  Vec3 v2(a21, a22, rnorm2);
 
-    // optionally remove axb from v1,v2
-    // costly and makes a very small difference!
-    // v1=(v1-v1.dot(v3)*v3);v1.normalize();
-    // v2=(v2-v2.dot(v3)*v3);v2.normalize();
-    // v2=(v2-v1.dot(v2)*v2);v2.normalize();
-    E << v1(0),v2(0),v3(0),  
-         v1(1),v2(1),v3(1),  
-         v1(2),v2(2),v3(2);
+  // optionally remove axb from v1,v2
+  // costly and makes a very small difference!
+  // v1=(v1-v1.dot(v3)*v3);v1.normalize();
+  // v2=(v2-v2.dot(v3)*v3);v2.normalize();
+  // v2=(v2-v1.dot(v2)*v2);v2.normalize();
+  E << v1(0), v2(0), v3(0),
+      v1(1), v2(1), v3(1),
+      v1(2), v2(2), v3(2);
 };
 
 /**
@@ -320,7 +327,7 @@ bool computePosesNordberg(
 
   // double g = 0.0;
 
-  // p3 is essentially det(D2) so it is definietly > 0 or it is degen
+  //p3 is det(D2) so its definietly >0 or its a degenerate case
   //if (std::abs(p3) >= std::abs(p0) || true)
   //{
   p3 = 1.0 / p3;
@@ -337,8 +344,6 @@ bool computePosesNordberg(
     // lower numerical performance
     //g = 1.0 / (cubick(p1 / p0, p2 / p0, p3 / p0));
   //}
-
-  //  cout<<"g: "<<g<<endl;
 
   // we can swap D1,D2 and the coeffs!
   // oki, Ds are:
