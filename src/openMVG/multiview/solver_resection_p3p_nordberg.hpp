@@ -44,7 +44,7 @@ struct P3PSolver_Nordberg
 };
 
 //-- Usable solver for robust estimation framework
-using PoseResectionKernel_P3P_Persson =
+using PoseResectionKernel_P3P_Nordberg =
     two_view::kernel::Kernel<
         P3PSolver_Nordberg, // Model estimator
         P3PSolver_Nordberg, // Error metric

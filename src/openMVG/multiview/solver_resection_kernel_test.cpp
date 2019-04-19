@@ -143,7 +143,7 @@ TEST(P3P_Nordberg_ECCV18, Multiview) {
     const Mat x = d._x[nResectionCameraIndex];
     const Mat bearing_vectors = (d._K[0].inverse() * x.colwise().homogeneous()).colwise().normalized();
     const Mat X = d._X;
-    openMVG::euclidean_resection::PoseResectionKernel_P3P_Persson kernel(bearing_vectors, X);
+    openMVG::euclidean_resection::PoseResectionKernel_P3P_Nordberg kernel(bearing_vectors, X);
 
     std::vector<Mat34> Ps;
     kernel.Fit({0,1,2}, &Ps); // 3 points sample are required, lets take the first three
