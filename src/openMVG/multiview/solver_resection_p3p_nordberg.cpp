@@ -180,12 +180,11 @@ static double cubick(const double & b, const double & c, const double & d)
     // double starterr=std::abs(r0*(r0*(r0 + b) + c) + d);
     // TODO(RJ:) I have hardcoded the number of iteration here, it's a hardcoded in a define in the orginal implementation 
     // according to the author, increasing it could lead to a better solution (more robust)
-    double fx,fpx;
     for (unsigned int cnt = 0; cnt < 50; ++cnt) { 
-        fx = (((r0 + b) * r0 + c) * r0 + d);
+        double fx = (((r0 + b) * r0 + c) * r0 + d);
 
         if((cnt < 7 || std::abs(fx) > 1e-13)) {
-            fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
+            double fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
             r0 -= fx / fpx;
         }
         else
