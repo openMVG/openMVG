@@ -287,10 +287,14 @@ bool computePosesNordberg(
   Vec3 P2 = X.col(1);
   Vec3 P3 = X.col(2);
 
-  // Extraction of bearing vectors
+  // Extraction of feature vectors
   Vec3 f1 = bearing_vectors.col(0);
   Vec3 f2 = bearing_vectors.col(1);
   Vec3 f3 = bearing_vectors.col(2);
+
+  f1.normalize();
+  f2.normalize();
+  f3.normalize();
 
   double b12 = -2.0 * (f1.dot(f2));
   double b13 = -2.0 * (f1.dot(f3));
@@ -468,6 +472,7 @@ bool computePosesNordberg(
     }
   }
 
+  // if constexpr (refinement_iterations>0)
   for (int i = 0; i < valid; ++i)
   {
     gauss_newton_refineL(Ls[i], a12, a13, a23, b12, b13, b23);
