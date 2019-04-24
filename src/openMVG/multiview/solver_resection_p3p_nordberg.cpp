@@ -520,7 +520,6 @@ void P3PSolver_Nordberg::Solve(
   assert(3 == bearing_vectors.rows());
   assert(3 == X.rows());
   assert(bearing_vectors.cols() == X.cols());
-  Mat34 P;
   std::vector<std::tuple<Mat3, Vec3>> rotation_translation_solutions;
   if (computePosesNordberg(bearing_vectors, X, rotation_translation_solutions))
   {
