@@ -79,7 +79,7 @@ void SphericalToCubic
  const ImageT & equirectangular_image,
  const openMVG::cameras::Pinhole_Intrinsic & pinhole_camera,
  std::vector<ImageT> & cube_images
-)
+ )
 {
     using namespace openMVG;
     using namespace openMVG::cameras;
@@ -92,8 +92,6 @@ void SphericalToCubic
     const Intrinsic_Spherical sphere_camera(
                                             equirectangular_image.Width() - 1, equirectangular_image.Height() - 1);
     // - the cube faces
-    
-    
     //
     // Perform backward/inverse rendering:
     // - For each cube face (rotation)
@@ -117,7 +115,7 @@ void SphericalToCubic
             // std::cout << "   row = " << x << std::endl;
             for (int y = 0; y < image_height; ++y)
             { // Project the pinhole bearing vector to the spherical camera
-                const Vec3 pinhole_bearing = rot_matrix[i_rot] * pinhole_camera(Vec2(x, y));
+                const Vec3 pinhole_bearing = rot_matrix[i_rot].transpose() * pinhole_camera(Vec2(x, y));
                 const Vec2 sphere_proj = sphere_camera.project(pinhole_bearing);
                 
                 if (equirectangular_image.Contains(sphere_proj(1), sphere_proj(0)))
@@ -172,12 +170,11 @@ int main(int argc, char *argv[]) {
     std::vector<image::Image<image::RGBColor>> cube_images;
     // Convert every spherical view to cubic views
     {
+        std::cout << "Generating cubic views:";
         C_Progress_display my_progress_bar(sfm_data.GetViews().size());
         const Views & views = sfm_data.GetViews();
         const Poses & poses = sfm_data.GetPoses();
         const Landmarks & structure = sfm_data.GetLandmarks();
-        
-        // std::cout << "number of landmarks = " << structure.size() << std::endl;
         
         // generate views and camera poses for each new views
         for (int i = 0; i < static_cast<int>(views.size()); ++i)
@@ -246,7 +243,6 @@ int main(int argc, char *argv[]) {
                                  );
                     sfm_data_out.views[v.id_view] = std::make_shared<View>(v);
                     
-                    std::cout << "set view id = " << v.id_pose << std::endl;
                     sfm_data_out.poses[v.id_pose] =
                     Pose3(
                           rot_matrix[cubic_image_id] * poses.at(view->id_pose).rotation(),
@@ -268,18 +264,20 @@ int main(int argc, char *argv[]) {
             for (int i = 0; i < num_output_views; ++i) {
                 const Pose3 pose = sfm_data_out.poses[i];
                 std::cout << "R{" << i+1 << "} = [" << pose.rotation()(0,0) << " " << pose.rotation()(0,1) << " " << pose.rotation()(0,2) << std::endl
-                                                  << pose.rotation()(1,0) << " " << pose.rotation()(1,1) << " " << pose.rotation()(1,2) << std::endl
-                                                  << pose.rotation()(2,0) << " " << pose.rotation()(2,1) << " " << pose.rotation()(2,2) << "]';" << std::endl;
+                                                   << pose.rotation()(1,0) << " " << pose.rotation()(1,1) << " " << pose.rotation()(1,2) << std::endl
+                                                   << pose.rotation()(2,0) << " " << pose.rotation()(2,1) << " " << pose.rotation()(2,2) << "]';" << std::endl;
                 std::cout << "T{" << i+1 << "} = [" << pose.center().x() << " " << pose.center().y() << " " << pose.center().z() << "]';" << std::endl;
             }
-            
-            // plot 3D points
         }
         
         // generate structure and associate it with new camera views
         {
+            std::cout << "Creating cubic sfm_data structure:";
+            
+            C_Progress_display my_progress_bar(structure.size());
             for (Landmarks::const_iterator it = structure.begin(); it != structure.end(); ++it) {
-                std::cout << it->second.X.x() << ", " << it->second.X.y() << ", " << it->second.X.z() << std::endl;
+                // std::cout << it->second.X.x() << ", " << it->second.X.y() << ", " << it->second.X.z() << std::endl;
+                ++my_progress_bar;
                 
                 const Observations & obs = it->second.obs;
                 Observations::const_iterator itObs = obs.begin();
@@ -292,7 +290,7 @@ int main(int argc, char *argv[]) {
                 {
                     IndexT pano_view_key = itObs->first;
                     IndexT feature_key = itObs->second.id_feat;
-                    std::cout << "pano view id = " << pano_view_key << std::endl;
+                    
                     // get cubical camera ids and poses and reproject to see if the 3D point is inside the view
                     bool is_reprojection_found = false;
                     for (IndexT local_view_index = pano_view_key * 6; local_view_index < pano_view_key * 6 + 6; ++local_view_index)
@@ -317,8 +315,8 @@ int main(int argc, char *argv[]) {
                         const double angle = acos(point_to_cam_dir.dot(cam_looking_dir))/M_PI*180;
                         
                         if (angle < 0 || angle > 90)
-                           continue;
-                        std::cout << "view " << local_view_index << " has angle = " << angle << std::endl;
+                            continue;
+                        // std::cout << "view " << local_view_index << " has angle = " << angle << std::endl;
                         out_landmark.obs[local_view_index] = Observation(projection, feature_key);
                         is_reprojection_found = true;
                         break; // if one of the 6 views observe the 3D point, no other views from the 6 views should observe it
@@ -351,3 +349,4 @@ int main(int argc, char *argv[]) {
     // Exit program
     return EXIT_SUCCESS;
 }
+
