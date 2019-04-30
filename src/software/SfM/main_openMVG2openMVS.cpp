@@ -117,6 +117,8 @@ bool convertToUndistortDepths(
         if (!sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
             continue;
 
+        const std::string ext = stlplus::extension_part(view.second->s_Img_path);
+
         std::vector<std::string> vec_image = stlplus::folder_files(sInDir);
         std::sort(vec_image.begin(), vec_image.end());
         for (const auto& image_file : vec_image)
@@ -127,12 +129,12 @@ bool convertToUndistortDepths(
             const std::string srcImage = stlplus::create_filespec(sInDir, image_file);
 
             std::string outputImage = stlplus::create_filespec(sOutDir, image_file);
-            auto pos = outputImage.find("depth");
+            auto pos = outputImage.rfind("depth");
             if (pos != std::string::npos)
             	outputImage.replace(pos, 5, "rgb");
-            pos = outputImage.find(".pfm");
+            pos = outputImage.rfind(".pfm");
             if (pos != std::string::npos)
-                outputImage.replace(pos, 4, ".jpg.ref.pfm");
+                outputImage.replace(pos, 4, std::string(".") + ext + std::string(".ref.pfm"));
 
             if (!stlplus::is_file(srcImage))
             {
@@ -196,6 +198,7 @@ bool exportToUndistortImages(
     for (const auto& view : sfm_data.GetViews())
     {
         const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
+        const std::string ext = stlplus::extension_part(srcImage);
 
         const std::string outputImage = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
 
@@ -237,11 +240,11 @@ bool exportToUndistortImages(
                 }
                 // undistort depth and save it
                 auto depthFileBasename = view.second->s_Img_path;
-                auto pos = depthFileBasename.find("rgb");
+                auto pos = depthFileBasename.rfind("rgb");
                 if (pos != std::string::npos) {
                     depthFileBasename.replace(pos, 3, "depth");
                 }
-                pos = depthFileBasename.find(".jpg");
+                pos = depthFileBasename.rfind(std::string(".") + ext);
                 if (pos != std::string::npos) {
                     depthFileBasename.replace(pos, 4, ".pfm");
                 }
@@ -276,11 +279,11 @@ bool exportToUndistortImages(
             auto& map_row = map_cam_remap[cam][0];
             auto& map_col = map_cam_remap[cam][1];
             auto depthFileBasename = view.second->s_Img_path;
-            auto pos = depthFileBasename.find("rgb");
+            auto pos = depthFileBasename.rfind("rgb");
             if (pos != std::string::npos) {
             	depthFileBasename.replace(pos, 3, "depth");
             }
-            pos = depthFileBasename.find(".jpg");
+            pos = depthFileBasename.rfind(std::string(".") + ext);
             if (pos != std::string::npos) {
                 depthFileBasename.replace(pos, 4, ".pfm");
             }
