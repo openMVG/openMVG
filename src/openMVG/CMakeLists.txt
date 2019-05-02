@@ -1,4 +1,5 @@
 add_subdirectory(cameras)
+add_subdirectory(clustering)
 add_subdirectory(exif)
 add_subdirectory(features)
 add_subdirectory(graph)
