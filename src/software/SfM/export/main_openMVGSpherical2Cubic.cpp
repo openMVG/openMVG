@@ -243,9 +243,15 @@ int main(int argc, char *argv[]) {
                                  );
                     sfm_data_out.views[v.id_view] = std::make_shared<View>(v);
                     
+                    // due to 360 cameras, rotation after BA might come with determinant -1
+                    // if so, negate the rotation for future use.
+                    Mat3 tmp_rotation = poses.at(view->id_pose).rotation();
+                    if (tmp_rotation.determinant()<0)
+                        tmp_rotation = tmp_rotation*(-1.0f);
+                    
                     sfm_data_out.poses[v.id_pose] =
                     Pose3(
-                          rot_matrix[cubic_image_id] * poses.at(view->id_pose).rotation(),
+                          rot_matrix[cubic_image_id] * tmp_rotation,
                           poses.at(view->id_pose).center()
                           );
                     
