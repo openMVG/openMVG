@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   {
     const IndexT pose_id = pose_gt_it.first;
     //sfm_data_gt.GetPoses().count(pose_id)
-    const auto & pose_to_compare_it = sfm_data_gt.GetPoses().at(pose_id);
+    const auto & pose_to_compare_it = sfm_data_to_compare.GetPoses().at(pose_id);
 
     camera_pos_gt.push_back(pose_gt_it.second.center());
     camera_rot_gt.push_back(pose_gt_it.second.rotation());
