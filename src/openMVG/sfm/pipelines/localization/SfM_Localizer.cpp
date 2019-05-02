@@ -62,26 +62,22 @@ public:
                   models); // Found model hypothesis
   }
 
-  double Error(uint32_t sample, const Model &model) const {
-    const Vec3 t = model.block(0, 3, 3, 1);
-    const geometry::Pose3 pose(model.block(0, 0, 3, 3),
-                               - model.block(0, 0, 3, 3).transpose() * t);
-    const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
-    return (camera_->residual(pose(x3D_.col(sample)),
-                              x2d_.col(sample),
-                              ignore_distortion) * N1_(0,0)).squaredNorm();
-  }
-
   void Errors(const Model & model, std::vector<double> & vec_errors) const
   {
+    // Convert the found model into a Pose3
     const Vec3 t = model.block(0, 3, 3, 1);
     const geometry::Pose3 pose(model.block(0, 0, 3, 3),
                                - model.block(0, 0, 3, 3).transpose() * t);
 
     vec_errors.resize(x2d_.cols());
+
+    const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+
     for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample)
     {
-      vec_errors[sample] = this->Error(sample, model);
+      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample)),
+                              x2d_.col(sample),
+                              ignore_distortion) * N1_(0,0)).squaredNorm();
     }
   }
 
