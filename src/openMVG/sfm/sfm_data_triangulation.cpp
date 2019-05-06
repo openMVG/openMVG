@@ -359,13 +359,15 @@ const
     std::vector<uint32_t> samples;
     robust::UniformSample(min_sample_index_, obs.size(), random_generator, &samples);
 
-    // Hypothesis generation
     Vec3 X;
-    if (!track_triangulation(sfm_data, ObservationsSampler(obs, samples), X))
+    // Hypothesis generation
+    const auto minimal_sample = ObservationsSampler(obs, samples);
+    
+    if (!track_triangulation(sfm_data, minimal_sample, X))
       continue;
 
     // Test validity of the hypothesis
-    if (!track_check_predicate(obs, sfm_data, X, predicate_binding))
+    if (!track_check_predicate(minimal_sample, sfm_data, X, predicate_binding))
       continue;
 
     std::deque<IndexT> inlier_set;
