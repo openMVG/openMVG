@@ -166,6 +166,36 @@ namespace sfm {
         resection_data.error_max = ACRansacOut.first;
       }
       break;
+      case resection::SolverType::P3P_NORDBERG_ECCV18:
+      {
+        if (!optional_intrinsics)
+        {
+          std::cerr << "Intrinsic data is required for P3P solvers." << std::endl;
+          return false;
+        }
+        //--
+        // Since the intrinsic data is known, compute only the pose
+        using SolverType = openMVG::euclidean_resection::P3PSolver_Nordberg;
+        MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
+
+        using KernelType =
+          ACKernelAdaptorResection_Intrinsics<
+            SolverType,
+            Mat34>;
+
+        KernelType kernel(resection_data.pt2D, resection_data.pt3D, optional_intrinsics);
+        // Robust estimation of the pose matrix and its precision
+        const auto ACRansacOut =
+          openMVG::robust::ACRANSAC(kernel,
+                                    resection_data.vec_inliers,
+                                    resection_data.max_iteration,
+                                    &P,
+                                    dPrecision,
+                                    true);
+        // Update the upper bound precision of the model found by AC-RANSAC
+        resection_data.error_max = ACRansacOut.first;
+      }
+      break;
       case resection::SolverType::P3P_KE_CVPR17:
       {
         if (!optional_intrinsics)
