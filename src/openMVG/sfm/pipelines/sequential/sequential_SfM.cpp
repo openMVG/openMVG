@@ -439,7 +439,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
               tracks::submapTrack::const_iterator iter = iterT->second.begin();
               const Vec2 featI = features_provider_->feats_per_view[I][iter->second].coords().cast<double>();
               const Vec2 featJ = features_provider_->feats_per_view[J][(++iter)->second].coords().cast<double>();
-              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, 
+              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J,
                 cam_I->get_ud_pixel(featI), cam_J->get_ud_pixel(featJ)));
             }
             // Compute the median triangulation angle
@@ -944,7 +944,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   geometry::Pose3 pose;
   const bool bResection = sfm::SfM_Localizer::Localize
   (
-    optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+    optional_intrinsic ? resection::SolverType::P3P_NORDBERG_ECCV18 : resection::SolverType::DLT_6POINTS,
     {view_I->ui_width, view_I->ui_height},
     optional_intrinsic.get(),
     resection_data,

@@ -382,7 +382,7 @@ int main(int argc, char **argv)
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
-      optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+      optional_intrinsic ? resection::SolverType::P3P_NORDBERG_ECCV18 : resection::SolverType::DLT_6POINTS,
       {imageGray.Width(), imageGray.Height()},
       optional_intrinsic.get(),
       *(query_regions.get()),
