@@ -90,12 +90,24 @@ TEST(SFM_DATA_TRIANGULATION, ROBUST) {
     }
   }
 
+
   // A landmark with empty information should be removed by the triangulation engine
   sfm_data_2.structure[0].obs.clear();
   {
     triangulation_engine.triangulate(sfm_data_2);
     EXPECT_EQ(npoints - 1, sfm_data_2.structure.size());
   }
+
+  // A landmark with an outlier should still be there if triangulable
+  sfm_data_2.structure.clear();
+  sfm_data_2.structure[0] = sfm_data.structure.at(0);
+  {
+    sfm_data_2.structure[0].obs[0].x += Vec2(-10, -10000);
+    sfm_data_2.structure[0].obs[1].x += Vec2(-10000, -10000);
+    triangulation_engine.triangulate(sfm_data_2);
+    EXPECT_EQ(1, sfm_data_2.structure.size());
+  }
+
 }
 
 /* ************************************************************************* */

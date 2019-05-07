@@ -342,7 +342,7 @@ const
   // else we perform a robust estimation since
   //  there is more observations than the minimal number of required sample.
 
-  const IndexT nbIter = obs.size(); // TODO: automatic computation of the number of iterations?
+  const IndexT nbIter = obs.size() * 2; // TODO: automatic computation of the number of iterations?
 
   // - Ransac variables
   Vec3 best_model = Vec3::Zero();
@@ -362,7 +362,7 @@ const
     Vec3 X;
     // Hypothesis generation
     const auto minimal_sample = ObservationsSampler(obs, samples);
-    
+
     if (!track_triangulation(sfm_data, minimal_sample, X))
       continue;
 
