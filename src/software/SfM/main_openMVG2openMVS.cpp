@@ -38,6 +38,7 @@ void UndistortImage(
     Image& image_ud,
     const RemapType& map_row,
     const RemapType& map_col,
+    bool useLinearSampler,
     typename Image::Tpixel fillcolor = typename Image::Tpixel(0))
 {
     int width = imageIn.Width();
@@ -45,23 +46,44 @@ void UndistortImage(
 
     image_ud.resize(width, height, true, fillcolor);
 
-    const image::Sampler2d<image::SamplerLinear> sampler;
+    if (useLinearSampler) {
+        image::Sampler2d<image::SamplerLinear> sampler;
 
 #ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for
+#pragma omp parallel for
 #endif
-    for (int j = 0; j < height; ++j)
-        for (int i = 0; i < width; ++i)
-        {
-            // compute coordinates with distortion
-            double row = (double)map_row(j, i);
-            double col = (double)map_col(j, i);
-            // pick pixel if it is in the image domain
-            if (imageIn.Contains(row, col))
+        for (int j = 0; j < height; ++j)
+            for (int i = 0; i < width; ++i)
             {
-                image_ud(j, i) = sampler(imageIn, row, col);
+                // compute coordinates with distortion
+                double row = (double)map_row(j, i);
+                double col = (double)map_col(j, i);
+                // pick pixel if it is in the image domain
+                if (imageIn.Contains(row, col))
+                {
+                    image_ud(j, i) = sampler(imageIn, row, col);
+                }
             }
-        }
+    }
+    else {
+        image::Sampler2d<image::SamplerNearest> nearest_sampler;
+
+#ifdef OPENMVG_USE_OPENMP
+#pragma omp parallel for
+#endif
+        for (int j = 0; j < height; ++j)
+            for (int i = 0; i < width; ++i)
+            {
+                // compute coordinates with distortion
+                double row = (double)map_row(j, i);
+                double col = (double)map_col(j, i);
+                // pick pixel if it is in the image domain
+                if (imageIn.Contains(row, col))
+                {
+                    image_ud(j, i) = nearest_sampler(imageIn, row, col);
+                }
+            }
+    }
 }
 
 template<typename RemapType>
@@ -92,12 +114,23 @@ void CalcCameraDistortionMap(
         }
 }
 
-bool convertToUndistortDepths(
+bool exportToUndistortDepths(
     const std::string& sInDir,
     const SfM_Data& sfm_data,
     const std::string& sOutDir
 )
 {
+    if (sfm_data.GetViews().empty())
+        return false;
+    const auto& view = sfm_data.GetViews().begin();
+    const auto& ext = stlplus::extension_part(view->second->s_Img_path);
+
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view->second.get()))
+        return false;
+    const auto* cam = sfm_data.GetIntrinsics().at(view->second->id_intrinsic).get();
+    if (cam == nullptr)
+        return false;
+
     if (!stlplus::is_folder(sOutDir))
     {
         stlplus::folder_create(sOutDir);
@@ -112,65 +145,54 @@ bool convertToUndistortDepths(
 
     bool ret = true;
 
-    for (const auto& view : sfm_data.GetViews())
+    std::vector<std::string> vec_file = stlplus::folder_files(sInDir);
+    std::sort(vec_file.begin(), vec_file.end());
+    for (const auto& file : vec_file)
     {
-        if (!sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+        if (stlplus::extension_part(file) != "pfm")
             continue;
 
-        const std::string ext = stlplus::extension_part(view.second->s_Img_path);
+        const std::string srcFile = stlplus::create_filespec(sInDir, file);
 
-        std::vector<std::string> vec_image = stlplus::folder_files(sInDir);
-        std::sort(vec_image.begin(), vec_image.end());
-        for (const auto& image_file : vec_image)
+        std::string outputFile = stlplus::create_filespec(sOutDir, file);
+        auto pos = outputFile.rfind("depth");
+        if (pos != std::string::npos)
+        	outputFile.replace(pos, 5, "rgb");
+        pos = outputFile.rfind(".pfm");
+        if (pos != std::string::npos)
+            outputFile.replace(pos, 4, std::string(".") + ext + std::string(".ref.pfm"));
+
+        if (!stlplus::is_file(srcFile))
         {
-            if (stlplus::extension_part(image_file) != "pfm")
-                continue;
-
-            const std::string srcImage = stlplus::create_filespec(sInDir, image_file);
-
-            std::string outputImage = stlplus::create_filespec(sOutDir, image_file);
-            auto pos = outputImage.rfind("depth");
-            if (pos != std::string::npos)
-            	outputImage.replace(pos, 5, "rgb");
-            pos = outputImage.rfind(".pfm");
-            if (pos != std::string::npos)
-                outputImage.replace(pos, 4, std::string(".") + ext + std::string(".ref.pfm"));
-
-            if (!stlplus::is_file(srcImage))
-            {
-                std::cout << "Cannot read the corresponding image: " << image_file << std::endl;
-                ret = false;
-                break;
-            }
-
-            // export undistorted images
-            const openMVG::cameras::IntrinsicBase* cam = sfm_data.GetIntrinsics().at(view.second->id_intrinsic).get();
-            if (!cam->have_disto())
-            {
-                // just copy image
-                stlplus::file_copy(srcImage, outputImage);
-            }
-            else
-            {
-                auto iterMapCam = map_cam_remap.find(cam);
-                if (map_cam_remap.end() == iterMapCam)
-                {
-                    // map row and col have not been cached
-                    CalcCameraDistortionMap(cam, map_cam_remap[cam][0], map_cam_remap[cam][1]);
-                }
-
-                auto& map_row = map_cam_remap[cam][0];
-                auto& map_col = map_cam_remap[cam][1];
-
-                // undistort depth and save it
-                Image<float> depth_float, depth_float_ud;
-                ReadImage(srcImage.c_str(), &depth_float);
-                UndistortImage(depth_float, depth_float_ud, map_row, map_col, 0.0f);
-                WriteImage(outputImage.c_str(), depth_float_ud);
-            }
+            std::cout << "Cannot read the corresponding depth file: " << srcFile << std::endl;
+            ret = false;
+            break;
         }
 
-        break;
+        // export undistorted depths
+        if (cam->have_disto())
+        {
+            auto iterMapCam = map_cam_remap.find(cam);
+            if (map_cam_remap.end() == iterMapCam)
+            {
+                // map row and col have not been cached
+                CalcCameraDistortionMap(cam, map_cam_remap[cam][0], map_cam_remap[cam][1]);
+            }
+
+            auto& map_row = map_cam_remap[cam][0];
+            auto& map_col = map_cam_remap[cam][1];
+
+            // undistort depth and save it
+            Image<float> depth_float, depth_float_ud;
+            ReadImage(srcFile.c_str(), &depth_float);
+            UndistortImage(depth_float, depth_float_ud, map_row, map_col, false, 0.0f);
+            WriteImage(outputFile.c_str(), depth_float_ud);
+        }
+        else
+        {
+            // just copy image
+            stlplus::file_copy(srcFile, outputFile);
+        }
     }
 
     return ret;
@@ -198,7 +220,7 @@ bool exportToUndistortImages(
     for (const auto& view : sfm_data.GetViews())
     {
         const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
-        const std::string ext = stlplus::extension_part(srcImage);
+        const std::string ext = stlplus::extension_part(view.second->s_Img_path);
 
         const std::string outputImage = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
 
@@ -228,14 +250,14 @@ bool exportToUndistortImages(
                 // undistort image and save it
                 Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
                 ReadImage(srcImage.c_str(), &imageRGB);
-                UndistortImage(imageRGB, imageRGB_ud, map_row, map_col, BLACK);
+                UndistortImage(imageRGB, imageRGB_ud, map_row, map_col, false, BLACK);
                 WriteImage(outputImage.c_str(), imageRGB_ud);
                 // undistort mask and save it
                 auto maskFileName = srcImage + ".mask.png";
                 if (stlplus::is_file(maskFileName)) {
                     Image<openMVG::image::RGBColor> maskRGB, maskRGB_ud;
                     ReadImage(maskFileName.c_str(), &maskRGB);
-                    UndistortImage(maskRGB, maskRGB_ud, map_row, map_col, BLACK);
+                    UndistortImage(maskRGB, maskRGB_ud, map_row, map_col, false, BLACK);
                     WriteImage((outputImage + ".mask.png").c_str(), maskRGB_ud);
                 }
                 // undistort depth and save it
@@ -253,7 +275,7 @@ bool exportToUndistortImages(
                 if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
                     Image<float> depth_float, depth_float_ud;
                     ReadImage(depthFileName.c_str(), &depth_float);
-                    UndistortImage(depth_float, depth_float_ud, map_row, map_col, 0.0f);
+                    UndistortImage(depth_float, depth_float_ud, map_row, map_col, false, 0.0f);
                     WriteImage((outputImage + ".ref.pfm").c_str(), depth_float_ud);
                 }
             }
@@ -292,7 +314,7 @@ bool exportToUndistortImages(
             if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
                 Image<float> depth_float, depth_float_ud;
                 ReadImage(depthFileName.c_str(), &depth_float);
-                UndistortImage(depth_float, depth_float_ud, map_row, map_col, 0.0f);
+                UndistortImage(depth_float, depth_float_ud, map_row, map_col, false, 0.0f);
                 std::cout << outputImage << std::endl;
                 WriteImage((outputImage + ".ref.pfm").c_str(), depth_float_ud);
             }
@@ -450,57 +472,69 @@ bool exportToOpenMVS(
 
 int main(int argc, char *argv[])
 {
-  CmdLine cmd;
-  std::string sSfM_Data_Filename;
-  std::string sInDir = "";
-  std::string sOutFile = "";
-  std::string sOutDir = "";
+    CmdLine cmd;
+    std::string sSfM_Data_Filename;
+    std::string sInDir = "";
+    std::string sOutFile = "";
+    std::string sOutDir = "";
 
-  cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
-  cmd.add( make_option('I', sInDir, "indir"));
-  cmd.add( make_option('o', sOutFile, "outfile") );
-  cmd.add( make_option('d', sOutDir, "outdir") );
+    cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
+    cmd.add( make_option('I', sInDir, "indir"));
+    cmd.add( make_option('o', sOutFile, "outfile") );
+    cmd.add( make_option('d', sOutDir, "outdir") );
 
-  try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
-  } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-      << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-      << "[-I]--indir] depth images path to convert\n"
-      << "[-o|--outfile] OpenMVS scene file\n"
-      << "[-d|--outdir] undistorted images path\n"
-      << std::endl;
+    try {
+        if (argc == 1) throw std::string("Invalid command line parameter.");
+        cmd.process(argc, argv);
+    } catch (const std::string& s) {
+        std::cerr << "Usage: " << argv[0] << '\n'
+        << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
+        << "[-I]--indir] depth images path to convert\n"
+        << "[-o|--outfile] OpenMVS scene file\n"
+        << "[-d|--outdir] undistorted images path\n"
+        << std::endl;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
-  }
+        std::cerr << s << std::endl;
+        return EXIT_FAILURE;
+    }
 
-  if ((0 == sOutFile.size()) && (0 == sOutDir.size()))
-  {
-      std::cerr << std::endl
-          << "At least one of OpenMVS scene file and undistorted images path should be assigned"
-          << std::endl;
-  }
-
-  if ((sOutFile.size() > 0) && (stlplus::extension_part(sOutFile) != "mvs")) {
-    std::cerr << std::endl
-      << "Invalid output file extension: " << sOutFile << std::endl
-      << "You must use a filename with a .mvs extension." << std::endl;
-      return EXIT_FAILURE;
-  }
-
-  // Read the input SfM scene
-  SfM_Data sfm_data;
-  if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
-    return EXIT_FAILURE;
-  }
-
-    if (sInDir.empty())
+    if ((0 == sOutFile.size()) && (0 == sOutDir.size()))
     {
-        if (sOutDir.size() > 0)
+        std::cerr << std::endl
+            << "At least one of OpenMVS scene file and undistorted images path should be assigned"
+            << std::endl;
+    }
+
+    if ((sOutFile.size() > 0) && (stlplus::extension_part(sOutFile) != "mvs")) {
+        std::cerr << std::endl
+        << "Invalid output file extension: " << sOutFile << std::endl
+        << "You must use a filename with a .mvs extension." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    // Read the input SfM scene
+    SfM_Data sfm_data;
+    if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
+        std::cerr << std::endl
+        << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    bool onlyExportDepth = !sInDir.empty();
+    bool exportOpenMVS = sInDir.empty();
+
+    if (sOutDir.size() > 0)
+    {
+        if (onlyExportDepth)
+        {
+            if (!exportToUndistortDepths(sInDir, sfm_data, sOutDir))
+            {
+                std::cerr << std::endl
+                    << "Error occurred during generation of undistorted images." << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
+        else
         {
             if (!exportToUndistortImages(sfm_data, sOutDir))
             {
@@ -509,27 +543,17 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
         }
-
-        if (sOutFile.size() > 0)
-        {
-            if (!exportToOpenMVS(sfm_data, sOutFile))
-            {
-                std::cerr << std::endl
-                    << "The output openMVS scene file can not be written." << std::endl;
-                return EXIT_FAILURE;
-            }
-        }
     }
-    else
+
+    if (exportOpenMVS && sOutFile.size() > 0)
     {
-        if (!convertToUndistortDepths(sInDir, sfm_data, sOutDir))
+        if (!exportToOpenMVS(sfm_data, sOutFile))
         {
             std::cerr << std::endl
-                << "Error occurred during generation of undistorted images" << std::endl;
+                << "The output openMVS scene file can not be written." << std::endl;
             return EXIT_FAILURE;
         }
     }
 
-
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
