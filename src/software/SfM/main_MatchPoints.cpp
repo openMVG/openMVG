@@ -237,6 +237,11 @@ int main(int argc, char *argv[])
 #endif
   }
 
+  if (front_point_match_result.size() == 0) {
+    cerr << "Fail to find any point match result" << endl;
+    return 1;
+  }
+
   // output the best match for each front point
   string outputPointsMatch = create_filespec(output_dir, "matched_point_result", "txt");
   ofstream points_match(outputPointsMatch, std::ios::out);
