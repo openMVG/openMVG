@@ -62,7 +62,7 @@ namespace openMVG {
         for (int j = 0; j < 3; j++) camera_data[i].t[j] = (float) (camera_T(j));
 
         // intrinsics
-        auto intrinsic_index = sfm_data_.views[camera_openmvg.first].get()->id_intrinsic;
+        auto intrinsic_index = sfm_data_.views[camera_openmvg.first]->id_intrinsic;
         auto params = sfm_data_.intrinsics[intrinsic_index]->getParams();
         camera_data[i].f = (float)params[0];
         if (distortion_type == ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION) {
@@ -105,7 +105,8 @@ namespace openMVG {
             camera_map[obs.first] = sz++;
           }
           ptidx[tot] = i;
-          auto params = sfm_data_.intrinsics[sfm_data_.views[obs.first].get()->id_intrinsic]->getParams();
+          auto intrinsic_index = sfm_data_.views[obs.first]->id_intrinsic;
+          auto params = sfm_data_.intrinsics[intrinsic_index]->getParams();
           double principal_x = params[1];
           double principal_y = params[2];
           measurements[tot++].SetPoint2D(obs.second.x.x() - principal_x, obs.second.x.y() - principal_y);
