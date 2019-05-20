@@ -86,6 +86,8 @@ namespace openMVG {
       //transform camera and point id
       //example: 1 3 5 9 --> 0 1 2 3
       camera_map.clear();
+      std::map<unsigned long, unsigned long> camera_id2pose_id;
+      camera_id2pose_id.clear();
       vector<unsigned long> camera_id;
       camera_id.clear();
 
@@ -115,7 +117,12 @@ namespace openMVG {
       }
       camera_map.clear(); sz = 0;
       sort(camera_id.begin(), camera_id.end());
-      for (auto id : camera_id) if (camera_map.find(id) == camera_map.end()) camera_map[id] = sz++;
+      for (auto id : camera_id) if (camera_map.find(id) == camera_map.end())
+      {
+        camera_map[id] = sz;
+        camera_id2pose_id[sz] = id;
+        ++sz;
+      }
       // init focalmask
       focalmask = std::vector<int>(sfm_data_.poses.size());                           //set mask to share model, mask must set after camera
       for (const auto &pose : sfm_data_.poses) {
@@ -133,10 +140,10 @@ namespace openMVG {
         int j = it - focalmask.begin();
         std::iter_swap(focalmask.begin() + i, it);
         std::iter_swap(camera_data.begin() + i, camera_data.begin() + j);
-        std::swap(camera_map[i], camera_map[j]);
+        std::swap(camera_map[camera_id2pose_id[i]], camera_map[camera_id2pose_id[j]]);
       }
       for (auto &id : camidx) id = static_cast<int>(camera_map[id]);
-      camera_id.clear();
+      camera_id.clear(); camera_id2pose_id.clear();
 
 //    if you want to debug, you can export your data or load your own data use bellow
 //    SaveBundlerModel("./test_output", camera_data, point_data, measurements, ptidx, camidx);
