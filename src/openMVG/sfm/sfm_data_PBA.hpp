@@ -24,11 +24,12 @@ namespace openMVG {
 
     private:
       vector<CameraT> camera_data;
+      std::map<unsigned long, unsigned long> camera_map;
       vector<Point2D> measurements;
       vector<Point3D> point_data;
       vector<int> camidx, ptidx;
       ParallelBA pba;
-      int *focalmask;
+      vector<int> focalmask;
     };
   }
 }
