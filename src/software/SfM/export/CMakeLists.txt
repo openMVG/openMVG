@@ -103,6 +103,15 @@ target_link_libraries( openMVG_main_openMVG2Colmap
   openMVG_features
   openMVG_sfm
   ${STLPLUS_LIBRARY} )
+  
+# - Export SfM openMVG spherical scene to a scene with cubemap (6 faces per panorama)
+add_executable(openMVG_main_openMVGSpherical2Cubic main_openMVGSpherical2Cubic.cpp)
+target_link_libraries( openMVG_main_openMVGSpherical2Cubic
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  ${STLPLUS_LIBRARY} )
 
 # installation rules
 set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
@@ -123,6 +132,8 @@ set_property(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVG2Colmap PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2Colmap DESTINATION bin/)
+set_property(TARGET openMVG_main_openMVGSpherical2Cubic PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_openMVGSpherical2Cubic DESTINATION bin/)
 
 ###
 # SfM tools to visualize feature tracking data
