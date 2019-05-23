@@ -33,7 +33,10 @@ RUN mkdir /opt/openMVG_Build; \
     -DOpenMVG_BUILD_EXAMPLES=OFF \
     -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
     -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
+    -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
+    -DCLP_INCLUDE_DIR_HINTS=/usr/include \
+    -DOSI_INCLUDE_DIR_HINTS=/usr/include \
     ../openMVG/src; \
-    make -j 4
+    make -j 4;
 
-RUN cd /opt/openMVG_Build && make test
+RUN cd /opt/openMVG_Build && make test && make install;

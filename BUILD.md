@@ -43,6 +43,7 @@ Checking out the project and build it
 - [Compiling on Windows](#windows)
 - [Compiling on MacOS](#macos)
 - [Compiling using VCPKG](#vcpkg)
+- [Using Docker](#docker)
 
 Getting the project
 --------------------
@@ -158,6 +159,31 @@ $ mkdir openMVG_Build
 $ cd openMVG_Build
 $ cmake -DCMAKE_TOOLCHAIN_FILE=<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake ../openMVG/src/
 $ cmake --build .
+```
+
+Using Docker
+------------
+<a name="docker"></a>
+
+Build the docker image
+```shell
+$ git clone --recursive https://github.com/openMVG/openMVG.git
+$ docker build . -t openmvg
+$ docker run -it openmvg /bin/sh
+```
+
+You can bind directories between the host and the container using `--volume` or `--mount` option in order to access to any files and directories on a host machine from the container. (See the [docker documentation](https://docs.docker.com/engine/reference/commandline/run/).)
+
+example:
+```shell
+# launch a container
+$ docker run -it \
+    --rm \ # Automatically remove the container when it exits
+    --volume /path/to/dataset/:/dataset:ro \ #read only
+    openmvg
+# dataset/ can be found in the root directory
+root@de138d2f6223:/# ls /
+...   dataset/  ...
 ```
 
 Using OpenCV sample

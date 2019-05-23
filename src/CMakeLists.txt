@@ -293,13 +293,14 @@ endif()
 # - internal by default (CoinUtils),
 # - external if COINUTILS_INCLUDE_DIR_HINTS and a valid CoinUtils setup is found
 # ==============================================================================
-find_package(CoinUtils QUIET)
-if (NOT COINUTILS_FOUND)
+if (NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
   set(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(OpenMVG_USE_INTERNAL_COINUTILS ON)
   find_package(CoinUtils QUIET)
   set(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(COINUTILS_LIBRARY lib_CoinUtils)
+else()
+  find_package(CoinUtils QUIET)
 endif()
 
 ## ==============================================================================
@@ -308,8 +309,7 @@ endif()
 ## - internal by default (Clp),
 ## - external if CLP_INCLUDE_DIR_HINTS and a valid Clp setup is found
 ## ==============================================================================
-find_package(Clp QUIET)
-if (NOT CLP_FOUND)
+if (NOT DEFINED CLP_INCLUDE_DIR_HINTS)
   set(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
   set(OpenMVG_USE_INTERNAL_CLP ON)
   find_package(Clp QUIET)
@@ -317,6 +317,8 @@ if (NOT CLP_FOUND)
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
   set(CLP_LIBRARIES lib_clp lib_OsiClpSolver)
+else()
+  find_package(Clp QUIET)
 endif()
 
 # ==============================================================================
@@ -325,13 +327,14 @@ endif()
 # - internal by default (Osi),
 # - external if OSI_INCLUDE_DIR_HINTS and a valid Osi setup is found
 # ==============================================================================
-find_package(Osi QUIET)
-if (NOT OSI_FOUND)
+if (NOT DEFINED OSI_INCLUDE_DIR_HINTS)
   set(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
   set(OpenMVG_USE_INTERNAL_OSI ON)
   find_package(Osi QUIET)
   set(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
   set(OSI_LIBRARY lib_Osi)
+else()
+  find_package(Osi QUIET)
 endif()
 
 # ==============================================================================
