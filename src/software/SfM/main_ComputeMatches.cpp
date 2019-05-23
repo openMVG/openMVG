@@ -81,6 +81,7 @@ int main(int argc, char **argv)
   bool bGuided_matching = false;
   int imax_iteration = 2048;
   unsigned int ui_max_cache_size = 0;
+  size_t machine_num;
 
   //required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -95,6 +96,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', bGuided_matching, "guided_matching") );
   cmd.add( make_option('I', imax_iteration, "max_iteration") );
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
+  cmd.add( make_option('x', machine_num, "machine_sequence") );
 
 
   try {
@@ -145,19 +147,19 @@ int main(int argc, char **argv)
 
   std::cout << " You called : " << "\n"
             << argv[0] << "\n"
-            << "--input_file " << sSfM_Data_Filename << "\n"
-            << "--out_dir " << sMatchesDirectory << "\n"
+            << "--input_file " << sSfM_Data_Filename << "\n"             //sfm_data.json
+            << "--out_dir " << sMatchesDirectory << "\n"                 //matches  
             << "Optional parameters:" << "\n"
-            << "--force " << bForce << "\n"
-            << "--ratio " << fDistRatio << "\n"
-            << "--geometric_model " << sGeometricModel << "\n"
-            << "--video_mode_matching " << iMatchingVideoMode << "\n"
-            << "--pair_list " << sPredefinedPairList << "\n"
-            << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
-            << "--guided_matching " << bGuided_matching << "\n"
+            << "--force " << bForce << "\n"                              //0
+            << "--ratio " << fDistRatio << "\n"                          //0.8
+            << "--geometric_model " << sGeometricModel << "\n"           //e
+            << "--video_mode_matching " << iMatchingVideoMode << "\n"    //-1  
+            << "--pair_list " << sPredefinedPairList << "\n"             //
+            << "--nearest_matching_method " << sNearestMatchingMethod << "\n"          //AUTO
+            << "--guided_matching " << bGuided_matching << "\n"                        //0
             << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << std::endl;
 
-  EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;
+  EPairMode ePairmode = (iMatchingVideoMode == -1 ) ? PAIR_EXHAUSTIVE : PAIR_CONTIGUOUS;  //PAIR_EXHAUSTIVE
 
   if (sPredefinedPairList.length()) {
     ePairmode = PAIR_FROM_FILE;
@@ -181,8 +183,8 @@ int main(int argc, char **argv)
       sGeometricMatchesFilename = "matches.f.bin";
     break;
     case 'e': case 'E':
-      eGeometricModelToCompute = ESSENTIAL_MATRIX;
-      sGeometricMatchesFilename = "matches.e.bin";
+      eGeometricModelToCompute = ESSENTIAL_MATRIX;                  //this
+      sGeometricMatchesFilename = "matches.e.txt";                  //modify
     break;
     case 'h': case 'H':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
@@ -224,7 +226,7 @@ int main(int argc, char **argv)
   // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
   const std::string sImage_describer = stlplus::create_filespec(sMatchesDirectory, "image_describer", "json");
-  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
+  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);      //regions type
   if (!regions_type)
   {
     std::cerr << "Invalid: "
@@ -240,7 +242,7 @@ int main(int argc, char **argv)
 
   // Load the corresponding view regions
   std::shared_ptr<Regions_Provider> regions_provider;
-  if (ui_max_cache_size == 0)
+  if (ui_max_cache_size == 0)                                   //ui_max_cache_size == 0
   {
     // Default regions provider (load & store all regions in memory)
     regions_provider = std::make_shared<Regions_Provider>();
@@ -254,28 +256,29 @@ int main(int argc, char **argv)
   // Show the progress on the command line:
   C_Progress_display progress;
 
-  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {
+  if (!regions_provider->load(sfm_data, sMatchesDirectory, regions_type, &progress)) {   //load .feat 和 .desc
     std::cerr << std::endl << "Invalid regions." << std::endl;
     return EXIT_FAILURE;
   }
 
-  PairWiseMatches map_PutativesMatches;
+  PairWiseMatches map_PutativesMatches;                    // Pairwise matches (indexed matches for a pair <I,J>)
+                                                           // A structure used to store corresponding point indexes per images pairs
 
   // Build some alias from SfM_Data Views data:
   // - List views as a vector of filenames & image sizes
   std::vector<std::string> vec_fileNames;
   std::vector<std::pair<size_t, size_t>> vec_imagesSize;
   {
-    vec_fileNames.reserve(sfm_data.GetViews().size());
+    vec_fileNames.reserve(sfm_data.GetViews().size());           //reserve
     vec_imagesSize.reserve(sfm_data.GetViews().size());
-    for (Views::const_iterator iter = sfm_data.GetViews().begin();
+    for (Views::const_iterator iter = sfm_data.GetViews().begin();    //loop
       iter != sfm_data.GetViews().end();
       ++iter)
     {
-      const View * v = iter->second.get();
-      vec_fileNames.push_back(stlplus::create_filespec(sfm_data.s_root_path,
-          v->s_Img_path));
-      vec_imagesSize.push_back( std::make_pair( v->ui_width, v->ui_height) );
+      const View * v = iter->second.get();               //get()View
+      vec_fileNames.push_back(stlplus::create_filespec(sfm_data.s_root_path,   //s_root_path = E:\sfm_dataset\lightinghouse
+          v->s_Img_path));                                                     //s_Img_path = filename
+      vec_imagesSize.push_back( std::make_pair( v->ui_width, v->ui_height) );  //View width height
     }
   }
 
@@ -300,7 +303,7 @@ int main(int argc, char **argv)
     std::cout << "Use: ";
     switch (ePairmode)
     {
-      case PAIR_EXHAUSTIVE: std::cout << "exhaustive pairwise matching" << std::endl; break;
+      case PAIR_EXHAUSTIVE: std::cout << "exhaustive pairwise matching" << std::endl; break;       //this
       case PAIR_CONTIGUOUS: std::cout << "sequence pairwise matching" << std::endl; break;
       case PAIR_FROM_FILE:  std::cout << "user defined pairwise matching" << std::endl; break;
     }
@@ -311,7 +314,7 @@ int main(int argc, char **argv)
     {
       if (regions_type->IsScalar())
       {
-        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
+        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;                        //this
         collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
       }
       else
@@ -356,14 +359,14 @@ int main(int argc, char **argv)
       std::cerr << "Invalid Nearest Neighbor method: " << sNearestMatchingMethod << std::endl;
       return EXIT_FAILURE;
     }
-    // Perform the matching
+    // Perform the matching           
     system::Timer timer;
     {
       // From matching mode compute the pair list that have to be matched:
       Pair_Set pairs;
       switch (ePairmode)
       {
-        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;
+        case PAIR_EXHAUSTIVE: pairs = exhaustivePairs(sfm_data.GetViews().size()); break;           //this
         case PAIR_CONTIGUOUS: pairs = contiguousWithOverlap(sfm_data.GetViews().size(), iMatchingVideoMode); break;
         case PAIR_FROM_FILE:
           if (!loadPairs(sfm_data.GetViews().size(), sPredefinedPairList, pairs))
@@ -372,12 +375,56 @@ int main(int argc, char **argv)
           }
           break;
       }
+
+	  /*size_t num = pairs.size();
+	  size_t n1 = num / 2;
+	  size_t n2 = num / 2 + num % 2;
+	  Pair_Set::iterator it_test;
+	  size_t i;
+	  Pair_Set pair_1, pair_2;
+	  for (it_test = pairs.begin(), i = 0; i < pairs.size(); i++, it_test++) {
+		  if (i < n1) {
+			  pair_1.insert(std::make_pair(it_test->first, it_test->second));
+		  }
+		  else {
+			  pair_2.insert(std::make_pair(it_test->first, it_test->second));
+		  }
+	  }*/
+
+	  size_t pcnum = 8;
+	  size_t pcnum_ect = pcnum - 1;
+	  size_t seqnum = machine_num;
+
+	  Pair_Set pair_part;
+	  size_t pair_num = pairs.size();
+	  std::vector<Pair> newpairs;
+
+	  size_t n_1 = pair_num / pcnum;
+	  size_t n_ect = n_1;
+	  size_t n_2 = pair_num % pcnum;
+
+	  Pair_Set::iterator it_1, it;
+	  size_t machine_i;
+
+	  for (it_1 = pairs.begin(); it_1 != pairs.end(); it_1++) {
+		  newpairs.push_back(std::make_pair(it_1->first, it_1->second));
+	  }
+	  if (machine_num == pcnum_ect) n_ect = n_ect + n_2;
+	  for (machine_i = machine_num * n_1; machine_i < machine_num * n_1 + n_ect; machine_i++) {
+
+		  pair_part.insert(newpairs[machine_i]);
+
+	  }
+	  for (it = pair_part.begin(); it != pair_part.end(); it++) {
+		  printf("%d %d\n", it->first, it->second);
+	  }
+
       // Photometric matching of putative pairs
-      collectionMatcher->Match(regions_provider, pairs, map_PutativesMatches, &progress);
+      collectionMatcher->Match(regions_provider, pair_part, map_PutativesMatches, &progress);          //match Cascade_Hashing_Matcher_Regions.cpp
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      if (!Save(map_PutativesMatches, std::string(sMatchesDirectory + "/matches.putative.bin")))
+      if (!Save(map_PutativesMatches, std::string(sMatchesDirectory + "/matches.putative.txt")))       //modify
       {
         std::cerr
           << "Cannot save computed matches in: "
@@ -390,7 +437,7 @@ int main(int argc, char **argv)
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG(vec_fileNames.size(),
     map_PutativesMatches,
-    stlplus::create_filespec(sMatchesDirectory, "PutativeAdjacencyMatrix", "svg"));
+    stlplus::create_filespec(sMatchesDirectory, "PutativeAdjacencyMatrix", "svg"));  //export svg PutativeAdjacencyMatrix
   //-- export view pair graph once putative graph matches have been computed
   {
     std::set<IndexT> set_ViewIds;
@@ -398,7 +445,7 @@ int main(int argc, char **argv)
       std::inserter(set_ViewIds, set_ViewIds.begin()), stl::RetrieveKey());
     graph::indexedGraph putativeGraph(set_ViewIds, getPairs(map_PutativesMatches));
     graph::exportToGraphvizData(
-      stlplus::create_filespec(sMatchesDirectory, "putative_matches"),
+      stlplus::create_filespec(sMatchesDirectory, "putative_matches"),               //export svg putative_matches
       putativeGraph);
   }
 
@@ -437,12 +484,12 @@ int main(int argc, char **argv)
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
-      case ESSENTIAL_MATRIX:
+      case ESSENTIAL_MATRIX:                                    //this
       {
-        filter_ptr->Robust_model_estimation(
-          GeometricFilter_EMatrix_AC(4.0, imax_iteration),
+        filter_ptr->Robust_model_estimation(                                  //Robust_model_estimation  GeometricFilter.hpp
+          GeometricFilter_EMatrix_AC(4.0, imax_iteration),                    //E_ACRobust.hpp
           map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
-        map_GeometricMatches = filter_ptr->Get_geometric_matches();
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();           //map_GeometricMatches
 
         //-- Perform an additional check to remove pairs with poor overlap
         std::vector<PairWiseMatches::key_type> vec_toRemove;
