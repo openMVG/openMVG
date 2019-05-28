@@ -67,7 +67,8 @@ int main(int argc, char **argv)
     (cmd.used('V') ? VIEWS      : 0)
   | (cmd.used('I') ? INTRINSICS : 0)
   | (cmd.used('E') ? EXTRINSICS : 0)
-  | (cmd.used('S') ? STRUCTURE  : 0);
+  | (cmd.used('S') ? STRUCTURE  : 0)
+  | (cmd.used('C') ? CONTROL_POINTS : 0);
 
   flags = (flags) ? flags : ALL;
 
