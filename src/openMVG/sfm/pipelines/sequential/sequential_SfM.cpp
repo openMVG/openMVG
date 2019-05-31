@@ -128,6 +128,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       break;
     initial_pair_ = scoring_per_pair[++initial_pair_idx].second;
   }
+  scoring_per_pair.clear();
   if (!init_succeed)
   {
     std::cerr << "init failed, initial pair is not good enough" << std::endl;
@@ -450,11 +451,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             const Pose3 pose_J = relativePose_info.relativePose;
             for (const uint32_t & inlier_idx : relativePose_info.vec_inliers)
             {
-//              Vec3 X;
-//              TriangulateDLT(
-//                pose_I.asMatrix(), (*cam_I)(xI.col(inlier_idx)),
-//                pose_J.asMatrix(), (*cam_J)(xJ.col(inlier_idx)), &X);
-
               openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
               std::advance(iterT, inlier_idx);
               tracks::submapTrack::const_iterator iter = iterT->second.begin();

@@ -330,7 +330,6 @@ bool Bundle_Adjustment_Ceres::Adjust
   //  - set it to nullptr if you don't want use a lossFunction.
   ceres::LossFunction * p_LossFunction =
     ceres_options_.bUse_loss_function_ ?
-      // new ceres::HuberLoss(Square(4.0))
       new ceres::ArctanLoss(Square(4.0))
       : nullptr;
 
