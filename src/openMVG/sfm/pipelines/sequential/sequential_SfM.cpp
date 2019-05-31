@@ -380,6 +380,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     return false; // There is not view that support valid intrinsic data
   }
 
+  scoring_per_pair.clear();
   // Compute the relative pose & the 'baseline score'
   C_Progress_display my_progress_bar( matches_provider_->pairWise_matches_.size(),
     std::cout,
