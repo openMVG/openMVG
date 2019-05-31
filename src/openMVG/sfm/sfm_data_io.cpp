@@ -8,6 +8,7 @@
 
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
+#include "openMVG/sfm/cereal_archives_json.hpp"
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/portable_binary.hpp>
 
@@ -100,7 +101,7 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
 {
   const std::string ext = stlplus::extension_part(filename);
   if (ext == "json")
-    return Save_Cereal<cereal::JSONOutputArchive>(sfm_data, filename, flags_part);
+    return Save_Cereal<cereal::JSONOutputArchiveNoPrettyWriter>(sfm_data, filename, flags_part);
   else if (ext == "bin")
     return Save_Cereal<cereal::PortableBinaryOutputArchive>(sfm_data, filename, flags_part);
   else if (ext == "xml")
