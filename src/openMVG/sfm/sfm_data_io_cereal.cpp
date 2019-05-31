@@ -12,6 +12,7 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
 
+#include "openMVG/sfm/cereal_archives_json.hpp"
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 
 #include "openMVG/cameras/cameras_io.hpp"
@@ -339,7 +340,7 @@ template bool Save_Cereal
 );
 
 template bool Save_Cereal
-<cereal::JSONOutputArchive>
+<cereal::JSONOutputArchiveNoPrettyWriter>
 (
   const SfM_Data & data,
   const std::string & filename,
