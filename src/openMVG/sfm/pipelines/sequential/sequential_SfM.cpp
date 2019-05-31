@@ -107,9 +107,10 @@ bool SequentialSfMReconstructionEngine::Process() {
     return false;
 
 
+  std::vector<std::pair<double, Pair>> scoring_per_pair;
   if (initial_pair_ == Pair(0,0))
   {
-    if (!AutomaticInitialPairChoice(initial_pair_))
+    if (!AutomaticInitialPairChoice(initial_pair_, scoring_per_pair))
     {
       // Cannot find a valid initial pair
       return false;
@@ -118,8 +119,21 @@ bool SequentialSfMReconstructionEngine::Process() {
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if (!MakeInitialPair3D(initial_pair_))
+  int initial_pair_idx = 0;
+  bool init_succeed = false;
+  while (initial_pair_idx < 10)
+  {
+    init_succeed = MakeInitialPair3D(initial_pair_);
+    if (init_succeed || initial_pair_idx + 1 >= scoring_per_pair.size())
+      break;
+    initial_pair_ = scoring_per_pair[++initial_pair_idx].second;
+  }
+  scoring_per_pair.clear();
+  if (!init_succeed)
+  {
+    std::cerr << "init failed, initial pair is not good enough" << std::endl;
     return false;
+  }
 
   // Compute robust Resection of remaining images
   // - group of images will be selected and resection + scene completion will be tried
@@ -343,7 +357,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
   return map_tracks_.size() > 0;
 }
 
-bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair) const
+bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initial_pair, std::vector<std::pair<double, Pair>> & scoring_per_pair) const
 {
   // select a pair that have the largest baseline (mean angle between its bearing vectors).
 
@@ -366,8 +380,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     return false; // There is not view that support valid intrinsic data
   }
 
-  std::vector<std::pair<double, Pair>> scoring_per_pair;
-
+  scoring_per_pair.clear();
   // Compute the relative pose & the 'baseline score'
   C_Progress_display my_progress_bar( matches_provider_->pairWise_matches_.size(),
     std::cout,
@@ -439,11 +452,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
             const Pose3 pose_J = relativePose_info.relativePose;
             for (const uint32_t & inlier_idx : relativePose_info.vec_inliers)
             {
-              Vec3 X;
-              TriangulateDLT(
-                pose_I.asMatrix(), (*cam_I)(xI.col(inlier_idx)),
-                pose_J.asMatrix(), (*cam_J)(xJ.col(inlier_idx)), &X);
-
               openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
               std::advance(iterT, inlier_idx);
               tracks::submapTrack::const_iterator iter = iterT->second.begin();
