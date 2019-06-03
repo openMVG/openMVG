@@ -50,48 +50,56 @@ namespace openMVG {
 
       int i = 0;
       //Data to pba begin
-      // Calculate map from sfm_data_.poses to camera_data,
-      // So that first n intrinsics in camera_data are non identical (n = different intrinsic num in sfm_data.poses)
+      // Calculate map from sfm_data_.views to camera_data,
+      // So that first n intrinsics in camera_data are non identical (n = different intrinsic num in sfm_data_.views)
       // (Required by pba)
-      std::unordered_map<IndexT, IndexT> unique_intrinsic;        // from intrinsic_id to pose_id
-      std::vector<std::pair<IndexT, IndexT>> duplicate_intrinsic; // pair: intrinsic_id, pose_id
-      for (const auto &camera_openmvg : sfm_data_.poses) {
-        auto intrinsic_id = sfm_data_.views[camera_openmvg.first]->id_intrinsic;
-        auto pose_id = camera_openmvg.first;
+      std::unordered_map<IndexT, IndexT> unique_intrinsic;        // from intrinsic_id to view_id
+      std::vector<std::pair<IndexT, IndexT>> duplicate_intrinsic; // pair: intrinsic_id, view_id
+      for (const auto &view : sfm_data_.views) {
+        if (sfm_data_.poses.count(view.second->id_pose) == 0)
+          continue;
+        auto view_id = view.first;
+        auto intrinsic_id = view.second->id_intrinsic;
         if (unique_intrinsic.count(intrinsic_id) == 0)
-          unique_intrinsic[intrinsic_id] = pose_id;
+          unique_intrinsic[intrinsic_id] = view_id;
         else
-          duplicate_intrinsic.emplace_back(intrinsic_id, pose_id);
+          duplicate_intrinsic.emplace_back(intrinsic_id, view_id);
       }
       i = 0;
-      pose_id2camera_id.clear();
+      view_id2camera_id.clear();
       for (const auto &ele : unique_intrinsic)
-        pose_id2camera_id[ele.second] = i++;
+        view_id2camera_id[ele.second] = i++;
       for (const auto &pair : duplicate_intrinsic)
-        pose_id2camera_id[pair.second] = i++;
+        view_id2camera_id[pair.second] = i++;
       unique_intrinsic.clear();
       duplicate_intrinsic.clear();
 
       // cameras
-      camera_data.resize(sfm_data_.poses.size());
-      for (const auto &camera_openmvg : sfm_data_.poses) {
-        auto idx = pose_id2camera_id[camera_openmvg.first];
-        camera_data[idx] = CameraT();
+      camera_data.resize(view_id2camera_id.size());
+      for (const auto &view : sfm_data_.views) {
+        auto view_id = view.first;
+        if (view_id2camera_id.count(view_id) == 0)
+          continue;
+
+        auto camera_id = view_id2camera_id[view_id];
+        camera_data[camera_id] = CameraT();
+        auto &camera = camera_data[camera_id];
 
         // extrinsics
-        const Mat3 &camera_R = camera_openmvg.second.rotation();
-        const Vec3 &camera_T = camera_openmvg.second.translation();
-        for (int j = 0; j < 9; ++j) camera_data[idx].m[j / 3][j % 3] = (float) camera_R(j / 3, j % 3);
-        for (int j = 0; j < 3; ++j) camera_data[idx].t[j] = (float) (camera_T(j));
+        const auto &pose = sfm_data_.poses[view.second->id_pose];
+        const Mat3 &camera_R = pose.rotation();
+        const Vec3 &camera_T = pose.translation();
+        for (int j = 0; j < 9; ++j) camera.m[j / 3][j % 3] = (float) camera_R(j / 3, j % 3);
+        for (int j = 0; j < 3; ++j) camera.t[j] = (float) (camera_T(j));
 
         // intrinsics
-        auto intrinsic_index = sfm_data_.views[camera_openmvg.first]->id_intrinsic;
-        auto params = sfm_data_.intrinsics[intrinsic_index]->getParams();
-        camera_data[idx].f = (float)params[0];
+        auto intrinsic_id = view.second->id_intrinsic;
+        const auto &intrinsic_params = sfm_data_.intrinsics[intrinsic_id]->getParams();
+        camera.f = (float)intrinsic_params[0];
         if (distortion_type == ParallelBA::DistortionT::PBA_PROJECTION_DISTORTION) {
-          camera_data[idx].SetProjectionDistortion(params[3]);
+          camera.SetProjectionDistortion(intrinsic_params[3]);
         } else if (distortion_type == ParallelBA::DistortionT::PBA_MEASUREMENT_DISTORTION) {
-          camera_data[idx].SetMeasumentDistortion(params[3]);
+          camera.SetMeasumentDistortion(intrinsic_params[3]);
         }
       }
 
@@ -114,11 +122,11 @@ namespace openMVG {
       i = 0; sz = 0;
       int tot = 0;
       for (const auto &structure_openmvg : sfm_data_.structure) {
-        for (auto &obs : structure_openmvg.second.obs) {
-          camidx[tot] = pose_id2camera_id[obs.first];
+        for (const auto &obs : structure_openmvg.second.obs) {
+          camidx[tot] = view_id2camera_id[obs.first];
           ptidx[tot] = i;
-          auto intrinsic_index = sfm_data_.views[obs.first]->id_intrinsic;
-          auto params = sfm_data_.intrinsics[intrinsic_index]->getParams();
+          auto intrinsic_id = sfm_data_.views[obs.first]->id_intrinsic;
+          const auto &params = sfm_data_.intrinsics[intrinsic_id]->getParams();
           double principal_x = params[1];
           double principal_y = params[2];
           measurements[tot++].SetPoint2D(obs.second.x.x() - principal_x, obs.second.x.y() - principal_y);
@@ -128,9 +136,11 @@ namespace openMVG {
 
       // focalmask
       // set mask to share model
-      focalmask.resize(sfm_data_.poses.size());
-      for (const auto &pose : sfm_data_.poses) {
-        focalmask[pose_id2camera_id[pose.first]] = sfm_data_.views[pose.first]->id_intrinsic;
+      focalmask.resize(view_id2camera_id.size());
+      for (const auto &view : sfm_data_.views) {
+        if (view_id2camera_id.count(view.first) == 0)
+          continue;
+        focalmask[view_id2camera_id[view.first]] = sfm_data_.views[view.first]->id_intrinsic;
       }
       // transform focalmask from id_intrinsic --> 0 1 2 3
       i = 0;
@@ -164,17 +174,22 @@ namespace openMVG {
     bool sfm_data_PBA::Adjust(SfM_Data &sfm_data_){
       pba.RunBundleAdjustment();
       //Data to openmvg start
-      for (auto &camera_openmvg : sfm_data_.poses) {
+      for (const auto &view : sfm_data_.views) {
+        if (view_id2camera_id.count(view.first) == 0)
+          continue;
+
         // extrinsics
+        int camera_id = view_id2camera_id[view.first];
         Mat3 camera_R;
         Vec3 camera_T;
-        int camera_id = pose_id2camera_id[camera_openmvg.first];
         for (int j = 0; j < 9; ++j) camera_R(j / 3, j % 3) = camera_data[camera_id].m[j / 3][j % 3];
         for (int j = 0; j < 3; ++j) camera_T(j) = camera_data[camera_id].t[j];
-        camera_openmvg.second = Pose3(camera_R, -camera_R.transpose() * camera_T);
+        auto &pose = sfm_data_.poses[view.second->id_pose];
+        pose = Pose3(camera_R, -camera_R.transpose() * camera_T);
 
         // intrinsics
-        auto intrinsic = sfm_data_.intrinsics[sfm_data_.views[camera_openmvg.first]->id_intrinsic];
+        auto intrinsic_id = sfm_data_.views[view.first]->id_intrinsic;
+        auto &intrinsic = sfm_data_.intrinsics[intrinsic_id];
         auto params = intrinsic->getParams();
         params[0] = camera_data[camera_id].f;
         params[3] = camera_data[camera_id].radial;

@@ -34,7 +34,7 @@ namespace openMVG {
       vector<int> focalmask;
 
       ParallelBA pba;
-      std::unordered_map<unsigned long, unsigned long> pose_id2camera_id;
+      std::unordered_map<unsigned long, unsigned long> view_id2camera_id;
     };
   }
 }
