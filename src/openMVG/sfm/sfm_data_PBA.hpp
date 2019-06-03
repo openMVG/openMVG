@@ -5,6 +5,7 @@
 #ifndef OPENMVG_SFM_DATA_PBA_H
 #define OPENMVG_SFM_DATA_PBA_H
 
+#include <unordered_map>
 #include <third_party/pba/src/pba/pba.h>
 #include <openMVG/cameras/Camera_Common.hpp>
 #include "sfm_data.hpp"
@@ -23,12 +24,17 @@ namespace openMVG {
       bool Adjust(SfM_Data &sfm_data);
 
     private:
+      // pba input & output
       vector<CameraT> camera_data;
-      vector<Point2D> measurements;
       vector<Point3D> point_data;
+
+      // pba input
+      vector<Point2D> measurements;
       vector<int> camidx, ptidx;
+      vector<int> focalmask;
+
       ParallelBA pba;
-      int *focalmask;
+      std::unordered_map<unsigned long, unsigned long> view_id2camera_id;
     };
   }
 }
