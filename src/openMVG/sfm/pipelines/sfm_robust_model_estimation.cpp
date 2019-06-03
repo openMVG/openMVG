@@ -110,7 +110,8 @@ bool robustRelativePose
     bearing1,
     bearing2,
     relativePose_info.essential_matrix,
-    relativePose_info.vec_inliers, &relative_pose))
+    relativePose_info.vec_inliers, &relative_pose,
+    nullptr, nullptr, 0.7, 0.9))
   {
     return false;
   }

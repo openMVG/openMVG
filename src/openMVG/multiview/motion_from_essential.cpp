@@ -26,7 +26,8 @@ bool RelativePoseFromEssential
   Pose3 * relative_pose,
   std::vector<uint32_t> * vec_selected_points,
   std::vector<Vec3> * vec_points,
-  const double positive_depth_solution_ratio
+  const double positive_depth_solution_ratio,
+  const double positive_solution_ratio
 )
 {
   // Recover plausible relative poses from E.
@@ -87,9 +88,11 @@ bool RelativePoseFromEssential
 
   // Test if the best solution is good by using the ratio of the two best solution score
   std::sort(cheirality_accumulator.begin(), cheirality_accumulator.end());
-  const double ratio = cheirality_accumulator.rbegin()[1]
+  const double ratio1 = cheirality_accumulator.rbegin()[1]
     / static_cast<double>(cheirality_accumulator.rbegin()[0]);
-  return (ratio < positive_depth_solution_ratio);
+  const double ratio2 = cheirality_accumulator.rbegin()[0]
+    / static_cast<double>(bearing_vector_index_to_use.size());
+  return (ratio1 < positive_depth_solution_ratio && ratio2 > positive_solution_ratio);
 }
 
 } // namespace openMVG
