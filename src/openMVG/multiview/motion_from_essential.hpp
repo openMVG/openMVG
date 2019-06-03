@@ -27,8 +27,11 @@ namespace openMVG
 *    in front of the cameras
 * @param[out] vec_points return the 3D point corresponding to
 *    vec_selected_points indexes
-* @param[in] positive_depth_solution_ratio Pourcentage ratio threshold used
+* @param[in] positive_depth_solution_ratio Percentage ratio threshold used
 *    to discard if there is two good solution that have many points in front
+*    of the cameras
+* @param[in] positive_solution_ratio Percentage ratio threshold used
+*    to discard if there is no good solution that have many points in front
 *    of the cameras
 */
 
@@ -41,7 +44,8 @@ bool RelativePoseFromEssential
   geometry::Pose3 * relative_pose = nullptr,
   std::vector<uint32_t> * vec_selected_points = nullptr,
   std::vector<Vec3> * vec_points = nullptr,
-  const double positive_depth_solution_ratio = 0.7
+  const double positive_depth_solution_ratio = 0.7,
+  const double positive_solution_ratio = 0.0
 );
 
 } // namespace openMVG
