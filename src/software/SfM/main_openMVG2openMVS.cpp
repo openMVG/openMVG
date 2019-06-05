@@ -153,21 +153,14 @@ bool exportToUndistortDepths(
             continue;
 
         const std::string srcFile = stlplus::create_filespec(sInDir, file);
-
-        std::string outputFile = stlplus::create_filespec(sOutDir, file);
-        auto pos = outputFile.rfind("depth");
-        if (pos != std::string::npos)
-        	outputFile.replace(pos, 5, "rgb");
-        pos = outputFile.rfind(".pfm");
-        if (pos != std::string::npos)
-            outputFile.replace(pos, 4, std::string(".") + ext + std::string(".ref.pfm"));
-
         if (!stlplus::is_file(srcFile))
         {
             std::cout << "Cannot read the corresponding depth file: " << srcFile << std::endl;
             ret = false;
             break;
         }
+
+        std::string outputFile = stlplus::create_filespec(sOutDir, file);
 
         // export undistorted depths
         if (cam->have_disto())
