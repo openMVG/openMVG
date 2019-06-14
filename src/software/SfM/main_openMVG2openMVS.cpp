@@ -122,12 +122,21 @@ bool exportToUndistortDepths(
 {
     if (sfm_data.GetViews().empty())
         return false;
-    const auto& view = sfm_data.GetViews().begin();
-    const auto& ext = stlplus::extension_part(view->second->s_Img_path);
-
-    if (!sfm_data.IsPoseAndIntrinsicDefined(view->second.get()))
+    int view_idx = -1;
+    for (const auto &v : sfm_data.GetViews())
+    {
+        if (sfm_data.IsPoseAndIntrinsicDefined(v.second.get()))
+        {
+            view_idx = v.first;
+            break;
+        }
+    }
+    if (view_idx == -1)
         return false;
-    const auto* cam = sfm_data.GetIntrinsics().at(view->second->id_intrinsic).get();
+    const auto& view = sfm_data.GetViews().at(view_idx);
+    const auto& ext = stlplus::extension_part(view->s_Img_path);
+
+    const auto* cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
     if (cam == nullptr)
         return false;
 
