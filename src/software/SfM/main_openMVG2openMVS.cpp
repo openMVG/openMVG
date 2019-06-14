@@ -114,6 +114,15 @@ void CalcCameraDistortionMap(
         }
 }
 
+/// Check if the View have defined intrinsic
+bool IsIntrinsicDefined(const Intrinsics &intrinsics, const View *view)
+{
+  if (view == nullptr ) return false;
+  return (
+    view->id_intrinsic != UndefinedIndexT &&
+    intrinsics.find(view->id_intrinsic) != intrinsics.end());
+}
+
 bool exportToUndistortDepths(
     const std::string& sInDir,
     const SfM_Data& sfm_data,
@@ -123,9 +132,10 @@ bool exportToUndistortDepths(
     if (sfm_data.GetViews().empty())
         return false;
     int view_idx = -1;
+    const auto &intrinsics = sfm_data.GetIntrinsics();
     for (const auto &v : sfm_data.GetViews())
     {
-        if (sfm_data.IsPoseAndIntrinsicDefined(v.second.get()))
+        if (IsIntrinsicDefined(intrinsics, v.second.get()))
         {
             view_idx = v.first;
             break;
