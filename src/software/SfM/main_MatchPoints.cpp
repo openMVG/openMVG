@@ -43,7 +43,7 @@ bool load_featmap(const string &featmap_file, map<int, int> &featmap)
 
 bool load_data(const string &sfm_data_file, const string &matches_dir, const string &output_dir, const string &prefix,
                SfM_Data &sfm_data, DescsT &good_descs, vector<Rich_SIOPointFeature> &good_feats,
-               vector<int> &good_points, vector<int> &views_indices)
+               vector<int> &good_points, vector<int> &views_indices, map<int, map<int, int>> &view_id2featmap)
 {
   // load sfm_data
   if (!Load(sfm_data, sfm_data_file, ESfM_Data(VIEWS|STRUCTURE)))
@@ -52,10 +52,15 @@ bool load_data(const string &sfm_data_file, const string &matches_dir, const str
     return false;
   }
 
+  good_descs.clear();
+  good_feats.clear();
+  good_points.clear();
+  views_indices.clear();
+  view_id2featmap.clear();
+
   // load descs, feats and featmap from file
-  map<int, DescsT> view_all_descs;
-  map<int, std::vector<Rich_SIOPointFeature>> view_all_feats;
-  map<int, map<int/*old_feat*/, int/*new_feat*/>> view_featmap;
+  map<int, DescsT> view_id2descs;
+  map<int, std::vector<Rich_SIOPointFeature>> view_id2feats;
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel
 #endif
@@ -65,7 +70,7 @@ bool load_data(const string &sfm_data_file, const string &matches_dir, const str
 #pragma omp single nowait
 #endif
     {
-      const string sImageName = create_filespec(sfm_data.s_root_path, iter->second->s_Img_path);
+      const string sImageName = iter->second->s_Img_path;
       const string basename = basename_part(sImageName);
       const string descFile = create_filespec(matches_dir, basename, ".desc");
       const string featFile = create_filespec(matches_dir, basename, "feat");
@@ -82,9 +87,9 @@ bool load_data(const string &sfm_data_file, const string &matches_dir, const str
 #pragma omp critical
 #endif
         {
-          view_all_descs[iter->first] = std::move(descs);
-          view_all_feats[iter->first] = std::move(feats);
-          view_featmap[iter->first] = std::move(featmap);
+          view_id2descs[iter->first] = std::move(descs);
+          view_id2feats[iter->first] = std::move(feats);
+          view_id2featmap[iter->first] = std::move(featmap);
         }
       }
     }
@@ -102,13 +107,13 @@ bool load_data(const string &sfm_data_file, const string &matches_dir, const str
   {
     for (const auto &ob : structure.second.obs)
     {
-      if (view_featmap.find(ob.first) != view_featmap.end())
+      if (view_id2featmap.find(ob.first) != view_id2featmap.end())
       {
-        const auto &featmap = view_featmap.at(ob.first);
+        const auto &featmap = view_id2featmap.at(ob.first);
         if (featmap.find(ob.second.id_feat) != featmap.end())
         {
-          const auto &descs = view_all_descs.at(ob.first);
-          const auto &feats = view_all_feats.at(ob.first);
+          const auto &descs = view_id2descs.at(ob.first);
+          const auto &feats = view_id2feats.at(ob.first);
           int new_feat_index = featmap.at(ob.second.id_feat);
           good_descs.emplace_back(descs[new_feat_index]);
           good_feats.emplace_back(feats[new_feat_index]);
@@ -152,7 +157,8 @@ int main(int argc, char *argv[])
   vector<Rich_SIOPointFeature> front_feats;
   vector<int> front_points;
   vector<int> front_views;
-  if (!load_data(argv[1], argv[3], output_dir, "front", front_sfm_data, front_descs, front_feats, front_points, front_views))
+  map<int, map<int/*old_feat*/, int/*new_feat*/>> front_view_id2featmap;
+  if (!load_data(argv[1], argv[3], output_dir, "front", front_sfm_data, front_descs, front_feats, front_points, front_views, front_view_id2featmap))
     return 1;
   // back
   SfM_Data back_sfm_data;
@@ -160,7 +166,8 @@ int main(int argc, char *argv[])
   vector<Rich_SIOPointFeature> back_feats;
   vector<int> back_points;
   vector<int> back_views;
-  if (!load_data(argv[2], argv[3], output_dir, "back", back_sfm_data, back_descs, back_feats, back_points, back_views))
+  map<int, map<int/*old_feat*/, int/*new_feat*/>> back_view_id2featmap;
+  if (!load_data(argv[2], argv[3], output_dir, "back", back_sfm_data, back_descs, back_feats, back_points, back_views, back_view_id2featmap))
     return 1;
 
 
@@ -175,125 +182,147 @@ int main(int argc, char *argv[])
 
   auto queries = reinterpret_cast<const Scalar*>(&front_descs[0]);
   const size_t NNN__ = 1;
-  IndMatches vec_Indice;
+  IndMatches vec_Match;
   std::vector<DistanceType> vec_Distance;
   // Search NNN__ neighbours for each query descriptor
-  matcher.SearchNeighbours(queries, front_descs.size(), &vec_Indice, &vec_Distance, NNN__);
+  matcher.SearchNeighbours(queries, front_descs.size(), &vec_Match, &vec_Distance, NNN__);
 
-  IndMatches vec_putatives_matches;
-  vec_putatives_matches.reserve(vec_Indice.size());
+  IndMatches vec_putative_match;
+  vec_putative_match.reserve(vec_Match.size());
   MetricT metric;
-  for (const auto &pair : vec_Indice)
+  for (const auto &match : vec_Match)
   {
-    if (metric(front_descs[pair.i_].data(), back_descs[pair.j_].data(), DescriptorT::static_size) < 2 * 255 * 255)
+    if (metric(front_descs[match.i_].data(), back_descs[match.j_].data(), DescriptorT::static_size) < 2 * 255 * 255)
     {
-        vec_putatives_matches.emplace_back(pair);
+        vec_putative_match.emplace_back(match);
     }
   }
 
-  // for each front point, count its descs matching result
-  map<int, vector<int>> front_point_match_result;
+  // for each front point, record its descs matching result
+  map<int, vector<int>> point_match_info;
 #ifdef OUTPUT_DEBUG_FILE
-  map<IntPair, vector<float>> feat_match_data;
+  map<IntPair, vector<float>> feat_match_info;
 #endif
-  if (!vec_putatives_matches.empty())
+  if (!vec_putative_match.empty())
   {
-    for (const auto &putative_match : vec_putatives_matches)
+    for (const auto &putative_match : vec_putative_match)
     {
-      int fPIndex = front_points[putative_match.i_];
-      int bPIndex = back_points[putative_match.j_];
-      front_point_match_result[fPIndex].emplace_back(bPIndex);
+      int fp_index = front_points[putative_match.i_];
+      int bp_index = back_points[putative_match.j_];
+      point_match_info[fp_index].emplace_back(bp_index);
 
 #ifdef OUTPUT_DEBUG_FILE
+      auto fv_index = front_views[putative_match.i_];
+      auto bv_index = back_views[putative_match.j_];
+      auto &match_vec = feat_match_info[IntPair(fv_index, bv_index)];
+
       auto f_feat = front_feats[putative_match.i_];
       auto b_feat = back_feats[putative_match.j_];
-      auto &data_vec = feat_match_data[IntPair(front_views[putative_match.i_], back_views[putative_match.j_])];
-      data_vec.emplace_back(f_feat.x());
-      data_vec.emplace_back(f_feat.y());
-      data_vec.emplace_back(b_feat.x());
-      data_vec.emplace_back(b_feat.y());
+      match_vec.emplace_back(f_feat.x());
+      match_vec.emplace_back(f_feat.y());
+      match_vec.emplace_back(b_feat.x());
+      match_vec.emplace_back(b_feat.y());
 #endif
     }
 #ifdef OUTPUT_DEBUG_FILE
     using fm_pair = pair<IntPair, vector<float>>;
-    vector<fm_pair> sort_feat_match_data(feat_match_data.begin(), feat_match_data.end());
-    sort(sort_feat_match_data.begin(), sort_feat_match_data.end(), [](const fm_pair &a, const fm_pair &b) -> bool {
+    vector<fm_pair> sorted_feat_match_info(feat_match_info.begin(), feat_match_info.end());
+    sort(sorted_feat_match_info.begin(), sorted_feat_match_info.end(), [](const fm_pair &a, const fm_pair &b) -> bool {
         return a.second.size() > b.second.size();
     });
 
-    string feat_match = create_filespec(output_dir, "matched_feat_result", "txt");
-    ofstream feat_match_point(feat_match, std::ios::out);
-    for (const auto &match_data : sort_feat_match_data)
+    string feat_match_path = create_filespec(output_dir, "matched_feat_result", "txt");
+    ofstream feat_match_result(feat_match_path, std::ios::out);
+    for (const auto &match_info : sorted_feat_match_info)
     {
-      feat_match_point << front_sfm_data.GetViews().at(match_data.first.first).get()->s_Img_path << " "
-                       << back_sfm_data.GetViews().at(match_data.first.second).get()->s_Img_path << endl;
-      for (const auto &pos : match_data.second)
+      feat_match_result << front_sfm_data.GetViews().at(match_info.first.first).get()->s_Img_path << " "
+                        << back_sfm_data.GetViews().at(match_info.first.second).get()->s_Img_path << endl;
+      for (const auto &feat_pos : match_info.second)
       {
-        feat_match_point << pos << " ";
+        feat_match_result << feat_pos << " ";
       }
-      feat_match_point << endl;
+      feat_match_result << endl;
     }
-    feat_match_point.close();
+    feat_match_result.close();
 #endif
   }
 
-  if (front_point_match_result.size() == 0) {
-    cerr << "Fail to find any point match result" << endl;
+  if (point_match_info.size() == 0) {
+    cerr << "Failed to find any point match" << endl;
     return 1;
   }
 
-  // output the best match for each front point
-  string outputPointsMatch = create_filespec(output_dir, "matched_point_result", "txt");
-  ofstream points_match(outputPointsMatch, std::ios::out);
-  for (auto& m : front_point_match_result)
+  using pm_info = tuple<int, int, int, int>; // fp index, bp index, score, valid descs count
+  vector<pm_info> sorted_point_match_info;
+  sorted_point_match_info.reserve(point_match_info.size());
+  for (auto& m : point_match_info)
   {
-    // find the best match for each front point
-    int front_point = m.first;
-    vector<int> &data_vec = m.second;
-    sort(data_vec.begin(), data_vec.end());
-
-    int best_match_score = 0;
-    int best_match_back_point = -1;
-    for (int j = 0; j < data_vec.size(); ++j)
+    // for each front point, find its best match
+    int fp_index = m.first;
+    vector<int> &match_vec = m.second;
+    // find the most frequent element in a vector
+    sort(match_vec.begin(), match_vec.end());
+    int best_score = 0;
+    int best_bp_index = -1;
+    for (int j = 0; j < match_vec.size(); ++j)
     {
-      int score = 1;
-      int index = data_vec[j];
-      for (int k = j + 1; k < data_vec.size() && data_vec[k] == index; ++k)
+      int bp_index = match_vec[j];
+      int count = 1;
+      for (int k = j + 1; k < match_vec.size() && match_vec[k] == bp_index; ++k)
       {
-        ++score;
+        ++count;
         ++j;
       }
-      if (score > best_match_score)
+      if (count > best_score)
       {
-        best_match_score = score;
-        best_match_back_point = index;
+        best_score = count;
+        best_bp_index = bp_index;
       }
     }
 
-    // output the besh match result: front index, back index, score, front point's pos, back point's pos, score / descs count
-    const auto &frontP = front_sfm_data.GetLandmarks().at(front_point);
-    const auto &backP = back_sfm_data.GetLandmarks().at(best_match_back_point);
-    points_match << front_point << " " << best_match_back_point << " " << best_match_score << " " << data_vec.size() << endl;
-    points_match << frontP.X[0] << " " << frontP.X[1] << " " << frontP.X[2] << " "
-                 << backP.X[0] << " " << backP.X[1] << " " << backP.X[2] << endl;
+    sorted_point_match_info.emplace_back(fp_index, best_bp_index, best_score, match_vec.size());
+  }
+  sort(sorted_point_match_info.begin(), sorted_point_match_info.end(), [](const pm_info &a, const pm_info &b) -> bool {
+        return std::get<2>(a) > std::get<2>(b);
+    });
 
-    // output feats pos in each image
+  // output the best match for each front point
+  string point_match_file = create_filespec(output_dir, "matched_point_result", "txt");
+  ofstream points_match_result(point_match_file, std::ios::out);
+  for (auto& m : sorted_point_match_info)
+  {
+    auto fp_index = std::get<0>(m);
+    auto bp_index = std::get<1>(m);
+    auto score = std::get<2>(m);
+    auto vote_num = std::get<3>(m);
+
+    // output fp index, bp index, score, valid descs count
+    points_match_result << fp_index << " " << bp_index << " " << score << " " << vote_num << endl;
+    // output fp pos, bp pos
+    const auto &frontP = front_sfm_data.GetLandmarks().at(fp_index);
+    const auto &backP = back_sfm_data.GetLandmarks().at(bp_index);
+    points_match_result << frontP.X[0] << " " << frontP.X[1] << " " << frontP.X[2] << " "
+                        << backP.X[0] << " " << backP.X[1] << " " << backP.X[2] << endl;
+
+    // output feats pos in each view
     for (const auto &ob : frontP.obs)
     {
-      points_match << front_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
-                   << ob.second.x[0] << " " << ob.second.x[1] << " ";
+      const auto & featmap = front_view_id2featmap[ob.first];
+      if (featmap.find(ob.second.id_feat) != featmap.end())
+        points_match_result << front_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
+                            << ob.second.x[0] << " " << ob.second.x[1] << " ";
     }
-    points_match << endl;
-
-    // output feats pos in each image
+    points_match_result << endl;
     for (const auto &ob : backP.obs)
     {
-      points_match << back_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
-                   << ob.second.x[0] << " " << ob.second.x[1] << " ";
+      const auto & featmap = back_view_id2featmap[ob.first];
+      if (featmap.find(ob.second.id_feat) != featmap.end())
+        points_match_result << back_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
+                            << ob.second.x[0] << " " << ob.second.x[1] << " ";
     }
-    points_match << endl;
+    points_match_result << endl;
   }
-  points_match.close();
+  points_match_result.close();
 
   return 0;
 }
