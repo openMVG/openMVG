@@ -296,18 +296,30 @@ int main(int argc, char *argv[])
     auto score = std::get<2>(m);
     auto vote_num = std::get<3>(m);
 
+    const auto &frontP = front_sfm_data.GetLandmarks().at(fp_index);
+    const auto &backP = back_sfm_data.GetLandmarks().at(bp_index);
+    int back_good_feat_num = 0;
+    for (const auto &ob : backP.obs)
+    {
+      const auto &featmap = back_view_id2featmap[ob.first];
+      if (featmap.find(ob.second.id_feat) != featmap.end())
+        ++back_good_feat_num;
+    }
+    // if 3d point do not have enough features after modelmask filter
+    // its 3d position is probabily not that good
+    if (vote_num < 2 || back_good_feat_num < 2)
+      continue;
+
     // output fp index, bp index, score, valid descs count
     points_match_result << fp_index << " " << bp_index << " " << score << " " << vote_num << endl;
     // output fp pos, bp pos
-    const auto &frontP = front_sfm_data.GetLandmarks().at(fp_index);
-    const auto &backP = back_sfm_data.GetLandmarks().at(bp_index);
     points_match_result << frontP.X[0] << " " << frontP.X[1] << " " << frontP.X[2] << " "
                         << backP.X[0] << " " << backP.X[1] << " " << backP.X[2] << endl;
 
     // output feats pos in each view
     for (const auto &ob : frontP.obs)
     {
-      const auto & featmap = front_view_id2featmap[ob.first];
+      const auto &featmap = front_view_id2featmap[ob.first];
       if (featmap.find(ob.second.id_feat) != featmap.end())
         points_match_result << front_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
                             << ob.second.x[0] << " " << ob.second.x[1] << " ";
@@ -315,7 +327,7 @@ int main(int argc, char *argv[])
     points_match_result << endl;
     for (const auto &ob : backP.obs)
     {
-      const auto & featmap = back_view_id2featmap[ob.first];
+      const auto &featmap = back_view_id2featmap[ob.first];
       if (featmap.find(ob.second.id_feat) != featmap.end())
         points_match_result << back_sfm_data.GetViews().at(ob.first).get()->s_Img_path << " "
                             << ob.second.x[0] << " " << ob.second.x[1] << " ";
