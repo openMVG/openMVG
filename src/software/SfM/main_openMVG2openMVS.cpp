@@ -35,16 +35,16 @@ using namespace openMVG::sfm;
 template<typename Image, typename RemapType>
 void UndistortImage(
     const Image& imageIn,
-    Image& image_ud,
-    const RemapType& map_row,
-    const RemapType& map_col,
+    Image& imageUd,
+    const RemapType& mapRow,
+    const RemapType& mapCol,
     bool useLinearSampler,
     typename Image::Tpixel fillcolor = typename Image::Tpixel(0))
 {
     int width = imageIn.Width();
     int height = imageIn.Height();
 
-    image_ud.resize(width, height, true, fillcolor);
+    imageUd.resize(width, height, true, fillcolor);
 
     if (useLinearSampler) {
         image::Sampler2d<image::SamplerLinear> sampler;
@@ -56,17 +56,17 @@ void UndistortImage(
             for (int i = 0; i < width; ++i)
             {
                 // compute coordinates with distortion
-                double row = (double)map_row(j, i);
-                double col = (double)map_col(j, i);
+                double row = (double)mapRow(j, i);
+                double col = (double)mapCol(j, i);
                 // pick pixel if it is in the image domain
                 if (imageIn.Contains(row, col))
                 {
-                    image_ud(j, i) = sampler(imageIn, row, col);
+                    imageUd(j, i) = sampler(imageIn, row, col);
                 }
             }
     }
     else {
-        image::Sampler2d<image::SamplerNearest> nearest_sampler;
+        image::Sampler2d<image::SamplerNearest> nearestSampler;
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
@@ -75,12 +75,12 @@ void UndistortImage(
             for (int i = 0; i < width; ++i)
             {
                 // compute coordinates with distortion
-                double row = (double)map_row(j, i);
-                double col = (double)map_col(j, i);
+                double row = (double)mapRow(j, i);
+                double col = (double)mapCol(j, i);
                 // pick pixel if it is in the image domain
                 if (imageIn.Contains(row, col))
                 {
-                    image_ud(j, i) = nearest_sampler(imageIn, row, col);
+                    imageUd(j, i) = nearestSampler(imageIn, row, col);
                 }
             }
     }
@@ -89,15 +89,15 @@ void UndistortImage(
 template<typename RemapType>
 void CalcCameraDistortionMap(
     const openMVG::cameras::IntrinsicBase* cam,
-    RemapType& out_map_row,
-    RemapType& out_map_col
+    RemapType& outMapRow,
+    RemapType& outMapCol
 )
 {
     int width = cam->w();
     int height = cam->h();
 
-    out_map_row.resize(width, height);
-    out_map_col.resize(width, height);
+    outMapRow.resize(width, height);
+    outMapCol.resize(width, height);
 
 #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
@@ -105,12 +105,12 @@ void CalcCameraDistortionMap(
     for (int j = 0; j < height; j++)
         for (int i = 0; i < width; i++)
         {
-            const Vec2 undisto_pix(i, j);
+            const Vec2 undistoPix(i, j);
             // compute coordinates with distortion
-            const Vec2 disto_pix = cam->get_d_pixel(undisto_pix);
+            const Vec2 distoPix = cam->get_d_pixel(undistoPix);
 
-            out_map_row(j, i) = disto_pix[1];
-            out_map_col(j, i) = disto_pix[0];
+            outMapRow(j, i) = distoPix[1];
+            outMapCol(j, i) = distoPix[0];
         }
 }
 
@@ -125,28 +125,28 @@ bool IsIntrinsicDefined(const Intrinsics &intrinsics, const View *view)
 
 bool exportToUndistortDepths(
     const std::string& sInDir,
-    const SfM_Data& sfm_data,
+    const SfM_Data& sfmData,
     const std::string& sOutDir
 )
 {
-    if (sfm_data.GetViews().empty())
+    if (sfmData.GetViews().empty())
         return false;
-    int view_idx = -1;
-    const auto &intrinsics = sfm_data.GetIntrinsics();
-    for (const auto &v : sfm_data.GetViews())
+    int viewIdx = -1;
+    const auto &intrinsics = sfmData.GetIntrinsics();
+    for (const auto &v : sfmData.GetViews())
     {
         if (IsIntrinsicDefined(intrinsics, v.second.get()))
         {
-            view_idx = v.first;
+            viewIdx = v.first;
             break;
         }
     }
-    if (view_idx == -1)
+    if (viewIdx == -1)
         return false;
-    const auto& view = sfm_data.GetViews().at(view_idx);
+    const auto& view = sfmData.GetViews().at(viewIdx);
     const auto& ext = stlplus::extension_part(view->s_Img_path);
 
-    const auto* cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
+    const auto* cam = sfmData.GetIntrinsics().at(view->id_intrinsic).get();
     if (cam == nullptr)
         return false;
 
@@ -160,13 +160,13 @@ bool exportToUndistortDepths(
         }
     }
 
-    std::unordered_map<const openMVG::cameras::IntrinsicBase*, std::array<Image<double>, 2>> map_cam_remap;
+    std::unordered_map<const openMVG::cameras::IntrinsicBase*, std::array<Image<double>, 2>> mapCamRemap;
 
     bool ret = true;
 
-    std::vector<std::string> vec_file = stlplus::folder_files(sInDir);
-    std::sort(vec_file.begin(), vec_file.end());
-    for (const auto& file : vec_file)
+    std::vector<std::string> vecFile = stlplus::folder_files(sInDir);
+    std::sort(vecFile.begin(), vecFile.end());
+    for (const auto& file : vecFile)
     {
         if (stlplus::extension_part(file) != "pfm")
             continue;
@@ -184,21 +184,21 @@ bool exportToUndistortDepths(
         // export undistorted depths
         if (cam->have_disto())
         {
-            auto iterMapCam = map_cam_remap.find(cam);
-            if (map_cam_remap.end() == iterMapCam)
+            auto iterMapCam = mapCamRemap.find(cam);
+            if (mapCamRemap.end() == iterMapCam)
             {
                 // map row and col have not been cached
-                CalcCameraDistortionMap(cam, map_cam_remap[cam][0], map_cam_remap[cam][1]);
+                CalcCameraDistortionMap(cam, mapCamRemap[cam][0], mapCamRemap[cam][1]);
             }
 
-            auto& map_row = map_cam_remap[cam][0];
-            auto& map_col = map_cam_remap[cam][1];
+            auto& mapRow = mapCamRemap[cam][0];
+            auto& mapCol = mapCamRemap[cam][1];
 
             // undistort depth and save it
-            Image<float> depth_float, depth_float_ud;
-            ReadImage(srcFile.c_str(), &depth_float);
-            UndistortImage(depth_float, depth_float_ud, map_row, map_col, false, 0.0f);
-            WriteImage(outputFile.c_str(), depth_float_ud);
+            Image<float> depthFloat, depthFloatUd;
+            ReadImage(srcFile.c_str(), &depthFloat);
+            UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, false, 0.0f);
+            WriteImage(outputFile.c_str(), depthFloatUd);
         }
         else
         {
@@ -211,7 +211,7 @@ bool exportToUndistortDepths(
 }
 
 bool exportToUndistortImages(
-    const SfM_Data& sfm_data,
+    const SfM_Data& sfmData,
     const std::string& sOutDir
 )
 {
@@ -225,13 +225,13 @@ bool exportToUndistortImages(
         }
     }
 
-    std::unordered_map<const openMVG::cameras::IntrinsicBase*, std::array<Image<double>, 2>> map_cam_remap;
+    std::unordered_map<const openMVG::cameras::IntrinsicBase*, std::array<Image<double>, 2>> mapCamRemap;
 
     bool ret = true;
 
-    for (const auto& view : sfm_data.GetViews())
+    for (const auto& view : sfmData.GetViews())
     {
-        const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
+        const std::string srcImage = stlplus::create_filespec(sfmData.s_root_path, view.second->s_Img_path);
         const std::string ext = stlplus::extension_part(view.second->s_Img_path);
 
         const std::string outputImage = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
@@ -242,35 +242,35 @@ bool exportToUndistortImages(
             ret = false;
             break;
         }
-        if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+        if (sfmData.IsPoseAndIntrinsicDefined(view.second.get()))
         {
             // export undistorted images
-            const openMVG::cameras::IntrinsicBase* cam = sfm_data.GetIntrinsics().at(view.second->id_intrinsic).get();
+            const openMVG::cameras::IntrinsicBase* cam = sfmData.GetIntrinsics().at(view.second->id_intrinsic).get();
 
             if (cam->have_disto())
             {
-                auto iterMapCam = map_cam_remap.find(cam);
-                if (map_cam_remap.end() == iterMapCam)
+                auto iterMapCam = mapCamRemap.find(cam);
+                if (mapCamRemap.end() == iterMapCam)
                 {
                     // map row and col have not been cached
-                    CalcCameraDistortionMap(cam, map_cam_remap[cam][0], map_cam_remap[cam][1]);
+                    CalcCameraDistortionMap(cam, mapCamRemap[cam][0], mapCamRemap[cam][1]);
                 }
 
-                auto& map_row = map_cam_remap[cam][0];
-                auto& map_col = map_cam_remap[cam][1];
+                auto& mapRow = mapCamRemap[cam][0];
+                auto& mapCol = mapCamRemap[cam][1];
 
                 // undistort image and save it
-                Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
+                Image<openMVG::image::RGBColor> imageRGB, imageRGBUd;
                 ReadImage(srcImage.c_str(), &imageRGB);
-                UndistortImage(imageRGB, imageRGB_ud, map_row, map_col, false, BLACK);
-                WriteImage(outputImage.c_str(), imageRGB_ud);
+                UndistortImage(imageRGB, imageRGBUd, mapRow, mapCol, false, BLACK);
+                WriteImage(outputImage.c_str(), imageRGBUd);
                 // undistort mask and save it
                 auto maskFileName = srcImage + ".mask.png";
                 if (stlplus::is_file(maskFileName)) {
-                    Image<openMVG::image::RGBColor> maskRGB, maskRGB_ud;
+                    Image<openMVG::image::RGBColor> maskRGB, maskRGBUd;
                     ReadImage(maskFileName.c_str(), &maskRGB);
-                    UndistortImage(maskRGB, maskRGB_ud, map_row, map_col, false, BLACK);
-                    WriteImage((outputImage + ".mask.png").c_str(), maskRGB_ud);
+                    UndistortImage(maskRGB, maskRGBUd, mapRow, mapCol, false, BLACK);
+                    WriteImage((outputImage + ".mask.png").c_str(), maskRGBUd);
                 }
                 // undistort depth and save it
                 auto depthFileBasename = view.second->s_Img_path;
@@ -282,13 +282,13 @@ bool exportToUndistortImages(
                 if (pos != std::string::npos) {
                     depthFileBasename.replace(pos, 4, ".pfm");
                 }
-                auto depthFileName = stlplus::create_filespec(sfm_data.s_root_path, depthFileBasename);
+                auto depthFileName = stlplus::create_filespec(sfmData.s_root_path, depthFileBasename);
 
                 if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
-                    Image<float> depth_float, depth_float_ud;
-                    ReadImage(depthFileName.c_str(), &depth_float);
-                    UndistortImage(depth_float, depth_float_ud, map_row, map_col, false, 0.0f);
-                    WriteImage((outputImage + ".ref.pfm").c_str(), depth_float_ud);
+                    Image<float> depthFloat, depthFloatUd;
+                    ReadImage(depthFileName.c_str(), &depthFloat);
+                    UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, false, 0.0f);
+                    WriteImage((outputImage + ".ref.pfm").c_str(), depthFloatUd);
                 }
             }
             else
@@ -310,28 +310,28 @@ bool exportToUndistortImages(
 }
 
 bool exportToOpenMVS(
-    const SfM_Data& sfm_data,
+    const SfM_Data& sfmData,
     const std::string& sOutFile
 )
 {
     // Export data :
     MVS::Interface scene;
     size_t nPoses(0);
-    const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
+    const uint32_t nViews((uint32_t)sfmData.GetViews().size());
 
-    C_Progress_display my_progress_bar(nViews);
+    C_Progress_display myProgressBar(nViews);
 
     // OpenMVG can have not contiguous index, use a map to create the required OpenMVS contiguous ID index
-    std::map<openMVG::IndexT, uint32_t> map_intrinsic, map_view;
+    std::map<openMVG::IndexT, uint32_t> mapIntrinsic, mapView;
 
     // define a platform with all the intrinsic group
-    for (const auto& intrinsic : sfm_data.GetIntrinsics())
+    for (const auto& intrinsic : sfmData.GetIntrinsics())
     {
         if (isPinhole(intrinsic.second->getType()))
         {
             const Pinhole_Intrinsic* cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
-            if (map_intrinsic.count(intrinsic.first) == 0)
-                map_intrinsic.insert(std::make_pair(intrinsic.first, scene.platforms.size()));
+            if (mapIntrinsic.count(intrinsic.first) == 0)
+                mapIntrinsic.insert(std::make_pair(intrinsic.first, scene.platforms.size()));
             MVS::Interface::Platform platform;
             // add the camera
             MVS::Interface::Platform::Camera camera;
@@ -346,21 +346,21 @@ bool exportToOpenMVS(
 
     // define images & poses
     scene.images.reserve(nViews);
-    for (const auto& view : sfm_data.GetViews())
+    for (const auto& view : sfmData.GetViews())
     {
-        map_view[view.first] = scene.images.size();
+        mapView[view.first] = scene.images.size();
         MVS::Interface::Image image;
         // store relative path because we going to feed mvs resized images
         image.name = view.second->s_Img_path;
-        image.platformID = map_intrinsic.at(view.second->id_intrinsic);
+        image.platformID = mapIntrinsic.at(view.second->id_intrinsic);
         MVS::Interface::Platform& platform = scene.platforms[image.platformID];
         image.cameraID = 0;
 
-        if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+        if (sfmData.IsPoseAndIntrinsicDefined(view.second.get()))
         {
             MVS::Interface::Platform::Pose pose;
             image.poseID = platform.poses.size();
-            const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
+            const openMVG::geometry::Pose3 poseMVG(sfmData.GetPoseOrDie(view.second.get()));
             pose.R = poseMVG.rotation();
             pose.C = poseMVG.center();
             platform.poses.push_back(pose);
@@ -372,20 +372,20 @@ bool exportToOpenMVS(
             image.poseID = NO_ID;
         }
         scene.images.emplace_back(image);
-        ++my_progress_bar;
+        ++myProgressBar;
     }
 
     // define structure
-    scene.vertices.reserve(sfm_data.GetLandmarks().size());
-    for (const auto& vertex : sfm_data.GetLandmarks())
+    scene.vertices.reserve(sfmData.GetLandmarks().size());
+    for (const auto& vertex : sfmData.GetLandmarks())
     {
         const Landmark& landmark = vertex.second;
         MVS::Interface::Vertex vert;
         MVS::Interface::Vertex::ViewArr& views = vert.views;
         for (const auto& observation : landmark.obs)
         {
-            const auto it(map_view.find(observation.first));
-            if (it != map_view.end()) {
+            const auto it(mapView.find(observation.first));
+            if (it != mapView.end()) {
                 MVS::Interface::Vertex::View view;
                 view.imageID = it->second;
                 view.confidence = 0;
@@ -428,7 +428,7 @@ bool exportToOpenMVS(
             }
             // read image meta-data
             ImageHeader imageHeader;
-            ReadImageHeader(stlplus::create_filespec(sfm_data.s_root_path, pImage->name).c_str(), &imageHeader);
+            ReadImageHeader(stlplus::create_filespec(sfmData.s_root_path, pImage->name).c_str(), &imageHeader);
             const double fScale(1.0 / std::max(imageHeader.width, imageHeader.height));
             camera.K(0, 0) *= fScale;
             camera.K(1, 1) *= fScale;
@@ -458,12 +458,12 @@ bool exportToOpenMVS(
 int main(int argc, char *argv[])
 {
     CmdLine cmd;
-    std::string sSfM_Data_Filename;
+    std::string sSfMDataFilename;
     std::string sInDir = "";
     std::string sOutFile = "";
     std::string sOutDir = "";
 
-    cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
+    cmd.add( make_option('i', sSfMDataFilename, "sfmdata") );
     cmd.add( make_option('I', sInDir, "indir"));
     cmd.add( make_option('o', sOutFile, "outfile") );
     cmd.add( make_option('d', sOutDir, "outdir") );
@@ -498,10 +498,10 @@ int main(int argc, char *argv[])
     }
 
     // Read the input SfM scene
-    SfM_Data sfm_data;
-    if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
+    SfM_Data sfmData;
+    if (!Load(sfmData, sSfMDataFilename, ESfM_Data(ALL))) {
         std::cerr << std::endl
-        << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+        << "The input SfM_Data file \""<< sSfMDataFilename << "\" cannot be read." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -512,7 +512,7 @@ int main(int argc, char *argv[])
     {
         if (onlyExportDepth)
         {
-            if (!exportToUndistortDepths(sInDir, sfm_data, sOutDir))
+            if (!exportToUndistortDepths(sInDir, sfmData, sOutDir))
             {
                 std::cerr << std::endl
                     << "Error occurred during generation of undistorted images." << std::endl;
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            if (!exportToUndistortImages(sfm_data, sOutDir))
+            if (!exportToUndistortImages(sfmData, sOutDir))
             {
                 std::cerr << std::endl
                     << "Error occurred during generation of undistorted images." << std::endl;
@@ -532,7 +532,7 @@ int main(int argc, char *argv[])
 
     if (exportOpenMVS && sOutFile.size() > 0)
     {
-        if (!exportToOpenMVS(sfm_data, sOutFile))
+        if (!exportToOpenMVS(sfmData, sOutFile))
         {
             std::cerr << std::endl
                 << "The output openMVS scene file can not be written." << std::endl;
