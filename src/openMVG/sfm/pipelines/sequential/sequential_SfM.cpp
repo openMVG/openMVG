@@ -159,7 +159,9 @@ bool SequentialSfMReconstructionEngine::Process() {
       // Perform BA until all point are under the given precision
       do
       {
-        BundleAdjustment();
+        if (!BundleAdjustment()) {
+          return false;
+        }
       }
       while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_);
