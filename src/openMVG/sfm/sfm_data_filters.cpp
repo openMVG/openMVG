@@ -271,6 +271,13 @@ bool IsTracksOneCC
       ++iterJ;
     }
   }
+
+  // Run path compression to identify all the CC id belonging to every item
+  for (unsigned int i = 0; i < uf_tree.GetNumNodes(); ++i)
+  {
+    uf_tree.Find(i);
+  }
+
   // Count the number of CC
   const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
   return parent_id.size() == 1;

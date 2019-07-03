@@ -76,8 +76,8 @@ TEST(Tracks, filter_3viewAtLeast) {
   // Create the input pairwise correspondences
   PairWiseMatches map_pairwisematches;
 
-  std::vector<IndMatch> ab = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
-  std::vector<IndMatch> bc = {IndMatch(0,0), IndMatch(1,6)};
+  const std::vector<IndMatch> ab = {IndMatch(0,0), IndMatch(1,1), IndMatch(2,3)};
+  const std::vector<IndMatch> bc = {IndMatch(0,0), IndMatch(1,6)};
   const int A = 0;
   const int B = 1;
   const int C = 2;
