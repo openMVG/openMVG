@@ -146,11 +146,23 @@ $ cd vcpkg
 $ ./bootstrap-vcpkg.sh/bat
 ```
 
-Checking OpenMVG 3rd party dependencies by using VCPKG (configure your build triplet if needed see `--triplet`)
+VCPKG can build OpenMVG using a native port, or you can build the dependencies and make your custom OpenMVG build.
+
+## (Option a) Use the VCPKG port
+
+```shell
+vcpkg install openmvg[core,openmp]
+```
+
+See [here](https://github.com/microsoft/vcpkg/tree/master/ports/openmvg) for more details about the VCPKG port.
+
+## (Option b) Custom build
+
+Checking OpenMVG 3rd party dependencies by using VCPKG (configure your build triplet if needed see the `--triplet` option)
 ```shell
 $ ./vcpkg install cereal ceres eigen3 libjpeg-turbo libpng tiff
 ```
-Note: If you want to use ceres with a sparse back end, please use one of this choice `ceres[cxsparse]` or `ceres[suitesparse]` or `ceres[eigensparse]`.
+Note: If you want to use ceres with a sparse back-end, please use one of this choice `ceres[cxsparse]` or `ceres[suitesparse]` or `ceres[eigensparse]`.
 
 Checking out OpenMVG and build it
 ```shell
