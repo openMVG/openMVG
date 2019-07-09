@@ -412,7 +412,7 @@ int main(int argc, char **argv)
   C_Progress_display my_progress_bar( sortedImages.size(),
       std::cout, "\n- Image listing -\n" );
   std::ostringstream error_report_stream;
-  for (size_t image_number =0; image_number<sortedImages.size(); ++image_number, ++my_progress_bar) {
+  for (size_t image_number = 0; image_number<sortedImages.size(); ++image_number, ++my_progress_bar) {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
     double width = -1.0, height = -1.0, ppx = -1.0, ppy = -1.0, focal = -1.0;
 
