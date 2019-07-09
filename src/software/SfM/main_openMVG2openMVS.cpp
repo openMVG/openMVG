@@ -32,13 +32,13 @@ using namespace openMVG::sfm;
 #include <unordered_map>
 #include <memory>
 
-template<typename Image, typename RemapType>
+template<typename Image, typename RemapType, typename SamplerType>
 void UndistortImage(
     const Image& imageIn,
     Image& imageUd,
     const RemapType& mapRow,
     const RemapType& mapCol,
-    bool useLinearSampler,
+    const SamplerType& sampler,
     typename Image::Tpixel fillcolor = typename Image::Tpixel(0))
 {
     int width = imageIn.Width();
@@ -46,44 +46,21 @@ void UndistortImage(
 
     imageUd.resize(width, height, true, fillcolor);
 
-    if (useLinearSampler) {
-        image::Sampler2d<image::SamplerLinear> sampler;
-
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
 #endif
-        for (int j = 0; j < height; ++j)
-            for (int i = 0; i < width; ++i)
+    for (int j = 0; j < height; ++j)
+        for (int i = 0; i < width; ++i)
+        {
+            // compute coordinates with distortion
+            double row = (double)mapRow(j, i);
+            double col = (double)mapCol(j, i);
+            // pick pixel if it is in the image domain
+            if (imageIn.Contains(row, col))
             {
-                // compute coordinates with distortion
-                double row = (double)mapRow(j, i);
-                double col = (double)mapCol(j, i);
-                // pick pixel if it is in the image domain
-                if (imageIn.Contains(row, col))
-                {
-                    imageUd(j, i) = sampler(imageIn, row, col);
-                }
+                imageUd(j, i) = sampler(imageIn, row, col);
             }
-    }
-    else {
-        image::Sampler2d<image::SamplerNearest> nearestSampler;
-
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp parallel for
-#endif
-        for (int j = 0; j < height; ++j)
-            for (int i = 0; i < width; ++i)
-            {
-                // compute coordinates with distortion
-                double row = (double)mapRow(j, i);
-                double col = (double)mapCol(j, i);
-                // pick pixel if it is in the image domain
-                if (imageIn.Contains(row, col))
-                {
-                    imageUd(j, i) = nearestSampler(imageIn, row, col);
-                }
-            }
-    }
+        }
 }
 
 template<typename RemapType>
@@ -114,15 +91,6 @@ void CalcCameraDistortionMap(
         }
 }
 
-/// Check if the View have defined intrinsic
-bool IsIntrinsicDefined(const Intrinsics &intrinsics, const View *view)
-{
-  if (view == nullptr ) return false;
-  return (
-    view->id_intrinsic != UndefinedIndexT &&
-    intrinsics.find(view->id_intrinsic) != intrinsics.end());
-}
-
 bool exportToUndistortDepths(
     const std::string& sInDir,
     const SfM_Data& sfmData,
@@ -132,10 +100,9 @@ bool exportToUndistortDepths(
     if (sfmData.GetViews().empty())
         return false;
     int viewIdx = -1;
-    const auto &intrinsics = sfmData.GetIntrinsics();
     for (const auto &v : sfmData.GetViews())
     {
-        if (IsIntrinsicDefined(intrinsics, v.second.get()))
+        if (sfmData.IsPoseAndIntrinsicDefined(v.second.get()))
         {
             viewIdx = v.first;
             break;
@@ -197,7 +164,7 @@ bool exportToUndistortDepths(
             // undistort depth and save it
             Image<float> depthFloat, depthFloatUd;
             ReadImage(srcFile.c_str(), &depthFloat);
-            UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, false, 0.0f);
+            UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, image::Sampler2d<image::SamplerNearest>(), 0.0f);
             WriteImage(outputFile.c_str(), depthFloatUd);
         }
         else
@@ -262,14 +229,14 @@ bool exportToUndistortImages(
                 // undistort image and save it
                 Image<openMVG::image::RGBColor> imageRGB, imageRGBUd;
                 ReadImage(srcImage.c_str(), &imageRGB);
-                UndistortImage(imageRGB, imageRGBUd, mapRow, mapCol, false, BLACK);
+                UndistortImage(imageRGB, imageRGBUd, mapRow, mapCol, image::Sampler2d<image::SamplerLinear>(), BLACK);
                 WriteImage(outputImage.c_str(), imageRGBUd);
                 // undistort mask and save it
                 auto maskFileName = srcImage + ".mask.png";
                 if (stlplus::is_file(maskFileName)) {
                     Image<openMVG::image::RGBColor> maskRGB, maskRGBUd;
                     ReadImage(maskFileName.c_str(), &maskRGB);
-                    UndistortImage(maskRGB, maskRGBUd, mapRow, mapCol, false, BLACK);
+                    UndistortImage(maskRGB, maskRGBUd, mapRow, mapCol, image::Sampler2d<image::SamplerNearest>(), BLACK);
                     WriteImage((outputImage + ".mask.png").c_str(), maskRGBUd);
                 }
                 // undistort depth and save it
@@ -287,7 +254,7 @@ bool exportToUndistortImages(
                 if (depthFileBasename != view.second->s_Img_path && stlplus::is_file(depthFileName)) {
                     Image<float> depthFloat, depthFloatUd;
                     ReadImage(depthFileName.c_str(), &depthFloat);
-                    UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, false, 0.0f);
+                    UndistortImage(depthFloat, depthFloatUd, mapRow, mapCol, image::Sampler2d<image::SamplerNearest>(), 0.0f);
                     WriteImage((outputImage + ".ref.pfm").c_str(), depthFloatUd);
                 }
             }
