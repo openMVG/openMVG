@@ -30,6 +30,74 @@ using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
+inline bool view_less(const std::pair<std::string, IndexT> &p1, const std::pair<std::string, IndexT> &p2) {
+  return (p1.first.compare(p2.first) < 0);
+}
+
+std::map<IndexT, IndexT> ComputeOrder(std::set<IndexT> &v) {
+  std::vector<IndexT> w;
+  std::copy(v.begin(), v.end(), std::back_inserter(w));
+  std::sort(w.begin(), w.end());
+
+  std::map<IndexT, IndexT> res;
+  for (IndexT idx=0; idx<w.size(); ++idx) {
+    res[w[idx]] = idx;
+  }
+
+  return res;
+}
+
+void SortAndClean(SfM_Data &sfm_data_) {
+  std::vector<std::pair<std::string, IndexT>> valid_view_imgs;
+  std::set<IndexT> valid_intrinsic_ids;
+  std::map<IndexT, IndexT> intrinsic_map;
+  std::map<IndexT, IndexT> view_map;
+
+  for (auto it = sfm_data_.GetViews().begin(); it != sfm_data_.GetViews().end(); ++it)
+  {
+    const View * view = it->second.get();
+    if (!sfm_data_.IsPoseAndIntrinsicDefined(view))
+    {
+      continue;
+    }
+
+    valid_view_imgs.push_back(std::make_pair(view->s_Img_path, view->id_view));
+    valid_intrinsic_ids.insert(view->id_intrinsic);
+  }
+
+
+  intrinsic_map = ComputeOrder(valid_intrinsic_ids);
+  std::sort(valid_view_imgs.begin(), valid_view_imgs.end(), view_less);
+  SfM_Data sfm_data;
+  sfm_data.s_root_path = sfm_data_.s_root_path;
+
+  for (IndexT idx=0; idx<valid_view_imgs.size(); idx++) {
+    auto view = sfm_data_.views[valid_view_imgs[idx].second];
+    sfm_data.poses[idx] = sfm_data_.poses[view->id_pose];
+    view->id_view = idx;
+    view->id_pose = idx;
+    view->id_intrinsic = intrinsic_map[view->id_intrinsic];
+    sfm_data.views[idx] = view;
+    view_map[valid_view_imgs[idx].second] = idx;
+  }
+
+  for (auto& intrinsic : intrinsic_map) {
+    sfm_data.intrinsics[intrinsic.second] = sfm_data_.intrinsics[intrinsic.first];
+  }
+
+  for (auto &landmark : sfm_data_.structure) {
+    Observations obs_new;
+    for (auto &observation : landmark.second.obs) {
+      std::pair<IndexT, Observation> ob_new(view_map[observation.first], observation.second);
+      obs_new.insert(ob_new);
+    }
+    sfm_data.structure[landmark.first].obs = std::move(obs_new);
+    sfm_data.structure[landmark.first].X = std::move(landmark.second.X);
+  }
+
+  std::swap(sfm_data_, sfm_data);
+}
+
 /// From 2 given image file-names, find the two corresponding index in the View list
 bool computeIndexFromImageNames(
   const SfM_Data & sfm_data,
@@ -253,6 +321,7 @@ int main(int argc, char **argv)
 
   if (sfmEngine.Process())
   {
+    SortAndClean(sfmEngine.Get_SfM_Data());
     std::cout << std::endl << " Total Ac-Sfm took (s): " << timer.elapsed() << std::endl;
 
     std::cout << "...Generating SfM_Report.html" << std::endl;
