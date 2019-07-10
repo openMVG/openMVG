@@ -62,6 +62,8 @@ public:
 
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
+  SfM_Data & Get_SfM_Data() {return sfm_data_;}
+
 protected:
   std::string sOut_directory_; // Output path where outputs will be stored
 
