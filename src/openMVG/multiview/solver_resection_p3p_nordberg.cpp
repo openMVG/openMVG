@@ -27,14 +27,13 @@ namespace euclidean_resection
  * @param b13 is the cosine of the angle between bearing vector 1 and bearing vector 3
  * @param b23 is the cosine of the angle between bearing vector 2 and bearing vector 3
  * The paper note it rarely improve after two iterations. The original implementation use 5 iterations.
- * For unknown reasons it always works for the correct solution, but not always for the other solutions!
  */
 static void gauss_newton_refineL(Vec3 &L,
                           const double & a12, const double & a13, const double & a23,
                           const double & b12, const double & b13, const double & b23)
 {
   // const expr makes it easier for the compiler to unroll
-  // TODO(RJ:) I have hardcoded the number of iteration here, it's a template parameter in the original implementation
+  // TODO(RJ:) I have hardcoded the number of iterations here, it's a template parameter in the original implementation
   for (int i = 0; i < 5; ++i)
   {
     double l1 = L(0);
@@ -77,9 +76,9 @@ static void gauss_newton_refineL(Vec3 &L,
       //L=L - g*J\r; 
       //% works because the size is ok!
       {
-        double l1 = L(0);
-        double l2 = L(1);
-        double l3 = L(2);
+        double l1 = L1(0);
+        double l2 = L1(1);
+        double l3 = L1(2);
         double r11 = l1 * l1 + l2 * l2 + b12 * l1 * l2 - a12;
         double r12 = l1 * l1 + l3 * l3 + b13 * l1 * l3 - a13;
         double r13 = l2 * l2 + l3 * l3 + b23 * l2 * l3 - a23;
