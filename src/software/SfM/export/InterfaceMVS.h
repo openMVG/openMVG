@@ -219,9 +219,7 @@ ARCHIVE_DEFINE_TYPE(uint64_t)
 ARCHIVE_DEFINE_TYPE(float)
 ARCHIVE_DEFINE_TYPE(double)
 #ifdef __APPLE__
-  #ifdef __clang__
-    ARCHIVE_DEFINE_TYPE(unsigned long)
-  #endif
+  ARCHIVE_DEFINE_TYPE(unsigned long)
 #endif
 
 // Serialization support for cv::Matx
