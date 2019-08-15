@@ -84,7 +84,7 @@ The relation :math:`x'^T_i Fx_i = 0` exists for all corresponding point belongin
    The fundamental matrix and the point to line constraint.
 
 The fundamental matrix is sometime called bifocal-tensor, it is a 3 x 3 matrix of rank 2
-with 7 degree of freedom. 8 ou 7 correspondences are sufficient to compute the :math:`F` matrix.
+with 7 degree of freedom. 8 or 7 non-coplanar correspondences are sufficient to compute the :math:`F` matrix.
 Implementation follows the DLT (Direct Linear Transform) explained in [HZ]_ book.
 
 Relative pose estimation (Essential matrix)
