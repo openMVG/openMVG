@@ -44,7 +44,7 @@ Argument descriptions:
 
   - **[-m|--matchdir]**
 
-    - path were image descriptions were stored
+    - path where image descriptions were stored
 
   - **[-o|--outdir]**
 
