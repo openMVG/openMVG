@@ -78,7 +78,7 @@ private:
 
 public:
   //-- Default constructor:
-  Color_Gradient(const Color_Points & rhs_color = k5ColorHeatMap())
+  explicit Color_Gradient(const Color_Points & rhs_color = k5ColorHeatMap())
     : color_map(rhs_color)  {}
 
 
