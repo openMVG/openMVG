@@ -12,6 +12,11 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
+
+#ifdef OPENMVG_HAVE_CUDA
+#include "openMVG/matching_image_collection/Cuda_Matcher_Regions.hpp"
+#endif
+
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/Cascade_Hashing_Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/GeometricFilter.hpp"
@@ -124,6 +129,7 @@ int main(int argc, char **argv)
       << "[-n|--nearest_matching_method]\n"
       << "  AUTO: auto choice from regions type,\n"
       << "  For Scalar based regions descriptor:\n"
+      << "    CUDA: CUDA matching,\n"
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
@@ -321,6 +327,14 @@ int main(int argc, char **argv)
         collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
       }
     }
+#ifdef OPENMVG_HAVE_CUDA
+    else
+    if (sNearestMatchingMethod == "CUDA")
+    {
+        std::cout << "Using CUDA matcher" << std::endl;
+        collectionMatcher.reset(new Cuda_Matcher_Regions(fDistRatio));
+    }
+#endif
     else
     if (sNearestMatchingMethod == "BRUTEFORCEL2")
     {

@@ -27,7 +27,7 @@ typedef struct {
 #ifdef MANAGEDMEM
   SiftPoint *m_data;  // Managed data
 #else
-  SiftPoint *h_data;  // Host (CPU) data
+  SiftPoint *h_data;  // Host (CPU) data'
   SiftPoint *d_data;  // Device (GPU) data
 #endif
 } SiftData;
@@ -41,5 +41,7 @@ void FreeSiftData(SiftData &data);
 void PrintSiftData(SiftData &data);
 double MatchSiftData(SiftData &data1, SiftData &data2);
 double FindHomography(SiftData &data,  float *homography, int *numMatches, int numLoops = 1000, float minScore = 0.85f, float maxAmbiguity = 0.95f, float thresh = 5.0f);
+
+void CopySiftDataHost2Dev(SiftData &data);
 
 #endif

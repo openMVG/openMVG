@@ -32,11 +32,13 @@ public:
     Params(
       float initBlur = 1.0f,
       float thresh = 3.5f,
-      int numOctaves = 5
+      int numOctaves = 5,
+      int maxNumFeat = 10000
     ):
     initBlur_(initBlur),
     thresh_(thresh),
-    numOctaves_(numOctaves) {}
+    numOctaves_(numOctaves),
+    maxNumFeat_(maxNumFeat){}
 
     template<class Archive>
     void serialize(Archive & ar)
@@ -48,6 +50,7 @@ public:
     float initBlur_;
     float thresh_;
     int numOctaves_;
+    int maxNumFeat_;
   };
 
   CSIFT_Image_describer
@@ -92,7 +95,7 @@ public:
 
     
     SiftData siftData1;
-    InitSiftData(siftData1, 32768, true, true);
+    InitSiftData(siftData1, params_.maxNumFeat_, true, true);
     ExtractSift(siftData1, img1, params_.numOctaves_, params_.initBlur_, params_.thresh_, 0.0f, false);
     int numPts1 = siftData1.numPts;
     std::cout << "Number of features detected: " << numPts1 << std::endl;

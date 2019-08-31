@@ -90,6 +90,11 @@ int main(int argc, char **argv)
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
 
+#ifdef OPENMVG_HAVE_CUDA
+  int iMaxFeatNum = 8000;
+    cmd.add( make_option('x', iMaxFeatNum, "maxFeatureNum") );
+#endif
+
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
@@ -116,6 +121,10 @@ int main(int argc, char **argv)
       << "   ULTRA: !!Can take long time!!\n"
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of parallel computations\n"
+#endif
+
+#ifdef OPENMVG_HAVE_CUDA
+      << "[-x|--maxFeatureNum] max number of cuda features\n"
 #endif
       << std::endl;
 
@@ -202,7 +211,8 @@ int main(int argc, char **argv)
     if (sImage_Describer_Method == "CSIFT")
     {
 #ifdef OPENMVG_HAVE_CUDA
-      image_describer.reset(new CSIFT_Image_describer(CSIFT_Image_describer::Params()));
+      image_describer.reset(new CSIFT_Image_describer
+      (CSIFT_Image_describer::Params(1.0f,3.5f,5,iMaxFeatNum)));
 #else
       std::cerr << "Cannot create CUDA SIFT image describer: CUDA libraries not linked." << std::endl;
 #endif

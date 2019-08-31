@@ -483,6 +483,8 @@ int main(int argc, char **argv)
     GroupSharedIntrinsics(sfm_data);
   }
 
+
+
   // Store SfM_Data views & intrinsic data
   if (!Save(
     sfm_data,

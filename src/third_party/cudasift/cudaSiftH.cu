@@ -301,6 +301,18 @@ void PrintSiftData(SiftData &data)
   printf("Number of allocated points: %d\n", data.maxPts);
 }
 
+void CopySiftDataHost2Dev(SiftData &data)
+{
+#ifdef MANAGEDMEM
+    SiftPoint *h_data = data.m_data;
+#else
+    SiftPoint *h_data = data.h_data;
+    if (data.d_data && h_data) {
+        safeCall(cudaMemcpy(data.d_data, data.h_data, sizeof(SiftPoint)*data.numPts, cudaMemcpyHostToDevice));
+    }
+#endif
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Host side master functions
 ///////////////////////////////////////////////////////////////////////////////
