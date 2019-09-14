@@ -9,6 +9,7 @@
 #ifndef OPENMVG_GRAPHICS_COLOR_GRADIENT_HPP
 #define OPENMVG_GRAPHICS_COLOR_GRADIENT_HPP
 
+#include <algorithm>
 #include <vector>
 
 namespace openMVG
