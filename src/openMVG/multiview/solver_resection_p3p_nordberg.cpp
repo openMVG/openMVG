@@ -393,37 +393,41 @@ bool computePosesNordberg(
     {
       double tau1, tau2;
       root2real(b, c, tau1, tau2);
-      if (tau1 > 0)
+      if (tau1 > 0.0)
       {
         double tau = tau1;
         double d = a23 / (tau * (b23 + tau) + 1.0);
-        double l2 = std::sqrt(d);
-        double l3 = tau * l2;
+        if(d > 0.0) {
+          double l2 = std::sqrt(d);
+          double l3 = tau * l2;
 
-        double l1 = w0 * l2 + w1 * l3;
-        if (l1 >= 0.0)
-        {
-          Ls[valid] = Vec3(l1, l2, l3);
-          ++valid;
+          double l1 = w0 * l2 + w1 * l3;
+          if (l1 >= 0.0)
+          {
+            Ls[valid] = Vec3(l1, l2, l3);
+            ++valid;
+          }          
         }
       }
       if (tau2 > 0.0)
       {
         double tau = tau2;
         double d = a23 / (tau * (b23 + tau) + 1.0);
-        double l2 = std::sqrt(d);
-        double l3 = tau * l2;
-        double l1 = w0 * l2 + w1 * l3;
-        if (l1 >= 0.0)
-        {
-          Ls[valid] = Vec3(l1, l2, l3);
-          ++valid;
+        if(d > 0.0) {
+          double l2 = std::sqrt(d);
+          double l3 = tau * l2;
+          double l1 = w0 * l2 + w1 * l3;
+          if (l1 >= 0.0)
+          {
+            Ls[valid] = Vec3(l1, l2, l3);
+            ++valid;
+          }
         }
       }
     }
   }
 
-  { //+v
+  { //-v
     double s = -v;
     double w2 = 1.0 / (s * V(0, 1) - V(0, 0));
     double w0 = (V(1, 0) - s * V(1, 1)) * w2;
@@ -442,30 +446,32 @@ bool computePosesNordberg(
       {
         double tau = tau1;
         double d = a23 / (tau * (b23 + tau) + 1.0);
-        double l2 = std::sqrt(d);
+        if(d > 0.0) {
+          double l2 = std::sqrt(d);
+          double l3 = tau * l2;
 
-        double l3 = tau * l2;
-
-        double l1 = w0 * l2 + w1 * l3;
-        if (l1 >= 0)
-        {
-          Ls[valid] = Vec3(l1, l2, l3);
-          ++valid;
+          double l1 = w0 * l2 + w1 * l3;
+          if (l1 >= 0)
+          {
+            Ls[valid] = Vec3(l1, l2, l3);
+            ++valid;
+          }
         }
       }
       if (tau2 > 0)
       {
         double tau = tau2;
         double d = a23 / (tau * (b23 + tau) + 1.0);
-        double l2 = std::sqrt(d);
+        if(d > 0.0) {
+          double l2 = std::sqrt(d);
+          double l3 = tau * l2;
 
-        double l3 = tau * l2;
-
-        double l1 = w0 * l2 + w1 * l3;
-        if (l1 >= 0)
-        {
-          Ls[valid] = Vec3(l1, l2, l3);
-          ++valid;
+          double l1 = w0 * l2 + w1 * l3;
+          if (l1 >= 0)
+          {
+            Ls[valid] = Vec3(l1, l2, l3);
+            ++valid;
+          }
         }
       }
     }
