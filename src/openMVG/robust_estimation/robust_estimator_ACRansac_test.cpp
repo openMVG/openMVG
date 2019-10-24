@@ -246,19 +246,19 @@ struct IndMatchd
   IndMatchd(double i = 0, double j = 0): i_(i), j_(j)
   {}
 
-  friend bool operator==(const IndMatchd& m1, const IndMatchd& m2)
-  {    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);  }
-
-  // Lexicographical ordering of matches. Used to remove duplicates.
-  friend bool operator<(const IndMatchd& m1, const IndMatchd& m2)
-  {
-    if (m1.i_ < m2.i_) return true;
-    if (m1.i_ > m2.i_) return false;
-    return (m1.j_ < m2.j_);
-  }
-
   double i_, j_;
 };
+
+bool operator==(const IndMatchd& m1, const IndMatchd& m2)
+{    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);  }
+
+// Lexicographical ordering of matches. Used to remove duplicates.
+bool operator<(const IndMatchd& m1, const IndMatchd& m2)
+{
+  if (m1.i_ < m2.i_) return true;
+  if (m1.i_ > m2.i_) return false;
+  return (m1.j_ < m2.j_);
+}
 
 // Test ACRANSAC adaptability to noise
 // Set a line with a increasing gaussian noise

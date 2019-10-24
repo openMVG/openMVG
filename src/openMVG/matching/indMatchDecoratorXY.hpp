@@ -69,6 +69,11 @@ class IndMatchDecorator
         m1.x2==m2.x2 && m1.y2==m2.y2);
     }
 
+    std::ostream & operator<<(std::ostream &os) const
+    {
+      return os << x1 << " " << y1 << " " << x2 << " " << y2 << "\n";
+    }
+
     T x1,y1, x2,y2;
     IndMatch index;
   };
@@ -159,11 +164,6 @@ public:
         std::ostream_iterator<IndMatchDecoratorStruct>(f, ""));
     }
     return f.is_open();
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const IndMatchDecoratorStruct & m)
-  {
-    return os << m.x1 << " " << m.y1 << " " << m.x2 << " " << m.y2 << "\n";
   }
 
 private:

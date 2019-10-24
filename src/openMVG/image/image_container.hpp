@@ -205,26 +205,6 @@ class Image : public Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::Row
       return 0 <= x && x < Base::cols()
              && 0 <= y && y < Base::rows();
     }
-
-    /**
-    * @brief Pixelwise addition of two images
-    * @param imgA First image
-    * @param imgB Second image
-    * @return pixelwise imgA + imgB
-    * @note Images must have the same size
-    */
-    template<typename T1>
-    friend Image<T1> operator+( const Image<T1> & imgA , const Image<T1> & imgB );
-
-    /**
-    * @brief Pixelwise subtraction of two images
-    * @param imgA First image
-    * @param imgB Second image
-    * @return pixelwise imgA - imgB
-    * @note Images must have the same size
-    */
-  template<typename T1>
-    friend Image<T1> operator-( const Image<T1> & imgA , const Image<T1> & imgB );
 };
 
 /**
