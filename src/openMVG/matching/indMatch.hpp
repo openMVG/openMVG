@@ -26,16 +26,16 @@ struct IndMatch
 {
   IndMatch(IndexT i = 0, IndexT j = 0) : i_(i), j_(j)  {}
 
-  friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
+   bool operator==(const IndMatch& m1, const IndMatch& m2)  {
     return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
   }
 
-  friend bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
+   bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
     return !(m1 == m2);
   }
 
   // Lexicographical ordering of matches. Used to remove duplicates
-  friend bool operator<(const IndMatch& m1, const IndMatch& m2)  {
+   bool operator<(const IndMatch& m1, const IndMatch& m2)  {
     return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
   }
 
