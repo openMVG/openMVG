@@ -62,6 +62,9 @@ matrix:
     # works on macOS 10.14
     - os: osx
       osx_image: xcode10.2
+      
+    - os: osx
+      osx_image: xcode11
 
     - os: osx
       osx_image: xcode10.2
