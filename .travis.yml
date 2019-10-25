@@ -63,6 +63,14 @@ matrix:
     - os: osx
       osx_image: xcode10.2
 
+    - os: osx
+      osx_image: xcode10.2
+      homebrew:
+        packages:
+        - gcc@5
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
     # works on Precise and Trusty
     - os: linux
       addons:
