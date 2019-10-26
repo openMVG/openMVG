@@ -73,7 +73,8 @@ matrix:
           packages:
           - gcc@5
       env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5 && CXXFLAGS=-w"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+      allow_failures: true
 
 #    # works on Precise and Trusty
 #    - os: linux
@@ -183,7 +184,7 @@ before_script:
       -DOpenMVG_BUILD_EXAMPLES=ON \
       -DOpenMVG_BUILD_SOFTWARES=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
-      CXXFLAGS=-w \
+      -DCXXFLAGS=-w \
       . $OPENMVG_SOURCE
 
 script:
