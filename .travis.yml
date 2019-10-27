@@ -219,13 +219,10 @@ before_script:
       . $OPENMVG_SOURCE
 
 script:
-  - echo CC:$CC
-  - echo "$TRAVIS_OS_NAME"
   - |
     # -j2 to limit GCC builds to a reduced number of thread for the virtual machine
     if [ "$TRAVIS_OS_NAME" = "osx" ] && (echo $CC | grep -qo gcc-) then 
-      echo 'truncating GCC output'
-      # filter out linker warnings to avoid hitting travis log size limits
+      echo 'filter out linker warnings to avoid travis log size limits'
       time make all -j 2 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*' | grep --color=always -i 'warning\|error\|$'
     else
       time make all -j 2
