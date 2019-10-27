@@ -9,63 +9,63 @@ language: cpp
 
 matrix:
   include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - ubuntu-sdk-team/ppa
-          packages:
-            - g++-4.8
-            - qtbase5-dev
-            - libqt5svg5-dev
-            - libqt5opengl5-dev
-      env:
-        - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-      env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-
-    # works on macOS 10.13
-    - os: osx
-      osx_image: xcode9.4
-    
-    # works on macOS 10.14
-    - os: osx
-      osx_image: xcode10.2
-       
-    - os: osx
-      osx_image: xcode11
-
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #            - ubuntu-sdk-team/ppa
+  #          packages:
+  #            - g++-4.8
+  #            - qtbase5-dev
+  #            - libqt5svg5-dev
+  #            - libqt5opengl5-dev
+  #      env:
+  #        - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #          packages:
+  #            - g++-5
+  #      env:
+  #         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+  #
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #          packages:
+  #            - g++-6
+  #      env:
+  #        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+  #
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #          packages:
+  #            - g++-7
+  #      env:
+  #        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+  #
+  #    # works on macOS 10.13
+  #    - os: osx
+  #      osx_image: xcode9.4
+  #    
+  #    # works on macOS 10.14
+  #    - os: osx
+  #      osx_image: xcode10.2
+  #       
+     - os: osx
+       osx_image: xcode11
+ 
     # allowed to fail: an exact topy is below in allow_failures
     # watching for Apple updates.
     # there are problems with GCC including new but nonstandard Apple .h
@@ -91,64 +91,64 @@ matrix:
           - gcc@5
       env:
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-          packages:
-            - clang-3.6
-      env:
-        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-          packages:
-            - clang-3.7
-      env:
-        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-          packages:
-            - clang-3.8
-      env:
-        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
-
-    # works on Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-3.9
-          packages:
-            - clang-3.9
-      env:
-        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
-
-    # works on Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-4.0
-          packages:
-            - clang-4.0
-      env:
-        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+  #
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #            - llvm-toolchain-precise-3.6
+  #          packages:
+  #            - clang-3.6
+  #      env:
+  #        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+  #
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #            - llvm-toolchain-precise-3.7
+  #          packages:
+  #            - clang-3.7
+  #      env:
+  #        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+  #
+  #    # works on Precise and Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - ubuntu-toolchain-r-test
+  #            - llvm-toolchain-precise-3.8
+  #          packages:
+  #            - clang-3.8
+  #      env:
+  #        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+  #
+  #    # works on Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - llvm-toolchain-trusty-3.9
+  #          packages:
+  #            - clang-3.9
+  #      env:
+  #        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+  #
+  #    # works on Trusty
+  #    - os: linux
+  #      addons:
+  #        apt:
+  #          sources:
+  #            - llvm-toolchain-trusty-4.0
+  #          packages:
+  #            - clang-4.0
+  #      env:
+  #        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
     # works on Trusty
     - os: linux
@@ -162,16 +162,6 @@ matrix:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
           
   allow_failures:
-    - os: osx
-      osx_image: xcode10.2
-      addons:
-        homebrew:
-          packages:
-          - gcc@5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-      
-          
     - os: osx
       osx_image: xcode11
       addons:
@@ -231,7 +221,7 @@ script:
     if [ "$TRAVIS_OS_NAME" = "osx" -a `echo $CC | grep -o gcc-`="gcc-" ]; then 
       echo 'truncating GCC output'
       # for OSX and GCC-* we filter out linker warnings to avoid travis log size errors
-      time make all -j 2 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*'; 
+      time make all -j 2 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*' | grep --color=always -i 'warning\|error\|$'
     else
       time make all -j 2
     fi
