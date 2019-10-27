@@ -22,6 +22,7 @@ matrix:
             - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
+          
     # works on Precise and Trusty
     - os: linux
       addons:
@@ -215,7 +216,6 @@ before_script:
       -DOpenMVG_BUILD_EXAMPLES=ON \
       -DOpenMVG_BUILD_SOFTWARES=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
-      -DCXXFLAGS=-w \
       . $OPENMVG_SOURCE
 
 script:
@@ -227,5 +227,4 @@ script:
     else
       time make all -j 2
     fi
-    
   - ctest -V
