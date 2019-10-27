@@ -163,16 +163,6 @@ matrix:
           
   allow_failures:
     - os: osx
-      osx_image: xcode10.2
-      addons:
-        homebrew:
-          packages:
-          - gcc@5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-      
-          
-    - os: osx
       osx_image: xcode11
       addons:
         homebrew:
