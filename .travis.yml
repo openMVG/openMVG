@@ -66,10 +66,6 @@ matrix:
     - os: osx
       osx_image: xcode11
 
-    # allowed to fail: an exact topy is below in allow_failures
-    # watching for Apple updates.
-    # there are problems with GCC including new but nonstandard Apple .h
-    # https://github.com/Homebrew/homebrew-core/issues/40676
     - os: osx
       osx_image: xcode10.2
       addons:
@@ -78,6 +74,15 @@ matrix:
           - gcc@5
       env:
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+          
+    - os: osx
+      osx_image: xcode10.2
+      addons:
+        homebrew:
+          packages:
+          - gcc@7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
           
     # allowed to fail: an exact topy is below in allow_failures
     # watching for Apple updates.
@@ -218,11 +223,12 @@ script:
   - echo "$TRAVIS_OS_NAME"
   - |
     # -j2 to limit GCC builds to a reduced number of thread for the virtual machine
-    if [ "$TRAVIS_OS_NAME" = "osx" -a `echo $CC | grep -o gcc-`="gcc-" ]; then 
+    if [ "$TRAVIS_OS_NAME" = "osx" ] && (echo $CC | grep -qo gcc-) then 
       echo 'truncating GCC output'
-      # for OSX and GCC-* we filter out linker warnings to avoid travis log size errors
+      # filter out linker warnings to avoid hitting travis log size limits
       time make all -j 2 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*' | grep --color=always -i 'warning\|error\|$'
     else
       time make all -j 2
     fi
+    
   - ctest -V
