@@ -49,8 +49,9 @@ int main(int argc, char **argv)
     s_directory_in,
     s_directory_out;
   int
-    image_resolution = 1200,
+    image_resolution = 1024,
     nb_split = 5;
+  float fov = 60.0;
 
   // required
   cmd.add( make_option('i', s_directory_in, "input_dir") );
@@ -58,7 +59,9 @@ int main(int argc, char **argv)
   // Optional
   cmd.add( make_option('r', image_resolution, "image_resolution") );
   cmd.add( make_option('n', nb_split, "nb_split") );
+  cmd.add( make_option('f', fov, "fov") );
   cmd.add( make_switch('D', "demo_mode") );
+
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -70,6 +73,7 @@ int main(int argc, char **argv)
     << " OPTIONAL:\n"
     << "[-r|--image_resolution] the rectilinear image size (default:" << image_resolution << ") \n"
     << "[-n|--nb_split] the number of rectilinear image along the X axis (default:" << nb_split << ") \n"
+    << "[-f|--fov] the rectilinear camera FoV in degrees (default:" << fov << ") \n"
     << "[-D|--demo_mode] switch parameter, export a SVG file that simulate asked rectilinear\n"
     << "  frustum configuration on the spherical image.\n"
     << std::endl;
@@ -125,7 +129,7 @@ int main(int argc, char **argv)
 
   //-- Simulate a camera with many rotations along the Y axis
   const int pinhole_width = image_resolution, pinhole_height = image_resolution;
-  const double focal = focalFromPinholeHeight(pinhole_height, openMVG::D2R(120.0/2.0));
+  const double focal = focalFromPinholeHeight(pinhole_height, openMVG::D2R(fov));
   const openMVG::cameras::Pinhole_Intrinsic pinhole_camera(
     //w, h, focal, ppx, ppy
     pinhole_width, pinhole_height, focal, pinhole_width/2., pinhole_height/2.);
@@ -196,6 +200,7 @@ int main(int argc, char **argv)
     const openMVG::cameras::Intrinsic_Spherical sphere_camera(spherical_image.Width(), spherical_image.Height());
 
     const image::Sampler2d<image::SamplerLinear> sampler;
+    //const image::Sampler2d<image::SamplerNearest> sampler;
     image::Image<image::RGBColor> sampled_image(image_resolution, image_resolution, image::BLACK);
 
     size_t index = 0;
@@ -209,8 +214,14 @@ int main(int argc, char **argv)
       {
         for (int i = 0; i < sampled_image.Width(); ++i)
         {
-          const Vec2 sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(i, j)));
-          sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
+          Vec2 sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(i, j)));
+          if (spherical_image.Width() - sphere_proj.x() < 2)
+          {
+            sphere_proj.x() = - int(sphere_proj.x() - spherical_image.Width());
+            sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
+          }
+          else
+            sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
         }
       }
       //-- save image

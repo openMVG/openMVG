@@ -220,7 +220,7 @@ endif()
 
 if (CXX11)
   include(AddCeresCXX11RequirementsToTarget)
-  add_ceres_cxx11_requirements_to_target(ceres)
+  add_ceres_cxx11_requirements_to_target(openMVG_ceres)
 endif()
 
 if (BUILD_SHARED_LIBS)
