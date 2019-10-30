@@ -100,7 +100,7 @@ void TriangulateLInfinityAngular
 
 /**
 * @brief Inverse Depth Weighted Midpoint method
-* @brief and its ad hoc adequacy test (a replacment for cheiralty tests)
+* @brief and its ad hoc adequacy test (a replacement for cheirality tests)
 * @brief should be better than DLT for low and high parallax angles
 * @param P1 First camera projection matrix
 * @param P2 Second camera projection matrix
@@ -113,7 +113,7 @@ void TriangulateLInfinityAngular
 bool TriangulateIDW(
   const Mat34 & P1,
   const Vec3 &x1,
-  const Mat34 &P2, 
+  const Mat34 &P2,
   const Vec3 &x2,
   Vec3 *X_euclidean
 );
