@@ -45,7 +45,6 @@ matrix:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
     # works on Precise and Trusty
-
     - os: linux
       addons:
         apt:
