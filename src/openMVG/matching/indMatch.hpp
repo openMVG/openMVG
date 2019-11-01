@@ -26,19 +26,6 @@ struct IndMatch
 {
   IndMatch(IndexT i = 0, IndexT j = 0) : i_(i), j_(j)  {}
 
-   bool operator==(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
-  }
-
-   bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
-    return !(m1 == m2);
-  }
-
-  // Lexicographical ordering of matches. Used to remove duplicates
-   bool operator<(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
-  }
-
   /// Remove duplicates ((i_, j_) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
 
@@ -54,6 +41,19 @@ struct IndMatch
 
   IndexT i_, j_;  // Left, right index
 };
+
+inline bool operator==(const IndMatch& m1, const IndMatch& m2)  {
+  return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
+}
+
+inline bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
+  return !(m1 == m2);
+}
+
+// Lexicographical ordering of matches. Used to remove duplicates
+inline bool operator<(const IndMatch& m1, const IndMatch& m2)  {
+  return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
+}
 
 inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj.i_ << " " << obj.j_;
