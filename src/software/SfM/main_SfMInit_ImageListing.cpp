@@ -36,12 +36,13 @@ using namespace openMVG::geodesy;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-/// Check that Kmatrix is a string like "f;0;ppx;0;f;ppy;0;0;1"
-/// With f,ppx,ppy as valid numerical value
-bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<double> & focals,
+/// Check that Kmatrix is a string like "fx;0;ppx;0;fy;ppy;0;0;1"
+/// With fx,ppx,fy,ppy as valid numerical value
+bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<double> & focalxs, std::vector<double> & focalys,
                                   std::vector<double> & ppxs, std::vector<double> & ppys)
 {
-  focals.clear();
+  focalxs.clear();
+  focalys.clear();
   ppxs.clear();
   ppys.clear();
   std::vector<std::string> vec_str;
@@ -60,8 +61,9 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<doub
       return false;
     }
     size_t component = i % 9;
-    if (component==0) focals.push_back(readvalue);
+    if (component==0) focalxs.push_back(readvalue);
     if (component==2) ppxs.push_back(readvalue);
+    if (component==4) focalys.push_back(readvalue);
     if (component==5) ppys.push_back(readvalue);
   }
   return true;
@@ -290,6 +292,7 @@ int main(int argc, char **argv)
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
       << "\t 6: Pinhole radial 1 pba\n"
       << "\t 8: Spherical camera\n"
+      << "\t 11: Pinhole brown 2 with different fx, fy"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
@@ -317,7 +320,7 @@ int main(int argc, char **argv)
             << "--group_camera_model " << b_Group_camera_model << std::endl;
 
   // Expected properties for each image
-  std::vector<double> focals, ppxs, ppys;
+  std::vector<double> focalxs, focalys, ppxs, ppys;
 
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
@@ -362,7 +365,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (sFocalPixels.size() > 0 && !checkFocalPixelsStringValidity(sFocalPixels, focals)) {
+  if (sFocalPixels.size() > 0 && !checkFocalPixelsStringValidity(sFocalPixels, focalxs)) { // todo
     std::cerr << "\nInvalid f focals input" << std::endl;
     return EXIT_FAILURE;
   }
@@ -414,7 +417,7 @@ int main(int argc, char **argv)
   std::ostringstream error_report_stream;
   for (size_t image_number = 0; image_number<sortedImages.size(); ++image_number, ++my_progress_bar) {
     // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
-    double width = -1.0, height = -1.0, ppx = -1.0, ppy = -1.0, focal = -1.0;
+    double width = -1.0, height = -1.0, ppx = -1.0, ppy = -1.0, focalx = -1.0, focaly = -1.0;
 
     const std::string sImageFilename = stlplus::create_filespec( sCombinationDirectory, sortedImages[image_number].first);
     const std::string sImFilenamePart = stlplus::filename_part( sImageFilename);
@@ -448,11 +451,12 @@ int main(int argc, char **argv)
     if (sKmatrixs.size() > 0) // Known user calibration K matrix
     {
       if (is_valid_intrinsic) {
-        focal = focals[sortedImages[image_number].second];
+        focalx = focalxs[sortedImages[image_number].second];
+        focaly = focalys[sortedImages[image_number].second];
         ppx = ppxs[sortedImages[image_number].second];
         ppy = ppys[sortedImages[image_number].second];
       } else {
-        focal = -1.0;
+        focalx = -1.0;
       }
     }
     else // User provided focal length value
@@ -460,7 +464,7 @@ int main(int argc, char **argv)
         focal = focals[sortedImages[image_number].second];
 
     // If not manually provided or wrongly provided
-    if (focal == -1)
+    if (focalx == -1)
     {
       std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
       exifReader->open( sImageFilename );
@@ -478,7 +482,7 @@ int main(int argc, char **argv)
         {
           error_report_stream
             << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
-          focal = -1.0;
+          focalx = -1.0;
         }
         else
         // Create the image entry in the list file
@@ -488,7 +492,7 @@ int main(int argc, char **argv)
           {
             // The camera model was found in the database so we can compute it's approximated focal length
             const double ccdw = datasheet.sensorSize_;
-            focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+            focalx = std::max ( width, height ) * exifReader->getFocal() / ccdw;
           }
           else
           {
@@ -503,30 +507,35 @@ int main(int argc, char **argv)
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic;
 
-    if (focal > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
+    if (focalx > 0 && ppx > 0 && ppy > 0 && width > 0 && height > 0)
     {
       // Create the desired camera type
       switch (e_User_camera_model)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>
-            (width, height, focal, ppx, ppy);
+            (width, height, focalx, ppx, ppy);
         break;
         case PINHOLE_CAMERA_RADIAL1:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
-            (width, height, focal, ppx, ppy, 0.0); // setup no distortion as initial guess
+            (width, height, focalx, ppx, ppy, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_RADIAL3:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
+            (width, height, focalx, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_BROWN:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+            (width, height, focalx, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+        break;
+        case PINHOLE_CAMERA_BROWN_2:
+          if (focaly > 0)
+            intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2_2>
+              (width, height, focalx, focaly, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_FISHEYE:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+            (width, height, focalx, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case CAMERA_SPHERICAL:
            intrinsic = std::make_shared<Intrinsic_Spherical>
@@ -534,7 +543,7 @@ int main(int argc, char **argv)
         break;
         case PINHOLE_CAMERA_RADIAL1_PBA:
            intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1_PBA>
-             (width, height, focal, ppx, ppy, 0.0);
+             (width, height, focalx, ppx, ppy, 0.0);
            break;
         default:
           std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;

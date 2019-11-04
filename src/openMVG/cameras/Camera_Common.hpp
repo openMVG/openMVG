@@ -42,11 +42,15 @@ enum EINTRINSIC
   PINHOLE_CAMERA = 1,         // No distortion
   PINHOLE_CAMERA_RADIAL1 = 2, // radial distortion K1
   PINHOLE_CAMERA_RADIAL3 = 3, // radial distortion K1,K2,K3
-  PINHOLE_CAMERA_BROWN = 4, // radial distortion K1,K2,K3, tangential distortion T1,T2
+  PINHOLE_CAMERA_BROWN = 4,   // radial distortion K1,K2,K3, tangential distortion T1,T2
   PINHOLE_CAMERA_FISHEYE = 5, // a simple Fish-eye distortion model with 4 distortion coefficients
   PINHOLE_CAMERA_RADIAL1_PBA = 6,
   PINHOLE_CAMERA_END = 7,
-  CAMERA_SPHERICAL = PINHOLE_CAMERA_END + 1
+  CAMERA_SPHERICAL = 8,
+  PINHOLE_CAMERA_2_START = 9,
+  PINHOLE_CAMERA_2 = 10,       // No distortion, with focal length Fx,Fy
+  PINHOLE_CAMERA_BROWN_2 = 11, // radial distortion K1,K2,K3, tangential distortion T1,T2
+  PINHOLE_CAMERA_2_END = 12
 };
 
 /**
@@ -58,6 +62,11 @@ enum EINTRINSIC
 static inline bool isPinhole( EINTRINSIC eintrinsic )
 {
   return eintrinsic > PINHOLE_CAMERA_START && eintrinsic < PINHOLE_CAMERA_END;
+}
+
+static inline bool isPinhole_2( EINTRINSIC eintrinsic )
+{
+  return eintrinsic > PINHOLE_CAMERA_2_START && eintrinsic < PINHOLE_CAMERA_2_END;
 }
 
 static inline bool isSpherical( EINTRINSIC eintrinsic )
@@ -73,7 +82,7 @@ static inline bool isSpherical( EINTRINSIC eintrinsic )
 */
 static inline bool isValid( EINTRINSIC eintrinsic )
 {
-  return isPinhole(eintrinsic) || isSpherical(eintrinsic);
+  return isPinhole(eintrinsic) || isSpherical(eintrinsic) || isPinhole_2(eintrinsic);
 }
 
 /**

@@ -96,6 +96,8 @@ ceres::CostFunction * IntrinsicsToCostFunction
       return ResidualErrorFunctor_Pinhole_Intrinsic_Radial_K3::Create(observation, weight);
     case PINHOLE_CAMERA_BROWN:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2::Create(observation, weight);
+    case PINHOLE_CAMERA_BROWN_2:
+      return ResidualErrorFunctor_Pinhole_Intrinsic_Brown_T2_2::Create(observation, weight);
     case PINHOLE_CAMERA_FISHEYE:
       return ResidualErrorFunctor_Pinhole_Intrinsic_Fisheye::Create(observation, weight);
     case CAMERA_SPHERICAL:
@@ -260,7 +262,9 @@ bool Bundle_Adjustment_Ceres::Adjust
 
     double * parameter_block = &map_poses.at(indexPose)[0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE)
+    if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE ||
+      std::find(options.fix_extrinsic_idx_opt.begin(), options.fix_extrinsic_idx_opt.end(), indexPose) !=
+      options.fix_extrinsic_idx_opt.end())
     {
       // set the whole parameter block as constant for best performance
       problem.SetParameterBlockConstant(parameter_block);

@@ -12,8 +12,10 @@
 #include "openMVG/cameras/cameras.hpp"
 #include "openMVG/cameras/Camera_Intrinsics_io.hpp"
 #include "openMVG/cameras/Camera_Pinhole_io.hpp"
+#include "openMVG/cameras/Camera_Pinhole_2_io.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial_io.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Brown_io.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Brown_2_io.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Fisheye_io.hpp"
 #include "openMVG/cameras/Camera_Spherical_io.hpp"
 
