@@ -583,18 +583,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
     // Init poses
     const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-    // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
-
-    Mat3 r;
-    Vec3 t;
-    r << 9.3215328318049406e-001, 2.2693848761667743e-003,
-    3.6205677254832508e-001, -2.9831596340666590e-003,
-    9.9999455284742622e-001, 1.4124567510952865e-003,
-    -3.6205159496185552e-001, -2.3966993469905417e-003,
-    9.3215497553669513e-001;
-    t << -2.9257562654058563e+002, -5.1523838108377185e-001,
-    4.8560761235743044e+001;
-    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = Pose3(r, -r.transpose() * t);;
+    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
 
     // Init structure
     Landmarks & landmarks = tiny_scene.structure;
@@ -630,8 +619,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         Optimize_Options
         (
           Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
-          // Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-          Extrinsic_Parameter_Type::NONE, // Keep camera motion constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
           Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
         )
       )
@@ -1258,18 +1246,11 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
         options.linear_solver_type_ = ceres::DENSE_SCHUR;
       }
       Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-      std::vector<uint32_t> fixed_extrinsic_indices;
-      if (true) {
-        fixed_extrinsic_indices.emplace_back(initial_pair_.first);
-        fixed_extrinsic_indices.emplace_back(initial_pair_.second);
-      }
       const Optimize_Options ba_refine_options
               ( ReconstructionEngine::intrinsic_refinement_options_,
                 Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
                 Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
-                Control_Point_Parameter(),
-                this->b_use_motion_prior_,
-                fixed_extrinsic_indices
+                Control_Point_Parameter()
               );
       return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   }

@@ -137,9 +137,6 @@ private:
   bool b_omit_angle_error_;
   //acransac times control
   uint32_t u_acransac_times_;
-
-  std::vector<double> initial_R;
-  std::vector<double> initial_T;
 };
 
 } // namespace sfm
