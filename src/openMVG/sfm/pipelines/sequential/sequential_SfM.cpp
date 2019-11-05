@@ -1250,7 +1250,8 @@ bool SequentialSfMReconstructionEngine::BundleAdjustment()
               ( ReconstructionEngine::intrinsic_refinement_options_,
                 Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
                 Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
-                Control_Point_Parameter()
+                Control_Point_Parameter(),
+                this->b_use_motion_prior_
               );
       return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
   }

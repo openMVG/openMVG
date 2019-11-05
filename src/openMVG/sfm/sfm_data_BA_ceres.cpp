@@ -262,9 +262,7 @@ bool Bundle_Adjustment_Ceres::Adjust
 
     double * parameter_block = &map_poses.at(indexPose)[0];
     problem.AddParameterBlock(parameter_block, 6);
-    if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE ||
-      std::find(options.fix_extrinsic_idx_opt.begin(), options.fix_extrinsic_idx_opt.end(), indexPose) !=
-      options.fix_extrinsic_idx_opt.end())
+    if (options.extrinsics_opt == Extrinsic_Parameter_Type::NONE)
     {
       // set the whole parameter block as constant for best performance
       problem.SetParameterBlockConstant(parameter_block);
