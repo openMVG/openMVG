@@ -61,9 +61,10 @@ void TriangulateDLT
 * @param t1 Second Camera translation vector
 * @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the cheirality test, false otherwise
 * @ref S.H. Lee, J. Civera - Closed-Form Optimal Triangulation Based on Angular Errors - ICCV 2019 - https://arxiv.org/pdf/1903.09115.pdf
 */
-void TriangulateL1Angular
+bool TriangulateL1Angular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -85,9 +86,10 @@ void TriangulateL1Angular
 * @param t1 Second Camera translation vector
 * @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the cheirality test, false otherwise
 * @ref S.H. Lee, J. Civera - Closed-Form Optimal Triangulation Based on Angular Errors - ICCV 2019 - https://arxiv.org/pdf/1903.09115.pdf
 */
-void TriangulateLInfinityAngular
+bool TriangulateLInfinityAngular
 (
   const Mat3 &R0,
   const Vec3 &t0,

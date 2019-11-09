@@ -59,7 +59,8 @@ TEST(Triangulation, TriangulateL1Angular)
     Vec3 X_estimated;
     const Vec2 x1 = d._x[0].col(i);
     const Vec2 x2 = d._x[1].col(i);
-    TriangulateL1Angular(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
+    bool cheir_ok = TriangulateL1Angular(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
+    EXPECT_TRUE(cheir_ok);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }
@@ -72,7 +73,8 @@ TEST(Triangulation, TriangulateL1Angular)
     Vec3 X_estimated;
     const Vec2 x1 = d._x[0].col(i);
     const Vec2 x2 = d._x[1].col(i);
-    TriangulateLInfinityAngular(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
+    bool cheir_ok = TriangulateLInfinityAngular(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
+    EXPECT_TRUE(cheir_ok);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }
@@ -85,8 +87,8 @@ TEST(Triangulation, TriangulateIDWMidpoint)
     Vec3 X_estimated;
     const Vec2 x1 = d._x[0].col(i);
     const Vec2 x2 = d._x[1].col(i);
-    bool chir_ok = TriangulateIDWMidpoint(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
-    EXPECT_TRUE(chir_ok);
+    bool cheir_ok = TriangulateIDWMidpoint(d._R[0], d._t[0], d._K[0].inverse() * x1.homogeneous(), d._R[1], d._t[1], d._K[1].inverse() * x2.homogeneous(), &X_estimated);
+    EXPECT_TRUE(cheir_ok);
     EXPECT_NEAR(0, DistanceLInfinity(X_estimated, X_gt), 1e-8);
   }
 }

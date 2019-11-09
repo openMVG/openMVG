@@ -49,7 +49,7 @@ void TriangulateDLT
   (*X_euclidean) = X_homogeneous.hnormalized();
 }
 
-void TriangulateL1Angular
+bool TriangulateL1Angular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -94,12 +94,18 @@ void TriangulateL1Angular
   // Rf'0 = m'0 and f'1 = m'1
   // Eq. (11)
   const Vec3 z = mprime1.cross(mprime0);
-  const Vec3 xprime1 = t + (z.dot(t.cross(mprime1)) / z.squaredNorm()) * mprime0;
+  const double lambda0 = z.dot(t.cross(mprime1)) / z.squaredNorm();
+  const double lambda1 = z.dot(t.cross(mprime0)) / z.squaredNorm();
+ 
+  const Vec3 xprime1 = t + lambda0 * mprime0;
   // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
   *X_euclidean = R1.transpose() * (xprime1 - t1);
+
+  // make and return the result og the cheirality test
+  return lambda0 > 0.0 && lambda1 > 0.0;
 }
 
-void TriangulateLInfinityAngular
+bool TriangulateLInfinityAngular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -122,7 +128,7 @@ void TriangulateLInfinityAngular
   const Vec3 na = (m0.normalized() + m1.normalized()).cross(t);
   const Vec3 nb = (m0.normalized() - m1.normalized()).cross(t);
 
-  const Vec3 & nprime = na.squaredNorm() >= nb.squaredNorm() ? na.normalized() : nb.normalized();
+  const Vec3 nprime = na.squaredNorm() >= nb.squaredNorm() ? na.normalized() : nb.normalized();
 
   const Vec3 mprime0 = m0 - (m0.dot(nprime)) * nprime;
   const Vec3 mprime1 = m1 - (m1.dot(nprime)) * nprime;
@@ -131,9 +137,15 @@ void TriangulateLInfinityAngular
   // Rf'0 = m'0 and f'1 = m'1
   // Eq. (11)
   const Vec3 z = mprime1.cross(mprime0);
-  const Vec3 xprime1 = t + (z.dot(t.cross(mprime1)) / z.squaredNorm()) * mprime0;
+  const double lambda0 = z.dot(t.cross(mprime1)) / z.squaredNorm();
+  const double lambda1 = z.dot(t.cross(mprime0)) / z.squaredNorm();
+
+  const Vec3 xprime1 = t + lambda0 * mprime0;
   // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
   *X_euclidean = R1.transpose() * (xprime1 - t1);
+
+  // make and return the result og the cheirality test
+  return lambda0 > 0.0 && lambda1 > 0.0;
 }
 
 bool TriangulateIDWMidpoint(
