@@ -136,48 +136,44 @@ void TriangulateLInfinityAngular
   *X_euclidean = R1.transpose() * (xprime1 - t1);
 }
 
-bool TriangulateIDW(
-  const Mat34& P1,
-  const Vec3& x1,
-  const Mat34& P2,
-  const Vec3& x2,
+bool TriangulateIDWMidpoint(
+  const Mat3 & R0,
+  const Vec3 & t0,
+  const Vec3 & x0,
+  const Mat3 & R1,
+  const Vec3 & t1,
+  const Vec3 & x1,
   Vec3* X_euclidean
 )
 {
-  // x1 && x2 are bearings, thus they should be should be normalized
-  const Mat3 &R1 = P1.block<3, 3>(0, 0);
-  const Mat3 &R2 = P2.block<3, 3>(0, 0);
-  const Vec3 &t1 = P1.block<3, 1>(0, 3);
-  const Vec3 &t2 = P2.block<3, 1>(0, 3);
-    
   // absolute to relative
-  const Mat3 R = R2 * R1.transpose();
-  const Vec3 t = t2 - R * t1;
+  const Mat3 R = R1 * R0.transpose();
+  const Vec3 t = t1 - R * t0;
 
-  const Vec3 Rx1 = R * x1;
+  const Vec3 Rx0 = R * x0;
 
-  const double p_norm = Rx1.cross(x2).norm();
-  const double q_norm = Rx1.cross(t).norm();
-  const double r_norm = x2.cross(t).norm();
+  const double p_norm = Rx0.cross(x1).norm();
+  const double q_norm = Rx0.cross(t).norm();
+  const double r_norm = x1.cross(t).norm();
   
   // Eq. (10)
   const auto xprime1 = ( q_norm / (q_norm + r_norm) ) 
-    * ( t + (r_norm / p_norm) * (Rx1 + x2) );
+    * ( t + (r_norm / p_norm) * (Rx0 + x1) );
 
   // relative to absolute
-  *X_euclidean = R2.transpose() * (xprime1 - t2);
+  *X_euclidean = R1.transpose() * (xprime1 - t1);
 
   // Eq. (7)
-  const Vec3 lambda1_Rx1 = (r_norm / p_norm) * Rx1;
-  const Vec3 lambda2_x2 = (q_norm / p_norm) * x2;
+  const Vec3 lambda0_Rx0 = (r_norm / p_norm) * Rx0;
+  const Vec3 lambda1_x1 = (q_norm / p_norm) * x1;
 
   // Eq. (9) - test adequation 
-  return (t + lambda1_Rx1 - lambda2_x2).squaredNorm()
+  return (t + lambda0_Rx0 - lambda1_x1).squaredNorm()
     <
     std::min(std::min(
-      (t + lambda1_Rx1 + lambda2_x2).squaredNorm(),
-      (t - lambda1_Rx1 - lambda2_x2).squaredNorm()),
-      (t - lambda1_Rx1 + lambda2_x2).squaredNorm());
+      (t + lambda0_Rx0 + lambda1_x1).squaredNorm(),
+      (t - lambda0_Rx0 - lambda1_x1).squaredNorm()),
+      (t - lambda0_Rx0 + lambda1_x1).squaredNorm());
 }
 
 }  // namespace openMVG
