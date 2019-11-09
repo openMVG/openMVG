@@ -49,7 +49,51 @@ void TriangulateDLT
   (*X_euclidean) = X_homogeneous.hnormalized();
 }
 
-void TriangulateL1Angular
+// Helper function
+// Compute Relative motion between two absolute poses parameterized by Rt
+// Rotate one bearing vector according to the relative motion
+inline void AbsoluteToRelative(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &x0,
+  Mat3 &R,
+  Vec3 &t,
+  Vec3 &Rx0
+)
+{
+  R = R1 * R0.transpose();
+  t = t1 - R * t0;
+  Rx0 = R * x0;
+}
+
+// Helper function
+// Compute the 3D point from the outcome of an angular triangulation solver
+// Return true if the point pass the cheirality test, false otherwise
+// Lee & Civera Eq. (11) and  Table 1 - 4)
+inline bool Compute3DPoint(
+  const Vec3 &mprime0,
+  const Vec3 &mprime1,
+  const Vec3 &t,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  Vec3 * X) 
+{
+  const Vec3 z = mprime1.cross(mprime0);
+  const double z_squared = z.squaredNorm();
+  const double lambda0 = z.dot(t.cross(mprime1)) / z_squared;
+  const double lambda1 = z.dot(t.cross(mprime0)) / z_squared;
+  const Vec3 xprime1 = t + lambda0 * mprime0;
+
+  // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
+  *X = R1.transpose() * (xprime1 - t1);
+
+  // make and return the result of the cheirality test
+  return lambda0 > 0.0 && lambda1 > 0.0;
+}
+
+bool TriangulateL1Angular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -60,46 +104,37 @@ void TriangulateL1Angular
   Vec3 *X_euclidean
 )
 {
-  // Table 1 - 1) we compute m0 and m1
-  // absolute to relative
-  const Mat3 R = R1 * R0.transpose();
-  const Vec3 t = t1 - R * t0;
+  // Table 1 - 1) we compute m0 (Rx0) and m1 (x1)
+  Mat3 R;
+  Vec3 t, Rx0;
+  AbsoluteToRelative(R0, t0, R1, t1, x0, R, t, Rx0);
 
-  const Vec3 m0 = R * x0;
-  const Vec3 & m1 = x1;
-
-  // Table 1 -2) obtain m'0 and m'1
+  // Table 1 - 2) obtain m'0 and m'1
   // allocate the two vectors
   Vec3 mprime0;
   Vec3 mprime1;
 
   // pre compute n0 and n1 cf. 5. Lemma 2
-  const Vec3 n0 = m0.cross(t).normalized();
-  const Vec3 n1 = m1.cross(t).normalized();
+  const Vec3 n0 = Rx0.cross(t).normalized();
+  const Vec3 n1 = x1.cross(t).normalized();
   
-  if(m0.normalized().cross(t).squaredNorm() <= m1.normalized().cross(t).squaredNorm())
+  if(Rx0.normalized().cross(t).squaredNorm() <= x1.normalized().cross(t).squaredNorm())
   {
     // Eq. (12)
-    mprime0 = m0 - m0.dot(n1) * n1;
-    mprime1 = m1;
+    mprime0 = Rx0 - Rx0.dot(n1) * n1;
+    mprime1 = x1;
   } 
   else 
   {
     // Eq. (13)
-    mprime0 = m0;
-    mprime1 = m1 - m1.dot(n0) * n0;
+    mprime0 = Rx0;
+    mprime1 = x1 - x1.dot(n0) * n0;
   }
 
-  // Table 1 - 3)
-  // Rf'0 = m'0 and f'1 = m'1
-  // Eq. (11)
-  const Vec3 z = mprime1.cross(mprime0);
-  const Vec3 xprime1 = t + (z.dot(t.cross(mprime1)) / z.squaredNorm()) * mprime0;
-  // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
-  *X_euclidean = R1.transpose() * (xprime1 - t1);
+  return Compute3DPoint(mprime0, mprime1, t, R1, t1, X_euclidean);
 }
 
-void TriangulateLInfinityAngular
+bool TriangulateLInfinityAngular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -110,74 +145,62 @@ void TriangulateLInfinityAngular
   Vec3 *X_euclidean
 )
 {
-  // Table 1 - 1) we compute m0 and m1
-  // absolute to relative
-  const Mat3 R = R1 * R0.transpose();
-  const Vec3 t = t1 - R * t0;
+  // Table 1 - 1) we compute m0 (Rx0) and m1 (x1)
+  Mat3 R;
+  Vec3 t, Rx0;
+  AbsoluteToRelative(R0, t0, R1, t1, x0, R, t, Rx0);
 
-  const Vec3 m0 = R * x0;
-  const Vec3 & m1 = x1;
+  // cf. 7. Lemma 2
+  const Vec3 Rx0_norm = Rx0.normalized();
+  const Vec3 x1_norm = x1.normalized();
+  const Vec3 na = (Rx0_norm + x1_norm).cross(t);
+  const Vec3 nb = (Rx0_norm - x1_norm).cross(t);
 
-  //cf. 7. Lemma 2
-  const Vec3 na = (m0.normalized() + m1.normalized()).cross(t);
-  const Vec3 nb = (m0.normalized() - m1.normalized()).cross(t);
+  const Vec3 nprime = na.squaredNorm() >= nb.squaredNorm() ? na.normalized() : nb.normalized();
 
-  const Vec3 & nprime = na.squaredNorm() >= nb.squaredNorm() ? na.normalized() : nb.normalized();
+  const Vec3 mprime0 = Rx0 - (Rx0.dot(nprime)) * nprime;
+  const Vec3 mprime1 = x1 - (x1.dot(nprime)) * nprime;
 
-  const Vec3 mprime0 = m0 - (m0.dot(nprime)) * nprime;
-  const Vec3 mprime1 = m1 - (m1.dot(nprime)) * nprime;
-
-  // Table 1 - 3)
-  // Rf'0 = m'0 and f'1 = m'1
-  // Eq. (11)
-  const Vec3 z = mprime1.cross(mprime0);
-  const Vec3 xprime1 = t + (z.dot(t.cross(mprime1)) / z.squaredNorm()) * mprime0;
-  // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
-  *X_euclidean = R1.transpose() * (xprime1 - t1);
+  return Compute3DPoint(mprime0, mprime1, t, R1, t1, X_euclidean);
 }
 
-bool TriangulateIDW(
-  const Mat34& P1,
-  const Vec3& x1,
-  const Mat34& P2,
-  const Vec3& x2,
+bool TriangulateIDWMidpoint(
+  const Mat3 & R0,
+  const Vec3 & t0,
+  const Vec3 & x0,
+  const Mat3 & R1,
+  const Vec3 & t1,
+  const Vec3 & x1,
   Vec3* X_euclidean
 )
 {
-  // x1 && x2 are bearings, thus they should be should be normalized
-  const Mat3 &R1 = P1.block<3, 3>(0, 0);
-  const Mat3 &R2 = P2.block<3, 3>(0, 0);
-  const Vec3 &t1 = P1.block<3, 1>(0, 3);
-  const Vec3 &t2 = P2.block<3, 1>(0, 3);
-    
   // absolute to relative
-  const Mat3 R = R2 * R1.transpose();
-  const Vec3 t = t2 - R * t1;
+  Mat3 R;
+  Vec3 t, Rx0;
+  AbsoluteToRelative(R0, t0, R1, t1, x0, R, t, Rx0);
 
-  const Vec3 Rx1 = R * x1;
-
-  const double p_norm = Rx1.cross(x2).norm();
-  const double q_norm = Rx1.cross(t).norm();
-  const double r_norm = x2.cross(t).norm();
+  const double p_norm = Rx0.cross(x1).norm();
+  const double q_norm = Rx0.cross(t).norm();
+  const double r_norm = x1.cross(t).norm();
   
   // Eq. (10)
   const auto xprime1 = ( q_norm / (q_norm + r_norm) ) 
-    * ( t + (r_norm / p_norm) * (Rx1 + x2) );
+    * ( t + (r_norm / p_norm) * (Rx0 + x1) );
 
   // relative to absolute
-  *X_euclidean = R2.transpose() * (xprime1 - t2);
+  *X_euclidean = R1.transpose() * (xprime1 - t1);
 
   // Eq. (7)
-  const Vec3 lambda1_Rx1 = (r_norm / p_norm) * Rx1;
-  const Vec3 lambda2_x2 = (q_norm / p_norm) * x2;
+  const Vec3 lambda0_Rx0 = (r_norm / p_norm) * Rx0;
+  const Vec3 lambda1_x1 = (q_norm / p_norm) * x1;
 
   // Eq. (9) - test adequation 
-  return (t + lambda1_Rx1 - lambda2_x2).squaredNorm()
+  return (t + lambda0_Rx0 - lambda1_x1).squaredNorm()
     <
     std::min(std::min(
-      (t + lambda1_Rx1 + lambda2_x2).squaredNorm(),
-      (t - lambda1_Rx1 - lambda2_x2).squaredNorm()),
-      (t - lambda1_Rx1 + lambda2_x2).squaredNorm());
+      (t + lambda0_Rx0 + lambda1_x1).squaredNorm(),
+      (t - lambda0_Rx0 - lambda1_x1).squaredNorm()),
+      (t - lambda0_Rx0 + lambda1_x1).squaredNorm());
 }
 
 }  // namespace openMVG

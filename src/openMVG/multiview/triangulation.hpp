@@ -61,9 +61,10 @@ void TriangulateDLT
 * @param t1 Second Camera translation vector
 * @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the cheirality test, false otherwise
 * @ref S.H. Lee, J. Civera - Closed-Form Optimal Triangulation Based on Angular Errors - ICCV 2019 - https://arxiv.org/pdf/1903.09115.pdf
 */
-void TriangulateL1Angular
+bool TriangulateL1Angular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -85,9 +86,10 @@ void TriangulateL1Angular
 * @param t1 Second Camera translation vector
 * @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the cheirality test, false otherwise
 * @ref S.H. Lee, J. Civera - Closed-Form Optimal Triangulation Based on Angular Errors - ICCV 2019 - https://arxiv.org/pdf/1903.09115.pdf
 */
-void TriangulateLInfinityAngular
+bool TriangulateLInfinityAngular
 (
   const Mat3 &R0,
   const Vec3 &t0,
@@ -102,19 +104,23 @@ void TriangulateLInfinityAngular
 * @brief Inverse Depth Weighted Midpoint method
 * @brief and its ad hoc adequacy test (a replacement for cheirality tests)
 * @brief should be better than DLT for low and high parallax angles
-* @param P1 First camera projection matrix
-* @param P2 Second camera projection matrix
-* @param x1 bearing vector of the landmark observation in the first camera
-* @param x2 bearing vector of the landmark observation in the second camera
+* @param R0 First Camera rotation matrix
+* @param t0 First Camera translation vector
+* @param x0 bearing vector of the landmark observation in the first camera
+* @param R1 Second Camera rotation matrix
+* @param t1 Second Camera translation vector
+* @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
 * @return true if the point pass the adequacy test, false otherwise
 * @ref S.H. Lee, J. Civera - Triangulation: Why Optimize? - BMVC 2019 - https://arxiv.org/pdf/1907.11917.pdf
 */
-bool TriangulateIDW(
-  const Mat34 & P1,
-  const Vec3 &x1,
-  const Mat34 &P2,
-  const Vec3 &x2,
+bool TriangulateIDWMidpoint(
+  const Mat3 & R0,
+  const Vec3 & t0,
+  const Vec3 & x0,
+  const Mat3 & R1,
+  const Vec3 & t1,
+  const Vec3 & x1,
   Vec3 *X_euclidean
 );
 
