@@ -24,27 +24,14 @@ namespace matching {
 /// A sort operator exist in order to remove duplicates of IndMatch series.
 struct IndMatch
 {
-  IndMatch(IndexT i = 0, IndexT j = 0) : i_(i), j_(j)  {}
-
-  friend bool operator==(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
-  }
-
-  friend bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
-    return !(m1 == m2);
-  }
-
-  // Lexicographical ordering of matches. Used to remove duplicates
-  friend bool operator<(const IndMatch& m1, const IndMatch& m2)  {
-    return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
-  }
+  IndMatch(const IndexT i = 0, const IndexT j = 0) : i_(i), j_(j)  {}
 
   /// Remove duplicates ((i_, j_) that appears multiple times)
   static bool getDeduplicated(std::vector<IndMatch> & vec_match)  {
 
     const size_t sizeBefore = vec_match.size();
-    const std::set<IndMatch> set_deduplicated( vec_match.begin(), vec_match.end());
-    vec_match.assign(set_deduplicated.begin(), set_deduplicated.end());
+    const std::set<IndMatch> set_deduplicated( vec_match.cbegin(), vec_match.cend());
+    vec_match.assign(set_deduplicated.cbegin(), set_deduplicated.cend());
     return sizeBefore != vec_match.size();
   }
 
@@ -54,6 +41,19 @@ struct IndMatch
 
   IndexT i_, j_;  // Left, right index
 };
+
+inline bool operator==(const IndMatch& m1, const IndMatch& m2)  {
+  return (m1.i_ == m2.i_ && m1.j_ == m2.j_);
+}
+
+inline bool operator!=(const IndMatch& m1, const IndMatch& m2)  {
+  return !(m1 == m2);
+}
+
+// Lexicographical ordering of matches. Used to remove duplicates
+inline bool operator<(const IndMatch& m1, const IndMatch& m2)  {
+  return (m1.i_ < m2.i_ || (m1.i_ == m2.i_ && m1.j_ < m2.j_));
+}
 
 inline std::ostream& operator<<(std::ostream & out, const IndMatch & obj) {
   return out << obj.i_ << " " << obj.j_;
