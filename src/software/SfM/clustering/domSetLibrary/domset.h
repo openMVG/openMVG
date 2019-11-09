@@ -24,16 +24,16 @@ namespace nomoko {
     private:
       // Generic clustering
       void findCommonPoints(const View& v1, const View& v2,
-          std::vector<size_t>& commonPts);
+          std::vector<size_t>& commonPts) const;
       // similarity measures
-      const float computeViewSimilaity(const View&, const View&);
-      Eigen::MatrixXf getSimilarityMatrix(std::map<size_t,size_t>&);
+      float computeViewSimilarity(const View&, const View&) const;
+      Eigen::MatrixXf getSimilarityMatrix(const std::map<size_t,size_t>&);
 
       // distance measures
       void getAllDistances();
-      float getDistanceMedian(const std::map<size_t,size_t> &);
+      float getDistanceMedian(const std::map<size_t,size_t> &) const;
       float computeViewDistance(const size_t& vId1, const size_t & vId2,
-              const float& medianDist);
+              const float& medianDist) const;
 
       void computeInformation();
 
@@ -66,7 +66,7 @@ namespace nomoko {
           const size_t& maxClusterSize);
 
       // export function
-      void exportToPLY(const std::string& plyFile, bool exportPoints = false);
+      void exportToPLY(const std::string& plyFile, bool exportPoints = false) const;
 
       const std::vector<std::vector<size_t>>& getClusters() {
         return finalClusters;
