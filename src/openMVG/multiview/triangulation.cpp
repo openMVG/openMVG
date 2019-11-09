@@ -100,8 +100,9 @@ bool TriangulateL1Angular
   const Vec3 xprime1 = t + lambda0 * mprime0;
   // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
   *X_euclidean = R1.transpose() * (xprime1 - t1);
-
-  // make and return the result og the cheirality test
+  
+  // Table 1 - 4)
+  // make and return the result of the cheirality test
   return lambda0 > 0.0 && lambda1 > 0.0;
 }
 
@@ -144,7 +145,8 @@ bool TriangulateLInfinityAngular
   // x'1 is into the frame of camera1 convert it into the world frame in order to obtain the 3D point
   *X_euclidean = R1.transpose() * (xprime1 - t1);
 
-  // make and return the result og the cheirality test
+  // Table 1 - 4)
+  // make and return the result of the cheirality test
   return lambda0 > 0.0 && lambda1 > 0.0;
 }
 
