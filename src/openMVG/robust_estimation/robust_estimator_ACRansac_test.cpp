@@ -243,7 +243,7 @@ void generateLine(Mat & points, size_t nbPoints, int W, int H, float noise, floa
 // Structure used to avoid repetition in a given series
 struct IndMatchd
 {
-  IndMatchd(double i = 0, double j = 0): i_(i), j_(j)
+  explicit IndMatchd(double i = 0.0, double j = 0.0): i_(i), j_(j)
   {}
 
   double i_, j_;
