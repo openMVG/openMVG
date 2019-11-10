@@ -15,6 +15,9 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
+#include <Spectra/SymEigsSolver.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
+
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
 #endif
@@ -51,12 +54,6 @@ Mat3 ClosestSVDRotationMatrix
     rot_mat *= -1.0;
   }
   return rot_mat;
-}
-
-// <eigenvalue, eigenvector> pair comparator
-bool compare_first_abs(std::pair<double, Vec> const &x, std::pair<double, Vec> const &y)
-{
- return std::abs(x.first) < std::abs(y.first);
 }
 
 //-- Solve the Global Rotation matrix registration for each camera given a list
@@ -128,38 +125,31 @@ bool L2RotationAveraging
     ++cpt;
   }
 
-  // nCamera * 3 because each columns have 3 elements.
-  Mat AtA(3*nCamera,3*nCamera);
+  sMat AtAsparse;
   {
+    // nCamera * 3 because each columns have 3 elements.
     sMat A(nRotationEstimation*3, 3*nCamera);
     A.setFromTriplets(tripletList.begin(), tripletList.end());
     tripletList.clear();
     tripletList.shrink_to_fit();
-
-    const sMat AtAsparse = A.transpose() * A;
-    AtA = Mat(AtAsparse); // convert to dense
+    AtAsparse = A.transpose() * A;
   }
 
   // Solve Ax=0 => eigen vectors
-  Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
+  Spectra::SparseSymMatProd<double> op(AtAsparse);
+  Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigenSolver(&op, 3, 7);
 
-  if (es.info() != Eigen::Success)
+  eigenSolver.init();
+  Eigen::Index nConverge = eigenSolver.compute();
+  if (nConverge < 3 || eigenSolver.info() != Eigen::Success)
   {
     return false;
   }
   // else
   {
-    // Sort abs(eigenvalues)
-    std::vector<std::pair<double, Vec>> eigs(AtA.cols());
-    for (Mat::Index i = 0; i < AtA.cols(); ++i)
-    {
-      eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};
-    }
-    std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
-
-    const Vec & NullspaceVector0 = eigs[0].second;
-    const Vec & NullspaceVector1 = eigs[1].second;
-    const Vec & NullspaceVector2 = eigs[2].second;
+    const Vec & NullspaceVector0 = eigenSolver.eigenvectors(3).col(0);
+    const Vec & NullspaceVector1 = eigenSolver.eigenvectors(3).col(1);
+    const Vec & NullspaceVector2 = eigenSolver.eigenvectors(3).col(2);
 
     //--
     // Search the closest matrix :
