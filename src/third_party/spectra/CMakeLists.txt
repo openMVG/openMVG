@@ -19,7 +19,7 @@ add_library(Spectra INTERFACE)
 target_include_directories(Spectra
 		INTERFACE
 		$<INSTALL_INTERFACE:include>
-		$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		)
 target_link_libraries(Spectra INTERFACE Eigen3::Eigen)
 
@@ -41,12 +41,12 @@ install(TARGETS Spectra
 	INCLUDES DESTINATION include
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include/openMVG/third_party/spectra/include)
 
 install(EXPORT Spectra-targets
 	FILE Spectra-targets.cmake
 	NAMESPACE Spectra::
-	DESTINATION cmake
+	DESTINATION include/openMVG/third_party/spectra/cmake
 	)
 
 # Configure package
@@ -57,7 +57,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/spectra-config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/spectra-config.cmake
-    INSTALL_DESTINATION cmake
+    INSTALL_DESTINATION include/openMVG/third_party/spectra/cmake
 )
 
 write_basic_package_version_file(
@@ -70,5 +70,5 @@ install(
     FILES
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/spectra-config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/spectra-config-version.cmake
-    DESTINATION cmake
+    DESTINATION include/openMVG/third_party/spectra/cmake
 )
