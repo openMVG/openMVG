@@ -96,6 +96,8 @@ if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   add_subdirectory(eigen)
 endif()
 
+add_subdirectory(spectra)
+
 list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
 foreach(inDirectory ${directories})
 install(

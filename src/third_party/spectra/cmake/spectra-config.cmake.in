@@ -1,0 +1,5 @@
+@PACKAGE_INIT@
+
+if(NOT TARGET Spectra::Spectra)
+  include(${CMAKE_CURRENT_LIST_DIR}/Spectra-targets.cmake)
+endif()
