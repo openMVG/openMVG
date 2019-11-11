@@ -30,11 +30,11 @@ target_link_libraries(openMVG_multiview
   PRIVATE
     openMVG_graph
     ${CERES_LIBRARIES}
-    Spectra
 )
 target_include_directories(openMVG_multiview
   PRIVATE
     ${CERES_INCLUDE_DIRS}
+    ${SPECTRA_INCLUDE_DIRS}
   PUBLIC
     $<INSTALL_INTERFACE:include>
 )

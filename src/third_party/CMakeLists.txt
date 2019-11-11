@@ -96,7 +96,7 @@ if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   add_subdirectory(eigen)
 endif()
 
-add_subdirectory(spectra)
+set(SPECTRA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/spectra/include  PARENT_SCOPE)
 
 list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
 foreach(inDirectory ${directories})
