@@ -27,7 +27,7 @@ Please follow this [build tutorial ](https://github.com/openMVG/openMVG/blob/mas
 
 ## Continuous integration
 
- - Build : Linux/Mac (GCC/CLANG): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG)), Windows (VStudio): [![Build status](https://ci.appveyor.com/api/projects/status/3nv6rt41yxqx5v7i?svg=true)](https://ci.appveyor.com/project/pmoulon/openmvg)
+ - Build : Linux/Mac (GCC/CLANG): [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG), Windows (VStudio): [![Build status](https://ci.appveyor.com/api/projects/status/3nv6rt41yxqx5v7i?svg=true)](https://ci.appveyor.com/project/pmoulon/openmvg)
  - Code Quality [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e067bc979aef48f5a96818714a5b33b9)](https://www.codacy.com/manual/pmoulon/openMVG?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=openMVG/openMVG&amp;utm_campaign=Badge_Grade) [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/openMVG/openMVG.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/openMVG/openMVG/context:cpp)  [![CodeFactor](https://www.codefactor.io/repository/github/openmvg/openmvg/badge)](https://www.codefactor.io/repository/github/openmvg/openmvg)
 <!-- - Unit test coverage: [![Coverage Status](https://coveralls.io/repos/openMVG/openMVG/badge.png?branch=develop)](https://coveralls.io/r/openMVG/openMVG?branch=develop) -->
 

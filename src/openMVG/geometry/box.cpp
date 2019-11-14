@@ -17,7 +17,7 @@ Box::Box
 (
   const Vec3 & center,
   const double radius, // Distance from center to corner (like sphere radius)
-  const Mat3 R
+  const Mat3 &R
 )
 {
   const Vec3 directions[8] =

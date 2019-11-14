@@ -39,7 +39,7 @@ struct Box : public HalfPlaneObject
   (
     const Vec3 & center,
     const double radius, // Distance from center to corner (like sphere radius)
-    const Mat3 R = Mat3::Identity()
+    const Mat3 & R = Mat3::Identity()
   );
 
   /// Define a Rectangular parallelepiped bounding box from min/max axis aligned positions

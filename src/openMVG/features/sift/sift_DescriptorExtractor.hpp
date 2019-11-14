@@ -457,16 +457,16 @@ protected:
 
               const int index = i*m_nb_split2d*m_nb_split_angle+j*m_nb_split_angle;
               // Contribution to left bin.
-              int k = ((int)gamma + m_nb_split_angle) % m_nb_split_angle;
-              descr[index+k]
+              const int k_left = ((int)gamma + m_nb_split_angle) % m_nb_split_angle;
+              descr[index+k_left]
                 += (1.0f-(gamma-floor(gamma)))
                    *(1.0f-std::abs((float)i-alpha))
                    *(1.0f-std::abs((float)j-beta))
                    *M;
 
               // Contribution to right bin.
-              k = ((int)gamma + 1 + m_nb_split_angle) % m_nb_split_angle;
-              descr[index+k]
+              const int k_right = ((int)gamma + 1 + m_nb_split_angle) % m_nb_split_angle;
+              descr[index+k_right]
                 += (1.0f-(floor(gamma)+1.f-gamma))
                   *(1.0f-std::abs((float)i-alpha))
                   *(1.0f-std::abs((float)j-beta))
