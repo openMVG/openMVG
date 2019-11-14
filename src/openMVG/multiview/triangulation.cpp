@@ -31,7 +31,7 @@ void TriangulateDLT
   design.row(2) = x2[0] * P2.row(2) - x2[2] * P2.row(0);
   design.row(3) = x2[1] * P2.row(2) - x2[2] * P2.row(1);
 
-  Eigen::JacobiSVD<Mat4> svd( design, Eigen::ComputeFullV );
+  const Eigen::JacobiSVD<Mat4> svd( design, Eigen::ComputeFullV );
   ( *X_homogeneous ) = svd.matrixV().col( 3 );
 }
 
@@ -47,6 +47,27 @@ void TriangulateDLT
   Vec4 X_homogeneous;
   TriangulateDLT(P1, x1, P2, x2, &X_homogeneous);
   (*X_euclidean) = X_homogeneous.hnormalized();
+}
+
+bool TriangulateDLT
+(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Vec3 &x0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &x1,
+  Vec3 *X
+)
+{
+  Mat34 P0, P1;
+  P0.block<3,3>(0,0) = R0;
+  P1.block<3,3>(0,0) = R1;
+  P0.block<3,1>(0,3) = t0;
+  P1.block<3,1>(0,3) = t1;
+  TriangulateDLT(P0, x0, P1, x1, X);
+  return x0.dot(R0 * (*X + R0.transpose() * t0)) > 0.0 &&
+         x1.dot(R1 * (*X + R1.transpose() * t1)) > 0.0;
 }
 
 // Helper function
@@ -78,7 +99,7 @@ inline bool Compute3DPoint(
   const Vec3 &t,
   const Mat3 &R1,
   const Vec3 &t1,
-  Vec3 * X) 
+  Vec3 *X)
 {
   const Vec3 z = mprime1.cross(mprime0);
   const double z_squared = z.squaredNorm();
@@ -117,14 +138,14 @@ bool TriangulateL1Angular
   // pre compute n0 and n1 cf. 5. Lemma 2
   const Vec3 n0 = Rx0.cross(t).normalized();
   const Vec3 n1 = x1.cross(t).normalized();
-  
+
   if(Rx0.normalized().cross(t).squaredNorm() <= x1.normalized().cross(t).squaredNorm())
   {
     // Eq. (12)
     mprime0 = Rx0 - Rx0.dot(n1) * n1;
     mprime1 = x1;
-  } 
-  else 
+  }
+  else
   {
     // Eq. (13)
     mprime0 = Rx0;
@@ -182,9 +203,9 @@ bool TriangulateIDWMidpoint(
   const double p_norm = Rx0.cross(x1).norm();
   const double q_norm = Rx0.cross(t).norm();
   const double r_norm = x1.cross(t).norm();
-  
+
   // Eq. (10)
-  const auto xprime1 = ( q_norm / (q_norm + r_norm) ) 
+  const auto xprime1 = ( q_norm / (q_norm + r_norm) )
     * ( t + (r_norm / p_norm) * (Rx0 + x1) );
 
   // relative to absolute
@@ -194,13 +215,45 @@ bool TriangulateIDWMidpoint(
   const Vec3 lambda0_Rx0 = (r_norm / p_norm) * Rx0;
   const Vec3 lambda1_x1 = (q_norm / p_norm) * x1;
 
-  // Eq. (9) - test adequation 
+  // Eq. (9) - test adequation
   return (t + lambda0_Rx0 - lambda1_x1).squaredNorm()
     <
     std::min(std::min(
       (t + lambda0_Rx0 + lambda1_x1).squaredNorm(),
       (t - lambda0_Rx0 - lambda1_x1).squaredNorm()),
       (t - lambda0_Rx0 + lambda1_x1).squaredNorm());
+}
+
+bool Triangulate2View
+(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Vec3 &bearing0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &bearing1,
+  Vec3 &X,
+  ETriangulationMethod etri_method
+)
+{
+  switch (etri_method)
+  {
+    case ETriangulationMethod::DIRECT_LINEAR_TRANSFORM:
+      return TriangulateDLT(R0, t0, bearing0, R1, t1, bearing1, &X);
+    break;
+    case ETriangulationMethod::L1_ANGULAR:
+      return TriangulateL1Angular(R0, t0, bearing0, R1, t1, bearing1, &X);
+    break;
+    case ETriangulationMethod::LINFINITY_ANGULAR:
+      return TriangulateLInfinityAngular(R0, t0, bearing0, R1, t1, bearing1, &X);
+    break;
+    case ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT:
+      return TriangulateIDWMidpoint(R0, t0, bearing0, R1, t1, bearing1, &X);
+    break;
+    default:
+      return false;
+  }
+  return false;
 }
 
 }  // namespace openMVG

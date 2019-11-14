@@ -14,6 +14,38 @@
 namespace openMVG
 {
 
+enum class ETriangulationMethod : unsigned char
+{
+  DIRECT_LINEAR_TRANSFORM, // DLT
+  L1_ANGULAR,
+  LINFINITY_ANGULAR,
+  INVERSE_DEPTH_WEIGHTED_MIDPOINT
+};
+
+/**
+* @brief Generic triangulation rountine (Aggregate all the solver in one place).
+* @param R0 First Camera rotation matrix
+* @param t0 First Camera translation vector
+* @param x0 bearing vector of the landmark observation in the first camera
+* @param R1 Second Camera rotation matrix
+* @param t1 Second Camera translation vector
+* @param x1 bearing vector of the landmark observation in the second camera
+* @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the adequacy test, false otherwise
+* (invalid 3d point or method that does not exist)
+**/
+bool Triangulate2View
+(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Vec3 &bearing0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &bearing1,
+  Vec3 &X,
+  ETriangulationMethod etri_method = ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT
+);
+
 /**
 * @brief Linear DLT triangulation
 * @param P1 First camera projection matrix
@@ -44,10 +76,35 @@ void TriangulateDLT
 * @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
 */
 void TriangulateDLT
-( const Mat34 &P1,
+(
+  const Mat34 &P1,
   const Vec3 &x1,
   const Mat34 &P2,
   const Vec3 &x2,
+  Vec3 *X_euclidean
+);
+
+/**
+* @brief Linear DLT triangulation
+* @param R0 First Camera rotation matrix
+* @param t0 First Camera translation vector
+* @param x0 bearing vector of the landmark observation in the first camera
+* @param R1 Second Camera rotation matrix
+* @param t1 Second Camera translation vector
+* @param x1 bearing vector of the landmark observation in the second camera
+* @param[out] X_euclidean Euclidean triangulated point
+* @return true if the point pass the cheirality test, false otherwise
+* @see HZ 12.2 pag.312
+* @ref Multiple View Geometry - Richard Hartley, Andrew Zisserman - second edition
+*/
+bool TriangulateDLT
+(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Vec3 &x0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &x1,
   Vec3 *X_euclidean
 );
 
@@ -123,8 +180,6 @@ bool TriangulateIDWMidpoint(
   const Vec3 & x1,
   Vec3 *X_euclidean
 );
-
-
 
 } // namespace openMVG
 
