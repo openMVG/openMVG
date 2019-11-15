@@ -137,10 +137,10 @@ bool L2RotationAveraging
 
   // Solve Ax=0 => eigen vectors
   Spectra::SparseSymMatProd<double> op(AtAsparse);
-  Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigenSolver(&op, 3, 7);
+  Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigenSolver(&op, 3, 5);
 
   eigenSolver.init();
-  Eigen::Index nConverge = eigenSolver.compute();
+  Eigen::Index nConverge = eigenSolver.compute(1000, 1e-10, Spectra::SMALLEST_MAGN);
   if (nConverge < 3 || eigenSolver.info() != Eigen::Success)
   {
     return false;
