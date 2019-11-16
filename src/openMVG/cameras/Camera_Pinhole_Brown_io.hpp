@@ -17,7 +17,7 @@
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Brown_T2::save( Archive & ar ) const
 {
-    Pinhole_Intrinsic::save( ar );
+    Pinhole_Intrinsic::save(ar);
     ar( cereal::make_nvp( "disto_t2", params_ ) );
 }
 
