@@ -9,14 +9,14 @@
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Brown_T2_2::save( Archive & ar ) const
 {
-    ar(cereal::base_class<Pinhole_Intrinsic_2>(this));
+    Pinhole_Intrinsic_2::save(ar);
     ar( cereal::make_nvp( "disto_t2_2", params_ ) );
 }
 
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Brown_T2_2::load( Archive & ar )
 {
-    ar(cereal::base_class<Pinhole_Intrinsic_2>(this));
+    Pinhole_Intrinsic_2::load(ar);
     ar( cereal::make_nvp( "disto_t2_2", params_ ) );
 }
 
