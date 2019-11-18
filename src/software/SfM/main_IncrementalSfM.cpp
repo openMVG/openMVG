@@ -185,6 +185,7 @@ int main(int argc, char **argv)
       << "\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t 5: Pinhole fisheye\n"
       << "\t 6: Pinhole radial 1 pba\n"
+      << "\t 11: Pinhole brown 2 with different fx, fy"
     << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
@@ -199,7 +200,7 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
-    << "[-p|--pba_option] Enable usage of pba(default: false)\n"   
+    << "[-p|--pba_option] Enable usage of pba(default: false)\n"
     << "[-M|--match_file] path to the match file to use.\n"
     << "[-e|--omit_angle_error] Enable usage of angle error(default false)\n"
     << "[-A|--ACRANSAC_times] Adjust AC-RANSAC times(default 4096)\n"
@@ -208,9 +209,9 @@ int main(int argc, char **argv)
     std::cerr << s << std::endl;
     return EXIT_FAILURE;
   }
-  
+
   b_use_pba = cmd.used('p');
-  
+
   if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
     std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
@@ -333,7 +334,7 @@ int main(int argc, char **argv)
    /* Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),
       ESfM_Data(ALL));
-   */	
+   */
     Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "cloud_and_poses", ".ply"),
       ESfM_Data(ALL));

@@ -1015,6 +1015,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       KRt_From_P(resection_data.projection_matrix, &K, &R, &t);
 
       const double focal = (K(0,0) + K(1,1))/2.0;
+      const double focalx = K(0,0);
+      const double focaly = K(1,1);
       const Vec2 principal_point(K(0,2), K(1,2));
 
       // Create the new camera intrinsic group
@@ -1039,6 +1041,11 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           optional_intrinsic =
             std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+        break;
+        case PINHOLE_CAMERA_BROWN_2:
+          optional_intrinsic =
+            std::make_shared<Pinhole_Intrinsic_Brown_T2_2>
+            (view_I->ui_width, view_I->ui_height, focalx, focaly, principal_point(0), principal_point(1));
         break;
         case PINHOLE_CAMERA_FISHEYE:
             optional_intrinsic =

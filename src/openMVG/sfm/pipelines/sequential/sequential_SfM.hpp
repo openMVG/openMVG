@@ -129,7 +129,7 @@ private:
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
   std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
-  
+
   //pba option
   bool b_use_pba_;
 

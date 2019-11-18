@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
       << "\t 3: Pinhole radial 3 (default)\n"
       << "\t 4: Pinhole brown 2\n"
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
-      << "\t 7: Spherical camera\n"
+      << "\t 8: Spherical camera\n"
       << "\n"
       << std::endl;
 

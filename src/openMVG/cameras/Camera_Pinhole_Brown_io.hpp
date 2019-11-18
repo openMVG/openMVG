@@ -17,14 +17,14 @@
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Brown_T2::save( Archive & ar ) const
 {
-    ar(cereal::base_class<Pinhole_Intrinsic>(this));
+    Pinhole_Intrinsic::save(ar);
     ar( cereal::make_nvp( "disto_t2", params_ ) );
 }
 
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Brown_T2::load( Archive & ar )
 {
-    ar(cereal::base_class<Pinhole_Intrinsic>(this));
+    Pinhole_Intrinsic::load(ar);
     ar( cereal::make_nvp( "disto_t2", params_ ) );
 }
 

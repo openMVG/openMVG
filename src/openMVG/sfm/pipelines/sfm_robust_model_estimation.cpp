@@ -12,6 +12,7 @@
 
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_Pinhole_2.hpp"
 #include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
@@ -45,27 +46,47 @@ bool robustRelativePose
     bearing1 = (*intrinsics1)(x1),
     bearing2 = (*intrinsics2)(x2);
 
-  if (isPinhole(intrinsics1->getType())
-      && isPinhole(intrinsics2->getType()))
+  bool is_pinhole = isPinhole(intrinsics1->getType())
+      && isPinhole(intrinsics2->getType());
+  bool is_pinhole_2 = isPinhole_2(intrinsics1->getType())
+      && isPinhole_2(intrinsics2->getType());
+
+  if (is_pinhole || is_pinhole_2)
   {
     // Define the AContrario adaptor to use the 5 point essential matrix solver.
     using KernelType = robust::ACKernelAdaptorEssential<
       openMVG::essential::kernel::FivePointSolver,
       openMVG::fundamental::kernel::EpipolarDistanceError,
       Mat3>;
-    KernelType kernel(x1, bearing1, size_ima1.first, size_ima1.second,
-                      x2, bearing2, size_ima2.first, size_ima2.second,
-                      dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics1)->K(),
-                      dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics2)->K());
 
-    // Robustly estimation of the Model and its precision
-    const auto ac_ransac_output = robust::ACRANSAC(
-      kernel, relativePose_info.vec_inliers,
-      max_iteration_count, &relativePose_info.essential_matrix,
-      relativePose_info.initial_residual_tolerance, false);
+    if (is_pinhole) {
+      KernelType kernel(x1, bearing1, size_ima1.first, size_ima1.second,
+                        x2, bearing2, size_ima2.first, size_ima2.second,
+                        dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics1)->K(),
+                        dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics2)->K());
 
-    relativePose_info.found_residual_precision = ac_ransac_output.first;
+      // Robustly estimation of the Model and its precision
+      const auto ac_ransac_output = robust::ACRANSAC(
+        kernel, relativePose_info.vec_inliers,
+        max_iteration_count, &relativePose_info.essential_matrix,
+        relativePose_info.initial_residual_tolerance, false);
 
+      relativePose_info.found_residual_precision = ac_ransac_output.first;
+    }
+    else if (is_pinhole_2) {
+      KernelType kernel(x1, bearing1, size_ima1.first, size_ima1.second,
+                        x2, bearing2, size_ima2.first, size_ima2.second,
+                        dynamic_cast<const cameras::Pinhole_Intrinsic_2*>(intrinsics1)->K(),
+                        dynamic_cast<const cameras::Pinhole_Intrinsic_2*>(intrinsics2)->K());
+
+      // Robustly estimation of the Model and its precision
+      const auto ac_ransac_output = robust::ACRANSAC(
+        kernel, relativePose_info.vec_inliers,
+        max_iteration_count, &relativePose_info.essential_matrix,
+        relativePose_info.initial_residual_tolerance, false);
+
+      relativePose_info.found_residual_precision = ac_ransac_output.first;
+    }
     if (relativePose_info.vec_inliers.size() <
         2.5 * KernelType::Solver::MINIMUM_SAMPLES )
     {
