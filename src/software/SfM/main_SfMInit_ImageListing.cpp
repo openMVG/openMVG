@@ -283,7 +283,7 @@ int main(int argc, char **argv)
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focals] (pixels)\n"
-      << "[-k|--intrinsics] Kmatrixs: \"f;0;ppx;0;f;ppy;0;0;1...\"\n"
+      << "[-k|--intrinsics] Kmatrixs: \"fx;0;ppx;0;fy;ppy;0;0;1...\"\n"
       << "[-c|--camera_model] Camera model type:\n"
       << "\t 1: Pinhole\n"
       << "\t 2: Pinhole radial 1\n"
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
             << "--imageDirectories " << sImageDirs << std::endl
             << "--sensorWidthDatabase " << sfileDatabase << std::endl
             << "--outputDirectory " << sOutputDir << std::endl
-            << "--focal " << sFocalPixels << std::endl
+            << "--focals " << sFocalPixels << std::endl
             << "--intrinsics " << sKmatrixs << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
@@ -365,12 +365,12 @@ int main(int argc, char **argv)
     }
   }
 
-  if (sFocalPixels.size() > 0 && !checkFocalPixelsStringValidity(sFocalPixels, focalxs)) { // todo
+  if (sFocalPixels.size() > 0 && !checkFocalPixelsStringValidity(sFocalPixels, focalxs)) {
     std::cerr << "\nInvalid f focals input" << std::endl;
     return EXIT_FAILURE;
   }
 
-  bool is_valid_intrinsic = checkIntrinsicStringValidity(sKmatrixs, focals, ppxs, ppys);
+  bool is_valid_intrinsic = checkIntrinsicStringValidity(sKmatrixs, focalxs, focalys, ppxs, ppys);
   if (sKmatrixs.size() > 0 &&
     !is_valid_intrinsic)
   {
@@ -416,7 +416,7 @@ int main(int argc, char **argv)
       std::cout, "\n- Image listing -\n" );
   std::ostringstream error_report_stream;
   for (size_t image_number = 0; image_number<sortedImages.size(); ++image_number, ++my_progress_bar) {
-    // Read meta data to fill camera parameter (w,h,focal,ppx,ppy) fields.
+    // Read meta data to fill camera parameter (w,h,focalx(,focaly),ppx,ppy) fields.
     double width = -1.0, height = -1.0, ppx = -1.0, ppy = -1.0, focalx = -1.0, focaly = -1.0;
 
     const std::string sImageFilename = stlplus::create_filespec( sCombinationDirectory, sortedImages[image_number].first);
@@ -461,7 +461,7 @@ int main(int argc, char **argv)
     }
     else // User provided focal length value
       if (sFocalPixels.size() > 0)
-        focal = focals[sortedImages[image_number].second];
+        focalx = focalxs[sortedImages[image_number].second];
 
     // If not manually provided or wrongly provided
     if (focalx == -1)
