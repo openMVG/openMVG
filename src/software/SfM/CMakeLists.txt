@@ -9,6 +9,7 @@ TARGET_LINK_LIBRARIES(openMVG_main_SfMInit_ImageListing
   openMVG_features
   openMVG_sfm
   easyexif
+  stdc++fs
   )
 
 ###
