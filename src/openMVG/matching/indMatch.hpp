@@ -102,6 +102,26 @@ inline Pair_Set getPairs(const PairWiseMatches & matches)
   return pairs;
 }
 
+/**
+ * @brief Get the subset of the matches that corresponds to the given pairs 
+ * 
+ * @param matches     Initial matches 
+ * @param pairs       The only pairs to keep 
+ * @return PairWiseMatches The matches that are inside the pairset
+ */
+inline PairWiseMatches getPairs( const PairWiseMatches & matches, const Pair_Set & pairs )
+{
+  PairWiseMatches res;
+  for( auto it_pair : pairs )
+  {
+    if( matches.count( it_pair ) )
+    {
+      res.insert( std::make_pair( it_pair , matches.at( it_pair ) ) );
+    }
+  }
+  return res; 
+}
+
 }  // namespace matching
 }  // namespace openMVG
 
