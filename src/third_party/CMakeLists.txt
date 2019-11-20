@@ -96,6 +96,18 @@ if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   add_subdirectory(eigen)
 endif()
 
+##
+# Add and install Spectra library
+##
+set(SPECTRA_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/spectra/include PARENT_SCOPE)
+install (
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/spectra/include/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/spectra
+  COMPONENT headers
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+)
+
+
 list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
 foreach(inDirectory ${directories})
 install(

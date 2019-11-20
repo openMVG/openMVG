@@ -79,7 +79,7 @@ TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
 
   //- Solve the global rotation estimation problem :
   std::vector<Mat3> vec_globalR;
-  L2RotationAveraging(3, vec_relativeRotEstimate, vec_globalR);
+  EXPECT_TRUE(L2RotationAveraging(3, vec_relativeRotEstimate, vec_globalR));
   EXPECT_EQ(3, vec_globalR.size());
   // Check that the loop is closing
   EXPECT_MATRIX_NEAR(Mat3::Identity(), (vec_globalR[0]*vec_globalR[1]*vec_globalR[2]), 1e-8);
@@ -133,7 +133,7 @@ TEST ( rotation_averaging, RefineRotationsL2_CompleteGraph)
 
   //- Solve the global rotation estimation problem :
   std::vector<Mat3> vec_globalR(iNviews);
-  L2RotationAveraging(iNviews, vec_relativeRotEstimate, vec_globalR);
+  EXPECT_TRUE(L2RotationAveraging(iNviews, vec_relativeRotEstimate, vec_globalR));
 
   // Check that the loop is closing
   Mat3 rotCumul = Mat3::Identity();
