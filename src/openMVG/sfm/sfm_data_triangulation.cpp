@@ -13,6 +13,7 @@
 
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
@@ -46,26 +47,29 @@ bool track_triangulation
 (
   const SfM_Data & sfm_data,
   const Observations & obs,
-  Vec3 & X
+  Vec3 & X,
+  const ETriangulationMethod & etri_method = ETriangulationMethod::DEFAULT
 )
 {
   if (obs.size() >= 2)
   {
     std::vector<Vec3> bearing;
     std::vector<Mat34> poses;
+    std::vector<Pose3> poses_;
     bearing.reserve(obs.size());
     poses.reserve(obs.size());
     for (const auto& observation : obs)
     {
       const View * view = sfm_data.views.at(observation.first).get();
       if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
+        return false;
       const IntrinsicBase * cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Pose3 pose = sfm_data.GetPoseOrDie(view);
       bearing.emplace_back((*cam)(cam->get_ud_pixel(observation.second.x)));
       poses.emplace_back(pose.asMatrix());
+      poses_.emplace_back(pose);
     }
-    if (bearing.size() >= 2)
+    if (bearing.size() > 2)
     {
       const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
       Vec4 Xhomogeneous;
@@ -78,6 +82,20 @@ bool track_triangulation
         X = Xhomogeneous.hnormalized();
         return true;
       }
+    }
+    else
+    {
+      return Triangulate2View
+      (
+        poses_.front().rotation(),
+        poses_.front().translation(),
+        bearing.front(),
+        poses_.back().rotation(),
+        poses_.back().translation(),
+        bearing.back(),
+        X,
+        etri_method
+      );
     }
   }
   return false;
@@ -210,12 +228,14 @@ SfM_Data_Structure_Computation_Robust::SfM_Data_Structure_Computation_Robust
   const double max_reprojection_error,
   const IndexT min_required_inliers,
   const IndexT min_sample_index,
+  const ETriangulationMethod etri_method,
   bool bConsoleVerbose
 ):
   SfM_Data_Structure_Computation_Basis(bConsoleVerbose),
   max_reprojection_error_(max_reprojection_error),
   min_required_inliers_(min_required_inliers),
-  min_sample_index_(min_sample_index)
+  min_sample_index_(min_sample_index),
+  etri_method_(etri_method)
 {
 }
 
@@ -329,7 +349,7 @@ const
   {
     // Generate the 3D point hypothesis by triangulating all the observations
     Vec3 X;
-    if (track_triangulation(sfm_data, obs, X) &&
+    if (track_triangulation(sfm_data, obs, X, etri_method_) &&
         track_check_predicate(obs, sfm_data, X, predicate_binding))
     {
       landmark.X = X;
@@ -363,7 +383,7 @@ const
     // Hypothesis generation
     const auto minimal_sample = ObservationsSampler(obs, samples);
 
-    if (!track_triangulation(sfm_data, minimal_sample, X))
+    if (!track_triangulation(sfm_data, minimal_sample, X, etri_method_))
       continue;
 
     // Test validity of the hypothesis

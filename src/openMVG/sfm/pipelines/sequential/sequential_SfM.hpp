@@ -15,6 +15,7 @@
 
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 namespace htmlDocument { class htmlDocumentStream; }
@@ -71,6 +72,12 @@ public:
     cam_type_ = camType;
   }
 
+  /// Configure the 2view triangulation method used by the SfM engine
+  void SetTriangulationMethod(const ETriangulationMethod method)
+  {
+    triangulation_method_ = method;
+  }
+
 protected:
 
 
@@ -116,6 +123,8 @@ private:
   Hash_Map<IndexT, double> map_ACThreshold_; // Per camera confidence (A contrario estimated threshold error)
 
   std::set<uint32_t> set_remaining_view_id_;     // Remaining camera index that can be used for resection
+
+  ETriangulationMethod triangulation_method_ = ETriangulationMethod::DEFAULT;
 };
 
 } // namespace sfm

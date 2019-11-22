@@ -582,8 +582,18 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
-      TriangulateDLT(Pose_I.asMatrix(), (*cam_I)(cam_I->get_ud_pixel(x1)),
-                     Pose_J.asMatrix(), (*cam_J)(cam_J->get_ud_pixel(x2)), &X);
+      Triangulate2View
+      (
+        Pose_I.rotation(),
+        Pose_I.translation(),
+        (*cam_I)(cam_I->get_ud_pixel(x1)),
+        Pose_J.rotation(),
+        Pose_J.translation(),
+        (*cam_J)(cam_J->get_ud_pixel(x2)),
+        X,
+        triangulation_method_
+      );
+
       Observations obs;
       obs[view_I->id_view] = Observation(x1, i);
       obs[view_J->id_view] = Observation(x2, j);
@@ -1125,9 +1135,18 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 xI_ud = cam_I->get_ud_pixel(xI),
                 xJ_ud = cam_J->get_ud_pixel(xJ);
               Vec3 X = Vec3::Zero();
-              TriangulateDLT(pose_I.asMatrix(), (*cam_I)(xI_ud),
-                             pose_J.asMatrix(), (*cam_J)(xJ_ud),
-                             &X);
+
+              Triangulate2View
+              (
+                pose_I.rotation(),
+                pose_I.translation(),
+                (*cam_I)(xI_ud),
+                pose_J.rotation(),
+                pose_J.translation(),
+                (*cam_J)(xJ_ud),
+                X,
+                triangulation_method_
+              );
               // Check triangulation result
               const double angle = AngleBetweenRay(
                 pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);

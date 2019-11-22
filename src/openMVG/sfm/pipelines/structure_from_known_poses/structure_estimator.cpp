@@ -70,13 +70,15 @@ SfM_Data_Structure_Estimation_From_Known_Poses::SfM_Data_Structure_Estimation_Fr
 void SfM_Data_Structure_Estimation_From_Known_Poses::run(
   SfM_Data & sfm_data,
   const Pair_Set & pairs,
-  const std::shared_ptr<Regions_Provider> & regions_provider)
+  const std::shared_ptr<Regions_Provider> & regions_provider,
+  const ETriangulationMethod triangulation_method
+)
 {
   sfm_data.structure.clear();
 
   match(sfm_data, pairs, regions_provider);
   filter(sfm_data, pairs, regions_provider);
-  triangulate(sfm_data, regions_provider);
+  triangulate(sfm_data, regions_provider, triangulation_method);
 }
 
 /// Use guided matching to find corresponding 2-view correspondences
@@ -294,10 +296,11 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   matching::PairWiseMatches().swap(putatives_matches);
 }
 
-/// Init & triangulate landmark observations from validated 3-view correspondences
+/// Init & triangulate landmark observations from the fused validated 3-view correspondences
 void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   SfM_Data & sfm_data,
-  const std::shared_ptr<Regions_Provider> & regions_provider)
+  const std::shared_ptr<Regions_Provider> & regions_provider,
+  const ETriangulationMethod triangulation_method)
 {
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   openMVG::tracks::TracksBuilder tracksBuilder;
@@ -309,7 +312,14 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
   // Generate new Structure tracks
   sfm_data.structure.clear();
 
-  SfM_Data_Structure_Computation_Robust structure_estimator(max_reprojection_error_);
+  const IndexT min_required_inliers = 3;
+  const IndexT min_sample_index = 2;
+
+  SfM_Data_Structure_Computation_Robust structure_estimator(
+    max_reprojection_error_,
+    min_required_inliers,
+    min_sample_index,
+    triangulation_method);
   C_Progress_display my_progress_bar( map_tracksCommon.size(), std::cout,
     "Tracks to structure conversion:\n" );
   // Fill sfm_data with the computed tracks (no 3D yet)

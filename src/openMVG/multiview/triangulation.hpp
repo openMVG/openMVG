@@ -10,20 +10,13 @@
 #define OPENMVG_MULTIVIEW_TRIANGULATION_HPP
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
 
 namespace openMVG
 {
 
-enum class ETriangulationMethod : unsigned char
-{
-  DIRECT_LINEAR_TRANSFORM, // DLT
-  L1_ANGULAR,
-  LINFINITY_ANGULAR,
-  INVERSE_DEPTH_WEIGHTED_MIDPOINT
-};
-
 /**
-* @brief Generic triangulation rountine (Aggregate all the solver in one place).
+* @brief Generic triangulation routine (Aggregate all the 2view triangulation solvers in one place).
 * @param R0 First Camera rotation matrix
 * @param t0 First Camera translation vector
 * @param x0 bearing vector of the landmark observation in the first camera
@@ -31,7 +24,7 @@ enum class ETriangulationMethod : unsigned char
 * @param t1 Second Camera translation vector
 * @param x1 bearing vector of the landmark observation in the second camera
 * @param[out] X_euclidean Euclidean triangulated point
-* @return true if the point pass the adequacy test, false otherwise
+* @return true if the point pass the adequacy or cheirality test (depending of the solver), false otherwise
 * (invalid 3d point or method that does not exist)
 **/
 bool Triangulate2View
@@ -43,7 +36,7 @@ bool Triangulate2View
   const Vec3 &t1,
   const Vec3 &bearing1,
   Vec3 &X,
-  ETriangulationMethod etri_method = ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT
+  ETriangulationMethod etri_method = ETriangulationMethod::DEFAULT
 );
 
 /**

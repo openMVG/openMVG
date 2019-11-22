@@ -63,6 +63,7 @@ int main(int argc, char **argv)
   std::string sOutFile = "";
   double dMax_reprojection_error = 4.0;
   unsigned int ui_max_cache_size = 0;
+  int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
@@ -73,6 +74,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', dMax_reprojection_error, "residual_threshold"));
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
   cmd.add( make_switch('d', "direct_triangulation"));
+  cmd.add( make_option('t', triangulation_method, "triangulation_method"));
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -93,6 +95,11 @@ int main(int argc, char **argv)
     << " [Provided Matches -> Robust triangulation of the match file (activated by -d)]\n"
     << "\t[-d|--direct_triangulation] Robustly triangulate the tracks computed from the file given by [--f|--match_file]\n"
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
+    << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
 
     << "\n[Optional]\n"
     << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene (OFF by default)\n"
@@ -249,6 +256,7 @@ int main(int argc, char **argv)
         max_reprojection_error,
         min_track_length,
         min_track_length,
+        static_cast<ETriangulationMethod>(triangulation_method),
         console_verbose);
       structure_estimator.triangulate(sfm_data);
     }
@@ -308,7 +316,8 @@ int main(int argc, char **argv)
     // Compute Structure from known camera poses
     //------------------------------------------
     SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
-    structure_estimator.run(sfm_data, pairs, regions_provider);
+    structure_estimator.run(sfm_data, pairs, regions_provider,
+      static_cast<ETriangulationMethod>(triangulation_method));
     std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
 
   }
