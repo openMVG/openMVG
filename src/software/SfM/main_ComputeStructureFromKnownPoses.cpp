@@ -114,6 +114,11 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
+    std::cerr << "\n Invalid triangulation method" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {

@@ -21,6 +21,13 @@ enum class ETriangulationMethod : unsigned char
   DEFAULT = INVERSE_DEPTH_WEIGHTED_MIDPOINT
 };
 
+static inline bool isValid( const ETriangulationMethod method )
+{
+  return
+    method >= ETriangulationMethod::DIRECT_LINEAR_TRANSFORM &&
+    method <= ETriangulationMethod::DEFAULT;
+}
+
 }  // namespace openMVG
 
 #endif //OPENMVG_MULTIVIEW_TRIANGULATION_TYPE_HPP
