@@ -582,23 +582,22 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
-      Triangulate2View
-      (
-        Pose_I.rotation(),
-        Pose_I.translation(),
-        (*cam_I)(cam_I->get_ud_pixel(x1)),
-        Pose_J.rotation(),
-        Pose_J.translation(),
-        (*cam_J)(cam_J->get_ud_pixel(x2)),
-        X,
-        triangulation_method_
-      );
-
-      Observations obs;
-      obs[view_I->id_view] = Observation(x1, i);
-      obs[view_J->id_view] = Observation(x2, j);
-      landmarks[track_iterator.first].obs = std::move(obs);
-      landmarks[track_iterator.first].X = X;
+      if (Triangulate2View(
+            Pose_I.rotation(),
+            Pose_I.translation(),
+            (*cam_I)(cam_I->get_ud_pixel(x1)),
+            Pose_J.rotation(),
+            Pose_J.translation(),
+            (*cam_J)(cam_J->get_ud_pixel(x2)),
+            X,
+            triangulation_method_))
+      {
+        Observations obs;
+        obs[view_I->id_view] = Observation(x1, i);
+        obs[view_J->id_view] = Observation(x2, j);
+        landmarks[track_iterator.first].obs = std::move(obs);
+        landmarks[track_iterator.first].X = X;
+      }
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
 
@@ -1136,40 +1135,37 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 xJ_ud = cam_J->get_ud_pixel(xJ);
               Vec3 X = Vec3::Zero();
 
-              Triangulate2View
-              (
-                pose_I.rotation(),
-                pose_I.translation(),
-                (*cam_I)(xI_ud),
-                pose_J.rotation(),
-                pose_J.translation(),
-                (*cam_J)(xJ_ud),
-                X,
-                triangulation_method_
-              );
-              // Check triangulation result
-              const double angle = AngleBetweenRay(
-                pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
-              const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
-              const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
-              if (
-                  //  - Check angle (small angle leads to imprecise triangulation)
-                  angle > 2.0 &&
-                  //  - Check positive depth
-                  CheiralityTest((*cam_I)(xI_ud), pose_I,
-                                 (*cam_J)(xJ_ud), pose_J,
-                                 X) &&
-                  //  - Check residual values (must be inferior to the found view's AContrario threshold)
-                  residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
-                  residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
-                 )
+              if (Triangulate2View(
+                    pose_I.rotation(),
+                    pose_I.translation(),
+                    (*cam_I)(xI_ud),
+                    pose_J.rotation(),
+                    pose_J.translation(),
+                    (*cam_J)(xJ_ud),
+                    X,
+                    triangulation_method_))
               {
-                // Add a new track
-                Landmark & landmark = sfm_data_.structure[trackId];
-                landmark.X = X;
-                new_track_observations_valid_views.insert(I);
-                new_track_observations_valid_views.insert(J);
-              } // 3D point is valid
+                // Check triangulation result
+                const double angle = AngleBetweenRay(
+                  pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
+                const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
+                const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
+                if (
+                    //  - Check angle (small angle leads to imprecise triangulation)
+                    angle > 2.0 &&
+                    //  - Check residual values (must be inferior to the found view's AContrario threshold)
+                    residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
+                    residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
+                    // Cheirality as been tested already in Triangulate2View
+                   )
+                {
+                  // Add a new track
+                  Landmark & landmark = sfm_data_.structure[trackId];
+                  landmark.X = X;
+                  new_track_observations_valid_views.insert(I);
+                  new_track_observations_valid_views.insert(J);
+                } // 3D point is valid
+              }
               else
               {
                 // We mark the view to add the observations once the point is triangulated

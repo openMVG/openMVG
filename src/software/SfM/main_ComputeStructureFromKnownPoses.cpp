@@ -93,12 +93,12 @@ int main(int argc, char **argv)
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
 
     << " [Provided Matches -> Robust triangulation of the match file (activated by -d)]\n"
-    << "\t[-d|--direct_triangulation] Robustly triangulate the tracks computed from the file given by [--f|--match_file]\n"
+    << "\t[-d|--direct_triangulation] Robustly triangulate the tracks computed from the file given by [-f|--match_file]\n"
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
     << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
 
     << "\n[Optional]\n"
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     // Check that a match file have been provided
     if (sMatchFile.empty() || !sPairFile.empty())
     {
-      std::cerr << "You must provide a match file thanks to the [--f|--match_file] option" << std::endl;
+      std::cerr << "You must provide a match file thanks to the [-f|--match_file] option" << std::endl;
       return EXIT_FAILURE;
     }
     std::cout

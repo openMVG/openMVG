@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     << "[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
     << std::endl;
 
