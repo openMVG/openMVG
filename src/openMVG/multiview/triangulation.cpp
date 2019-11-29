@@ -131,28 +131,20 @@ bool TriangulateL1Angular
   AbsoluteToRelative(R0, t0, R1, t1, x0, R, t, Rx0);
 
   // Table 1 - 2) obtain m'0 and m'1
-  // allocate the two vectors
-  Vec3 mprime0;
-  Vec3 mprime1;
-
-  // pre compute n0 and n1 cf. 5. Lemma 2
-  const Vec3 n0 = Rx0.cross(t).normalized();
-  const Vec3 n1 = x1.cross(t).normalized();
-
   if(Rx0.normalized().cross(t).squaredNorm() <= x1.normalized().cross(t).squaredNorm())
   {
+    const Vec3 n1 = x1.cross(t).normalized();
     // Eq. (12)
-    mprime0 = Rx0 - Rx0.dot(n1) * n1;
-    mprime1 = x1;
+    const Vec3 mprime0 = Rx0 - Rx0.dot(n1) * n1;
+    return Compute3DPoint(mprime0, x1, t, R1, t1, X_euclidean);
   }
   else
   {
+    const Vec3 n0 = Rx0.cross(t).normalized();
     // Eq. (13)
-    mprime0 = Rx0;
-    mprime1 = x1 - x1.dot(n0) * n0;
+    const Vec3 mprime1 = x1 - x1.dot(n0) * n0;
+    return Compute3DPoint(Rx0, mprime1, t, R1, t1, X_euclidean);
   }
-
-  return Compute3DPoint(mprime0, mprime1, t, R1, t1, X_euclidean);
 }
 
 bool TriangulateLInfinityAngular
