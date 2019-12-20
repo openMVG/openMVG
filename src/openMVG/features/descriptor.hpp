@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
@@ -96,7 +95,7 @@ inline std::istream& operator>>(std::istream& in, Descriptor<T, N>& obj)
 template<typename T>
 inline std::ostream& printT(std::ostream& os, T *tab, uint32_t N)
 {
-  std::copy( tab, &tab[N], std::ostream_iterator<T>(os," "));
+  std::copy(tab, &tab[N], std::ostream_iterator<T>(os," "));
   return os;
 }
 

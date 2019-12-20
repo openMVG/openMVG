@@ -48,7 +48,6 @@ Changes are:
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 
-#include <iostream>
 #include <numeric>
 #include <vector>
 

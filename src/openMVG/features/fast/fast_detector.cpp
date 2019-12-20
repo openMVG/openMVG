@@ -11,6 +11,7 @@
 #include "openMVG/image/image_container.hpp"
 #include "third_party/fast/fast.h"
 
+#include <iostream>
 //
 // Bibliography
 //

@@ -12,7 +12,6 @@
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
 
-#include <iostream>
 #include <numeric>
 
 namespace openMVG {

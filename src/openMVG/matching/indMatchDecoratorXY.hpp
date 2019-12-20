@@ -10,7 +10,6 @@
 #define OPENMVG_MATCHING_IND_MATCH_DECORATOR_XY_HPP
 
 #include <algorithm>
-#include <iostream>
 #include <fstream>
 #include <set>
 #include <vector>

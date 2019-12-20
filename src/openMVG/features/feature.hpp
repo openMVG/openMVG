@@ -10,7 +10,6 @@
 #define OPENMVG_FEATURES_FEATURE_HPP
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
