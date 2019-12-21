@@ -137,8 +137,9 @@ macro(AutodetectHostArchitecture)
             set(TARGET_ARCHITECTURE "cannonlake")
          elseif(_cpu_model EQUAL 142 OR _cpu_model EQUAL 158) # 8E, 9E
             set(TARGET_ARCHITECTURE "kaby-lake")
-         elseif(_cpu_model EQUAL 85) # 55
-            set(TARGET_ARCHITECTURE "skylake-avx512")
+         # Disable skylake-avx512 -> Detection seems unstable on Tracis-CI
+         #elseif(_cpu_model EQUAL 85) # 55
+         #    set(TARGET_ARCHITECTURE "skylake-avx512")
          elseif(_cpu_model EQUAL 78 OR _cpu_model EQUAL 94) # 4E, 5E
             set(TARGET_ARCHITECTURE "skylake")
          elseif(_cpu_model EQUAL 61 OR _cpu_model EQUAL 71 OR _cpu_model EQUAL 79 OR _cpu_model EQUAL 86) # 3D, 47, 4F, 56
@@ -398,7 +399,7 @@ Other supported values are: \"none\", \"generic\", \"core\", \"merom\" (65nm Cor
       set(_disable_vector_unit_list)
       set(_enable_vector_unit_list)
       if(DEFINED Vc_AVX_INTRINSICS_BROKEN AND Vc_AVX_INTRINSICS_BROKEN)
-         UserWarning("AVX disabled per default because of old/broken toolchain")
+         message(STATUS "AVX disabled per default because of old/broken toolchain")
          set(_avx_broken true)
          set(_avx2_broken true)
          set(_fma4_broken true)
@@ -406,19 +407,19 @@ Other supported values are: \"none\", \"generic\", \"core\", \"merom\" (65nm Cor
       else()
          set(_avx_broken false)
          if(DEFINED Vc_FMA4_INTRINSICS_BROKEN AND Vc_FMA4_INTRINSICS_BROKEN)
-            UserWarning("FMA4 disabled per default because of old/broken toolchain")
+            message(STATUS "FMA4 disabled per default because of old/broken toolchain")
             set(_fma4_broken true)
          else()
             set(_fma4_broken false)
          endif()
          if(DEFINED Vc_XOP_INTRINSICS_BROKEN AND Vc_XOP_INTRINSICS_BROKEN)
-            UserWarning("XOP disabled per default because of old/broken toolchain")
+            message(STATUS "XOP disabled per default because of old/broken toolchain")
             set(_xop_broken true)
          else()
             set(_xop_broken false)
          endif()
          if(DEFINED Vc_AVX2_INTRINSICS_BROKEN AND Vc_AVX2_INTRINSICS_BROKEN)
-            UserWarning("AVX2 disabled per default because of old/broken toolchain")
+            message(STATUS "AVX2 disabled per default because of old/broken toolchain")
             set(_avx2_broken true)
          else()
             set(_avx2_broken false)

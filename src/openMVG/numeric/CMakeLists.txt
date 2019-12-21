@@ -16,8 +16,10 @@ add_library(openMVG_numeric
   ${numeric_files_header}
   ${numeric_files_cpp})
 target_compile_features(openMVG_numeric INTERFACE ${CXX11_FEATURES})
-string(REPLACE " " ";" REPLACED_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-target_compile_options(openMVG_numeric INTERFACE ${REPLACED_CMAKE_CXX_FLAGS})
+if (CMAKE_CXX_FLAGS)
+  string(REPLACE " " ";" REPLACED_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  target_compile_options(openMVG_numeric INTERFACE ${REPLACED_CMAKE_CXX_FLAGS})
+endif()
 target_include_directories(openMVG_numeric
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
