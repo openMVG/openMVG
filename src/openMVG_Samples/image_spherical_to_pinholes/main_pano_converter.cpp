@@ -14,7 +14,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -148,8 +148,8 @@ int main(int argc, char **argv)
     const openMVG::cameras::Intrinsic_Spherical sphere_camera(pano_width, pano_height);
 
     svgDrawer svgStream(pano_width, pano_height);
-    svgStream.drawLine(0, 0, pano_width, pano_height, svgStyle());
-    svgStream.drawLine(pano_width, 0, 0, pano_height, svgStyle());
+    svgStream << svg::drawLine(0, 0, pano_width, pano_height, svgAttributes());
+    svgStream << svg::drawLine(pano_width, 0, 0, pano_height, svgAttributes());
 
     //--> For each cam, reproject the image borders onto the panoramic image
 
@@ -165,19 +165,19 @@ int main(int argc, char **argv)
       {
         // Project the pinhole bearing vector to the sphere
         sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(0., j)));
-        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("green"));
+        svgStream << svg::drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgAttributes().fill("green"));
 
         sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(image_resolution, j)));
-        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("green"));
+        svgStream << svg::drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgAttributes().fill("green"));
       }
       // Horizontal rectilinear image border:
       for (double j = 0; j <= image_resolution; j += image_resolution/(double)step)
       {
         sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(j, 0.)));
-        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("yellow"));
+        svgStream << svg::drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgAttributes().fill("yellow"));
 
         sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(j, image_resolution)));
-        svgStream.drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgStyle().fill("yellow"));
+        svgStream << svg::drawCircle(sphere_proj.x(), sphere_proj.y(), 4, svgAttributes().fill("yellow"));
       }
     }
 

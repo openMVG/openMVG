@@ -10,7 +10,7 @@
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/system/timer.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
 
@@ -102,14 +102,14 @@ TEST( Sift_Keypoint , DetectionAndDescription )
   //--
   using namespace svg;
   svgDrawer svgStream( image.Width(), image.Height());
-  svgStream.drawImage(png_filename, image.Width(), image.Height());
+  svgStream << svg::drawImage(png_filename, image.Width(), image.Height());
   for (size_t i = 0; i < keypoints.size(); ++i) {
     const Keypoint & key = keypoints[i];
-    svgStream.drawCircle(key.x, key.y, key.sigma, svgStyle().stroke("yellow", 2.0));
+    svgStream << svg::drawCircle(key.x, key.y, key.sigma, svgAttributes().stroke("yellow", 2.0));
     // Orientation
-    svgStream.drawLine(key.x, key.y,
+    svgStream << svg::drawLine(key.x, key.y,
       key.x + cos(key.sigma) * key.sigma,
-      key.y + sin(key.sigma) * key.sigma, svgStyle().stroke("green", 2.0));
+      key.y + sin(key.sigma) * key.sigma, svgAttributes().stroke("green", 2.0));
   }
   std::string out_filename = "Sift_Features.svg";
   std::ofstream svgFile( out_filename.c_str() );

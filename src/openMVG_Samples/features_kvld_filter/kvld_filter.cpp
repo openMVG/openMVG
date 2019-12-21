@@ -17,7 +17,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -197,8 +197,8 @@ int main(int argc, char **argv) {
     svgDrawer svgStream(imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
 
     // ".svg"
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
 
     for (size_t it1=0; it1<matchesPair.size()-1;it1++){
@@ -216,8 +216,8 @@ int main(int argc, char **argv) {
           float width = std::max(1.f, L / (dimension+1.f));
 
           // ".svg"
-          svgStream.drawLine(l1.x(), l1.y(), l2.x(), l2.y(), svgStyle().stroke("yellow", width));
-          svgStream.drawLine(r1.x() + imageL.Width(), r1.y(), r2.x() + imageL.Width(), r2.y(), svgStyle().stroke("yellow", width));
+          svgStream << svg::drawLine(l1.x(), l1.y(), l2.x(), l2.y(), svgAttributes().stroke("yellow", width));
+          svgStream << svg::drawLine(r1.x() + imageL.Width(), r1.y(), r2.x() + imageL.Width(), r2.y(), svgAttributes().stroke("yellow", width));
 
         }
       }
@@ -233,8 +233,8 @@ int main(int argc, char **argv) {
     svgDrawer svgStream(imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
 
     // ".svg"
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
     for (size_t it=0; it<matchesPair.size();it++){
        if (valid[it]){
@@ -243,8 +243,8 @@ int main(int argc, char **argv) {
         const PointFeature & r = featsR[matchesPair[it].second];
 
         // ".svg"
-        svgStream.drawCircle(l.x(), l.y(), 10, svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(r.x() + imageL.Width(), r.y(), 10, svgStyle().stroke("yellow", 2.0));
+        svgStream << svg::drawCircle(l.x(), l.y(), 10, svgAttributes().stroke("yellow", 2.0));
+        svgStream << svg::drawCircle(r.x() + imageL.Width(), r.y(), 10, svgAttributes().stroke("yellow", 2.0));
       }
     }
     const string out_filename = stlplus::create_filespec(sOutDir, "04_KVLD_Keypoints.svg");

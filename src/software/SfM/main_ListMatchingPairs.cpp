@@ -15,7 +15,7 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -53,27 +53,27 @@ void AdjacencyMatrixToSVG
         const auto iterSearch = corresponding_indexes.find(std::make_pair(I,J));
         if (iterSearch != corresponding_indexes.end())
         {
-          svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
-          svgStyle().fill("blue").noStroke());
+          svgStream << svg::drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
+          svgAttributes().fill("blue").noStroke());
         }
       }
     }
     // Display axes with 0 -> NbImages annotation : _|
     std::ostringstream osNbImages;
     osNbImages << NbImages;
-    svgStream.drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages+1)*scaleFactor,
+    svgStream << svg::drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
+    svgStream << svg::drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
       (NbImages+1)*scaleFactor, (NbImages)*scaleFactor - 2*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svgAttributes().stroke("black", 1.0));
 
-    svgStream.drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages)*scaleFactor - scaleFactor,
+    svgStream << svg::drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages)*scaleFactor - scaleFactor,
       (NbImages+1)*scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
+    svgStream << svg::drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svgAttributes().stroke("black", 1.0));
 
     std::ofstream svgFileStream(sOutName.c_str());
     svgFileStream << svgStream.closeSvgFile().str();

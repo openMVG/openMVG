@@ -33,7 +33,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <string>
 #include <iostream>
@@ -336,14 +336,14 @@ void display_info
   //Show homography validated point and compute residuals
   std::vector<double> vec_residuals(vec_inliers.size(), 0.0);
   svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-  svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-  svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+  svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+  svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
   for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
     const PointFeature & L = featsL[vec_PutativeMatches[vec_inliers[i]].i_];
     const PointFeature & R = featsR[vec_PutativeMatches[vec_inliers[i]].j_];
-    svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-    svgStream.drawCircle(L.x(), L.y(), 5, svgStyle().stroke("yellow", 2.0));
-    svgStream.drawCircle(R.x()+imageL.Width(), R.y(), 5,svgStyle().stroke("yellow", 2.0));
+    svgStream << svg::drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgAttributes().stroke("green", 2.0));
+    svgStream << svg::drawCircle(L.x(), L.y(), 5, svgAttributes().stroke("yellow", 2.0));
+    svgStream << svg::drawCircle(R.x()+imageL.Width(), R.y(), 5,svgAttributes().stroke("yellow", 2.0));
     // residual computation
     using KernelType = homography::kernel::UnnormalizedKernel;
     vec_residuals[i] = std::sqrt(

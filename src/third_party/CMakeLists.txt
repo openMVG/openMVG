@@ -64,9 +64,6 @@ endif (NOT TIFF_FOUND)
 # End - Image I/O
 ##
 
-# Add svg library
-add_subdirectory(vectorGraphics)
-
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
 if (DEFINED OpenMVG_USE_INTERNAL_CERES)
   add_subdirectory(cxsparse)

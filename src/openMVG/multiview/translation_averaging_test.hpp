@@ -22,7 +22,7 @@
 #include "openMVG/numeric/numeric.h"
 
 #include "testing/testing.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 int modifiedMod
 (
@@ -67,8 +67,8 @@ void visibleCamPosToSVGSurface
     svg::svgDrawer svgSurface_GT(size,size);
     for (size_t i = 0; i  < vec_Ci.size(); ++i)
     {
-      svgSurface_GT.drawCircle(out[i](0), out[i](2),
-                               3,svg::svgStyle().stroke("black",0.2).fill("red"));
+      svgSurface_GT << svg::drawCircle(out[i](0), out[i](2),
+                               3,svg::svgAttributes().stroke("black",0.2).fill("red"));
     }
     std::ostringstream osSvgGT;
     osSvgGT << fileName;

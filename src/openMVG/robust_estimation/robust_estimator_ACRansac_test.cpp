@@ -12,7 +12,7 @@
 #include "openMVG/numeric/extract_columns.hpp"
 
 #include "testing/testing.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <iterator>
 #include <random>
@@ -313,7 +313,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     svgDrawer svgTest(W,H);
     for (size_t i = 0; i < nbPoints; ++i) {
       float x = points.col(i)[0], y = points.col(i)[1];
-      svgTest.drawCircle(x,y, 1, svgStyle().fill("red").noStroke());
+      svgTest << svg::drawCircle(x,y, 1, svgAttributes().fill("red").noStroke());
     }
 
     ostringstream osSvg;
@@ -348,13 +348,13 @@ TEST(RansacLineFitter, ACRANSACSimu) {
         {
           sCol = "green";
         }
-        svgTest.drawCircle(x,y, 1, svgStyle().fill(sCol).noStroke());
+        svgTest << svg::drawCircle(x,y, 1, svgAttributes().fill(sCol).noStroke());
       }
       //draw the found line
       const float xa = 0, xb = W;
       const float ya = line[1] * xa + line[0];
       const float yb = line[1] * xb + line[0];
-      svgTest.drawLine(xa, ya, xb, yb, svgStyle().stroke("blue", 0.5));
+      svgTest << svg::drawLine(xa, ya, xb, yb, svgAttributes().stroke("blue", 0.5));
 
       ostringstream osSvg;
       osSvg << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".svg";

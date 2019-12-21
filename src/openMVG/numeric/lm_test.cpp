@@ -10,7 +10,7 @@
 #include "openMVG/numeric/lm.hpp"
 
 #include "testing/testing.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
@@ -102,15 +102,15 @@ TEST(LM, MimimaSearchViaLM) {
       yFound[cpt] = (4 - (exp(xlm[0] * i) + xlm[1]))*dFactor;
     }
 
-    svgSurface.drawPolyline(
+    svgSurface << svg::drawPolyline(
       xFound.data(), xFound.data()+30,
       yFound.data(), yFound.data()+30,
-      svgStyle().stroke("blue", 1.f));
+      svgAttributes().stroke("blue", 1.f));
 
     //Draw point in a second time to put them in the top layer
     for (Vec::Index i = 0; i < x.rows(); ++i)
-      svgSurface.drawCircle(x[i]*dFactor, (4-y[i])*dFactor, 1,
-        svgStyle().fill("red").noStroke());
+      svgSurface << svg::drawCircle(x[i]*dFactor, (4-y[i])*dFactor, 1,
+        svgAttributes().fill("red").noStroke());
 
     std::ostringstream osSvg;
     osSvg << "exponentialRegression_unit_test.svg";

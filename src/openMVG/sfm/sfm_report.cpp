@@ -18,7 +18,7 @@
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgHistogram.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -189,8 +189,7 @@ bool Generate_SfM_Report
       Histogram<double> histo(0.0, maxRange, 100);
       histo.Add(residuals.cbegin(), residuals.cend());
 
-      svg::svgHisto svg_Histo;
-      svg_Histo.draw(histo.GetHist(), std::pair<float,float>(0.f, maxRange),
+      svg::drawHistogram(histo.GetHist(), std::pair<float,float>(0.f, maxRange),
         stlplus::create_filespec(stlplus::folder_part(htmlFilename), "residuals_histogram", "svg"),
         600, 200);
 

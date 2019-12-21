@@ -28,7 +28,6 @@
 #include <opencv2/legacy/legacy.hpp>
 
 #include "openMVG/numeric/numeric.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 #include "openMVG/multiview/solver_homography_kernel.hpp"
 #include "openMVG/multiview/conditioning.hpp"
 
