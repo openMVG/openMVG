@@ -57,9 +57,10 @@ public:
       os << " fill=\"none\"";
     else
       os << " fill=\"" << _sFillCol << "\"";
+    if (!os.str().empty())
+      os << ">";
     if (!_sToolTip.empty())
-      os << " tooltip=\"enable\">"
-      << "<title>" << _sToolTip << "</title>";
+      os << "<title>" << _sToolTip << "</title>";
 
     return os.str();
   }
@@ -94,7 +95,9 @@ public:
   {
     svgStream << "<circle cx=\"" << cx << "\"" << " cy=\"" << cy << "\""
       << " r=\"" << r << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</circle>" : "/>\n");  }
+      << style.getSvgStream()
+      << "</circle>\n";
+  }
 
   ///Line draw -> start and end point
   void drawLine(float ax, float ay, float bx, float by,
@@ -102,7 +105,8 @@ public:
   {
     svgStream <<
       "<polyline points=\""<< ax << "," << ay << "," << bx << "," << by <<"\""
-      << style.getSvgStream() +  (style.bTooltip() ? "</polyline>" : "/>\n");
+      << style.getSvgStream()
+      << "</polyline>\n";
   }
 
   ///Reference to an image (path must be relative to the svg file)
@@ -131,7 +135,8 @@ public:
       << " y=\"" << cy << "\""
       << " width=\"" << W << "\""
       << " height=\"" << H << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</rect>" : "/>\n");
+      << style.getSvgStream()
+      << "</rect>\n";
   }
 
   ///Text display -> x,y position, font size
@@ -161,7 +166,7 @@ public:
       svgStream << *iterx << ',' << *itery << ' ';
     }
     svgStream << "\""
-      << style.getSvgStream() + (style.bTooltip() ? "</polyline>" : "/>\n");
+      << style.getSvgStream() << "</polyline>\n";
   }
 
   ///Close the svg tag.
