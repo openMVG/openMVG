@@ -1,101 +1,42 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2015 Pierre MOULON.
+// Copyright (c) 2019 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
-#define OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
+#ifndef OPENMVG_SFM_SFM_PREEMPTIVE_REGIONS_PROVIDER_HPP
+#define OPENMVG_SFM_SFM_PREEMPTIVE_REGIONS_PROVIDER_HPP
 
-#include <atomic>
-#include <memory>
-#include <string>
-
-#include "openMVG/features/image_describer.hpp"
-#include "openMVG/features/regions_factory.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/system/logger.hpp"
-#include "openMVG/system/progressinterface.hpp"
-#include "openMVG/types.hpp"
-
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 namespace openMVG {
 namespace sfm {
 
 /// Abstract Regions provider
-/// Allow to load and return the regions related to a view
-struct Regions_Provider
+/// Allow to load and return a subset of regions related to a view
+struct Preemptive_Regions_Provider : public Regions_Provider
 {
 public:
 
-  virtual ~Regions_Provider() = default;
-
-  std::string Type_id()
-  {
-    if (region_type_)
-      return region_type_->Type_id();
-    else
-    {
-      return std::string("initialized regions type");
-    }
-  }
-
-  bool IsScalar()
-  {
-    if (region_type_)
-      return region_type_->IsScalar();
-    else
-    {
-      OPENMVG_LOG_ERROR << "Invalid region type";
-      return false;
-    }
-  }
-
-  bool IsBinary()
-  {
-    if (region_type_)
-      return region_type_->IsBinary();
-    else
-    {
-      OPENMVG_LOG_ERROR << "Invalid region type";
-      return false;
-    }
-  }
-
-  const openMVG::features::Regions* getRegionsType() const
-  {
-    if (region_type_)
-      return &(*region_type_);
-    else
-      return nullptr;
-  }
-
-  virtual std::shared_ptr<features::Regions> get(const IndexT x) const
-  {
-    const auto it = cache_.find(x);
-    if (it != std::end(cache_))
-    {
-      return it->second;
-    }
-    // else Invalid ressource
-    return {};
-  }
+  /// Set the number of regions to keep per image (largest scale kept first)
+  explicit Preemptive_Regions_Provider(int kept_regions_count = 100):
+    Regions_Provider(), kept_regions_count_(kept_regions_count)
+  {};
 
   // Load Regions related to a provided SfM_Data View container
-  virtual bool load(
+  bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type,
-    system::ProgressInterface * my_progress_bar = nullptr)
+    system::ProgressInterface * my_progress_bar = nullptr) override
   {
     if (!my_progress_bar)
       my_progress_bar = &system::ProgressInterface::dummy();
     region_type_.reset(region_type->EmptyClone());
 
-    my_progress_bar->Restart(sfm_data.GetViews().size(), "- Regions Loading -");
+    my_progress_bar->Restart(sfm_data.GetViews().size(), "- Regions ---- Loading -");
     // Read for each view the corresponding regions and store them
     std::atomic<bool> bContinue(true);
 #ifdef OPENMVG_USE_OPENMP
@@ -124,11 +65,13 @@ public:
           OPENMVG_LOG_ERROR << "Invalid regions files for the view: " << sImageName;
           bContinue = false;
         }
-
+        //else
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif
         {
+          // Sort regions by feature scale & keep the desired count
+          regions_ptr->SortAndSelectByRegionScale(kept_regions_count_);
           cache_[iter->second->id_view] = std::move(regions_ptr);
         }
         ++(*my_progress_bar);
@@ -138,12 +81,10 @@ public:
   }
 
 protected:
-  /// Regions per ViewId of the considered SfM_Data container
-  mutable Hash_Map<IndexT, std::shared_ptr<features::Regions>> cache_;
-  std::unique_ptr<openMVG::features::Regions> region_type_;
-}; // Regions_Provider
+  int kept_regions_count_ = 100;
+}; // Preemptive_Regions_Provider
 
 } // namespace sfm
 } // namespace openMVG
 
-#endif // OPENMVG_SFM_SFM_REGIONS_PROVIDER_HPP
+#endif // OPENMVG_SFM_SFM_PREEMPTIVE_REGIONS_PROVIDER_HPP
