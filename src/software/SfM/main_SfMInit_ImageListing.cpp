@@ -41,6 +41,10 @@ using namespace openMVG::sfm;
 bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<double> & focalxs, std::vector<double> & focalys,
                                   std::vector<double> & ppxs, std::vector<double> & ppys)
 {
+  if (Kmatrixs.empty()) {
+    return false;
+  }
+
   focalxs.clear();
   focalys.clear();
   ppxs.clear();
