@@ -43,8 +43,7 @@ bool LoadFeatmap(const string &featmap_file, map<int, int> &featmap) {
   return true;
 }
 
-bool LoadData(const SfM_Data &sfm_data, const string &matches_dir, const string &prefix,
-  const string &output_dir, GoodFeatInfo &feat_info) {
+bool LoadData(const SfM_Data &sfm_data, const string &matches_dir, GoodFeatInfo &feat_info) {
   feat_info.descs.clear();
   feat_info.points.clear();
   feat_info.featmap_map.clear();
@@ -134,7 +133,7 @@ int main(int argc, char *argv[]) {
     cerr << "Failed to load " << front_sfm_data_file << endl;
     return 1;
   }
-  if (!LoadData(front_sfm_data, argv[3], output_dir, "front", gfi_front)) {
+  if (!LoadData(front_sfm_data, argv[3], gfi_front)) {
     return 1;
   }
   // back
@@ -144,7 +143,7 @@ int main(int argc, char *argv[]) {
     cerr << "Failed to load " << back_sfm_data_file << endl;
     return 1;
   }
-  if (!LoadData(back_sfm_data, argv[3], output_dir, "back", gfi_back)) {
+  if (!LoadData(back_sfm_data, argv[3], gfi_back)) {
     return 1;
   }
 
