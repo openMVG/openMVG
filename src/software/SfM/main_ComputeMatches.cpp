@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/graph.hpp"
+#include "openMVG/graph/graph_stats.hpp"
 #include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
@@ -494,6 +495,9 @@ int main(int argc, char **argv)
     }
 
     std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+
+    // -- export Geometric View Graph statistics
+    graph::getGraphStatistics(sfm_data.GetViews().size(), getPairs(map_GeometricMatches));
 
     //-- export Adjacency matrix
     std::cout << "\n Export Adjacency Matrix of the pairwise's geometric matches"
