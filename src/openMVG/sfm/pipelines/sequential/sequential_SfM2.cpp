@@ -279,7 +279,8 @@ bool SequentialSfMReconstructionEngine2::Triangulation()
   SfM_Data_Structure_Computation_Robust triangulation_engine(
       max_reprojection_error,
       min_required_inliers,
-      min_sample_index);
+      min_sample_index,
+      triangulation_method_);
 
   triangulation_engine.triangulate(sfm_data_);
 
