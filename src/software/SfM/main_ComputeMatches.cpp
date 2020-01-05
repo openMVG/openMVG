@@ -126,7 +126,7 @@ int main(int argc, char **argv)
       << "  AUTO: auto choice from regions type,\n"
       << "  For Scalar based regions descriptor:\n"
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
-      << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs (float only),\n"
+      << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
