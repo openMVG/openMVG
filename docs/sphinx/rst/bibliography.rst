@@ -96,6 +96,9 @@ Bibliography
 .. [CASCADEHASHING] **Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction.**
    Jian Cheng, Cong Leng, Jiaxiang Wu, Hainan Cui, Hanqing Lu. CVPR 2014.
 
+.. [HNSW] **Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs.**
+   Yu. A. Malkov, D. A. Yashunin, TPAMI 2018.
+
 .. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers.**
    Magnus Oskarsson. In Journal of Mathematical Imaging and Vision, 2017.
 
