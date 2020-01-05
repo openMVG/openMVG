@@ -370,15 +370,17 @@ bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
   }
 
   std::vector<Type> vec_val( begin, end );
-  std::sort( vec_val.begin(), vec_val.end() );
-  min = vec_val[0];
-  max = vec_val[vec_val.size() - 1];
-  mean = std::accumulate( vec_val.begin(), vec_val.end(), Type( 0 ) )
+
+  // Get the median value:
+  const auto middle = vec_val.begin() + vec_val.size() / 2;
+  std::nth_element(vec_val.begin(), middle, vec_val.end());
+  median = *middle;
+  min = *std::min_element(vec_val.begin(), middle);
+  max = *std::max_element(middle, vec_val.end());
+  mean = std::accumulate( vec_val.cbegin(), vec_val.cend(), Type( 0 ) )
     / static_cast<Type>( vec_val.size() );
-  median = vec_val[vec_val.size() / 2];
   return true;
 }
-
 
 /**
 * @brief Display to standard output min, max, mean and median value of input range
