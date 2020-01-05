@@ -11,6 +11,7 @@
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching/matcher_hnsw.hpp"
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
@@ -92,6 +93,38 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
   // no 3, because it involve the same dist as 1,1
 
   ArrayMatcher_Kdtree_Flann<float> matcher;
+  EXPECT_TRUE( matcher.Build(array, 5, 1) );
+
+  const float query[] = {2};
+  IndMatches vec_nIndice;
+  vector<float> vec_fDistance;
+  const int NN = 5;
+  EXPECT_TRUE( matcher.SearchNeighbours(query, 1, &vec_nIndice, &vec_fDistance, NN) );
+
+  EXPECT_EQ( 5, vec_nIndice.size());
+  EXPECT_EQ( 5, vec_fDistance.size());
+
+  // Check distances:
+  EXPECT_NEAR( vec_fDistance[0], Square(2.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[1], Square(1.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[2], Square(0.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[3], Square(5.0f-2.0f), 1e-6);
+  EXPECT_NEAR( vec_fDistance[4], Square(6.0f-2.0f), 1e-6);
+
+  // Check indexes:
+  EXPECT_EQ(IndMatch(0,2), vec_nIndice[0]);
+  EXPECT_EQ(IndMatch(0,1), vec_nIndice[1]);
+  EXPECT_EQ(IndMatch(0,0), vec_nIndice[2]);
+  EXPECT_EQ(IndMatch(0,3), vec_nIndice[3]);
+  EXPECT_EQ(IndMatch(0,4), vec_nIndice[4]);
+}
+
+TEST(Matching, ArrayMatcher_Hnsw_Simple__NN)
+{
+  const float array[] = {0, 1, 2, 5, 6};
+  // no 3, because it involve the same dist as 1,1
+
+  HNSWMatcher<float> matcher;
   EXPECT_TRUE( matcher.Build(array, 5, 1) );
 
   const float query[] = {2};
