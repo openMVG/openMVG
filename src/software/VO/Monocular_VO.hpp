@@ -10,8 +10,9 @@
 #define MONOCULAR_VO_HPP
 
 #include <deque>
-#include <set>
+#include <iostream>
 #include <numeric>
+#include <set>
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/image/image_container.hpp"

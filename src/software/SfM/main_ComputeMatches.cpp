@@ -126,6 +126,7 @@ int main(int argc, char **argv)
       << "  AUTO: auto choice from regions type,\n"
       << "  For Scalar based regions descriptor:\n"
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
+      << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
@@ -333,6 +334,12 @@ int main(int argc, char **argv)
     {
       std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
+    }
+    else
+    if (sNearestMatchingMethod == "HNSWL2")
+    {
+      std::cout << "Using HNSWL2 matcher" << std::endl;
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
