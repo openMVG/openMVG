@@ -61,7 +61,7 @@ struct L2<uint8_t>
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
-    #ifdef OPENMVG_USE_AVX2
+    #ifdef __AVX2__
     if (size == 128)
     {
       return L2_AVX2(a, b, size);
@@ -102,10 +102,10 @@ struct L2<float>
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
-    #ifdef OPENMVG_USE_AVX2
+    #ifdef __AVX__
     if (size == 128)
     {
-      return L2_AVX2(a, b, size);
+      return L2_AVX(a, b, size);
     }
     #endif
 

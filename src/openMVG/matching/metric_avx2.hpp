@@ -17,7 +17,6 @@
 #include <array>
 #include <numeric>
 
-#ifdef OPENMVG_USE_AVX2
 #include <cstdint>
 #include <immintrin.h>
 
@@ -30,6 +29,7 @@ namespace matching {
 #define ALIGNED32 __attribute__((aligned(32)))
 #endif
 
+#ifdef __AVX2__
 inline int L2_AVX2
 (
   const uint8_t * a,
@@ -64,8 +64,10 @@ inline int L2_AVX2
   __m128i r = _mm_hadd_epi32(_mm_add_epi32(h, l), _mm_setzero_si128());
   return _mm_extract_epi32(r, 0) + _mm_extract_epi32(r, 1);
 }
+#endif
 
-inline float L2_AVX2
+#ifdef __AVX__
+inline float L2_AVX
 (
   const float * a,
   const float * b,
@@ -85,9 +87,9 @@ inline float L2_AVX2
   _mm256_store_ps(acc_float, acc);
   return std::accumulate(acc_float, acc_float + 8, 0.f);
 }
+#endif
 
 }  // namespace matching
 }  // namespace openMVG
-#endif
 
 #endif // OPENMVG_MATCHING_METRIC_AVX2_HPP
