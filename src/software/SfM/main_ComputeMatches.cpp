@@ -133,7 +133,8 @@ int main(int argc, char **argv)
       << "      L2 Cascade Hashing with precomputed hashed regions\n"
       << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
-      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
+      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching,\n"
+      << "    HNSWHAMMING: Hamming pproximate Matching with Hierarchical Navigable Small World graphs\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
@@ -340,6 +341,12 @@ int main(int argc, char **argv)
     {
       std::cout << "Using HNSWL2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
+    }
+    else
+    if (sNearestMatchingMethod == "HNSWHAMMING")
+    {
+      std::cout << "Using HNSWHAMMING matcher" << std::endl;
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")

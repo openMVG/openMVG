@@ -18,7 +18,8 @@ enum EMatcherType : unsigned char
   ANN_L2,
   CASCADE_HASHING_L2,
   HNSW_L2,
-  BRUTE_FORCE_HAMMING
+  BRUTE_FORCE_HAMMING,
+  HNSW_HAMMING
 };
 
 } // namespace matching

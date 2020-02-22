@@ -57,9 +57,9 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
 )
 {
   // Handle invalid request
-  if (regions.IsScalar() && eMatcherType == BRUTE_FORCE_HAMMING)
+  if (regions.IsScalar() && (eMatcherType == BRUTE_FORCE_HAMMING && eMatcherType == HNSW_HAMMING) )
     return {};
-  if (regions.IsBinary() && eMatcherType != BRUTE_FORCE_HAMMING)
+  if (regions.IsBinary() && (eMatcherType != BRUTE_FORCE_HAMMING && eMatcherType != HNSW_HAMMING) )
     return {};
 
   std::unique_ptr<RegionsMatcher> region_matcher;
@@ -178,6 +178,13 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
         using MetricT = Hamming<unsigned char>;
         using MatcherT = ArrayMatcherBruteForce<unsigned char, MetricT>;
         region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, false));
+      }
+      break;
+      case HNSW_HAMMING:
+      {
+        using MetricT = Hamming<unsigned char>;
+        using MatcherT = HNSWMatcher<unsigned char, MetricT>;
+        region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
       }
       break;
       default:

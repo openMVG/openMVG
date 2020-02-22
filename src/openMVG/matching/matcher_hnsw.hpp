@@ -17,6 +17,7 @@
 
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
+#include "openMVG/matching/metric_hnsw.hpp"
 
 #include "third_party/hnswlib/hnswlib.h"
 
@@ -61,14 +62,18 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     dimension_ = dimension;
     
     // Here this is tricky since there is no specialization
-    if(typeid(DistanceType)== typeid(int)) {
+    if(typeid(DistanceType) == typeid(int)) {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
     } else
     if (typeid(DistanceType) == typeid(float))  {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
+    } else 
+    if (typeid(DistanceType) == typeid(unsigned int)) {
+       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new HammingSpace(dimension)));
     } else {
       std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
     }
+
     
     HNSWmatcher.reset(new HierarchicalNSW<DistanceType>(HNSWmetric.get(), nbRows, 16, 100) );
     HNSWmatcher->setEf(16);
