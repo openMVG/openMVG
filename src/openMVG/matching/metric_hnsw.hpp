@@ -21,9 +21,9 @@ namespace matching {
 template <typename U>
 static unsigned int HammingHnsw(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
 {
+  constexpr openMVG::matching::Hamming<U> hamming;
   const U *a = reinterpret_cast<const U *>(pVect1);
   const U *b = reinterpret_cast<const U *>(pVect2);
-  const openMVG::matching::Hamming<U> hamming;
   return hamming(a, b,*(reinterpret_cast<const size_t*>(qty_ptr)));
 }
 
