@@ -103,7 +103,7 @@ struct L2<float>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     #ifdef __AVX__
-    if (size == 128)
+    if (size % 8)
     {
       return L2_AVX(a, b, size);
     }
