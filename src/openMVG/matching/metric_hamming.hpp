@@ -83,7 +83,7 @@ struct Hamming
     ResultType result = 0;
     size /= (sizeof(U) / sizeof(uint8_t));
     for (size_t i = 0; i < size; ++i) {
-      result += popcnt(pa[i] ^ pb[i]);
+      result += static_cast<ResultType>(popcnt(pa[i] ^ pb[i]));
     }
     return result;
   }
