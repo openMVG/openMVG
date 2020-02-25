@@ -103,7 +103,7 @@ struct L2<float>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     #ifdef __AVX__
-    if (size % 8)
+    if (size > 4 && size % 8)
     {
       return L2_AVX(a, b, size);
     }
@@ -128,6 +128,66 @@ struct L2<float>
     while (a < last) {
       diff0 = *a++ - *b++;
       result += diff0 * diff0;
+    }
+    return result;
+  }
+};
+
+template <class T>
+struct L1
+{
+  using ElementType = T;
+  using ResultType = typename Accumulator<ElementType>::Type;
+
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    ResultType result = ResultType();
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
+
+    // Process 4 items for each loop for efficiency.
+    while (a < lastgroup) {
+      result += std::abs(a[0] - b[0]);
+      result += std::abs(a[1] - b[1]);
+      result += std::abs(a[2] - b[2]);
+      result += std::abs(a[3] - b[3]);
+      a += 4;
+      b += 4;
+    }
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
+    while (a < last) {
+      result += std::abs(*a++ - *b++);
+    }
+    return result;
+  }
+};
+
+template<>
+struct L1<uint8_t>
+{
+  using ElementType = uint8_t;
+  using ResultType = unsigned int;
+
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    ResultType result = ResultType();
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
+
+    // Process 4 items for each loop for efficiency.
+    while (a < lastgroup) {
+      result += std::abs(a[0] - b[0]);
+      result += std::abs(a[1] - b[1]);
+      result += std::abs(a[2] - b[2]);
+      result += std::abs(a[3] - b[3]);
+      a += 4;
+      b += 4;
+    }
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
+    while (a < last) {
+      result += std::abs(*a++ - *b++);
     }
     return result;
   }

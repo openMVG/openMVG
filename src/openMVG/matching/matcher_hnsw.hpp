@@ -64,13 +64,13 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     // Here this is tricky since there is no specialization
     // TODO: the hamming vs. L2 distinction is fine for now but not robust
     if(typeid(DistanceType) == typeid(int)) {
-      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
+      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L2SpaceInteger(dimension)));
     } else
     if (typeid(DistanceType) == typeid(float))  {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
     } else 
     if (typeid(DistanceType) == typeid(unsigned int)) {
-      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new HammingSpace<uint8_t>(dimension)));
+      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
     } else {
       std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
     }
