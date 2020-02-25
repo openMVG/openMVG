@@ -26,11 +26,19 @@ using namespace hnswlib;
 namespace openMVG {
 namespace matching {
 
+
 // By default compute square(L2 distance).
 template <typename Scalar = float, typename Metric = L2<Scalar>>
 class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
 {
-  public:
+public:
+
+  enum MetricType {
+    L1,
+    L2,
+    HAMMING
+  };
+
   using DistanceType = typename Metric::ResultType;
 
   HNSWMatcher() = default;
@@ -54,39 +62,61 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
   {
     if (nbRows < 1)
     {
-      HNSWmetric.reset(nullptr);
-      HNSWmatcher.reset(nullptr);  
+      HNSW_metric_.reset(nullptr);
+      HNSW_matcher_.reset(nullptr);  
       return false;
     }
 
     dimension_ = dimension;
-    
+    std::cout << typeid(Metric).name() << std::endl;
+    getchar();
     // Here this is tricky since there is no specialization
-    // TODO: the hamming vs. L2 distinction is fine for now but not robust
-    if(typeid(DistanceType) == typeid(int)) {
-      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L2SpaceInteger(dimension)));
-    } else
-    if (typeid(DistanceType) == typeid(float))  {
-      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
-    } else 
-    if (typeid(DistanceType) == typeid(unsigned int)) {
-      HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
-    } else {
-      std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+    switch (INFO)
+    {
+    case L1:
+      if (typeid(DistanceType) == typeid(int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L1SpaceInteger(dimension)));
+      } else {
+        std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+        return false;
+      }
+      break;
+    case L2:
+      if (typeid(DistanceType) == typeid(int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L2SpaceInteger(dimension)));
+      } else
+      if (typeid(DistanceType) == typeid(float)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
+      } else {
+        std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+        return false;
+      }
+      break;
+    case HAMMING:
+      if (typeid(DistanceType) == typeid(unsigned int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
+      } else {
+        std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+        return false;
+      }
+      break;
+    default:
+        std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+        return false;  
+      break;
     }
 
-    
-    HNSWmatcher.reset(new HierarchicalNSW<DistanceType>(HNSWmetric.get(), nbRows, 16, 100) );
-    HNSWmatcher->setEf(16);
+    HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
+    HNSW_matcher_->setEf(16);
     
     // add first point..
-    HNSWmatcher->addPoint((void *)(dataset), (size_t) 0);
-    //...and the other in //
+    HNSW_matcher_->addPoint((void *)(dataset), (size_t) 0);
+    //...and the others in //
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
     #endif
     for (int i = 1; i < nbRows; i++) {
-        HNSWmatcher->addPoint((void *) (dataset + dimension * i), (size_t) i);
+        HNSW_matcher_->addPoint((void *) (dataset + dimension * i), (size_t) i);
     }
 
     return true;
@@ -109,9 +139,9 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     DistanceType * distance
   ) override
   {
-    if (HNSWmatcher.get() == nullptr)
+    if (HNSW_matcher_.get() == nullptr)
       return false;
-    auto result = HNSWmatcher->searchKnn(query, 1).top();
+    auto result = HNSW_matcher_->searchKnn(query, 1).top();
     *indice = result.second;
     *distance =  result.first;
     return true;
@@ -136,7 +166,7 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     size_t NN
   ) override
   {
-    if (HNSWmatcher.get() == nullptr)
+    if (HNSW_matcher_.get() == nullptr)
     {
       return false;
     }
@@ -146,7 +176,7 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     #pragma omp parallel for
     #endif
     for (int i = 0; i < nbQuery; i++) {
-      auto result = HNSWmatcher->searchKnn((const void *) (query + dimension_ * i), NN,
+      auto result = HNSW_matcher_->searchKnn((const void *) (query + dimension_ * i), NN,
         [](const std::pair<DistanceType, size_t> &a, const std::pair<DistanceType, size_t> &b) -> bool {
           return a.first < b.first;
       });
@@ -165,10 +195,13 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
   };
 
 private:
+  MetricType metric_type_;
   int dimension_;
-  std::unique_ptr<SpaceInterface<DistanceType>> HNSWmetric;
-  std::unique_ptr<HierarchicalNSW<DistanceType>> HNSWmatcher;
+  std::unique_ptr<SpaceInterface<DistanceType>> HNSW_metric_;
+  std::unique_ptr<HierarchicalNSW<DistanceType>> HNSW_matcher_;
 };
+
+
 
 }  // namespace matching
 }  // namespace openMVG

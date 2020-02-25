@@ -66,8 +66,8 @@ static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2
 {
   size_t size = *(reinterpret_cast<const size_t*>(qty_ptr));
   size = size >> 2;
-  uint8_t *a = (uint8_t *)(pVe  int result = 0;
-ct1); // discard const
+  int result = 0;
+  uint8_t *a = (uint8_t *)(pVect1); // discard const
   uint8_t *b = (uint8_t *)(pVect2); // discard const
 
 
