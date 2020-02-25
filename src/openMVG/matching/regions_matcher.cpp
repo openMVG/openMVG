@@ -88,7 +88,7 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
         case HNSW_L2: 
         {
           using MetricT = L2<unsigned char>;
-          using MatcherT = HNSWMatcher<unsigned char, MetricT>;
+          using MatcherT = HNSWMatcher<unsigned char, MetricT, HNSWMETRIC::L2_HNSW>;
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
         break;
@@ -125,7 +125,7 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
         case HNSW_L2: 
         {
           using MetricT = L2<float>;
-          using MatcherT = HNSWMatcher<float, MetricT>;
+          using MatcherT = HNSWMatcher<float, MetricT, HNSWMETRIC::L2_HNSW>;
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
         break;
@@ -183,7 +183,7 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
       case HNSW_HAMMING:
       {
         using MetricT = Hamming<unsigned char>;
-        using MatcherT = HNSWMatcher<unsigned char, MetricT>;
+        using MatcherT = HNSWMatcher<unsigned char, MetricT, HNSWMETRIC::HAMMING_HNSW>;
         region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, false));
       }
       break;

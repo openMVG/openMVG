@@ -26,18 +26,17 @@ using namespace hnswlib;
 namespace openMVG {
 namespace matching {
 
+enum HNSWMETRIC {
+  L2_HNSW,
+  L1_HNSW,
+  HAMMING_HNSW
+};
 
 // By default compute square(L2 distance).
-template <typename Scalar = float, typename Metric = L2<Scalar>>
+template <typename Scalar = float, typename Metric = L2<Scalar>, HNSWMETRIC MetricType = HNSWMETRIC::L2_HNSW>
 class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
 {
 public:
-
-  enum MetricType {
-    L1,
-    L2,
-    HAMMING
-  };
 
   using DistanceType = typename Metric::ResultType;
 
@@ -68,12 +67,11 @@ public:
     }
 
     dimension_ = dimension;
-    std::cout << typeid(Metric).name() << std::endl;
-    getchar();
+
     // Here this is tricky since there is no specialization
-    switch (INFO)
+    switch (MetricType)
     {
-    case L1:
+    case  HNSWMETRIC::L1_HNSW:
       if (typeid(DistanceType) == typeid(int)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L1SpaceInteger(dimension)));
       } else {
@@ -81,7 +79,7 @@ public:
         return false;
       }
       break;
-    case L2:
+    case  HNSWMETRIC::L2_HNSW:
       if (typeid(DistanceType) == typeid(int)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L2SpaceInteger(dimension)));
       } else
@@ -92,7 +90,7 @@ public:
         return false;
       }
       break;
-    case HAMMING:
+    case  HNSWMETRIC::HAMMING_HNSW:
       if (typeid(DistanceType) == typeid(unsigned int)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
       } else {
@@ -195,7 +193,6 @@ public:
   };
 
 private:
-  MetricType metric_type_;
   int dimension_;
   std::unique_ptr<SpaceInterface<DistanceType>> HNSW_metric_;
   std::unique_ptr<HierarchicalNSW<DistanceType>> HNSW_matcher_;
