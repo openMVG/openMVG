@@ -85,12 +85,15 @@ static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2
   return result * result;
 }
 
+#ifdef __AVX2__
 static int L1Kernel_AVX2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
   return L1_AVX2(a, b, 128);
 }
+#endif
+
 
 class L1SpaceInteger : public hnswlib::SpaceInterface<int>
 {
@@ -129,12 +132,14 @@ public:
   }
 };
 
+#ifdef __AVX2__
 static int L2Kernel_AVX2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
   return L2_AVX2(a, b, 128);
 }
+#endif
 
 class L2SpaceInteger : public hnswlib::SpaceInterface<int>
 {
