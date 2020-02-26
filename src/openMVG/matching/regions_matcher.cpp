@@ -91,6 +91,7 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
           using MatcherT = HNSWMatcher<unsigned char, MetricT, HNSWMETRIC::L2_HNSW>;
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
+        break;
         case HNSW_L1: 
         {
           using MetricT = L1<unsigned char>;
