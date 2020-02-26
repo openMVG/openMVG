@@ -167,7 +167,7 @@ template<>
 struct L1<uint8_t>
 {
   using ElementType = uint8_t;
-  using ResultType = unsigned int;
+  using ResultType = int;
 
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const

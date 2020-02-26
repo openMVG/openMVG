@@ -91,6 +91,12 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
           using MatcherT = HNSWMatcher<unsigned char, MetricT, HNSWMETRIC::L2_HNSW>;
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
+        case HNSW_L1: 
+        {
+          using MetricT = L1<unsigned char>;
+          using MatcherT = HNSWMatcher<unsigned char, MetricT, HNSWMETRIC::L1_HNSW>;
+          region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, false));
+        }
         break;
         case CASCADE_HASHING_L2:
         {

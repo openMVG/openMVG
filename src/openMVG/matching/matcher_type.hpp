@@ -18,6 +18,7 @@ enum EMatcherType : unsigned char
   ANN_L2,
   CASCADE_HASHING_L2,
   HNSW_L2,
+  HNSW_L1,
   BRUTE_FORCE_HAMMING,
   HNSW_HAMMING
 };

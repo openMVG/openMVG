@@ -127,6 +127,8 @@ int main(int argc, char **argv)
       << "  For Scalar based regions descriptor:\n"
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
       << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
+      << "    HNSWL1: L1 Approximate Matching with Hierarchical Navigable Small World graphs\n"
+      << "      taylored for quantized and histogram based descriptors (e.g uint8 RootSIFT)\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
@@ -341,6 +343,11 @@ int main(int argc, char **argv)
     {
       std::cout << "Using HNSWL2 matcher" << std::endl;
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
+    }
+    if (sNearestMatchingMethod == "HNSWL1")
+    {
+      std::cout << "Using HNSWL1 matcher" << std::endl;
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L1));
     }
     else
     if (sNearestMatchingMethod == "HNSWHAMMING")
