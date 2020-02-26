@@ -25,9 +25,36 @@ namespace matching {
 
 #ifdef _MSC_VER
 #define ALIGNED32 __declspec(align(32))
+#define ALIGNED16 __declspec(align(16))
 #else
 #define ALIGNED32 __attribute__((aligned(32)))
+#define ALIGNED16 __attribute__((aligned(16)))
 #endif
+
+
+#ifdef __SSE2__
+inline int L1_SSE2
+(
+  const uint8_t * a,
+  const uint8_t * b,
+  size_t size
+) 
+{
+  // Accumulator
+  __m128i acc (_mm_setzero_si128());
+  
+  const ALIGNED16 __m128i* ad = reinterpret_cast<const ALIGNED16 __m128i*>(a);
+  const ALIGNED16 __m128i* bd = reinterpret_cast<const ALIGNED16 __m128i*>(b);
+  
+  // Compute SAD on 16x2 components per iteration
+  for (int j = 0; j < 8; ++j) // only 128 for now 
+  {
+    acc = _mm_add_epi16(acc, _mm_sad_epu8(ad[j], bd[j]));
+  }
+  return (_mm_extract_epi16(acc, 0) + _mm_extract_epi16(acc, 4));
+}
+#endif
+
 
 #ifdef __AVX2__
 inline int L2_AVX2
