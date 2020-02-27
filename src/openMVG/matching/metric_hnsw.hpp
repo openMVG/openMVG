@@ -82,12 +82,11 @@ static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2
     result += std::abs(*a - *b);
     a++;b++;
   }
-  return result * result;
+  return result;
 }
 #ifdef __SSE2__
 static int L1Kernel_SSE2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
 {
-  std::cout << "hello world" << std::endl;
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
   return L1_SSE2(a, b, 128);
@@ -114,9 +113,10 @@ public:
   {
     fstdistfunc_ = L1Kernel;
     #ifdef __SSE2__
-    if(dim == 128) {
+    //FIXME (RJ): Kernel disabled since there are some troubles on my Linux computer
+    /*if(dim == 128) {
       fstdistfunc_ = L1Kernel_SSE2;
-    }
+    }*/
     #endif
     #ifdef __AVX2__
     if(dim == 128) {

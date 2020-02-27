@@ -173,6 +173,11 @@ TEST(Metric, L1DIM128) {
     EXPECT_TRUE(cpu_instruction_set.supportAVX2());
     EXPECT_EQ(GTL1, metricL1(a.data(), b.data(), 128));
   #endif
+  #ifdef __SSE2__
+    openMVG::system::CpuInstructionSet cpu_instruction_set;
+    EXPECT_TRUE(cpu_instruction_set.supportSSE2());
+    EXPECT_EQ(GTL1, metricL1(a.data(), b.data(), 128));
+  #endif
 }
 
 
