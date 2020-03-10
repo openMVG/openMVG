@@ -185,7 +185,7 @@ int main(int argc, char **argv)
       << "\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t 5: Pinhole fisheye\n"
       << "\t 6: Pinhole radial 1 pba\n"
-      << "\t 11: Pinhole brown 2 with different fx, fy"
+      << "\t 11: Pinhole brown 2 with different fx, fy\n"
     << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"

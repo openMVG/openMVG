@@ -41,6 +41,10 @@ using namespace openMVG::sfm;
 bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<double> & focalxs, std::vector<double> & focalys,
                                   std::vector<double> & ppxs, std::vector<double> & ppys)
 {
+  if (Kmatrixs.empty()) {
+    return false;
+  }
+
   focalxs.clear();
   focalys.clear();
   ppxs.clear();
@@ -67,6 +71,24 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrixs, std::vector<doub
     if (component==5) ppys.push_back(readvalue);
   }
   return true;
+}
+
+/// Check that CameraModel is a string like "c1;c2"
+std::vector<EINTRINSIC> checkCameraModelsStringValidity(const std::string& sCameraModels)
+{
+  std::vector<EINTRINSIC> cameraModels;
+  std::vector<std::string> vec_str;
+  stl::split(sCameraModels, ';', vec_str);
+  if (vec_str.size() == 0)  {
+    throw std::runtime_error("\n CameraModel is empty");
+  }
+
+  // Check that all CameraModel values are valid types
+  for (size_t i = 0; i < vec_str.size(); ++i) {
+    int readvalue = std::stoi(vec_str[i]);
+    cameraModels.push_back(EINTRINSIC(readvalue));
+  }
+  return cameraModels;
 }
 
 bool checkFocalPixelsStringValidity(const std::string &sFocalPixels, std::vector<double> &focals) {
@@ -254,7 +276,7 @@ int main(int argc, char **argv)
   std::string sPriorWeights;
   std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
 
-  int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
+  std::string i_User_camera_models = "3";
 
   bool b_Group_camera_model = true;
 
@@ -267,7 +289,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutputDir, "outputDirectory") );
   cmd.add( make_option('f', sFocalPixels, "focals") );
   cmd.add( make_option('k', sKmatrixs, "intrinsics") );
-  cmd.add( make_option('c', i_User_camera_model, "camera_model") );
+  cmd.add( make_option('c', i_User_camera_models, "camera_models") );
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weights"));
@@ -284,7 +306,7 @@ int main(int argc, char **argv)
       << "[-o|--outputDirectory]\n"
       << "[-f|--focals] (pixels)\n"
       << "[-k|--intrinsics] Kmatrixs: \"fx;0;ppx;0;fy;ppy;0;0;1...\"\n"
-      << "[-c|--camera_model] Camera model type:\n"
+      << "[-c|--camera_models] Camera models type: \"c1;c2...\"\n"
       << "\t 1: Pinhole\n"
       << "\t 2: Pinhole radial 1\n"
       << "\t 3: Pinhole radial 3 (default)\n"
@@ -292,12 +314,12 @@ int main(int argc, char **argv)
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
       << "\t 6: Pinhole radial 1 pba\n"
       << "\t 8: Spherical camera\n"
-      << "\t 11: Pinhole brown 2 with different fx, fy"
+      << "\t 11: Pinhole brown 2 with different fx, fy\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
       << "\t 1-> (default) view can share some camera intrinsic parameters\n"
       << "\n"
-      << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
+      << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available\n"
       << "[-W|--prior_weights] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
@@ -316,13 +338,14 @@ int main(int argc, char **argv)
             << "--outputDirectory " << sOutputDir << std::endl
             << "--focals " << sFocalPixels << std::endl
             << "--intrinsics " << sKmatrixs << std::endl
-            << "--camera_model " << i_User_camera_model << std::endl
+            << "--camera_models " << i_User_camera_models << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
 
   // Expected properties for each image
   std::vector<double> focalxs, focalys, ppxs, ppys;
 
-  const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
+  const std::vector<EINTRINSIC> e_User_camera_models =
+    checkCameraModelsStringValidity(i_User_camera_models);
 
   auto imageDirs = checkImageDirsStringValidity(sImageDirs);
   if (imageDirs.empty()) {
@@ -504,6 +527,8 @@ int main(int argc, char **argv)
         }
       }
     }
+    EINTRINSIC e_User_camera_model = e_User_camera_models[sortedImages[image_number].second];
+
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic;
 

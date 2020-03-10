@@ -68,8 +68,6 @@ class Pinhole_Intrinsic_2 : public IntrinsicBase
       const Mat3& K)
       : IntrinsicBase( w, h ), K_(K)
     {
-      K_(0,0) = K(0,0);
-      K_(1,1) = K(1,1);
       Kinv_ = K_.inverse();
     }
 
