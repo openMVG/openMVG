@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <unordered_map>
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/svg_features.hpp"
@@ -63,6 +64,7 @@ int main(int argc, char **argv)
   std::string sOutFile = "";
   double dMax_reprojection_error = 4.0;
   unsigned int ui_max_cache_size = 0;
+  std::string sTagTrackFile;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
@@ -73,6 +75,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('r', dMax_reprojection_error, "residual_threshold"));
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
   cmd.add( make_switch('d', "direct_triangulation"));
+  cmd.add( make_option('T', sTagTrackFile, "tag_track_file"));
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -100,6 +103,7 @@ int main(int argc, char **argv)
         << "[-c|--cache_size]\n"
     << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
     << "  If not used, all regions will be load in memory.\n"
+    << "[-T|--tag_track_file] given track file to compute points' position.\n"
 
     << std::endl;
 
@@ -118,12 +122,16 @@ int main(int argc, char **argv)
   // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
   const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
-  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
-  if (!regions_type)
+  std::unique_ptr<Regions> regions_type = nullptr;
+  if (sTagTrackFile.empty())
   {
-    std::cerr << "Invalid: "
-      << sImage_describer << " regions type file." << std::endl;
-    return EXIT_FAILURE;
+    regions_type = Init_region_type_from_file(sImage_describer);
+    if (!regions_type)
+    {
+      std::cerr << "Invalid: "
+        << sImage_describer << " regions type file." << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   // Prepare the Regions provider
@@ -142,10 +150,13 @@ int main(int argc, char **argv)
   // Show the progress on the command line:
   C_Progress_display progress;
 
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
-    std::cerr << std::endl
-      << "Invalid regions." << std::endl;
-    return EXIT_FAILURE;
+  if (sTagTrackFile.empty())
+  {
+    if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
+      std::cerr << std::endl
+        << "Invalid regions." << std::endl;
+      return EXIT_FAILURE;
+    }
   }
 
   std::cout
@@ -158,7 +169,71 @@ int main(int argc, char **argv)
 
   const bool bDirect_triangulation = cmd.used('d');
 
-  if (bDirect_triangulation)
+  if (!sTagTrackFile.empty())
+  {
+    std::cout
+      << "\n======================================\n"
+      << "Robust triangulation given the track file\n"
+      << "======================================"  << std::endl;
+
+    const int min_track_length = 2;
+
+    struct TagTrack
+    {
+      std::unordered_map<uint32_t, std::pair<uint32_t, Vec2>> feats;
+    };
+    std::vector<TagTrack> tracks;
+
+    ifstream file(sTagTrackFile);
+    if (!file.is_open())
+    {
+      std::cerr<< "Unable to read the tag track file." << std::endl;
+      return EXIT_FAILURE;
+    }
+    while (!file.eof())
+    {
+      uint32_t feat_num, image_index, feat_index;
+      Vec2 feat_pos;
+      file >> feat_num;
+      TagTrack tagTrack;
+      for (uint32_t i = 0; i < feat_num; ++i)
+      {
+        file >> image_index >> feat_index >> feat_pos.x() >> feat_pos.y();
+        tagTrack.feats[image_index] = std::make_pair(feat_index, feat_pos);
+      }
+      tracks.emplace_back(std::move(tagTrack));
+    }
+
+    // Fill sfm_data with the computed tracks (no 3D yet)
+    Landmarks & structure = sfm_data.structure;
+    IndexT idx(0);
+    for (const auto & track : tracks)
+    {
+      structure[idx] = {};
+      Observations & obs = structure.at(idx).obs;
+      for (const auto & feat_it : track.feats)
+      {
+        const auto imaIndex = feat_it.first;
+        const auto featIndex = feat_it.second.first;
+        const Vec2 & pt =  feat_it.second.second;
+        obs[imaIndex] = {pt, featIndex};
+      }
+      ++idx;
+    }
+
+    // Compute 3D position of the landmark of the structure by robust triangulation of the observations
+    {
+      const double max_reprojection_error = 4.0; // pixels reprojection error
+      bool console_verbose = true;
+      SfM_Data_Structure_Computation_Robust structure_estimator(
+        max_reprojection_error,
+        min_track_length,
+        min_track_length,
+        console_verbose);
+      structure_estimator.triangulate(sfm_data);
+    }
+  }
+  else if (bDirect_triangulation)
   {
     // Check that a match file have been provided
     if (sMatchFile.empty() || !sPairFile.empty())
