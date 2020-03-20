@@ -5,7 +5,6 @@ add_executable(openMVG_main_ComputeClusters main_ComputeClusters.cpp)
 target_link_libraries(openMVG_main_ComputeClusters
   PRIVATE
     openMVG_system
-    openMVG_image
     openMVG_features
     openMVG_sfm
     domset
