@@ -19,6 +19,13 @@
 #include <iomanip>
 #include <iterator>
 
+static const std::string COLOR_BOTTOM = "107 118 178";
+static const std::string COLOR_LEFT = "112 178 107";
+static const std::string COLOR_TOP = "178 107 124";
+static const std::string COLOR_RIGHT = "178 175 107";
+static const std::string COLOR_FAR = "164 107 178";
+static const std::string COLOR_NEAR = "223 196 230";
+
 namespace openMVG {
 namespace sfm {
 
@@ -168,6 +175,9 @@ const
     << "property double z" << '\n'
     << "element face " << face_count << '\n'
     << "property list uchar int vertex_index" << '\n'
+    << "property uchar red" << "\n"
+    << "property uchar green" << "\n"
+    << "property uchar blue" << "\n"
     << "end_header" << '\n';
 
   // Export frustums points
@@ -186,21 +196,21 @@ const
   {
     if (it->second.isInfinite()) // infinite frustum: drawn normalized cone: 4 faces
     {
-      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << '\n'
-        << "3 " << count + 0 << ' ' << count + 2 << ' ' << count + 3 << '\n'
-        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << '\n'
-        << "3 " << count + 0 << ' ' << count + 4 << ' ' << count + 1 << '\n'
-        << "4 " << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << count + 4 << '\n';
+      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << COLOR_BOTTOM << '\n'
+        << "3 " << count + 0 << ' ' << count + 2 << ' ' << count + 3 << ' ' << COLOR_LEFT << '\n'
+        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << ' ' << COLOR_TOP << '\n'
+        << "3 " << count + 0 << ' ' << count + 4 << ' ' << count + 1 << ' ' << COLOR_RIGHT << '\n'
+        << "4 " << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << count + 4 << ' ' << COLOR_FAR << '\n';
       count += 5;
     }
     else // truncated frustum: 6 faces
     {
-      of << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << count + 3 << '\n'
-        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << '\n'
-        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << '\n'
-        << "4 " << count + 3 << ' ' << count + 7 << ' ' << count + 6 << ' ' << count + 2 << '\n'
-        << "4 " << count + 0 << ' ' << count + 4 << ' ' << count + 7 << ' ' << count + 3 << '\n'
-        << "4 " << count + 4 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 7 << '\n';
+      of << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << COLOR_BOTTOM << '\n'
+        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << ' ' << COLOR_LEFT << '\n'
+        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << ' ' << COLOR_TOP << '\n'
+        << "4 " << count + 3 << ' ' << count + 7 << ' ' << count + 6 << ' ' << count + 2 << ' ' << COLOR_RIGHT << '\n'
+        << "4 " << count + 0 << ' ' << count + 4 << ' ' << count + 7 << ' ' << count + 3 << ' ' << COLOR_NEAR << '\n'
+        << "4 " << count + 4 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 7 << ' ' << COLOR_FAR << '\n';
       count += 8;
     }
   }
