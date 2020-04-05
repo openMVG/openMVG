@@ -157,12 +157,20 @@ bool exportToOpenMVS(
       {
         // undistort image and save it
         Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
+        Image<uint8_t> image_gray, image_gray_ud;
         try
         {
           if (ReadImage(srcImage.c_str(), &imageRGB))
           {
             UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
             bOk = WriteImage(imageName.c_str(), imageRGB_ud);
+          }
+          else // If RGBColor reading fails, try to read as gray image
+          if (ReadImage(srcImage.c_str(), &image_gray))
+          {
+            UndistortImage(image_gray, cam, image_gray_ud, BLACK);
+            const bool bRes = WriteImage(imageName.c_str(), image_gray_ud);
+            bOk = bOk & bRes;
           }
           else
           {
