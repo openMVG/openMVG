@@ -10,6 +10,7 @@
 
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/image/pixel_types.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 
@@ -19,19 +20,14 @@
 #include <iomanip>
 #include <iterator>
 
-static const std::string COLOR_BOTTOM = "107 118 178";
-static const std::string COLOR_LEFT = "112 178 107";
-static const std::string COLOR_TOP = "178 107 124";
-static const std::string COLOR_RIGHT = "178 175 107";
-static const std::string COLOR_FAR = "164 107 178";
-static const std::string COLOR_NEAR = "223 196 230";
-
 namespace openMVG {
 namespace sfm {
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::geometry::halfPlane;
+
+std::string RgbPLYString(const image::RGBColor& color);
 
 // Constructor
 Frustum_Filter::Frustum_Filter
@@ -191,26 +187,28 @@ const
 
   // Export frustums faces
   IndexT count = 0;
+  std::string color_top_face{RgbPLYString(image::RED)};
+  std::string color_other_face{RgbPLYString(image::GRAY)};
   for (FrustumsT::const_iterator it = frustum_perView.begin();
     it != frustum_perView.end(); ++it)
   {
     if (it->second.isInfinite()) // infinite frustum: drawn normalized cone: 4 faces
     {
-      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << COLOR_BOTTOM << '\n'
-        << "3 " << count + 0 << ' ' << count + 2 << ' ' << count + 3 << ' ' << COLOR_LEFT << '\n'
-        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << ' ' << COLOR_TOP << '\n'
-        << "3 " << count + 0 << ' ' << count + 4 << ' ' << count + 1 << ' ' << COLOR_RIGHT << '\n'
-        << "4 " << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << count + 4 << ' ' << COLOR_FAR << '\n';
+      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << color_other_face << '\n'
+        << "3 " << count + 0 << ' ' << count + 2 << ' ' << count + 3 << ' ' << color_other_face << '\n'
+        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << ' ' << color_top_face << '\n'
+        << "3 " << count + 0 << ' ' << count + 4 << ' ' << count + 1 << ' ' << color_other_face << '\n'
+        << "4 " << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << count + 4 << ' ' << color_other_face << '\n';
       count += 5;
     }
     else // truncated frustum: 6 faces
     {
-      of << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << COLOR_BOTTOM << '\n'
-        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << ' ' << COLOR_LEFT << '\n'
-        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << ' ' << COLOR_TOP << '\n'
-        << "4 " << count + 3 << ' ' << count + 7 << ' ' << count + 6 << ' ' << count + 2 << ' ' << COLOR_RIGHT << '\n'
-        << "4 " << count + 0 << ' ' << count + 4 << ' ' << count + 7 << ' ' << count + 3 << ' ' << COLOR_NEAR << '\n'
-        << "4 " << count + 4 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 7 << ' ' << COLOR_FAR << '\n';
+      of << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << color_other_face << '\n'
+        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << ' ' << color_other_face << '\n'
+        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << ' ' << color_top_face << '\n'
+        << "4 " << count + 3 << ' ' << count + 7 << ' ' << count + 6 << ' ' << count + 2 << ' ' << color_other_face << '\n'
+        << "4 " << count + 0 << ' ' << count + 4 << ' ' << count + 7 << ' ' << count + 3 << ' ' << color_other_face << '\n'
+        << "4 " << count + 4 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 7 << ' ' << color_other_face << '\n';
       count += 8;
     }
   }
@@ -274,6 +272,11 @@ void Frustum_Filter::init_z_near_z_far_depth
         z_near_z_far_perView[view->id_view] = {zNear, zFar};
     }
   }
+}
+
+std::string RgbPLYString(const image::RGBColor& color)
+{
+  return std::to_string(color.r()) + ' ' + std::to_string(color.g()) + ' ' + std::to_string(color.b());
 }
 
 } // namespace sfm
