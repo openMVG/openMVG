@@ -201,7 +201,9 @@ int main(int argc, char **argv)
         file >> image_index >> feat_index >> feat_pos.x() >> feat_pos.y();
         tagTrack.feats[image_index] = std::make_pair(feat_index, feat_pos);
       }
-      tracks.emplace_back(std::move(tagTrack));
+      if (file.good()) {
+        tracks.emplace_back(std::move(tagTrack));
+      }
     }
 
     // Fill sfm_data with the computed tracks (no 3D yet)
