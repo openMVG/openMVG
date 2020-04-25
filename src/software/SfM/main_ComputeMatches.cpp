@@ -52,7 +52,8 @@ enum EGeometricModel
   ESSENTIAL_MATRIX   = 1,
   HOMOGRAPHY_MATRIX  = 2,
   ESSENTIAL_MATRIX_ANGULAR = 3,
-  ESSENTIAL_MATRIX_ORTHO = 4
+  ESSENTIAL_MATRIX_ORTHO = 4,
+  ESSENTIAL_MATRIX_UPRIGHT = 5
 };
 
 enum EPairMode
@@ -116,6 +117,7 @@ int main(int argc, char **argv)
       << "   h: homography matrix.\n"
       << "   a: essential matrix with an angular parametrization,\n"
       << "   o: orthographic essential matrix.\n"
+      << "   u: upright essential matrix.\n"
       << "[-v|--video_mode_matching]\n"
       << "  (sequence matching with an overlap of X images)\n"
       << "   X: with match 0 with (1->X), ...]\n"
@@ -197,6 +199,10 @@ int main(int argc, char **argv)
     case 'o': case 'O':
       eGeometricModelToCompute = ESSENTIAL_MATRIX_ORTHO;
       sGeometricMatchesFilename = "matches.o.bin";
+    break;
+    case 'u': case 'U':
+      eGeometricModelToCompute = ESSENTIAL_MATRIX_UPRIGHT;
+      sGeometricMatchesFilename = "matches.f.bin";
     break;
     default:
       std::cerr << "Unknown geometric model" << std::endl;
@@ -484,6 +490,14 @@ int main(int argc, char **argv)
         filter_ptr->Robust_model_estimation(
           GeometricFilter_EOMatrix_RA(2.0, imax_iteration),
           map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
+      }
+      break;
+      case ESSENTIAL_MATRIX_UPRIGHT:
+      {
+        filter_ptr->Robust_model_estimation(
+          GeometricFilter_ESphericalMatrix_AC_Angular<true>(4.0, imax_iteration),
+            map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;

@@ -1,6 +1,7 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2017, Romain JANVIER & Pierre MOULON
+// Copyright (c) 2020 Pierre MOULON.
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -79,4 +80,39 @@ void ThreePointsRelativePose
   E->emplace_back(ComputeEssentialMatrix(d4_2 - tmp));
 }
 
+namespace essential {
+namespace kernel {
+
+void ThreePointUprightRelativePoseSolver::Solve
+(
+  const Mat3X & bearing_a,
+  const Mat3X & bearing_b,
+  std::vector<Mat3> * pvec_E
+)
+{
+  // Build the action matrix -> see (6,7) in the paper
+  Eigen::Matrix<double, 3, 4> A;
+  for (const int i : {0,1,2})
+  {
+    const auto & bearing_a_i = bearing_a.col(i);
+    const auto & bearing_b_i = bearing_b.col(i);
+    A.row(i) <<
+         bearing_a_i.x() * bearing_b_i.y(), -bearing_a_i.z() * bearing_b_i.y(),
+        -bearing_b_i.x() * bearing_a_i.y(), -bearing_b_i.z() * bearing_a_i.y();
+  }
+
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 4, 4>> solver(A.transpose() * A);
+  const Vec4 nullspace = solver.eigenvectors().leftCols<1>();
+
+  Mat3 E = Mat3::Zero(); // see (3) in the paper
+  E(0, 1) =   nullspace(2);
+  E(1, 0) = - nullspace(0);
+  E(1, 2) =   nullspace(1);
+  E(2, 1) =   nullspace(3);
+
+  pvec_E->emplace_back(E);
+}
+
+} // namespace kernel
+} // namespace essential
 } // namespace openMVG

@@ -10,6 +10,7 @@
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_E_SPHERICAL_ACROBUST_ANGULAR_HPP
 
 #include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -19,9 +20,9 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
+#include "openMVG/multiview/solver_essential_three_point.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
@@ -29,12 +30,13 @@ namespace openMVG { namespace sfm { struct Regions_Provider; } }
 namespace openMVG {
 namespace matching_image_collection {
 
+template <bool isUprightEssentialMatrix = false>
 //-- A contrario essential matrix estimation template functor used for filter pair of putative correspondences
 struct GeometricFilter_ESphericalMatrix_AC_Angular
 {
   GeometricFilter_ESphericalMatrix_AC_Angular(
-    double precision_upper_bound = std::numeric_limits<double>::infinity(),
-    size_t iteration = 1024)
+    const double precision_upper_bound,
+    const size_t iteration)
     : m_precision_upper_bound(precision_upper_bound),
       m_stIteration(iteration),
       m_E(Mat3::Identity()),
@@ -94,11 +96,13 @@ struct GeometricFilter_ESphericalMatrix_AC_Angular
     //--
     // Robust estimation
     //--
-
     // Define the AContrario angular error adaptor
     typedef openMVG::robust::ACKernelAdaptor_AngularRadianError<
-        // Use the 8 point solver in order to estimate E
-        openMVG::EightPointRelativePoseSolver,
+        typename std::conditional<isUprightEssentialMatrix,
+          // Use the 3 point solver in order to estimate E (Upright)
+          openMVG::essential::kernel::ThreePointUprightRelativePoseSolver,
+          // Use the 8 point solver in order to estimate E
+          openMVG::EightPointRelativePoseSolver>::type,
         openMVG::AngularError,
         Mat3>
         KernelType;
@@ -163,8 +167,11 @@ struct GeometricFilter_ESphericalMatrix_AC_Angular
     return false;
   }
 
-  double m_precision_upper_bound;  // upper_bound precision used for robust estimation
-  size_t m_stIteration; // maximal number of iteration for robust estimation
+  // upper_bound precision used for robust estimation
+  double m_precision_upper_bound = std::numeric_limits<double>::infinity();
+  // maximal number of iteration for robust estimation
+  size_t m_stIteration = 1024;
+
   //
   //-- Stored data
   Mat3 m_E;
