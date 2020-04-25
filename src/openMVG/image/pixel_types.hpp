@@ -378,6 +378,7 @@ std::ostream& operator<<( std::ostream& os, const Rgba<T>& col )
 using RGBAColor = Rgba<unsigned char>;
 
 const RGBColor WHITE( 255, 255, 255 );
+const RGBColor GRAY( 127, 127, 127);
 const RGBColor BLACK( 0, 0, 0 );
 const RGBColor BLUE( 0, 0, 255 );
 const RGBColor RED( 255, 0, 0 );
