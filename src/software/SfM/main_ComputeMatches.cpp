@@ -474,8 +474,8 @@ int main(int argc, char **argv)
       case ESSENTIAL_MATRIX_ANGULAR:
       {
         filter_ptr->Robust_model_estimation(
-          GeometricFilter_ESphericalMatrix_AC_Angular(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching);
+          GeometricFilter_ESphericalMatrix_AC_Angular<false>(4.0, imax_iteration),
+          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
