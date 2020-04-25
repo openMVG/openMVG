@@ -58,7 +58,7 @@ struct ACParametrizationHelper
     return log10(2. * D / A / scaling_factor);
   }
 
-  static constexpr double MultError() 
+  static constexpr double MultError()
   {
     return .5;
   }
@@ -77,7 +77,7 @@ inline double ACParametrizationHelper<AContrarioParametrizationType::POINT_TO_PO
 }
 
 template<>
-constexpr double ACParametrizationHelper<AContrarioParametrizationType::POINT_TO_POINT>::MultError() 
+constexpr double ACParametrizationHelper<AContrarioParametrizationType::POINT_TO_POINT>::MultError()
 {
   return 1.;
 }
@@ -94,7 +94,7 @@ inline double ACParametrizationHelper<AContrarioParametrizationType::RADIAN_ANGL
 }
 
 template<>
-constexpr double ACParametrizationHelper<AContrarioParametrizationType::RADIAN_ANGLE>::MultError() 
+constexpr double ACParametrizationHelper<AContrarioParametrizationType::RADIAN_ANGLE>::MultError()
 {
   return 1. / 4.;
 }

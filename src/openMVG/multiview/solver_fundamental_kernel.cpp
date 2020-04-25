@@ -28,7 +28,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/numeric/nullspace.hpp"
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/poly.h"
 
