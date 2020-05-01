@@ -953,7 +953,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   geometry::Pose3 pose;
   const bool bResection = sfm::SfM_Localizer::Localize
   (
-    optional_intrinsic ? resection::SolverType::P3P_NORDBERG_ECCV18 : resection::SolverType::DLT_6POINTS,
+    optional_intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
     {view_I->ui_width, view_I->ui_height},
     optional_intrinsic.get(),
     resection_data,

@@ -396,7 +396,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
         geometry::Pose3 pose;
         const bool bResection = sfm::SfM_Localizer::Localize
         (
-          intrinsic ? resection::SolverType::P3P_NORDBERG_ECCV18 : resection::SolverType::DLT_6POINTS,
+          intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
           {view->ui_width, view->ui_height},
           intrinsic ? intrinsic.get() : nullptr,
           resection_data,

@@ -15,6 +15,7 @@
 
 #include "openMVG/sfm/pipelines/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
+#include "openMVG/multiview/solver_resection.hpp"
 #include "openMVG/multiview/triangulation_method.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
@@ -75,6 +76,12 @@ public:
     triangulation_method_ = method;
   }
 
+  /// Configure the resetcion method method used by the Localization engine
+  void SetResectionMethod(const resection::SolverType method)
+  {
+    resection_method_ = method;
+  }
+
 private:
 
   //----
@@ -104,6 +111,8 @@ private:
 
   /// 2View triangulation method used in the robust triangulation engine
   ETriangulationMethod triangulation_method_ = ETriangulationMethod::DEFAULT;
+
+  resection::SolverType resection_method_ = resection::SolverType::DEFAULT;
 };
 
 } // namespace sfm
