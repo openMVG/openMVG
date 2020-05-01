@@ -34,6 +34,7 @@ int main(int argc, char **argv)
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('o', sOutFile, "output_file") );
+  cmd.add( make_switch('c', "colorize") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
     std::cerr << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-o|--output_file] PLY file to store the camera frustums as triangle meshes.\n"
+    << "[-c|--colorize] Colorize the camera frustums.\n"
     << std::endl;
 
     std::cerr << s << std::endl;
@@ -61,11 +63,14 @@ int main(int argc, char **argv)
     if (!stlplus::folder_create( stlplus::folder_part(sOutFile) ))
       return EXIT_FAILURE;
 
+  // Detect if colorization is requested
+  const bool colorize = cmd.used('c');
+
   // If sfm_data have not structure, cameras are displayed as tiny normalized cones
   const Frustum_Filter frustum_filter(sfm_data);
   if (!sOutFile.empty())
   {
-    if (frustum_filter.export_Ply(sOutFile))
+    if (frustum_filter.export_Ply(sOutFile, colorize))
       return EXIT_SUCCESS;
   }
   return EXIT_FAILURE;
