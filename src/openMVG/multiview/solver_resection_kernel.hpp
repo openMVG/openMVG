@@ -9,10 +9,8 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_RESECTION_KERNEL_HPP
 
-#include <vector>
-
 #include "openMVG/multiview/two_view_kernel.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/solver_resection_metrics.hpp"
 
 namespace openMVG {
 namespace resection {
@@ -38,20 +36,13 @@ struct SixPointResectionSolver {
     bool bcheck = true
   );
 
-  // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
-  static double Error
-  (
-    const Mat34 & P,
-    const Vec2 & pt2D,
-    const Vec3 & pt3D
-  );
 };
 
 //-- Usable solver for the 6pt Resection estimation
 using PoseResectionKernel =
   two_view::kernel::Kernel<
     SixPointResectionSolver, // Model estimator
-    SixPointResectionSolver, // Error metric
+    resection::PixelReprojectionError, // Error metric
     Mat34>;
 
 }  // namespace kernel

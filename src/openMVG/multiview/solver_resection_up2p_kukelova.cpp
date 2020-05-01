@@ -81,16 +81,5 @@ void UP2PSolver_Kukelova::Solve
   }
 }
 
-double UP2PSolver_Kukelova::Error
-(
-  const Mat34 & P,
-  const Vec3 & bearing_vector,
-  const Vec3 & pt3D
-)
-{
-  const auto new_bearing = (P * pt3D.homogeneous()).normalized();
-  return 1.0 - (bearing_vector.dot(new_bearing));
-}
-
 } // namespace euclidean_resection
 } // namespace openMVG

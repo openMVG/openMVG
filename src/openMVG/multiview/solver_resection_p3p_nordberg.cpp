@@ -73,7 +73,7 @@ static void gauss_newton_refineL(Vec3 &L,
              v3 * v7, -v0 * v7, -v1 * v3;
       Vec3 L1 = Vec3(L) - det * (Ji * r);
       //%l=l - g*H\G;%inv(H)*G
-      //L=L - g*J\r; 
+      //L=L - g*J\r;
       //% works because the size is ok!
       {
         double l1 = L1(0);
@@ -266,9 +266,9 @@ static void eigwithknown0(const Mat3 &x, Mat3 &E, Vec3 &L)
 /**
 * @brief Compute the absolute pose of a camera using three 3D-to-2D correspondences.
 *  Implementation of the paper "Lambda Twist: An Accurate Fast Robust Perspective Three Point (P3P) Solver". Persson, M. and Nordberg, K. ECCV 2018
-* 
+*
 * @authors Mikael Persson and Klas Nordberg
-* 
+*
 * @param[in] bearing_vectors 3x3 matrix with UNITARY feature vectors (each column is a vector)
 * @param[in] X  3x3 matrix with corresponding 3D world points (each column is a point)
 * @param[out] rotation_translation_solutions vector that will contain the solutions (up to 4 solutions)
@@ -406,7 +406,7 @@ bool computePosesNordberg(
           {
             Ls[valid] = Vec3(l1, l2, l3);
             ++valid;
-          }          
+          }
         }
       }
       if (tau2 > 0.0)
@@ -491,7 +491,7 @@ bool computePosesNordberg(
   Xmat << d12(0), d13(0), d12xd13(0),
           d12(1), d13(1), d12xd13(1),
           d12(2), d13(2), d12xd13(2);
-  
+
   Xmat = Xmat.inverse().eval();
 
   for (int i = 0; i < valid; ++i)
@@ -513,7 +513,7 @@ bool computePosesNordberg(
     Mat3 Rs = Ymat * Xmat;
     rotation_translation_solutions.emplace_back(Rs, ry1 - Rs * P1);
   }
-  
+
   return valid > 0;
 }
 
@@ -538,17 +538,6 @@ void P3PSolver_Nordberg::Solve(
     }
   }
 };
-
-double P3PSolver_Nordberg::Error
-(
-  const Mat34 & P,
-  const Vec3 & bearing_vector,
-  const Vec3 & pt3D
-)
-{
-  const auto new_bearing = (P * pt3D.homogeneous()).normalized();
-  return 1.0 - (bearing_vector.dot(new_bearing));
-}
 
 } // namespace euclidean_resection
 } // namespace openMVG

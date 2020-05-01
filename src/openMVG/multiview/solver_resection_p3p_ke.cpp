@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_resection_p3p_ke.hpp"
-
 #include "openMVG/multiview/projection.hpp"
-#include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/numeric/poly.h"
 
 #include <array>
@@ -159,17 +157,6 @@ void P3PSolver_Ke::Solve
       models->push_back(P);
     }
   }
-}
-
-double P3PSolver_Ke::Error
-(
-  const Mat34 & P,
-  const Vec3 & bearing_vector,
-  const Vec3 & pt3D
-)
-{
-  const auto new_bearing = (P * pt3D.homogeneous()).normalized();
-  return 1.0 - (bearing_vector.dot(new_bearing));
 }
 
 } // namespace euclidean_resection

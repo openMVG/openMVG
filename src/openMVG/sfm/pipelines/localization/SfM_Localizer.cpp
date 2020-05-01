@@ -105,15 +105,6 @@ private:
 namespace openMVG {
 namespace sfm {
 
-  struct ResectionSquaredResidualError {
-    // Compute the residual of the projection distance(pt2D, Project(P,pt3D))
-    // Return the squared error
-    static double Error(const Mat34 & P, const Vec2 & pt2D, const Vec3 & pt3D) {
-      const Vec2 x = Project(P, pt3D);
-      return (x - pt2D).squaredNorm();
-    }
-  };
-
   bool SfM_Localizer::Localize
   (
     const resection::SolverType & solver_type,
@@ -149,7 +140,7 @@ namespace sfm {
         using KernelType =
           openMVG::robust::ACKernelAdaptorResection<
             SolverType,
-            ResectionSquaredResidualError,
+            resection::SquaredPixelReprojectionError,
             openMVG::robust::UnnormalizerResection,
             Mat34>;
 
