@@ -236,6 +236,7 @@ before_script:
       -DOpenMVG_BUILD_EXAMPLES=ON \
       -DOpenMVG_BUILD_SOFTWARES=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
+      -DTARGET_ARCHITECTURE=core \
       . $OPENMVG_SOURCE
 
 script:

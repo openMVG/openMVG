@@ -137,9 +137,8 @@ macro(AutodetectHostArchitecture)
             set(TARGET_ARCHITECTURE "cannonlake")
          elseif(_cpu_model EQUAL 142 OR _cpu_model EQUAL 158) # 8E, 9E
             set(TARGET_ARCHITECTURE "kaby-lake")
-         # Disable skylake-avx512 -> Detection seems unstable on Tracis-CI
-         #elseif(_cpu_model EQUAL 85) # 55
-         #    set(TARGET_ARCHITECTURE "skylake-avx512")
+         elseif(_cpu_model EQUAL 85) # 55
+            set(TARGET_ARCHITECTURE "skylake-avx512")
          elseif(_cpu_model EQUAL 78 OR _cpu_model EQUAL 94) # 4E, 5E
             set(TARGET_ARCHITECTURE "skylake")
          elseif(_cpu_model EQUAL 61 OR _cpu_model EQUAL 71 OR _cpu_model EQUAL 79 OR _cpu_model EQUAL 86) # 3D, 47, 4F, 56
