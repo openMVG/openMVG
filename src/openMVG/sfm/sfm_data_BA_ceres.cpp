@@ -235,7 +235,18 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
   }
 
-  ceres::Problem problem;
+  ceres::Problem::Options problem_options;
+
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to nullptr if you don't want use a lossFunction.
+  std::unique_ptr<ceres::LossFunction> p_LossFunction;
+  if (ceres_options_.bUse_loss_function_)
+  {
+    p_LossFunction.reset(new ceres::HuberLoss(Square(4.0)));
+    problem_options.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+  }
+
+  ceres::Problem problem(problem_options);
 
   // Data wrapper for refinement:
   Hash_Map<IndexT, std::vector<double>> map_intrinsics;
@@ -323,13 +334,6 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
   }
 
-  // Set a LossFunction to be less penalized by false measurements
-  //  - set it to nullptr if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction =
-    ceres_options_.bUse_loss_function_ ?
-      new ceres::HuberLoss(Square(4.0))
-      : nullptr;
-
   // For all visibility add reprojections errors:
   for (auto & structure_landmark_it : sfm_data.structure)
   {
@@ -352,7 +356,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         if (!map_intrinsics.at(view->id_intrinsic).empty())
         {
           problem.AddResidualBlock(cost_function,
-            p_LossFunction,
+            p_LossFunction.get(),
             &map_intrinsics.at(view->id_intrinsic)[0],
             &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
@@ -360,7 +364,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         else
         {
           problem.AddResidualBlock(cost_function,
-            p_LossFunction,
+            p_LossFunction.get(),
             &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
         }
