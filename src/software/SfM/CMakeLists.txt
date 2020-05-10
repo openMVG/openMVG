@@ -103,6 +103,13 @@ TARGET_LINK_LIBRARIES(openMVG_main_ComputeMatches
   stlplus
   )
 
+ADD_EXECUTABLE(openMVG_main_SortAndCleanSfMData main_SortAndCleanSfMData.cpp)
+TARGET_LINK_LIBRARIES(openMVG_main_SortAndCleanSfMData
+  openMVG_system
+  openMVG_sfm
+  stdc++fs
+  )
+
 # Installation rules
 SET_PROPERTY(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
@@ -114,6 +121,8 @@ SET_PROPERTY(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/softw
 INSTALL(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
 SET_PROPERTY(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
 INSTALL(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
+SET_PROPERTY(TARGET openMVG_main_SortAndCleanSfMData PROPERTY FOLDER OpenMVG/software)
+INSTALL(TARGETS openMVG_main_SortAndCleanSfMData DESTINATION bin/)
 
 ###
 # SfM Pipelines
