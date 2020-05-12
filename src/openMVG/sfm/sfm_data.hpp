@@ -65,6 +65,15 @@ struct SfM_Data
       poses.find(view->id_pose) != poses.end());
   }
 
+  /// Check if the View have defined intrinsic
+  bool IsIntrinsicDefined(const View * view) const
+  {
+    if (view == nullptr ) return false;
+    return (
+      view->id_intrinsic != UndefinedIndexT &&
+      intrinsics.find(view->id_intrinsic) != intrinsics.end());
+  }
+
   /// Get the pose associated to a view
   const geometry::Pose3 GetPoseOrDie(const View * view) const
   {

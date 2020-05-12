@@ -20,7 +20,6 @@ using namespace openMVG::matching;
 
 using DescriptorT = Descriptor<unsigned char, 128>;
 using DescsT = std::vector<DescriptorT, Eigen::aligned_allocator<DescriptorT>>;
-using IntPair = pair<int, int>;
 
 struct GoodFeatInfo {
   DescsT descs;
@@ -75,23 +74,16 @@ bool LoadData(const SfM_Data &sfm_data, const string &matches_dir, GoodFeatInfo 
 
       map<int, int> featmap;
       string featmapFile = create_filespec(matches_dir, basename, "featmap");
-      if (LoadFeatmap(featmapFile, featmap)) {
-#ifdef OPENMVG_USE_OPENMP
-#pragma omp critical
-#endif
-        {
-          feat_info.featmap_map[view.first] = std::move(featmap);
-        }
-      } else if (descs_size != 0) {
+      if (!LoadFeatmap(featmapFile, featmap)) {
         for (uint32_t i = 0; i < descs_size; ++i) {
           featmap[i] = i;
         }
+      }
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp critical
 #endif
-        {
-          feat_info.featmap_map[view.first] = std::move(featmap);
-        }
+      {
+        feat_info.featmap_map[view.first] = std::move(featmap);
       }
     }
   }
@@ -125,7 +117,7 @@ int main(int argc, char *argv[]) {
   string back_sfm_data_file = argv[2];
   string output_dir = argv[4];
 
-  // load sfm_data, build good feat info: descs, feats, point map, view map
+  // load sfm_data, build good feat info: descs, points, featmap_map
   // front
   SfM_Data front_sfm_data;
   GoodFeatInfo gfi_front;
@@ -216,7 +208,7 @@ int main(int argc, char *argv[]) {
     sorted_point_match_info.emplace_back(fp_index, best_bp_index, best_score, match_vec.size());
   }
   sort(sorted_point_match_info.begin(), sorted_point_match_info.end(), [](const pm_info &a, const pm_info &b) -> bool {
-        return std::get<2>(a) > std::get<2>(b);
+      return std::get<2>(a) > std::get<2>(b);
     });
 
   // output the best match for each front point
