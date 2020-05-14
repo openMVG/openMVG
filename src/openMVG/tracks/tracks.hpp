@@ -63,7 +63,7 @@ struct TracksBuilder
 {
   using indexedFeaturePair = std::pair<uint32_t, uint32_t>;
 
-  flat_pair_map<indexedFeaturePair, uint32_t> map_node_to_index;
+  std::map<indexedFeaturePair, uint32_t> image_feature_index;
   UnionFind uf_tree;
 
   /// Build tracks for a given series of pairWise matches
@@ -71,8 +71,8 @@ struct TracksBuilder
   {
     // 1. We need to know how much single set we will have.
     //   i.e each set is made of a tuple : (imageIndex, featureIndex)
-    std::set<indexedFeaturePair> allFeatures;
     // For each couple of images list the used features
+    image_feature_index.clear();
     for ( const auto & iter : map_pair_wise_matches )
     {
       const auto & I = iter.first.first;
@@ -82,27 +82,24 @@ struct TracksBuilder
       // Retrieve all shared features and add them to a set
       for ( const auto & cur_filtered_match : vec_FilteredMatches )
       {
-        allFeatures.emplace(I,cur_filtered_match.i_);
-        allFeatures.emplace(J,cur_filtered_match.j_);
+        image_feature_index.emplace(std::piecewise_construct,
+          std::forward_as_tuple(I, cur_filtered_match.i_), std::forward_as_tuple(0));
+        image_feature_index.emplace(std::piecewise_construct,
+          std::forward_as_tuple(J, cur_filtered_match.j_), std::forward_as_tuple(0));
       }
     }
 
     // 2. Build the 'flat' representation where a tuple (the node)
     //  is attached to a unique index.
-    map_node_to_index.reserve(allFeatures.size());
     uint32_t cpt = 0;
-    for (const auto & feat : allFeatures)
+    for (auto & feat_index : image_feature_index)
     {
-      map_node_to_index.emplace_back(feat, cpt);
+      feat_index.second = cpt;
       ++cpt;
     }
-    // Sort the flat_pair_map
-    map_node_to_index.sort();
-    // Clean some memory
-    allFeatures.clear();
 
     // 3. Add the node and the pairwise correpondences in the UF tree.
-    uf_tree.InitSets(map_node_to_index.size());
+    uf_tree.InitSets(image_feature_index.size());
 
     // 4. Union of the matched features corresponding UF tree sets
     for ( const auto & iter : map_pair_wise_matches )
@@ -115,7 +112,7 @@ struct TracksBuilder
         const indexedFeaturePair pairI(I, match.i_);
         const indexedFeaturePair pairJ(J, match.j_);
         // Link feature correspondences to the corresponding containing sets.
-        uf_tree.Union(map_node_to_index[pairI], map_node_to_index[pairJ]);
+        uf_tree.Union(image_feature_index[pairI], image_feature_index[pairJ]);
       }
     }
   }
@@ -130,13 +127,13 @@ struct TracksBuilder
     // For each node retrieve its track id from the UF tree and add the node to the track
     // - if an image id is observed multiple time, then mark the track as invalid
     //   - a track cannot list many times the same image index
-    for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
+    for (auto &feat_index : image_feature_index)
     {
-      const uint32_t & track_id = uf_tree.Find(k);
-      const auto & feat = map_node_to_index[k];
+      const auto & feat = feat_index.first;
+      const uint32_t & track_id = uf_tree.Find(feat_index.second);
 
       // Augment the track and mark if invalid (an image can only be listed once)
-      if (tracks[track_id].insert(feat.first.first).second == false)
+      if (tracks[track_id].insert(feat.first).second == false)
       {
         problematic_track_id.insert(track_id); // invalid
       }
@@ -178,10 +175,10 @@ struct TracksBuilder
   void ExportToSTL(STLMAPTracks & map_tracks)
   {
     map_tracks.clear();
-    for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
+    for (auto &feat_index : image_feature_index)
     {
-      const auto & feat = map_node_to_index[k];
-      const uint32_t & track_id = uf_tree.m_cc_parent[k];
+      const auto & feat = feat_index.first;
+      const uint32_t & track_id = uf_tree.m_cc_parent[feat_index.second];
       if
       (
         // ensure never add rejected elements (track marked as invalid)
@@ -190,7 +187,7 @@ struct TracksBuilder
         && uf_tree.m_cc_size[track_id] > 1
       )
       {
-        map_tracks[track_id].insert(feat.first);
+        map_tracks[track_id].insert(feat);
       }
     }
   }
