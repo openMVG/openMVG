@@ -22,10 +22,29 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/progress/progress_display.hpp"
 
+#include <chrono>
+
 using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::tracks;
+
+
+class Timer
+{
+public:
+    Timer() : beg_(clock_::now()) {}
+    void reset() { beg_ = clock_::now(); }
+    double elapsed() const { 
+        return std::chrono::duration_cast<second_>
+            (clock_::now() - beg_).count(); }
+
+private:
+    typedef std::chrono::high_resolution_clock clock_;
+    typedef std::chrono::duration<double, std::ratio<1> > second_;
+    std::chrono::time_point<clock_> beg_;
+};
+
 
 int main(int argc, char ** argv)
 {
@@ -103,14 +122,20 @@ int main(int argc, char ** argv)
   //---------------------------------------
   // Compute tracks from matches
   //---------------------------------------
+
+
+  Timer timer;
   tracks::STLMAPTracks map_tracks;
-  {
+  for (int i = 0; i < 100; i++) {
+    // map_tracks.clear();
     const openMVG::matching::PairWiseMatches & map_Matches = matches_provider->pairWise_matches_;
     tracks::TracksBuilder tracksBuilder;
     tracksBuilder.Build(map_Matches);
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks);
+    // std::cout << "map_tracks: " << map_tracks.size() << std::endl;
   }
+  std::cout << "elapsed: " << timer.elapsed() << std::endl;
   openMVG::tracks::SharedTrackVisibilityHelper track_visibility_helper(map_tracks);
 
   // ------------
