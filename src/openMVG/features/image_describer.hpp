@@ -22,6 +22,7 @@ namespace features {
 
 enum EDESCRIBER_PRESET
 {
+  LOW_PRESET,
   NORMAL_PRESET,
   HIGH_PRESET,
   ULTRA_PRESET

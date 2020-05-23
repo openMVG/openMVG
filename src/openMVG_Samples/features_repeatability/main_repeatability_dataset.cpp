@@ -191,6 +191,9 @@ struct RepeatabilityResults_Matching
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
+  if (sPreset == "LOW")
+    preset = features::LOW_PRESET;
+  else
   if (sPreset == "NORMAL")
     preset = features::NORMAL_PRESET;
   else

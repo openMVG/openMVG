@@ -55,6 +55,9 @@ public:
   {
     switch (preset)
     {
+    case LOW_PRESET:
+      params_.options_.fThreshold = features::AKAZE::Params().fThreshold*10.f;
+    break;
     case NORMAL_PRESET:
       params_.options_.fThreshold = features::AKAZE::Params().fThreshold;
     break;

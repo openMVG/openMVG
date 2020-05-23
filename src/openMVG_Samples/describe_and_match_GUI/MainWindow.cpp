@@ -578,6 +578,7 @@ void MainWindow::PopulateFeatureType()
   m_comboFeatureName->addItem( "AKAZE_FLOAT" );
   m_comboFeatureName->addItem( "AKAZE_MLDB" );
 
+  m_comboFeatureMode->addItem( "LOW" );
   m_comboFeatureMode->addItem( "NORMAL" );
   m_comboFeatureMode->addItem( "HIGH" );
   m_comboFeatureMode->addItem( "ULTRA" );
@@ -658,7 +659,11 @@ EDESCRIBER_PRESET MainWindow::GetFeaturePreset()
   // get selected item
   const std::string sPreset = m_comboFeatureMode->currentText().toStdString();
   EDESCRIBER_PRESET preset;
-  if ( sPreset == "NORMAL" )
+  if ( sPreset == "LOW" )
+  {
+    preset = LOW_PRESET;
+  }
+  else if ( sPreset == "NORMAL" )
   {
     preset = NORMAL_PRESET;
   }

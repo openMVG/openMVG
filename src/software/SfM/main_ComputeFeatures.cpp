@@ -44,6 +44,9 @@ using namespace std;
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
+  if (sPreset == "LOW")
+    preset = features::LOW_PRESET;
+  else
   if (sPreset == "NORMAL")
     preset = features::NORMAL_PRESET;
   else
@@ -104,6 +107,7 @@ int main(int argc, char **argv)
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
       << "  (used to control the Image_describer configuration):\n"
+      << "   LOW,\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"

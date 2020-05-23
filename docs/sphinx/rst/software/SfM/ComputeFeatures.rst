@@ -48,6 +48,7 @@ Arguments description:
 
     - Used to control the Image_describer configuration:
 
+      - LOW
       - NORMAL,
       - HIGH,
       - ULTRA: !!Can be time consuming!!
