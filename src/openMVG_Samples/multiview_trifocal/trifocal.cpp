@@ -42,6 +42,12 @@ struct Trifocal3PointPositionTangentialSolver {
     std::vector<trifocal_model_t> *trifocal_tensor)
   {
     //...
+    // TODO
+    
+    // io::point_tangents2params_img(p_, tgt_, tgt_ids[0], tgt_ids[1], K_, params_start_target_);
+    // io::point_tangents2params(pn, tn, id_tgt0, id_tgt1, params/*[static 2*M::nparams]*/);
+
+    // minus::solve_chicago(pn, tn, id_tgt0, id_tgt1);
   }
 
   static double Error(
@@ -51,8 +57,15 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_2)
   {
     // Return the cost related to this model and those sample data point
+    // TODO(gabriel)
+
+    // 1) reconstruct the 3D points and orientations
+    // 2) project the 3D points and orientations on all images
+    // 3) compute error 
     return 0.0;
   }
+
+  private:
 };
 
 template<typename SolverArg,
@@ -107,6 +120,7 @@ int main(int argc, char **argv) {
   cmd.add( make_option('a', image_filenames[0], "image_a") );
   cmd.add( make_option('b', image_filenames[1], "image_b") );
   cmd.add( make_option('c', image_filenames[2], "image_c") );
+  cmd.add( make_option('k', intrinsics_filename, "K") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -169,7 +183,7 @@ int main(int argc, char **argv) {
   std::cout
     <<  regions_per_image.at(0)->RegionCount() << " #Features on image A" << std::endl
     <<  regions_per_image.at(1)->RegionCount() << " #Features on image B" << std::endl
-    <<  regions_per_image.at(2)->RegionCount() << " #Features on image B" << std::endl
+    <<  regions_per_image.at(2)->RegionCount() << " #Features on image C" << std::endl
     << pairwise_matches.at({0,1}).size() << " #matches with Distance Ratio filter" << std::endl
     << pairwise_matches.at({1,2}).size() << " #matches with Distance Ratio filter" << std::endl
     << tracks.size() << " #tracks" << std::endl;
@@ -202,6 +216,27 @@ int main(int argc, char **argv) {
     datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
     datum[1].col(idx) << feature_j.x(), feature_j.y(), feature_j.orientation();
     datum[2].col(idx) << feature_k.x(), feature_k.y(), feature_k.orientation();
+    // TODO(gabriel): invert K matrix
+    //
+    //  Reference: //  minus/minus/chicago14a.hxx line ~7560
+    //  
+    //  invert_intrinsics(K, p[1], pn[1], pp::npoints);
+    //          for (unsigned p=0; p < npts; ++p) {
+    //            const F *px = pix_coords[p];
+    //            F *nrm = normalized_coords[p];
+    //            nrm[1] = (px[1]-K[1][2])/K[1][1];
+    //            nrm[0] = (px[0] - K[0][1] - K[0][2])/K[0][0];
+    //          }
+    //  
+    //  invert_intrinsics_tgt(K, tgt[0], tn[0], pp::npoints);
+    //      for (unsigned p=0; p < npts; ++p) {
+    //        const F *tp = pix_tgt_coords[p];
+    //        F *t = normalized_tgt_coords[p];
+    //        t[1] = tp[1]/K[1][1];
+    //        t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
+    //      }
+    //  
+    // 
     ++idx;
   }
 
