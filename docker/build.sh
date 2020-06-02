@@ -1,1 +1,2 @@
-docker build -t="openmvg:latest" .;
+cd ../;
+docker build -t="openmvg:latest" -f docker/Dockerfile .;
