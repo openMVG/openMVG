@@ -102,24 +102,31 @@ void SphericalToCubic
   // Initialize the rotation matrices corresponding to each cube face
   const std::array<Mat3, 6> rot_matrix = GetCubicRotations();
 
+  // Use image coordinate in a matrix to use OpenMVG camera bearing vector vectorization
+  Mat2X xy_coords(2, static_cast<int>(cubic_image_size * cubic_image_size));
+  for (int y = 0; y < cubic_image_size; ++y)
+    for (int x = 0; x < cubic_image_size; ++x)
+      xy_coords.col(x + cubic_image_size * y ) << x, y;
+
+  // Compute bearing vectors
+  const Mat3X bearing_vectors = pinhole_camera(xy_coords);
+
   for (const int i_rot : {0, 1, 2, 3, 4, 5})
   {
     auto & pinhole_image = cube_images[i_rot];
-    const int image_width = pinhole_image.Width();
-    const int image_height = pinhole_image.Height();
 
+    // Compute rotation bearings
+    const Mat3X rotated_bearings = rot_matrix[i_rot].transpose() * bearing_vectors;
     // For every pinhole image pixels
-    for (int x = 0; x < image_width; ++x)
+    for (int it = 0; it < rotated_bearings.cols(); ++it)
     {
-      for (int y = 0; y < image_height; ++y)
-      { // Project the pinhole bearing vector to the spherical camera
-        const Vec3 pinhole_bearing = rot_matrix[i_rot].transpose() * pinhole_camera(Vec2(x, y));
-        const Vec2 sphere_proj = sphere_camera.project(pinhole_bearing);
-
-        if (equirectangular_image.Contains(sphere_proj(1), sphere_proj(0)))
-        {
-          pinhole_image(y, x) = sampler(equirectangular_image, sphere_proj(1), sphere_proj(0));
-        }
+      // Project the bearing vector to the sphere
+      const Vec2 sphere_proj = sphere_camera.project(rotated_bearings.col(it));
+      if (equirectangular_image.Contains(sphere_proj(1), sphere_proj(0)))
+      {
+        // and use the corresponding pixel location in the panorama
+        const Vec2 xy = xy_coords.col(it);
+        pinhole_image(xy.y(), xy.x()) = equirectangular_image(sphere_proj.y(), sphere_proj.x());
       }
     }
   }

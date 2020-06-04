@@ -203,37 +203,53 @@ int main(int argc, char **argv)
     //const image::Sampler2d<image::SamplerNearest> sampler;
     image::Image<image::RGBColor> sampled_image(image_resolution, image_resolution, image::BLACK);
 
-    size_t index = 0;
-    for (const Mat3 & cam_rotation : camera_rotations)
+    // Backward mapping:
+    // - Find for each pixels of the pinhole image where it comes from the panoramic image
     {
-      sampled_image.fill(image::BLACK);
+      size_t index = 0;
 
-      // Backward mapping:
-      // - Find for each pixels of the pinhole image where it comes from the panoramic image
-      for (int j = 0; j < sampled_image.Height(); ++j)
+      // Use image coordinate in a matrix to use OpenMVG camera bearing vector vectorization
+      Mat2X xy_coords(2, static_cast<int>(image_resolution * image_resolution));
+      for (int y = 0; y < image_resolution; ++y)
+        for (int x = 0; x < image_resolution; ++x)
+          xy_coords.col(x + image_resolution * y ) << x, y;
+
+      // Compute bearing vectors
+      const Mat3X bearing_vectors = pinhole_camera(xy_coords);
+
+      for (const Mat3 & cam_rotation : camera_rotations)
       {
-        for (int i = 0; i < sampled_image.Width(); ++i)
+        sampled_image.fill(image::BLACK);
+
+        // Compute rotation bearings
+        const Mat3X rotated_bearings = cam_rotation * bearing_vectors;
+        // For every pinhole image pixels
+        for (int it = 0; it < rotated_bearings.cols(); ++it)
         {
-          Vec2 sphere_proj = sphere_camera.project(cam_rotation * pinhole_camera(Vec2(i, j)));
+          // Project the bearing vector to the sphere
+          Vec2 sphere_proj = sphere_camera.project(rotated_bearings.col(it));
+          // and use the corresponding pixel location in the panorama
+          const Vec2 xy = xy_coords.col(it);
+
           if (spherical_image.Width() - sphere_proj.x() < 2)
           {
             sphere_proj.x() = - int(sphere_proj.x() - spherical_image.Width());
-            sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
+            sampled_image(xy.y(), xy.x()) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
           }
           else
-            sampled_image(j, i) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
+            sampled_image(xy.y(), xy.x()) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
         }
+        //-- save image
+        const std::string basename = stlplus::basename_part(filename_it);
+
+        std::cout << basename << " cam index: " << index << std::endl;
+
+        std::ostringstream os;
+        os << s_directory_out << "/" << basename << "_" << index << ".jpg";
+        WriteImage(os.str().c_str(), sampled_image);
+
+        ++index;
       }
-      //-- save image
-      const std::string basename = stlplus::basename_part(filename_it);
-
-      std::cout << basename << " cam index: " << index << std::endl;
-
-      std::ostringstream os;
-      os << s_directory_out << "/" << basename << "_" << index << ".jpg";
-      WriteImage(os.str().c_str(), sampled_image);
-
-      ++index;
     }
   }
 
