@@ -126,7 +126,7 @@ void SphericalToCubic
       {
         // and use the corresponding pixel location in the panorama
         const Vec2 xy = xy_coords.col(it);
-        pinhole_image(xy.y(), xy.x()) = equirectangular_image(sphere_proj.y(), sphere_proj.x());
+        pinhole_image(xy.y(), xy.x()) = sampler(equirectangular_image,sphere_proj(1), sphere_proj(0));
       }
     }
   }
