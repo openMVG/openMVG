@@ -19,6 +19,9 @@ add_subdirectory(system)
 add_subdirectory(sfm)
 add_subdirectory(stl)
 
+# NEW
+add_subdirectory(spherical)
+
 #INSTALL RULES
 install(
   DIRECTORY .
