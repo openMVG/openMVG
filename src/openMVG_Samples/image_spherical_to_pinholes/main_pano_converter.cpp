@@ -6,11 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_Spherical.hpp"
-#include "openMVG/cameras/Camera_Pinhole.hpp"
-
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/image/sample.hpp"
+#include "openMVG/spherical/cubic_image_sampler.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -24,21 +21,6 @@
 
 using namespace std;
 using namespace svg;
-
-/// Compute a rectilinear camera focal from a given angular desired FoV
-double focalFromPinholeHeight
-(
-  int h,
-  double thetaMax = openMVG::D2R(60) // Camera FoV
-)
-{
-  float f = 1.f;
-  while ( thetaMax < atan2( h / (2 * f) , 1))
-  {
-    ++f;
-  }
-  return f;
-}
 
 // Convert spherical panorama to rectilinear images
 int main(int argc, char **argv)
@@ -129,10 +111,8 @@ int main(int argc, char **argv)
 
   //-- Simulate a camera with many rotations along the Y axis
   const int pinhole_width = image_resolution, pinhole_height = image_resolution;
-  const double focal = focalFromPinholeHeight(pinhole_height, openMVG::D2R(fov));
-  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera(
-    //w, h, focal, ppx, ppy
-    pinhole_width, pinhole_height, focal, pinhole_width/2., pinhole_height/2.);
+  const double focal = spherical::FocalFromPinholeHeight(pinhole_height, openMVG::D2R(fov));
+  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera = spherical::ComputeCubicCameraIntrinsics(image_resolution);
 
   const double alpha = (M_PI * 2.0) / static_cast<double>(nb_split); // 360 / split_count
   std::vector<Mat3> camera_rotations;
@@ -197,59 +177,29 @@ int main(int argc, char **argv)
       continue;
     }
 
-    const openMVG::cameras::Intrinsic_Spherical sphere_camera(spherical_image.Width(), spherical_image.Height());
+    std::vector<image::Image<image::RGBColor>> sampled_images(
+        camera_rotations.size(), image::Image<image::RGBColor>(image_resolution, image_resolution, image::BLACK));
 
-    const image::Sampler2d<image::SamplerLinear> sampler;
-    //const image::Sampler2d<image::SamplerNearest> sampler;
-    image::Image<image::RGBColor> sampled_image(image_resolution, image_resolution, image::BLACK);
+    spherical::SphericalToPinholes
+    (
+      spherical_image,
+      pinhole_camera,
+      sampled_images,
+      camera_rotations,
+      image::Sampler2d<image::SamplerLinear>()
+    );
 
-    // Backward mapping:
-    // - Find for each pixels of the pinhole image where it comes from the panoramic image
+    // Save images to disk
+    for (int i_rot = 0; i_rot < camera_rotations.size(); ++i_rot)
     {
-      size_t index = 0;
+      //-- save image
+      const std::string basename = stlplus::basename_part(filename_it);
 
-      // Use image coordinate in a matrix to use OpenMVG camera bearing vector vectorization
-      Mat2X xy_coords(2, static_cast<int>(image_resolution * image_resolution));
-      for (int y = 0; y < image_resolution; ++y)
-        for (int x = 0; x < image_resolution; ++x)
-          xy_coords.col(x + image_resolution * y ) << x, y;
+      std::cout << basename << " cam index: " << i_rot << std::endl;
 
-      // Compute bearing vectors
-      const Mat3X bearing_vectors = pinhole_camera(xy_coords);
-
-      for (const Mat3 & cam_rotation : camera_rotations)
-      {
-        sampled_image.fill(image::BLACK);
-
-        // Compute rotation bearings
-        const Mat3X rotated_bearings = cam_rotation * bearing_vectors;
-        // For every pinhole image pixels
-        for (int it = 0; it < rotated_bearings.cols(); ++it)
-        {
-          // Project the bearing vector to the sphere
-          Vec2 sphere_proj = sphere_camera.project(rotated_bearings.col(it));
-          // and use the corresponding pixel location in the panorama
-          const Vec2 xy = xy_coords.col(it);
-
-          if (spherical_image.Width() - sphere_proj.x() < 2)
-          {
-            sphere_proj.x() = - int(sphere_proj.x() - spherical_image.Width());
-            sampled_image(xy.y(), xy.x()) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
-          }
-          else
-            sampled_image(xy.y(), xy.x()) = sampler(spherical_image, sphere_proj.y(), sphere_proj.x());
-        }
-        //-- save image
-        const std::string basename = stlplus::basename_part(filename_it);
-
-        std::cout << basename << " cam index: " << index << std::endl;
-
-        std::ostringstream os;
-        os << s_directory_out << "/" << basename << "_" << index << ".jpg";
-        WriteImage(os.str().c_str(), sampled_image);
-
-        ++index;
-      }
+      std::ostringstream os;
+      os << s_directory_out << "/" << basename << "_" << i_rot << ".jpg";
+      WriteImage(os.str().c_str(), sampled_images[i_rot]);
     }
   }
 

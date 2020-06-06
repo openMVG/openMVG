@@ -6,106 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/cameras/Camera_Spherical.hpp"
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/spherical/cubic_image_sampler.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
-#include <array>
 #include <string>
-
-/// Compute a rectilinear camera focal for a given angular desired FoV and image size
-double FocalFromPinholeHeight
-(
-  int h,
-  double thetaMax = openMVG::D2R(60) // Camera FoV
-)
-{
-  float f = 1.f;
-  while ( thetaMax < atan2( h / (2 * f) , 1))
-  {
-    ++f;
-  }
-  return f;
-}
-
-const std::array<openMVG::Mat3, 6> GetCubicRotations()
-{
-  using namespace openMVG;
-  return {
-    RotationAroundY(D2R(0)),    // front
-    RotationAroundY(D2R(90)),   // right
-    RotationAroundY(D2R(180)),  // behind
-    RotationAroundY(D2R(270)),  // left
-    RotationAroundX(D2R(90)),   // up
-    RotationAroundX(D2R(-90))   // down
-  };
-}
-
-template <typename ImageT>
-void SphericalToCubic
-(
-  const ImageT & equirectangular_image,
-  std::vector<ImageT> & cube_images,
-  openMVG::cameras::Pinhole_Intrinsic & pinhole_camera
-)
-{
-  using namespace openMVG;
-  using namespace openMVG::cameras;
-  //
-  // Initialize a camera model for each image domain
-  // - the equirectangular panorama
-  const Intrinsic_Spherical sphere_camera(
-    equirectangular_image.Width() - 1, equirectangular_image.Height() - 1);
-  // - the cube faces
-  const double cubic_image_size = equirectangular_image.Width() / 4;
-  const double focal = FocalFromPinholeHeight(cubic_image_size, D2R(45));
-  const double principal_point_xy = cubic_image_size / 2;
-  pinhole_camera = Pinhole_Intrinsic(cubic_image_size,
-                                     cubic_image_size,
-                                     focal,
-                                     principal_point_xy,
-                                     principal_point_xy);
-
-  //
-  // Perform backward/inverse rendering:
-  // - For each cube face (rotation)
-  // - Sample the panorama pixel by camera to camera bearing vector projection
-
-  cube_images.resize(6, ImageT(cubic_image_size, cubic_image_size));
-
-  // Get the rotation matrices corresponding to each cube face
-  const std::array<Mat3, 6> rot_matrix = GetCubicRotations();
-
-  // Use image coordinate in a matrix to use OpenMVG camera bearing vector vectorization
-  Mat2X xy_coords(2, static_cast<int>(cubic_image_size * cubic_image_size));
-  for (int y = 0; y < cubic_image_size; ++y)
-    for (int x = 0; x < cubic_image_size; ++x)
-      xy_coords.col(x + cubic_image_size * y ) << x, y;
-
-  // Compute bearing vectors
-  const Mat3X bearing_vectors = pinhole_camera(xy_coords);
-
-  #pragma omp parallel for
-  for (int i_rot = 0; i_rot < rot_matrix.size(); ++i_rot)
-  {
-    auto & pinhole_image = cube_images[i_rot];
-
-    // Compute rotation bearings
-    const Mat3X rotated_bearings = rot_matrix[i_rot] * bearing_vectors;
-    // For every pinhole image pixels
-    for (int it = 0; it < rotated_bearings.cols(); ++it)
-    {
-      // Project the bearing vector to the sphere
-      const Vec2 sphere_proj = sphere_camera.project(rotated_bearings.col(it));
-      // and use the corresponding pixel location in the panorama
-      const Vec2 xy = xy_coords.col(it);
-      pinhole_image(xy.y(), xy.x()) = equirectangular_image(sphere_proj.y(), sphere_proj.x());
-    }
-  }
-}
 
 // Convert a spherical panorama to 6 perspective view (cubic panorama)
 int main(int argc, char **argv)
@@ -145,9 +52,18 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  std::vector<image::Image<image::RGBColor>> cube_images;
-  openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
-  SphericalToCubic(spherical_image, cube_images, pinhole_camera);
+  const double cubic_image_size = spherical_image.Width() / 4; // Size can be customized
+  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
+    spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
+
+  std::vector<image::Image<image::RGBColor>> cube_images(6);
+  spherical::SphericalToCubic
+  (
+    spherical_image,
+    pinhole_camera,
+    cube_images,
+    image::Sampler2d<image::SamplerNearest>()
+  );
 
   if (WriteImage("cube_0.png", cube_images[0]) &&
       WriteImage("cube_1.png", cube_images[1]) &&

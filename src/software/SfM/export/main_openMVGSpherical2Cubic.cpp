@@ -6,16 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/cameras/Camera_Spherical.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/image/sample.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/spherical/cubic_image_sampler.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -32,105 +30,6 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
-
-/// Compute a rectilinear camera focal for a given angular desired FoV and image size
-double FocalFromPinholeHeight
-(
-  int h,
-  double thetaMax = openMVG::D2R(60) // Camera FoV
-)
-{
-  float f = 1.f;
-  while ( thetaMax < atan2( h / (2 * f) , 1))
-  {
-    ++f;
-  }
-  return f;
-}
-
-const std::array<openMVG::Mat3,6> GetCubicRotations()
-{
-  using namespace openMVG;
-  return {
-    RotationAroundY(D2R(0)),     // front
-    RotationAroundY(D2R(-90)),   // right
-    RotationAroundY(D2R(-180)),  // behind
-    RotationAroundY(D2R(-270)),  // left
-    RotationAroundX(D2R(-90)),   // up
-    RotationAroundX(D2R(+90))    // down
-  };
-}
-
-void ComputeCubicCameraIntrinsics(const int cubic_image_size,
-                                  openMVG::cameras::Pinhole_Intrinsic & pinhole_camera)
-{
-  const double focal = FocalFromPinholeHeight(cubic_image_size, D2R(45));
-  const double principal_point_xy = cubic_image_size / 2;
-  pinhole_camera = Pinhole_Intrinsic(cubic_image_size,
-                                     cubic_image_size,
-                                     focal,
-                                     principal_point_xy,
-                                     principal_point_xy);
-}
-
-template <typename ImageT>
-void SphericalToCubic
-(
-  const ImageT & equirectangular_image,
-  const openMVG::cameras::Pinhole_Intrinsic & pinhole_camera,
-  std::vector<ImageT> & cube_images
-)
-{
-  using namespace openMVG;
-  using namespace openMVG::cameras;
-
-  const image::Sampler2d<image::SamplerLinear> sampler;
-
-  //
-  // Initialize a camera model for each image domain
-  // - the equirectangular panorama
-  const Intrinsic_Spherical sphere_camera(equirectangular_image.Width()  - 1,
-                                          equirectangular_image.Height() - 1);
-  // - the cube faces
-  //
-  // Perform backward/inverse rendering:
-  // - For each cube face (rotation)
-  // - Sample the panorama pixel by camera to camera bearing vector projection
-  const int cubic_image_size = pinhole_camera.h();
-  cube_images.resize(6, ImageT(cubic_image_size, cubic_image_size));
-
-  // Initialize the rotation matrices corresponding to each cube face
-  const std::array<Mat3, 6> rot_matrix = GetCubicRotations();
-
-  // Use image coordinate in a matrix to use OpenMVG camera bearing vector vectorization
-  Mat2X xy_coords(2, static_cast<int>(cubic_image_size * cubic_image_size));
-  for (int y = 0; y < cubic_image_size; ++y)
-    for (int x = 0; x < cubic_image_size; ++x)
-      xy_coords.col(x + cubic_image_size * y ) << x, y;
-
-  // Compute bearing vectors
-  const Mat3X bearing_vectors = pinhole_camera(xy_coords);
-
-  for (const int i_rot : {0, 1, 2, 3, 4, 5})
-  {
-    auto & pinhole_image = cube_images[i_rot];
-
-    // Compute rotation bearings
-    const Mat3X rotated_bearings = rot_matrix[i_rot].transpose() * bearing_vectors;
-    // For every pinhole image pixels
-    for (int it = 0; it < rotated_bearings.cols(); ++it)
-    {
-      // Project the bearing vector to the sphere
-      const Vec2 sphere_proj = sphere_camera.project(rotated_bearings.col(it));
-      if (equirectangular_image.Contains(sphere_proj(1), sphere_proj(0)))
-      {
-        // and use the corresponding pixel location in the panorama
-        const Vec2 xy = xy_coords.col(it);
-        pinhole_image(xy.y(), xy.x()) = sampler(equirectangular_image,sphere_proj(1), sphere_proj(0));
-      }
-    }
-  }
-}
 
 int main(int argc, char *argv[]) {
 
@@ -173,6 +72,10 @@ int main(int argc, char *argv[]) {
   SfM_Data sfm_data_out; // the sfm_data that stores the cubical image list
   sfm_data_out.s_root_path = s_out_dir;
 
+  const int cubic_image_size = 1024;
+  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
+    spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
+
   // Convert every spherical view to cubic views
   {
     std::cout << "Generating cubic views:";
@@ -209,16 +112,25 @@ int main(int argc, char *argv[]) {
           continue;
         }
 
-        openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
-        const int cubic_image_size = 1024;
-        ComputeCubicCameraIntrinsics(cubic_image_size, pinhole_camera);
+        const std::array<Mat3,6> rot_matrix = spherical::GetCubicRotations();
 
         // when cubical image computation is needed
         std::vector<image::Image<image::RGBColor>> cube_images;
         if (force_recompute_images)
-          SphericalToCubic(spherical_image, pinhole_camera, cube_images);
-
-        const std::array<Mat3,6> rot_matrix = GetCubicRotations();
+        {
+          std::vector<Mat3> rot_matrix_transposed(rot_matrix.cbegin(), rot_matrix.cend());
+          std::transform(
+            rot_matrix_transposed.begin(),
+            rot_matrix_transposed.end(),
+            rot_matrix_transposed.begin(),
+            [](const Mat3 & mat) -> Mat3 { return mat.transpose(); });
+          spherical::SphericalToPinholes(
+            spherical_image,
+            pinhole_camera,
+            cube_images,
+            rot_matrix_transposed,
+            image::Sampler2d<image::SamplerLinear>());
+        }
 
         for (const int cubic_image_id : {0,1,2,3,4,5})
         {
