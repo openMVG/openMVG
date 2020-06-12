@@ -80,6 +80,43 @@ struct Trifocal3PointPositionTangentialSolver {
   private:
 };
 
+
+// 3x3 intrinsic matrix for this default test case
+// This representation is specific for fast non-homog action
+// Just eliminate last row 
+//
+// This matrix is calib.intrinsic for the synthcurves spherical dataset
+static double K_[io::ncoords2d][io::ncoords2d_h] = {
+  {2584.9325098195013197, 0, 249.77137587221417903},
+  {0, 2584.7918606057692159, 278.31267937919352562}
+ //  0 0 1 
+};
+
+static void
+invert_intrinsics(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_coords[2], 
+    double normalized_coords[2])
+{
+  const double *px = pix_coords;
+  double *nrm = normalized_coords;
+  nrm[1] = (px[1]-K[1][2])/K[1][1];
+  nrm[0] = (px[0] - K[0][1] - K[0][2])/K[0][0];
+}
+
+static void
+invert_intrinsics_tgt(
+    const F K[/*3 or 2 ignoring last line*/][ncoords2d_h], 
+    const double pix_tgt_coords[ncoords2d], 
+    double normalized_tgt_coords[ncoords2d], unsigned npts)
+{
+  const F *tp = pix_tgt_coords;
+  F *t = normalized_tgt_coords;
+  t[1] = tp[1]/K[1][1];
+  t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
+}
+
+
 template<typename SolverArg,
          typename ErrorArg,
          typename ModelArg = Trifocal3PointPositionTangentialSolver::trifocal_model_t>
@@ -119,27 +156,8 @@ class ThreeViewKernel {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, x3, models);
   }
- /// Compute inverse K matrix and K_tg matrix(names to be changed)
-   static void Invert_Intrisics(const Mat &K, const Mat &coord, const Mat &normalized_coord, const int points){     
-     for(unsigned p = 0; p < points; ++p){
-          const Mat pixel = coord[p];
-          const Mat norm = normalized_coord[p];
-          norm[1] = (pixel[1]-K[1][2])/K[1][1];
-          norm[0] = (pixel[0] - K[0][1] - K[0][2])/K[0][0];
-	}
-   }
-    static void Invert_Intrisics_tg(const Mat &K, const Mat &coord_tg, const Mat &normalized_coord_tg, const int points){    
-      for(unsigned p = 0; p < points; ++p){
-          const Mat pixel_tg = coord_tg[p];
-          const Mat norm_tg = normalized_coord_tg[p];
-          norm_tg[1] = pixel_tg[1]/K[1][1];
-          norm_tg[0] = (pixel_tg[0] - K[0][1]* pixel_tg[1])/K[0][0];
-	}
-   }
-
-
- protected:
-  const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
+  protected:
+    const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
 };
 
 int main(int argc, char **argv) {
@@ -228,10 +246,10 @@ int main(int argc, char **argv) {
   //
   // Build datum (corresponding {x,y,orientation})
   //
-  std::array<Mat, 3> datum;
-  datum[0].resize(3, tracks.size());
-  datum[1].resize(3, tracks.size());
-  datum[2].resize(3, tracks.size());
+  std::array<Mat, 3> datum;              
+  datum[0].resize(4, tracks.size());
+  datum[1].resize(4, tracks.size());
+  datum[2].resize(4, tracks.size());
   int idx = 0;
   for (const auto &track_it: tracks)
   {
@@ -244,39 +262,16 @@ int main(int argc, char **argv) {
     const auto feature_i = sio_regions[0]->Features()[i];
     const auto feature_j = sio_regions[1]->Features()[j];
     const auto feature_k = sio_regions[2]->Features()[k];
-    datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
-    datum[1].col(idx) << feature_j.x(), feature_j.y(), feature_j.orientation();
-    datum[2].col(idx) << feature_k.x(), feature_k.y(), feature_k.orientation();
+    datum[0].col(idx) << feature_i.x(), feature_i.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+    // datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
+    datum[1].col(idx) << feature_j.x(), feature_j.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+feature_j.orientation();
+    datum[2].col(idx) << feature_k.x(), feature_k.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+    
     //Gabriel:Calling both K invertions:
     //
-    std::cout<<Invert_Intrisics(K, datum[0], datum[0], tracks.size());
-    //Invert_Intrisics(K, datum[1], datum[1], tracks.size());
-    //Invert_Intrisics(K, datum[2], datum[2], tracks.size());
-
-
-
-    // TODO(gabriel): invert K matrix
-    //
-    //  Reference: //  minus/minus/chicago14a.hxx line ~7100
-    //  
-    //  invert_intrinsics(const Mat &K, const Mat &datum, const trifocal_model_t &T,const auto &track_it: tracks);
-    //          std::array<Mat,2> nrm;
-    //          for (unsigned p=0; p < tracks.size(); ++p) {
-    //            const Mat px = datum[p];
-    //            nrm[1] = (px[1]-K[1][2])/K[1][1];
-    //            nrm[0] = (px[0] - K[0][1] - K[0][2])/K[0][0];
-    //          }
-    //  
-    //  invert_intrinsics_tgt(const Mat &K, tgt[0],);
-    //      std::array<Mat,2> t;
-    //      for (unsigned p=0; p < tracks.size(); ++p) {
-    //        const Mat px = pix_tgt_coords[p];
-    //         px = normalized_tgt_coords[p];
-    //        t[1] = tp[1]/K[1][1];
-    //        t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
-    //      }
-    //  
-    // 
+    std::cout << invert_intrinsics((double *)[3][3](K.data()), datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
+    std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks.size());
     ++idx;
   }
 
