@@ -1,4 +1,3 @@
-// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2019 Pierre MOULON.
 
@@ -24,6 +23,10 @@
 
 #include <memory>
 #include <string>
+
+//this is a temporary include, may be removed
+
+#include<numeric>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -52,16 +55,25 @@ struct Trifocal3PointPositionTangentialSolver {
 
   static double Error(
     const trifocal_model_t &T,
-    const Vec &bearing_0, // x,y,tangential, ..
-    const Vec &bearing_1,
-    const Vec &bearing_2)
+    const Mat &bearing_0, // x,y,tangential, ..
+    const Mat &bearing_1,
+    const Mat &bearing_2)
   {
     // Return the cost related to this model and those sample data point
     // TODO(gabriel)
-
+    
     // 1) reconstruct the 3D points and orientations
     // 2) project the 3D points and orientations on all images
     // 3) compute error 
+    
+    //Gabriel: This error function is based on squared euclidian distance
+   // const Vec r1 = &T - &bearing0; 
+   // const Vec r2 = &T - &bearing1; 
+   // const Vec r3 = &T - &bearing2;
+   //const double d1 = std::inner_product(r1.begin(), r1.end(), r1.begin(), r1.end(),0);
+   //const double d2 = std::inner_product(r2.begin(), r2.end(), r2.begin(), r2.end(),0);
+   //const double d3 = std::inner_product(r3.begin(), r3.end(), r3.begin(), r3.end(),0);
+   //return (d1+d2+d3)/6;
     return 0.0;
   }
 
@@ -107,6 +119,25 @@ class ThreeViewKernel {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, x3, models);
   }
+ /// Compute inverse K matrix and K_tg matrix(names to be changed)
+   static void Invert_Intrisics(const Mat &K, const Mat &coord, const Mat &normalized_coord, const int points){     
+     for(unsigned p = 0; p < points; ++p){
+          const Mat pixel = coord[p];
+          const Mat norm = normalized_coord[p];
+          norm[1] = (pixel[1]-K[1][2])/K[1][1];
+          norm[0] = (pixel[0] - K[0][1] - K[0][2])/K[0][0];
+	}
+   }
+    static void Invert_Intrisics_tg(const Mat &K, const Mat &coord_tg, const Mat &normalized_coord_tg, const int points){    
+      for(unsigned p = 0; p < points; ++p){
+          const Mat pixel_tg = coord_tg[p];
+          const Mat norm_tg = normalized_coord_tg[p];
+          norm_tg[1] = pixel_tg[1]/K[1][1];
+          norm_tg[0] = (pixel_tg[0] - K[0][1]* pixel_tg[1])/K[0][0];
+	}
+   }
+
+
  protected:
   const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
 };
@@ -115,7 +146,7 @@ int main(int argc, char **argv) {
 
   // The three images used to compute the trifocal configuration
   std::array<std::string, 3> image_filenames;
-
+  const Mat intrinsics_filename;
   CmdLine cmd;
   cmd.add( make_option('a', image_filenames[0], "image_a") );
   cmd.add( make_option('b', image_filenames[1], "image_b") );
@@ -216,22 +247,31 @@ int main(int argc, char **argv) {
     datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
     datum[1].col(idx) << feature_j.x(), feature_j.y(), feature_j.orientation();
     datum[2].col(idx) << feature_k.x(), feature_k.y(), feature_k.orientation();
+    //Gabriel:Calling both K invertions:
+    //
+    std::cout<<Invert_Intrisics(K, datum[0], datum[0], tracks.size());
+    //Invert_Intrisics(K, datum[1], datum[1], tracks.size());
+    //Invert_Intrisics(K, datum[2], datum[2], tracks.size());
+
+
+
     // TODO(gabriel): invert K matrix
     //
-    //  Reference: //  minus/minus/chicago14a.hxx line ~7560
+    //  Reference: //  minus/minus/chicago14a.hxx line ~7100
     //  
-    //  invert_intrinsics(K, p[1], pn[1], pp::npoints);
-    //          for (unsigned p=0; p < npts; ++p) {
-    //            const F *px = pix_coords[p];
-    //            F *nrm = normalized_coords[p];
+    //  invert_intrinsics(const Mat &K, const Mat &datum, const trifocal_model_t &T,const auto &track_it: tracks);
+    //          std::array<Mat,2> nrm;
+    //          for (unsigned p=0; p < tracks.size(); ++p) {
+    //            const Mat px = datum[p];
     //            nrm[1] = (px[1]-K[1][2])/K[1][1];
     //            nrm[0] = (px[0] - K[0][1] - K[0][2])/K[0][0];
     //          }
     //  
-    //  invert_intrinsics_tgt(K, tgt[0], tn[0], pp::npoints);
-    //      for (unsigned p=0; p < npts; ++p) {
-    //        const F *tp = pix_tgt_coords[p];
-    //        F *t = normalized_tgt_coords[p];
+    //  invert_intrinsics_tgt(const Mat &K, tgt[0],);
+    //      std::array<Mat,2> t;
+    //      for (unsigned p=0; p < tracks.size(); ++p) {
+    //        const Mat px = pix_tgt_coords[p];
+    //         px = normalized_tgt_coords[p];
     //        t[1] = tp[1]/K[1][1];
     //        t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
     //      }
