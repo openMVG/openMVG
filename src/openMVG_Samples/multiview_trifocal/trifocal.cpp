@@ -269,7 +269,7 @@ feature_j.orientation();
     
     //Gabriel:Calling both K invertions:
     //
-    // std::cout << invert_intrinsics((double *)[3][3](K.data()), datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
+    std::cout << invert_intrinsics(K, datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
     // std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks.size());
    
     ++idx;
