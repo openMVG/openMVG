@@ -80,18 +80,6 @@ struct Trifocal3PointPositionTangentialSolver {
   private:
 };
 
-
-// 3x3 intrinsic matrix for this default test case
-// This representation is specific for fast non-homog action
-// Just eliminate last row 
-//
-// This matrix is calib.intrinsic for the synthcurves spherical dataset
-static double K_[io::ncoords2d][io::ncoords2d_h] = {
-  {2584.9325098195013197, 0, 249.77137587221417903},
-  {0, 2584.7918606057692159, 278.31267937919352562}
- //  0 0 1 
-};
-
 static void
 invert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
@@ -106,12 +94,12 @@ invert_intrinsics(
 
 static void
 invert_intrinsics_tgt(
-    const F K[/*3 or 2 ignoring last line*/][ncoords2d_h], 
-    const double pix_tgt_coords[ncoords2d], 
-    double normalized_tgt_coords[ncoords2d], unsigned npts)
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_tgt_coords[3], 
+    double normalized_tgt_coords[3], unsigned npts)
 {
-  const F *tp = pix_tgt_coords;
-  F *t = normalized_tgt_coords;
+  const double *tp = pix_tgt_coords;
+  double *t = normalized_tgt_coords;
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
 }
@@ -169,7 +157,18 @@ int main(int argc, char **argv) {
   cmd.add( make_option('a', image_filenames[0], "image_a") );
   cmd.add( make_option('b', image_filenames[1], "image_b") );
   cmd.add( make_option('c', image_filenames[2], "image_c") );
-  cmd.add( make_option('k', intrinsics_filename, "K") );
+  // cmd.add( make_option('k', intrinsics_filename, "K") );
+// 3x3 intrinsic matrix for this default test case
+// This representation is specific for fast non-homog action
+// Just eliminate last row 
+//
+// This matrix is calib.intrinsic for the synthcurves spherical dataset
+static double K[2][3] = {
+  {2584.9325098195013197, 0, 249.77137587221417903},
+  {0, 2584.7918606057692159, 278.31267937919352562}
+ //  0 0 1 
+};
+
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -270,11 +269,12 @@ feature_j.orientation();
     
     //Gabriel:Calling both K invertions:
     //
-    std::cout << invert_intrinsics((double *)[3][3](K.data()), datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
-    std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks.size());
+    // std::cout << invert_intrinsics((double *)[3][3](K.data()), datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
+    // std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks.size());
+   
     ++idx;
   }
-
+std::cout <<  datum[0] << "blyat" << std::endl;
   //
   // Display demo
   //
