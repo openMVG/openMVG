@@ -27,6 +27,7 @@
 //this is a temporary include, may be removed
 
 #include<numeric>
+// Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -89,22 +90,21 @@ invert_intrinsics(
 {
   const double *px = pix_coords;
   double *nrm = normalized_coords;
-  nrm[1] = (px[1]-K[1][2])/K[1][1];
-  nrm[0] = (px[0] - K[0][1] - K[0][2])/K[0][0];
+  nrm[1] = (px[1] - K[1][2]) /K[1][1];
+  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
 }
 
 static void
 invert_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_tgt_coords[3], 
-    double normalized_tgt_coords[3], unsigned npts)
+    const double pix_tgt_coords[2], 
+    double normalized_tgt_coords[2])
 {
   const double *tp = pix_tgt_coords;
   double *t = normalized_tgt_coords;
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
 }
-
 
 template<typename SolverArg,
          typename ErrorArg,
@@ -247,12 +247,17 @@ struct TrifocalSampleApp {
         const auto feature_i = sio_regions_[0]->Features()[i];
         const auto feature_j = sio_regions_[1]->Features()[j];
         const auto feature_k = sio_regions_[2]->Features()[k];
-        datum_[0].col(idx) << feature_i.x(), feature_i.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
+        datum_[0].col(idx) << feature_i.x(), feature_i.y(), 
+          cos(feature_i.orientation()), sin(feature_i.orientation());
         // datum_[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
-        datum_[1].col(idx) << feature_j.x(), feature_j.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
-    feature_j.orientation();
-        datum_[2].col(idx) << feature_k.x(), feature_k.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
-        invert_intrinsics(K_, datum_[0].col(idx).data(), datum_[0].col(idx).data());
+        datum_[1].col(idx) << feature_j.x(), feature_j.y(), 
+          cos(feature_i.orientation()), sin(feature_i.orientation());
+        datum_[2].col(idx) << feature_k.x(), feature_k.y(), 
+          cos(feature_i.orientation()), sin(feature_i.orientation());
+        for (unsigned v=0; v < 3; ++v) {
+          invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data());
+          invert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
+        }
         ++idx;
       }
   }
@@ -345,7 +350,7 @@ struct TrifocalSampleApp {
   // Features
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
-  array<Mat, 3> datum_; // x,y,orientation
+  array<Mat, 3> datum_; // x,y,orientation across 3 views
   
   // Matches
   matching::PairWiseMatches pairwise_matches_;
