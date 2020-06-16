@@ -63,7 +63,7 @@ struct Trifocal3PointPositionTangentialSolver {
     // TODO(gabriel)
     
     // 1) reconstruct the 3D points and orientations
-    // 2) project the 3D points and orientations on all images
+    // 2) project the 3D points and orientations on all images_
     // 3) compute error 
     
     //Gabriel: This error function is based on squared euclidian distance
@@ -151,16 +151,38 @@ class ThreeViewKernel {
 
 struct TrifocalSampleApp {
  public:
+  
+   void ProcessCmdLine() {
+     CmdLine cmd;
+     cmd.add( make_option('a', image_filenames[0], "image_a") );
+     cmd.add( make_option('b', image_filenames[1], "image_b") );
+     cmd.add( make_option('c', image_filenames[2], "image_c") );
+     cmd.add( make_option('K', intrinsics_filename, "K matrix") );
+    
+     try {
+       if (argc == 1) throw std::string("Invalid command line parameter.");
+       cmd.process(argc, argv);
+     } catch (const std::string& s) {
+       std::cerr << "Usage: " << argv[0] << '\n' << std::endl;
+       std::cerr << s << std::endl;
+       return EXIT_FAILURE;
+     }
+  }
+   
   void ExtractKeypoints() {
      // Call Keypoint extractor
      using namespace openMVG::features;
      std::unique_ptr<Image_describer> image_describer;
      image_describer.reset(new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params()));
 
-     if (!image_describer)
-     {
+     if (!image_describer) {
        std::cerr << "Invalid Image_describer type" << std::endl;
        return EXIT_FAILURE;
+     }
+     for (const int image_idx : {0,1,2})
+     {
+       if (ReadImage(image_filenames_[image_idx].c_str(), &images_[image_idx]))
+         image_describer->Describe(images_[image_idx], regions_per_image_[image_idx]);
      }
   }
 
@@ -170,58 +192,52 @@ struct TrifocalSampleApp {
     //--
     //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
     //std::unique_ptr<Matcher> collectionMatcher(new Cascade_Hashing_Matcher_Regions(fDistRatio));
-    //collectionMatcher->Match(regions_provider, {{0,1}, {1,2}}, pairwise_matches, &progress);
-    matching::PairWiseMatches pairwise_matches;
+    //collectionMatcher->Match(regions_provider, {{0,1}, {1,2}}, pairwise_matches_, &progress);
     matching::DistanceRatioMatch(
       0.8, matching::BRUTE_FORCE_L2,
-      * regions_per_image.at(0).get(),
-      * regions_per_image.at(1).get(),
-      pairwise_matches[{0,1}]);
+      * regions_per_image_.at(0).get(),
+      * regions_per_image_.at(1).get(),
+      pairwise_matches_[{0,1}]);
     matching::DistanceRatioMatch(
       0.8, matching::BRUTE_FORCE_L2,
-      * regions_per_image.at(1).get(),
-      * regions_per_image.at(2).get(),
-      pairwise_matches[{1,2}]);
+      * regions_per_image_.at(1).get(),
+      * regions_per_image_.at(2).get(),
+      pairwise_matches_[{1,2}]);
   }
 
   void ComputeTracks() {
-      //
-      // Computing tracks
-      //
-      openMVG::tracks::STLMAPTracks tracks;
       openMVG::tracks::TracksBuilder track_builder;
-      track_builder.Build(pairwise_matches);
+      track_builder.Build(pairwise_matches_);
       track_builder.Filter(3);
-      track_builder.ExportToSTL(tracks);
+      track_builder.ExportToSTL(tracks_);
   }
 
   void Stats() {
       // Display some statistics
       std::cout
-        <<  regions_per_image.at(0)->RegionCount() << " #Features on image A" << std::endl
-        <<  regions_per_image.at(1)->RegionCount() << " #Features on image B" << std::endl
-        <<  regions_per_image.at(2)->RegionCount() << " #Features on image C" << std::endl
-        << pairwise_matches.at({0,1}).size() << " #matches with Distance Ratio filter" << std::endl
-        << pairwise_matches.at({1,2}).size() << " #matches with Distance Ratio filter" << std::endl
-        << tracks.size() << " #tracks" << std::endl;
-
-      const std::array<const SIFT_Regions*, 3> sio_regions = {
-        dynamic_cast<SIFT_Regions*>(regions_per_image.at(0).get()),
-        dynamic_cast<SIFT_Regions*>(regions_per_image.at(1).get()),
-        dynamic_cast<SIFT_Regions*>(regions_per_image.at(2).get())
-      };
+        <<  regions_per_image_.at(0)->RegionCount() << " #Features on image A" << std::endl
+        <<  regions_per_image_.at(1)->RegionCount() << " #Features on image B" << std::endl
+        <<  regions_per_image_.at(2)->RegionCount() << " #Features on image C" << std::endl
+        << pairwise_matches_.at({0,1}).size() << " #matches with Distance Ratio filter" << std::endl
+        << pairwise_matches_.at({1,2}).size() << " #matches with Distance Ratio filter" << std::endl
+        << tracks_.size() << " #tracks" << std::endl;
   }
 
   void ExtractXYOrientation() {
+      sio_regions_ = std::array<const SIFT_Regions*, 3> ({
+        dynamic_cast<SIFT_Regions*>(regions_per_image_.at(0).get()),
+        dynamic_cast<SIFT_Regions*>(regions_per_image_.at(1).get()),
+        dynamic_cast<SIFT_Regions*>(regions_per_image_.at(2).get())
+      });
       //
       // Build datum (corresponding {x,y,orientation})
       //
       std::array<Mat, 3> datum;              
-      datum[0].resize(4, tracks.size());
-      datum[1].resize(4, tracks.size());
-      datum[2].resize(4, tracks.size());
+      datum[0].resize(4, tracks_.size());
+      datum[1].resize(4, tracks_.size());
+      datum[2].resize(4, tracks_.size());
       int idx = 0;
-      for (const auto &track_it: tracks)
+      for (const auto &track_it: tracks_)
       {
         auto iter = track_it.second.cbegin();
         const uint32_t
@@ -240,8 +256,8 @@ struct TrifocalSampleApp {
         
         //Gabriel:Calling both K invertions:
         //
-        std::cout << invert_intrinsics(K, datum[0].col(idx).data(), datum[0].col(idx).data(), tracks.size());
-        // std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks.size());
+        std::cout << invert_intrinsics(K, datum[0].col(idx).data(), datum[0].col(idx).data(), tracks_.size());
+        // std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks_.size());
         ++idx;
       }
       std::cout <<  datum[0] << "blyat" << std::endl;
@@ -251,51 +267,49 @@ struct TrifocalSampleApp {
     //
     // Display demo
     //
+    const int svg_w = images_[0].Width();
+    const int svg_h = images_[0].Height() + images_[1].Height() + images_[2].Height();
+    svg::svgDrawer svg_stream(svg_w, svg_h);
+
+    // Draw image side by side
+    svg_stream.drawImage(image_filenames[0], images_[0].Width(), images_[0].Height());
+    svg_stream.drawImage(image_filenames[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
+    svg_stream.drawImage(image_filenames[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
+
+    for (const auto &track_it: tracks_)
     {
-      const int svg_w = images[0].Width();
-      const int svg_h = images[0].Height() + images[1].Height() + images[2].Height();
-      svg::svgDrawer svg_stream(svg_w, svg_h);
+      auto iter = track_it.second.cbegin();
+      const uint32_t
+        i = iter->second,
+        j = (++iter)->second,
+        k = (++iter)->second;
+      //
+      const auto feature_i = sio_regions[0]->Features()[i];
+      const auto feature_j = sio_regions[1]->Features()[j];
+      const auto feature_k = sio_regions[2]->Features()[k];
 
-      // Draw image side by side
-      svg_stream.drawImage(image_filenames[0], images[0].Width(), images[0].Height());
-      svg_stream.drawImage(image_filenames[1], images[1].Width(), images[1].Height(), 0, images[0].Height());
-      svg_stream.drawImage(image_filenames[2], images[2].Width(), images[2].Height(), 0, images[0].Height() + images[1].Height());
-
-      for (const auto &track_it: tracks)
-      {
-        auto iter = track_it.second.cbegin();
-        const uint32_t
-          i = iter->second,
-          j = (++iter)->second,
-          k = (++iter)->second;
-        //
-        const auto feature_i = sio_regions[0]->Features()[i];
-        const auto feature_j = sio_regions[1]->Features()[j];
-        const auto feature_k = sio_regions[2]->Features()[k];
-
-        svg_stream.drawCircle(
-          feature_i.x(), feature_i.y(), feature_i.scale(),
-          svg::svgStyle().stroke("yellow", 1));
-        svg_stream.drawCircle(
-          feature_j.x(), feature_j.y() + images[0].Height(), feature_k.scale(),
-          svg::svgStyle().stroke("yellow", 1));
-        svg_stream.drawCircle(
-          feature_k.x(), feature_j.y() + images[0].Height() + images[1].Height(), feature_k.scale(),
-          svg::svgStyle().stroke("yellow", 1));
-        svg_stream.drawLine(
-          feature_i.x(), feature_i.y(),
-          feature_j.x(), feature_j.y() + images[0].Height(),
-          svg::svgStyle().stroke("blue", 1));
-        svg_stream.drawLine(
-          feature_j.x(), feature_j.y() + images[0].Height(),
-          feature_k.x(), feature_j.y() + images[0].Height() + images[1].Height(),
-          svg::svgStyle().stroke("blue", 1));
-      }
-      std::ofstream svg_file( "trifocal_track.svg" );
-      if (svg_file.is_open())
-      {
-        svg_file << svg_stream.closeSvgFile().str();
-      }
+      svg_stream.drawCircle(
+        feature_i.x(), feature_i.y(), feature_i.scale(),
+        svg::svgStyle().stroke("yellow", 1));
+      svg_stream.drawCircle(
+        feature_j.x(), feature_j.y() + images_[0].Height(), feature_k.scale(),
+        svg::svgStyle().stroke("yellow", 1));
+      svg_stream.drawCircle(
+        feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
+        svg::svgStyle().stroke("yellow", 1));
+      svg_stream.drawLine(
+        feature_i.x(), feature_i.y(),
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        svg::svgStyle().stroke("blue", 1));
+      svg_stream.drawLine(
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(),
+        svg::svgStyle().stroke("blue", 1));
+    }
+    std::ofstream svg_file( "trifocal_track.svg" );
+    if (svg_file.is_open())
+    {
+      svg_file << svg_stream.closeSvgFile().str();
     }
   }
 
@@ -308,6 +322,15 @@ struct TrifocalSampleApp {
     const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers);
   }
 
+  void DisplayInliersCamerasAndPoints() {
+    // TODO We can then display the inlier and the 3D camera configuration as PLY
+
+  }
+
+  // ---------------------------------------------------------------------------
+  // Data
+  //
+  //
   // 3x3 intrinsic matrix for this default test case
   // This representation is specific for fast non-homog action
   // Just eliminate last row 
@@ -318,43 +341,34 @@ struct TrifocalSampleApp {
     {0, 2584.7918606057692159, 278.31267937919352562}
    //  0 0 1 
   };
+  
+  // The three images_ used to compute the trifocal configuration
+  std::array<std::string, 3> image_filenames_;
+  std::array<std::string> intrinsics_filename_;
+  std::array<Image<unsigned char>, 3> images_;
+  
+  // Features
+  std::map<IndexT, std::unique_ptr<features::Regions>> regions_per_image_;
+  std::array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
+  
+  // Matches
+  matching::PairWiseMatches pairwise_matches_;
+ 
+  // Tracks 
+  openMVG::tracks::STLMAPTracks tracks_;
 }
 
 int main(int argc, char **argv) {
-
-  // The three images used to compute the trifocal configuration
-  std::array<std::string, 3> image_filenames;
-  std::array<std::string> intrinsics_filename;
-  CmdLine cmd;
-  cmd.add( make_option('a', image_filenames[0], "image_a") );
-  cmd.add( make_option('b', image_filenames[1], "image_b") );
-  cmd.add( make_option('c', image_filenames[2], "image_c") );
-  cmd.add( make_option('K', intrinsics_filename, "K matrix") );
-
-  try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
-  } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-      << std::endl;
-
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
-  }
-
   TrifocalSampleApp T;
-
-  T.ProcessCMDLine();
-
-  T.ExtractKeypoints();
-  T.MatchKeypoints();
-  T.Stats();
-  T.ExtractXYOrientation();
-  T.Display();
-  T.RobustSolve();
-
   
-  // We can then display the inlier and the 3D camera configuration as PLY
+  T.ProcessCmdLine();
+//  T.ExtractKeypoints();
+//  T.MatchKeypoints();
+//  T.Stats();
+//  T.ExtractXYOrientation();
+//  T.Display();
+//  T.RobustSolve();
+//  T.DisplayInliersCamerasAndPoints();
 
   return EXIT_SUCCESS;
 }

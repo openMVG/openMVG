@@ -187,9 +187,7 @@ int main(int argc, char **argv) {
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
-      << std::endl;
-
+      std::cerr << "Usage: " << argv[0] << '\n' << std::endl;
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
   }
