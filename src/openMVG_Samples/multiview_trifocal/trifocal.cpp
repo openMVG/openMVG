@@ -361,6 +361,7 @@ int main(int argc, char **argv) {
   T.ProcessCmdLine(argc, argv);
   T.ExtractKeypoints();
   T.MatchKeypoints();
+  T.ComputeTracks();
   T.Stats();
   T.ExtractXYOrientation();
   T.Display();
