@@ -34,7 +34,7 @@ using namespace openMVG::robust;
 using namespace std;
 
 struct Trifocal3PointPositionTangentialSolver {
-  using trifocal_model_t = std::array<Mat34, 3>;
+  using trifocal_model_t = array<Mat34, 3>;
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 1 };
 
@@ -42,7 +42,7 @@ struct Trifocal3PointPositionTangentialSolver {
     const Mat &bearing_0,
     const Mat &bearing_1,
     const Mat &bearing_2,
-    std::vector<trifocal_model_t> *trifocal_tensor)
+    vector<trifocal_model_t> *trifocal_tensor)
   {
     //...
     // TODO
@@ -70,9 +70,9 @@ struct Trifocal3PointPositionTangentialSolver {
    // const Vec r1 = &T - &bearing0; 
    // const Vec r2 = &T - &bearing1; 
    // const Vec r3 = &T - &bearing2;
-   //const double d1 = std::inner_product(r1.begin(), r1.end(), r1.begin(), r1.end(),0);
-   //const double d2 = std::inner_product(r2.begin(), r2.end(), r2.begin(), r2.end(),0);
-   //const double d3 = std::inner_product(r3.begin(), r3.end(), r3.begin(), r3.end(),0);
+   //const double d1 = inner_product(r1.begin(), r1.end(), r1.begin(), r1.end(),0);
+   //const double d2 = inner_product(r2.begin(), r2.end(), r2.begin(), r2.end(),0);
+   //const double d3 = inner_product(r3.begin(), r3.end(), r3.begin(), r3.end(),0);
    //return (d1+d2+d3)/6;
     return 0.0;
   }
@@ -122,7 +122,7 @@ class ThreeViewKernel {
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   /// Extract required sample and fit model(s) to the sample
-  void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
+  void Fit(const vector<uint32_t> &samples, vector<Model> *models) const {
     const auto
       x1 = ExtractColumns(x1_, samples),
       x2 = ExtractColumns(x2_, samples),
@@ -140,7 +140,7 @@ class ThreeViewKernel {
   }
 
   /// Compute a model on sampled datum
-  static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, std::vector<Model> *models) {
+  static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, vector<Model> *models) {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, x3, models);
   }
@@ -160,11 +160,11 @@ struct TrifocalSampleApp {
      cmd.add( make_option('K', intrinsics_filename, "K matrix") );
     
      try {
-       if (argc == 1) throw std::string("Invalid command line parameter.");
+       if (argc == 1) throw string("Invalid command line parameter.");
        cmd.process(argc, argv);
-     } catch (const std::string& s) {
-       std::cerr << "Usage: " << argv[0] << '\n' << std::endl;
-       std::cerr << s << std::endl;
+     } catch (const string& s) {
+       cerr << "Usage: " << argv[0] << '\n' << endl;
+       cerr << s << endl;
        return EXIT_FAILURE;
      }
   }
@@ -172,11 +172,11 @@ struct TrifocalSampleApp {
   void ExtractKeypoints() {
      // Call Keypoint extractor
      using namespace openMVG::features;
-     std::unique_ptr<Image_describer> image_describer;
+     unique_ptr<Image_describer> image_describer;
      image_describer.reset(new SIFT_Anatomy_Image_describer(SIFT_Anatomy_Image_describer::Params()));
 
      if (!image_describer) {
-       std::cerr << "Invalid Image_describer type" << std::endl;
+       cerr << "Invalid Image_describer type" << endl;
        return EXIT_FAILURE;
      }
      for (const int image_idx : {0,1,2})
@@ -191,7 +191,7 @@ struct TrifocalSampleApp {
     // Compute corresponding points {{0,1}, {1,2}}
     //--
     //-- Perform matching -> find Nearest neighbor, filtered with Distance ratio
-    //std::unique_ptr<Matcher> collectionMatcher(new Cascade_Hashing_Matcher_Regions(fDistRatio));
+    //unique_ptr<Matcher> collectionMatcher(new Cascade_Hashing_Matcher_Regions(fDistRatio));
     //collectionMatcher->Match(regions_provider, {{0,1}, {1,2}}, pairwise_matches_, &progress);
     matching::DistanceRatioMatch(
       0.8, matching::BRUTE_FORCE_L2,
@@ -214,17 +214,17 @@ struct TrifocalSampleApp {
 
   void Stats() {
       // Display some statistics
-      std::cout
-        <<  regions_per_image_.at(0)->RegionCount() << " #Features on image A" << std::endl
-        <<  regions_per_image_.at(1)->RegionCount() << " #Features on image B" << std::endl
-        <<  regions_per_image_.at(2)->RegionCount() << " #Features on image C" << std::endl
-        << pairwise_matches_.at({0,1}).size() << " #matches with Distance Ratio filter" << std::endl
-        << pairwise_matches_.at({1,2}).size() << " #matches with Distance Ratio filter" << std::endl
-        << tracks_.size() << " #tracks" << std::endl;
+      cout
+        <<  regions_per_image_.at(0)->RegionCount() << " #Features on image A" << endl
+        <<  regions_per_image_.at(1)->RegionCount() << " #Features on image B" << endl
+        <<  regions_per_image_.at(2)->RegionCount() << " #Features on image C" << endl
+        << pairwise_matches_.at({0,1}).size() << " #matches with Distance Ratio filter" << endl
+        << pairwise_matches_.at({1,2}).size() << " #matches with Distance Ratio filter" << endl
+        << tracks_.size() << " #tracks" << endl;
   }
 
   void ExtractXYOrientation() {
-      sio_regions_ = std::array<const SIFT_Regions*, 3> ({
+      sio_regions_ = array<const SIFT_Regions*, 3> ({
         dynamic_cast<SIFT_Regions*>(regions_per_image_.at(0).get()),
         dynamic_cast<SIFT_Regions*>(regions_per_image_.at(1).get()),
         dynamic_cast<SIFT_Regions*>(regions_per_image_.at(2).get())
@@ -232,7 +232,7 @@ struct TrifocalSampleApp {
       //
       // Build datum (corresponding {x,y,orientation})
       //
-      std::array<Mat, 3> datum;              
+      array<Mat, 3> datum;              
       datum[0].resize(4, tracks_.size());
       datum[1].resize(4, tracks_.size());
       datum[2].resize(4, tracks_.size());
@@ -248,19 +248,19 @@ struct TrifocalSampleApp {
         const auto feature_i = sio_regions[0]->Features()[i];
         const auto feature_j = sio_regions[1]->Features()[j];
         const auto feature_k = sio_regions[2]->Features()[k];
-        datum[0].col(idx) << feature_i.x(), feature_i.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+        datum[0].col(idx) << feature_i.x(), feature_i.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
         // datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
-        datum[1].col(idx) << feature_j.x(), feature_j.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+        datum[1].col(idx) << feature_j.x(), feature_j.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
     feature_j.orientation();
-        datum[2].col(idx) << feature_k.x(), feature_k.y(), std::cos(feature_i.orientation()), std::sin(feature_i.orientation());
+        datum[2].col(idx) << feature_k.x(), feature_k.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
         
         //Gabriel:Calling both K invertions:
         //
-        std::cout << invert_intrinsics(K, datum[0].col(idx).data(), datum[0].col(idx).data(), tracks_.size());
-        // std::cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks_.size());
+        cout << invert_intrinsics(K, datum[0].col(idx).data(), datum[0].col(idx).data(), tracks_.size());
+        // cout << invert_intrinsics_tgt((double *)[3][3](K.data()), datum[0].col(idx).data()+2, datum[0].col(idx).data()+2, tracks_.size());
         ++idx;
       }
-      std::cout <<  datum[0] << "blyat" << std::endl;
+      cout <<  datum[0] << "blyat" << endl;
   }
 
   void Display() {
@@ -306,7 +306,7 @@ struct TrifocalSampleApp {
         feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(),
         svg::svgStyle().stroke("blue", 1));
     }
-    std::ofstream svg_file( "trifocal_track.svg" );
+    ofstream svg_file( "trifocal_track.svg" );
     if (svg_file.is_open())
     {
       svg_file << svg_stream.closeSvgFile().str();
@@ -318,7 +318,7 @@ struct TrifocalSampleApp {
     const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]);
 
     const double threshold_pix = 2.0;
-    std::vector<uint32_t> vec_inliers;
+    vector<uint32_t> vec_inliers;
     const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers);
   }
 
@@ -343,13 +343,13 @@ struct TrifocalSampleApp {
   };
   
   // The three images_ used to compute the trifocal configuration
-  std::array<std::string, 3> image_filenames_;
-  std::array<std::string> intrinsics_filename_;
-  std::array<Image<unsigned char>, 3> images_;
+  array<string, 3> image_filenames_;
+  string intrinsics_filename_;
+  array<Image<unsigned char>, 3> images_;
   
   // Features
-  std::map<IndexT, std::unique_ptr<features::Regions>> regions_per_image_;
-  std::array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
+  map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
+  array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
   
   // Matches
   matching::PairWiseMatches pairwise_matches_;
@@ -362,13 +362,13 @@ int main(int argc, char **argv) {
   TrifocalSampleApp T;
   
   T.ProcessCmdLine();
-//  T.ExtractKeypoints();
-//  T.MatchKeypoints();
-//  T.Stats();
-//  T.ExtractXYOrientation();
-//  T.Display();
-//  T.RobustSolve();
-//  T.DisplayInliersCamerasAndPoints();
+  T.ExtractKeypoints();
+  T.MatchKeypoints();
+  T.Stats();
+  T.ExtractXYOrientation();
+  T.Display();
+  T.RobustSolve();
+  T.DisplayInliersCamerasAndPoints();
 
   return EXIT_SUCCESS;
 }
