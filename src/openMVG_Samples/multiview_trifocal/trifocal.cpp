@@ -140,7 +140,7 @@ class ThreeViewKernel {
     return static_cast<size_t>(x1_.cols());
   }
 
-  /// Compute a model on sampled datum
+  /// Compute a model on sampled datum_
   static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, vector<Model> *models) {
     // By offering this, Kernel types can be passed to templates.
     Solver::Solve(x1, x2, x3, models);
@@ -231,11 +231,11 @@ struct TrifocalSampleApp {
         dynamic_cast<SIFT_Regions*>(regions_per_image_.at(2).get())
       });
       //
-      // Build datum (corresponding {x,y,orientation})
+      // Build datum_ (corresponding {x,y,orientation})
       //
-      datum[0].resize(4, tracks_.size());
-      datum[1].resize(4, tracks_.size());
-      datum[2].resize(4, tracks_.size());
+      datum_[0].resize(4, tracks_.size());
+      datum_[1].resize(4, tracks_.size());
+      datum_[2].resize(4, tracks_.size());
       int idx = 0;
       for (const auto &track_it: tracks_) {
         auto iter = track_it.second.cbegin();
@@ -247,12 +247,12 @@ struct TrifocalSampleApp {
         const auto feature_i = sio_regions_[0]->Features()[i];
         const auto feature_j = sio_regions_[1]->Features()[j];
         const auto feature_k = sio_regions_[2]->Features()[k];
-        datum[0].col(idx) << feature_i.x(), feature_i.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
-        // datum[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
-        datum[1].col(idx) << feature_j.x(), feature_j.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
+        datum_[0].col(idx) << feature_i.x(), feature_i.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
+        // datum_[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
+        datum_[1].col(idx) << feature_j.x(), feature_j.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
     feature_j.orientation();
-        datum[2].col(idx) << feature_k.x(), feature_k.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
-        invert_intrinsics(K_, datum[0].col(idx).data(), datum[0].col(idx).data());
+        datum_[2].col(idx) << feature_k.x(), feature_k.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
+        invert_intrinsics(K_, datum_[0].col(idx).data(), datum_[0].col(idx).data());
         ++idx;
       }
   }
@@ -309,11 +309,10 @@ struct TrifocalSampleApp {
 
   void RobustSolve() {
     using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
-    const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]);
+    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
 
     const double threshold_pix = 2.0;
-    vector<uint32_t> vec_inliers;
-    const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers);
+    const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_);
   }
 
   void DisplayInliersCamerasAndPoints() {
@@ -338,7 +337,7 @@ struct TrifocalSampleApp {
    //  0 0 1 
   };
   
-  // The three images_ used to compute the trifocal configuration
+  // The three images used to compute the trifocal configuration
   array<string, 3> image_filenames_;
   string intrinsics_filename_;
   array<Image<unsigned char>, 3> images_;
@@ -346,13 +345,16 @@ struct TrifocalSampleApp {
   // Features
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
-  array<Mat, 3> datum; // x,y,orientation
+  array<Mat, 3> datum_; // x,y,orientation
   
   // Matches
   matching::PairWiseMatches pairwise_matches_;
  
   // Tracks 
   openMVG::tracks::STLMAPTracks tracks_;
+  
+  // Vector of inliers for the best fit found
+  vector<uint32_t> vec_inliers_;
 };
 
 int main(int argc, char **argv) {
