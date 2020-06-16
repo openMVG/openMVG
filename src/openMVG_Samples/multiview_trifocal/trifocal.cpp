@@ -321,10 +321,12 @@ struct TrifocalSampleApp {
 
   }
 
+  
   // ---------------------------------------------------------------------------
   // Data
-  //
-  //
+  // ---------------------------------------------------------------------------
+ 
+
   // 3x3 intrinsic matrix for this default test case
   // This representation is specific for fast non-homog action
   // Just eliminate last row 

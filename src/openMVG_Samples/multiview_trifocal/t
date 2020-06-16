@@ -1,0 +1,5 @@
+set -x
+d="~/lib/data/right-dome-subset-cleaned-for-students/"
+m="/Users/rfabbri/cprg/vxlprg/lemsvpe/openMVG-bin/Darwin-x86_64-Debug/openMVG_sample_multiview_trifocal" 
+
+$m -a $d/frame_00001.png -b $d/frame_00030.png -c $d/frame_00066.png -K bla
