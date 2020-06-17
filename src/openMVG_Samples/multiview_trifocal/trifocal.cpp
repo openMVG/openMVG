@@ -24,9 +24,12 @@
 #include <memory>
 #include <string>
 
-//this is a temporary include, may be removed
+//these are temporary includes, may be removed
 
 #include<numeric>
+#include "openMVG/multiview/projection.hpp"
+#include "openMVG/multiview/triangulation.hpp"
+
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 
 using namespace openMVG;
@@ -54,12 +57,12 @@ struct Trifocal3PointPositionTangentialSolver {
 
     // minus::solve_chicago(pn, tn, id_tgt0, id_tgt1);
   }
-
+  // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
   static double Error(
     const trifocal_model_t &T,
-    const Mat &bearing_0, // x,y,tangential, ..
-    const Mat &bearing_1,
-    const Mat &bearing_2)
+    const Vec3 &bearing_0, // x,y,tangential, ..
+    const Vec3 &bearing_1,
+    const Vec3 &bearing_2)
   {
     // Return the cost related to this model and those sample data point
     // TODO(gabriel)
@@ -68,15 +71,42 @@ struct Trifocal3PointPositionTangentialSolver {
     // 2) project the 3D points and orientations on all images_
     // 3) compute error 
     
-    //Gabriel: This error function is based on squared euclidian distance
-   // const Vec r1 = &T - &bearing0; 
-   // const Vec r2 = &T - &bearing1; 
-   // const Vec r3 = &T - &bearing2;
-   //const double d1 = inner_product(r1.begin(), r1.end(), r1.begin(), r1.end(),0);
-   //const double d2 = inner_product(r2.begin(), r2.end(), r2.begin(), r2.end(),0);
-   //const double d3 = inner_product(r3.begin(), r3.end(), r3.begin(), r3.end(),0);
-   //return (d1+d2+d3)/6;
-    return 0.0;
+    // Gabriel's note: I'm using triangulation.hpp file, for best usage I'll create an Vec3 array
+    const array<Vec3, 3>triangulated;
+    openMVG::TriangulateDLT( T[0], bearing_0, T[1], bearing_1, triangulated[0] );
+    openMVG::TriangulateDLT( T[1], bearing_1, T[2], bearing_2, triangulated[1] );
+    openMVG::TriangulateDLT( T[2], bearing_2, T[0], bearing_0, triangulated[2] );
+    
+    // Computing the projection of triangulated points using projection.hpp
+    const array<Vec2, 3>projected;
+    projected[0] << openMVG::Project( T[0], triangulated[0] );
+    projected[1] << openMVG::Project( T[1], triangulated[1] );
+    projected[2] << openMVG::Project( T[2], triangulated[2] );
+    
+    //computing the projection of inputs
+    const array<Vec2, 3> real_projection;
+    real_projection[0] << bearing_0[0]/bearing_0[2],
+                          bearing_0[1]/bearing_0[2];
+    real_projection[1] << bearing_1[0]/bearing_1[2], 
+                          bearing_1[1]/bearing_1[2];
+    real_projection[2] << bearing_2[0]/bearing_2[2], 
+                          bearing_2[1]/bearing_2[2];
+
+    //computing the euclidian distance and error
+    const array<double, 3> distance;
+    for ( unsigned i =0; i<3 ; i++){
+       distance[i] = inner_product( (projected[i]-real_projection[i])[0], (projected[i]-real_projection[i])[2], (projected[i]-real_projection[i])[0], 0.0 );
+    }
+    //distance[0] = inner_product( (projected[0]-real_projection[0])[0], (projected[0]-real_projection[0])[2], (projected[0]-real_projection[0])[0], 0.0 );
+    //distance[1] = inner_product( (projected[1]-real_projection[1])[0], (projected[1]-real_projection[1])[2], (projected[1]-real_projection[1])[0], 0.0 );
+    //distance[2] = inner_product( (projected[2]-real_projection[2])[0], (projected[2]-real_projection[2])[2], (projected[2]-real_projection[2])[0], 0.0 );
+    const double sum = 0.0;
+    for ( unsigned i = 0; i < 3; i++){
+          sum += distance[i];
+    }
+
+    //Gabriel's comment: Using square Euclidian distance
+    return sum/6;
   }
 
   private:
