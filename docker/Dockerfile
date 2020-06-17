@@ -29,14 +29,15 @@ RUN mkdir /opt/openMVG_Build; \
   cd /opt/openMVG_Build; \
   cmake -DCMAKE_BUILD_TYPE=RELEASE \
     -DCMAKE_INSTALL_PREFIX="/opt/openMVG_Build/install" \
-    -DOpenMVG_BUILD_TESTS=ON \
+    -DOpenMVG_BUILD_TESTS=OFF \
+    -DOpenMVG_BUILD_GUI_SOFTWARES=OFF \
+    -DOpenMVG_USE_OCVSIFT=ON \
     -DOpenMVG_BUILD_EXAMPLES=OFF \
     -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
     -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
     -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
     -DCLP_INCLUDE_DIR_HINTS=/usr/include \
     -DOSI_INCLUDE_DIR_HINTS=/usr/include \
-    ../openMVG/src; \
-    make -j 16;
+    ../openMVG/src;
 
-RUN cd /opt/openMVG_Build && make test && make install;
+RUN cd /opt/openMVG_Build && make && make install;
