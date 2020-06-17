@@ -95,12 +95,12 @@ struct Trifocal3PointPositionTangentialSolver {
     //computing the euclidian distance and error
     const array<double, 3> distance;
     for ( unsigned i =0; i<3 ; i++){
-       distance[i] = inner_product( (projected[i]-real_projection[i])[0], (projected[i]-real_projection[i])[2], (projected[i]-real_projection[i])[0], 0.0 );
+       distance[i] = inner_product( (projected[i]-real_projection[i]), (projected[i]-real_projection[i])+3, (projected[i]-real_projection[i]), 0.0 );
     }
     //distance[0] = inner_product( (projected[0]-real_projection[0])[0], (projected[0]-real_projection[0])[2], (projected[0]-real_projection[0])[0], 0.0 );
     //distance[1] = inner_product( (projected[1]-real_projection[1])[0], (projected[1]-real_projection[1])[2], (projected[1]-real_projection[1])[0], 0.0 );
     //distance[2] = inner_product( (projected[2]-real_projection[2])[0], (projected[2]-real_projection[2])[2], (projected[2]-real_projection[2])[0], 0.0 );
-    const double sum = 0.0;
+    double sum = 0.0;
     for ( unsigned i = 0; i < 3; i++){
           sum += distance[i];
     }
