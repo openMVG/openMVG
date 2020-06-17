@@ -96,10 +96,13 @@ public:
     vl_destructor();
   }
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset, float scale=1.0 ) override
   {
     switch (preset)
     {
+    case CUSTOM_PRESET:
+      _params._peak_threshold = 0.04f*scale;
+    break;
     case LOW_PRESET:
       _params._peak_threshold = 0.08f;
     break;

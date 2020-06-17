@@ -107,10 +107,13 @@ public:
   {}
 
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset, float scale=1.0) override
   {
     switch (preset)
     {
+    case CUSTOM_PRESET:
+      params_.peak_threshold_ = 0.04f*scale;
+    break;
     case LOW_PRESET:
       params_.peak_threshold_ = 0.08f;
     break;

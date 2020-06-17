@@ -52,6 +52,11 @@ Arguments description:
       - NORMAL,
       - HIGH,
       - ULTRA: !!Can be time consuming!!
+      - CUSTOM: (will need to set the extraction_scale parameter)
+
+  - **[-s|--extraction_scale]**
+
+    - <float> Used to customize feature extraction level. 1.0 = NORMAL. Higher value means fewer extracted features.
 
 
 **Use mask to filter keypoints/regions**

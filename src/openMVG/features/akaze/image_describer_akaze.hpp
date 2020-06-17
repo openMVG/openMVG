@@ -51,10 +51,13 @@ public:
 
   static std::unique_ptr<AKAZE_Image_describer> create(const Params& params, bool orientation = true);
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset, float scale=1.0) override
   {
     switch (preset)
     {
+    case CUSTOM_PRESET:
+      params_.options_.fThreshold = features::AKAZE::Params().fThreshold*scale;
+    break;
     case LOW_PRESET:
       params_.options_.fThreshold = features::AKAZE::Params().fThreshold*10.f;
     break;

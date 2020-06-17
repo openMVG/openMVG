@@ -44,6 +44,9 @@ using namespace std;
 features::EDESCRIBER_PRESET stringToEnum(const std::string & sPreset)
 {
   features::EDESCRIBER_PRESET preset;
+  if (sPreset == "CUSTOM")
+    preset = features::CUSTOM_PRESET;
+  else
   if (sPreset == "LOW")
     preset = features::LOW_PRESET;
   else
@@ -72,6 +75,7 @@ int main(int argc, char **argv)
   std::string sImage_Describer_Method = "SIFT";
   bool bForce = false;
   std::string sFeaturePreset = "";
+  float extraction_scale = 1.0;
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
 #endif
@@ -84,6 +88,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', bUpRight, "upright") );
   cmd.add( make_option('f', bForce, "force") );
   cmd.add( make_option('p', sFeaturePreset, "describerPreset") );
+  cmd.add( make_option('s', extraction_scale, "extraction_scale") );
 
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
@@ -99,18 +104,23 @@ int main(int argc, char **argv)
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data\n"
       << "[-m|--describerMethod]\n"
-      << "  (method to use to describe an image):\n"
+      << "   (method to use to describe an image):\n"
       << "   SIFT (default),\n"
       << "   SIFT_ANATOMY,\n"
       << "   AKAZE_FLOAT: AKAZE with floating point descriptors,\n"
       << "   AKAZE_MLDB:  AKAZE with binary descriptors\n"
       << "[-u|--upright] Use Upright feature 0 or 1\n"
       << "[-p|--describerPreset]\n"
-      << "  (used to control the Image_describer configuration):\n"
+      << "   (used to control the Image_describer configuration):\n"
       << "   LOW,\n"
       << "   NORMAL (default),\n"
       << "   HIGH,\n"
       << "   ULTRA: !!Can take long time!!\n"
+      << "   CUSTOM: (must also set the extraction_scale parameter)\n"
+      << "[-s|--extraction_scale]\n"
+      << "   Used to customize feature extraction level. 1.0 = NORMAL.\n"
+      << "   To give context, for SIFT: LOW=2.0, ULTRA=0.1. For AKAZE: LOW=10.0, ULTRA=0.01.\n"
+
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of parallel computations\n"
 #endif
@@ -127,6 +137,7 @@ int main(int argc, char **argv)
             << "--describerMethod " << sImage_Describer_Method << std::endl
             << "--upright " << bUpRight << std::endl
             << "--describerPreset " << (sFeaturePreset.empty() ? "NORMAL" : sFeaturePreset) << std::endl
+            << "--extraction_scale " << extraction_scale << std::endl
             << "--force " << bForce << std::endl
 #ifdef OPENMVG_USE_OPENMP
             << "--numThreads " << iNumThreads << std::endl
@@ -222,7 +233,7 @@ int main(int argc, char **argv)
     else
     {
       if (!sFeaturePreset.empty())
-      if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset)))
+      if (!image_describer->Set_configuration_preset(stringToEnum(sFeaturePreset),extraction_scale))
       {
         std::cerr << "Preset configuration failed." << std::endl;
         return EXIT_FAILURE;

@@ -22,6 +22,7 @@ namespace features {
 
 enum EDESCRIBER_PRESET
 {
+  CUSTOM_PRESET,
   LOW_PRESET,
   NORMAL_PRESET,
   HIGH_PRESET,
@@ -39,10 +40,8 @@ public:
   @param preset The preset configuration
   @return True if configuration succeed.
   */
-  virtual bool Set_configuration_preset
-  (
-    EDESCRIBER_PRESET preset
-  ) = 0;
+  virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset,
+                                        float scale) = 0;
 
   /**
   @brief Detect regions on the image and compute their attributes (description)

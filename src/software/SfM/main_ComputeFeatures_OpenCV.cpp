@@ -65,7 +65,7 @@ public:
 
   AKAZE_OCV_Image_describer():Image_describer(){}
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset, float scale=1.0) override
   {
     return false;
   }
@@ -164,7 +164,7 @@ public:
 
   ~SIFT_OPENCV_Image_describer() {}
 
-  bool Set_configuration_preset(EDESCRIBER_PRESET preset){
+  bool Set_configuration_preset(EDESCRIBER_PRESET preset, float scale=1.0){
     return true;
   }
 
