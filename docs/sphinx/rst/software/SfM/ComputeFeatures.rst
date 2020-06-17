@@ -57,6 +57,9 @@ Arguments description:
   - **[-s|--extraction_scale]**
 
     - <float> Used to customize feature extraction level. 1.0 = NORMAL. Higher value means fewer extracted features.
+      To give context, for SIFT: LOW=2.0, ULTRA=0.1. For AKAZE: LOW=10.0, ULTRA=0.01.
+
+
 
 
 **Use mask to filter keypoints/regions**
