@@ -49,13 +49,13 @@ struct Trifocal3PointPositionTangentialSolver {
     const Mat &bearing_2,
     vector<trifocal_model_t> *trifocal_tensor)
   {
-    //...
-    // TODO
-    
-    // io::point_tangents2params_img(p_, tgt_, tgt_ids[0], tgt_ids[1], K_, params_start_target_);
-    // io::point_tangents2params(pn, tn, id_tgt0, id_tgt1, params/*[static 2*M::nparams]*/);
-
-    // minus::solve_chicago(pn, tn, id_tgt0, id_tgt1);
+    minus<chicago14a>::solve(p_, tgt_, cameras, &nsols_final);
+    // Signature is this:
+    // solve(
+    //    const F p[pp::nviews][pp::npoints][io::ncoords2d], 
+    //    const F tgt[pp::nviews][pp::npoints][io::ncoords2d], 
+    //    F solutions_cams[M::nsols][pp::nviews-1][4][3],  // first camera is always [I | 0]^t
+    //    unsigned *nsols_final);
   }
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
   static double Error(
