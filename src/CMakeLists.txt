@@ -9,6 +9,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 project(openMVG C CXX)
 
+# Run automoc on .hh files in new versions of cmake
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17")
+  cmake_policy(SET CMP0100 NEW)
+endif()
+
 # guard against in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
