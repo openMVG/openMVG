@@ -44,33 +44,51 @@ struct Trifocal3PointPositionTangentialSolver {
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 1 };
 
+  // datum_i[4 /*xy tgtx tgty*/][pp:npoints /* 3 for Chicago */]
   static void Solve(
-    const Mat &bearing_0,
-    const Mat &bearing_1,
-    const Mat &bearing_2,
-    vector<trifocal_model_t> *trifocal_tensor)
-  {
+      const Mat &datum_0,
+      const Mat &datum_1,
+      const Mat &datum_2,
+      vector<trifocal_model_t> *trifocal_tensor) {
+
+    double p[pp::nviews][pp::npoints][io::ncoords2d];
+    double tgt[pp::nviews][pp::npoints][io::ncoords2d]; 
+    
+    // pack into solver's efficient representation
+    for (unsigned ip=0; ip < pp:npoints; ++ip) {
+      p[0][ip][0] = datum_0(0,ip);
+      p[0][ip][1] = datum_0(1,ip);
+      tgt[0][ip][0] = datum_0(2,ip); 
+      tgt[0][ip][1] = datum_0(3,ip); 
+      
+      p[1][ip][0] = datum_1(0,ip);
+      p[1][ip][1] = datum_1(1,ip);
+      tgt[1][ip][0] = datum_1(2,ip); 
+      tgt[1][ip][1] = datum_1(3,ip); 
+      
+      p[2][ip][0] = datum_2(0,ip);
+      p[2][ip][1] = datum_2(1,ip);
+      tgt[2][ip][0] = datum_2(2,ip); 
+      tgt[2][ip][1] = datum_2(3,ip); 
+    }
+    
     unsigned nsols_final = 0;
     unsigned id_sols[M::nsols];
+    double  solutions_cams[M::nsols][pp::nviews-1][4][3];  // first camera is always [I | 0]
     
-    minus<chicago14a>::solve(p_, tgt_, cameras, id_sols, &nsols_final);
+    minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
 
+    // xxx
     for (unsigned s=0; s < nsols_final; ++s)
       trifocal_tensor->push_back(cameras[id_sols[s]]);
-    // Signature is this:
-    // solve(
-    //    const F p[pp::nviews][pp::npoints][io::ncoords2d], 
-    //    const F tgt[pp::nviews][pp::npoints][io::ncoords2d], 
-    //    F solutions_cams[M::nsols][pp::nviews-1][4][3],  // first camera is always [I | 0]^t
-    //    unsigned *nsols_final);
   }
+  
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
   static double Error(
     const trifocal_model_t &T,
     const Vec3 &bearing_0, // x,y,tangential, ..
     const Vec3 &bearing_1,
-    const Vec3 &bearing_2)
-  {
+    const Vec3 &bearing_2) {
     // Return the cost related to this model and those sample data point
     // TODO(gabriel)
     
@@ -184,6 +202,7 @@ class ThreeViewKernel {
   }
   protected:
     const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
+    // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
 };
 
 
@@ -350,7 +369,8 @@ struct TrifocalSampleApp {
   }
 
   void RobustSolve() {
-    using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
+    using TrifocalKernel = 
+      ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
     const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
 
     const double threshold_pix = 2.0;
@@ -387,7 +407,9 @@ struct TrifocalSampleApp {
   // Features
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
-  array<Mat, 3> datum_; // x,y,orientation across 3 views
+  array<Mat, pp:nviews> datum_; // x,y,orientation across 3 views
+  // datum_[view][4 /*xy tgtx tgty*/][npts /* total number of tracks */];
+  // datum_[v][1][p] = y coordinate of point p in view v
   
   // Matches
   matching::PairWiseMatches pairwise_matches_;
