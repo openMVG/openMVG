@@ -31,6 +31,7 @@
 #include "openMVG/multiview/triangulation.hpp"
 
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
+// Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -49,7 +50,13 @@ struct Trifocal3PointPositionTangentialSolver {
     const Mat &bearing_2,
     vector<trifocal_model_t> *trifocal_tensor)
   {
-    minus<chicago14a>::solve(p_, tgt_, cameras, &nsols_final);
+    unsigned nsols_final = 0;
+    unsigned id_sols[M::nsols];
+    
+    minus<chicago14a>::solve(p_, tgt_, cameras, id_sols, &nsols_final);
+
+    for (unsigned s=0; s < nsols_final; ++s)
+      trifocal_tensor->push_back(cameras[id_sols[s]]);
     // Signature is this:
     // solve(
     //    const F p[pp::nviews][pp::npoints][io::ncoords2d], 
