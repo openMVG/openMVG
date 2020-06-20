@@ -110,24 +110,29 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_1,
     const Vec &bearing_2) {
     // Return the cost related to this model and those sample data point
-    // TODO(gabriel)
-    
+    // Ideal algorithm:
     // 1) reconstruct the 3D points and orientations
     // 2) project the 3D points and orientations on all images_
     // 3) compute error 
+    // 
+    // In practice we ignore the directions and only reproject to one third view
     
-    // Gabriel's note: I'm using triangulation.hpp file, for best usage I'll create an Vec3 array
-//    const array<Vec3, 3> triangulated;
+    // 3x3: each column is x,y,1
+    Mat33 bearing 
+      << bearing_0.head(2).homogeneous() 
+      << bearing_1.head(2).homogeneous() 
+      << bearing_2.head(2).homogeneous();
+    
+    // Using triangulation.hpp
     Vec4 triangulated_homg;
-
     unsigned third_view = 0;
     // pick the wider baseline. TODO: measure all pairwise translation distances
     if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm()) {
       // TODO use triangulation from the three views at once
-      TriangulateDLT(tt[0], bearing_0, tt[1], bearing_1, &triangulated_homg);
+      TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
       third_view = 2;
     } else {
-      TriangulateDLT(tt[0], bearing_0, tt[2], bearing_2, &triangulated_homg);
+      TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
       third_view = 1;
     }
     
@@ -135,7 +140,7 @@ struct Trifocal3PointPositionTangentialSolver {
     // For prototyping and speed, for now we will only project to the third view
     // and report only one error
     Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
-    Vec2 measured    = bearing.block(third_view).hnormalized();
+    Vec2 measured    = bearing.col(third_view).hnormalized();
 
     return (reprojected-measured).squaredNorm();
   }
