@@ -120,36 +120,24 @@ struct Trifocal3PointPositionTangentialSolver {
 //    const array<Vec3, 3> triangulated;
     Vec4 triangulated_homg;
 
-    // pick the wider baseline. TODO: measure all distances
-    if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm())
+    unsigned third_view = 0;
+    // pick the wider baseline. TODO: measure all pairwise translation distances
+    if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm()) {
       // TODO use triangulation from the three views at once
       TriangulateDLT(tt[0], bearing_0, tt[1], bearing_1, &triangulated_homg);
-    else
+      third_view = 2;
+    } else {
       TriangulateDLT(tt[0], bearing_0, tt[2], bearing_2, &triangulated_homg);
+      third_view = 1;
+    }
     
     // Computing the projection of triangulated points using projection.hpp
-    const array<Vec2, 3>projected;
-    projected[0] << Project(tt[0], triangulated_homg);
-    projected[1] << Project(tt[1], triangulated_homg);
-    projected[2] << Project(tt[2], triangulated_homg);
-    
-    //computing the projection of inputs
-    const array<Vec2, 3> real_projection;
-    real_projection[0] << bearing_0[0]/bearing_0[2],
-                          bearing_0[1]/bearing_0[2];
-    real_projection[1] << bearing_1[0]/bearing_1[2], 
-                          bearing_1[1]/bearing_1[2];
-    real_projection[2] << bearing_2[0]/bearing_2[2], 
-                          bearing_2[1]/bearing_2[2];
+    // For prototyping and speed, for now we will only project to the third view
+    // and report only one error
+    Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
+    Vec2 measured    = bearing.block(third_view).hnormalized();
 
-    //computing the Euclidean distance and error
-    double sum = 0.0;
-    for (unsigned i =0; i<3 ; i++)
-      sum + = 
-         inner_product( projected[i]-real_projection[i], (projected[i]-real_projection[i])+3, projected[i]-real_projection[i]), 0.0 );
-
-    //Gabriel's comment: Using square Euclidian distance
-    return sum/6;
+    return (reprojected-measured).squaredNorm();
   }
 };
 
