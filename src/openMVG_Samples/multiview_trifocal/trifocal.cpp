@@ -30,6 +30,10 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
+#include <minus/minus.hxx>
+#include <minus/chicago14a-default.h> 
+
+
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
@@ -49,13 +53,13 @@ struct Trifocal3PointPositionTangentialSolver {
       const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
-      vector<trifocal_model_t> *trifocal_tensor) {
-
-    double p[pp::nviews][pp::npoints][io::ncoords2d];
-    double tgt[pp::nviews][pp::npoints][io::ncoords2d]; 
+      vector<trifocal_model_t> *trifocal_tensor) 
+  {
+    double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
+    double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
     
     // pack into solver's efficient representation
-    for (unsigned ip=0; ip < pp:npoints; ++ip) {
+    for (unsigned ip=0; ip < io::pp:npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
       p[0][ip][1] = datum_0(1,ip);
       tgt[0][ip][0] = datum_0(2,ip); 
@@ -74,13 +78,22 @@ struct Trifocal3PointPositionTangentialSolver {
     
     unsigned nsols_final = 0;
     unsigned id_sols[M::nsols];
-    double  solutions_cams[M::nsols][pp::nviews-1][4][3];  // first camera is always [I | 0]
+    double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
     minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
-
-    // xxx
-    for (unsigned s=0; s < nsols_final; ++s)
-      trifocal_tensor->push_back(cameras[id_sols[s]]);
+    
+    vector<trifocal_model_t> &tt = *trifocal_tensor;
+    tt.resize(nsols_final);
+    const Mat34 id({{1 0 0 0}, {0 1 0 0}, {0 0 1 0}});
+    // using trifocal_model_t = array<Mat34, 3>;
+    for (unsigned s=0; s < nsols_final; ++s) {
+      tt[s][0] = id; // view 0 [I | 0]
+      for (unsigned v=1; v < io::pp:nviews; ++v {
+          memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
+          for (unsigned r=0; r < 3; ++r)
+            tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
+      }
+    }
   }
   
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
@@ -89,6 +102,7 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec3 &bearing_0, // x,y,tangential, ..
     const Vec3 &bearing_1,
     const Vec3 &bearing_2) {
+#if 0
     // Return the cost related to this model and those sample data point
     // TODO(gabriel)
     
@@ -132,6 +146,8 @@ struct Trifocal3PointPositionTangentialSolver {
 
     //Gabriel's comment: Using square Euclidian distance
     return sum/6;
+#endif
+    return 0;
   }
 
   private:
@@ -407,7 +423,7 @@ struct TrifocalSampleApp {
   // Features
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
-  array<Mat, pp:nviews> datum_; // x,y,orientation across 3 views
+  array<Mat, io::pp:nviews> datum_; // x,y,orientation across 3 views
   // datum_[view][4 /*xy tgtx tgty*/][npts /* total number of tracks */];
   // datum_[v][1][p] = y coordinate of point p in view v
   
