@@ -30,21 +30,22 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
-#include <minus/minus.hxx>
-#include <minus/chicago14a-default.h> 
+#include "minus/minus.hxx"
+#include "minus/chicago14a-default.hxx"
 
 
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
+using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::robust;
-using namespace std;
+using namespace MiNuS;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 
 struct Trifocal3PointPositionTangentialSolver {
-  using trifocal_model_t = array<Mat34, 3>;
+  using trifocal_model_t = std::array<Mat34, 3>;
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 1 };
 
@@ -53,13 +54,13 @@ struct Trifocal3PointPositionTangentialSolver {
       const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
-      vector<trifocal_model_t> *trifocal_tensor) 
+      std::vector<trifocal_model_t> *trifocal_tensor) 
   {
     double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
     double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
     
     // pack into solver's efficient representation
-    for (unsigned ip=0; ip < io::pp:npoints; ++ip) {
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
       p[0][ip][1] = datum_0(1,ip);
       tgt[0][ip][0] = datum_0(2,ip); 
@@ -80,29 +81,34 @@ struct Trifocal3PointPositionTangentialSolver {
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
-    minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
+    MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
     
-    vector<trifocal_model_t> &tt = *trifocal_tensor;
+    std::vector<trifocal_model_t> &tt = *trifocal_tensor;
     tt.resize(nsols_final);
-    const Mat34 id({{1 0 0 0}, {0 1 0 0}, {0 0 1 0}});
     // using trifocal_model_t = array<Mat34, 3>;
     for (unsigned s=0; s < nsols_final; ++s) {
-      tt[s][0] = id; // view 0 [I | 0]
-      for (unsigned v=1; v < io::pp:nviews; ++v {
+      tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
+      for (unsigned v=1; v < io::pp::nviews; ++v) {
           memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
           for (unsigned r=0; r < 3; ++r)
             tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
       }
     }
+
+    // TODO: filter the solutions by:
+    // - positive depth and 
+    // - using tangent at 3rd point
+    //
+    //  if we know the rays are perfectly coplanar, we can just use cross
+    // product within the plane instead of SVD
   }
   
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
   static double Error(
-    const trifocal_model_t &T,
-    const Vec3 &bearing_0, // x,y,tangential, ..
-    const Vec3 &bearing_1,
-    const Vec3 &bearing_2) {
-#if 0
+    const trifocal_model_t &tt,
+    const Vec &bearing_0, // x,y,tangentialx,tangentialy
+    const Vec &bearing_1,
+    const Vec &bearing_2) {
     // Return the cost related to this model and those sample data point
     // TODO(gabriel)
     
@@ -111,16 +117,21 @@ struct Trifocal3PointPositionTangentialSolver {
     // 3) compute error 
     
     // Gabriel's note: I'm using triangulation.hpp file, for best usage I'll create an Vec3 array
-    const array<Vec3, 3>triangulated;
-    openMVG::TriangulateDLT( T[0], bearing_0, T[1], bearing_1, triangulated[0] );
-    openMVG::TriangulateDLT( T[1], bearing_1, T[2], bearing_2, triangulated[1] );
-    openMVG::TriangulateDLT( T[2], bearing_2, T[0], bearing_0, triangulated[2] );
+//    const array<Vec3, 3> triangulated;
+    Vec4 triangulated_homg;
+
+    // pick the wider baseline. TODO: measure all distances
+    if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm())
+      // TODO use triangulation from the three views at once
+      TriangulateDLT(tt[0], bearing_0, tt[1], bearing_1, &triangulated_homg);
+    else
+      TriangulateDLT(tt[0], bearing_0, tt[2], bearing_2, &triangulated_homg);
     
     // Computing the projection of triangulated points using projection.hpp
     const array<Vec2, 3>projected;
-    projected[0] << openMVG::Project( T[0], triangulated[0] );
-    projected[1] << openMVG::Project( T[1], triangulated[1] );
-    projected[2] << openMVG::Project( T[2], triangulated[2] );
+    projected[0] << Project(tt[0], triangulated_homg);
+    projected[1] << Project(tt[1], triangulated_homg);
+    projected[2] << Project(tt[2], triangulated_homg);
     
     //computing the projection of inputs
     const array<Vec2, 3> real_projection;
@@ -131,26 +142,15 @@ struct Trifocal3PointPositionTangentialSolver {
     real_projection[2] << bearing_2[0]/bearing_2[2], 
                           bearing_2[1]/bearing_2[2];
 
-    //computing the euclidian distance and error
-    const array<double, 3> distance;
-    for ( unsigned i =0; i<3 ; i++){
-       distance[i] = inner_product( (projected[i]-real_projection[i]), (projected[i]-real_projection[i])+3, (projected[i]-real_projection[i]), 0.0 );
-    }
-    //distance[0] = inner_product( (projected[0]-real_projection[0])[0], (projected[0]-real_projection[0])[2], (projected[0]-real_projection[0])[0], 0.0 );
-    //distance[1] = inner_product( (projected[1]-real_projection[1])[0], (projected[1]-real_projection[1])[2], (projected[1]-real_projection[1])[0], 0.0 );
-    //distance[2] = inner_product( (projected[2]-real_projection[2])[0], (projected[2]-real_projection[2])[2], (projected[2]-real_projection[2])[0], 0.0 );
+    //computing the Euclidean distance and error
     double sum = 0.0;
-    for ( unsigned i = 0; i < 3; i++){
-          sum += distance[i];
-    }
+    for (unsigned i =0; i<3 ; i++)
+      sum + = 
+         inner_product( projected[i]-real_projection[i], (projected[i]-real_projection[i])+3, projected[i]-real_projection[i]), 0.0 );
 
     //Gabriel's comment: Using square Euclidian distance
     return sum/6;
-#endif
-    return 0;
   }
-
-  private:
 };
 
 static void
@@ -423,7 +423,7 @@ struct TrifocalSampleApp {
   // Features
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
-  array<Mat, io::pp:nviews> datum_; // x,y,orientation across 3 views
+  array<Mat, io::pp::nviews> datum_; // x,y,orientation across 3 views
   // datum_[view][4 /*xy tgtx tgty*/][npts /* total number of tracks */];
   // datum_[v][1][p] = y coordinate of point p in view v
   
