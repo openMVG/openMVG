@@ -118,16 +118,16 @@ struct Trifocal3PointPositionTangentialSolver {
     // In practice we ignore the directions and only reproject to one third view
     
     // 3x3: each column is x,y,1
-    Mat33 bearing 
-      << bearing_0.head(2).homogeneous() 
-      << bearing_1.head(2).homogeneous() 
-      << bearing_2.head(2).homogeneous();
-    
+    Mat3 bearing;
+    bearing
+      << bearing_0.head(2).homogeneous(),
+      bearing_1.head(2).homogeneous(),
+      bearing_2.head(2).homogeneous();
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
     // pick the wider baseline. TODO: measure all pairwise translation distances
-    if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm()) {
+    if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
       // TODO use triangulation from the three views at once
       TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
       third_view = 2;
