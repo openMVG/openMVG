@@ -126,7 +126,6 @@ struct Trifocal3PointPositionTangentialSolver {
     bearing << bearing_0.head(2).homogeneous(),
                bearing_1.head(2).homogeneous(), 
                bearing_2.head(2).homogeneous();
-    
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
@@ -176,6 +175,7 @@ invert_intrinsics_tgt(
   t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
 }
 
+int iteration_global_debug = 0;
 template<typename SolverArg,
          typename ErrorArg,
          typename ModelArg = Trifocal3PointPositionTangentialSolver::trifocal_model_t>
@@ -199,6 +199,7 @@ class ThreeViewKernel {
       x2 = ExtractColumns(x2_, samples),
       x3 = ExtractColumns(x3_, samples);
     Solver::Solve(x1, x2, x3, models);
+    std::cout << "DEBUG: " << iteration_global_debug++ <<std::endl;
   }
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
