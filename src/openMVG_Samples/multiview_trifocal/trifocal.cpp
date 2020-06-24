@@ -58,6 +58,8 @@ struct Trifocal3PointPositionTangentialSolver {
   {
     double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
     double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
+
+    std::cerr << "TRIFOCAL LOG: Called Solve()\n";
     
     // pack into solver's efficient representation
     for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
@@ -101,6 +103,7 @@ struct Trifocal3PointPositionTangentialSolver {
     //
     //  if we know the rays are perfectly coplanar, we can just use cross
     // product within the plane instead of SVD
+    std::cerr << "TRIFOCAL LOG: Finished Solve()\n";
   }
   
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
@@ -109,6 +112,7 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
     const Vec &bearing_2) {
+    std::cerr << "TRIFOCAL LOG: Called Error()\n";
     // Return the cost related to this model and those sample data point
     // Ideal algorithm:
     // 1) reconstruct the 3D points and orientations
@@ -118,16 +122,16 @@ struct Trifocal3PointPositionTangentialSolver {
     // In practice we ignore the directions and only reproject to one third view
     
     // 3x3: each column is x,y,1
-    Mat33 bearing 
-      << bearing_0.head(2).homogeneous() 
-      << bearing_1.head(2).homogeneous() 
-      << bearing_2.head(2).homogeneous();
+    Mat3 bearing;
+    bearing << bearing_0.head(2).homogeneous(),
+               bearing_1.head(2).homogeneous(), 
+               bearing_2.head(2).homogeneous();
     
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
     // pick the wider baseline. TODO: measure all pairwise translation distances
-    if (tt[1].column(3).squaredNorm() > tt[2].column(3).squaredNorm()) {
+    if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
       // TODO use triangulation from the three views at once
       TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
       third_view = 2;
@@ -141,6 +145,8 @@ struct Trifocal3PointPositionTangentialSolver {
     // and report only one error
     Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
     Vec2 measured    = bearing.col(third_view).hnormalized();
+    
+    std::cerr << "TRIFOCAL LOG: Finished Error()\n";
 
     return (reprojected-measured).squaredNorm();
   }
@@ -382,8 +388,9 @@ struct TrifocalSampleApp {
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
     const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
 
-    const double threshold_pix = 2.0;
-    const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_);
+    const double threshold_pix = 25; // 5*5 
+    const unsigned max_iteration = 3; // testing
+    const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
   }
 
   void DisplayInliersCamerasAndPoints() {
