@@ -31,8 +31,7 @@
 #include "openMVG/multiview/triangulation.hpp"
 
 #include "minus/minus.hxx"
-#include "minus/chicago14a-default.hxx"
-
+#include "minus/chicago-default.h"
 
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
@@ -283,6 +282,7 @@ struct TrifocalSampleApp {
       track_builder.Build(pairwise_matches_);
       track_builder.Filter(3);
       track_builder.ExportToSTL(tracks_);
+      // TODO(gabriel): keep only 3 true tracks
   }
 
   void Stats() {
@@ -448,7 +448,7 @@ int main(int argc, char **argv) {
   T.Stats();
   T.ExtractXYOrientation();
   T.Display();
-  T.RobustSolve();
+  // T.RobustSolve();
   T.DisplayInliersCamerasAndPoints();
 
   return EXIT_SUCCESS;
