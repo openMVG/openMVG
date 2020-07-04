@@ -30,6 +30,8 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/progress/progress_display.hpp"
 
+#include <ceres/types.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -100,11 +102,10 @@ int main(int argc, char **argv)
     << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
     << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
-
     << "\n[Optional]\n"
     << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene (OFF by default)\n"
     << "[-r|--residual_threshold] maximal pixels reprojection error that will be considered for triangulations (4.0 by default)\n"
-        << "[-c|--cache_size]\n"
+    << "[-c|--cache_size]\n"
     << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
     << "  If not used, all regions will be load in memory.\n"
 
@@ -353,8 +354,24 @@ int main(int argc, char **argv)
         << "\t #3DPoints: " << pointcount_cleaning << "\n";
     }
 
+    Bundle_Adjustment_Ceres::BA_Ceres_options options;
+    if ( sfm_data.GetPoses().size() > 100 &&
+        (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+        ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+        ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+      )
+    // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+    {
+      options.preconditioner_type_ = ceres::JACOBI;
+      options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+    }
+    else
+    {
+      options.linear_solver_type_ = ceres::DENSE_SCHUR;
+    }
+
     std::cout << "Bundle adjustment..." << std::endl;
-    Bundle_Adjustment_Ceres bundle_adjustment_obj;
+    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     bundle_adjustment_obj.Adjust
       (
         sfm_data,
