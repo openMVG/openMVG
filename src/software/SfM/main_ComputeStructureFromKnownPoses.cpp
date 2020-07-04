@@ -256,7 +256,7 @@ int main(int argc, char **argv)
     // Compute 3D position of the landmark of the structure by robust triangulation of the observations
     {
       openMVG::system::Timer timer;
-      const double max_reprojection_error = 4.0; // pixels reprojection error
+      const double max_reprojection_error = dMax_reprojection_error; // pixels reprojection error
       bool console_verbose = true;
       SfM_Data_Structure_Computation_Robust structure_estimator(
         max_reprojection_error,
