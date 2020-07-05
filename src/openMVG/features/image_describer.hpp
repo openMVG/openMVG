@@ -41,7 +41,7 @@ public:
   @return True if configuration succeed.
   */
   virtual bool Set_configuration_preset(EDESCRIBER_PRESET preset,
-                                        float scale) = 0;
+                                        float scale=1.0) = 0;
 
   /**
   @brief Detect regions on the image and compute their attributes (description)
