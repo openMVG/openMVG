@@ -51,10 +51,18 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     int dimension
   ) override
   {
+    HNSWmetric.reset(nullptr);
+    HNSWmatcher.reset(nullptr);
+    
     if (nbRows < 1)
-    {
-      HNSWmetric.reset(nullptr);
-      HNSWmatcher.reset(nullptr);  
+      return false;
+      
+    // Returns early if DistanceType is not supported.
+    // This avoids the case where HNSWmetric is null, which causes an error when 
+    // HNSWmatcher initializes.
+    if (
+        typeid(DistanceType) != typeid(int) &&
+        typeid(DistanceType) != typeid(float)) {
       return false;
     }
 
@@ -64,7 +72,7 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     if(typeid(DistanceType)== typeid(int)) {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
     } else
-    if (typeid(DistanceType) == typeid(float))  {
+    if (typeid(DistanceType) == typeid(float)) {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
     } else {
       std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
