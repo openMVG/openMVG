@@ -37,7 +37,6 @@ template <typename Scalar = float, typename Metric = L2<Scalar>, HNSWMETRIC Metr
 class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
 {
 public:
-
   using DistanceType = typename Metric::ResultType;
 
   HNSWMatcher() = default;
@@ -137,7 +136,7 @@ public:
     DistanceType * distance
   ) override
   {
-    if (HNSW_matcher_.get() == nullptr)
+    if (!HNSW_matcher_)
       return false;
     auto result = HNSW_matcher_->searchKnn(query, 1).top();
     *indice = result.second;
@@ -164,10 +163,8 @@ public:
     size_t NN
   ) override
   {
-    if (HNSW_matcher_.get() == nullptr)
-    {
+    if (!HNSW_matcher_)
       return false;
-    }
     pvec_indices->reserve(nbQuery * NN);
     pvec_distances->reserve(nbQuery * NN);
     #ifdef OPENMVG_USE_OPENMP
@@ -197,8 +194,6 @@ private:
   std::unique_ptr<SpaceInterface<DistanceType>> HNSW_metric_;
   std::unique_ptr<HierarchicalNSW<DistanceType>> HNSW_matcher_;
 };
-
-
 
 }  // namespace matching
 }  // namespace openMVG

@@ -136,7 +136,7 @@ int main(int argc, char **argv)
       << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
       << "    BRUTEFORCEHAMMING: BruteForce Hamming matching,\n"
-      << "    HNSWHAMMING: Hamming pproximate Matching with Hierarchical Navigable Small World graphs\n"
+      << "    HNSWHAMMING: Hamming Approximate Matching with Hierarchical Navigable Small World graphs\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"

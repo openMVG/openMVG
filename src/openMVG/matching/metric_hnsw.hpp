@@ -37,7 +37,7 @@ class HammingSpace : public hnswlib::SpaceInterface<unsigned int>
   size_t dim_;
 
 public:
-  HammingSpace(size_t dim)
+  explicit HammingSpace(size_t dim)
   {
     fstdistfunc_ = HammingKernel<U>;
     dim_ = dim;
@@ -69,7 +69,6 @@ static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2
   int result = 0;
   uint8_t *a = (uint8_t *)(pVect1); // discard const
   uint8_t *b = (uint8_t *)(pVect2); // discard const
-
 
   // Process 4 items for each loop for efficiency.
   for (size_t i = 0; i < size; i++) {
@@ -109,7 +108,7 @@ class L1SpaceInteger : public hnswlib::SpaceInterface<int>
   size_t dim_;
 
 public:
-  L1SpaceInteger(size_t dim)
+  explicit L1SpaceInteger(size_t dim)
   {
     fstdistfunc_ = L1Kernel;
     #ifdef __SSE2__
@@ -161,7 +160,7 @@ class L2SpaceInteger : public hnswlib::SpaceInterface<int>
   size_t dim_;
 
 public:
-  L2SpaceInteger(size_t dim)
+  explicit L2SpaceInteger(size_t dim)
   {
     fstdistfunc_ = hnswlib::L2SqrI;
     #ifdef __AVX2__

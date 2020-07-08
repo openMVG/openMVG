@@ -168,6 +168,7 @@ TEST(Metric, L1DIM128) {
     const VecUC128 b = VecUC128::Random();
     const unsigned int GTL1 = (a.cast<int>()-b.cast<int>()).lpNorm<1>();
     const L1<uint8_t> metricL1{};
+    EXPECT_NEAR(GTL1, metricL1(a.data(), b.data(), 128), 1e-4);
   #ifdef __AVX2__
     openMVG::system::CpuInstructionSet cpu_instruction_set;
     EXPECT_TRUE(cpu_instruction_set.supportAVX2());
