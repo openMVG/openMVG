@@ -21,7 +21,7 @@ namespace matching {
 namespace custom_hnsw{
 
 template <typename U>
-static unsigned int HammingKernel(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
+static unsigned int HammingKernel(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   constexpr openMVG::matching::Hamming<U> hamming{};
   const U *a = reinterpret_cast<const U *>(pVect1);
@@ -84,7 +84,7 @@ static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2
   return result;
 }
 #ifdef __SSE2__
-static int L1Kernel_SSE2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
+static int L1Kernel_SSE2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
@@ -93,7 +93,7 @@ static int L1Kernel_SSE2(const void *__restrict pVect1, const void *__restrict p
 #endif
 
 #ifdef __AVX2__
-static int L1Kernel_AVX2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
+static int L1Kernel_AVX2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
@@ -145,7 +145,7 @@ public:
 };
 
 #ifdef __AVX2__
-static int L2Kernel_AVX2(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
+static int L2Kernel_AVX2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
