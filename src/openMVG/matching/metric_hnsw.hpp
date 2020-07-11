@@ -62,38 +62,23 @@ public:
   }
 };
 
-static int L1Kernel(const void *__restrict pVect1, const void *__restrict pVect2, const void *__restrict qty_ptr) 
+static int L1Kernel(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
-  size_t size = *(reinterpret_cast<const size_t*>(qty_ptr));
-  size = size >> 2;
-  int result = 0;
-  uint8_t *a = (uint8_t *)(pVect1); // discard const
-  uint8_t *b = (uint8_t *)(pVect2); // discard const
-
-  // Process 4 items for each loop for efficiency.
-  for (size_t i = 0; i < size; i++) {
-    result += std::abs(*a - *b);
-    a++;b++;
-    result += std::abs(*a - *b);
-    a++;b++;
-    result += std::abs(*a - *b);
-    a++;b++;
-    result += std::abs(*a - *b);
-    a++;b++;
-  }
-  return result;
+  constexpr L1<uint8_t> metricL1{};
+  const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
+  const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
+  return metricL1(a,b,*(reinterpret_cast<const size_t*>(qty_ptr)));
 }
 #ifdef __SSE2__
-static int L1Kernel_SSE2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
+static int L1Kernel_SSE2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
   return L1_SSE2(a, b, 128);
 }
 #endif
-
 #ifdef __AVX2__
-static int L1Kernel_AVX2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
+static int L1Kernel_AVX2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
@@ -113,12 +98,12 @@ public:
     fstdistfunc_ = L1Kernel;
     #ifdef __SSE2__
     if(dim == 128) {
-      fstdistfunc_ = L1Kernel_SSE2;
+      fstdistfunc_ = L1Kernel_SSE2_128;
     }
     #endif
     #ifdef __AVX2__
     if(dim == 128) {
-      fstdistfunc_ = L1Kernel_AVX2;
+      fstdistfunc_ = L1Kernel_AVX2_128;
     }
     #endif
     dim_ = dim;
@@ -144,7 +129,7 @@ public:
 };
 
 #ifdef __AVX2__
-static int L2Kernel_AVX2(const void * pVect1, const void * pVect2, const void * qty_ptr) 
+static int L2Kernel_AVX2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
@@ -164,7 +149,7 @@ public:
     fstdistfunc_ = hnswlib::L2SqrI;
     #ifdef __AVX2__
     if(dim == 128) {
-      fstdistfunc_ = L2Kernel_AVX2;
+      fstdistfunc_ = L2Kernel_AVX2_128;
     }
     #endif
     dim_ = dim;

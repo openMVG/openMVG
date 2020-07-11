@@ -7,12 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /*
-*
-* Define fast AVX2 squared euclidean distance computation for SIFT array
+* Define fast AVX2 and SSE distance function mostly taylored for SIFT arrays
 */
 
-#ifndef OPENMVG_MATCHING_METRIC_AVX2_HPP
-#define OPENMVG_MATCHING_METRIC_AVX2_HPP
+#ifndef OPENMVG_MATCHING_METRIC_SIMD_HPP
+#define OPENMVG_MATCHING_METRIC_SIMD_HPP
 
 #include <array>
 #include <numeric>
@@ -51,7 +50,7 @@ inline int L1_SSE2
   {
     acc = _mm_add_epi16(acc, _mm_sad_epu8(ad[j], bd[j]));
   }
-  return (_mm_extract_epi16(acc, 0) + _mm_extract_epi16(acc, 4));
+  return _mm_extract_epi16(acc, 0) + _mm_extract_epi16(acc, 4);
 }
 #endif
 
@@ -104,7 +103,6 @@ inline int L1_AVX2(
   for(int i = 0; i < 4; ++i) {
     acc = _mm256_add_epi16(acc, _mm256_sad_epu8(ad[i], bd[i]));
   }
-
   return _mm256_extract_epi16(acc, 0) + _mm256_extract_epi16(acc, 4) + _mm256_extract_epi16(acc, 8) + _mm256_extract_epi16(acc, 12);
 }
 #endif
@@ -135,4 +133,4 @@ inline float L2_AVX
 }  // namespace matching
 }  // namespace openMVG
 
-#endif // OPENMVG_MATCHING_METRIC_AVX2_HPP
+#endif // OPENMVG_MATCHING_METRIC_SIMD_HPP

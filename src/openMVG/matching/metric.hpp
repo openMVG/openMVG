@@ -9,7 +9,7 @@
 #ifndef OPENMVG_MATCHING_METRIC_HPP
 #define OPENMVG_MATCHING_METRIC_HPP
 
-#include "openMVG/matching/metric_avx2.hpp"
+#include "openMVG/matching/metric_simd.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
 #include "openMVG/numeric/accumulator_trait.hpp"
 #include <cstdint>
