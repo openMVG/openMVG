@@ -112,10 +112,9 @@ public:
   {
     fstdistfunc_ = L1Kernel;
     #ifdef __SSE2__
-    //FIXME (RJ): Kernel disabled since there are some troubles on my Linux computer
-    /*if(dim == 128) {
+    if(dim == 128) {
       fstdistfunc_ = L1Kernel_SSE2;
-    }*/
+    }
     #endif
     #ifdef __AVX2__
     if(dim == 128) {
