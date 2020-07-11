@@ -172,10 +172,6 @@ TEST(Metric, L1DIM128) {
   #if defined(__SSE2__) || defined(__AVX2__) 
     openMVG::system::CpuInstructionSet cpu_instruction_set;
   #endif
-  #ifdef __AVX2__
-    EXPECT_TRUE(cpu_instruction_set.supportAVX2());
-    EXPECT_EQ(GTL1, L1_AVX2(a.data(), b.data(), 128));
-  #endif
   #ifdef __SSE2__
     EXPECT_TRUE(cpu_instruction_set.supportSSE2());
     EXPECT_EQ(GTL1, L1_SSE2(a.data(), b.data(), 128));

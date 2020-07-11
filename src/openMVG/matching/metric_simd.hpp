@@ -90,21 +90,6 @@ inline int L2_AVX2
   __m128i r = _mm_hadd_epi32(_mm_add_epi32(h, l), _mm_setzero_si128());
   return _mm_extract_epi32(r, 0) + _mm_extract_epi32(r, 1);
 }
-
-inline int L1_AVX2(
-  const uint8_t * a,
-  const uint8_t * b,
-  size_t size
-) {
-  __m256i acc(_mm256_setzero_si256());
-  const ALIGNED32 __m256i* ad = reinterpret_cast<const ALIGNED32 __m256i*>(a);
-  const ALIGNED32 __m256i* bd = reinterpret_cast<const ALIGNED32 __m256i*>(b);
-  
-  for(int i = 0; i < 4; ++i) {
-    acc = _mm256_add_epi16(acc, _mm256_sad_epu8(ad[i], bd[i]));
-  }
-  return _mm256_extract_epi16(acc, 0) + _mm256_extract_epi16(acc, 4) + _mm256_extract_epi16(acc, 8) + _mm256_extract_epi16(acc, 12);
-}
 #endif
 
 #ifdef __AVX__

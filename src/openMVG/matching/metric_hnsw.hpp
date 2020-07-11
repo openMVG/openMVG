@@ -77,14 +77,6 @@ static int L1Kernel_SSE2_128(const void * pVect1, const void * pVect2, const voi
   return L1_SSE2(a, b, 128);
 }
 #endif
-#ifdef __AVX2__
-static int L1Kernel_AVX2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
-{
-  const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
-  const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
-  return L1_AVX2(a, b, 128);
-}
-#endif
 
 class L1SpaceInteger : public hnswlib::SpaceInterface<int>
 {
@@ -99,11 +91,6 @@ public:
     #ifdef __SSE2__
     if(dim == 128) {
       fstdistfunc_ = L1Kernel_SSE2_128;
-    }
-    #endif
-    #ifdef __AVX2__
-    if(dim == 128) {
-      fstdistfunc_ = L1Kernel_AVX2_128;
     }
     #endif
     dim_ = dim;
