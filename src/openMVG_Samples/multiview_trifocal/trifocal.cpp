@@ -32,6 +32,7 @@
 
 #include "minus/minus.hxx"
 #include "minus/chicago-default.h"
+#include "minus/chicago14a-default-data.hxx"
 
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
@@ -82,10 +83,14 @@ struct Trifocal3PointPositionTangentialSolver {
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
+    std::cerr << "TRIFOCAL LOG: Antes de ::solve()\n" << std::endl;
     MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
+    std::cerr << "Number of sols " << nsols_final << std::endl;
     
     std::vector<trifocal_model_t> &tt = *trifocal_tensor;
+    std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
     tt.resize(nsols_final);
+    std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
     // using trifocal_model_t = array<Mat34, 3>;
     for (unsigned s=0; s < nsols_final; ++s) {
       tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
@@ -323,9 +328,9 @@ struct TrifocalSampleApp {
           cos(feature_i.orientation()), sin(feature_i.orientation());
         // datum_[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
         datum_[1].col(idx) << feature_j.x(), feature_j.y(), 
-          cos(feature_i.orientation()), sin(feature_i.orientation());
+          cos(feature_j.orientation()), sin(feature_j.orientation());
         datum_[2].col(idx) << feature_k.x(), feature_k.y(), 
-          cos(feature_i.orientation()), sin(feature_i.orientation());
+          cos(feature_k.orientation()), sin(feature_k.orientation());
         for (unsigned v=0; v < 3; ++v) {
           invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data());
           invert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
@@ -390,7 +395,7 @@ struct TrifocalSampleApp {
     const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
 
     const double threshold_pix = 25; // 5*5 
-    const unsigned max_iteration = 3; // testing
+    const unsigned max_iteration = 1; // testing
     const auto model = MaxConsensus(trifocal_kernel, ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
   }
 
@@ -448,7 +453,7 @@ int main(int argc, char **argv) {
   T.Stats();
   T.ExtractXYOrientation();
   T.Display();
-  // T.RobustSolve();
+  //T.RobustSolve();
   T.DisplayInliersCamerasAndPoints();
 
   return EXIT_SUCCESS;
