@@ -83,7 +83,7 @@ struct Trifocal3PointPositionTangentialSolver {
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
-    std::cerr << "TRIFOCAL LOG: Antes de ::solve()\n" << std::endl;
+    std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
     MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
     std::cerr << "Number of sols " << nsols_final << std::endl;
     
@@ -352,8 +352,21 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
 
+    constexpr unsigned n_ids = 5;
+    unsigned desired_ids[n_ids] = {13, 23, 33, 43, 53}; // 41 53 33(razoavel) TODO: achar melhor que o 33
+    unsigned track_id=0;
     for (const auto &track_it: tracks_)
     {
+      bool found=false;
+      for (unsigned i=0; i < n_ids; ++i)
+        if (track_id == desired_ids[i])
+          found = true;
+          
+      if (!found) {
+        track_id++;
+        continue;
+      }
+      
       auto iter = track_it.second.cbegin();
       const uint32_t
         i = iter->second,
@@ -373,6 +386,10 @@ struct TrifocalSampleApp {
       svg_stream.drawCircle(
         feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
         svg::svgStyle().stroke("yellow", 1));
+
+      svg_stream.drawText(
+        feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_id));
+        
       svg_stream.drawLine(
         feature_i.x(), feature_i.y(),
         feature_j.x(), feature_j.y() + images_[0].Height(),
@@ -381,6 +398,7 @@ struct TrifocalSampleApp {
         feature_j.x(), feature_j.y() + images_[0].Height(),
         feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(),
         svg::svgStyle().stroke("blue", 1));
+      track_id++;
     }
     ofstream svg_file( "trifocal_track.svg" );
     if (svg_file.is_open())
@@ -453,7 +471,7 @@ int main(int argc, char **argv) {
   T.Stats();
   T.ExtractXYOrientation();
   T.Display();
-  //T.RobustSolve();
+//  T.RobustSolve();
   T.DisplayInliersCamerasAndPoints();
 
   return EXIT_SUCCESS;
