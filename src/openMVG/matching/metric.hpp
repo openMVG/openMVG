@@ -142,6 +142,14 @@ struct L1
   template <typename Iterator1, typename Iterator2>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
+
+    #ifdef __SSE2__
+    if (size == 128)
+    {
+      return L1_SSE2(a, b, size);
+    }
+    #endif
+
     ResultType result = ResultType();
     Iterator1 last = a + size;
     Iterator1 lastgroup = last - 3;

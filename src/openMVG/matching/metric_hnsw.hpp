@@ -37,12 +37,8 @@ class HammingSpace : public hnswlib::SpaceInterface<unsigned int>
   size_t dim_;
 
 public:
-  explicit HammingSpace(size_t dim)
-  {
-    fstdistfunc_ = HammingKernel<U>;
-    dim_ = dim;
-    data_size_ = dim_ * sizeof(U);
-  }
+  explicit HammingSpace(size_t dim):
+    fstdistfunc_(HammingKernel<U>), dim_(dim), data_size_(dim * sizeof(U)) {}
 
   ~HammingSpace() {}
 
@@ -85,16 +81,14 @@ class L1SpaceInteger : public hnswlib::SpaceInterface<int>
   size_t dim_;
 
 public:
-  explicit L1SpaceInteger(size_t dim)
+  explicit L1SpaceInteger(size_t dim): 
+    fstdistfunc_(L1Kernel), dim_(dim), data_size_(dim_ * sizeof(uint8_t))
   {
-    fstdistfunc_ = L1Kernel;
     #ifdef __SSE2__
     if(dim == 128) {
       fstdistfunc_ = L1Kernel_SSE2_128;
     }
     #endif
-    dim_ = dim;
-    data_size_ = dim_ * sizeof(uint8_t);
   }
 
   ~L1SpaceInteger() {}
@@ -131,16 +125,14 @@ class L2SpaceInteger : public hnswlib::SpaceInterface<int>
   size_t dim_;
 
 public:
-  explicit L2SpaceInteger(size_t dim)
+  explicit L2SpaceInteger(size_t dim):
+    fstdistfunc_(hnswlib::L2SqrI), dim_(dim), data_size_(dim_ * sizeof(uint8_t))
   {
-    fstdistfunc_ = hnswlib::L2SqrI;
     #ifdef __AVX2__
     if(dim == 128) {
       fstdistfunc_ = L2Kernel_AVX2_128;
     }
     #endif
-    dim_ = dim;
-    data_size_ = dim_ * sizeof(uint8_t);
   }
 
   ~L2SpaceInteger() {}
