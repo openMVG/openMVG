@@ -74,7 +74,7 @@ public:
       if (typeid(DistanceType) == typeid(int)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L1SpaceInteger(dimension)));
       } else {
-        std::cerr << "HNSW matcher: this type of distance is not handled yet for L1 metric" << std::endl;
+        std::cerr << "HNSWL1 matcher: this type of feature is not handled" << std::endl;
         return false;
       }
       break;
@@ -85,7 +85,7 @@ public:
       if (typeid(DistanceType) == typeid(float)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
       } else {
-        std::cerr << "HNSW matcher: this type of distance is not handled yet for L2 metric" << std::endl;
+        std::cerr << "HNSWL2 matcher: this type of feature is not handled" << std::endl;
         return false;
       }
       break;
@@ -93,7 +93,7 @@ public:
       if (typeid(DistanceType) == typeid(unsigned int)) {
         HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
       } else {
-        std::cerr << "HNSW matcher: this type of distance is not handled yet for Hamming distance" << std::endl;
+        std::cerr << "HNSWHAMMING matcher: this type of feature is not handled" << std::endl;
         return false;
       }
       break;
