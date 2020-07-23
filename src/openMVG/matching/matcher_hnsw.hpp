@@ -104,7 +104,6 @@ public:
     }
 
     HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
-    HNSW_matcher_->setEf(16);
     
     // add a first point...
     HNSW_matcher_->addPoint(static_cast<const void *>(dataset), static_cast<size_t>(0));
@@ -138,6 +137,7 @@ public:
   {
     if (!HNSW_matcher_)
       return false;
+    HNSW_matcher_->setEf(16); // it could probabely by lowered in this case
     const auto result = HNSW_matcher_->searchKnn(query, 1).top();
     *indice = result.second;
     *distance =  result.first;
@@ -165,6 +165,17 @@ public:
   {
     if (!HNSW_matcher_)
       return false;
+    // EfSearch parameter could not be < NN.
+    // -
+    // For vectors with dimentionality of approx. 64-128 and for 2NN, 
+    // EfSearch = 16 produces good results in conjonction with other parameters fixed in this file (EfConstruct = 16, M = 100).
+    // But nothing has been evaluated on our side for lower / higher dimentionality and for a higher number of NNs.
+    // So for now and for NN > 2, EfSearch is fixed without a good knowledge, and in fact it depends on the two other parameters.
+    if (NN <= 2) {
+      HNSW_matcher_->setEf(16);
+    } else {
+      HNSW_matcher_->setEf(std::max(NN*2, static_cast<size_t>(nbQuery)));
+    }
     pvec_indices->resize(nbQuery * NN);
     pvec_distances->resize(nbQuery * NN);
     #ifdef OPENMVG_USE_OPENMP
