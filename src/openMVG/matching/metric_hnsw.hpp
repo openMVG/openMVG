@@ -24,9 +24,9 @@ template <typename U>
 static unsigned int HammingKernel(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   constexpr openMVG::matching::Hamming<U> hamming{};
-  const U *a = reinterpret_cast<const U *>(pVect1);
-  const U *b = reinterpret_cast<const U *>(pVect2);
-  return hamming(a, b,*(reinterpret_cast<const size_t*>(qty_ptr)));
+  const U *a = static_cast<const U *>(pVect1);
+  const U *b = static_cast<const U *>(pVect2);
+  return hamming(a, b,*(static_cast<const size_t*>(qty_ptr)));
 }
 
 template <typename U>
@@ -61,9 +61,9 @@ public:
 static int L1Kernel(const void * pVect1, const void * pVect2, const void * qty_ptr) 
 {
   constexpr L1<uint8_t> metricL1{};
-  const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
-  const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
-  return metricL1(a, b,*(reinterpret_cast<const size_t*>(qty_ptr)));
+  const uint8_t *a = static_cast<const uint8_t *>(pVect1); // we are sure this was an uint8
+  const uint8_t *b = static_cast<const uint8_t *>(pVect2);
+  return metricL1(a, b,*(static_cast<const size_t*>(qty_ptr)));
 }
 
 class L1SpaceInteger : public hnswlib::SpaceInterface<int>

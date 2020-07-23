@@ -107,13 +107,13 @@ public:
     HNSW_matcher_->setEf(16);
     
     // add a first point...
-    HNSW_matcher_->addPoint((const void *)(dataset), (size_t)0);
+    HNSW_matcher_->addPoint(static_cast<const void *>(dataset), static_cast<size_t>(0));
     //...and the others in parallel
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
     #endif
     for (int vector_id = 1; vector_id < nbRows; ++vector_id) {
-        HNSW_matcher_->addPoint((const void *)(dataset + dimension * vector_id), (size_t)vector_id);
+        HNSW_matcher_->addPoint(static_cast<const void *>(dataset + dimension * vector_id), static_cast<size_t>(vector_id));
     }
 
     return true;
@@ -165,27 +165,23 @@ public:
   {
     if (!HNSW_matcher_)
       return false;
-    pvec_indices->reserve(nbQuery * NN);
-    pvec_distances->reserve(nbQuery * NN);
+    pvec_indices->resize(nbQuery * NN);
+    pvec_distances->resize(nbQuery * NN);
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
     #endif
     for (int query_id = 0; query_id < nbQuery; query_id++) {
-      const auto result = HNSW_matcher_->searchKnn((const void *)(query + dimension_ * query_id), NN,
-        [](const std::pair<DistanceType, size_t> &a, const std::pair<DistanceType, size_t> &b) -> bool {
-          return a.first < b.first;
-      });
-      #ifdef OPENMVG_USE_OPENMP
-      #pragma omp critical
-      #endif
+      auto result = HNSW_matcher_->searchKnn(static_cast<const void *>(query + dimension_ * query_id), NN);
+      size_t result_id = NN - 1;
+      while(!result.empty())
       {
-      for (const auto & res : result)
-      {
-        pvec_indices->emplace_back(query_id, res.second);
-        pvec_distances->emplace_back(res.first);
+        const auto & res = result.top();
+        const size_t match_id = query_id * NN + result_id;
+        pvec_indices->operator[](match_id) = {static_cast<IndexT>(query_id), static_cast<IndexT>(res.second)};
+        pvec_distances->operator[](match_id) = res.first;
+        result.pop();result_id--;
       }
-      }
-    }   
+    }
     return true;
   };
 
