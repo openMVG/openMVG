@@ -13,6 +13,8 @@
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
 #endif
+#include <set>
+#include <typeindex>
 #include <vector>
 
 #include "openMVG/matching/matching_interface.hpp"
@@ -60,25 +62,24 @@ class HNSWMatcher: public ArrayMatcher<Scalar, Metric>
     // Returns early if DistanceType is not supported.
     // This avoids the case where HNSWmetric is null, which causes an error when 
     // HNSWmatcher initializes.
-    std::set<std::type_info> allowed_distance_types = {
+    std::set<std::type_index> allowed_distance_types = {
         typeid(int), typeid(float)};
-    auto distance_type = typeid(DistanceType);
+    const std::type_index distance_type(typeid(DistanceType));
 
-    if (!allowed_distance_types.contains(distance_type)) {
+    if (allowed_distance_types.find(distance_type) == allowed_distance_types.end()) {
+      std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
       return false;
     }
 
     dimension_ = dimension;
     
     // Here this is tricky since there is no specialization
-    if(distance_type == typeid(int)) {
+    if (distance_type == typeid(int)) {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
     } else if (distance_type == typeid(float)) {
       HNSWmetric.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
-    } else {
-      std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
     }
-    
+
     HNSWmatcher.reset(new HierarchicalNSW<DistanceType>(HNSWmetric.get(), nbRows, 16, 100) );
     HNSWmatcher->setEf(16);
     
