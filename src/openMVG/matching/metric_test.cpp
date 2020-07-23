@@ -169,13 +169,6 @@ TEST(Metric, L1DIM128) {
     const unsigned int GTL1 = (a.cast<int>()-b.cast<int>()).lpNorm<1>();
     const L1<uint8_t> metricL1{};
     EXPECT_NEAR(GTL1, metricL1(a.data(), b.data(), 128), 1e-4);
-  #if defined(__SSE2__) || defined(__AVX2__) 
-    openMVG::system::CpuInstructionSet cpu_instruction_set;
-  #endif
-  #ifdef __SSE2__
-    EXPECT_TRUE(cpu_instruction_set.supportSSE2());
-    EXPECT_EQ(GTL1, L1_SSE2(a.data(), b.data(), 128));
-  #endif
 }
 
 
