@@ -316,14 +316,19 @@ int main(int argc, char **argv)
     {
       if (regions_type->IsScalar())
       {
-        std::cout << "Using FAST_CASCADE_HASHING_L2 matcher" << std::endl;
-        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
+        if(regions_type->Type_id() == typeid(uint8_t).name()) {
+          std::cout << "Using HNSWL1 matcher" << std::endl;
+          collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L1));
+        } else {
+          std::cout << "Using HNSWL2 matcher" << std::endl;
+          collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
+        }
       }
       else
       if (regions_type->IsBinary())
       {
-        std::cout << "Using BRUTE_FORCE_HAMMING matcher" << std::endl;
-        collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
+        std::cout << "Using HNSWHAMMING matcher" << std::endl;
+        collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_HAMMING));
       }
     }
     else
