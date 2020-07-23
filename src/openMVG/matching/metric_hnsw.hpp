@@ -63,16 +63,8 @@ static int L1Kernel(const void * pVect1, const void * pVect2, const void * qty_p
   constexpr L1<uint8_t> metricL1{};
   const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
   const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
-  return metricL1(a,b,*(reinterpret_cast<const size_t*>(qty_ptr)));
+  return metricL1(a, b,*(reinterpret_cast<const size_t*>(qty_ptr)));
 }
-#ifdef __SSE2__
-static int L1Kernel_SSE2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
-{
-  const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
-  const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
-  return L1_SSE2(a, b, 128);
-}
-#endif
 
 class L1SpaceInteger : public hnswlib::SpaceInterface<int>
 {
@@ -82,60 +74,10 @@ class L1SpaceInteger : public hnswlib::SpaceInterface<int>
 
 public:
   explicit L1SpaceInteger(size_t dim): 
-    fstdistfunc_(L1Kernel), dim_(dim), data_size_(dim_ * sizeof(uint8_t))
-  {
-    #ifdef __SSE2__
-    if(dim == 128) {
-      fstdistfunc_ = L1Kernel_SSE2_128;
-    }
-    #endif
-  }
+    fstdistfunc_(L1Kernel), dim_(dim), data_size_(dim * sizeof(uint8_t))
+  {}
 
   ~L1SpaceInteger() {}
-
-  size_t get_data_size() override
-  {
-    return data_size_;
-  }
-
-  hnswlib::DISTFUNC<int> get_dist_func() override
-  {
-    return fstdistfunc_;
-  }
-
-  void *get_dist_func_param() override
-  {
-    return &dim_;
-  }
-};
-
-#ifdef __AVX2__
-static int L2Kernel_AVX2_128(const void * pVect1, const void * pVect2, const void * qty_ptr) 
-{
-  const uint8_t *a = reinterpret_cast<const uint8_t *>(pVect1);
-  const uint8_t *b = reinterpret_cast<const uint8_t *>(pVect2);
-  return L2_AVX2(a, b, 128);
-}
-#endif
-
-class L2SpaceInteger : public hnswlib::SpaceInterface<int>
-{
-  hnswlib::DISTFUNC<int> fstdistfunc_;
-  size_t data_size_;
-  size_t dim_;
-
-public:
-  explicit L2SpaceInteger(size_t dim):
-    fstdistfunc_(hnswlib::L2SqrI), dim_(dim), data_size_(dim_ * sizeof(uint8_t))
-  {
-    #ifdef __AVX2__
-    if(dim == 128) {
-      fstdistfunc_ = L2Kernel_AVX2_128;
-    }
-    #endif
-  }
-
-  ~L2SpaceInteger() {}
 
   size_t get_data_size() override
   {
