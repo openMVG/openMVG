@@ -384,7 +384,7 @@ struct TrifocalSampleApp {
         feature_j.x(), feature_j.y() + images_[0].Height(), feature_k.scale(),
         svg::svgStyle().stroke("yellow", 1));
       svg_stream.drawCircle(
-        feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
+        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
         svg::svgStyle().stroke("yellow", 1));
 
       svg_stream.drawText(
@@ -396,7 +396,7 @@ struct TrifocalSampleApp {
         svg::svgStyle().stroke("blue", 1));
       svg_stream.drawLine(
         feature_j.x(), feature_j.y() + images_[0].Height(),
-        feature_k.x(), feature_j.y() + images_[0].Height() + images_[1].Height(),
+        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
         svg::svgStyle().stroke("blue", 1));
       track_id++;
     }
