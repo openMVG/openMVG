@@ -199,9 +199,9 @@ const
   {
     if (it->second.isInfinite()) // infinite frustum: drawn normalized cone: 4 faces
     {
-      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << color_other_face << '\n'
+      of << "3 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << color_top_face << '\n'
         << "3 " << count + 0 << ' ' << count + 2 << ' ' << count + 3 << color_other_face << '\n'
-        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << color_top_face << '\n'
+        << "3 " << count + 0 << ' ' << count + 3 << ' ' << count + 4 << color_other_face << '\n'
         << "3 " << count + 0 << ' ' << count + 4 << ' ' << count + 1 << color_other_face << '\n'
         << "4 " << count + 1 << ' ' << count + 2 << ' ' << count + 3 << ' ' << count + 4 << color_other_face << '\n';
       count += 5;
@@ -209,8 +209,8 @@ const
     else // truncated frustum: 6 faces
     {
       of << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 2 << ' ' << count + 3 << color_other_face << '\n'
-        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << color_other_face << '\n'
-        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << color_top_face << '\n'
+        << "4 " << count + 0 << ' ' << count + 1 << ' ' << count + 5 << ' ' << count + 4 << color_top_face << '\n'
+        << "4 " << count + 1 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 2 << color_other_face << '\n'
         << "4 " << count + 3 << ' ' << count + 7 << ' ' << count + 6 << ' ' << count + 2 << color_other_face << '\n'
         << "4 " << count + 0 << ' ' << count + 4 << ' ' << count + 7 << ' ' << count + 3 << color_other_face << '\n'
         << "4 " << count + 4 << ' ' << count + 5 << ' ' << count + 6 << ' ' << count + 7 << color_other_face << '\n';
