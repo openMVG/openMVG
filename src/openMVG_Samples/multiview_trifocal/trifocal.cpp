@@ -88,7 +88,6 @@ struct Trifocal3PointPositionTangentialSolver {
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
     std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
-<<<<<<< HEAD
     MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
     std::cerr << datum_0 << "\n"; 
       
@@ -129,37 +128,6 @@ struct Trifocal3PointPositionTangentialSolver {
    // 
    //fill C0* with for loop
      std::cerr << "Number of sols " << nsols_final << std::endl;
-=======
-    // MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
-    // TEST stub for cameras
-    
-    {
-      nsols_final = 1;
-
-      double R1bar[3][3] = {
-         9.1376199999999996e-01,  3.4689900000000001e-01   2.1142500000000000e-01
-         3.4278300000000000e-01  -3.7905100000000003e-01  -8.5954600000000003e-01
-        -2.1803500000000001e-01   8.5789400000000005e-01  -4.6527400000000002e-01
-      };
-
-      double T1bar[3] = {
-        // vai no scilab e coloca aqui 
-        // - R1bar*[6.5520770278699999e+01  -3.0753422307349996e+02   1.5982380484480001e+02]'
-      };
-
-
-      double R2bar[3] = {
-      };
-      
-      double T2bar[3] = {
-      };
-
-
-      // for loop to fill cameras[0]* array above
-    }
-
-    std::cerr << "Number of sols " << nsols_final << std::endl;
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
     
    std::vector<trifocal_model_t> &tt = *trifocal_tensor;
    // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
@@ -551,18 +519,9 @@ struct TrifocalSampleApp {
         feature_j.x(), feature_j.y() + images_[0].Height(), feature_k.scale(),
         svg::svgStyle().stroke("navy", 1));
       svg_stream.drawCircle(
-<<<<<<< HEAD
         feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_j.scale(),
         svg::svgStyle().stroke("navy", 1));
       //TODO: Tangent line segments in yellow and if inlier -> in green
-=======
-        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
-        svg::svgStyle().stroke("yellow", 1));
-
-      // TODO(gabriel): tangent line segments in yellow and fixed length
-
-
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
       svg_stream.drawText(
         feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_id));
      
@@ -602,7 +561,6 @@ struct TrifocalSampleApp {
 //3 files trifocal_track,trifocal_inlier,track_inlier, return the correct matrices, pass to solver datum desired i,print feature sca scale
   void RobustSolve() {
     using TrifocalKernel = 
-<<<<<<< HEAD
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
     array<Mat,3> Ds;
     Ds[0].resize(datum_[0].rows(),n_ids);
@@ -622,10 +580,6 @@ struct TrifocalSampleApp {
       }
     }
     //cout <<  D0 << "\n";
-=======
-      ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
-                      Trifocal3PointPositionTangentialSolver>;
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
     const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
     //const TrifocalKernel trifocal_kernel(D0, D1, D2);
 
@@ -698,7 +652,6 @@ struct TrifocalSampleApp {
         feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()),
         svg::svgStyle().stroke("yellow", 1));
 
-<<<<<<< HEAD
       svg_stream.drawLine(
         feature_i.x(), feature_i.y(),
         feature_j.x(), feature_j.y() + images_[0].Height(),
@@ -723,16 +676,6 @@ struct TrifocalSampleApp {
   void DisplayInliersCamerasAndPoints() {
     // TODO We can then display the inlier and the 3D camera configuration as PLY
 
-=======
-
-  void DisplayInliersCamerasAndPoints() {
-    // TODO We can then display the inlier and the 3D camera configuration as PLY
-
-    // TODO(gabriel): if inlier -> display circle in green
-    //
-    // Display demo
-    //
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
     const int svg_w = images_[0].Width();
     const int svg_h = images_[0].Height() + images_[1].Height() + images_[2].Height();
     svg::svgDrawer svg_stream(svg_w, svg_h);
@@ -741,22 +684,11 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[0], images_[0].Width(), images_[0].Height());
     svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
-<<<<<<< HEAD
     
     unsigned track_id=0;
     constexpr unsigned n_inlier_pp = 3;
     unsigned desired_inliers[n_inlier_pp] = {13, 23, 3};
     unsigned track_inlier=0;
-=======
-
-    constexpr unsigned n_ids = 5;
-    unsigned desired_ids[n_ids] = {13, 23, 33, 43, 53}; // 41 53 33(razoavel) TODO: achar melhor que o 33
-    unsigned track_id=0;
-
-    constexpr unsigned n_inliers_test = 2;
-    unsigned vec_inliers_test[n_inliers_test] = {33, 53}; // 41 53 33(razoavel) TODO: achar melhor que o 33
-    
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
     for (const auto &track_it: tracks_)
     {
       bool found=false;
@@ -768,7 +700,6 @@ struct TrifocalSampleApp {
         track_id++;
         continue;
       }
-<<<<<<< HEAD
       bool inlier=false;
       for (unsigned i=0; i < n_inlier_pp; ++i)
         if (track_inlier == desired_inliers[i])
@@ -779,19 +710,6 @@ struct TrifocalSampleApp {
         continue;
       }
       
-=======
-
-      bool inlier=false;
-      for (unsigned i=0; i < n_inliers_test; ++i)
-        if (track_id == vec_inliers_test[i]) // XXX change back to vec_inliers_
-          inlier = true;
-      
-      if (inlier) {
-        // TODO(gabriel) set feature color to green
-        // set correspondence color to light blue
-      }
-
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
       auto iter = track_it.second.cbegin();
       const uint32_t
         i = iter->second,
@@ -801,12 +719,8 @@ struct TrifocalSampleApp {
       const auto feature_i = sio_regions_[0]->Features()[i];
       const auto feature_j = sio_regions_[1]->Features()[j];
       const auto feature_k = sio_regions_[2]->Features()[k];
-<<<<<<< HEAD
       if(found && inlier){
       cout<<"blyat"<<endl;
-=======
-
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
       svg_stream.drawCircle(
         feature_i.x(), feature_i.y(), feature_i.scale(),
         svg::svgStyle().stroke("yellow", 1));
@@ -816,7 +730,6 @@ struct TrifocalSampleApp {
       svg_stream.drawCircle(
         feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
         svg::svgStyle().stroke("yellow", 1));
-<<<<<<< HEAD
       //TODO: Tangent line segments in yellow and if inlier -> in green
       svg_stream.drawText(
         feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_id));
@@ -838,15 +751,6 @@ struct TrifocalSampleApp {
         feature_i.x(), feature_i.y(),
         feature_j.x(), feature_j.y() + images_[0].Height(),
         svg::svgStyle().stroke("blue", 1));
-=======
-
-      // TODO(gabriel): tangent line segments in yellow and fixed length
-
-
-      svg_stream.drawText(
-        feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_id));
-        
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
       svg_stream.drawLine(
         feature_i.x(), feature_i.y(),
         feature_j.x(), feature_j.y() + images_[0].Height(),
@@ -856,7 +760,6 @@ struct TrifocalSampleApp {
         feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
         svg::svgStyle().stroke("blue", 1));
       track_id++;
-<<<<<<< HEAD
        }
       if(!inlier){
       cout<<"cyka"<<endl; 
@@ -902,10 +805,6 @@ struct TrifocalSampleApp {
       }
     }
     ofstream svg_file( "trifocal_track.svg" );
-=======
-    }
-    ofstream svg_file( "trifocal_track_with_inliers.svg" );
->>>>>>> 99a55c82bae14f62256eb251c948e2258e5071a5
     if (svg_file.is_open())
     {
       svg_file << svg_stream.closeSvgFile().str();
