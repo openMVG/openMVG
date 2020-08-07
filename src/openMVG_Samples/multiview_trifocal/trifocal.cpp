@@ -25,7 +25,7 @@
 #include <string>
 
 //these are temporary includes, may be removed
-
+#include <Eigen/StdVector>
 #include<numeric>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
@@ -129,7 +129,7 @@ struct Trifocal3PointPositionTangentialSolver {
    //fill C0* with for loop
      std::cerr << "Number of sols " << nsols_final << std::endl;
     
-   std::vector<trifocal_model_t> &tt = *trifocal_tensor;
+   std::vector<trifocal_model_t,Eigen::aligned_allocator<trifocal_model_t>> &tt = *trifocal_tensor;
    // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
    tt.resize(nsols_final);
     std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
@@ -563,25 +563,27 @@ struct TrifocalSampleApp {
     using TrifocalKernel = 
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
     array<Mat,3> Ds;
-    Ds[0].resize(datum_[0].rows(),n_ids);
-    Ds[1].resize(datum_[1].rows(),n_ids);
-    Ds[2].resize(datum_[2].rows(),n_ids);
+    Ds[0].resize(4,n_ids);
+    Ds[1].resize(4,n_ids);
+    Ds[2].resize(4,n_ids);
+    std::cerr << Ds[0].cols() << "\n";
     unsigned track_id=0;
-    for(unsigned i=0;i<datum_[0].rows();i++){
+    //going to try with calling the value of datum_[0].cols()
+    for(unsigned i=0;i<datum_[0].cols();i++){
       for(unsigned j=0;j<n_ids;j++){
         if(i ==  desired_ids[j]){
           for(unsigned k=0;k<4;k++){
             Ds[0](k, track_id) = datum_[0].col(desired_ids[j])[k];
             Ds[1](k, track_id) = datum_[1].col(desired_ids[j])[k];
             Ds[2](k, track_id) = datum_[2].col(desired_ids[j])[k];
-            track_id++;
           }
+          track_id++;
         }
       }
     }
     //cout <<  D0 << "\n";
-    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
-    //const TrifocalKernel trifocal_kernel(D0, D1, D2);
+    //const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
+    const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
     const double threshold_pix = 25; // 5*5 
     const unsigned max_iteration = 1; // testing
@@ -761,7 +763,7 @@ struct TrifocalSampleApp {
         svg::svgStyle().stroke("blue", 1));
       track_id++;
        }
-      if(!inlier){
+      if(inlier){
       cout<<"cyka"<<endl; 
       svg_stream.drawCircle(
         feature_i.x(), feature_i.y(), feature_i.scale(),
