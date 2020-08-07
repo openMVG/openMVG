@@ -717,48 +717,6 @@ struct TrifocalSampleApp {
       const auto feature_i = sio_regions_[0]->Features()[i];
       const auto feature_j = sio_regions_[1]->Features()[j];
       const auto feature_k = sio_regions_[2]->Features()[k];
-      if(!inlier){
-      cout<<"cyka"<<endl; 
-      svg_stream.drawCircle(
-        feature_i.x(), feature_i.y(), feature_i.scale(),
-        svg::svgStyle().stroke("green", 1));
-      svg_stream.drawCircle(
-        feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
-        svg::svgStyle().stroke("green", 1));
-      svg_stream.drawCircle(
-        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
-        svg::svgStyle().stroke("green", 1));
-      //TODO: Tangent line segments in yellow and if inlier -> in green
-      svg_stream.drawText(
-        feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_inlier));
-     
-      svg_stream.drawLine(
-        feature_i.x(), feature_i.y(),
-        feature_i.x()+20*cos(feature_i.orientation()), feature_i.y() + 20*sin(feature_i.orientation()) ,
-        svg::svgStyle().stroke("yellow", 1)); 
-      svg_stream.drawLine(
-        feature_j.x(), feature_j.y() + images_[0].Height(),
-        feature_j.x()+20*cos(feature_j.orientation()), feature_j.y() + images_[0].Height()+ 20*sin(feature_j.orientation()),
-        svg::svgStyle().stroke("yellow", 1));
-      svg_stream.drawLine(
-        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
-        feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()),
-        svg::svgStyle().stroke("yellow", 1));
-
-      svg_stream.drawLine(
-        feature_i.x(), feature_i.y(),
-        feature_j.x(), feature_j.y() + images_[0].Height(),
-        svg::svgStyle().stroke("lightblue", 1));
-      svg_stream.drawLine(
-        feature_i.x(), feature_i.y(),
-        feature_j.x(), feature_j.y() + images_[0].Height(),
-        svg::svgStyle().stroke("lightblue", 1));
-      svg_stream.drawLine(
-        feature_j.x(), feature_j.y() + images_[0].Height(),
-        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
-        svg::svgStyle().stroke("lightblue", 1));
-      track_inlier++;
-      }
       if(found && inlier){
       cout<<"blyat"<<endl;
       svg_stream.drawCircle(
@@ -801,6 +759,48 @@ struct TrifocalSampleApp {
         svg::svgStyle().stroke("blue", 1));
       track_id++;
        }
+      if(!inlier){
+      cout<<"cyka"<<endl; 
+      svg_stream.drawCircle(
+        feature_i.x(), feature_i.y(), feature_i.scale(),
+        svg::svgStyle().stroke("green", 1));
+      svg_stream.drawCircle(
+        feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
+        svg::svgStyle().stroke("green", 1));
+      svg_stream.drawCircle(
+        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
+        svg::svgStyle().stroke("green", 1));
+      //TODO: Tangent line segments in yellow and if inlier -> in green
+      svg_stream.drawText(
+        feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_inlier));
+     
+      svg_stream.drawLine(
+        feature_i.x(), feature_i.y(),
+        feature_i.x()+20*cos(feature_i.orientation()), feature_i.y() + 20*sin(feature_i.orientation()) ,
+        svg::svgStyle().stroke("yellow", 1)); 
+      svg_stream.drawLine(
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        feature_j.x()+20*cos(feature_j.orientation()), feature_j.y() + images_[0].Height()+ 20*sin(feature_j.orientation()),
+        svg::svgStyle().stroke("yellow", 1));
+      svg_stream.drawLine(
+        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+        feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()),
+        svg::svgStyle().stroke("yellow", 1));
+
+      svg_stream.drawLine(
+        feature_i.x(), feature_i.y(),
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        svg::svgStyle().stroke("lightblue", 1));
+      svg_stream.drawLine(
+        feature_i.x(), feature_i.y(),
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        svg::svgStyle().stroke("lightblue", 1));
+      svg_stream.drawLine(
+        feature_j.x(), feature_j.y() + images_[0].Height(),
+        feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+        svg::svgStyle().stroke("lightblue", 1));
+      track_inlier++;
+      }
     }
     ofstream svg_file( "trifocal_track.svg" );
     if (svg_file.is_open())
