@@ -151,6 +151,10 @@ target_link_libraries(openMVG_main_FrustumFiltering
 )
 
 add_executable(openMVG_main_ComputeStructureFromKnownPoses main_ComputeStructureFromKnownPoses.cpp)
+target_include_directories(openMVG_main_ComputeStructureFromKnownPoses
+  PRIVATE
+    ${CERES_INCLUDE_DIRS}
+)
 target_link_libraries(openMVG_main_ComputeStructureFromKnownPoses
   PRIVATE
     openMVG_system
