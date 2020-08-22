@@ -6,6 +6,7 @@ ENV PATH $PATH:/opt/openMVG_Build/install/bin
 
 # Get dependencies
 RUN apt-get update && apt-get install -y \
+  vim \
   cmake \
   build-essential \
   graphviz \
@@ -37,6 +38,6 @@ RUN mkdir /opt/openMVG_Build; \
     -DCLP_INCLUDE_DIR_HINTS=/usr/include \
     -DOSI_INCLUDE_DIR_HINTS=/usr/include \
     ../openMVG/src; \
-    make -j 4;
+    make -j 12;
 
 RUN cd /opt/openMVG_Build && make test && make install;
