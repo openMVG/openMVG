@@ -47,7 +47,7 @@
 #include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
-#include "third_party/histogram/histogram.hpp"
+#include "openMVG/third_party/histogram/histogram.hpp"
 
 namespace openMVG {
 namespace robust{
