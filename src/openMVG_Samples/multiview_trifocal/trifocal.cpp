@@ -506,7 +506,8 @@ struct TrifocalSampleApp {
       }
     //TODO: find examples of features: point in curve(3), edge(33) 
       auto iter = track_it.second.cbegin();
-      const uint32_t
+      
+   32503654dd..93e1be4193  master -> masterconst uint32_t
         i = iter->second,
         j = (++iter)->second,
         k = (++iter)->second;
@@ -568,6 +569,7 @@ struct TrifocalSampleApp {
                       Trifocal3PointPositionTangentialSolver>;
     constexpr unsigned n_ids = 5;
     unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
+    // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
     array<Mat,3> Ds;
     Ds[0].resize(4,n_ids);
     Ds[1].resize(4,n_ids);
@@ -701,7 +703,7 @@ struct TrifocalSampleApp {
     unsigned track_id=0;
     //constexpr unsigned n_ids_test = 5;
     //unsigned desired_ids_test[n_ids] = {13, 23, 33, 43, 53};
-    constexpr unsigned n_inlier_pp = 3;
+    // constexpr unsigned n_inlier_pp = 3;
     //unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};//the only inlier that matches with desired id is 13
     vector<uint32_t>desired_inliers_vector; 
     desired_inliers_vector.resize(vec_inliers_.size()) ;
@@ -778,6 +780,7 @@ struct TrifocalSampleApp {
       }
      track_id++;
     }
+    unsigned track_inlier = 0;
     for (const auto &track_it: tracks_)
     {
       bool inlier=false;
@@ -792,7 +795,7 @@ struct TrifocalSampleApp {
       const auto feature_j = sio_regions_[1]->Features()[j];
       const auto feature_k = sio_regions_[2]->Features()[k];
       for (unsigned i=0; i < desired_inliers_vector.size(); ++i)
-        if (track_inlier == desired_inliers_vector.at(i)){
+        if (track_inlier == desired_inliers_vector.at(i)) {
          //cout<<"cyka"<<endl; 
          svg_stream.drawCircle(
             feature_i.x(), feature_i.y(), feature_i.scale(),
@@ -1049,9 +1052,9 @@ int main(int argc, char **argv) {
   T.Display();
   T.DisplayDesiredIds();
   T.RobustSolve();
-  T.DisplayInliers();
+  // T.DisplayInliers();
   T.DisplayInliersCamerasAndPoints();
-  T.DisplayInliersCamerasAndPointsSIFT();
+  // T.DisplayInliersCamerasAndPointsSIFT();
 
   return EXIT_SUCCESS;
 }
