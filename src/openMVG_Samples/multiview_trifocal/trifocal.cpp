@@ -46,8 +46,8 @@ using SIFT_Regions = openMVG::features::SIFT_Regions;
 
 //Defining global variables
 
-constexpr unsigned n_ids = 5;
-unsigned desired_ids[n_ids] = {13, 23, 33, 43, 53};
+//constexpr unsigned n_ids = 5;
+//unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
 
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;
@@ -84,82 +84,82 @@ struct Trifocal3PointPositionTangentialSolver {
       tgt[2][ip][1] = datum_2(3,ip); 
     }
     
-    unsigned nsols_final = 0;
+    unsigned nsols_final = 1;
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
     std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
-    MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
+    //MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
     //std::cerr << datum_0 << "\n"; 
       
-   //  double R0[3][3] = {
-   //                     {9.1376199999999996e-01,   3.4689900000000001e-01,   2.1142500000000000e-01},
-   //                     {3.4278300000000000e-01,  -3.7905100000000003e-01,  -8.5954600000000003e-01},
-   //                     {-2.1803500000000001e-01,   8.5789400000000005e-01,  -4.6527400000000002e-01}
-   //                    };
-   //    
-   //   double T0[3][1] = {
-   //                       {13.022176},
-   //                       {-1.6546488},
-   //                       {352.47945}
-   //                      };
+     double R0[3][3] = {
+                        {9.1376199999999996e-01,   3.4689900000000001e-01,   2.1142500000000000e-01},
+                        {3.4278300000000000e-01,  -3.7905100000000003e-01,  -8.5954600000000003e-01},
+                        {-2.1803500000000001e-01,   8.5789400000000005e-01,  -4.6527400000000002e-01}
+                       };
+       
+      double T0[3][1] = {
+                          {13.022176},
+                          {-1.6546488},
+                          {352.47945}
+                         };
 
-   //   double R1[3][3] = {   
-   //                      {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
-   //                      {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
-   //                      {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
-   //                     };
-   //   double T1[3][1] = { 
-   //                       {8.7042556},
-   //                       {-1.621631},
-   //                       {-352.61293}
-   //                     };
+      double R1[3][3] = {   
+                         {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
+                         {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
+                         {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
+                        };
+      double T1[3][1] = { 
+                          {8.7042556},
+                          {-1.621631},
+                          {-352.61293}
+                        };
 
-   //   double R2[3][3] = {
-   //                      {0.970091125581631,   0.235130101826381,   0.060307903987350},
-   //                      {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
-   //                      {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
-   //                     };
+      double R2[3][3] = {
+                         {0.970091125581631,   0.235130101826381,   0.060307903987350},
+                         {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
+                         {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
+                        };
 
-   //   double T2[3][1] = { 
-   //                       {0.8892335},
-   //                       {-14.05071},
-   //                       {-352.44293}
-   //                     };
-   // 
+      double T2[3][1] = { 
+                          {0.8892335},
+                          {-14.05071},
+                          {-352.44293}
+                        };
+    
    //fill C0* with for loop
      std::cerr << "Number of sols " << nsols_final << std::endl;
    std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
    // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
    tt.resize(nsols_final);
     std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
-    // using trifocal_model_t = array<Mat34, 3>;
-    for (unsigned s=0; s < nsols_final; ++s) {
-      tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
-      for (unsigned v=1; v < io::pp::nviews; ++v) {
-          memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
-          for (unsigned r=0; r < 3; ++r)
-            tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
-      }
-    }
+    //using trifocal_model_t = array<Mat34, 3>;
+    //for (unsigned s=0; s < nsols_final; ++s) {
+    //  tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
+    //  for (unsigned v=1; v < io::pp::nviews; ++v) {
+    //      memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
+    //      for (unsigned r=0; r < 3; ++r)
+    //        tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
+    //  }
+    //}
     //This is for hard coding test 
-   // tt[0][0] = Mat34::Identity();
-   // tt[0][1] = Mat34::Identity();
-   // tt[0][2] = Mat34::Identity();
-   // for(unsigned i=0;i<3;i++){
-   //   for(unsigned j=0;j<4;j++){
-   //     if(j<3){
-   //       tt[0][0](i,j) = R0[i][j];
-   //       tt[0][1](i,j) = R1[i][j];
-   //       tt[0][2](i,j) = R2[i][j];
-   //     }
-   //     else{
-   //       tt[0][0](i,j) = T0[i][1];
-   //       tt[0][1](i,j) = T1[i][1];
-   //       tt[0][2](i,j) = T2[i][1];
-   //     }
-   //   }                       
-   // }
+    tt[0][0] = Mat34::Identity();
+    tt[0][1] = Mat34::Identity();
+    tt[0][2] = Mat34::Identity();
+    for(unsigned i=0;i<3;i++){
+      for(unsigned j=0;j<4;j++){
+        if(j<3){
+          tt[0][0](i,j) = R0[i][j];
+          tt[0][1](i,j) = R1[i][j];
+          tt[0][2](i,j) = R2[i][j];
+        }
+        else{
+          tt[0][0](i,j) = T0[i][1];
+          tt[0][1](i,j) = T1[i][1];
+          tt[0][2](i,j) = T2[i][1];
+        }
+      }                       
+    }
    // cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
    // cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
    // cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
@@ -170,7 +170,7 @@ struct Trifocal3PointPositionTangentialSolver {
     //
     //  if we know the rays are perfectly coplanar, we can just use cross
     // product within the plane instead of SVD
-    std::cerr << "TRIFOCAL LOG: Finished Solve()\n";
+    std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
   }
   
   // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
@@ -211,9 +211,10 @@ struct Trifocal3PointPositionTangentialSolver {
     // and report only one error
     Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
     Vec2 measured    = bearing.col(third_view).hnormalized();
-    
+    cout << "error " << (reprojected - measured).squaredNorm() << "\n";
+    cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-
+     
     return (reprojected-measured).squaredNorm();
   }
 };
@@ -488,6 +489,8 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
 
+    constexpr unsigned n_ids = 5;
+    unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     unsigned track_id=0;
     for (const auto &track_it: tracks_)
     {
@@ -561,7 +564,10 @@ struct TrifocalSampleApp {
 //3 files trifocal_track,trifocal_inlier,track_inlier, return the correct matrices, pass to solver datum desired i,print feature sca scale
   void RobustSolve() {
     using TrifocalKernel = 
-      ThreeViewKernel<Trifocal3PointPositionTangentialSolver, Trifocal3PointPositionTangentialSolver>;
+      ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
+                      Trifocal3PointPositionTangentialSolver>;
+    constexpr unsigned n_ids = 5;
+    unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     array<Mat,3> Ds;
     Ds[0].resize(4,n_ids);
     Ds[1].resize(4,n_ids);
@@ -572,6 +578,7 @@ struct TrifocalSampleApp {
     for(unsigned i=0;i<datum_[0].cols();i++){
       for(unsigned j=0;j<n_ids;j++){
         if(i ==  desired_ids[j]){
+          //cout << i<<"\n";
           for(unsigned k=0;k<4;k++){
             Ds[0](k, track_id) = datum_[0].col(desired_ids[j])[k];
             Ds[1](k, track_id) = datum_[1].col(desired_ids[j])[k];
@@ -582,11 +589,11 @@ struct TrifocalSampleApp {
       }
     }
     //cout <<  Ds[0] << "\n";
-    //const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
-    const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
+    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
+    //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
     const double threshold_pix = 25; // 5*5 
-    const unsigned max_iteration = 1; // testing
+    const unsigned max_iteration =1; // testing
     const auto model = MaxConsensus(trifocal_kernel, 
         ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
     // TODO(gabriel) recontruct from inliers and best models to show as PLY
@@ -606,7 +613,7 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
     
     constexpr unsigned n_inlier_pp = 3;
-    unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};
+    unsigned desired_inliers[n_inlier_pp] = {13, 23, 63};
     unsigned track_inlier=0;
     for (const auto &track_it: tracks_)
     {
@@ -689,11 +696,23 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
     
+    constexpr unsigned n_ids = 5;
+    unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     unsigned track_id=0;
     //constexpr unsigned n_ids_test = 5;
     //unsigned desired_ids_test[n_ids] = {13, 23, 33, 43, 53};
     constexpr unsigned n_inlier_pp = 3;
-    unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};//the only inlier that matches with desired id is 13
+    //unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};//the only inlier that matches with desired id is 13
+    vector<uint32_t>desired_inliers_vector; 
+    desired_inliers_vector.resize(vec_inliers_.size()) ;
+    //using this for loop for get desired_inliers_vector output
+    for (unsigned j = 0; j < desired_inliers_vector.size(); j++) {
+        desired_inliers_vector.at(j) = desired_ids[vec_inliers_.at(j)];
+        //cout << desired_inliers_vector.at(j) <<" " ;
+      }
+    //unsigned desired_inliers[n_inlier_pp] = {desired_inliers_vector.at(13), 
+    //                                         desired_inliers_vector.at(23),
+    //                                         desired_inliers_vector.at(63)};//these are the selected inliers from vec_inliers_. Its easier select the result got from robustsolve() than select in robustsolve()
     unsigned track_inlier=0;
     for (const auto &track_it: tracks_)
     {
@@ -712,7 +731,7 @@ struct TrifocalSampleApp {
       for (unsigned i=0; i < n_ids; ++i)
         if (track_id == desired_ids[i]) { //this part is literaly overwriting the inliers
           found = true;
-          cout<<"blyat"<<endl;
+          //cout<<"blyat"<<endl;
            svg_stream.drawCircle(
               feature_i.x(), feature_i.y(), feature_i.scale(),
               svg::svgStyle().stroke("yellow", 1));
@@ -772,9 +791,9 @@ struct TrifocalSampleApp {
       const auto feature_i = sio_regions_[0]->Features()[i];
       const auto feature_j = sio_regions_[1]->Features()[j];
       const auto feature_k = sio_regions_[2]->Features()[k];
-      for (unsigned i=0; i < n_inlier_pp; ++i)
-        if (track_inlier == desired_inliers[i]){
-         cout<<"cyka"<<endl; 
+      for (unsigned i=0; i < desired_inliers_vector.size(); ++i)
+        if (track_inlier == desired_inliers_vector.at(i)){
+         //cout<<"cyka"<<endl; 
          svg_stream.drawCircle(
             feature_i.x(), feature_i.y(), feature_i.scale(),
             svg::svgStyle().stroke("green", 1));
@@ -841,8 +860,8 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
     
     unsigned track_id=0;
-    constexpr unsigned n_ids_test = 5;
-    unsigned desired_ids_test[n_ids] = {13, 23, 33, 43, 53};
+    constexpr unsigned n_ids = 5;
+    unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     constexpr unsigned n_inlier_pp = 3;
     unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};
     unsigned track_inlier=0;
@@ -860,10 +879,10 @@ struct TrifocalSampleApp {
       const auto feature_i = sio_regions_[0]->Features()[i];
       const auto feature_j = sio_regions_[1]->Features()[j];
       const auto feature_k = sio_regions_[2]->Features()[k];
-      for (unsigned i=0; i < n_ids_test; ++i)
-        if (track_id == desired_ids_test[i]) { //this part is literaly overwriting the inliers
+      for (unsigned i=0; i < n_ids; ++i)
+        if (track_id == desired_ids[i]) { //this part is literaly overwriting the inliers
           found = true;
-      cout<<"blyat"<<endl;//using sigma instead is a gives an error in build
+      //cout<<"blyat"<<endl;//using sigma instead is a gives an error in build
       svg_stream.drawCircle(
         feature_i.x(), feature_i.y(), 2*feature_i.scale(),
         svg::svgStyle().stroke("yellow", 1));
@@ -925,7 +944,7 @@ struct TrifocalSampleApp {
       const auto feature_k = sio_regions_[2]->Features()[k];
       for (unsigned i=0; i < n_inlier_pp; ++i)
         if (track_inlier == desired_inliers[i]){
-         cout<<"cyka"<<endl; 
+         //cout<<"cyka"<<endl; 
          svg_stream.drawCircle(
             feature_i.x(), feature_i.y(), feature_i.scale(),
             svg::svgStyle().stroke("green", 1));
