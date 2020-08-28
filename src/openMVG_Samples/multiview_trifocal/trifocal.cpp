@@ -507,7 +507,7 @@ struct TrifocalSampleApp {
     //TODO: find examples of features: point in curve(3), edge(33) 
       auto iter = track_it.second.cbegin();
       
-   32503654dd..93e1be4193  master -> masterconst uint32_t
+   uint32_t
         i = iter->second,
         j = (++iter)->second,
         k = (++iter)->second;
@@ -780,7 +780,7 @@ struct TrifocalSampleApp {
       }
      track_id++;
     }
-    unsigned track_inlier = 0;
+    track_inlier = 0;
     for (const auto &track_it: tracks_)
     {
       bool inlier=false;
