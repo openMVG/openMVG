@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string>
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -30,6 +31,9 @@ void SortAndCleanSfMData(SfM_Data & sfm_data);
 // Reorder views using sorted view_names, new view_id starts with 0
 // If a view is not found in sfm_data, the corresponding id will not be used
 void SortAndCleanSfMData(SfM_Data & sfm_data, std::vector<std::string> & view_names);
+
+// Transform poses and landmarks using given transform matrix
+void TransformSfMData(const Mat4 & transform, SfM_Data & sfm_data);
 
 } // namespace sfm
 } // namespace openMVG

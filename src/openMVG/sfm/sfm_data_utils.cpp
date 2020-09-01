@@ -173,5 +173,34 @@ void SortAndCleanSfMData(SfM_Data &sfm_data, std::vector<std::string> &view_name
   std::swap(sfm_data, sfm_data_new);
 }
 
+void TransformSfMData(const Mat4 & transform, SfM_Data & sfm_data)
+{
+  auto TransformPoint = [&transform](Vec3 &pt3)
+  {
+    Vec4 pt4;
+    pt4 << pt3, 1.0;
+    pt4 = transform * pt4;
+    pt3 << pt4(0) / pt4(3), pt4(1) / pt4(3), pt4(2) / pt4(3);
+  };
+
+  Mat3 transform_inv = transform.block<3, 3>(0, 0).inverse();
+  for (auto &id_pose_pair: sfm_data.poses)
+  {
+    auto &pose = id_pose_pair.second;
+    pose.rotation() = pose.rotation() * transform_inv;
+    TransformPoint(pose.center());
+  }
+
+  for (auto &id_landmark_pair : sfm_data.structure)
+  {
+    TransformPoint(id_landmark_pair.second.X);
+  }
+
+  for (auto &id_landmark_pair : sfm_data.control_points)
+  {
+    TransformPoint(id_landmark_pair.second.X);
+  }
+}
+
 } // namespace sfm
 } // namespace openMVG
