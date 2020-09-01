@@ -33,7 +33,11 @@ int main(int argc, char *argv[])
 
   SortAndCleanSfMData(sfm_data, view_names);
 
-  Save(sfm_data, sfm_data_file, ESfM_Data(ALL));
+  if (!Save(sfm_data, sfm_data_file, ESfM_Data(ALL)))
+  {
+    cerr << "Failed to save sfm data to " << sfm_data_file << endl;
+    return 1;
+  }
 
   return 0;
 }
