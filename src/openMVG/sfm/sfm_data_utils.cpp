@@ -187,7 +187,14 @@ void TransformSfMData(const Mat4 & transform, SfM_Data & sfm_data)
   for (auto &id_pose_pair: sfm_data.poses)
   {
     auto &pose = id_pose_pair.second;
-    pose.rotation() = pose.rotation() * transform_inv;
+    Mat3 rotation = pose.rotation() * transform_inv;
+    if (rotation.determinant() < 0)
+    {
+      // if the transform is a mirror, negate the x axis to keep this matrix in SO(3)
+      // this implies all the images need to be mirrored along the x axis
+      rotation.row(0) = -rotation.row(0);
+    }
+    pose.rotation() = rotation;
     TransformPoint(pose.center());
   }
 
