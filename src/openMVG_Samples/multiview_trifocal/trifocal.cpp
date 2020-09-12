@@ -84,48 +84,48 @@ struct Trifocal3PointPositionTangentialSolver {
       tgt[2][ip][1] = datum_2(3,ip); 
     }
     
-    unsigned nsols_final = 1;
+    unsigned nsols_final = 0;
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     
     std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
-    //MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
-    //std::cerr << datum_0 << "\n"; 
+    MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
+    //std::cerr << datum_0  "\n"; 
       
-     double R0[3][3] = {
-                        {9.1376199999999996e-01,   3.4689900000000001e-01,   2.1142500000000000e-01},
-                        {3.4278300000000000e-01,  -3.7905100000000003e-01,  -8.5954600000000003e-01},
-                        {-2.1803500000000001e-01,   8.5789400000000005e-01,  -4.6527400000000002e-01}
-                       };
-       
-      double T0[3][1] = {
-                          {13.022176},
-                          {-1.6546488},
-                          {352.47945}
-                         };
+    // double R0[3][3] = {
+    //                    {1,0,0},
+    //                    {0,1,0},
+    //                    {0,0,1}
+    //                   };
+    //   
+    //  double T0[3][1] = {
+    //                      {13.022176},
+    //                      {-1.6546488},
+    //                      {352.47945}
+    //                     };
 
-      double R1[3][3] = {   
-                         {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
-                         {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
-                         {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
-                        };
-      double T1[3][1] = { 
-                          {8.7042556},
-                          {-1.621631},
-                          {-352.61293}
-                        };
+    //  double R1[3][3] = {   
+    //                     {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
+    //                     {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
+    //                     {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
+    //                    };
+    //  double T1[3][1] = { 
+    //                      {8.70420714},
+    //                      {-1.62157456},
+    //                      {-352.61248141}
+    //                    };
 
-      double R2[3][3] = {
-                         {0.970091125581631,   0.235130101826381,   0.060307903987350},
-                         {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
-                         {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
-                        };
+    //  double R2[3][3] = {
+    //                     {0.970091125581631,   0.235130101826381,   0.060307903987350},
+    //                     {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
+    //                     {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
+    //                    };
 
-      double T2[3][1] = { 
-                          {0.8892335},
-                          {-14.05071},
-                          {-352.44293}
-                        };
+    //  double T2[3][1] = { 
+    //                      {0.88920328},
+    //                      {-14.05063273},
+    //                      {-352.44248798}
+    //                    };
     
    //fill C0* with for loop
      std::cerr << "Number of sols " << nsols_final << std::endl;
@@ -134,32 +134,32 @@ struct Trifocal3PointPositionTangentialSolver {
    tt.resize(nsols_final);
     std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
     //using trifocal_model_t = array<Mat34, 3>;
-    //for (unsigned s=0; s < nsols_final; ++s) {
-    //  tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
-    //  for (unsigned v=1; v < io::pp::nviews; ++v) {
-    //      memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
-    //      for (unsigned r=0; r < 3; ++r)
-    //        tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
-    //  }
-    //}
-    //This is for hard coding test 
-    tt[0][0] = Mat34::Identity();
-    tt[0][1] = Mat34::Identity();
-    tt[0][2] = Mat34::Identity();
-    for(unsigned i=0;i<3;i++){
-      for(unsigned j=0;j<4;j++){
-        if(j<3){
-          tt[0][0](i,j) = R0[i][j];
-          tt[0][1](i,j) = R1[i][j];
-          tt[0][2](i,j) = R2[i][j];
-        }
-        else{
-          tt[0][0](i,j) = T0[i][1];
-          tt[0][1](i,j) = T1[i][1];
-          tt[0][2](i,j) = T2[i][1];
-        }
-      }                       
+    for (unsigned s=0; s < nsols_final; ++s) {
+      tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
+      for (unsigned v=1; v < io::pp::nviews; ++v) {
+          memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
+          for (unsigned r=0; r < 3; ++r)
+            tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
+      }
     }
+    //This is for hard coding test 
+    //tt[0][0] = Mat34::Identity();
+    //tt[0][1] = Mat34::Identity();
+    //tt[0][2] = Mat34::Identity();
+    //for(unsigned i=0;i<3;i++){
+    //  for(unsigned j=0;j<4;j++){
+    //    if(j<3){
+    //      tt[0][0](i,j) = R0[i][j];
+    //      tt[0][1](i,j) = R1[i][j];
+    //      tt[0][2](i,j) = R2[i][j];
+    //    }
+    //    else{
+    //      tt[0][0](i,j) = T0[i][1];
+    //      tt[0][1](i,j) = T1[i][1];
+    //      tt[0][2](i,j) = T2[i][1];
+    //    }
+    //  }                       
+    //}
    // cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
    // cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
    // cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
@@ -594,7 +594,7 @@ struct TrifocalSampleApp {
     const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
     //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
-    const double threshold_pix = 25; // 5*5 
+    const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
     const unsigned max_iteration =1; // testing
     const auto model = MaxConsensus(trifocal_kernel, 
         ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
@@ -708,7 +708,8 @@ struct TrifocalSampleApp {
     desired_inliers_vector.resize(vec_inliers_.size()) ;
     //using this for loop for get desired_inliers_vector output
     for (unsigned j = 0; j < desired_inliers_vector.size(); j++) {
-        desired_inliers_vector.at(j) = desired_ids[vec_inliers_.at(j)];
+        //desired_inliers_vector.at(j) = desired_ids[vec_inliers_.at(j)];
+        desired_inliers_vector.at(j) = vec_inliers_.at(j);
         //cout << desired_inliers_vector.at(j) <<" " ;
       }
     //unsigned desired_inliers[n_inlier_pp] = {desired_inliers_vector.at(13), 
