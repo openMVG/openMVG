@@ -73,6 +73,8 @@ bool exportToOpenMVS(
       MVS::Interface::Platform platform;
       // add the camera
       MVS::Interface::Platform::Camera camera;
+      camera.width = cam->w();
+      camera.height = cam->h();
       camera.K = cam->K();
       // sub-pose
       camera.R = Mat3::Identity();
@@ -226,38 +228,6 @@ bool exportToOpenMVS(
     );
     vert.X = landmark.X.cast<float>();
     scene.vertices.push_back(vert);
-  }
-
-  // normalize camera intrinsics
-  for (size_t p=0; p<scene.platforms.size(); ++p)
-  {
-    MVS::Interface::Platform& platform = scene.platforms[p];
-    for (size_t c=0; c<platform.cameras.size(); ++c) {
-      MVS::Interface::Platform::Camera& camera = platform.cameras[c];
-      // find one image using this camera
-      MVS::Interface::Image* pImage(nullptr);
-      for (MVS::Interface::Image& image: scene.images)
-      {
-        if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
-        {
-          pImage = &image;
-          break;
-        }
-      }
-      if (!pImage)
-      {
-        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
-        continue;
-      }
-      // read image meta-data
-      ImageHeader imageHeader;
-      ReadImageHeader(pImage->name.c_str(), &imageHeader);
-      const double fScale(1.0/std::max(imageHeader.width, imageHeader.height));
-      camera.K(0, 0) *= fScale;
-      camera.K(1, 1) *= fScale;
-      camera.K(0, 2) *= fScale;
-      camera.K(1, 2) *= fScale;
-    }
   }
 
   // write OpenMVS data
