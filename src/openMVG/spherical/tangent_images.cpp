@@ -7,13 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/spherical/tangent_images.hpp"
-#include <algorithm>
 #include <cmath>
-#include <exception>
-#include <vector>
-// #include "openMVG/features/image_describer.hpp"
-// #include "openMVG/image/image_container.hpp"
-// #include "openMVG/image/sample.hpp"
 
 namespace openMVG {
 namespace spherical {
@@ -53,13 +47,15 @@ void TangentImages::ComputeTangentImageCorners() {
   const double ang_res = this->GetVertexAngularResolution();
   const double tangent_dim = static_cast<double>(this->dim);
 
-  // Compute the corners via the gnomonic projection
+  // Compute the corners via the inverse gnomonic projection
   const double d = ang_res * static_cast<double>(this->dim - 1) /
                    static_cast<double>(this->dim);
   std::vector<double> spherical_corners;
   this->InverseGnomonicKernel(centers, 2, 2, d, d, spherical_corners);
 
+  // Convert all corners to 3D coordinates
   this->corners.resize(this->num * 8);
+#pragma omp parallel for
   for (size_t i = 0; i < this->num * 8; i++) {
     this->corners[i] = ConvertSphericalTo3D(
         Vec2(spherical_corners[2 * i], spherical_corners[2 * i + 1]));
@@ -122,18 +118,14 @@ void TangentImages::InverseGnomonicKernel(
 
     // j indexes rows in the tangent image
     for (size_t j = 0; j < kh; j++) {
-      double y =
-          (static_cast<double>(j) - static_cast<double>(kh) / 2.0) * res_lat;
-      if (kh % 2 == 0) {
-        y += res_lat / 2.0;
-      }
+      const double y =
+          (static_cast<double>(j) - static_cast<double>(kh) / 2.0) * res_lat +
+          res_lat / 2.0;
       // k indexes columns in the tangent image
       for (size_t k = 0; k < kw; k++) {
-        double x =
-            (static_cast<double>(k) - static_cast<double>(kw) / 2.0) * res_lon;
-        if (kw % 2 == 0) {
-          x += res_lon / 2.0;
-        }
+        const double x =
+            (static_cast<double>(k) - static_cast<double>(kw) / 2.0) * res_lon +
+            res_lon / 2.0;
 
         // Index in output vector
         const size_t vec_idx = i * kh * kw * 2 + j * kw * 2 + k * 2;
@@ -150,8 +142,8 @@ void TangentImages::InverseGnomonicKernel(
         lonlat_out[vec_idx + 1] = out_sph_coords[1];
       }
     }
-  }
-}
+  }  // namespace spherical
+}  // namespace openMVG
 
 /*
   Creates a resampling map to create tangent images
@@ -297,25 +289,29 @@ const double TangentImages::FOV() const {
 
 const Vec2 TangentImages::TangentUVToEquirectangular(
     const size_t tangent_image_idx, const Vec2 &uv) const {
-  // Get the corners of this tangent image as 3D coordinates
-  const size_t corner_idx = 4 * tangent_image_idx;  // Vector index
-  Vec3 tl = this->corners[corner_idx];
-  Vec3 tr = this->corners[corner_idx + 1];
-  Vec3 bl = this->corners[corner_idx + 2];
+  // Get the reference to the tangent image centers
+  std::vector<double> tangent_centers;
+  this->GetTangentImageCenters(tangent_centers);
 
-  // Normalize the (u,v) coordinates on the tangent image
-  const double un = uv[0] / this->dim;
-  const double vn = uv[1] / this->dim;
+  // Angular resolution between pixels in a tangent image
+  const double sample_resolution =
+      this->GetVertexAngularResolution() / this->dim;
 
-  // Vector between TL and TR
-  const Vec3 top = tr - tl;
+  // Convert UV coordinates to angular distance and shift them so the origin is
+  // at the center pixel
+  const double un =
+      (uv[0] - static_cast<double>(this->dim) / 2.0) * sample_resolution +
+      sample_resolution / 2.0;
+  const double vn =
+      (uv[1] - static_cast<double>(this->dim) / 2.0) * sample_resolution +
+      sample_resolution / 2.0;
 
-  // Vector between TL and BL
-  const Vec3 left = bl - tl;
-
-  // Return converted UV coordinate in spherical coordinates
+  // Compute the inverse gnomonic projection and convert the output to
+  // equirectangular pixels
   return this->ConvertSphericalToEquirectangular(
-      Convert3DToSpherical(tl + un * top + vn * left));
+      this->InverseGnomonicProjection(
+          Vec2(un, vn), Vec2(tangent_centers[tangent_image_idx * 2],
+                             tangent_centers[tangent_image_idx * 2 + 1])));
 }
 
 // Average angle between vertices in a <base_level> icosahedron (radians)

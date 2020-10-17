@@ -12,7 +12,6 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include "openMVG/features/regions.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -89,7 +88,7 @@ class TangentImages {
   Based on the results in Eder et al., "Tangent Images for Mitigating
   Spherical Distortion," CVPR 2020, we only really need the coordinates on the
   icosahedron for levels 0, 1, and 2, which makes the alternatives fairly
-  cumbersome. Instead, this file explicitly provides the necessary data. As
+  cumbersome. Instead, this implementation hard-codes the necessary data. As
   this is for internal operations of the class, these are private constants.
   ***************************************************************************/
 

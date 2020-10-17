@@ -52,7 +52,11 @@ TEST(Spherical, EquirectToTangent) {
 }
 
 
+/* Unit test to ensure that the conversion between equirectangular pixel coordinates and tangent UV coordinates holds */
+TEST(Spherical, TangentUVToEquirect) {
 
+
+}
 
 /* ************************************************************************* */
 int main() {
