@@ -48,8 +48,7 @@ void TangentImages::ComputeTangentImageCorners() {
   const double tangent_dim = static_cast<double>(this->dim);
 
   // Compute the corners via the inverse gnomonic projection
-  const double d = ang_res * static_cast<double>(this->dim - 1) /
-                   static_cast<double>(this->dim);
+  const double d = ang_res * (tangent_dim - 1.0) / tangent_dim;
   std::vector<double> spherical_corners;
   this->InverseGnomonicKernel(centers, 2, 2, d, d, spherical_corners);
 
@@ -103,7 +102,7 @@ const Vec2 TangentImages::InverseGnomonicProjection(
 }
 
 void TangentImages::InverseGnomonicKernel(
-    const std::vector<double> lonlat_in, const int kh, const int kw,
+    const std::vector<double> &lonlat_in, const int kh, const int kw,
     const double res_lon, const double res_lat,
     std::vector<double> &lonlat_out) const {
   // Allocate memory for output
@@ -142,8 +141,8 @@ void TangentImages::InverseGnomonicKernel(
         lonlat_out[vec_idx + 1] = out_sph_coords[1];
       }
     }
-  }  // namespace spherical
-}  // namespace openMVG
+  }
+}
 
 /*
   Creates a resampling map to create tangent images

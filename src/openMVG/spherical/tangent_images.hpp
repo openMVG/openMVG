@@ -139,7 +139,7 @@ class TangentImages {
     centers of N tangent images in spherical coordinates. The output is a
     flattened N x kh x kw x 2 tensor in row-major order.
   */
-  void InverseGnomonicKernel(const std::vector<double> lonlat_in, const int kh,
+  void InverseGnomonicKernel(const std::vector<double> &lonlat_in, const int kh,
                              const int kw, const double res_lon,
                              const double res_lat,
                              std::vector<double> &lonlat_out) const;
