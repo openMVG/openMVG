@@ -12,9 +12,9 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include "openMVG/features/regions.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
-#include "openMVG/features/regions.hpp"
 #include "openMVG/numeric/numeric.h"
 
 namespace openMVG {
@@ -48,6 +48,23 @@ inline const Vec2 Convert3DToSpherical(const Vec3 &xyz) {
   const double lat =
       std::atan2(-xyz[1], std::sqrt(xyz[0] * xyz[0] + xyz[2] * xyz[2]));
   return Vec2(lon, lat);
+}
+
+inline const bool PointInTriangle2D(Vec2 pt, Vec2 v1, Vec2 v2, Vec2 v3) {
+  // Lambda to check which side of the triangle edge this point falls on
+  auto sign = [](Vec2 pt, Vec2 v0, Vec2 v1) {
+    return (pt[0] - v1[0]) * (v0[1] - v1[1]) -
+           (v0[0] - v1[0]) * (pt[1] - v1[1]);
+  };
+
+  // Check each triangle edge
+  const double d1 = sign(pt, v1, v2);
+  const double d2 = sign(pt, v2, v3);
+  const double d3 = sign(pt, v3, v1);
+
+  // Returns true if all signs are consistent
+  return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) &&
+           ((d1 > 0) || (d2 > 0) || (d3 > 0)));
 }
 
 class TangentImages {
@@ -88,6 +105,8 @@ class TangentImages {
   static const std::vector<double> kTangentImageCentersL1;
   static const std::vector<double> kTangentImageCentersL2;
 
+  /* These are the spherical coordinates of the vertices of each face of the
+   * icosahedron. This is a "triangle soup" storage. */
   static const std::vector<double> kIcosahedronVerticesL0;
   static const std::vector<double> kIcosahedronVerticesL1;
   static const std::vector<double> kIcosahedronVerticesL2;
@@ -100,16 +119,36 @@ class TangentImages {
   void ComputeTangentImageCorners();
 
   /*
-    Computes the gnomonic projection of a window with dimensions (<kh> x <kw>)
-    centered at <lonlat_in>, which is a flattened N x 2 matrix with the centers
-    of N tangent images in spherical coordinates. The output is a flattened N x
-    kh x kw x 2 tensor in row-major order.
+    Computes the inverse gnomonic projection of a given point (x, y) on a plane
+    tangent to (center_lon, center_lat). Output is in spherical coordinates
+    (radians).
+  */
+  const Vec2 InverseGnomonicProjection(const Vec2 &xy,
+                                       const Vec2 &center_lonlat) const;
+
+  /*
+  Computes the forward gnomonic projection of a given point (lon, lat) on the
+  sphere to a plane tangent to (center_lon, center_lat). Output is in normalized
+  coordinates on the plane.
+*/
+  const Vec2 ForwardGnomonicProjection(const Vec2 &lonlat,
+                                       const Vec2 &center_lonlat) const;
+
+  /*
+    Computes the inverse gnomonic projection of a window with dimensions (<kh>,
+    <kw>) centered at <lonlat_in>, which is a flattened N x 2 matrix with the
+    centers of N tangent images in spherical coordinates. The output is a
+    flattened N x kh x kw x 2 tensor in row-major order.
   */
   void InverseGnomonicKernel(const std::vector<double> lonlat_in, const int kh,
                              const int kw, const double res_lon,
                              const double res_lat,
                              std::vector<double> &lonlat_out) const;
 
+  /*
+    Creates a sampling map that describes, for each pixel on each tangent image,
+    where to sample from the input equirectangular image.
+  */
   void CreateEquirectangularToTangentImagesSampleMap(
       std::vector<double> &sampling_map) const;
 
@@ -133,26 +172,23 @@ class TangentImages {
   void GetIcosahedronVertices(std::vector<double> &triangles) const;
 
   /*
-    This function converts (u, v) coordinates on a tangent image given by <tangent_image_idx> to the corresponding 3D point on the tangent plane to the sphere. This is used in conjunction with RayIntersectsTriangle to determine the valid region of a tangent image.
+    Given a spherical coordinate, converts it to a pixel coordinate on the
+    equirectangular image
   */
-  const Vec3 TangentUVTo3D(const size_t tangent_image_idx, const double u,
-                           const double v) const;
-
-
-  /*
-    This function computes the 3D barycentric coordinates of point <pt> on triangle ABC in order to check if the point falls within the triangle. This is used when checking if a feature is within the valid region of the tangent image when converting back to equirectangular coordinates.
-  */
-  const bool RayIntersectsTriangle(const Vec3 &pt, const Vec3 &A, const Vec3 &B,
-                                   const Vec3 &C) const;
+  const Vec2 ConvertSphericalToEquirectangular(const Vec2 &lonlat) const;
 
   /*
-    Checks if the ray to <pt> on the tangent image given by <tangent_image_idx>
-    is within a valid region to be transferred back to the equirectangular
-    image. This function is used to avoid converting features detected on the
-    padded regions in the tangent image.
+      Given a pixel coordinate on the equirectangular image, converts it to a
+     spherical coordinate
+    */
+  const Vec2 ConvertEquirectangularToSpherical(const Vec2 &xy) const;
+
+  /*
+    Returns the pixel coordinates (u, v) corresponding to the corners of the
+    icosahedral face associated with the <tangent_image_idx>-th tangent image
   */
-  const bool IsValidRegion(const size_t tangent_image_idx,
-                           const Vec3 &pt) const;
+  void ProjectFaceOntoTangentImage(const size_t tangent_image_idx, Vec2 &v0_uv,
+                                   Vec2 &v1_uv, Vec2 &v2_uv) const;
 
   /*
     Compute the number of tangent images at this base level
@@ -179,19 +215,18 @@ class TangentImages {
     Create the tangent images by resampling from the equirectangular image
   */
   template <typename ImageT>
-  void CreateTangentImages(const ImageT &rect_img,
-                           std::vector<ImageT> &tangent_images);
+  void CreateTangentImages(
+      const ImageT &rect_img, std::vector<ImageT> &tangent_images,
+      std::vector<image::Image<unsigned char>> *mask = nullptr) const;
 
   /*
-    Accepts a vector of Regions that describe the features detected on the set
-    of tangent images. This function converts the coordinates of each feature
-    from UV coordinates on a tangent image to XY coordinates on an
-    equirectangular spherical image. These converted features are returned as a
-    new Regions object
-   */
-  const std::unique_ptr<features::Regions>
-  ConvertTangentImageFeaturesToEquirectangular(
-      const std::vector<std::unique_ptr<features::Regions>> &regions) const;
+    This function converts (u, v) coordinates on a tangent image given by
+    <tangent_image_idx> to the corresponding 3D point on the tangent plane to
+    the sphere. This is used in conjunction with RayIntersectsTriangle to
+    determine the valid region of a tangent image.
+  */
+  const Vec2 TangentUVToEquirectangular(const size_t tangent_image_idx,
+                                        const Vec2 &uv) const;
 
   /*
     Returns the FOV of the tangent images in degrees
@@ -225,11 +260,15 @@ class TangentImages {
   Function to create a set of tangent images from a given equirectangular image
 */
 template <typename ImageT>
-void TangentImages::CreateTangentImages(const ImageT &rect_img,
-                                        std::vector<ImageT> &tangent_images) {
+void TangentImages::CreateTangentImages(
+    const ImageT &rect_img, std::vector<ImageT> &tangent_images,
+    std::vector<image::Image<unsigned char>> *mask) const {
   // Allocate the output vector
   const size_t num_tangent_imgs = this->num;
   tangent_images.resize(num_tangent_imgs);
+  if (mask) {
+    mask->resize(num_tangent_imgs);
+  }
 
   // Create the sampling maps for the tangent images
   std::vector<double> sampling_map;
@@ -238,14 +277,33 @@ void TangentImages::CreateTangentImages(const ImageT &rect_img,
   // Tangent image dimension is 2^(s-b)
   const size_t tangent_dim = this->dim;
 
-  // Create bilinear samplerback
+  // Create bilinear sampler
   const image::Sampler2d<image::SamplerLinear> sampler;
 
-  // Create each tangent image
+  // For creating a face mask for each tangent image
+  std::vector<double> face_vertices;
+  this->GetIcosahedronVertices(face_vertices);
+  std::vector<double> tangent_centers;
+  this->GetTangentImageCenters(tangent_centers);
+
+// Create each tangent image
 #pragma omp parallel for
   for (size_t i = 0; i < num_tangent_imgs; i++) {
     // Initialize output image
     tangent_images[i] = ImageT(tangent_dim, tangent_dim);
+
+    // Do some pre-computation for getting the mask for this tangent image if
+    // desired
+    Vec2 v0_uv;
+    Vec2 v1_uv;
+    Vec2 v2_uv;
+    if (mask) {
+      // Initialize mask image
+      (*mask)[i] = image::Image<unsigned char>(tangent_dim, tangent_dim);
+
+      // Compute gnomonic projection of face vertices
+      this->ProjectFaceOntoTangentImage(i, v0_uv, v1_uv, v2_uv);
+    }
 
     // Resample to each tangent image
     for (size_t j = 0; j < tangent_dim; j++) {
@@ -257,6 +315,28 @@ void TangentImages::CreateTangentImages(const ImageT &rect_img,
         // Sample from the precomputed map
         tangent_images[i](j, k) =
             sampler(rect_img, sampling_map[map_idx + 1], sampling_map[map_idx]);
+
+        // If we also want to generate masks of the unique regions on each
+        // tangent image (i.e. the area that falls within the face of the
+        // associated icosahedron)
+        if (mask) {
+          // Check if the sampling point falls within the associated triangular
+          // face by doing a point-in-triangle test on the tangent image.
+
+          // First get the sampling point in spherical coordinates
+          const Vec2 lonlat = this->ConvertEquirectangularToSpherical(
+              Vec2(sampling_map[map_idx], sampling_map[map_idx + 1]));
+
+          // Apply the forward gnomonic projection onto this tangent image
+          const Vec2 uv = this->ForwardGnomonicProjection(
+              lonlat, Vec2(tangent_centers[i * 2], tangent_centers[i * 2 + 1]));
+
+          // If the point falls within the projected face, then make the mask
+          // non-zero
+          if (PointInTriangle2D(uv, v0_uv, v1_uv, v2_uv)) {
+            (*mask)[i](j, k) = 255;
+          }
+        }
       }
     }
   }
