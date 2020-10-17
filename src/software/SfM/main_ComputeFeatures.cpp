@@ -72,7 +72,6 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
 #endif
-  std::string sSpherical = "NONE";
 
   // required
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
@@ -86,7 +85,6 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
-  cmd.add(make_option('s', sSpherical, "spherical"));
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -112,11 +110,6 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of parallel computations\n"
 #endif
-      << "[-s|--spherical]\n"
-      << "  (if using spherical image inputs):\n"
-      << "   RECT: compute features on equirectangular image (default),\n"
-      << "   TI0: compute features on level 0 tangent images,\n"
-      << "   TI1: compute features on level 1 tangent images\n"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -134,7 +127,6 @@ int main(int argc, char **argv)
 #ifdef OPENMVG_USE_OPENMP
             << "--numThreads " << iNumThreads << std::endl
 #endif
-            << "--spherical " << sSpherical << std::endl
             << std::endl;
 
 
@@ -151,21 +143,6 @@ int main(int argc, char **argv)
       std::cerr << "Cannot create output directory" << std::endl;
       return EXIT_FAILURE;
     }
-  }
-
-  // Tangent image level (-1 means equirectangular, i.e. do nothing)
-  if (sSpherical == "TI0")
-  {
-    const size_t ti_level = 0;
-  }
-  else if (sSpherical == "TI1")
-  {
-    const size_t ti_level = 1;
-  }
-  else
-  {
-    // Default case (treat spherical input as any other image)
-    const size_t ti_level = -1;
   }
 
   //---------------------------------------
