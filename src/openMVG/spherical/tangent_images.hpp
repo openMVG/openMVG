@@ -86,8 +86,8 @@ inline const T Rescale(const T value, const T old_min, const T old_max,
 }
 
 // Checks if a 2D point falls within a triangle
-inline const bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1,
-                                    const Vec2 &v2, const Vec2 &v3) {
+inline bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1, const Vec2 &v2,
+                              const Vec2 &v3) {
   // Lambda to check which side of the triangle edge this point falls on
   auto sign = [](Vec2 pt, Vec2 v0, Vec2 v1) {
     return (pt[0] - v1[0]) * (v0[1] - v1[1]) -
@@ -185,7 +185,7 @@ class TangentImages {
     A selector function that grabs the correct hard-coded constant for the
     stored base level
   */
-  const double GetVertexAngularResolution() const;
+  double GetVertexAngularResolution() const;
   /*
     A selector function that grabs the correct hard-coded centers (in spherical
     coordinates) of the icosahedron faces at the stored base level. These are
@@ -213,7 +213,7 @@ class TangentImages {
   const Vec2 ConvertEquirectangularToSpherical(const Vec2 &xy) const;
 
   /*
-    Returns the pixel coordinates (u, v) corresponding to the corners of the
+    Returns the pixel coordinates (u, v) corresponding to the vertices of the
     icosahedral face associated with the <tangent_image_idx>-th tangent image
   */
   void ProjectFaceOntoTangentImage(const size_t tangent_image_idx, Vec2 &v0_uv,
@@ -265,27 +265,27 @@ class TangentImages {
   /*
     Returns the FOV of the tangent images in degrees
   */
-  const double FOV() const;
+  double FOV() const;
 
   /*
     Returns the base level
   */
-  inline const int BaseLevel() const { return this->base_level; }
+  inline int BaseLevel() const { return this->base_level; }
 
   /*
     Returns the sphere level
   */
-  inline const int SphereLevel() const { return this->sphere_level; }
+  inline int SphereLevel() const { return this->sphere_level; }
 
   /*
     Returns the number of tangent images at this base level
   */
-  inline const int Num() const { return this->num; }
+  inline int Num() const { return this->num; }
 
   /*
     Returns the dimension of the tangent images in pixels
   */
-  inline const int Dim() const { return this->dim; }
+  inline int Dim() const { return this->dim; }
 };
 
 /* TEMPLATE FUNCTION DEFINITIONS */

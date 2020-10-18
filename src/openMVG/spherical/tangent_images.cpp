@@ -120,7 +120,9 @@ void TangentImages::InverseGnomonicKernel(
 void TangentImages::CreateEquirectangularToTangentImagesSampleMap(
     std::vector<double> &sampling_map) const {
   // Allocate space for all the tangent image sample maps
-  sampling_map.resize(this->num * this->dim * this->dim * 2);
+  sampling_map.resize(static_cast<size_t>(this->num) *
+                      static_cast<size_t>(this->dim) *
+                      static_cast<size_t>(this->dim) * 2);
 
   // Sampling resolution of the tangent images
   const double sample_resolution =
@@ -230,7 +232,7 @@ void TangentImages::ComputeDim() {
   average over all of them as there is slight variation due to the singular
   points of the icosahedron after subdivision
 */
-const double TangentImages::FOV() const {
+double TangentImages::FOV() const {
   // Accumulator variable for mean computation
   double accum = 0.0;
 
@@ -291,7 +293,7 @@ const Vec2 TangentImages::TangentUVToEquirectangular(
 }
 
 // Average angle between vertices in a <base_level> icosahedron (radians)
-const double TangentImages::GetVertexAngularResolution() const {
+double TangentImages::GetVertexAngularResolution() const {
   switch (this->base_level) {
     case 0:
       return kVertexAngularResolutionL0;
