@@ -27,38 +27,6 @@ TangentImages::TangentImages(const int base_level, const int sphere_level,
   // Compute the number and dim
   this->ComputeNum();
   this->ComputeDim();
-
-  // Compute the corners of the tangent images. This will be used when
-  // converting coordinates from tangent images to equirectangular.
-  this->ComputeTangentImageCorners();
-}
-
-/*
-  Compute the corners of the tangent images in 3D coordinates for use
-  converting UV coordinates on a tangent plane to XY coordinates in the
-  equirectangular image, storing the result in the class variable <corners>
- */
-void TangentImages::ComputeTangentImageCorners() {
-  // Get the centers of the tangent images in spherical coordinates
-  std::vector<double> centers;
-  this->GetTangentImageCenters(centers);
-
-  // Get the tangent image info
-  const double tangent_dim = static_cast<double>(this->dim);
-
-  // Compute the corners via the inverse gnomonic projection
-  const double d =
-      this->GetVertexAngularResolution() * (tangent_dim - 1.0) / tangent_dim;
-  std::vector<double> spherical_corners;
-  this->InverseGnomonicKernel(centers, 2, 2, d, d, spherical_corners);
-
-  // Convert all corners to 3D coordinates
-  this->corners.resize(this->num * 8);
-#pragma omp parallel for
-  for (size_t i = 0; i < this->num * 8; i++) {
-    this->corners[i] = ConvertSphericalTo3D(
-        Vec2(spherical_corners[2 * i], spherical_corners[2 * i + 1]));
-  }
 }
 
 // Equations courtesy of https://mathworld.wolfram.com/GnomonicProjection.html
@@ -266,11 +234,12 @@ const double TangentImages::FOV() const {
   // Accumulator variable for mean computation
   double accum = 0.0;
 
-  // Go through each set of N tangent image corners (N x 4 in memory)
+  // Go through each set of N tangent images
   for (size_t i = 0; i < this->num; i++) {
-    // Get the rays to 2 corners
-    Vec3 tl = this->corners[4 * i];
-    Vec3 tr = this->corners[4 * i + 1];
+    Vec3 tl =
+        ConvertSphericalTo3D(this->TangentUVToSpherical(i, Vec2(0.0, 0.0)));
+    Vec3 tr = ConvertSphericalTo3D(
+        this->TangentUVToSpherical(i, Vec2(0.0, this->dim)));
 
     // Normalize the rays to vectors from the origin
     tl.normalize();
@@ -288,8 +257,8 @@ const double TangentImages::FOV() const {
   return 180 * accum / M_PI;
 }
 
-const Vec2 TangentImages::TangentUVToEquirectangular(
-    const size_t tangent_image_idx, const Vec2 &uv) const {
+const Vec2 TangentImages::TangentUVToSpherical(const size_t tangent_image_idx,
+                                               const Vec2 &uv) const {
   // Get the reference to the tangent image centers
   std::vector<double> tangent_centers;
   this->GetTangentImageCenters(tangent_centers);
@@ -308,11 +277,17 @@ const Vec2 TangentImages::TangentUVToEquirectangular(
       sample_resolution / 2.0;
 
   // Compute the inverse gnomonic projection and convert the output to
-  // equirectangular pixels
+  // spherical coordinates
+  return this->InverseGnomonicProjection(
+      Vec2(un, vn), Vec2(tangent_centers[tangent_image_idx * 2],
+                         tangent_centers[tangent_image_idx * 2 + 1]));
+}
+
+const Vec2 TangentImages::TangentUVToEquirectangular(
+    const size_t tangent_image_idx, const Vec2 &uv) const {
+  // Simply convert to spherical and then to equirectangular
   return this->ConvertSphericalToEquirectangular(
-      this->InverseGnomonicProjection(
-          Vec2(un, vn), Vec2(tangent_centers[tangent_image_idx * 2],
-                             tangent_centers[tangent_image_idx * 2 + 1])));
+      this->TangentUVToSpherical(tangent_image_idx, uv));
 }
 
 // Average angle between vertices in a <base_level> icosahedron (radians)

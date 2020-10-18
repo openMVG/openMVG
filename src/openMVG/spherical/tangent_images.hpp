@@ -41,6 +41,18 @@ Some clarifying identities:
 * (lon, lat) == (0, -p/2) along the -Y axis
 * (lon, lat) == (pi/2, 0) along the +Z axis
 * (lon, lat) == (3*pi/2, 0) along the -Z axis
+
+Additionally, we assume a (H, W) equirectangular image relates to spherical
+coordinates as:
+
+           0 <--> -pi            W-1 <--> pi*(W-1/W)
+              --------------------------
+ 0 <--> -pi/2 |                        |
+              |                        |
+              |                        |
+H-1 <--> pi/2 |                        |
+              --------------------------
+
 */
 
 // Converts spherical coordinates to 3D coordinates
@@ -102,8 +114,6 @@ class TangentImages {
   int rect_w;       /* width of the input equirectangular image */
   int dim;          /* dimension of the tangent images */
   int num;          /* number of tangent images */
-  std::vector<Vec3> corners; /* 3D coords of the corners of the computed
-                                tangent images */
 
   /***************************************************************************
   These constants are provided here to avoid two alternative solutions:
@@ -138,13 +148,6 @@ class TangentImages {
   static const std::vector<double> kIcosahedronVerticesL2;
 
   /*
-    Compute the corners of the tangent images in 3D coordinates for subsequent
-    use converting UV coordinates on a tangent plane to XY coordinates in the
-    equirectangular image, storing the result in the class variable <corners>
-   */
-  void ComputeTangentImageCorners();
-
-  /*
     Computes the inverse gnomonic projection of a given point (x, y) on a plane
     tangent to (center_lon, center_lat). Output is in spherical coordinates
     (radians).
@@ -154,7 +157,7 @@ class TangentImages {
 
   /*
   Computes the forward gnomonic projection of a given point (lon, lat) on the
-  sphere to a plane tangent to (center_lon, center_lat). Output is in 
+  sphere to a plane tangent to (center_lon, center_lat). Output is in
   coordinates on the plane.
 */
   const Vec2 ForwardGnomonicProjection(const Vec2 &lonlat,
@@ -217,6 +220,13 @@ class TangentImages {
                                    Vec2 &v1_uv, Vec2 &v2_uv) const;
 
   /*
+    This function converts (u, v) coordinates on a tangent image given by
+    <tangent_image_idx> to the corresponding spherical coordinate.
+  */
+  const Vec2 TangentUVToSpherical(const size_t tangent_image_idx,
+                                  const Vec2 &uv) const;
+
+  /*
     Compute the number of tangent images at this base level
   */
   void ComputeNum();
@@ -247,9 +257,7 @@ class TangentImages {
 
   /*
     This function converts (u, v) coordinates on a tangent image given by
-    <tangent_image_idx> to the corresponding 3D point on the tangent plane to
-    the sphere. This is used in conjunction with RayIntersectsTriangle to
-    determine the valid region of a tangent image.
+    <tangent_image_idx> to the corresponding pixel in the equirectangular image.
   */
   const Vec2 TangentUVToEquirectangular(const size_t tangent_image_idx,
                                         const Vec2 &uv) const;
@@ -308,7 +316,7 @@ void TangentImages::CreateTangentImages(
   std::vector<double> tangent_centers;
   this->GetTangentImageCenters(tangent_centers);
 
-// Create each tangent image
+  // Create each tangent image
 #pragma omp parallel for
   for (size_t i = 0; i < this->num; i++) {
     // Initialize output image

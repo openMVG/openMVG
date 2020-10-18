@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/spherical/tangent_images.hpp"
-#include "nonFree/sift/SIFT_describer.hpp"
 #include "openMVG/image/image_io.hpp"
-
 #include "testing/testing.h"
 
 #include <sstream>
@@ -19,7 +17,6 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::spherical;
-using namespace openMVG::features;
 
 /* Test and demo to create tangent images */
 TEST(Spherical, EquirectToTangent) {
@@ -29,7 +26,9 @@ TEST(Spherical, EquirectToTangent) {
       std::string(THIS_SOURCE_DIR) + "/earthmap4k.jpg";
   EXPECT_TRUE(ReadImage(png_filename.c_str(), &image));
 
-  // Instantiate a TangentImage object that defines the relationship between the dimension of the equirectangular image and those of the tangent images we want to create
+  // Instantiate a TangentImage object that defines the relationship between the
+  // dimension of the equirectangular image and those of the tangent images we
+  // want to create
   TangentImages tangent_images(0, 9, image.Height(), image.Width());
 
   // For fun, this is the FOV of each tangent image we're going to create
