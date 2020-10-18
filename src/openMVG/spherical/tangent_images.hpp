@@ -19,19 +19,29 @@
 namespace openMVG {
 namespace spherical {
 
-// Floating point negative modulus operation
-template <typename T>
-inline const T NegMod(const T lval, const T rval) {
-  return fmod(fmod(lval, rval) + rval, rval);
-}
+/*
+All of the spherical to Cartesian conversions in this file transform coordinates
+according to this coordinate system:
 
-// Rescale value to a new range
-template <typename T>
-inline const T Rescale(const T value, const T old_min, const T old_max,
-                       const T new_min, const T new_max) {
-  return (new_max - new_min) * (value - old_min) / (old_max - old_min) +
-         new_min;
-}
+-Y   +Z
+ |   /
+ |  /
+ | /
+ |/
+ --------- +X
+
+This 3D rectangular coordinate system is consistently used within computer
+vision, and aligns with the 2D image coordinate system that places the origin at
+the top-left of an image.
+
+Some useful identities:
+* (lon, lat) == (0, 0) along the +X axis
+* (lon, lat) == (-pi, 0) along the -X axis
+* (lon, lat) == (0, p/2) along the +Y axis
+* (lon, lat) == (0, -p/2) along the -Y axis
+* (lon, lat) == (pi/2, 0) along the +Z axis
+* (lon, lat) == (3*pi/2, 0) along the -Z axis
+*/
 
 // Converts spherical coordinates to 3D coordinates
 inline const Vec3 ConvertSphericalTo3D(const Vec2 &lonlat) {
@@ -49,7 +59,23 @@ inline const Vec2 Convert3DToSpherical(const Vec3 &xyz) {
   return Vec2(lon, lat);
 }
 
-inline const bool PointInTriangle2D(Vec2 pt, Vec2 v1, Vec2 v2, Vec2 v3) {
+// Floating point negative modulus operation
+template <typename T>
+inline const T NegMod(const T lval, const T rval) {
+  return fmod(fmod(lval, rval) + rval, rval);
+}
+
+// Rescale value to a new range
+template <typename T>
+inline const T Rescale(const T value, const T old_min, const T old_max,
+                       const T new_min, const T new_max) {
+  return (new_max - new_min) * (value - old_min) / (old_max - old_min) +
+         new_min;
+}
+
+// Checks if a point falls within a triangle
+inline const bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1,
+                                    const Vec2 &v2, const Vec2 &v3) {
   // Lambda to check which side of the triangle edge this point falls on
   auto sign = [](Vec2 pt, Vec2 v0, Vec2 v1) {
     return (pt[0] - v1[0]) * (v0[1] - v1[1]) -
@@ -66,6 +92,7 @@ inline const bool PointInTriangle2D(Vec2 pt, Vec2 v1, Vec2 v2, Vec2 v3) {
            ((d1 > 0) || (d2 > 0) || (d3 > 0)));
 }
 
+// Tangent images class
 class TangentImages {
  private:
   int base_level;   /* base icosahedron level */
@@ -263,18 +290,14 @@ void TangentImages::CreateTangentImages(
     const ImageT &rect_img, std::vector<ImageT> &tangent_images,
     std::vector<image::Image<unsigned char>> *mask) const {
   // Allocate the output vector
-  const size_t num_tangent_imgs = this->num;
-  tangent_images.resize(num_tangent_imgs);
+  tangent_images.resize(this->num);
   if (mask) {
-    mask->resize(num_tangent_imgs);
+    mask->resize(this->num);
   }
 
   // Create the sampling maps for the tangent images
   std::vector<double> sampling_map;
   this->CreateEquirectangularToTangentImagesSampleMap(sampling_map);
-
-  // Tangent image dimension is 2^(s-b)
-  const size_t tangent_dim = this->dim;
 
   // Create bilinear sampler
   const image::Sampler2d<image::SamplerLinear> sampler;
@@ -287,9 +310,9 @@ void TangentImages::CreateTangentImages(
 
 // Create each tangent image
 #pragma omp parallel for
-  for (size_t i = 0; i < num_tangent_imgs; i++) {
+  for (size_t i = 0; i < this->num; i++) {
     // Initialize output image
-    tangent_images[i] = ImageT(tangent_dim, tangent_dim);
+    tangent_images[i] = ImageT(this->dim, this->dim);
 
     // Do some pre-computation for getting the mask for this tangent image if
     // desired
@@ -298,18 +321,18 @@ void TangentImages::CreateTangentImages(
     Vec2 v2_uv;
     if (mask) {
       // Initialize mask image
-      (*mask)[i] = image::Image<unsigned char>(tangent_dim, tangent_dim);
+      (*mask)[i] = image::Image<unsigned char>(this->dim, this->dim);
 
       // Compute gnomonic projection of face vertices
       this->ProjectFaceOntoTangentImage(i, v0_uv, v1_uv, v2_uv);
     }
 
     // Resample to each tangent image
-    for (size_t j = 0; j < tangent_dim; j++) {
-      for (size_t k = 0; k < tangent_dim; k++) {
+    for (size_t j = 0; j < this->dim; j++) {
+      for (size_t k = 0; k < this->dim; k++) {
         // Index in sample map
         const size_t map_idx =
-            i * tangent_dim * tangent_dim * 2 + j * tangent_dim * 2 + k * 2;
+            i * this->dim * this->dim * 2 + j * this->dim * 2 + k * 2;
 
         // Sample from the precomputed map
         tangent_images[i](j, k) =
@@ -333,7 +356,7 @@ void TangentImages::CreateTangentImages(
           // If the point falls within the projected face, then make the mask
           // non-zero
           if (PointInTriangle2D(uv, v0_uv, v1_uv, v2_uv)) {
-            (*mask)[i](j, k) = 255;
+            (*mask)[i](j, k) = 255;  // 255 chosen for visualizability
           }
         }
       }
