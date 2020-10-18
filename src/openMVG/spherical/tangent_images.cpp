@@ -44,11 +44,11 @@ void TangentImages::ComputeTangentImageCorners() {
   this->GetTangentImageCenters(centers);
 
   // Get the tangent image info
-  const double ang_res = this->GetVertexAngularResolution();
   const double tangent_dim = static_cast<double>(this->dim);
 
   // Compute the corners via the inverse gnomonic projection
-  const double d = ang_res * (tangent_dim - 1.0) / tangent_dim;
+  const double d =
+      this->GetVertexAngularResolution() * (tangent_dim - 1.0) / tangent_dim;
   std::vector<double> spherical_corners;
   this->InverseGnomonicKernel(centers, 2, 2, d, d, spherical_corners);
 
@@ -61,6 +61,7 @@ void TangentImages::ComputeTangentImageCorners() {
   }
 }
 
+// Equations courtesy of https://mathworld.wolfram.com/GnomonicProjection.html
 const Vec2 TangentImages::ForwardGnomonicProjection(
     const Vec2 &lonlat, const Vec2 &center_lonlat) const {
   const double cos_c = std::sin(center_lonlat[1]) * std::sin(lonlat[1]) +
@@ -76,6 +77,7 @@ const Vec2 TangentImages::ForwardGnomonicProjection(
   return Vec2(x, y);
 }
 
+// Equations courtesy of https://mathworld.wolfram.com/GnomonicProjection.html
 const Vec2 TangentImages::InverseGnomonicProjection(
     const Vec2 &xy, const Vec2 &center_lonlat) const {
   // Compute the inverse gnomonic projection of each (x,y) on a plane
@@ -326,7 +328,7 @@ const double TangentImages::GetVertexAngularResolution() const {
   }
 }
 
-// Assigns the provides vector to the vector representing the N x 2 matrix of
+// Assigns the provided vector to the vector representing the N x 2 matrix of
 // tangent image center (i.e. tangent points to the sphere) in spherical
 // coordinates (lon, lat)
 void TangentImages::GetTangentImageCenters(std::vector<double> &centers) const {
@@ -344,9 +346,8 @@ void TangentImages::GetTangentImageCenters(std::vector<double> &centers) const {
   }
 }
 
-// Assigns the provides vector to the vector representing the N x 3 x 3
-// (XYZ)tensor of tangent image center (i.e. tangent points to the sphere) in
-// spherical coordinates (lon, lat)
+// Assigns the provided vector to the vector representing the N x 3 x 2
+// (lon, lat) tensor of tangent image vertices as a "triangle soup"
 void TangentImages::GetIcosahedronVertices(
     std::vector<double> &triangles) const {
   switch (this->base_level) {

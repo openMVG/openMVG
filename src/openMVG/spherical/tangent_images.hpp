@@ -20,7 +20,7 @@ namespace openMVG {
 namespace spherical {
 
 /*
-All of the spherical to Cartesian conversions in this file transform coordinates
+The spherical to Cartesian conversions in this file transform coordinates
 according to this coordinate system:
 
 -Y   +Z
@@ -34,7 +34,7 @@ This 3D rectangular coordinate system is consistently used within computer
 vision, and aligns with the 2D image coordinate system that places the origin at
 the top-left of an image.
 
-Some useful identities:
+Some clarifying identities:
 * (lon, lat) == (0, 0) along the +X axis
 * (lon, lat) == (-pi, 0) along the -X axis
 * (lon, lat) == (0, p/2) along the +Y axis
@@ -73,7 +73,7 @@ inline const T Rescale(const T value, const T old_min, const T old_max,
          new_min;
 }
 
-// Checks if a point falls within a triangle
+// Checks if a 2D point falls within a triangle
 inline const bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1,
                                     const Vec2 &v2, const Vec2 &v3) {
   // Lambda to check which side of the triangle edge this point falls on
@@ -110,7 +110,7 @@ class TangentImages {
 
     (1) Re-implementing Loop subdivision from scratch for the icosahedron
     (2) Adding a new dependency on CGAL or another library that provides a
-  Loop subdivision implementation
+        Loop subdivision implementation
 
   Based on the results in Eder et al., "Tangent Images for Mitigating
   Spherical Distortion," CVPR 2020, we only really need the coordinates on the
@@ -154,7 +154,7 @@ class TangentImages {
 
   /*
   Computes the forward gnomonic projection of a given point (lon, lat) on the
-  sphere to a plane tangent to (center_lon, center_lat). Output is in normalized
+  sphere to a plane tangent to (center_lon, center_lat). Output is in 
   coordinates on the plane.
 */
   const Vec2 ForwardGnomonicProjection(const Vec2 &lonlat,
