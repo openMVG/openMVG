@@ -9,6 +9,7 @@
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/features/feature.hpp"
@@ -104,8 +105,25 @@ bool CreateLineCameraFile(  const IndexT camera_id,
       return false;
       break;      
     case PINHOLE_CAMERA_FISHEYE: 
-      std::cout << "PINHOLE_CAMERA_FISHEYE is not supported. Aborting ..." << std::endl;
-      return false;
+      //OpenMVG's PINHOLE_CAMERA_FISHEYE corresponds to Colmap's OPENCV_FISHEYE
+      //Parameters: fx, fy, cx, cy, k1, k2, k3, k4
+      {
+        std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Fisheye> pinhole_intrinsic_fisheye(
+            dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Fisheye * >(intrinsic->clone()));
+        
+        came_line_ss << camera_id << " " << 
+          "OPENCV_FISHEYE" << " " <<
+          pinhole_intrinsic_fisheye->w() << " " << 
+          pinhole_intrinsic_fisheye->h() << " " <<
+          pinhole_intrinsic_fisheye->focal() << " " << 
+          pinhole_intrinsic_fisheye->focal() << " " << 
+          pinhole_intrinsic_fisheye->principal_point().x() << " " << 
+          pinhole_intrinsic_fisheye->principal_point().y() << " " << 
+          pinhole_intrinsic_fisheye->getParams().at(3) << " " << //k1
+          pinhole_intrinsic_fisheye->getParams().at(4) << " " << //k2
+          pinhole_intrinsic_fisheye->getParams().at(5) << " " << //k3
+          pinhole_intrinsic_fisheye->getParams().at(6) << " " << "\n"; //k4
+      }
       break; 
     default: std::cout << "Camera Type " << current_type << " is not supported. Aborting ..." << std::endl;
     return false;
