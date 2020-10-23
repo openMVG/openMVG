@@ -515,7 +515,22 @@ bool Bundle_Adjustment_Ceres::Adjust
         Vec3 t_refined(map_poses.at(indexPose)[3], map_poses.at(indexPose)[4], map_poses.at(indexPose)[5]);
         // Update the pose
         Pose3 & pose = pose_it.second;
-        pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_ROTATION)
+        {
+            // Update only rotation
+            pose.rotation() = R_refined;
+        }
+        else if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
+        {
+            // Update only translation
+            Vec3 C_refined = -R_refined.transpose() * t_refined;
+            pose.center() = C_refined;
+        }
+        else
+        {
+            // Update rotation + translation
+            pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        }
       }
     }
 
