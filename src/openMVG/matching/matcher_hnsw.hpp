@@ -137,7 +137,7 @@ public:
   {
     if (!HNSW_matcher_)
       return false;
-    HNSW_matcher_->setEf(16); // it could probabely by lowered in this case
+    HNSW_matcher_->setEf(16); //here we stay conservative but it could probably be lowered in this case (first NN)
     const auto result = HNSW_matcher_->searchKnn(query, 1).top();
     *indice = result.second;
     *distance =  result.first;
@@ -167,10 +167,11 @@ public:
       return false;
     // EfSearch parameter could not be < NN.
     // -
-    // For vectors with dimensionality of approx. 64-128 and for 2NN, 
+    // For vectors with dimensionality of approx. 64-128 and for 2 NNs, 
     // EfSearch = 16 produces good results in conjonction with other parameters fixed in this file (EfConstruct = 16, M = 100).
     // But nothing has been evaluated on our side for lower / higher dimensionality and for a higher number of NNs.
-    // So for now and for NN > 2, EfSearch is fixed without a good knowledge, and in fact it depends on the two other parameters.
+    // So for now and for NN > 2, EfSearch is fixed to 2 * NNs without a good a priori knowledge. 
+    // A good value for EfSearch could really depends on the two other parameters (EfConstruct / M).
     if (NN <= 2) {
       HNSW_matcher_->setEf(16);
     } else {
