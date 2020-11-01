@@ -73,8 +73,8 @@ TEST(Spherical, DescribeFeatures) {
       new SIFT_Image_describer(SIFT_Image_describer::Params(), true));
 
   // Compute features on tangent images, and return the
-  auto regions =
-      tangent_images.ComputeFeaturesOnTangentImages(image_describer, imageGray);
+  auto regions = tangent_images.ComputeFeaturesOnTangentImages(*image_describer,
+                                                               imageGray);
 
   // Write the tangent images to file
   if (regions &&

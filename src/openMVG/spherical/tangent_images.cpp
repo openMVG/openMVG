@@ -343,7 +343,7 @@ void TangentImages::GetIcosahedronVertices(
 
 std::unique_ptr<features::Regions>
 TangentImages::ComputeFeaturesOnTangentImages(
-    const std::unique_ptr<features::Image_describer> &image_describer,
+    features::Image_describer &image_describer,
     const image::Image<unsigned char> &imageGray,
     image::Image<unsigned char> *feature_mask) const {
   // Create the tangent images and the valid region mask
@@ -382,7 +382,7 @@ TangentImages::ComputeFeaturesOnTangentImages(
   std::vector<std::unique_ptr<features::Regions>> t_regions;
   for (size_t i = 0; i < t_images.size(); i++) {
     // Compute descriptors only in the valid regions
-    auto regions = image_describer->Describe(t_images[i], &(t_mask[i]));
+    auto regions = image_describer.Describe(t_images[i], &(t_mask[i]));
     t_regions.push_back(std::move(regions));
   }
 

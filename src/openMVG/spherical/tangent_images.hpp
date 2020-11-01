@@ -268,10 +268,11 @@ class TangentImages {
     This function takes a grayscale equirectangular image as input, computes
     sparse features on the tangent image representation defined by the calling
     object, and then converts the detected features' coordinates back to pixels
-    on the equirectangular image. Optionally an equirectangular mask can be passed in as well where non-zero values denote where to compute features.
+    on the equirectangular image. Optionally an equirectangular mask can be
+    passed in as well where non-zero values denote where to compute features.
   */
   std::unique_ptr<features::Regions> ComputeFeaturesOnTangentImages(
-      const std::unique_ptr<features::Image_describer> &image_describer,
+      features::Image_describer &image_describer,
       const image::Image<unsigned char> &imageGray,
       image::Image<unsigned char> *feature_mask = nullptr) const;
 
