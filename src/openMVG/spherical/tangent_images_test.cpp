@@ -72,13 +72,14 @@ TEST(Spherical, DescribeFeatures) {
   image_describer.reset(
       new SIFT_Image_describer(SIFT_Image_describer::Params(), true));
 
-  // Compute features on tangent images
-  auto regions = ComputeFeaturesOnTangentImages(tangent_images, image_describer,
-                                                imageGray);
+  // Compute features on tangent images, and return the
+  auto regions =
+      tangent_images.ComputeFeaturesOnTangentImages(image_describer, imageGray);
 
   // Write the tangent images to file
   if (regions &&
-      !image_describer->Save(regions.get(), "feat.txt", "desc.txt")) {
+      !image_describer->Save(regions.get(), "tangent_images_feat.txt",
+                             "tangent_images_desc.txt")) {
     std::cerr << "Cannot save regions" << std::endl;
   }
 }
