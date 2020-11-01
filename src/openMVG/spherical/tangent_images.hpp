@@ -12,6 +12,10 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include "openMVG/features/binary_regions.hpp"
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/features/scalar_regions.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -372,6 +376,80 @@ void TangentImages::CreateTangentImages(
   }
 }
 
+inline std::unique_ptr<features::Regions> ComputeFeaturesOnTangentImages(
+    const TangentImages &tangent_images,
+    const std::unique_ptr<features::Image_describer> &image_describer,
+    const image::Image<unsigned char> &imageGray,
+    image::Image<unsigned char> *feature_mask = nullptr) {
+  // Create the tangent images and the valid region mask
+  std::vector<image::Image<unsigned char>> t_images;
+  std::vector<image::Image<unsigned char>> t_mask;
+  tangent_images.CreateTangentImages(imageGray, t_images, &t_mask);
+
+  // If a mask is provided, convert that to tangent images and AND it with the
+  // valid region mask
+  if (feature_mask) {
+    std::vector<image::Image<unsigned char>> t_feature_mask;
+    std::vector<image::Image<unsigned char>> t_feature_mask_mask;
+    tangent_images.CreateTangentImages(*feature_mask, t_feature_mask,
+                                       &t_feature_mask_mask);
+#pragma omp parallel for
+    for (size_t i = 0; i < t_images.size(); i++) {
+      for (size_t j = 0; j < t_images[i].Height(); j++) {
+        for (size_t k = 0; k < t_images[i].Width(); k++) {
+          if (t_mask[i](j, k) > 0 && t_feature_mask_mask[i](j, k) > 0) {
+            t_mask[i](j, k) = 255;
+          } else {
+            t_mask[i](j, k) = 0;
+          }
+        }
+      }
+    }
+  }
+
+  // At this point we have out tangent images to detect and describe on as
+  // <t_images> and our feature mask is incorporated into our valid region mask
+  // in <t_mask>. So next, we compute the descriptors on each tangent
+  // image
+
+  // Image_describer returns a unique_ptr, but we want to keep track of these
+  // over all tangent images, so we create a vector of raw pointers
+  std::vector<std::unique_ptr<features::Regions>> t_regions;
+  for (size_t i = 0; i < t_images.size(); i++) {
+    // Compute descriptors only in the valid regions
+    auto regions = image_describer->Describe(t_images[i], &(t_mask[i]));
+    t_regions.push_back(std::move(regions));
+  }
+
+  // Output regions container should be the same type as the tangent image ones
+  std::unique_ptr<features::Regions> regions_out =
+      std::unique_ptr<features::Regions>(t_regions[0]->EmptyClone());
+
+  // Go through all regions and check if the features are valid
+  for (size_t i = 0; i < t_regions.size(); i++) {
+    // Go through each feature in this region, check if it's in a valid region,
+    // and if so, copy it to the output regions container and update its
+    // coordinates
+    for (size_t j = 0; j < t_regions[i]->RegionCount(); j++) {
+      // Grab the location of the features
+      const auto coords = t_regions[i]->GetRegionPosition(j);
+
+      // Copy the feature over to the end of the output regions container
+      t_regions[i]->CopyRegion(j, regions_out.get());
+
+      // Convert back to equirectangular coordinate
+      const auto rect_coords =
+          tangent_images.TangentUVToEquirectangular(i, coords);
+
+      // Update the coordinates in the output regions container
+      // TODO: Figure out how to do this
+      std::cout << rect_coords.transpose() << std::endl;
+    }
+  }
+
+  // Return the output regions
+  return regions_out;
+}
 }  // namespace spherical
 }  // namespace openMVG
 
