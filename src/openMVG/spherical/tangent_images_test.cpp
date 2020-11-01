@@ -10,6 +10,9 @@
 #include "openMVG/image/image_io.hpp"
 #include "testing/testing.h"
 
+#include "nonFree/sift/SIFT_describer_io.hpp"
+#include "openMVG/features/image_describer.hpp"
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -17,6 +20,7 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::spherical;
+using namespace openMVG::features;
 
 /* Test and demo to create tangent images */
 TEST(Spherical, EquirectToTangent) {
@@ -47,6 +51,36 @@ TEST(Spherical, EquirectToTangent) {
     const std::string mask_filename =
         ("test_tangent images_" + std::to_string(i) + "_mask.png");
     EXPECT_TRUE(WriteImage(mask_filename.c_str(), t_mask[i]));
+  }
+}
+
+/* Test and demo to detect features on tangent images */
+TEST(Spherical, DescribeFeatures) {
+  // Load the test equirectangular image
+  Image<unsigned char> imageGray;
+  const std::string png_filename =
+      std::string(THIS_SOURCE_DIR) + "/earthmap4k.jpg";
+  EXPECT_TRUE(ReadImage(png_filename.c_str(), &imageGray));
+
+  // Instantiate a TangentImage object that defines the relationship between the
+  // dimension of the equirectangular image and those of the tangent images we
+  // want to create
+  TangentImages tangent_images(0, 9, imageGray.Height(), imageGray.Width());
+
+  // Create SIFT image describer
+  std::unique_ptr<Image_describer> image_describer;
+  image_describer.reset(
+      new SIFT_Image_describer(SIFT_Image_describer::Params(), true));
+
+  // Compute features on tangent images, and return the
+  auto regions =
+      tangent_images.ComputeFeaturesOnTangentImages(image_describer, imageGray);
+
+  // Write the tangent images to file
+  if (regions &&
+      !image_describer->Save(regions.get(), "tangent_images_feat.txt",
+                             "tangent_images_desc.txt")) {
+    std::cerr << "Cannot save regions" << std::endl;
   }
 }
 

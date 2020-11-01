@@ -341,6 +341,110 @@ void TangentImages::GetIcosahedronVertices(
   }
 }
 
+std::unique_ptr<features::Regions>
+TangentImages::ComputeFeaturesOnTangentImages(
+    const std::unique_ptr<features::Image_describer> &image_describer,
+    const image::Image<unsigned char> &imageGray,
+    image::Image<unsigned char> *feature_mask) const {
+  // Create the tangent images and the valid region mask
+  std::vector<image::Image<unsigned char>> t_images;
+  std::vector<image::Image<unsigned char>> t_mask;
+  this->CreateTangentImages(imageGray, t_images, &t_mask);
+
+  // If a mask is provided, convert that to tangent images and AND it with the
+  // valid region mask
+  if (feature_mask) {
+    std::vector<image::Image<unsigned char>> t_feature_mask;
+    std::vector<image::Image<unsigned char>> t_feature_mask_mask;
+    this->CreateTangentImages(*feature_mask, t_feature_mask,
+                              &t_feature_mask_mask);
+#pragma omp parallel for
+    for (size_t i = 0; i < t_images.size(); i++) {
+      for (size_t j = 0; j < t_images[i].Height(); j++) {
+        for (size_t k = 0; k < t_images[i].Width(); k++) {
+          if (t_mask[i](j, k) > 0 && t_feature_mask_mask[i](j, k) > 0) {
+            t_mask[i](j, k) = 255;
+          } else {
+            t_mask[i](j, k) = 0;
+          }
+        }
+      }
+    }
+  }
+
+  // At this point we have out tangent images to detect and describe on as
+  // <t_images> and our feature mask is incorporated into our valid region mask
+  // in <t_mask>. So next, we compute the descriptors on each tangent
+  // image
+
+  // Image_describer returns a unique_ptr, but we want to keep track of these
+  // over all tangent images, so we create a vector of raw pointers
+  std::vector<std::unique_ptr<features::Regions>> t_regions;
+  for (size_t i = 0; i < t_images.size(); i++) {
+    // Compute descriptors only in the valid regions
+    auto regions = image_describer->Describe(t_images[i], &(t_mask[i]));
+    t_regions.push_back(std::move(regions));
+  }
+
+  // Output regions container should be the same type as the tangent image ones
+  std::unique_ptr<features::Regions> regions_out =
+      std::unique_ptr<features::Regions>(t_regions[0]->EmptyClone());
+
+  // Go through all regions and convert them to equirectangular
+  for (size_t i = 0; i < t_regions.size(); i++) {
+    // Go through each feature in this region, copy it to the output regions
+    // container and update its coordinates
+    for (size_t j = 0; j < t_regions[i]->RegionCount(); j++) {
+      // Grab the location of the features
+      const auto coords = t_regions[i]->GetRegionPosition(j);
+
+      // Copy the feature over to the end of the output regions container
+      t_regions[i]->CopyRegion(j, regions_out.get());
+
+      // Convert back to equirectangular coordinate
+      const auto rect_coords = this->TangentUVToEquirectangular(i, coords);
+
+      // Update the coordinates in the output regions container depending on the
+      // region type SIFT_Regions
+      if (dynamic_cast<features::SIFT_Regions *>(regions_out.get())) {
+        auto sift_regions =
+            dynamic_cast<features::SIFT_Regions *>(regions_out.get());
+        sift_regions->Features().back().coords() = rect_coords.cast<float>();
+        // AKAZE_Float_Regions
+      } else if (dynamic_cast<features::AKAZE_Float_Regions *>(
+                     regions_out.get())) {
+        auto akaze_float_regions =
+            dynamic_cast<features::AKAZE_Float_Regions *>(regions_out.get());
+        akaze_float_regions->Features().back().coords() =
+            rect_coords.cast<float>();
+        // AKAZE_Liop_Regions
+      } else if (dynamic_cast<features::AKAZE_Liop_Regions *>(
+                     regions_out.get())) {
+        auto akaze_liop_regions =
+            dynamic_cast<features::AKAZE_Liop_Regions *>(regions_out.get());
+        akaze_liop_regions->Features().back().coords() =
+            rect_coords.cast<float>();
+        // AKAZE_Binary_Regions
+      } else if (dynamic_cast<features::AKAZE_Binary_Regions *>(
+                     regions_out.get())) {
+        auto akaze_binary_regions =
+            dynamic_cast<features::AKAZE_Binary_Regions *>(regions_out.get());
+        akaze_binary_regions->Features().back().coords() =
+            rect_coords.cast<float>();
+        // Throw runtime error if none of the above
+      } else {
+        throw std::runtime_error(
+            "Invalid Region type! Tangent images support SIFT_Regions, "
+            "AKAZE_Binary_Regions, AKAZE_Liop_Regions, and "
+            "AKAZE_Float_Regions.");
+      }
+    }
+  }
+
+  // Return the output regions
+  return regions_out;
+}
+
 /***************************/
 /* Constant initialization */
 /***************************/

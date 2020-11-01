@@ -12,6 +12,8 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include "openMVG/features/image_describer.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/sample.hpp"
 #include "openMVG/numeric/numeric.h"
@@ -261,6 +263,17 @@ class TangentImages {
   */
   const Vec2 TangentUVToEquirectangular(const size_t tangent_image_idx,
                                         const Vec2 &uv) const;
+
+  /*
+    This function takes a grayscale equirectangular image as input, computes
+    sparse features on the tangent image representation defined by the calling
+    object, and then converts the detected features' coordinates back to pixels
+    on the equirectangular image. Optionally an equirectangular mask can be passed in as well where non-zero values denote where to compute features.
+  */
+  std::unique_ptr<features::Regions> ComputeFeaturesOnTangentImages(
+      const std::unique_ptr<features::Image_describer> &image_describer,
+      const image::Image<unsigned char> &imageGray,
+      image::Image<unsigned char> *feature_mask = nullptr) const;
 
   /*
     Returns the FOV of the tangent images in degrees
