@@ -29,46 +29,135 @@ TangentImages::TangentImages(const int base_level, const int sphere_level,
   this->ComputeDim();
 }
 
-// Equations courtesy of https://mathworld.wolfram.com/GnomonicProjection.html
-const Vec2 TangentImages::ForwardGnomonicProjection(
-    const Vec2 &lonlat, const Vec2 &center_lonlat) const {
-  const double cos_c = std::sin(center_lonlat[1]) * std::sin(lonlat[1]) +
-                       std::cos(center_lonlat[1]) * std::cos(lonlat[1]) *
-                           std::cos(lonlat[0] - center_lonlat[0]);
-  const double x =
-      std::cos(lonlat[1]) * std::sin(lonlat[0] - center_lonlat[0]) / cos_c;
-  const double y = (std::cos(center_lonlat[1]) * std::sin(lonlat[1]) -
-                    std::sin(center_lonlat[1]) * std::cos(lonlat[1]) *
-                        std::cos(lonlat[0] - center_lonlat[0])) /
-                   cos_c;
+size_t TangentImages::GetTangentImageIndex(const Vec2 &lonlat) const {
+  // Uses the nested structure of the icosahedron to efficiently search for
+  // intersecting faces
 
-  return Vec2(x, y);
+  // Get the vertices of the level 0 icosahedron as a triangle soup
+  std::vector<double> face_vertices;
+  this->GetIcosahedronVertices(face_vertices, 0);
+
+  // Find the first face intersection exhaustively
+  size_t face_idx = -1;
+
+  for (size_t i = 0; i < 20; i++) {
+    // Get the vertices of this face in 3D coordinates
+    const Vec3 v0 = ConvertSphericalTo3D(
+        Vec2(face_vertices[6 * i], face_vertices[6 * i + 1]));
+    const Vec3 v1 = ConvertSphericalTo3D(
+        Vec2(face_vertices[6 * i + 2], face_vertices[6 * i + 3]));
+    const Vec3 v2 = ConvertSphericalTo3D(
+        Vec2(face_vertices[6 * i + 4], face_vertices[6 * i + 5]));
+    // std::cout << "ray" << std::endl;
+    // std::cout << lonlat.transpose() << std::endl;
+    // std::cout << ConvertSphericalTo3D(lonlat).transpose() << std::endl;
+    // std::cout << "corners" << std::endl;
+    // std::cout << v0.transpose() << std::endl;
+    // std::cout << v1.transpose() << std::endl;
+    // std::cout << v2.transpose() << std::endl;
+    if (RayIntersectSphericalTriangle3D(ConvertSphericalTo3D(lonlat), v0, v1,
+                                        v2)) {
+      face_idx = i;
+      // If we are at a base level zero representation, just return, as our job
+      // is done
+      if (this->base_level == 0) {
+        return face_idx;
+      }
+    }
+  }
+
+  // This should never happen as the icosahedron is water tight, so a spherical
+  // ray will intersection with a face. Nevertheless....
+  if (face_idx == -1) {
+    throw std::runtime_error(
+        "Something went wrong with face intersection search!");
+  }
+
+  // If this tangent image representation uses a base level above 0, we only
+  // need to search 4 faces for each subsequent base level
+  for (size_t i = 1; i <= this->base_level; i++) {
+    // Get the vertices at this base level
+    this->GetIcosahedronVertices(face_vertices, i);
+
+    // At each subsequent base level, we can compute the range of possible
+    // indices for the face intersections using this relation below. Because of
+    // the way the hard-coded icosahedron is subdivided, each subsequent level
+    // turns <face_idx> into 4 new faces numbered {<face_idx>, 20*4^(l-1) +
+    // 3*<face_idx> + k}, where k={0,1,2}. Because it's guaranteed to be one of
+    // these four faces, we just check the newly-numbered ones. If it's not one
+    // of them, then it still <face_idx>.
+    size_t start_face_idx = 20 * std::pow(4, i - 1) + 3 * face_idx;
+
+    // Check each of the 3 subdivided faces for intersections. If it's none of
+    // those 3, then it's the central face (which keeps the index from the
+    // previous subdivision level)
+    for (size_t j = 0; j < 3; j++) {
+      // Current face index
+      const size_t cur_face_idx = start_face_idx + j;
+
+      // Get the vertices of this face in 3D coordinates
+      const Vec3 v0 =
+          ConvertSphericalTo3D(Vec2(face_vertices[6 * cur_face_idx],
+                                    face_vertices[6 * cur_face_idx + 1]));
+      const Vec3 v1 =
+          ConvertSphericalTo3D(Vec2(face_vertices[6 * cur_face_idx + 2],
+                                    face_vertices[6 * cur_face_idx + 3]));
+      const Vec3 v2 =
+          ConvertSphericalTo3D(Vec2(face_vertices[6 * cur_face_idx + 4],
+                                    face_vertices[6 * cur_face_idx + 5]));
+
+      // Check intersection at this face
+      if (RayIntersectSphericalTriangle3D(ConvertSphericalTo3D(lonlat), v0, v1,
+                                          v2)) {
+        face_idx = cur_face_idx;
+
+        // Early stopping option
+        if (this->base_level == i) {
+          return face_idx;
+        }
+      }
+    }
+    // If we've checked the 3 other faces, then the intersecting face is still
+    // labeled as <face_idx>.
+  }
+
+  return face_idx;
 }
 
-// Equations courtesy of https://mathworld.wolfram.com/GnomonicProjection.html
-const Vec2 TangentImages::InverseGnomonicProjection(
-    const Vec2 &xy, const Vec2 &center_lonlat) const {
-  // Compute the inverse gnomonic projection of each (x,y) on a plane
-  // centered at (lon, lat) [output is in spherical coordinates (radians)]
-  const double rho = std::sqrt(xy[0] * xy[0] + xy[1] * xy[1]);
-  const double nu = std::atan(rho);
+/*
+  Given the associated tangent image index (obtainable by the
+  GetTangentImageIndex() function), this function converts (x, y) coordinates on
+  the equirectangular image to tangent image coordinates (u, v).
+*/
+const Vec2 TangentImages::EquirectangularToTangentUV(
+    const size_t tangent_image_idx, const Vec2 &xy) const {
+  // Get the centers of the tangent images
+  std::vector<double> tangent_centers;
+  this->GetTangentImageCenters(tangent_centers);
 
-  // Output longitude (module 2*PI)
-  const double lon =
-      NegMod(center_lonlat[0] +
-                 std::atan2(
-                     xy[0] * std::sin(nu),
-                     rho * std::cos(center_lonlat[1]) * std::cos(nu) -
-                         xy[1] * std::sin(center_lonlat[1]) * std::sin(nu)) +
-                 M_PI,
-             2 * M_PI) -
-      M_PI;
+  // Sampling resolution of the tangent images
+  const double sample_resolution =
+      this->GetVertexAngularResolution() / this->dim;
 
-  // Output latitude
-  const double lat =
-      std::asin(std::cos(nu) * std::sin(center_lonlat[1]) +
-                xy[1] * std::sin(nu) * std::cos(center_lonlat[1]) / rho);
-  return Vec2(lon, lat);
+  // Get equirectangular coordinates in lon/lat
+  const auto lonlat = this->ConvertEquirectangularToSpherical(xy);
+
+  // Center of the tangent image (i.e. center of spherical projection)
+  const double center_lon = tangent_centers[2 * tangent_image_idx];
+  const double center_lat = tangent_centers[2 * tangent_image_idx + 1];
+
+  // Project the coordinate onto the plane
+  const auto uv_n =
+      ForwardGnomonicProjection(lonlat, Vec2(center_lon, center_lat));
+
+  // Convert the normalized projected coordinates to indices of the tangent
+  // image pixel grid
+  const double u = (uv_n[0] - sample_resolution / 2.0) / sample_resolution +
+                   static_cast<double>(this->dim) / 2.0;
+  const double v = (uv_n[1] - sample_resolution / 2.0) / sample_resolution +
+                   static_cast<double>(this->dim) / 2.0;
+
+  return Vec2(u, v);
 }
 
 void TangentImages::InverseGnomonicKernel(
@@ -102,7 +191,11 @@ void TangentImages::InverseGnomonicKernel(
         // Compute the inverse gnomonic projection of each (x,y) on a plane
         // centered at (lon, lat)
         const Vec2 out_sph_coords =
-            this->InverseGnomonicProjection(Vec2(x, y), Vec2(lon, lat));
+            InverseGnomonicProjection(Vec2(x, y), Vec2(lon, lat));
+
+        // std::cout << "index: " << i << ", (" << j << ", " << k << ")"
+        //           << std::endl;
+        // std::cout << "out_sph_coords: " << out_sph_coords << std::endl;
 
         // Compute output longitude (modulo 2*PI)
         lonlat_out[vec_idx] = out_sph_coords[0];
@@ -201,13 +294,13 @@ void TangentImages::ProjectFaceOntoTangentImage(const size_t tangent_image_idx,
                        face_vertices[6 * tangent_image_idx + 3]);
   const Vec2 v2 = Vec2(face_vertices[6 * tangent_image_idx + 4],
                        face_vertices[6 * tangent_image_idx + 5]);
-  v0_uv = this->ForwardGnomonicProjection(
+  v0_uv = ForwardGnomonicProjection(
       v0, Vec2(tangent_centers[tangent_image_idx * 2],
                tangent_centers[tangent_image_idx * 2 + 1]));
-  v1_uv = this->ForwardGnomonicProjection(
+  v1_uv = ForwardGnomonicProjection(
       v1, Vec2(tangent_centers[tangent_image_idx * 2],
                tangent_centers[tangent_image_idx * 2 + 1]));
-  v2_uv = this->ForwardGnomonicProjection(
+  v2_uv = ForwardGnomonicProjection(
       v2, Vec2(tangent_centers[tangent_image_idx * 2],
                tangent_centers[tangent_image_idx * 2 + 1]));
 }
@@ -280,7 +373,7 @@ const Vec2 TangentImages::TangentUVToSpherical(const size_t tangent_image_idx,
 
   // Compute the inverse gnomonic projection and convert the output to
   // spherical coordinates
-  return this->InverseGnomonicProjection(
+  return InverseGnomonicProjection(
       Vec2(un, vn), Vec2(tangent_centers[tangent_image_idx * 2],
                          tangent_centers[tangent_image_idx * 2 + 1]));
 }
@@ -324,10 +417,18 @@ void TangentImages::GetTangentImageCenters(std::vector<double> &centers) const {
 }
 
 // Assigns the provided vector to the vector representing the N x 3 x 2
-// (lon, lat) tensor of tangent image vertices as a "triangle soup"
+// (lon, lat) tensor of tangent image vertices as a "triangle soup",
+// automatically using the base level of this instances's representation.
 void TangentImages::GetIcosahedronVertices(
     std::vector<double> &triangles) const {
-  switch (this->base_level) {
+  this->GetIcosahedronVertices(triangles, this->base_level);
+}
+
+// Assigns the provided vector to the vector representing the N x 3 x 2
+// (lon, lat) tensor of tangent image vertices as a "triangle soup"
+void TangentImages::GetIcosahedronVertices(std::vector<double> &triangles,
+                                           const int base_level) const {
+  switch (base_level) {
     case 0:
       triangles = kIcosahedronVerticesL0;
       break;
@@ -405,34 +506,35 @@ TangentImages::ComputeFeaturesOnTangentImages(
       const auto rect_coords = this->TangentUVToEquirectangular(i, coords);
 
       // Update the coordinates in the output regions container depending on the
-      // region type SIFT_Regions
+      // region type
       if (dynamic_cast<features::SIFT_Regions *>(regions_out.get())) {
+        // SIFT_Regions
         auto sift_regions =
             dynamic_cast<features::SIFT_Regions *>(regions_out.get());
         sift_regions->Features().back().coords() = rect_coords.cast<float>();
-        // AKAZE_Float_Regions
       } else if (dynamic_cast<features::AKAZE_Float_Regions *>(
                      regions_out.get())) {
+        // AKAZE_Float_Regions
         auto akaze_float_regions =
             dynamic_cast<features::AKAZE_Float_Regions *>(regions_out.get());
         akaze_float_regions->Features().back().coords() =
             rect_coords.cast<float>();
-        // AKAZE_Liop_Regions
       } else if (dynamic_cast<features::AKAZE_Liop_Regions *>(
                      regions_out.get())) {
+        // AKAZE_Liop_Regions
         auto akaze_liop_regions =
             dynamic_cast<features::AKAZE_Liop_Regions *>(regions_out.get());
         akaze_liop_regions->Features().back().coords() =
             rect_coords.cast<float>();
-        // AKAZE_Binary_Regions
       } else if (dynamic_cast<features::AKAZE_Binary_Regions *>(
                      regions_out.get())) {
+        // AKAZE_Binary_Regions
         auto akaze_binary_regions =
             dynamic_cast<features::AKAZE_Binary_Regions *>(regions_out.get());
         akaze_binary_regions->Features().back().coords() =
             rect_coords.cast<float>();
-        // Throw runtime error if none of the above
       } else {
+        // Throw runtime error if none of the above
         throw std::runtime_error(
             "Invalid Region type! Tangent images support SIFT_Regions, "
             "AKAZE_Binary_Regions, AKAZE_Liop_Regions, and "

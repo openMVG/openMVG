@@ -87,6 +87,58 @@ inline const T Rescale(const T value, const T old_min, const T old_max,
          new_min;
 }
 
+/*
+Computes the forward gnomonic projection of a given point (lon, lat) on the
+sphere to a plane tangent to (center_lon, center_lat). Output is in
+coordinates on the plane. Equations courtesy of
+https://mathworld.wolfram.com/GnomonicProjection.html
+*/
+inline const Vec2 ForwardGnomonicProjection(const Vec2 &lonlat,
+                                            const Vec2 &center_lonlat) {
+  const double cos_c = std::sin(center_lonlat[1]) * std::sin(lonlat[1]) +
+                       std::cos(center_lonlat[1]) * std::cos(lonlat[1]) *
+                           std::cos(lonlat[0] - center_lonlat[0]);
+  const double x =
+      std::cos(lonlat[1]) * std::sin(lonlat[0] - center_lonlat[0]) / cos_c;
+  const double y = (std::cos(center_lonlat[1]) * std::sin(lonlat[1]) -
+                    std::sin(center_lonlat[1]) * std::cos(lonlat[1]) *
+                        std::cos(lonlat[0] - center_lonlat[0])) /
+                   cos_c;
+
+  return Vec2(x, y);
+}
+
+/*
+  Computes the inverse gnomonic projection of a given point (x, y) on a plane
+  tangent to (center_lon, center_lat). Output is in spherical coordinates
+  (radians). Equations courtesy of
+  https://mathworld.wolfram.com/GnomonicProjection.html
+*/
+inline const Vec2 InverseGnomonicProjection(const Vec2 &xy,
+                                            const Vec2 &center_lonlat) {
+  // Compute the inverse gnomonic projection of each (x,y) on a plane
+  // centered at (lon, lat) [output is in spherical coordinates (radians)]
+  const double rho = std::sqrt(xy[0] * xy[0] + xy[1] * xy[1]);
+  const double nu = std::atan(rho);
+
+  // Output longitude (module 2*PI)
+  const double lon =
+      NegMod(center_lonlat[0] +
+                 std::atan2(
+                     xy[0] * std::sin(nu),
+                     rho * std::cos(center_lonlat[1]) * std::cos(nu) -
+                         xy[1] * std::sin(center_lonlat[1]) * std::sin(nu)) +
+                 M_PI,
+             2 * M_PI) -
+      M_PI;
+
+  // Output latitude
+  const double lat =
+      std::asin(std::cos(nu) * std::sin(center_lonlat[1]) +
+                xy[1] * std::sin(nu) * std::cos(center_lonlat[1]) / rho);
+  return Vec2(lon, lat);
+}
+
 // Checks if a 2D point falls within a triangle
 inline bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1, const Vec2 &v2,
                               const Vec2 &v3) {
@@ -104,6 +156,30 @@ inline bool PointInTriangle2D(const Vec2 &pt, const Vec2 &v1, const Vec2 &v2,
   // Returns true if all signs are consistent
   return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) &&
            ((d1 > 0) || (d2 > 0) || (d3 > 0)));
+}
+
+// Checks if a origin-centered ray in 3D intersects a triangle in 3D using the
+// spherical triangle test. Assumes face normal points outward
+inline bool RayIntersectSphericalTriangle3D(const Vec3 &ray, const Vec3 &v1,
+                                            const Vec3 &v2, const Vec3 &v3) {
+  // Normals for each edge plane where the origin is a point on every plane
+  const auto n1 = v1.cross(v2);
+  const auto n2 = v2.cross(v3);
+  const auto n3 = v3.cross(v1);
+
+  // Check which side of the edge plan our ray falls on, denoted by sign
+  const double d1 = ray.dot(n1);
+  const double d2 = ray.dot(n2);
+  const double d3 = ray.dot(n3);
+
+  // Also check that the ray is in the same direction as the face normal (avoids
+  // negative-ray ambiguity)
+  const auto d_dir = ray.dot((v3 - v2).cross(v1 - v2));
+
+  // Inside if all signs are consistent
+  return (((d1 > 0) && (d2 > 0) && (d3 > 0)) ||
+          ((d1 < 0) && (d2 < 0) && (d3 < 0))) &&
+         (d_dir > 0);
 }
 
 // Tangent images class
@@ -150,22 +226,6 @@ class TangentImages {
   static const std::vector<double> kIcosahedronVerticesL2;
 
   /*
-    Computes the inverse gnomonic projection of a given point (x, y) on a plane
-    tangent to (center_lon, center_lat). Output is in spherical coordinates
-    (radians).
-  */
-  const Vec2 InverseGnomonicProjection(const Vec2 &xy,
-                                       const Vec2 &center_lonlat) const;
-
-  /*
-  Computes the forward gnomonic projection of a given point (lon, lat) on the
-  sphere to a plane tangent to (center_lon, center_lat). Output is in
-  coordinates on the plane.
-*/
-  const Vec2 ForwardGnomonicProjection(const Vec2 &lonlat,
-                                       const Vec2 &center_lonlat) const;
-
-  /*
     Computes the inverse gnomonic projection of a window with dimensions (<kh>,
     <kw>) centered at <lonlat_in>, which is a flattened N x 2 matrix with the
     centers of N tangent images in spherical coordinates. The output is a
@@ -201,18 +261,8 @@ class TangentImages {
     in-bounds when converting from tangent images to equirectangular
   */
   void GetIcosahedronVertices(std::vector<double> &triangles) const;
-
-  /*
-    Given a spherical coordinate, converts it to a pixel coordinate on the
-    equirectangular image
-  */
-  const Vec2 ConvertSphericalToEquirectangular(const Vec2 &lonlat) const;
-
-  /*
-      Given a pixel coordinate on the equirectangular image, converts it to a
-     spherical coordinate
-    */
-  const Vec2 ConvertEquirectangularToSpherical(const Vec2 &xy) const;
+  void GetIcosahedronVertices(std::vector<double> &triangles,
+                              const int base_level) const;
 
   /*
     Returns the pixel coordinates (u, v) corresponding to the vertices of the
@@ -256,6 +306,12 @@ class TangentImages {
   void CreateTangentImages(
       const ImageT &rect_img, std::vector<ImageT> &tangent_images,
       std::vector<image::Image<unsigned char>> *mask = nullptr) const;
+  /*
+    Create an equirectangular image by resampling from  the tangent images
+  */
+  template <typename ImageT>
+  void ConvertTangentImagesToEquirectangular(
+      const std::vector<ImageT> &tangent_images, ImageT &rect_img) const;
 
   /*
     This function converts (u, v) coordinates on a tangent image given by
@@ -263,6 +319,33 @@ class TangentImages {
   */
   const Vec2 TangentUVToEquirectangular(const size_t tangent_image_idx,
                                         const Vec2 &uv) const;
+
+  /*
+    Given the associated tangent image index (obtainable by the
+    GetTangentImageIndex() function), this function converts (x, y) coordinates
+    on the equirectangular image to tangent image coordinates (u, v).
+  */
+  const Vec2 EquirectangularToTangentUV(const size_t tangent_image_idx,
+                                        const Vec2 &xy) const;
+  /*
+    Given a spherical coordinate, computes the index of the intersection face
+    (and therefor the tangent image index). This functions leverages the
+    subdivision structure of the icosahedron to do this look up in <= 20 + 4 * b
+    checks.
+  */
+  size_t GetTangentImageIndex(const Vec2 &lonlat) const;
+
+  /*
+    Given a spherical coordinate, converts it to a pixel coordinate on the
+    equirectangular image
+  */
+  const Vec2 ConvertSphericalToEquirectangular(const Vec2 &lonlat) const;
+
+  /*
+    Given a pixel coordinate on the equirectangular image, converts it to a
+     spherical coordinate
+  */
+  const Vec2 ConvertEquirectangularToSpherical(const Vec2 &xy) const;
 
   /*
     This function takes a grayscale equirectangular image as input, computes
@@ -330,7 +413,7 @@ void TangentImages::CreateTangentImages(
   std::vector<double> tangent_centers;
   this->GetTangentImageCenters(tangent_centers);
 
-  // Create each tangent image
+// Create each tangent image
 #pragma omp parallel for
   for (size_t i = 0; i < this->num; i++) {
     // Initialize output image
@@ -372,7 +455,7 @@ void TangentImages::CreateTangentImages(
               Vec2(sampling_map[map_idx], sampling_map[map_idx + 1]));
 
           // Apply the forward gnomonic projection onto this tangent image
-          const Vec2 uv = this->ForwardGnomonicProjection(
+          const Vec2 uv = ForwardGnomonicProjection(
               lonlat, Vec2(tangent_centers[i * 2], tangent_centers[i * 2 + 1]));
 
           // If the point falls within the projected face, then make the mask
@@ -386,6 +469,39 @@ void TangentImages::CreateTangentImages(
   }
 }
 
+/*
+  Function to recreate an equirectangular image from a set of tangent images
+*/
+template <typename ImageT>
+void TangentImages::ConvertTangentImagesToEquirectangular(
+    const std::vector<ImageT> &tangent_images, ImageT &rect_img) const {
+  // Initialize output image
+  rect_img = ImageT(this->rect_w, this->rect_h);
+
+  // Create bilinear sampler
+  const image::Sampler2d<image::SamplerLinear> sampler;
+
+// Iterate over all equirectangular image pixels
+#pragma omp parallel for
+  for (size_t i = 0; i < this->rect_h; i++) {
+    for (size_t j = 0; j < this->rect_w; j++) {
+      // Equirectangular pixel coordinates
+      const auto xy = Vec2(j, i);
+
+      // Convert the pixel coordinate to spherical coordinates
+      const auto lonlat = this->ConvertEquirectangularToSpherical(xy);
+
+      // Get the tangent image index to sample from
+      const size_t tangent_image_idx = this->GetTangentImageIndex(lonlat);
+
+      // Get the coordinates on the tangent image to sample from
+      const auto uv = this->EquirectangularToTangentUV(tangent_image_idx, xy);
+
+      // Sample from the specified tangent image
+      rect_img(i, j) = sampler(tangent_images[tangent_image_idx], uv[1], uv[0]);
+    }
+  }
+}
 }  // namespace spherical
 }  // namespace openMVG
 
