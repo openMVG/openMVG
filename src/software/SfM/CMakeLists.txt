@@ -161,6 +161,7 @@ target_link_libraries(openMVG_main_ComputeStructureFromKnownPoses
     openMVG_features
     openMVG_sfm
     ${STLPLUS_LIBRARY}
+    ${CERES_LIBRARIES}
 )
 
 add_executable(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
