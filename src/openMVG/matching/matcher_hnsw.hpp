@@ -13,7 +13,6 @@
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
 #endif
-#include <set>
 #include <typeindex>
 #include <vector>
 
@@ -60,38 +59,50 @@ public:
     int dimension
   ) override
   {
-    HNSW_metric_.reset(nullptr);
-    HNSW_matcher_.reset(nullptr);
-    if (nbRows < 1)
-      return false;
-      
-    // Returns early if DistanceType is not supported.
-    // This avoids the case where HNSWmetric is null, which causes an error when 
-    // HNSWmatcher initializes.
-    const std::set<std::type_index> allowed_distance_types = {
-        typeid(int), typeid(float)};
-    const std::type_index distance_type(typeid(DistanceType));
+    HNSW_metric_.reset();
+    HNSW_matcher_.reset();
 
-    if (allowed_distance_types.find(distance_type) == allowed_distance_types.end()) {
-      std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
+    if (nbRows < 1)
+    {
       return false;
     }
 
     dimension_ = dimension;
 
+    const std::type_index distance_type(typeid(DistanceType));
     // Here this is tricky since there is no specialization
-    if (distance_type == typeid(int)) {
-      HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
-    } else if (distance_type == typeid(float)) {
-      HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
+    switch (MetricType)
+    {
+    case  HNSWMETRIC::L1_HNSW:
+      if (distance_type == typeid(int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L1SpaceInteger(dimension)));
+      }
+      break;
+    case  HNSWMETRIC::L2_HNSW:
+      if (distance_type == typeid(int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
+      } else
+      if (distance_type == typeid(float)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
+      }
+      break;
+    case  HNSWMETRIC::HAMMING_HNSW:
+      if (distance_type == typeid(unsigned int)) {
+        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
+      }
+      break;
     }
 
-    HNSW_matcher_->reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
-    HNSW_matcher_->setEf(16);
+    if (!HNSW_metric_) {
+      OPENMVG_LOG_ERROR << "HNSW matcher: this type of distance is not handled yet";
+      return false;
+    }
 
-    // add first point..
-    HNSW_matcher_->addPoint((void *)(dataset), (size_t) 0);
-    //...and the other in //
+    HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
+
+    // add a first point...
+    HNSW_matcher_->addPoint(static_cast<const void *>(dataset), static_cast<size_t>(0));
+    //...and the others in parallel
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
     #endif
@@ -175,7 +186,8 @@ public:
         const size_t match_id = query_id * NN + result_id;
         pvec_indices->operator[](match_id) = {static_cast<IndexT>(query_id), static_cast<IndexT>(res.second)};
         pvec_distances->operator[](match_id) = res.first;
-        result.pop();result_id--;
+        result.pop();
+        result_id--;
       }
     }
     return true;
