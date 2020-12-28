@@ -17,6 +17,11 @@ struct Abstract_Tracker
 {
   Abstract_Tracker() = default;
 
+protected:
+  ~Abstract_Tracker() = default;
+
+public:
+
   // Try to track the pt_to_track features
   virtual bool track
   (
