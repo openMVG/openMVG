@@ -13,6 +13,8 @@
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
 #endif
+#include <set>
+#include <typeindex>
 #include <vector>
 
 #include "openMVG/matching/matching_interface.hpp"
@@ -58,56 +60,38 @@ public:
     int dimension
   ) override
   {
+    HNSW_metric_.reset(nullptr);
+    HNSW_matcher_.reset(nullptr);
     if (nbRows < 1)
-    {
-      HNSW_metric_.reset(nullptr);
-      HNSW_matcher_.reset(nullptr);  
+      return false;
+      
+    // Returns early if DistanceType is not supported.
+    // This avoids the case where HNSWmetric is null, which causes an error when 
+    // HNSWmatcher initializes.
+    const std::set<std::type_index> allowed_distance_types = {
+        typeid(int), typeid(float)};
+    const std::type_index distance_type(typeid(DistanceType));
+
+    if (allowed_distance_types.find(distance_type) == allowed_distance_types.end()) {
+      std::cerr << "HNSW matcher: this type of distance is not handled Yet" << std::endl;
       return false;
     }
 
     dimension_ = dimension;
 
     // Here this is tricky since there is no specialization
-    switch (MetricType)
-    {
-    case  HNSWMETRIC::L1_HNSW:
-      if (typeid(DistanceType) == typeid(int)) {
-        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::L1SpaceInteger(dimension)));
-      } else {
-        std::cerr << "HNSWL1 matcher: this type of feature is not handled" << std::endl;
-        return false;
-      }
-      break;
-    case  HNSWMETRIC::L2_HNSW:
-      if (typeid(DistanceType) == typeid(int)) {
-        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
-      } else
-      if (typeid(DistanceType) == typeid(float)) {
-        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
-      } else {
-        std::cerr << "HNSWL2 matcher: this type of feature is not handled" << std::endl;
-        return false;
-      }
-      break;
-    case  HNSWMETRIC::HAMMING_HNSW:
-      if (typeid(DistanceType) == typeid(unsigned int)) {
-        HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new custom_hnsw::HammingSpace<uint8_t>(dimension)));
-      } else {
-        std::cerr << "HNSWHAMMING matcher: this type of feature is not handled" << std::endl;
-        return false;
-      }
-      break;
-    default:
-        std::cerr << "HNSW matcher: this type of distance is not handled yet" << std::endl;
-        return false;  
-      break;
+    if (distance_type == typeid(int)) {
+      HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2SpaceI(dimension)));
+    } else if (distance_type == typeid(float)) {
+      HNSW_metric_.reset(dynamic_cast<SpaceInterface<DistanceType> *>(new L2Space(dimension)));
     }
 
-    HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
-    
-    // add a first point...
-    HNSW_matcher_->addPoint(static_cast<const void *>(dataset), static_cast<size_t>(0));
-    //...and the others in parallel
+    HNSW_matcher_->reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
+    HNSW_matcher_->setEf(16);
+
+    // add first point..
+    HNSW_matcher_->addPoint((void *)(dataset), (size_t) 0);
+    //...and the other in //
     #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for
     #endif
@@ -167,10 +151,10 @@ public:
       return false;
     // EfSearch parameter could not be < NN.
     // -
-    // For vectors with dimensionality of approx. 64-128 and for 2 NNs, 
+    // For vectors with dimensionality of approx. 64-128 and for 2 NNs,
     // EfSearch = 16 produces good results in conjonction with other parameters fixed in this file (EfConstruct = 16, M = 100).
     // But nothing has been evaluated on our side for lower / higher dimensionality and for a higher number of NNs.
-    // So for now and for NN > 2, EfSearch is fixed to 2 * NNs without a good a priori knowledge. 
+    // So for now and for NN > 2, EfSearch is fixed to 2 * NNs without a good a priori knowledge.
     // A good value for EfSearch could really depends on the two other parameters (EfConstruct / M).
     if (NN <= 2) {
       HNSW_matcher_->setEf(16);
