@@ -24,6 +24,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
 
@@ -80,7 +81,11 @@ struct GeometricFilter_ESphericalMatrix_AC_Angular
           sfm_data->GetIntrinsics().at(view_J->id_intrinsic).get() : nullptr;
 
     if (!cam_I || !cam_J)
+    {
+      OPENMVG_LOG_WARNING << "Skip this pair. No intrinsic information: "
+        << '(' << iIndex << ',' << jIndex << ')';
       return false;
+    }
 
     //--
     // Get corresponding point regions arrays
@@ -164,6 +169,7 @@ struct GeometricFilter_ESphericalMatrix_AC_Angular
     matching::IndMatches & matches
   )
   {
+    OPENMVG_LOG_ERROR << "Not yet implemented";
     return false;
   }
 

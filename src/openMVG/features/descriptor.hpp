@@ -16,6 +16,7 @@
 #include <string>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {

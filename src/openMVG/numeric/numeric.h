@@ -383,20 +383,19 @@ bool minMaxMeanMedian( DataInputIterator begin, DataInputIterator end,
 }
 
 /**
-* @brief Display to standard output min, max, mean and median value of input range
+* @brief Export to the stream min, max, mean and median value of input range
 * @param begin start of range
 * @param end end of range
 */
 template <typename Type, typename DataInputIterator>
-void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end )
+void minMaxMeanMedian( DataInputIterator begin, DataInputIterator end, std::ostream & os)
 {
   Type min, max, mean, median;
   minMaxMeanMedian( begin, end, min, max, mean, median );
-  std::cout << "\n"
-            << "\t min: " << min << "\n"
-            << "\t mean: " << mean << "\n"
-            << "\t median: " << median << std::endl
-            << "\t max: " << max << std::endl;
+  os << "\t min: " << min << "\n"
+     << "\t mean: " << mean << "\n"
+     << "\t median: " << median << std::endl
+     << "\t max: " << max << std::endl;
 }
 
 /**

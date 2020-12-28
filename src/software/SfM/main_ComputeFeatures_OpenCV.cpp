@@ -17,7 +17,6 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress.hpp"
 
 /// OpenCV Includes
 #include <opencv2/opencv.hpp>
@@ -284,10 +283,10 @@ int main(int argc, char **argv)
 #endif
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--input_file]: a SfM_Data file \n"
       << "[-o|--outdir] path \n"
       << "\n[Optional]\n"
@@ -298,23 +297,24 @@ int main(int argc, char **argv)
       << "   AKAZE_OPENCV (default),\n"
       << "   SIFT_OPENCV: SIFT FROM OPENCV\n"
 #endif
-      << std::endl;
+      ;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--input_file " << sSfM_Data_Filename << std::endl
-            << "--outdir " << sOutDir << std::endl
+  OPENMVG_LOG_INFO
+    << " You called : "
+    << argv[0]
+    << "\n\t--input_file " << sSfM_Data_Filename
+    << "\n\t--outdir " << sOutDir
 #ifdef USE_OCVSIFT
-            << "--describerMethod " << sImage_Describer_Method << std::endl
+    << "\n\t--describerMethod " << sImage_Describer_Method
 #endif
-            << "--force " << bForce << std::endl;
+    << "\n\t--force " << bForce;
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "\nIt is an invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -323,7 +323,7 @@ int main(int argc, char **argv)
   {
     if (!stlplus::folder_create(sOutDir))
     {
-      std::cerr << "Cannot create output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create output directory";
       return EXIT_FAILURE;
     }
   }
@@ -333,8 +333,7 @@ int main(int argc, char **argv)
   //---------------------------------------
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
-    std::cerr << std::endl
-      << "The input file \""<< sSfM_Data_Filename << "\" cannot be read" << std::endl;
+    OPENMVG_LOG_ERROR << "The input file \""<< sSfM_Data_Filename << "\" cannot be read";
     return false;
   }
 
@@ -350,7 +349,7 @@ int main(int argc, char **argv)
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    if (!stream)
       return false;
 
     cereal::JSONInputArchive archive(stream);
@@ -370,7 +369,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cerr << "Unknown image describer method." << std::endl;
+      OPENMVG_LOG_ERROR << "Unknown image describer method.";
       return EXIT_FAILURE;
     }
 #else
@@ -381,7 +380,7 @@ int main(int argc, char **argv)
     // - dynamic future regions computation and/or loading
     {
       std::ofstream stream(sImage_describer.c_str());
-      if (!stream.is_open())
+      if (!stream)
         return false;
 
       cereal::JSONOutputArchive archive(stream);
@@ -399,8 +398,7 @@ int main(int argc, char **argv)
     system::Timer timer;
     Image<unsigned char> imageGray;
 
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- EXTRACT FEATURES -\n" );
+    system::LoggerProgress my_progress_bar(sfm_data.GetViews().size(), "- EXTRACT FEATURES -" );
 
     // Use a boolean to track if we must stop feature extraction
     bool preemptive_exit(false);
@@ -429,7 +427,7 @@ int main(int argc, char **argv)
           mask_filename_local =
             stlplus::create_filespec(sfm_data.s_root_path,
               stlplus::basename_part(sView_filename) + "_mask", "png"),
-          mask__filename_global =
+          mask_filename_global =
             stlplus::create_filespec(sfm_data.s_root_path, "mask", "png");
 
         Image<unsigned char> imageMask;
@@ -438,8 +436,9 @@ int main(int argc, char **argv)
         {
           if (!ReadImage(mask_filename_local.c_str(), &imageMask))
           {
-            std::cerr << "Invalid mask: " << mask_filename_local << std::endl
-                      << "Stopping feature extraction." << std::endl;
+            OPENMVG_LOG_ERROR
+              << "Invalid mask: " << mask_filename_local
+              << "\nStopping feature extraction.";
             preemptive_exit = true;
             continue;
           }
@@ -450,12 +449,13 @@ int main(int argc, char **argv)
         else
         {
           // Try to read the global mask
-          if (stlplus::file_exists(mask__filename_global))
+          if (stlplus::file_exists(mask_filename_global))
           {
-            if (!ReadImage(mask__filename_global.c_str(), &imageMask))
+            if (!ReadImage(mask_filename_global.c_str(), &imageMask))
             {
-              std::cerr << "Invalid mask: " << mask__filename_global << std::endl
-                        << "Stopping feature extraction." << std::endl;
+              OPENMVG_LOG_ERROR
+                << "Invalid mask: " << mask_filename_global
+                << "\nStopping feature extraction.";
               preemptive_exit = true;
               continue;
             }
@@ -468,15 +468,16 @@ int main(int argc, char **argv)
         // Compute features and descriptors and export them to files
         auto regions = image_describer->Describe(imageGray, mask);
         if (regions && !image_describer->Save(regions.get(), sFeat, sDesc)) {
-          std::cerr << "Cannot save regions for images: " << sView_filename << std::endl
-                    << "Stopping feature extraction." << std::endl;
+          OPENMVG_LOG_ERROR
+            << "Cannot save regions for images: " << sView_filename
+            << "\nStopping feature extraction.";
           preemptive_exit = true;
           continue;
         }
         ++my_progress_bar;
       }
     }
-    std::cout << "Task done in (s): " << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << "Task done in (s): " << timer.elapsed();
   }
   return EXIT_SUCCESS;
 }

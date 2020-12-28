@@ -9,14 +9,14 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/image/image_io.hpp>
-#include <software/SfM/SfMPlyHelper.hpp>
-
+#include <openMVG/sfm/sfm.hpp>
+#include <openMVG/system/loggerprogress.hpp>
 #include <openMVG/system/timer.hpp>
-#include "openMVG/stl/stl.hpp"
+#include <openMVG/stl/stl.hpp>
+#include <software/SfM/SfMPlyHelper.hpp>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    if (!stream)
       return EXIT_FAILURE;
 
     try
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
   }
 
   // Show the progress on the command line:
-  C_Progress_display progress;
+  system::LoggerProgress progress;
 
   // Load the SfM_Data region's views
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();

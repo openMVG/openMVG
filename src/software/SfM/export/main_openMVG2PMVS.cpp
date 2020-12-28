@@ -15,10 +15,12 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
+
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
@@ -63,12 +65,12 @@ bool exportToPMVSFormat(
     bOk = true;
   }
   else  {
-    std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot access to one of the desired output directory";
   }
 
   if (bOk)
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size()*2 );
 
     // Since PMVS requires contiguous camera index, and that some views can have some missing poses,
     // we reindex the poses to ensure a contiguous pose list.
@@ -222,96 +224,100 @@ bool exportToBundlerFormat(
   const std::string & sOutListFile)  //Output Bundler list.txt file
 {
   std::ofstream os(sOutFile.c_str());
-  std::ofstream osList(sOutListFile.c_str());
-  if (! os.is_open() || ! osList.is_open())
+
+  if (!os)
   {
     return false;
   }
-  else
+  std::ofstream osList(sOutListFile.c_str());
+  if (!osList)
   {
-    // Since PMVS requires contiguous camera index, and that some views can have some missing poses,
-    // we reindex the poses to ensure a contiguous pose list.
-    Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
-
-    // Count the number of valid cameras and re-index the viewIds
-    for (Views::const_iterator iter = sfm_data.GetViews().begin();
-        iter != sfm_data.GetViews().end(); ++iter)
-    {
-      const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
-
-      // View Id re-indexing
-      map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
-    }
-
-    // Fill the "Bundle file"
-    os << "# Bundle file v0.3" << os.widen('\n')
-      << map_viewIdToContiguous.size()  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
-
-    // Export camera properties & image filenames
-    for (Views::const_iterator iter = sfm_data.GetViews().begin();
-        iter != sfm_data.GetViews().end(); ++iter)
-    {
-      const View * view = iter->second.get();
-      if (!sfm_data.IsPoseAndIntrinsicDefined(view))
-        continue;
-
-      const Pose3 pose = sfm_data.GetPoseOrDie(view);
-      Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
-
-      // Must export focal, k1, k2, R, t
-
-      Mat3 D;
-      D.fill(0.0);
-      D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
-      const double k1 = 0.0, k2 = 0.0; // distortion already removed
-
-      if (isPinhole(iterIntrinsic->second->getType()))
-      {
-        const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
-        const double focal = cam->focal();
-        const Mat3 R = D * pose.rotation();
-        const Vec3 t = D * pose.translation();
-
-        os << focal << " " << k1 << " " << k2 << os.widen('\n') //f k1 k2
-          << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << os.widen('\n')  //R.row(0)
-          << R(1,0) << " " << R(1, 1) << " " << R(1, 2) << os.widen('\n')  //R.row(1)
-          << R(2,0) << " " << R(2, 1) << " " << R(2, 2) << os.widen('\n')  //R.row(2)
-          << t(0)   << " " << t(1)    << " " << t(2)    << os.widen('\n'); //t
-
-        osList << stlplus::basename_part(view->s_Img_path) + "." + stlplus::extension_part(view->s_Img_path)
-          << " 0 " << focal << os.widen('\n');
-      }
-      else
-      {
-        std::cerr << "Unsupported camera model for Bundler export." << std::endl;
-        return false;
-      }
-    }
-    // Export structure and visibility
-    for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
-      iter != sfm_data.GetLandmarks().end(); ++iter)
-    {
-      const Landmark & landmark = iter->second;
-      const Observations & obs = landmark.obs;
-      const Vec3 & X = landmark.X;
-      // X, color, obsCount
-      os << X[0] << " " << X[1] << " " << X[2] << os.widen('\n')
-         <<  "255 255 255" << os.widen('\n')
-         << obs.size() << " ";
-      for (Observations::const_iterator iterObs = obs.begin();
-        iterObs != obs.end(); ++iterObs)
-      {
-        const Observation & ob = iterObs->second;
-        // ViewId, FeatId, x, y
-        os << map_viewIdToContiguous[iterObs->first] << " " << ob.id_feat << " " << ob.x(0) << " " << ob.x(1) << " ";
-      }
-      os << os.widen('\n');
-    }
-    os.close();
-    osList.close();
+    return false;
   }
+
+  // Since PMVS requires contiguous camera index, and that some views can have some missing poses,
+  // we reindex the poses to ensure a contiguous pose list.
+  Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
+
+  // Count the number of valid cameras and re-index the viewIds
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
+  {
+    const View * view = iter->second.get();
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
+
+    // View Id re-indexing
+    map_viewIdToContiguous.insert(std::make_pair(view->id_view, map_viewIdToContiguous.size()));
+  }
+
+  // Fill the "Bundle file"
+  os << "# Bundle file v0.3" << os.widen('\n')
+    << map_viewIdToContiguous.size()  << " " << sfm_data.GetLandmarks().size() << os.widen('\n');
+
+  // Export camera properties & image filenames
+  for (Views::const_iterator iter = sfm_data.GetViews().begin();
+      iter != sfm_data.GetViews().end(); ++iter)
+  {
+    const View * view = iter->second.get();
+    if (!sfm_data.IsPoseAndIntrinsicDefined(view))
+      continue;
+
+    const Pose3 pose = sfm_data.GetPoseOrDie(view);
+    Intrinsics::const_iterator iterIntrinsic = sfm_data.GetIntrinsics().find(view->id_intrinsic);
+
+    // Must export focal, k1, k2, R, t
+
+    Mat3 D;
+    D.fill(0.0);
+    D .diagonal() = Vec3(1., -1., -1.); // mapping between our pinhole and Bundler convention
+    const double k1 = 0.0, k2 = 0.0; // distortion already removed
+
+    if (isPinhole(iterIntrinsic->second->getType()))
+    {
+      const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(iterIntrinsic->second.get());
+      const double focal = cam->focal();
+      const Mat3 R = D * pose.rotation();
+      const Vec3 t = D * pose.translation();
+
+      os << focal << " " << k1 << " " << k2 << os.widen('\n') //f k1 k2
+        << R(0,0) << " " << R(0, 1) << " " << R(0, 2) << os.widen('\n')  //R.row(0)
+        << R(1,0) << " " << R(1, 1) << " " << R(1, 2) << os.widen('\n')  //R.row(1)
+        << R(2,0) << " " << R(2, 1) << " " << R(2, 2) << os.widen('\n')  //R.row(2)
+        << t(0)   << " " << t(1)    << " " << t(2)    << os.widen('\n'); //t
+
+      osList << stlplus::basename_part(view->s_Img_path) + "." + stlplus::extension_part(view->s_Img_path)
+        << " 0 " << focal << os.widen('\n');
+    }
+    else
+    {
+      OPENMVG_LOG_ERROR << "Unsupported camera model for Bundler export.";
+      return false;
+    }
+  }
+  // Export structure and visibility
+  for (Landmarks::const_iterator iter = sfm_data.GetLandmarks().begin();
+    iter != sfm_data.GetLandmarks().end(); ++iter)
+  {
+    const Landmark & landmark = iter->second;
+    const Observations & obs = landmark.obs;
+    const Vec3 & X = landmark.X;
+    // X, color, obsCount
+    os << X[0] << " " << X[1] << " " << X[2] << os.widen('\n')
+       <<  "255 255 255" << os.widen('\n')
+       << obs.size() << " ";
+    for (Observations::const_iterator iterObs = obs.begin();
+      iterObs != obs.end(); ++iterObs)
+    {
+      const Observation & ob = iterObs->second;
+      // ViewId, FeatId, x, y
+      os << map_viewIdToContiguous[iterObs->first] << " " << ob.id_feat << " " << ob.x(0) << " " << ob.x(1) << " ";
+    }
+    os << os.widen('\n');
+  }
+  os.close();
+  osList.close();
+
   return true;
 }
 
@@ -331,19 +337,18 @@ int main(int argc, char *argv[]) {
   cmd.add( make_option('v', bVisData, "useVisData") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"
       << "[-r|--resolution] divide image coefficient\n"
       << "[-c|--nb core]\n"
-      << "[-v|--useVisData] use visibility information."
-      << std::endl;
+      << "[-v|--useVisData] use visibility information.";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
   // Create output dir
@@ -352,8 +357,7 @@ int main(int argc, char *argv[]) {
 
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 

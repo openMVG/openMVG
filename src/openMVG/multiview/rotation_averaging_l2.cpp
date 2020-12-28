@@ -19,6 +19,8 @@
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
 #endif
 
+#include "openMVG/system/logger.hpp"
+
 //--
 //-- Implementation related to rotation averaging.
 // . Compute global rotation from a list of relative estimates.
@@ -238,7 +240,7 @@ bool L2RotationAveraging_Refine
 )
 {
   if (vec_relativeRot.size() == 0 ||vec_ApprRotMatrix.size() == 0 ) {
-    std::cout << "Skip nonlinear rotation optimization, no sufficient data provided " << std::endl;
+    OPENMVG_LOG_INFO << "Skip nonlinear rotation optimization, no sufficient data provided";
     return false;
   }
 

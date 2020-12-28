@@ -28,7 +28,7 @@ bool computeSimilarity(
   double *Sout, Mat3 * Rout, Vec3 * tout)
 {
   if (vec_camPosGT.size() != vec_camPosComputed.size()) {
-    std::cerr << "Cannot perform registration, vector sizes are different" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot perform registration, vector sizes are different";
     return false;
   }
 
@@ -45,7 +45,7 @@ bool computeSimilarity(
   Vec3 t;
   Mat3 R;
   openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  std::cout << "\n Non linear refinement" << std::endl;
+  OPENMVG_LOG_INFO << "Non linear refinement";
   openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
@@ -78,7 +78,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
     << '\n' << "property uchar red"
     << '\n' << "property uchar green"
     << '\n' << "property uchar blue"
-    << '\n' << "end_header" << std::endl;
+    << '\n' << "end_header" << "\n";
 
   for (size_t i=0; i < vec_camPosGT.size(); ++i)  {
     outfile << vec_camPosGT[i].transpose()
@@ -141,20 +141,26 @@ void EvaluteToGT(
   }
 
   // Display residual errors :
-  std::cout << "\nBaseline residuals (in GT unit)\n";
-  copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
-  std::cout << "\nAngular residuals (Degree) \n";
-  copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
+  std::ostringstream os;
+  os << "Baseline residuals (in GT unit)\n";
+  copy(vec_residualErrors.cbegin(), vec_residualErrors.cend(), std::ostream_iterator<double>(os, " , "));
+  os << "\nAngular residuals (Degree) \n";
+  copy(vec_angularErrors.cbegin(), vec_angularErrors.cend(), std::ostream_iterator<double>(os, " , "));
 
-  std::cout << std::endl << "\nBaseline error statistics : \n ";
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end());
+  os << "\nBaseline error statistics : \n ";
+  minMaxMeanMedian<double>(vec_residualErrors.cbegin(), vec_residualErrors.cend(), os);
+
+  os << "\nAngular error statistics : \n ";
+  minMaxMeanMedian<double>(vec_angularErrors.cbegin(), vec_angularErrors.cend(), os);
+  OPENMVG_LOG_INFO << os.str();
+
+
   double minB, maxB, meanB, medianB;
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end(), minB, maxB, meanB, medianB);
+  minMaxMeanMedian<double>(vec_residualErrors.cbegin(), vec_residualErrors.cend(), minB, maxB, meanB, medianB);
 
-  std::cout << std::endl << "\nAngular error statistics : \n ";
-  minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end());
   double minA, maxA, meanA, medianA;
-  minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end(), minA, maxA, meanA, medianA);
+  minMaxMeanMedian<double>(vec_angularErrors.cbegin(), vec_angularErrors.cend(), minA, maxA, meanA, medianA);
+
 
   // Export camera position (viewable)
   exportToPly(vec_camPosGT, vec_camPosComputed_T,
@@ -174,7 +180,7 @@ void EvaluteToGT(
 
     std::ostringstream os;
     os << "Baseline_Residual=[";
-    std::copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(os, " "));
+    std::copy(vec_residualErrors.cbegin(), vec_residualErrors.cend(), std::ostream_iterator<double>(os, " "));
     os <<"];";
     _htmlDocStream->pushInfo("<hr>");
     _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));

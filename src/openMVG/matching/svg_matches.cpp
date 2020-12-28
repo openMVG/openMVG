@@ -160,8 +160,8 @@ bool Matches2SVG
       stroke_size
     );
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svg_content;
     svgFile.close();
@@ -248,8 +248,8 @@ bool InlierMatches2SVG
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();

@@ -50,7 +50,7 @@ void FastCornerDetector::detect
   if (size_ == 12) detector = fast12_detect_nonmax;
   if (!detector)
   {
-    std::cout << "Invalid size for FAST detector: " << size_ << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid size for FAST detector: " << size_;
     return;
   }
 

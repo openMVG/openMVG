@@ -14,11 +14,11 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_colorization.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "config.h"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>

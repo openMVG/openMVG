@@ -78,7 +78,7 @@ TEST(Camera_IO_ceral, SaveRead) {
     // Writing
     {
       std::ofstream stream(filename, std::ios::binary | std::ios::out);
-      CHECK(stream.is_open());
+      CHECK(stream);
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("intrinsics", intrinsic));
@@ -86,7 +86,7 @@ TEST(Camera_IO_ceral, SaveRead) {
     // Reading
     {
       std::ifstream stream(filename, std::ios::binary | std::ios::in);
-      CHECK(stream.is_open());
+      CHECK(stream);
 
       cereal::JSONInputArchive archive(stream);
       archive(cereal::make_nvp("intrinsics", intrinsic));

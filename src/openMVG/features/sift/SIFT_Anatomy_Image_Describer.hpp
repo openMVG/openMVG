@@ -58,6 +58,7 @@ Changes are:
 #include "openMVG/features/sift/sift_DescriptorExtractor.hpp"
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/features/sift/sift_KeypointExtractor.hpp"
+#include "openMVG/system/logger.hpp"
 
 
 namespace openMVG {
@@ -122,6 +123,7 @@ public:
       params_.first_octave_ = -1;
     break;
     default:
+      OPENMVG_LOG_ERROR << "Invalid preset configuration";
       return false;
     }
     return true;

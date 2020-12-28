@@ -96,9 +96,8 @@ Mat34 NViewDataSet::P(size_t i)const {
 
 void NViewDataSet::ExportToPLY(
   const std::string & out_file_name)const {
-  std::ofstream outfile;
-  outfile.open(out_file_name.c_str(), std::ios_base::out);
-  if (outfile.is_open()) {
+  std::ofstream outfile(out_file_name.c_str(), std::ios_base::out);
+  if (outfile) {
     outfile << "ply"
      << std::endl << "format ascii 1.0"
      << std::endl << "comment NViewDataSet export"

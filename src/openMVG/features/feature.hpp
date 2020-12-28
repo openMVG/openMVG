@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {
@@ -141,7 +142,7 @@ protected:
 };
 
 /// Read feats from file
-template<typename FeaturesT >
+template<typename FeaturesT>
 static bool loadFeatsFromFile(
   const std::string & sfileNameFeats,
   FeaturesT & vec_feat)

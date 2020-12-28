@@ -20,7 +20,6 @@
 #include "software/SfM/SfMIOHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -45,19 +44,18 @@ int main(int argc, char ** argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Export pairwise tracks.\nUsage: " << argv[0] << "\n"
-      << "[-i|--input_file file] path to a SfM_Data scene\n"
-      << "[-d|--matchdir path]\n"
-      << "[-m|--sMatchFile filename]\n"
-      << "[-o|--outdir path]\n"
-      << std::endl;
+      OPENMVG_LOG_INFO << "Export pairwise tracks.\nUsage: " << argv[0] << "\n"
+                        << "[-i|--input_file file] path to a SfM_Data scene\n"
+                        << "[-d|--matchdir path]\n"
+                        << "[-m|--sMatchFile filename]\n"
+                        << "[-o|--outdir path]\n";
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "\nIt is an invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -67,8 +65,8 @@ int main(int argc, char ** argv)
   //---------------------------------------
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "\n"
+      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -81,21 +79,21 @@ int main(int argc, char ** argv)
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
   if (!regions_type)
   {
-    std::cerr << "Invalid: " << sImage_describer << " regions type file." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid: " << sImage_describer << " regions type file.";
     return EXIT_FAILURE;
   }
 
   // Read the features
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, sMatchesDir, regions_type)) {
-    std::cerr << "Invalid features." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid features." << std::endl;
     return EXIT_FAILURE;
   }
 
   // Read the matches
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
   if (!matches_provider->load(sfm_data, sMatchFile)) {
-    std::cerr << "Invalid match file." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid match file." << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -131,7 +129,7 @@ int main(int argc, char ** argv)
 
   if (!Save(sfm_data, stlplus::create_filespec(sOutDir, "sfm_data.bin"),ESfM_Data(ALL)))
   {
-    std::cerr << "Unable to write the output sfm_data.bin file" << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to write the output sfm_data.bin file" << std::endl;
     return EXIT_FAILURE;
   }
 

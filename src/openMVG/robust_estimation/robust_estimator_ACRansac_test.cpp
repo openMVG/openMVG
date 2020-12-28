@@ -318,7 +318,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
     ostringstream osSvg;
     osSvg << gaussianNoiseLevel << "_line_.svg";
-    ofstream svgFile( osSvg.str().c_str());
+    ofstream svgFile( osSvg.str() );
     svgFile << svgTest.closeSvgFile().str();
 
     // robust line estimation
@@ -358,7 +358,7 @@ TEST(RansacLineFitter, ACRANSACSimu) {
 
       ostringstream osSvg;
       osSvg << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".svg";
-      ofstream svgFile( osSvg.str().c_str());
+      ofstream svgFile( osSvg.str() );
       svgFile << svgTest.closeSvgFile().str();
     }
   }

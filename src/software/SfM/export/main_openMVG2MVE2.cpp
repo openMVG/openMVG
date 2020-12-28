@@ -17,6 +17,8 @@
 #include "openMVG/image/image_resampling.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/loggerprogress.hpp"
+
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -26,7 +28,6 @@ using namespace openMVG::sfm;
 using namespace openMVG::features;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include <cstdlib>
 #include <cmath>
@@ -65,14 +66,14 @@ bool exportToMVE2Format(
   // Create basis directory structure
   if (!stlplus::is_folder(sOutDirectory))
   {
-    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    OPENMVG_LOG_INFO << "[Creating directory: " << sOutDirectory << "]";
     stlplus::folder_create(sOutDirectory);
     bOk = stlplus::is_folder(sOutDirectory);
   }
 
   if (!bOk)
   {
-    std::cerr << "Cannot access one of the desired output directories" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot access one of the desired output directories";
     return false;
   }
 
@@ -86,7 +87,7 @@ bool exportToMVE2Format(
     const Landmarks & landmarks = sfm_data.GetLandmarks();
     const size_t featureCount = landmarks.size();
     const std::string filename = "synth_0.out";
-    std::cout << "Writing bundle (" << cameraCount << " cameras, "
+    OPENMVG_LOG_INFO << "Writing bundle (" << cameraCount << " cameras, "
         << featureCount << " features): to " << filename << "...\n";
     std::ofstream out(stlplus::folder_append_separator(sOutDirectory) + filename);
     out << "drews 1.0\n";  // MVE expects this header
@@ -145,17 +146,17 @@ bool exportToMVE2Format(
     out.close();
 
     // Export (calibrated) views as undistorted images in parallel
-    std::cout << "Exporting views..." << std::endl;
+    OPENMVG_LOG_INFO << "Exporting views...";
 
     // Create 'views' subdirectory
     const std::string sOutViewsDirectory = stlplus::folder_append_separator(sOutDirectory) + "views";
     if (!stlplus::folder_exists(sOutViewsDirectory))
     {
-      std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+      OPENMVG_LOG_INFO << "[Creating directory:  " << sOutViewsDirectory << "]";
       stlplus::folder_create(sOutViewsDirectory);
     }
 
-    C_Progress_display my_progress_bar(views.size());
+    system::LoggerProgress my_progress_bar(views.size());
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < static_cast<int>(views.size()); ++i)
@@ -199,9 +200,8 @@ bool exportToMVE2Format(
         UndistortImage(image, cam, image_ud, BLACK);
         if (!WriteImage(dstImage.c_str(), image_ud))
         {
-          std::cerr
-            << "Unable to write the output image as a RGB image:\n"
-            << dstImage << std::endl;
+          OPENMVG_LOG_ERROR
+            << "Unable to write the output image as a RGB image: " << dstImage;
           bOk = false;
           continue;
         }
@@ -219,7 +219,7 @@ bool exportToMVE2Format(
           if (!ReadImage( srcImage.c_str(), &image) ||
               !WriteImage( dstImage.c_str(), image))
           {
-            std::cerr << "Unable to read and write the image" << std::endl;
+            OPENMVG_LOG_ERROR << "Unable to read and write the image";
             bOk = false;
             continue;
           }
@@ -287,19 +287,18 @@ int main(int argc, char *argv[])
   std::string sOutDir = "";
   cmd.add( make_option('i', sSfM_Data_Filename, "sfmdata") );
   cmd.add( make_option('o', sOutDir, "outdir") );
-  std::cout << "Note:  this program writes output in MVE file format.\n";
+  OPENMVG_LOG_INFO << "Note:  this program writes output in MVE file format.";
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-      << "[-o|--outdir] path\n"
-      << std::endl;
+      << "[-o|--outdir] path";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
   // Create output dir
@@ -309,8 +308,7 @@ int main(int argc, char *argv[])
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 

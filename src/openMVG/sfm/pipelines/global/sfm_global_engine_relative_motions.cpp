@@ -24,6 +24,8 @@
 #include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/types.hpp"
 
@@ -76,7 +78,7 @@ GlobalSfMReconstructionEngine_RelativeMotions::~GlobalSfMReconstructionEngine_Re
   if (!sLogging_file_.empty())
   {
     // Save the reconstruction Log
-    std::ofstream htmlFileStream(sLogging_file_.c_str());
+    std::ofstream htmlFileStream(sLogging_file_);
     htmlFileStream << html_doc_stream_->getDoc();
   }
 }
@@ -117,7 +119,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     const std::set<IndexT> set_remainingIds = graph::CleanGraph_KeepLargestBiEdge_Nodes<Pair_Set, IndexT>(pairs);
     if (set_remainingIds.empty())
     {
-      std::cout << "Invalid input image graph for global SfM" << std::endl;
+      OPENMVG_LOG_WARNING << "Invalid input image graph for global SfM";
       return false;
     }
     KeepOnlyReferencedElement(set_remainingIds, matches_provider_->pairWise_matches_);
@@ -129,24 +131,24 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
   Hash_Map<IndexT, Mat3> global_rotations;
   if (!Compute_Global_Rotations(relatives_R, global_rotations))
   {
-    std::cerr << "GlobalSfM:: Rotation Averaging failure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Rotation Averaging failure!";
     return false;
   }
 
   matching::PairWiseMatches  tripletWise_matches;
   if (!Compute_Global_Translations(global_rotations, tripletWise_matches))
   {
-    std::cerr << "GlobalSfM:: Translation Averaging failure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
     return false;
   }
   if (!Compute_Initial_Structure(tripletWise_matches))
   {
-    std::cerr << "GlobalSfM:: Cannot initialize an initial structure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Cannot initialize an initial structure!";
     return false;
   }
   if (!Adjust())
   {
-    std::cerr << "GlobalSfM:: Non-linear adjustment failure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Non-linear adjustment failure!";
     return false;
   }
 
@@ -190,10 +192,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
       set_pose_ids.insert(relative_R.j);
     }
 
-    std::cout << "\n-------------------------------" << "\n"
+    OPENMVG_LOG_INFO << "\n-------------------------------" << "\n"
       << " Global rotations computation: " << "\n"
       << "  #relative rotations: " << relatives_R.size() << "\n"
-      << "  #global rotations: " << set_pose_ids.size() << std::endl;
+      << "  #global rotations: " << set_pose_ids.size();
   }
 
   // Global Rotation solver:
@@ -207,9 +209,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
     eRotation_averaging_method_, eRelativeRotationInferenceMethod,
     relatives_R, global_rotations);
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Found #global_rotations: " << global_rotations.size() << "\n"
-    << "Timing: " << t.elapsed() << " seconds" << std::endl;
+    << "Timing: " << t.elapsed() << " seconds";
 
 
   if (b_rotation_averaging)
@@ -236,18 +238,20 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Global_Rotations
       const float error_max = *max_element(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
       Histogram<float> histo(0.0f,error_max, 20);
       histo.Add(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
-      std::cout
+      OPENMVG_LOG_INFO
         << "\nRelative/Global degree rotations residual errors {0," << error_max<< "}:\n"
-        << histo.ToString() << std::endl;
+        << histo.ToString();
       {
         Histogram<float> histo(0.0f, 5.0f, 20);
         histo.Add(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
-        std::cout
+        OPENMVG_LOG_INFO
           << "\nRelative/Global degree rotations residual errors {0,5}:\n"
-          << histo.ToString() << std::endl;
+          << histo.ToString();
       }
-      std::cout << "\nStatistics about global rotation evaluation:" << std::endl;
-      minMaxMeanMedian<float>(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
+      std::ostringstream os;
+      os << "\nStatistics about global rotation evaluation:\n";
+      minMaxMeanMedian<float>(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend(), os);
+      OPENMVG_LOG_INFO << os.str();
     }
 
     // Log input graph to the HTML report
@@ -359,7 +363,6 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       }
     }
 
-    std::cout << std::endl << "Track stats" << std::endl;
     {
       std::ostringstream osTrack;
       //-- Display stats:
@@ -367,14 +370,15 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       //    - number of tracks
       std::set<uint32_t> set_imagesId;
       TracksUtilsMap::ImageIdInTracks(map_selectedTracks, set_imagesId);
-      osTrack << "------------------" << "\n"
-        << "-- Tracks Stats --" << "\n"
+      osTrack
+        << "\n------------------\n"
+        << "-- Tracks Stats --\n"
         << " Tracks number: " << tracksBuilder.NbTracks() << "\n"
-        << " Images Id: " << "\n";
+        << " Images Id: \n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),
         std::ostream_iterator<uint32_t>(osTrack, ", "));
-      osTrack << "\n------------------" << "\n";
+      osTrack << "\n------------------\n";
 
       std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
       TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
@@ -383,7 +387,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
-      std::cout << osTrack.str();
+      OPENMVG_LOG_INFO << osTrack.str();
     }
   }
 
@@ -395,9 +399,9 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
     SfM_Data_Structure_Computation_Blind structure_estimator(true);
     structure_estimator.triangulate(sfm_data_);
 
-    std::cout << "\n#removed tracks (invalid triangulation): " <<
-      trackCountBefore - IndexT(sfm_data_.GetLandmarks().size()) << std::endl;
-    std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << "\n#removed tracks (invalid triangulation): " <<
+      trackCountBefore - IndexT(sfm_data_.GetLandmarks().size());
+    OPENMVG_LOG_INFO << "Triangulation took (s): " << timer.elapsed();
 
     // Export initial structure
     if (!sLogging_file_.empty())
@@ -481,10 +485,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
   const size_t pointcount_pixelresidual_filter = sfm_data_.structure.size();
   RemoveOutliers_AngleError(sfm_data_, 2.0);
   const size_t pointcount_angular_filter = sfm_data_.structure.size();
-  std::cout << "Outlier removal (remaining #points):\n"
+  OPENMVG_LOG_INFO << "Outlier removal (remaining #points):\n"
     << "\t initial structure size #3DPoints: " << pointcount_initial << "\n"
     << "\t\t pixel residual filter  #3DPoints: " << pointcount_pixelresidual_filter << "\n"
-    << "\t\t angular filter         #3DPoints: " << pointcount_angular_filter << std::endl;
+    << "\t\t angular filter         #3DPoints: " << pointcount_angular_filter;
 
   if (!sLogging_file_.empty())
   {
@@ -501,7 +505,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
     // TODO: must ensure that track graph is producing a single connected component
 
     const size_t pointcount_cleaning = sfm_data_.structure.size();
-    std::cout << "Point_cloud cleaning:\n"
+    OPENMVG_LOG_INFO << "Point_cloud cleaning:\n"
       << "\t #3DPoints: " << pointcount_cleaning << "\n";
   }
 

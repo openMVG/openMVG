@@ -16,6 +16,7 @@
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/image_resampling.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG{
 namespace features{
@@ -114,9 +115,9 @@ struct HierarchicalGaussianScaleSpace: public Octaver<Octave>
       }
       else
       {
-        std::cerr
+        OPENMVG_LOG_ERROR
           << "Upsampling or downsampling with delta equal to: "
-          << m_params.delta_min << " is not yet implemented" << std::endl;
+          << m_params.delta_min << " is not yet implemented";
       }
     }
     //-- Limit the size of the last octave to be at least 32x32 pixels

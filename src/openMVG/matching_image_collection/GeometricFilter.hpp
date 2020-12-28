@@ -15,8 +15,7 @@
 
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
-
-#include "third_party/progress/progress_display.hpp"
+#include "openMVG/system/progressinterface.hpp"
 
 namespace openMVG { namespace sfm { struct Regions_Provider; } }
 namespace openMVG { namespace sfm { struct SfM_Data; } }
@@ -49,7 +48,7 @@ struct ImageCollectionGeometricFilter
     const PairWiseMatches & putative_matches,
     const bool b_guided_matching = false,
     const double d_distance_ratio = 0.6,
-    C_Progress *progress_bar = nullptr
+    system::ProgressInterface *progress_bar = nullptr
   );
 
   const PairWiseMatches & Get_geometric_matches() const
@@ -70,12 +69,12 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
   const PairWiseMatches & putative_matches,
   const bool b_guided_matching,
   const double d_distance_ratio,
-  C_Progress * my_progress_bar
+  system::ProgressInterface * my_progress_bar
 )
 {
   if (!my_progress_bar)
-    my_progress_bar = &C_Progress::dummy();
-  my_progress_bar->restart( putative_matches.size(), "\n- Geometric filtering -\n" );
+    my_progress_bar = &system::ProgressInterface::dummy();
+  my_progress_bar->Restart( putative_matches.size(), "- Geometric filtering -" );
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)

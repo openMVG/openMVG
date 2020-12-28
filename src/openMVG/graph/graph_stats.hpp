@@ -50,7 +50,7 @@ void getGraphStatistics
   const auto connected_components =
     exportGraphToMapSubgraphs<indexedGraph::GraphT, IndexT>(graph.g);
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Graph statistics:\n"
     << "\t#nodes: " << nb_nodes<< "\n"
     << "\t#cc: " << connected_components.size() + (nb_nodes - lemon::countNodes(graph.g)) << "\n"
@@ -59,7 +59,7 @@ void getGraphStatistics
     << "min: " << min << ", "
     << "max: " << max << ", "
     << "mean: " << mean << ", "
-    << "median: " << median << "\n";
+    << "median: " << median;
 }
 
 }

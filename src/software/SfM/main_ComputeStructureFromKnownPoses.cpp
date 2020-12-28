@@ -24,11 +24,11 @@
 #include "openMVG/sfm/sfm_report.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/tracks/tracks.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 
 #include <ceres/types.h>
 
@@ -54,7 +54,7 @@ Pair_Set BuildPairsFromFrustumsIntersections(
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << "Compute Structure from the provided poses" << std::endl;
+  OPENMVG_LOG_INFO << "Compute Structure from the provided poses";
 
   CmdLine cmd;
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
     << "[-i|--input_file] path to a SfM_Data scene\n"
     << "[-m|--match_dir] path to the features and descriptors that "
     <<    "corresponds to the provided SfM_Data scene\n"
@@ -107,24 +107,21 @@ int main(int argc, char **argv)
     << "[-r|--residual_threshold] maximal pixels reprojection error that will be considered for triangulations (4.0 by default)\n"
     << "[-c|--cache_size]\n"
     << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
-    << "  If not used, all regions will be load in memory.\n"
+    << "  If not used, all regions will be load in memory.\n";
 
-    << std::endl;
-
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR<< s;
     return EXIT_FAILURE;
   }
 
   if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
-    std::cerr << "\n Invalid triangulation method" << std::endl;
+    OPENMVG_LOG_ERROR << "\n Invalid triangulation method";
     return EXIT_FAILURE;
   }
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -134,8 +131,8 @@ int main(int argc, char **argv)
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
   if (!regions_type)
   {
-    std::cerr << "Invalid: "
-      << sImage_describer << " regions type file." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid: "
+      << sImage_describer << " regions type file.";
     return EXIT_FAILURE;
   }
 
@@ -153,21 +150,19 @@ int main(int argc, char **argv)
   }
 
   // Show the progress on the command line:
-  C_Progress_display progress;
+  system::LoggerProgress progress;
 
   if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
-    std::cerr << std::endl
-      << "Invalid regions." << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot find the view corresponding regions in : " << sMatchesDir;
     return EXIT_FAILURE;
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Loaded a sfm_data scene with:\n"
     << " #views: " << sfm_data.GetViews().size() << "\n"
     << " #poses: " << sfm_data.GetPoses().size() << "\n"
     << " #intrinsics: " << sfm_data.GetIntrinsics().size() <<  "\n"
-    << " #tracks: " << sfm_data.GetLandmarks().size()
-    << std::endl;
+    << " #tracks: " << sfm_data.GetLandmarks().size();
 
   const bool bDirect_triangulation = cmd.used('d');
 
@@ -176,17 +171,17 @@ int main(int argc, char **argv)
     // Check that a match file have been provided
     if (sMatchFile.empty() || !sPairFile.empty())
     {
-      std::cerr << "You must provide a match file thanks to the [-f|--match_file] option" << std::endl;
+       OPENMVG_LOG_ERROR << "You must provide a match file thanks to the [-f|--match_file] option";
       return EXIT_FAILURE;
     }
-    std::cout
+    OPENMVG_LOG_INFO
       << "\n======================================\n"
       << "Robust triangulation of the match file\n"
-      << "======================================"  << std::endl;
+      << "======================================";
     PairWiseMatches matches;
     if (!Load(matches, sMatchFile))
     {
-      std::cerr<< "Unable to read the matches file." << std::endl;
+      OPENMVG_LOG_ERROR << "Unable to read the matches file.";
       return EXIT_FAILURE;
     }
     // Compute the tracks from the pairwise estimation
@@ -195,10 +190,10 @@ int main(int argc, char **argv)
     openMVG::tracks::STLMAPTracks tracks;
     {
       // List of features matches for each couple of images
-      std::cout << "\n" << "Building tracks..." << std::endl;
+      OPENMVG_LOG_INFO << "Building tracks...";
       tracks::TracksBuilder tracks_builder;
       tracks_builder.Build(matches);
-      std::cout << "Filtering tracks..." << std::endl;
+      OPENMVG_LOG_INFO << "Filtering tracks...";
       tracks_builder.Filter(min_track_length);
       //-- Build tracks with STL compliant type :
       tracks_builder.ExportToSTL(tracks);
@@ -227,15 +222,12 @@ int main(int argc, char **argv)
           track_stream << "\t" << it.first << "\t" << it.second << "\n";
         }
         track_stream << "\n";
-        std::cout << track_stream.str();
+        OPENMVG_LOG_INFO << track_stream.str();
       }
     }
 
-    std::cout
-      << "====================================\n"
-      << "Robust triangulation of the tracks\n"
-      << " - tracks computed from a match file\n"
-      << "====================================" << std::endl;
+    OPENMVG_LOG_INFO
+      << "Robust triangulation of the tracks: [tracks computed from a match file]";
 
     // Fill sfm_data with the computed tracks (no 3D yet)
     Landmarks & structure = sfm_data.structure;
@@ -271,12 +263,9 @@ int main(int argc, char **argv)
   }
   else
   {
-    std::cout
-      << "=============================================================\n"
-      << "Robust triangulation of the tracks\n"
-      << " - Triangulation of guided epipolar geometry matches\n"
-      << "============================================================="
-      << std::endl;
+    OPENMVG_LOG_INFO
+      << "Robust triangulation of the tracks: "
+      << " [Triangulation of guided epipolar geometry matches]";
     //--
     //- Pair selection method:
     //  - geometry guided -> camera frustum intersection,
@@ -295,7 +284,7 @@ int main(int argc, char **argv)
       {
         if (!loadPairs(sfm_data.GetViews().size(), sPairFile, pairs))
         {
-          std::cerr << "Unable to read the pair file." << std::endl;
+          OPENMVG_LOG_ERROR << "Unable to read the pair file.";
           return EXIT_FAILURE;
         }
       }
@@ -304,7 +293,7 @@ int main(int argc, char **argv)
         PairWiseMatches matches;
         if (!Load(matches, sMatchFile))
         {
-          std::cerr<< "Unable to read the matches file." << std::endl;
+          OPENMVG_LOG_ERROR<< "Unable to read the matches file.";
           return EXIT_FAILURE;
         }
         pairs = getPairs(matches);
@@ -314,7 +303,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        std::cerr << "Cannot use --match_file and --pair_file at the same time" << std::endl;
+        OPENMVG_LOG_ERROR << "Cannot use --match_file and --pair_file at the same time";
       }
     }
 
@@ -326,16 +315,15 @@ int main(int argc, char **argv)
     SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
     structure_estimator.run(sfm_data, pairs, regions_provider,
       static_cast<ETriangulationMethod>(triangulation_method));
-    std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
+    OPENMVG_LOG_INFO << "\nStructure estimation took (s): " << timer.elapsed() << ".";
 
   }
   regions_provider.reset(); // Regions are not longer needed.
   RemoveOutliers_AngleError(sfm_data, 2.0);
 
-  std::cout
-    << "\n#landmark found: " << sfm_data.GetLandmarks().size() << std::endl;
+  OPENMVG_LOG_INFO << "#landmark found: " << sfm_data.GetLandmarks().size();
 
-  std::cout << "...Generating SfM_Report.html" << std::endl;
+  OPENMVG_LOG_INFO << "...Generating SfM_Report.html";
   Generate_SfM_Report(sfm_data,
     stlplus::create_filespec(stlplus::folder_part(sOutFile), "SfMStructureFromKnownPoses_Report.html"));
 
@@ -350,8 +338,7 @@ int main(int argc, char **argv)
       eraseUnstablePosesAndObservations(sfm_data, minPointPerPose, minTrackLength);
 
       const size_t pointcount_cleaning = sfm_data.structure.size();
-      std::cout << "Point_cloud cleaning:\n"
-        << "\t #3DPoints: " << pointcount_cleaning << "\n";
+      OPENMVG_LOG_INFO << "Point_cloud cleaning: #3DPoints: " << pointcount_cleaning;
     }
 
     Bundle_Adjustment_Ceres::BA_Ceres_options options;
@@ -370,7 +357,7 @@ int main(int argc, char **argv)
       options.linear_solver_type_ = ceres::DENSE_SCHUR;
     }
 
-    std::cout << "Bundle adjustment..." << std::endl;
+    OPENMVG_LOG_INFO << "Bundle adjustment...";
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     bundle_adjustment_obj.Adjust
       (
@@ -382,13 +369,12 @@ int main(int argc, char **argv)
       );
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Found a sfm_data scene with:\n"
     << " #views: " << sfm_data.GetViews().size() << "\n"
     << " #poses: " << sfm_data.GetPoses().size() << "\n"
     << " #intrinsics: " << sfm_data.GetIntrinsics().size() <<  "\n"
-    << " #tracks: " << sfm_data.GetLandmarks().size()
-    << std::endl;
+    << " #tracks: " << sfm_data.GetLandmarks().size();
 
   if (stlplus::extension_part(sOutFile) != "ply") {
     Save(sfm_data,

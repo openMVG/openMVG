@@ -8,6 +8,7 @@
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/stl/stlMap.hpp"
 
 #include "software/SfM/tools_precisionEvaluationToGt.hpp"
@@ -45,18 +46,17 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid command line parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--gt] path (where the ground truth dataset is saved).\n"
       << "[-c|--computed] path to the sfm_data file to compare.\n"
-      << "[-o|--output] path (where the registration statistics will be saved).\n"
-      << std::endl;
+      << "[-o|--output] path (where the registration statistics will be saved).\n";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   if (sOutDir.empty())  {
-    std::cerr << "\nIt is an invalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "\nIt is an invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
         stlplus::folder_append_separator(sGTDirectory) + "gt_dense_cameras",
         stlplus::folder_append_separator(sGTDirectory) + "images"))
   {
-    std::cerr << "Cannot initialize the GT dataset." << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot initialize the GT dataset." << std::endl;
     return EXIT_FAILURE;
   }
   const SfM_Data sfm_data_gt = sfm_data_gt_loader->GetSfMData();
@@ -86,14 +86,13 @@ int main(int argc, char **argv)
   //
   SfM_Data sfm_data_to_compare;
   if (!Load(sfm_data_to_compare, sComputedDirectory, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sComputedDirectory << "\" cannot be read.";
     return EXIT_FAILURE;
   }
   // Assert that GT and loaded scene have the same camera count
   if (sfm_data_gt.GetPoses().size() != sfm_data_to_compare.GetPoses().size())
   {
-    std::cerr << std::endl
+    OPENMVG_LOG_ERROR
       << "Dataset poses count does not match." << "\n"
       << "#GT poses: " << sfm_data_gt.GetPoses().size() << "\n"
       << "#Scene poses: " << sfm_data_to_compare.GetPoses().size() << std::endl;
