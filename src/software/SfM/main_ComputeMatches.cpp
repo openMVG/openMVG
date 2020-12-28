@@ -129,13 +129,16 @@ int main(int argc, char **argv)
       << "  For Scalar based regions descriptor:\n"
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
       << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
+      << "    HNSWL1: L1 Approximate Matching with Hierarchical Navigable Small World graphs\n"
+      << "      taylored for quantized and histogram based descriptors (e.g uint8 RootSIFT)\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
       << "      L2 Cascade Hashing with precomputed hashed regions\n"
       << "     (faster than CASCADEHASHINGL2 but use more memory).\n"
       << "  For Binary based descriptor:\n"
-      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching.\n"
+      << "    BRUTEFORCEHAMMING: BruteForce Hamming matching,\n"
+      << "    HNSWHAMMING: Hamming Approximate Matching with Hierarchical Navigable Small World graphs\n"
       << "[-m|--guided_matching]\n"
       << "  use the found model to improve the pairwise correspondences.\n"
       << "[-c|--cache_size]\n"
@@ -313,14 +316,19 @@ int main(int argc, char **argv)
     {
       if (regions_type->IsScalar())
       {
-        OPENMVG_LOG_INFO << "Using FAST_CASCADE_HASHING_L2 matcher";
-        collectionMatcher.reset(new Cascade_Hashing_Matcher_Regions(fDistRatio));
+        if(regions_type->Type_id() == typeid(uint8_t).name()) {
+          OPENMVG_LOG_INFO << "Using HNSWL1 matcher";
+          collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L1));
+        } else {
+          OPENMVG_LOG_INFO << "Using HNSWL2 matcher";
+          collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
+        }
       }
       else
       if (regions_type->IsBinary())
       {
-        OPENMVG_LOG_INFO << "Using BRUTE_FORCE_HAMMING matcher";
-        collectionMatcher.reset(new Matcher_Regions(fDistRatio, BRUTE_FORCE_HAMMING));
+        OPENMVG_LOG_INFO << "Using HNSWHAMMING matcher";
+        collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_HAMMING));
       }
     }
     else
@@ -338,8 +346,19 @@ int main(int argc, char **argv)
     else
     if (sNearestMatchingMethod == "HNSWL2")
     {
-      std::cout << "Using HNSWL2 matcher" << std::endl;
+      OPENMVG_LOG_INFO << "Using HNSWL2 matcher";
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
+    }
+    if (sNearestMatchingMethod == "HNSWL1")
+    {
+      OPENMVG_LOG_INFO << "Using HNSWL1 matcher";
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L1));
+    }
+    else
+    if (sNearestMatchingMethod == "HNSWHAMMING")
+    {
+      OPENMVG_LOG_INFO << "Using HNSWHAMMING matcher";
+      collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_HAMMING));
     }
     else
     if (sNearestMatchingMethod == "ANNL2")
