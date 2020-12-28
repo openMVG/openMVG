@@ -140,6 +140,7 @@ install( TARGETS openMVG_main_MatchesToTracks   DESTINATION bin/ )
 # - Compute structure from known camera poses
 # - Compute structure color
 ###
+
 add_executable(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
 target_link_libraries(openMVG_main_IncrementalSfM
   PRIVATE
@@ -162,6 +163,16 @@ target_link_libraries(openMVG_main_IncrementalSfM2
 
 add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
 target_link_libraries(openMVG_main_GlobalSfM
+  PRIVATE
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_sfm
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_StellarSfM main_StellarSfM.cpp)
+target_link_libraries(openMVG_main_StellarSfM
   PRIVATE
     openMVG_system
     openMVG_image
@@ -237,6 +248,8 @@ set_property(TARGET openMVG_main_IncrementalSfM2 PROPERTY FOLDER OpenMVG/softwar
 install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION bin/)
 set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+set_property(TARGET openMVG_main_StellarSfM PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_StellarSfM DESTINATION bin/)
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
