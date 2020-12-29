@@ -98,7 +98,7 @@ public:
       return false;
     }
 
-    HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100) );
+    HNSW_matcher_.reset(new HierarchicalNSW<DistanceType>(HNSW_metric_.get(), nbRows, 16, 100));
 
     // add a first point...
     HNSW_matcher_->addPoint(static_cast<const void *>(dataset), static_cast<size_t>(0));

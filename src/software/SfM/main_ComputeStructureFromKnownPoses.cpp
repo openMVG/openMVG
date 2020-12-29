@@ -258,7 +258,7 @@ int main(int argc, char **argv)
         static_cast<ETriangulationMethod>(triangulation_method),
         console_verbose);
       structure_estimator.triangulate(sfm_data);
-      std::cout << "\n@Triangulation time: " << timer.elapsedMs() << std::endl;
+      OPENMVG_LOG_INFO << "\n@Triangulation time: " << timer.elapsedMs();
     }
   }
   else
