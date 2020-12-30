@@ -60,12 +60,12 @@ struct Hamming
   }
 
 #ifdef _MSC_VER
-  inline std::size_t constexpr popcnt(const uint32_t & rhs)
+  inline std::size_t const popcnt(const uint32_t & rhs)
   {
     return _mm_popcnt_u32(rhs);
   }
 
-  inline std::size_t constexpr popcnt(const uint64_t & rhs)
+  inline std::size_t const popcnt(const uint64_t & rhs)
   {
 #if __amd64__ || __x86_64__ || _WIN64 || _M_X64
     return _mm_popcnt_u64(rhs);
