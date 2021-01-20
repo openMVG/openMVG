@@ -61,7 +61,7 @@ target_link_libraries(openMVG_main_ListMatchingPairs
 )
 
 add_executable( openMVG_main_PairGenerator main_PairGenerator.cpp )
-target_link_libraries( openMVG_main_PairGenerator 
+target_link_libraries( openMVG_main_PairGenerator
   PRIVATE
     openMVG_features
     openMVG_multiview

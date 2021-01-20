@@ -20,7 +20,6 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <string>
-#include <vector>
 
 bool LoadImages
 (

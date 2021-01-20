@@ -8,10 +8,6 @@
 
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/graph/graph_stats.hpp"
-#include "openMVG/features/akaze/image_describer_akaze.hpp"
-#include "openMVG/features/descriptor.hpp"
-#include "openMVG/features/feature.hpp"
-#include "openMVG/graph/graph.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
