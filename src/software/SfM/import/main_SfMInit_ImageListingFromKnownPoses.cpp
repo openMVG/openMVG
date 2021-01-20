@@ -30,12 +30,12 @@
 #include <string>
 #include <utility>
 
-#include "io_readGTInterface.hpp"
-#include "io_readGTStrecha.hpp"
-#include "io_readGTMiddleBury.hpp"
+#include "io_readGTBlendedMVS.hpp"
 #include "io_readGTDTUMVS.hpp"
 #include "io_readGTETH3D.hpp"
 #include "io_readGTKitti.hpp"
+#include "io_readGTMiddleBury.hpp"
+#include "io_readGTStrecha.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      OPENMVG_LOG_INFO 
+      OPENMVG_LOG_INFO
         << "Usage: " << argv[0] << '\n'
         << "[-i|--imageDirectory]\n"
         << "[-g|--groundTruthDirectory]\n"
@@ -78,13 +78,14 @@ int main(int argc, char **argv)
         << "\t 3: DTU MVS Dataset\n"
         << "\t 4: ETH 3D Dataset\n"
         << "\t 5: Kitti Odometry Dataset\n"
+        << "\t 6: BlendedMVS Dataset\n"
         << "[-o|--outputDirectory]\n";
 
       OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
-  OPENMVG_LOG_INFO  
+  OPENMVG_LOG_INFO
     << " You called : \n"
     << argv[0] << "\n"
     << "--imageDirectory " << sImageDir << "\n"
@@ -139,6 +140,9 @@ int main(int argc, char **argv)
       break;
     case 5:
       sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_Kitti>();
+      break;
+    case 6:
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_BlendedMVS>();
       break;
     default:
       OPENMVG_LOG_ERROR << "Error: Not Support Dataset";
