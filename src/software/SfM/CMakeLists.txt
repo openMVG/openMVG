@@ -424,8 +424,8 @@ IF(OpenMVG_USE_OPENCV)
     openMVG_sfm
     stlplus
     vlsift
-    ${OpenCV_LIBS})
-  target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
+    opencv::opencv)
+  target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${opencv_INCLUDE_DIRS})
 
   add_executable(undistort undistort.cpp)
   target_link_libraries(undistort
@@ -434,7 +434,8 @@ IF(OpenMVG_USE_OPENCV)
     openMVG_features
     openMVG_sfm
     stlplus
-    ${OpenCV_LIBS})
+    opencv::opencv)
+  target_include_directories(undistort PRIVATE ${opencv_INCLUDE_DIRS})
 
   IF(OpenMVG_USE_OCVSIFT)
     target_compile_definitions(openMVG_main_ComputeFeatures_OpenCV PRIVATE USE_OCVSIFT)

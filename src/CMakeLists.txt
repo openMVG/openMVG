@@ -14,6 +14,11 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
 
+if (EXISTS ${CMAKE_BINARY_DIR}/conan_paths.cmake)
+  include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+endif()
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
@@ -378,12 +383,13 @@ endif()
 # - only external and enabled only if OpenMVG_USE_OPENCV is set to ON
 # ==============================================================================
 if (OpenMVG_USE_OPENCV)
-  find_package( OpenCV 3.0 QUIET )
-  if (NOT OpenCV_FOUND)
-    message(STATUS "OpenCV was not found. Disabling OpenCV support.")
+find_package( opencv 3.0 QUIET )
+if (NOT opencv_FOUND)
+message(STATUS "OpenCV was not found. Disabling OpenCV support.")
+    include(UpdateCacheVariable)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENCV OFF)
     UPDATE_CACHE_VARIABLE(OpenMVG_USE_OCVSIFT OFF)
-  endif (NOT OpenCV_FOUND)
+  endif (NOT opencv_FOUND)
 endif (OpenMVG_USE_OPENCV)
 
 
