@@ -23,7 +23,7 @@ add_subdirectory(stl)
 #INSTALL RULES
 install(
   DIRECTORY .
-  DESTINATION include/openMVG
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openMVG
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
