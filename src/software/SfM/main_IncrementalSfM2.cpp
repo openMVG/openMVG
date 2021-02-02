@@ -72,6 +72,7 @@ int main(int argc, char **argv)
   std::string sMatchesDir, sMatchFilename;
   std::string sOutDir = "";
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
+  std::string sExtrinsic_refinement_options = "ADJUST_ALL";
   std::string sSfMInitializer_method = "STELLAR";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool b_use_motion_priors = false;
@@ -84,6 +85,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutDir, "outdir") );
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
+  cmd.add( make_option('e', sExtrinsic_refinement_options, "refineExtrinsics") );
   cmd.add( make_option('S', sSfMInitializer_method, "sfm_initializer") );
   cmd.add( make_switch('P', "prior_usage") );
   cmd.add( make_option('t', triangulation_method, "triangulation_method"));
@@ -122,6 +124,9 @@ int main(int argc, char **argv)
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+    << "[-e|--refineExtrinsics] Extrinsic parameters refinement option\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> extrinsic parameters are held as constant\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
     << "[-M|--match_file] path to the match file to use(default= matches.f.txt then matches.f.bin).\n"
     << "[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
@@ -156,6 +161,14 @@ int main(int argc, char **argv)
   if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
   {
     std::cerr << "Invalid input for the Bundle Adjusment Intrinsic parameter refinement option" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  const sfm::Extrinsic_Parameter_Type extrinsic_refinement_options =
+    sfm::StringTo_Extrinsic_Parameter_Type(sExtrinsic_refinement_options);
+  if (extrinsic_refinement_options == static_cast<sfm::Extrinsic_Parameter_Type>(0) )
+  {
+    std::cerr << "Invalid input for the Bundle Adjusment Extrinsic parameter refinement option" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -268,6 +281,7 @@ int main(int argc, char **argv)
 
   // Configure reconstruction parameters
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
+  sfmEngine.Set_Extrinsics_Refinement_Type(extrinsic_refinement_options);
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
   b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);

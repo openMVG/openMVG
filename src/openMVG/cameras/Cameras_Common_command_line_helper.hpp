@@ -12,8 +12,10 @@
 #include <string>
 #include <vector>
 
+#include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/stl/split.hpp"
 #include "openMVG/system/logger.hpp"
+
 
 namespace openMVG
 {
@@ -76,6 +78,57 @@ StringTo_Intrinsic_Parameter_Type
 }
 
 } // namespace cameras
+
+namespace sfm
+{
+  // Allow to initialize an object sfm::Extrinsic_Parameter_Type BA from
+  // a string and delimiters('|')
+  //
+
+  inline
+  sfm::Extrinsic_Parameter_Type
+  StringTo_Extrinsic_Parameter_Type
+  (
+    const std::string & rhs
+  )
+  {
+    // Split the string by the '|' token.
+    std::vector<std::string> items;
+    stl::split(rhs, '|', items);
+
+    sfm::Extrinsic_Parameter_Type extrinsics_opt =
+      static_cast<sfm::Extrinsic_Parameter_Type>(0);
+
+    // Look for the "STRING KEY" parameters and initialize them
+    for (const std::string & item : items)
+    {
+      // cameras::Intrinsic_Parameter_Type
+      if (item == "NONE")
+      {
+        return sfm::Extrinsic_Parameter_Type::NONE;
+      }
+      else if (item == "ADJUST_TRANSLATION")
+      {
+        extrinsics_opt = extrinsics_opt | sfm::Extrinsic_Parameter_Type::ADJUST_TRANSLATION;
+      }
+      else if (item == "ADJUST_ROTATION")
+      {
+        extrinsics_opt = extrinsics_opt | sfm::Extrinsic_Parameter_Type::ADJUST_ROTATION;
+      }
+      else if (item == "ADJUST_ALL")
+      {
+        extrinsics_opt = sfm::Extrinsic_Parameter_Type::ADJUST_ALL;
+      }
+      else
+      {
+        OPENMVG_LOG_ERROR << "WARNING: Unknow KEY: " << item;
+        extrinsics_opt = static_cast<sfm::Extrinsic_Parameter_Type>(0);
+        break;
+      }
+    }
+    return extrinsics_opt;
+  }
+} // namespace sfm
 } // namespace openMVG
 
 #endif // OPENMVG_CAMERAS_CAMERAS_COMMON_COMMAND_LINE_HELPER_HPP

@@ -191,7 +191,7 @@ bool SequentialSfMReconstructionEngine2::Process() {
   //-- Reconstruction done.
   //-- Display some statistics
   OPENMVG_LOG_INFO
-    << "\n\n-------------------------------" << "\n"
+    << "\n-------------------------------" << "\n"
     << "-- Structure from Motion (statistics):\n"
     << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
     << " from " << sfm_data_.GetViews().size() << " input images.\n"
@@ -524,7 +524,7 @@ bool SequentialSfMReconstructionEngine2::BundleAdjustment()
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   const Optimize_Options ba_refine_options
     ( ReconstructionEngine::intrinsic_refinement_options_,
-      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+      ReconstructionEngine::extrinsic_refinement_options_,
       Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
       Control_Point_Parameter(),
       this->b_use_motion_prior_
