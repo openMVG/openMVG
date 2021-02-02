@@ -39,7 +39,7 @@ if (MSVC)
 endif (MSVC)
 set_target_properties(openMVG_numeric PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_numeric PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_numeric DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_numeric DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG extract_columns openMVG_numeric)
 UNIT_TEST(openMVG numeric openMVG_numeric)
