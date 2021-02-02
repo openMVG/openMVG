@@ -14,7 +14,7 @@
 
 #INSTALL(
 #  TARGETS flann_cpp_s
-#  DESTINATION lib
+#  DESTINATION ${CMAKE_INSTALL_LIBDIR}
 #  EXPORT openMVG-targets)
 
 INSTALL (
