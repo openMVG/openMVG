@@ -553,7 +553,7 @@ install(EXPORT openMVG-targets DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::
-  DESTINATION share/openMVG/cmake
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/openMVG/cmake
 )
 
 
@@ -570,7 +570,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
-        DESTINATION share/openMVG/cmake)
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/openMVG/cmake)
 
 # ==============================================================================
 # UNINSTALL RULES
