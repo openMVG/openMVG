@@ -115,25 +115,25 @@ target_link_libraries( openMVG_main_openMVGSpherical2Cubic
 
 # installation rules
 set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2PMVS DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2openMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2openMVS DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2openMVS DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2Agisoft PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2Agisoft DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2Agisoft DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2MVSTEXTURING PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2MVE2 PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MVE2 DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2MVE2 DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2NVM DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVG2Colmap PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2Colmap DESTINATION bin/)
+install(TARGETS openMVG_main_openMVG2Colmap DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_openMVGSpherical2Cubic PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVGSpherical2Cubic DESTINATION bin/)
+install(TARGETS openMVG_main_openMVGSpherical2Cubic DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ###
 # SfM tools to visualize feature tracking data
@@ -183,13 +183,13 @@ target_link_libraries(openMVG_main_ExportUndistortedImages
 
 # installation rules
 set_property(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportKeypoints DESTINATION bin/)
+install(TARGETS openMVG_main_exportKeypoints DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_exportMatches PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportMatches DESTINATION bin/)
+install(TARGETS openMVG_main_exportMatches DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_exportTracks PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportTracks DESTINATION bin/)
+install(TARGETS openMVG_main_exportTracks DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ExportUndistortedImages PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
+install(TARGETS openMVG_main_ExportUndistortedImages DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
 # - Export SfM openMVG camera scene frustums as triangle meshes
@@ -202,4 +202,4 @@ target_link_libraries(openMVG_main_ExportCameraFrustums
   ${STLPLUS_LIBRARY}
 )
 set_property(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
+install(TARGETS openMVG_main_ExportCameraFrustums DESTINATION ${CMAKE_INSTALL_BINDIR})

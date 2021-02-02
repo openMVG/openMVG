@@ -16,4 +16,4 @@ target_link_libraries(openMVG_main_SfM_Localization
 
 # Installation rules
 set_property(TARGET openMVG_main_SfM_Localization PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_SfM_Localization DESTINATION bin/)
+install(TARGETS openMVG_main_SfM_Localization DESTINATION ${CMAKE_INSTALL_BINDIR})

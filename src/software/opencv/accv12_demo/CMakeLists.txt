@@ -4,5 +4,5 @@ if(OpenMVG_USE_OPENCV)
     target_include_directories(opencv_fitting PRIVATE ${OpenCV_INCLUDE_DIRS})
     target_compile_definitions(opencv_fitting
       PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-    install(TARGETS opencv_fitting DESTINATION bin/)
+    install(TARGETS opencv_fitting DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(OpenMVG_USE_OPENCV)

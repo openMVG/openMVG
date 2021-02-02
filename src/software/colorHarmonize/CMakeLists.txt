@@ -13,4 +13,4 @@ target_link_libraries(openMVG_main_ColHarmonize
 
 set_property(TARGET openMVG_main_ColHarmonize PROPERTY FOLDER OpenMVG/software)
 
-install(TARGETS openMVG_main_ColHarmonize DESTINATION bin/)
+install(TARGETS openMVG_main_ColHarmonize DESTINATION ${CMAKE_INSTALL_BINDIR})

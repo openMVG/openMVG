@@ -11,4 +11,4 @@ target_link_libraries(openMVG_main_geodesy_registration_to_gps_position
 )
 
 set_property(TARGET openMVG_main_geodesy_registration_to_gps_position PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_geodesy_registration_to_gps_position DESTINATION bin/)
+install(TARGETS openMVG_main_geodesy_registration_to_gps_position DESTINATION ${CMAKE_INSTALL_BINDIR})

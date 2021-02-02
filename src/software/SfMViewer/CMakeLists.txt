@@ -42,4 +42,4 @@ target_link_libraries(openMVG_main_sfmViewer
   ${GLFW_LIBRARIES})
 
 set_property(TARGET openMVG_main_sfmViewer PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_sfmViewer DESTINATION bin/)
+install(TARGETS openMVG_main_sfmViewer DESTINATION ${CMAKE_INSTALL_BINDIR})

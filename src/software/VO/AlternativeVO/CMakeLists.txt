@@ -31,7 +31,7 @@ if ( OpenMVG_BUILD_GUI_SOFTWARES )
 
     set_property( TARGET openMVG_main_AlternativeVO PROPERTY CXX_STANDARD 11 )
     set_property(TARGET openMVG_main_AlternativeVO PROPERTY FOLDER OpenMVG/software)
-    install(TARGETS openMVG_main_AlternativeVO DESTINATION bin/)
+    install(TARGETS openMVG_main_AlternativeVO DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   endif( Qt5Widgets_FOUND )
 

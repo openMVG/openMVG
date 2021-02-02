@@ -25,9 +25,9 @@ target_link_libraries(openMVG_main_ConvertList
 
 # Installation rules
 set_property(TARGET openMVG_main_SfMInit_ImageListing PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION bin/)
+install(TARGETS openMVG_main_SfMInit_ImageListing DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ConvertList PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ConvertList DESTINATION bin/)
+install(TARGETS openMVG_main_ConvertList DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ###
 # Add executable that computes:
@@ -84,13 +84,13 @@ target_link_libraries(openMVG_main_MatchesToTracks
 
 # Installation rules
 set_property(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
+install(TARGETS openMVG_main_ComputeFeatures DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
+install(TARGETS openMVG_main_ListMatchingPairs DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
+install(TARGETS openMVG_main_ComputeMatches DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_MatchesToTracks PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_MatchesToTracks DESTINATION bin/)
+install(TARGETS openMVG_main_MatchesToTracks DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ###
 # SfM Pipelines
@@ -194,23 +194,23 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
 
 # Installation rules
 set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
+install(TARGETS openMVG_main_IncrementalSfM DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_IncrementalSfM2 PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION bin/)
+install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+install(TARGETS openMVG_main_GlobalSfM DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
+install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_FrustumFiltering DESTINATION bin/)
+install(TARGETS openMVG_main_FrustumFiltering DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ComputeStructureFromKnownPoses PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeStructureFromKnownPoses DESTINATION bin/)
+install(TARGETS openMVG_main_ComputeStructureFromKnownPoses DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ComputeSfM_DataColor PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION bin/)
+install(TARGETS openMVG_main_ComputeSfM_DataColor DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_PointsFiltering PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_PointsFiltering DESTINATION bin/)
+install(TARGETS openMVG_main_PointsFiltering DESTINATION ${CMAKE_INSTALL_BINDIR})
 set_property(TARGET openMVG_main_ChangeLocalOrigin PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ChangeLocalOrigin DESTINATION bin/)
+install(TARGETS openMVG_main_ChangeLocalOrigin DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # SplitMatchFileIntoMatchFiles
 add_executable(openMVG_main_SplitMatchFileIntoMatchFiles main_SplitMatchFileIntoMatchFiles.cpp)
@@ -224,7 +224,7 @@ target_link_libraries(openMVG_main_SplitMatchFileIntoMatchFiles
 
 # Installation rules
 set_property(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
+install(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # -
 # Use openCV Feature detector to describe the images
@@ -249,7 +249,7 @@ if(OpenMVG_USE_OPENCV)
 
   set_property(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY FOLDER OpenMVG/software)
   set_property(TARGET openMVG_main_ComputeFeatures_OpenCV PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-  install(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION bin/)
+  install(TARGETS openMVG_main_ComputeFeatures_OpenCV DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(OpenMVG_USE_OPENCV)
 
 
@@ -269,7 +269,7 @@ target_link_libraries(openMVG_main_evalQuality
 
 #installation rules
 set_property(TARGET openMVG_main_evalQuality PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_evalQuality DESTINATION bin/)
+install(TARGETS openMVG_main_evalQuality DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ##
 # Export tutorial with valid path thanks to a configuration file

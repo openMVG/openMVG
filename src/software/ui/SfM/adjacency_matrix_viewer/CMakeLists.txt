@@ -30,5 +30,5 @@ if (Qt5Widgets_FOUND AND Qt5Svg_FOUND )
   endif()
 
   set_property(TARGET ui_openMVG_MatchesViewer PROPERTY FOLDER OpenMVG/software/ui)
-  install(TARGETS ui_openMVG_MatchesViewer DESTINATION bin/)
+  install(TARGETS ui_openMVG_MatchesViewer DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(Qt5Widgets_FOUND AND Qt5Svg_FOUND )
