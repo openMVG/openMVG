@@ -38,7 +38,7 @@ if (MSVC)
 endif (MSVC)
 set_target_properties(openMVG_image PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_image PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_image DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
+install(TARGETS openMVG_image DESTINATION "${CMAKE_INSTALL_LIBDIR}" EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG image "openMVG_image")
 UNIT_TEST(openMVG image_drawing "openMVG_image")

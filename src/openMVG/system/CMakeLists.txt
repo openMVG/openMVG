@@ -6,7 +6,7 @@ target_include_directories(openMVG_system PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURC
 target_compile_features(openMVG_system INTERFACE ${CXX11_FEATURES})
 set_target_properties(openMVG_system PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_system PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_system DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
+install(TARGETS openMVG_system DESTINATION "${CMAKE_INSTALL_LIBDIR}" EXPORT openMVG-targets)
 
 add_library(openMVG_progress_test INTERFACE)
 target_link_libraries(openMVG_progress_test INTERFACE ${OPENMVG_LIBRARY_DEPENDENCIES})
