@@ -549,7 +549,7 @@ message("\n")
 # INSTALL RULES
 # ==============================================================================
 
-install(EXPORT openMVG-targets DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(EXPORT openMVG-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::
