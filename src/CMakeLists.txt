@@ -190,7 +190,7 @@ endif (OpenMVG_BUILD_OPENGL_EXAMPLES)
 # Dependencies install rules
 install(
   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openMVG_dependencies
+  DESTINATION include/openMVG_dependencies
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )
@@ -549,11 +549,11 @@ message("\n")
 # INSTALL RULES
 # ==============================================================================
 
-install(EXPORT openMVG-targets DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(EXPORT openMVG-targets DESTINATION lib)
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/openMVG/cmake
+  DESTINATION share/openMVG/cmake
 )
 
 
@@ -570,7 +570,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/openMVG/cmake)
+        DESTINATION share/openMVG/cmake)
 
 # ==============================================================================
 # UNINSTALL RULES

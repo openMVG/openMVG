@@ -2,4 +2,4 @@
 UNIT_TEST(openMVG ParseDatabase "openMVG_testing;${STLPLUS_LIBRARY}")
 
 # Installation rules
-install(FILES sensor_width_camera_database.txt DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/openMVG)
+install(FILES sensor_width_camera_database.txt DESTINATION share/openMVG)

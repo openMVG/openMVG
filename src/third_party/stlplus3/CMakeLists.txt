@@ -21,7 +21,7 @@ set_property(TARGET openMVG_stlplus PROPERTY FOLDER OpenMVG/3rdParty)
 
 install(
   TARGETS openMVG_stlplus
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  DESTINATION lib
   EXPORT openMVG-targets
 )
 

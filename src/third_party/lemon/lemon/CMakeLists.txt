@@ -62,7 +62,7 @@ target_include_directories(openMVG_lemon PUBLIC
 
 INSTALL(
   TARGETS openMVG_lemon
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  DESTINATION lib
   EXPORT openMVG-targets
 )
 
@@ -94,5 +94,5 @@ INSTALL(
 
 #INSTALL(
 #  FILES ${CMAKE_CURRENT_BINARY_DIR}/lemon.pc
-#  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+#  DESTINATION lib/pkgconfig
 #)

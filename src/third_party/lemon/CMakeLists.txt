@@ -270,7 +270,7 @@ CONFIGURE_FILE(
 #IF(UNIX)
 #  INSTALL(
 #    FILES ${PROJECT_BINARY_DIR}/cmake/LEMONConfig.cmake
-#    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lemon/cmake
+#    DESTINATION share/lemon/cmake
 #  )
 #ELSEIF(WIN32)
 #  INSTALL(

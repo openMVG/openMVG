@@ -39,7 +39,7 @@ if (MSVC)
   target_compile_options(openMVG_features PUBLIC "-D_USE_MATH_DEFINES")
 endif (MSVC)
 set_target_properties(openMVG_features PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
-install(TARGETS openMVG_features DESTINATION "${CMAKE_INSTALL_LIBDIR}" EXPORT openMVG-targets)
+install(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
 set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 
 UNIT_TEST(openMVG features "openMVG_features")
