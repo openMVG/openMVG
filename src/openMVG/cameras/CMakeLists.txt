@@ -1,11 +1,11 @@
-
+include(GNUInstallDirs)
 add_library(openMVG_camera INTERFACE)
 set_property(TARGET openMVG_camera APPEND PROPERTY
   INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:include>")
 
 target_compile_features(openMVG_camera INTERFACE ${CXX11_FEATURES})
 target_link_libraries(openMVG_camera INTERFACE openMVG_numeric cereal ${OPENMVG_LIBRARY_DEPENDENCIES})
-install(TARGETS openMVG_camera DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_camera DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG Camera_Pinhole openMVG_camera)
 
