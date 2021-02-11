@@ -395,6 +395,7 @@ add_subdirectory(testing)
 # ==============================================================================
 # openMVG modules
 # ==============================================================================
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # The openMVG library itself
 add_subdirectory(openMVG)
 
