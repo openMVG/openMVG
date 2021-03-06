@@ -52,7 +52,7 @@ bool exportToOpenMVS(
   }
 
   // Export data :
-  MVS::Interface scene;
+  _INTERFACE_NAMESPACE::Interface scene;
   size_t nPoses(0);
   const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
 
@@ -70,9 +70,9 @@ bool exportToOpenMVS(
       const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
       if (map_intrinsic.count(intrinsic.first) == 0)
         map_intrinsic.insert(std::make_pair(intrinsic.first, scene.platforms.size()));
-      MVS::Interface::Platform platform;
+      _INTERFACE_NAMESPACE::Interface::Platform platform;
       // add the camera
-      MVS::Interface::Platform::Camera camera;
+      _INTERFACE_NAMESPACE::Interface::Platform::Camera camera;
       camera.width = cam->w();
       camera.height = cam->h();
       camera.K = cam->K();
@@ -101,13 +101,13 @@ bool exportToOpenMVS(
     {
       map_view[view.first] = scene.images.size();
 
-      MVS::Interface::Image image;
+      _INTERFACE_NAMESPACE::Interface::Image image;
       image.name = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
       image.platformID = map_intrinsic.at(view.second->id_intrinsic);
-      MVS::Interface::Platform& platform = scene.platforms[image.platformID];
+      _INTERFACE_NAMESPACE::Interface::Platform& platform = scene.platforms[image.platformID];
       image.cameraID = 0;
 
-      MVS::Interface::Platform::Pose pose;
+      _INTERFACE_NAMESPACE::Interface::Platform::Pose pose;
       image.poseID = platform.poses.size();
       const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
       pose.R = poseMVG.rotation();
@@ -205,13 +205,13 @@ bool exportToOpenMVS(
   for (const auto& vertex: sfm_data.GetLandmarks())
   {
     const Landmark & landmark = vertex.second;
-    MVS::Interface::Vertex vert;
-    MVS::Interface::Vertex::ViewArr& views = vert.views;
+    _INTERFACE_NAMESPACE::Interface::Vertex vert;
+    _INTERFACE_NAMESPACE::Interface::Vertex::ViewArr& views = vert.views;
     for (const auto& observation: landmark.obs)
     {
       const auto it(map_view.find(observation.first));
       if (it != map_view.end()) {
-        MVS::Interface::Vertex::View view;
+        _INTERFACE_NAMESPACE::Interface::Vertex::View view;
         view.imageID = it->second;
         view.confidence = 0;
         views.push_back(view);
@@ -221,7 +221,7 @@ bool exportToOpenMVS(
       continue;
     std::sort(
       views.begin(), views.end(),
-      [] (const MVS::Interface::Vertex::View& view0, const MVS::Interface::Vertex::View& view1)
+      [] (const _INTERFACE_NAMESPACE::Interface::Vertex::View& view0, const _INTERFACE_NAMESPACE::Interface::Vertex::View& view1)
       {
         return view0.imageID < view1.imageID;
       }
@@ -231,7 +231,7 @@ bool exportToOpenMVS(
   }
 
   // write OpenMVS data
-  if (!MVS::ARCHIVE::SerializeSave(scene, sOutFile))
+  if (!_INTERFACE_NAMESPACE::ARCHIVE::SerializeSave(scene, sOutFile))
     return false;
 
   std::cout
