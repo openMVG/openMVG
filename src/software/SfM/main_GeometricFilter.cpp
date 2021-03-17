@@ -159,7 +159,7 @@ int main( int argc, char** argv )
     return EXIT_FAILURE;
   }
 
-  const std::string sMatchesDirectory = stlplus::folder_part( sSfM_Data_Filename ) + "/../matches/";
+  const std::string sMatchesDirectory = stlplus::folder_part( sPutativeMatchesFilename );
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
   switch ( sGeometricModel[ 0 ] )
