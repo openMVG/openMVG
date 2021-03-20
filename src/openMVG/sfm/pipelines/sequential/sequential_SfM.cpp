@@ -300,10 +300,10 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
         std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------\n";
 
-      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
-      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurence_TrackLength);
+      std::map<uint32_t, uint32_t> map_Occurrence_TrackLength;
+      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurrence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (const auto & it : map_Occurence_TrackLength)  {
+      for (const auto & it : map_Occurrence_TrackLength)  {
         osTrack << "\t" << it.first << "\t" << it.second << "\n";
       }
       OPENMVG_LOG_INFO << osTrack.str();
@@ -1094,7 +1094,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           // If view is valid try triangulation
           if (J != I && valid_views.count(J) != 0)
           {
-            // If successfuly triangulated add the observation from J view
+            // If successfully triangulated add the observation from J view
             if (sfm_data_.structure.count(trackId) != 0)
             {
               new_track_observations_valid_views.insert(J);
@@ -1158,7 +1158,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
         }// Go through all the views
       }// If new point
 
-      // If successfuly triangulated, add the valid view observations
+      // If successfully triangulated, add the valid view observations
       if (sfm_data_.structure.count(trackId) != 0 &&
           !new_track_observations_valid_views.empty())
       {

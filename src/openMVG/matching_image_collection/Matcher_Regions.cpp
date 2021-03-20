@@ -32,7 +32,7 @@ Matcher_Regions::Matcher_Regions
 void Matcher_Regions::Match(
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatchesContainer & map_PutativesMatches,
+  PairWiseMatchesContainer & map_PutativeMatches,
   system::ProgressInterface * my_progress_bar)const
 {
   if (!my_progress_bar)
@@ -89,16 +89,16 @@ void Matcher_Regions::Match(
         continue;
       }
 
-      IndMatches vec_putatives_matches;
-      matcher->MatchDistanceRatio(f_dist_ratio_, *regionsJ.get(), vec_putatives_matches);
+      IndMatches vec_putative_matches;
+      matcher->MatchDistanceRatio(f_dist_ratio_, *regionsJ.get(), vec_putative_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
       {
-        if (!vec_putatives_matches.empty())
+        if (!vec_putative_matches.empty())
         {
-          map_PutativesMatches.insert( { {I,J}, std::move(vec_putatives_matches) } );
+          map_PutativeMatches.insert( { {I,J}, std::move(vec_putative_matches) } );
         }
       }
       ++(*my_progress_bar);

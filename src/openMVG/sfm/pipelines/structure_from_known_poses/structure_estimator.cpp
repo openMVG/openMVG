@@ -164,7 +164,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          putatives_matches[pair].insert(putatives_matches[pair].end(),
+          putative_matches[pair].insert(putative_matches[pair].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
         ++my_progress_bar;
@@ -206,14 +206,14 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
       openMVG::tracks::TracksBuilder tracksBuilder;
       {
         PairWiseMatches map_matchesIJK;
-        if (putatives_matches.count({I,J}))
-          map_matchesIJK.insert(*putatives_matches.find({I,J}));
+        if (putative_matches.count({I,J}))
+          map_matchesIJK.insert(*putative_matches.find({I,J}));
 
-        if (putatives_matches.count({I,K}))
-          map_matchesIJK.insert(*putatives_matches.find({I,K}));
+        if (putative_matches.count({I,K}))
+          map_matchesIJK.insert(*putative_matches.find({I,K}));
 
-        if (putatives_matches.count({J,K}))
-          map_matchesIJK.insert(*putatives_matches.find({J,K}));
+        if (putative_matches.count({J,K}))
+          map_matchesIJK.insert(*putative_matches.find({J,K}));
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
@@ -292,7 +292,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
     }
   }
   // Clear putatives matches since they are no longer required
-  matching::PairWiseMatches().swap(putatives_matches);
+  matching::PairWiseMatches().swap(putative_matches);
 }
 
 /// Init & triangulate landmark observations from the fused validated 3-view correspondences

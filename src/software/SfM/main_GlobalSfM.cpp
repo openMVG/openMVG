@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     Generate_SfM_Report(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "SfMReconstruction_Report.html"));
 
-    //-- Export to disk computed scene (data & visualizable results)
+    //-- Export to disk computed scene (data & viewable results)
     OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";
     Save(sfmEngine.Get_SfM_Data(),
       stlplus::create_filespec(sOutDir, "sfm_data", ".bin"),

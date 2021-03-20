@@ -252,11 +252,11 @@ int main( int argc, char** argv )
     return EXIT_FAILURE;
   }
 
-  PairWiseMatches map_PutativesMatches;
+  PairWiseMatches map_PutativeMatches;
   //---------------------------------------
   // A. Load initial matches
   //---------------------------------------
-  if ( !Load( map_PutativesMatches, sPutativeMatchesFilename ) )
+  if ( !Load( map_PutativeMatches, sPutativeMatchesFilename ) )
   {
     std::cerr << "Failed to load the initial matches file.";
     return EXIT_FAILURE;
@@ -271,7 +271,7 @@ int main( int argc, char** argv )
 
     // Filter matches with the given pairs
     std::cout << "Filtering matches with the given pairs." << std::endl;
-    map_PutativesMatches = getPairs( map_PutativesMatches, input_pairs );
+    map_PutativeMatches = getPairs( map_PutativeMatches, input_pairs );
   }
 
   //---------------------------------------
@@ -296,7 +296,7 @@ int main( int argc, char** argv )
         const bool bGeometric_only_guided_matching = true;
         filter_ptr->Robust_model_estimation(
             GeometricFilter_HMatrix_AC( 4.0, imax_iteration ),
-            map_PutativesMatches,
+            map_PutativeMatches,
             bGuided_matching,
             bGeometric_only_guided_matching ? -1.0 : d_distance_ratio,
             &progress );
@@ -307,7 +307,7 @@ int main( int argc, char** argv )
       {
         filter_ptr->Robust_model_estimation(
             GeometricFilter_FMatrix_AC( 4.0, imax_iteration ),
-            map_PutativesMatches,
+            map_PutativeMatches,
             bGuided_matching,
             d_distance_ratio,
             &progress );
@@ -318,7 +318,7 @@ int main( int argc, char** argv )
       {
         filter_ptr->Robust_model_estimation(
             GeometricFilter_EMatrix_AC( 4.0, imax_iteration ),
-            map_PutativesMatches,
+            map_PutativeMatches,
             bGuided_matching,
             d_distance_ratio,
             &progress );
@@ -328,7 +328,7 @@ int main( int argc, char** argv )
         std::vector<PairWiseMatches::key_type> vec_toRemove;
         for ( const auto& pairwisematches_it : map_GeometricMatches )
         {
-          const size_t putativePhotometricCount = map_PutativesMatches.find( pairwisematches_it.first )->second.size();
+          const size_t putativePhotometricCount = map_PutativeMatches.find( pairwisematches_it.first )->second.size();
           const size_t putativeGeometricCount   = pairwisematches_it.second.size();
           const float  ratio                    = putativeGeometricCount / static_cast<float>( putativePhotometricCount );
           if ( putativeGeometricCount < 50 || ratio < .3f )
@@ -348,7 +348,7 @@ int main( int argc, char** argv )
       {
         filter_ptr->Robust_model_estimation(
           GeometricFilter_ESphericalMatrix_AC_Angular<false>(4.0, imax_iteration),
-          map_PutativesMatches, bGuided_matching, d_distance_ratio, &progress);
+          map_PutativeMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
       break;
@@ -356,7 +356,7 @@ int main( int argc, char** argv )
       {
         filter_ptr->Robust_model_estimation(
             GeometricFilter_EOMatrix_RA( 2.0, imax_iteration ),
-            map_PutativesMatches,
+            map_PutativeMatches,
             bGuided_matching,
             d_distance_ratio,
             &progress );

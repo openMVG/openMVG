@@ -101,7 +101,7 @@ struct TracksBuilder
     // Clean some memory
     allFeatures.clear();
 
-    // 3. Add the node and the pairwise correpondences in the UF tree.
+    // 3. Add the node and the pairwise correspondences in the UF tree.
     uf_tree.InitSets(map_node_to_index.size());
 
     // 4. Union of the matched features corresponding UF tree sets
@@ -121,7 +121,7 @@ struct TracksBuilder
   }
 
   /// Remove bad tracks (too short or track with ids collision)
-  bool Filter(size_t nLengthSupTo = 2)
+  bool Filter(uint32_t nLengthSupTo = 2)
   {
     // Build the Track observations & mark tracks that have id collision:
     std::map<uint32_t, std::set<uint32_t>> tracks; // {track_id, {image_id, image_id, ...}}
@@ -167,7 +167,7 @@ struct TracksBuilder
   /// Return the number of connected set in the UnionFind structure (tree forest)
   size_t NbTracks() const
   {
-    std::set<uint32_t> parent_id(uf_tree.m_cc_parent.begin(), uf_tree.m_cc_parent.end());
+    std::set<uint32_t> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
     // Erase the "special marker" that depicted rejected tracks
     parent_id.erase(std::numeric_limits<uint32_t>::max());
     return parent_id.size();
@@ -355,7 +355,7 @@ struct TracksUtilsMap
   (
     const STLMAPTracks & tracks,
     const std::set<uint32_t> & track_ids,
-    size_t nImageIndex,
+    uint32_t nImageIndex,
     std::vector<uint32_t> * feat_ids
   )
   {
@@ -380,19 +380,19 @@ struct TracksUtilsMap
   static void TracksLength
   (
     const STLMAPTracks & map_tracks,
-    std::map<uint32_t, uint32_t> & map_Occurence_TrackLength
+    std::map<uint32_t, uint32_t> & map_Occurrence_TrackLength
   )
   {
     for ( const auto & iterT : map_tracks )
     {
       const size_t trLength = iterT.second.size();
-      if (map_Occurence_TrackLength.count(trLength) == 0)
+      if (map_Occurrence_TrackLength.count(trLength) == 0)
       {
-        map_Occurence_TrackLength[trLength] = 1;
+        map_Occurrence_TrackLength[trLength] = 1;
       }
       else
       {
-        map_Occurence_TrackLength[trLength] += 1;
+        map_Occurrence_TrackLength[trLength] += 1;
       }
     }
   }
