@@ -17,7 +17,7 @@
 
 /**
  * @brief Current list of available pair mode
- * 
+ *
  */
 enum EPairMode
 {
@@ -38,7 +38,7 @@ void usage( const char* argv0 )
             << "       EXHAUSTIVE:        Build all possible pairs. [default]\n"
             << "       CONTIGUOUS:        Build pairs for contiguous images (use it with --contiguous_count parameter)\n"
             << "[-c|--contiguous_count] X Number of contiguous links\n"
-            << "       X: with match 0 with (1->X), ...]\n"
+            << "       X: will match 0 with (1->X), ...]\n"
             << "       2: will match 0 with (1,2), 1 with (2,3), ...\n"
             << "       3: will match 0 with (1,2,3), 1 with (2,3,4), ...\n"
             << std::endl;

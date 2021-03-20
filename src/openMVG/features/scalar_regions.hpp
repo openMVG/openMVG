@@ -11,8 +11,9 @@
 
 #include <typeinfo>
 
-#include "openMVG/features/regions.hpp"
 #include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/features/regions_scale_sort.hpp"
 #include "openMVG/matching/metric.hpp"
 
 namespace openMVG {
@@ -120,6 +121,11 @@ public:
     assert(i < vec_feats_.size() && i < vec_descs_.size());
     static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);
     static_cast<Scalar_Regions<FeatT, T, L> *>(region_container)->vec_descs_.push_back(vec_descs_[i]);
+  }
+
+  bool SortAndSelectByRegionScale(int keep_count = -1) override
+  {
+    return features::SortAndSelectByRegionScale<FeatT, DescsT>(vec_feats_, vec_descs_, keep_count);
   }
 
 private:

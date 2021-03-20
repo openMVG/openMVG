@@ -70,6 +70,17 @@ target_link_libraries( openMVG_main_PairGenerator
     ${STLPLUS_LIBRARY}
 )
 
+add_executable(openMVG_main_benchANN main_benchANN.cpp)
+target_link_libraries(openMVG_main_benchANN
+  PRIVATE
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
 add_executable(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 target_link_libraries(openMVG_main_ComputeMatches
   PRIVATE
