@@ -54,8 +54,12 @@ pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compu
 pFeatures.wait()
 
 print ("2. Compute matches")
-pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-f", "1", "-n", "ANNL2"] )
+pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir+"/matches.putative.bin", "-f", "1", "-n", "ANNL2"] )
 pMatches.wait()
+
+print ("2. Filter matches" )
+pFiltering = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_GeometricFilter"), "-i", matches_dir+"/sfm_data.json", "-m", matches_dir+"/matches.putative.bin" , "-g" , "f" , "-o" , matches_dir+"/matches.f.bin" ] )
+pFiltering.wait()
 
 reconstruction_dir = os.path.join(output_dir,"reconstruction_sequential")
 print ("3. Do Incremental/Sequential reconstruction") #set manually the initial pair to avoid the prompt question
@@ -71,11 +75,11 @@ pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_Compute
 pRecons.wait()
 
 # Reconstruction for the global SfM pipeline
-# - global SfM pipeline use matches filtered by the essential matrices
+# - global SfM pipeline use matches filtered by estimating essential matrices
 # - here we reuse photometric matches and perform only the essential matrix filering
-print ("2. Compute matches (for the global SfM Pipeline)")
-pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-r", "0.8", "-g", "e"] )
-pMatches.wait()
+print ("2. Filter matches (for the global SfM Pipeline)")
+pFiltering = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_GeometricFilter"), "-i", matches_dir+"/sfm_data.json", "-m", matches_dir+"/matches.putative.bin" , "-g" , "e" , "-o" , matches_dir+"/matches.e.bin" ] )
+pFiltering.wait()
 
 reconstruction_dir = os.path.join(output_dir,"reconstruction_global")
 print ("3. Do Global reconstruction")
