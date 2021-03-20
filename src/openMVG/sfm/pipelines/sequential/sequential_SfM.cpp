@@ -91,6 +91,55 @@ void SequentialSfMReconstructionEngine::SetMatchesProvider(Matches_Provider * pr
   matches_provider_ = provider;
 }
 
+// Get the PairWiseMatches that have the most support point
+std::vector<openMVG::matching::PairWiseMatches::const_iterator>
+GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches, int clamp_count = 10) {
+
+  std::vector<openMVG::matching::PairWiseMatches::const_iterator> sorted_pairwise_matches_iterators;
+  // List Views that supports valid intrinsic
+  std::set<IndexT> valid_views;
+  for (const auto & view : sfm_data.GetViews())
+  {
+    const View * v = view.second.get();
+    if (sfm_data.GetIntrinsics().find(v->id_intrinsic) != sfm_data.GetIntrinsics().end())
+      valid_views.insert(v->id_view);
+  }
+
+  if (sfm_data.GetIntrinsics().empty() || valid_views.empty())
+  {
+    OPENMVG_LOG_ERROR
+      << "Unable to choose an initial pair, since there is no defined intrinsic data.";
+    return {};
+  }
+
+  // Try to list the clamp_count top pairs that have valid intrinsics
+  std::vector<uint32_t > vec_NbMatchesPerPair;
+  std::vector<openMVG::matching::PairWiseMatches::const_iterator> vec_MatchesIterator;
+  const openMVG::matching::PairWiseMatches & map_Matches = matches;
+  for (openMVG::matching::PairWiseMatches::const_iterator
+    iter = map_Matches.begin();
+    iter != map_Matches.end(); ++iter)
+  {
+    const Pair current_pair = iter->first;
+    if (valid_views.count(current_pair.first) &&
+      valid_views.count(current_pair.second) )
+    {
+      vec_NbMatchesPerPair.push_back(iter->second.size());
+      vec_MatchesIterator.push_back(iter);
+    }
+  }
+  // sort the Pairs in descending order according their correspondences count
+  using namespace stl::indexed_sort;
+  std::vector<sort_index_packet_descend<uint32_t, uint32_t>> packet_vec(vec_NbMatchesPerPair.size());
+  sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)clamp_count, vec_NbMatchesPerPair.size()));
+
+  for (size_t i = 0; i < std::min((size_t)clamp_count, vec_NbMatchesPerPair.size()); ++i) {
+    const uint32_t index = packet_vec[i].index;
+    sorted_pairwise_matches_iterators.emplace_back(vec_MatchesIterator[index]);
+  }
+  return sorted_pairwise_matches_iterators;
+}
+
 bool SequentialSfMReconstructionEngine::Process() {
 
   //-------------------
@@ -105,9 +154,23 @@ bool SequentialSfMReconstructionEngine::Process() {
   {
     if (!AutomaticInitialPairChoice(initial_pair_))
     {
-      // Cannot find a valid initial pair, try to set it by hand?
-      if (!ChooseInitialPair(initial_pair_))
+      // Cannot find a valid initial pair with the defined settings:
+      // - try to initialize a pair with less strict constraint
+      //    testing only X pairs with most matches.
+      const auto sorted_pairwise_matches_iterators =
+        GetPairWithMostMatches(sfm_data_, matches_provider_->pairWise_matches_, 20);
+
+      for (const auto & it : sorted_pairwise_matches_iterators)
       {
+        if (MakeInitialPair3D({it->first.first, it->first.second}))
+        {
+          initial_pair_ = {it->first.first, it->first.second};
+          break;
+        }
+      }
+      if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0))
+      {
+        OPENMVG_LOG_INFO << "Cannot find a valid initial pair - stop reconstruction.";
         return false;
       }
     }
@@ -200,90 +263,6 @@ bool SequentialSfMReconstructionEngine::Process() {
     jsxGraph.setViewport(range);
     jsxGraph.close();
     html_doc_stream_->pushInfo(jsxGraph.toStr());
-  }
-  return true;
-}
-
-/// Select a candidate initial pair
-bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairIndex) const
-{
-  if (initial_pair_ != Pair(0,0))
-  {
-    // Internal initial pair is already initialized (so return it)
-    initialPairIndex = initial_pair_;
-  }
-  else
-  {
-    // List Views that supports valid intrinsic
-    std::set<IndexT> valid_views;
-    for (const auto & view : sfm_data_.GetViews())
-    {
-      const View * v = view.second.get();
-      if (sfm_data_.GetIntrinsics().find(v->id_intrinsic) != sfm_data_.GetIntrinsics().end())
-        valid_views.insert(v->id_view);
-    }
-
-    if (sfm_data_.GetIntrinsics().empty() || valid_views.empty())
-    {
-      OPENMVG_LOG_ERROR
-        << "Unable to choose an initial pair, since there is no defined intrinsic data.";
-      return false;
-    }
-
-    OPENMVG_LOG_INFO
-      << "\n----------------------------------------------------\n"
-      << "SequentialSfMReconstructionEngine::ChooseInitialPair\n"
-      << "----------------------------------------------------\n"
-      << " Pairs that have valid intrinsic and high support of points are displayed:\n"
-      << " Choose one pair manually by typing the two integer indexes\n"
-      << "----------------------------------------------------";
-
-    // Try to list the 10 top pairs that have:
-    //  - valid intrinsics,
-    //  - valid estimated Fundamental matrix.
-    std::vector<uint32_t > vec_NbMatchesPerPair;
-    std::vector<openMVG::matching::PairWiseMatches::const_iterator> vec_MatchesIterator;
-    const openMVG::matching::PairWiseMatches & map_Matches = matches_provider_->pairWise_matches_;
-    for (openMVG::matching::PairWiseMatches::const_iterator
-      iter = map_Matches.begin();
-      iter != map_Matches.end(); ++iter)
-    {
-      const Pair current_pair = iter->first;
-      if (valid_views.count(current_pair.first) &&
-        valid_views.count(current_pair.second) )
-      {
-        vec_NbMatchesPerPair.push_back(iter->second.size());
-        vec_MatchesIterator.push_back(iter);
-      }
-    }
-    // sort the Pairs in descending order according their correspondences count
-    using namespace stl::indexed_sort;
-    std::vector<sort_index_packet_descend<uint32_t, uint32_t>> packet_vec(vec_NbMatchesPerPair.size());
-    sort_index_helper(packet_vec, &vec_NbMatchesPerPair[0], std::min((size_t)10, vec_NbMatchesPerPair.size()));
-
-    for (size_t i = 0; i < std::min((size_t)10, vec_NbMatchesPerPair.size()); ++i) {
-      const uint32_t index = packet_vec[i].index;
-      openMVG::matching::PairWiseMatches::const_iterator iter = vec_MatchesIterator[index];
-      std::cout << "(" << iter->first.first << "," << iter->first.second <<")\t\t"
-        << iter->second.size() << " matches" << std::endl;
-    }
-
-    // Ask the user to choose an initial pair (by set some view ids)
-    std::cout << std::endl << " type INITIAL pair ids: X enter Y enter\n";
-    int val, val2;
-    if ( std::cin >> val && std::cin >> val2) {
-      initialPairIndex.first = val;
-      initialPairIndex.second = val2;
-    }
-  }
-
-  // Check validity of the initial pair indices:
-  if (features_provider_->feats_per_view.find(initialPairIndex.first) == features_provider_->feats_per_view.end() ||
-      features_provider_->feats_per_view.find(initialPairIndex.second) == features_provider_->feats_per_view.end())
-  {
-    OPENMVG_LOG_ERROR << "Cannot find the features for the requested pair: {"
-      << initialPairIndex.first << "," << initialPairIndex.second << "}";
-    return false;
   }
   return true;
 }
