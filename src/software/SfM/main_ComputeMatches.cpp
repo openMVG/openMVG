@@ -101,7 +101,7 @@ int main( int argc, char** argv )
       << "    BRUTEFORCEL2: L2 BruteForce matching,\n"
       << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
       << "    HNSWL1: L1 Approximate Matching with Hierarchical Navigable Small World graphs\n"
-      << "      taylored for quantized and histogram based descriptors (e.g uint8 RootSIFT)\n"
+      << "      tailored for quantized and histogram based descriptors (e.g uint8 RootSIFT)\n"
       << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
@@ -131,14 +131,9 @@ int main( int argc, char** argv )
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--cache_size " << ( ( ui_max_cache_size == 0 ) ? "unlimited" : std::to_string( ui_max_cache_size ) );
 
-  if ( sPredefinedPairList.empty() )
-  {
-    std::cerr << "\nNo input pairs file set." << std::endl;
-    return EXIT_FAILURE;
-  }
   if ( sOutputFilename.empty() )
   {
-    std::cerr << "\nNo output file set." << std::endl;
+    OPENMVG_LOG_ERROR << "No output file set.";
     return EXIT_FAILURE;
   }
 
@@ -153,7 +148,7 @@ int main( int argc, char** argv )
   //---------------------------------------
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
-    OPENMVG_LOG_ERROR  << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
   const std::string sMatchesDirectory = stlplus::folder_part( sOutputFilename );
@@ -198,7 +193,7 @@ int main( int argc, char** argv )
     return EXIT_FAILURE;
   }
 
-  PairWiseMatches map_PutativesMatches;
+  PairWiseMatches map_PutativeMatches;
 
   // Build some alias from SfM_Data Views data:
   // - List views as a vector of filenames & image sizes
@@ -220,14 +215,14 @@ int main( int argc, char** argv )
   // If the matches already exists, reload them
   if ( !bForce && ( stlplus::file_exists( sOutputFilename ) ) )
   {
-    if ( !( Load( map_PutativesMatches, sOutputFilename ) ) )
+    if ( !( Load( map_PutativeMatches, sOutputFilename ) ) )
     {
       OPENMVG_LOG_ERROR << "Cannot load input matches file";
       return EXIT_FAILURE;
     }
     OPENMVG_LOG_INFO
       << "\t PREVIOUS RESULTS LOADED;"
-      << " #pair: " << map_PutativesMatches.size();
+      << " #pair: " << map_PutativeMatches.size();
   }
   else // Compute the putative matches
   {
@@ -304,17 +299,24 @@ int main( int argc, char** argv )
     {
       // From matching mode compute the pair list that have to be matched:
       Pair_Set pairs;
+      if ( sPredefinedPairList.empty() )
+      {
+        OPENMVG_LOG_INFO << "No input pair file set. Use exhaustive match by default.";
+        const size_t NImage = sfm_data.GetViews().size();
+        pairs = exhaustivePairs( NImage );
+      }
+      else
       if ( !loadPairs( sfm_data.GetViews().size(), sPredefinedPairList, pairs ) )
       {
         OPENMVG_LOG_ERROR << "Failed to load pairs from file: \"" << sPredefinedPairList << "\"";
         return EXIT_FAILURE;
       }
       // Photometric matching of putative pairs
-      collectionMatcher->Match( regions_provider, pairs, map_PutativesMatches, &progress );
+      collectionMatcher->Match( regions_provider, pairs, map_PutativeMatches, &progress );
       //---------------------------------------
       //-- Export putative matches
       //---------------------------------------
-      if ( !Save( map_PutativesMatches, std::string( sOutputFilename ) ) )
+      if ( !Save( map_PutativeMatches, std::string( sOutputFilename ) ) )
       {
         OPENMVG_LOG_ERROR
           << "Cannot save computed matches in: "
@@ -325,17 +327,17 @@ int main( int argc, char** argv )
     OPENMVG_LOG_INFO << "Task (Regions Matching) done in (s): " << timer.elapsed();
   }
 
-  OPENMVG_LOG_INFO << "#Putative pairs: " << map_PutativesMatches.size();
+  OPENMVG_LOG_INFO << "#Putative pairs: " << map_PutativeMatches.size();
 
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG( vec_fileNames.size(),
-                                        map_PutativesMatches,
+                                        map_PutativeMatches,
                                         stlplus::create_filespec( sMatchesDirectory, "PutativeAdjacencyMatrix", "svg" ) );
   //-- export view pair graph once putative graph matches have been computed
   {
     std::set<IndexT> set_ViewIds;
     std::transform( sfm_data.GetViews().begin(), sfm_data.GetViews().end(), std::inserter( set_ViewIds, set_ViewIds.begin() ), stl::RetrieveKey() );
-    graph::indexedGraph putativeGraph( set_ViewIds, getPairs( map_PutativesMatches ) );
+    graph::indexedGraph putativeGraph( set_ViewIds, getPairs( map_PutativeMatches ) );
     graph::exportToGraphvizData(
         stlplus::create_filespec( sMatchesDirectory, "putative_matches" ),
         putativeGraph );
