@@ -57,7 +57,7 @@ int main( int argc, char** argv )
   // Mandatory elements:
   cmd.add( make_option( 'i', sSfMDataFilename, "input_file" ) );
   cmd.add( make_option( 'o', sOutputPairsFilename, "output_file" ) );
-  // Optionnal elements:
+  // Optional elements:
   cmd.add( make_option( 'm', sPairMode, "pair_mode" ) );
   cmd.add( make_option( 'c', iContiguousCount, "contiguous_count" ) );
 
