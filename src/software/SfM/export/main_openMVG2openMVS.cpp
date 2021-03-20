@@ -119,7 +119,7 @@ bool exportToOpenMVS(
     }
     else
     {
-      std::cout << "Cannot read the corresponding pose or intrinsic of view " << view.first << std::endl;
+      OPENMVG_LOG_INFO << "Cannot read the corresponding pose or intrinsic of view " << view.first;
     }
   }
 
