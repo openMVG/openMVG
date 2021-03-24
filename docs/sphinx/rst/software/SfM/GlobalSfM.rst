@@ -39,7 +39,7 @@ The chain will only consider images with known approximate focal length. Image w
 
   .. code-block:: c++
   
-    $ openMVG_main_GlobalSfM -i Dataset/matches/sfm_data.json -m Dataset/matches/ -o Dataset/out_Global_Reconstruction/
+    $ openMVG_main_SfM --engine GLOBAL -i Dataset/matches/sfm_data.json -m Dataset/matches/ -o Dataset/out_Global_Reconstruction/
 
 Arguments description:
 

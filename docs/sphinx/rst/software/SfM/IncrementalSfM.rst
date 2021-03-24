@@ -38,11 +38,7 @@ The chain is designed to run on a sfm_data.json file and some pre-computed match
 
   .. code-block:: c++
 
-    $ openMVG_main_IncrementalSfM -i Dataset/matches/sfm_data.json -m Dataset/matches/ -o Dataset/out_Incremental_Reconstruction/
-
-openMVG_main_IncrementalSfM displays to you some initial pairs that share an important number of common point.
-  **Please select two image index that are convergent and the 3D reconstruction will start.
-  The initial pair must be chosen with numerous correspondences while keeping a wide enough baseline.**
+    $ openMVG_main_SfM --engine INCREMENTAL -i Dataset/matches/sfm_data.json -m Dataset/matches/ -o Dataset/out_Incremental_Reconstruction/
 
 Arguments description:
 
@@ -52,21 +48,21 @@ Arguments description:
 
     - a SfM_Data file
 
-  - **[-m|--matchdir]**
+  - **[-m|--match_dir]**
 
     - path were geometric matches were stored
 
-  - **[-o|--outdir]**
+  - **[-o|--out_dir]**
 
     - path where the output data will be stored
 
 **Optional parameters:**
 
-  - **[-a|--initialPairA NAME]**
+  - **[-a|--initial_pair_a NAME]**
 
     - the filename image to use (i.e. 100_7001.JPG)
 
-  - **[-b|--initialPairB NAME]**
+  - **[-b|--initial_pair_b NAME]**
 
     - the filename image to use (i.e. 100_7002.JPG)
 
@@ -80,7 +76,7 @@ Arguments description:
       - 4: Pinhole radial 3 + tangential 2
       - 5: Pinhole fisheye
 
-  - **[-f|--refineIntrinsics]**
+  - **[-f|--sIntrinsic_refinement_options]**
       User can control exactly which parameter will be considered as constant/variable and combine them by using the '|' operator.
 
     - ADJUST_ALL -> refine all existing parameters (default)
@@ -101,10 +97,10 @@ Arguments description:
         -> refine the principal point position & the distortion coefficient(s) (if any)
 
 *************************************
-openMVG_main_IncrementalSfM2
+IncrementalSfM2
 *************************************
 
-`openMVG_main_IncrementalSfM2` is a more generic incremental pipeline than `openMVG_main_IncrementalSfM` since it can:
+`INCREMENTALV2` is a more generic incremental pipeline than `INCREMENTAL` since it can:
 
 - extend a scene that was started by using existing poses or an abstract scene initialization (2 view or n-views).
 
