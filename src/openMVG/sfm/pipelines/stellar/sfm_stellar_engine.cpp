@@ -35,6 +35,8 @@
 
 #include <ceres/types.h>
 
+#include "lemon/kruskal.h"
+
 namespace openMVG{
 namespace sfm{
 
@@ -159,6 +161,53 @@ bool StellarSfMReconstructionEngine::Process()
   return true;
 }
 
+Pair_Set selectMST(const openMVG::matching::PairWiseMatches & matches,
+               const int nbTree)
+{
+  Pair_Set selected_pairs;
+
+  // Build a graph, affect edge weight depending of supporting match
+  // Do N time : select an MST (set weight to 0)
+  // return the supporting edges
+
+  graph::indexedGraph graph_builder(getPairs(matches));
+  using map_EdgeMap = graph::indexedGraph::GraphT::EdgeMap<double>;
+  map_EdgeMap edge_map(graph_builder.g);
+
+  using EdgeIterator = graph::indexedGraph::GraphT::EdgeIt;
+  for ( EdgeIterator it( graph_builder.g ); it != lemon::INVALID; ++it )
+  {
+    const auto & found = matches.at(std::make_pair(
+      (*graph_builder.node_map_id)[graph_builder.g.u(it)],
+      (*graph_builder.node_map_id)[graph_builder.g.v(it)]));
+    edge_map[it] = - static_cast<double>(found.size());
+  }
+
+  int nb_select = nbTree;
+  // Select Many MST
+  while (nb_select>0)
+  {
+    std::vector<graph::indexedGraph::GraphT::Edge> tree_edge_vec;
+    lemon::kruskal(graph_builder.g, edge_map, std::back_inserter(tree_edge_vec));
+
+    //E-- Export compute MST
+    for (const auto & edge_it : tree_edge_vec )
+    {
+      selected_pairs.insert(
+       {(*graph_builder.node_map_id)[graph_builder.g.u(edge_it)],
+       (*graph_builder.node_map_id)[graph_builder.g.v(edge_it)]});
+       // Update the weight to avoid resampling the same tree next time
+      edge_map[edge_it] = 0;
+    }
+    --nb_select;
+  }
+  OPENMVG_LOG_INFO << "Graph simplification:\n"
+    <<"\tUsing #trees: " << nbTree << " selected #pairs: " << selected_pairs.size() << "\n"
+    <<"\tOriginal graph #pairs: " << matches.size() << "\n"
+    <<"\tKeep: " << selected_pairs.size() / (float)matches.size() << " % of original graph.";
+  return selected_pairs;
+}
+
 void StellarSfMReconstructionEngine::ComputeRelativeMotions(
   Hash_Map<Pair, Pose3> & relative_poses
 )
@@ -177,17 +226,89 @@ void StellarSfMReconstructionEngine::ComputeRelativeMotions(
     return;
   }*/
 
+  int graph_simplification = 2;
+
+  Pair_Set selected_pairs;
+  switch (graph_simplification)
+  {
+  case 0:{ // No simplification
+    selected_pairs = matching::getPairs(matches_provider_->pairWise_matches_);
+  }
+  break;
+  case 1: // Keep the X edges per n-Uplet
+  {
+    // Limit the complexity of each sub-star -> TODO guarantee 1 CC?
+    int max_stellar_pod_size = 10;
+
+    const Pair_Set pairs = matching::getPairs(matches_provider_->pairWise_matches_);
+
+    // Enhance the selected pairs in order to ensure that each NUplets have at maximum max_stellar_pod_size edges
+    {
+      // List all stellar configurations
+      using StellarPods = Hash_Map<IndexT, Pair_Set>;
+      StellarPods stellar_pods;
+      for (const auto & it : pairs)
+      {
+        const Pair & pairIt = it;
+        stellar_pods[pairIt.first].insert(pairIt);
+        stellar_pods[pairIt.second].insert(pairIt);
+      }
+      // Keep only the Nth best pairs for each node
+      for (auto & stellar_pod_it : stellar_pods)
+      {
+        Pair_Set & pairs = stellar_pod_it.second;
+        unsigned int count = 0;
+        std::vector<std::pair<unsigned int, unsigned int> > matches_per_edges;
+        for (const Pair & pair_it : pairs)
+        {
+          matches_per_edges.emplace_back(matches_provider_->pairWise_matches_.at(pair_it).size(), count++);
+        }
+        std::sort(matches_per_edges.begin(), matches_per_edges.end());
+        Pair_Set cpy;
+        for ( std::vector<std::pair<unsigned int, unsigned int> >::const_reverse_iterator iter = matches_per_edges.rbegin();
+          iter != matches_per_edges.rend() && cpy.size() < max_stellar_pod_size; ++ iter)
+        {
+          const unsigned int offset = iter->second;
+          Pair_Set::const_iterator iterP = pairs.begin();
+          std::advance(iterP, offset);
+          cpy.insert(*iterP);
+          selected_pairs.insert(*iterP);
+        }
+      }
+    }
+
+    std::cout << "Will use: " << selected_pairs.size() << " relative pose pairs." << std::endl;
+    std::cout << "Initial graph got: " << matches_provider_->pairWise_matches_.size() << " view pairs" << std::endl;
+  }
+    break;
+  case 2:
+  {
+      // Select X random MST
+      const int nb_trees = 5; // Could it be dynamic depending of the node degree (median)
+      selected_pairs = selectMST(matches_provider_->pairWise_matches_, nb_trees);
+
+  }
+  break;
+  
+  default:
+    break;
+  }
+
   // Compute a relative pose for each edge of the pose pair graph
   relative_poses = [&]
   {
     Relative_Pose_Engine relative_pose_engine;
-    if (!relative_pose_engine.Process(sfm_data_,
+    if (!relative_pose_engine.Process(
+        selected_pairs,
+        sfm_data_,
         matches_provider_,
         features_provider_))
       return Relative_Pose_Engine::Relative_Pair_Poses();
     else
       return relative_pose_engine.Get_Relative_Poses();
   }();
+
+
 
   /// Export to a JSON cache (for the relative motions):
   /*
