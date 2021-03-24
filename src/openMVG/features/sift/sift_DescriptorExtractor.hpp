@@ -476,8 +476,7 @@ protected:
       Extract_sift_feature_vector(key, key.descr);
 
       // Threshold bins
-      float norm = (m_b_root_sift ? key.descr.lpNorm<1>() : key.descr.lpNorm<2>())
-        + std::numeric_limits<float>::epsilon();
+      float norm = key.descr.lpNorm<2>() + std::numeric_limits<float>::epsilon();
       for (int i = 0; i < key.descr.rows(); ++i){
         key.descr[i] = std::min(key.descr[i], m_clip_value * norm);
       }
