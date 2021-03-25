@@ -76,7 +76,7 @@ Arguments description:
       - 4: Pinhole radial 3 + tangential 2
       - 5: Pinhole fisheye
 
-  - **[-f|--sIntrinsic_refinement_options]**
+  - **[-f|--refine_intrinsic_config]**
       User can control exactly which parameter will be considered as constant/variable and combine them by using the '|' operator.
 
     - ADJUST_ALL -> refine all existing parameters (default)

@@ -94,7 +94,7 @@ bool StringToEnum
   return true;
 }
 
-/// From 2 given image file-names, find the two corresponding index in the View list
+/// From 2 given image filenames, find the two corresponding index in the View list
 bool computeIndexFromImageNames(
   const SfM_Data & sfm_data,
   const std::pair<std::string,std::string>& initialPairName,
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     cmd.process(argc, argv);
   } catch (const std::string& s) {
 
-     cmd.add( make_option('i', filename_sfm_data, "input_file") );
+  cmd.add( make_option('i', filename_sfm_data, "input_file") );
   cmd.add( make_option('m', directory_match, "match_dir") );
   cmd.add( make_option('M', filename_match, "match_file") );
   cmd.add( make_option('o', directory_output, "output_dir") );
@@ -229,15 +229,15 @@ int main(int argc, char **argv)
     << "[-m|--match_dir] path to the matches that corresponds to the provided SfM_Data scene\n"
     << "[-o|--output_dir] path where the output data will be stored\n"
     << "[-s|--sfm_engine] Type of SfM Engine to use for the reconstruction\n"
-      << "\t INCREMENTAL   : add image sequentially to a 2view seed\n"
+      << "\t INCREMENTAL   : add image sequentially to a 2 view seed\n"
       << "\t INCREMENTALV2 : add image sequentially to a 2 or N view seed (experimental)\n"
       << "\t GLOBAL        : initialize globally rotation and translations\n"
     << "\n\n"
     << "[Optional parameters]\n"
     << "\n\n"
-    << "[Global]\n"
+    << "[Common]\n"
     << "[-M|--match_file] path to the match file to use (i.e matches.f.txt or matches.f.bin)\n"
-    << "[-f|--refineIntrinsics] Intrinsic parameters refinement option\n"
+    << "[-f|--refine_extrinsic_config] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
       << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
       <<      "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
-    << "[-e|--refineExtrinsics] Extrinsic parameters refinement option\n"
+    << "[-e|--refine_extrinsic_config] Extrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> extrinsic parameters are held as constant\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
@@ -302,7 +302,7 @@ int main(int argc, char **argv)
     << "\t\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
     << "\t\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
     << "\n\n"
-    << "[Global]\n"
+    << "[GLOBAL]\n"
     << "\t[-r|--rotationAveraging]\n"
       << "\t\t 1 -> L1 minimization\n"
       << "\t\t 2 -> L2 minimization (default)\n"
