@@ -389,6 +389,7 @@ int main(int argc, char **argv)
     if (!stlplus::folder_create(directory_output))
     {
       OPENMVG_LOG_ERROR << "Cannot create the output directory";
+      return EXIT_FAILURE;
     }
   }
 
@@ -455,6 +456,7 @@ int main(int argc, char **argv)
         matches_provider.get()));
     break;
     default:
+      OPENMVG_LOG_ERROR << "Unknown SFM Scene initializer method";
       return EXIT_FAILURE;
   }
   if (!scene_initializer)
