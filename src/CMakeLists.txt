@@ -81,6 +81,10 @@ ENDMACRO()
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  if(WIN32)
+    # Avoid to use the dllexport markup
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
 else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
@@ -369,7 +373,6 @@ if (NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   set(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
     ${PROJECT_BINARY_DIR}/third_party/lemon)
-  set(LEMON_LIBRARY openMVG_lemon)
 endif()
 
 # ==============================================================================

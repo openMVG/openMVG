@@ -31,8 +31,6 @@ target_link_libraries(openMVG_sfm
 
 target_link_libraries(openMVG_sfm
   LINK_PRIVATE
-    ${CERES_LIBRARIES}
-    openMVG_graph
     openMVG_image
     openMVG_lInftyComputerVision
     openMVG_system

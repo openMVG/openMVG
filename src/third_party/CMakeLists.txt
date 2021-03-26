@@ -20,6 +20,7 @@ set(STLPLUS_LIBRARY openMVG_stlplus PARENT_SCOPE)
 # Add graph library
 if(DEFINED OpenMVG_USE_INTERNAL_LEMON)
   add_subdirectory(lemon)
+  set(LEMON_LIBRARY openMVG_lemon PARENT_SCOPE)
   set_property(TARGET openMVG_lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
   set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
 endif()
