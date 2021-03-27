@@ -118,50 +118,23 @@ target_link_libraries(openMVG_main_MatchesToTracks
 # Installation rules
 set_property( TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_ComputeFeatures   PROPERTY FOLDER OpenMVG/software )
-set_property( TARGET openMVG_main_PairGenerator    PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_PairGenerator     PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_ComputeMatches    PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_GeometricFilter   PROPERTY FOLDER OpenMVG/software )
 set_property( TARGET openMVG_main_MatchesToTracks   PROPERTY FOLDER OpenMVG/software )
 
 install( TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/ )
 install( TARGETS openMVG_main_ComputeFeatures   DESTINATION bin/ )
-install( TARGETS openMVG_main_PairGenerator    DESTINATION bin/ )
+install( TARGETS openMVG_main_PairGenerator     DESTINATION bin/ )
 install( TARGETS openMVG_main_ComputeMatches    DESTINATION bin/ )
 install( TARGETS openMVG_main_GeometricFilter   DESTINATION bin/ )
 install( TARGETS openMVG_main_MatchesToTracks   DESTINATION bin/ )
 
 ###
-# SfM Pipelines
-# - Incremental/Sequential
-# - Global
+# SfM Pipelines & SfM Data format tools, ...
 ###
-# - Convert SfM_Data format (from one to another)
-# - Pair filtering (from frustum)
-# - Compute structure from known camera poses
-# - Compute structure color
-###
-add_executable(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
-target_link_libraries(openMVG_main_IncrementalSfM
-  PRIVATE
-    openMVG_system
-    openMVG_image
-    openMVG_features
-    openMVG_sfm
-    ${STLPLUS_LIBRARY}
-)
-
-add_executable(openMVG_main_IncrementalSfM2 main_IncrementalSfM2.cpp)
-target_link_libraries(openMVG_main_IncrementalSfM2
-  PRIVATE
-    openMVG_system
-    openMVG_image
-    openMVG_features
-    openMVG_sfm
-    ${STLPLUS_LIBRARY}
-)
-
-add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
-target_link_libraries(openMVG_main_GlobalSfM
+add_executable(openMVG_main_SfM main_SfM.cpp)
+target_link_libraries(openMVG_main_SfM
   PRIVATE
     openMVG_system
     openMVG_image
@@ -231,12 +204,8 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
 )
 
 # Installation rules
-set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
-set_property(TARGET openMVG_main_IncrementalSfM2 PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION bin/)
-set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+set_property(TARGET openMVG_main_SfM PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_SfM DESTINATION bin/)
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
