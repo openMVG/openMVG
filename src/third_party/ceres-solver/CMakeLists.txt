@@ -109,7 +109,7 @@ option(EXPORT_BUILD_DIR
 option(BUILD_TESTING "Enable tests" OFF)
 option(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
-option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
+#option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
 if (MSVC)
   option(MSVC_USE_STATIC_CRT
     "MS Visual Studio: Use static C-Run Time Library in place of shared." OFF)
