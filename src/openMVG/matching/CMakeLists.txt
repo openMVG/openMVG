@@ -1,6 +1,4 @@
 
-project(matching)
-
 file(
   GLOB
   matching_files_header

@@ -19,11 +19,6 @@ namespace openMVG
   {
     namespace MSER
     {
-
-      const int MSERExtractor::MSER_4_CONNECTIVITY = 0;
-      const int MSERExtractor::MSER_8_CONNECTIVITY = 1;
-
-
       // Ordering of neighboring
       /*
           3     2     1
