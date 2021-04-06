@@ -81,6 +81,25 @@ target_link_libraries(openMVG_main_benchANN
     ${STLPLUS_LIBRARY}
 )
 
+add_executable(openMVG_main_ComputeVLAD main_ComputeVLAD.cpp)
+target_link_libraries(openMVG_main_ComputeVLAD
+  PRIVATE
+    openMVG_features
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_MatchingRetrievalQuality main_MatchingRetrievalQuality.cpp)
+target_link_libraries(openMVG_main_MatchingRetrievalQuality
+  PRIVATE
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
 add_executable(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
 target_link_libraries(openMVG_main_ComputeMatches
   PRIVATE
