@@ -17,11 +17,11 @@
 
 namespace openMVG {
 
-template<typename RegionTypeT = AKAZE_Float_Regions>
+template<typename RegionTypeT>
 class VLAD : public VLADBase
 {
   public:
-  
+
   DescriptorVector RegionsToCodebook(
     const std::vector<IndexT>& view_ids,
     std::shared_ptr<sfm::Regions_Provider> learning_regions_provider
@@ -36,9 +36,9 @@ class VLAD : public VLADBase
 
     const size_t base_descriptor_length =
         learning_regions_provider->getRegionsType()->DescriptorLength();
-  
+
     for (const auto &view_id : view_ids) {
-      auto &regions = learning_regions_provider->get(view_id);
+      const auto &regions = learning_regions_provider->get(view_id);
       RegionTypeT *cast_centroid_regions =
         dynamic_cast<RegionTypeT *>(regions.get());
 
@@ -48,12 +48,12 @@ class VLAD : public VLADBase
                                 base_descriptor_length);
       for (int region_id = 0; region_id < cast_centroid_regions->RegionCount(); ++region_id) {
         descriptor_array.emplace_back(
-            descriptors.row(region_id).cast<DescriptorType::Scalar>());
+            descriptors.row(region_id).template cast<typename DescriptorType::Scalar>());
       }
     }
     return descriptor_array;
   }
-  
+
   DescriptorVector BuildCodebook(
     const DescriptorVector& descriptor_array,
     const int codebook_size = 128,
@@ -139,8 +139,8 @@ class VLAD : public VLADBase
         const auto descriptor_id = centroid_id_and_descriptor_list.j_;
 
         const auto residual =
-            cast_query_regions->Descriptors()[descriptor_id].cast<double>() -
-            cast_centroid_regions->Descriptors()[centroid_id].cast<double>();
+            cast_query_regions->Descriptors()[descriptor_id].template cast<double>() -
+            cast_centroid_regions->Descriptors()[centroid_id].template cast<double>();
 
         switch (vlad_normalization_type) {
           case VLAD_NORMALIZATION::RESIDUAL_NORMALIZATION_PWR_LAW: {

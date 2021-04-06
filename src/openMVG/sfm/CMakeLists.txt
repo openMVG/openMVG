@@ -34,6 +34,7 @@ target_link_libraries(openMVG_sfm
     openMVG_image
     openMVG_lInftyComputerVision
     openMVG_system
+    ${CERES_LIBRARIES}
     ${STLPLUS_LIBRARY}
 )
 target_include_directories(openMVG_sfm
