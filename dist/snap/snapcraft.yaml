@@ -64,14 +64,8 @@ apps:
   geodesy-registration-to-gps-position:
     command: openMVG_main_geodesy_registration_to_gps_position
     plugs: [home]
-  GlobalSfM:
-    command: openMVG_main_GlobalSfM
-    plugs: [home]
-  IncrementalSfM:
-    command: openMVG_main_IncrementalSfM
-    plugs: [home]
-  IncrementalSfM2:
-    command: openMVG_main_IncrementalSfM2
+  SfM:
+    command: openMVG_main_SfM
     plugs: [home]
   ListMatchingPairs:
     command: openMVG_main_ListMatchingPairs

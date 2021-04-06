@@ -380,10 +380,10 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
         std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------\n";
 
-      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
-      TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurence_TrackLength);
+      std::map<uint32_t, uint32_t> map_Occurrence_TrackLength;
+      TracksUtilsMap::TracksLength(map_selectedTracks, map_Occurrence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (const auto & iter : map_Occurence_TrackLength)  {
+      for (const auto & iter : map_Occurrence_TrackLength)  {
         osTrack << "\t" << iter.first << "\t" << iter.second << "\n";
       }
       osTrack << "\n";
@@ -417,7 +417,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
 // Adjust the scene (& remove outliers)
 bool GlobalSfMReconstructionEngine_RelativeMotions::Adjust()
 {
-  // Refine sfm_scene (in a 3 iteration process (free the parameters regarding their incertainty order)):
+  // Refine sfm_scene (in a 3 iteration process (free the parameters regarding their uncertainty order)):
 
   Bundle_Adjustment_Ceres bundle_adjustment_obj;
   // - refine only Structure and translations

@@ -336,6 +336,7 @@ int main(int argc, char **argv)
       // Evaluate the feature positions accuracy (descriptors are ignored)
       if (bFeature_Repeatability)
       {
+        RepeatabilityResults_Matching image_results;
         for (size_t i = 1; i < dataset.size(); ++i)
         {
           if (map_regions.count(0) == 0 || map_regions.count(i) == 0)
@@ -345,7 +346,7 @@ int main(int argc, char **argv)
           const Regions * regions_I = map_regions[i].get();
           const PointFeatures pointsFeatures0 = regions_0->GetRegionsPositions();
           const PointFeatures pointsFeaturesI = regions_I->GetRegionsPositions();
-
+          
           Mat x0, xI;
           PointsToMat(pointsFeatures0, x0);
           PointsToMat(pointsFeaturesI, xI);
@@ -355,14 +356,23 @@ int main(int argc, char **argv)
             <Mat3, openMVG::homography::kernel::AsymmetricError>(
             dataset.H(i).transpose(), x0, xI, Square(m_dPrecision_robust), matches_0I);
 
-          std::cout << "Feature repeatablity Results" << "\n"
+          std::cout << "Feature repeatability Results" << "\n"
            << "*******************************" << "\n"
            << "# Keypoints 1:                        \t" << map_regions[0]->RegionCount() << "\n"
            << "# Keypoints N:                        \t" << map_regions[i]->RegionCount() << "\n"
            << "# Inliers:                            \t" << matches_0I.size() << "\n"
            << "Inliers Ratio (%):                    \t" << matches_0I.size() / (float) map_regions[0]->RegionCount() << "\n"
            << std::endl;
+
+           const std::vector<double> results = {
+            static_cast<double>( map_regions[0]->RegionCount() ) ,
+            static_cast<double>( map_regions[i]->RegionCount() ) ,
+            static_cast<double>( matches_0I.size() ) ,
+            static_cast<double>( matches_0I.size() / (float) map_regions[0]->RegionCount())
+            };
+          image_results.results[std::to_string(i)] = results;
         }
+        image_results.exportToFile("repeatability_results.xls", stlplus::basename_part(sPath));
       }
 
       if (bMatching_Repeatability)

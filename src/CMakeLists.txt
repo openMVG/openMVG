@@ -10,7 +10,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 project(openMVG C CXX)
 
 # Run automoc on .hh files in new versions of cmake
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17")
+if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
+    ${CMAKE_VERSION} VERSION_GREATER "3.17")
   cmake_policy(SET CMP0100 NEW)
 endif()
 
@@ -80,6 +81,10 @@ ENDMACRO()
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  if(WIN32)
+    # Avoid to use the dllexport markup
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
 else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
@@ -368,7 +373,6 @@ if (NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   set(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
     ${PROJECT_BINARY_DIR}/third_party/lemon)
-  set(LEMON_LIBRARY openMVG_lemon)
 endif()
 
 # ==============================================================================

@@ -706,7 +706,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   // compute 3D scene base on motion estimation
   SfM_Data    tiny_scene;
 
-  // intialize poses (which are now shared by a group of images)
+  // initialize poses (which are now shared by a group of images)
   tiny_scene.poses[poses_id.i] = Pose3(vec_global_R_Triplet[0], -vec_global_R_Triplet[0].transpose() * vec_tis[0]);
   tiny_scene.poses[poses_id.j] = Pose3(vec_global_R_Triplet[1], -vec_global_R_Triplet[1].transpose() * vec_tis[1]);
   tiny_scene.poses[poses_id.k] = Pose3(vec_global_R_Triplet[2], -vec_global_R_Triplet[2].transpose() * vec_tis[2]);
