@@ -25,6 +25,12 @@ namespace openMVG { namespace sfm { struct SfM_Data; } }
 namespace openMVG{
 namespace sfm{
 
+enum class EGraphSimplification : uint8_t {
+  NONE,
+  STAR_X,
+  MST_X
+};
+
 /// A Stellar SfM Pipeline Reconstruction Engine:
 /// - Use a local relative motion refinement,
 /// - Fuse groups or relative motions.
@@ -41,9 +47,7 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
-
-  //void SetRotationAveragingMethod(ERotationAveragingMethod eRotationAveragingMethod);
-  //void SetTranslationAveragingMethod(ETranslationAveragingMethod eTranslation_averaging_method_);
+  void SetGraphSimplification(const EGraphSimplification graph_simplification, const int value);
 
   bool Process() override;
 
@@ -53,7 +57,7 @@ protected:
   void ComputeRelativeMotions
   (
     Hash_Map<Pair, geometry::Pose3> & relative_poses
-  );
+  ) const;
 
   // Structure to store a stellar reconstruction
   // A series of relative motions centered in one pose Id
@@ -71,14 +75,14 @@ protected:
   (
     const Hash_Map<Pair, geometry::Pose3> & relative_poses,
     Hash_Map<IndexT, StellarPodRelativeMotions> & stellar_reconstruction_per_pose
-  );
+  ) const;
 
   /// Compute the global rotations from the relative rotations
   bool Compute_Global_Rotations
   (
     const openMVG::rotation_averaging::RelativeRotations & vec_relatives_R,
     Hash_Map<IndexT, Mat3> & map_globalR
-  );
+  ) const;
 
   /// Compute global translations
   bool Compute_Global_Translations
@@ -91,12 +95,7 @@ protected:
 
   bool Adjust();
 
-
 private:
-
-  //----
-  //-- Data
-  //----
 
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
@@ -105,6 +104,10 @@ private:
   //-- Data provider
   Features_Provider  * features_provider_;
   Matches_Provider  * matches_provider_;
+
+  //-- Graph simplication for Stellar configurations
+  EGraphSimplification graph_simplification_;
+  int graph_simplification_value_; // Additional parameters (nb_tree or star satellite, ...)
 };
 
 } // namespace sfm

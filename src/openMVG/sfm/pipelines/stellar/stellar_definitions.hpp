@@ -118,13 +118,13 @@ Solve_stellar_translation_scales_averaging
       Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver(lhs);
       if (solver.info() != Eigen::Success)
       {
-        std::cerr << "Sparse matrix cannot be factorized" << std::endl;
+        OPENMVG_LOG_ERROR << "Sparse matrix cannot be factorized";
         return false;
       }
       const Vec x = solver.solve(rhs);
       if (solver.info() != Eigen::Success)
       {
-        std::cerr << "Sparse system cannot be solved" << std::endl;
+        OPENMVG_LOG_ERROR << "Sparse system cannot be solved";
         return false;
       }
 
@@ -162,13 +162,13 @@ Solve_stellar_translation_scales_averaging
       Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver(lhs);
       if (solver.info() != Eigen::Success)
       {
-        std::cerr << "Sparse matrix cannot be factorized" << std::endl;
+        OPENMVG_LOG_ERROR << "Sparse matrix cannot be factorized";
         return false;
       }
       const Vec x = solver.solve(rhs);
       if (solver.info() != Eigen::Success)
       {
-        std::cerr << "Sparse system cannot be solved" << std::endl;
+        OPENMVG_LOG_ERROR << "Sparse system cannot be solved";
         return false;
       }
 
@@ -220,13 +220,13 @@ Solve_stellar_translation_scales_averaging
       }
       else
       {
-        std::cerr << "Sparse system cannot be solved" << std::endl;
+        OPENMVG_LOG_ERROR << "Sparse system cannot be solved";
         return false;
       }
     }
     break;
     default:
-      std::cerr << "Unsupported solver" << std::endl;
+      OPENMVG_LOG_ERROR << "Unsupported solver";
       return false;
   }
 

@@ -26,6 +26,27 @@
 using namespace openMVG;
 using namespace openMVG::sfm;
 
+
+bool StringToEnum_EGraphSimplification
+(
+  const std::string & str,
+  EGraphSimplification & graph_simplification
+)
+{
+  const std::map<std::string, EGraphSimplification> string_to_enum_mapping =
+  {
+    {"NONE", EGraphSimplification::NONE},
+    {"MST_X", EGraphSimplification::MST_X},
+    {"STAR_X", EGraphSimplification::STAR_X},
+  };
+  auto it = string_to_enum_mapping.find(str);
+  if (it == string_to_enum_mapping.end())
+    return false;
+  graph_simplification = it->second;
+  return true;
+}
+
+
 int main(int argc, char **argv)
 {
   using namespace std;
@@ -50,6 +71,11 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
   cmd.add( make_switch('P', "prior_usage") );
 
+  int graph_simplification_value = -1;
+  std::string sGgraph_simplification = "MST_X";
+  cmd.add( make_option('g', sGgraph_simplification, "graph_simplification") );
+  cmd.add( make_option('v', graph_simplification_value, "graph_simplification_value") );
+  
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
@@ -84,6 +110,18 @@ int main(int argc, char **argv)
   if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
   {
     std::cerr << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  EGraphSimplification graph_simplification_method;
+  if (!StringToEnum_EGraphSimplification(sGgraph_simplification, graph_simplification_method))
+  {
+    OPENMVG_LOG_ERROR << "Cannot recognize graph simplification method";
+    return EXIT_FAILURE;
+  }
+  if (graph_simplification_value <= 1)
+  {
+    OPENMVG_LOG_ERROR << "graph simplification value must be > 1";
     return EXIT_FAILURE;
   }
 
@@ -157,6 +195,7 @@ int main(int argc, char **argv)
   sfmEngine.Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
+  sfmEngine.SetGraphSimplification(graph_simplification_method, graph_simplification_value);
 
   if (sfmEngine.Process())
   {

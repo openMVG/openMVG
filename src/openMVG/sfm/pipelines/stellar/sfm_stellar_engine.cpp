@@ -52,7 +52,9 @@ StellarSfMReconstructionEngine::StellarSfMReconstructionEngine(
     html_doc_stream_(nullptr),
     logging_file_(logging_file),
     features_provider_(nullptr),
-    matches_provider_(nullptr)
+    matches_provider_(nullptr),
+    graph_simplification_(EGraphSimplification::MST_X),
+    graph_simplification_value_(5)
 {
   if (!logging_file_.empty())
   {
@@ -90,6 +92,16 @@ void StellarSfMReconstructionEngine::SetMatchesProvider(
   matches_provider_ = provider;
 }
 
+void StellarSfMReconstructionEngine::SetGraphSimplification
+(
+  const EGraphSimplification graph_simplification,
+  const int value
+)
+{
+  graph_simplification_ = graph_simplification;
+  graph_simplification_value_ = value;
+}
+
 bool StellarSfMReconstructionEngine::Process()
 {
   // Compute a relative pose for each pair
@@ -101,7 +113,7 @@ bool StellarSfMReconstructionEngine::Process()
   if (!ComputeStellarReconstructions(relative_poses, stellar_reconstruction_per_pose))
     return false;
 
-  std::cout << "#Stellar reconstruction pod: " << stellar_reconstruction_per_pose.size() << std::endl;
+  OPENMVG_LOG_INFO << "#Stellar reconstruction pod: " << stellar_reconstruction_per_pose.size();
 
   // Perform the rotation averaging and compute the global rotations
   openMVG::rotation_averaging::RelativeRotations relatives_R;
@@ -119,13 +131,13 @@ bool StellarSfMReconstructionEngine::Process()
   Hash_Map<IndexT, Mat3> global_rotations;
   if (!Compute_Global_Rotations(relatives_R, global_rotations))
   {
-    std::cerr << "GlobalSfM:: Rotation Averaging failure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Rotation Averaging failure!";
     return false;
   }
 
   if (!Compute_Global_Translations(global_rotations, stellar_reconstruction_per_pose))
   {
-    std::cerr << "GlobalSfM:: Translation Averaging failure!" << std::endl;
+    OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
     return false;
   }
 
@@ -146,15 +158,16 @@ bool StellarSfMReconstructionEngine::Process()
   }*/
 
   {
-    if (!Compute_Initial_Structure(2))
+    const int min_covisibility = 2;
+    if (!Compute_Initial_Structure(min_covisibility))
     {
-      std::cerr << "GlobalSfM:: Cannot initialize an initial structure!" << std::endl;
+      OPENMVG_LOG_ERROR << "GlobalSfM:: Cannot initialize an initial structure!";
       return false;
     }
 
     if (!Adjust())
     {
-      std::cerr << "GlobalSfM:: Non-linear adjustment failure!" << std::endl;
+      OPENMVG_LOG_ERROR << "GlobalSfM:: Non-linear adjustment failure!";
       return false;
     }
   }
@@ -210,7 +223,7 @@ Pair_Set selectMST(const openMVG::matching::PairWiseMatches & matches,
 
 void StellarSfMReconstructionEngine::ComputeRelativeMotions(
   Hash_Map<Pair, Pose3> & relative_poses
-)
+) const
 {
   /// If there is a JSON cache use it:
   /*if (stlplus::is_file(sOut_directory_ + "/relative_motion_cache"))
@@ -226,19 +239,18 @@ void StellarSfMReconstructionEngine::ComputeRelativeMotions(
     return;
   }*/
 
-  int graph_simplification = 2;
-
   Pair_Set selected_pairs;
-  switch (graph_simplification)
+  switch (graph_simplification_)
   {
-  case 0:{ // No simplification
+  case EGraphSimplification::NONE:
+  { // No simplification
     selected_pairs = matching::getPairs(matches_provider_->pairWise_matches_);
   }
   break;
-  case 1: // Keep the X edges per n-Uplet
+  case EGraphSimplification::STAR_X: // Keep the X edges per n-Uplet
   {
-    // Limit the complexity of each sub-star -> TODO guarantee 1 CC?
-    int max_stellar_pod_size = 10;
+    // Limit the complexity of each sub-star
+    int max_stellar_pod_size = graph_simplification_value_; // 10
 
     const Pair_Set pairs = matching::getPairs(matches_provider_->pairWise_matches_);
 
@@ -276,23 +288,28 @@ void StellarSfMReconstructionEngine::ComputeRelativeMotions(
         }
       }
     }
-
-    std::cout << "Will use: " << selected_pairs.size() << " relative pose pairs." << std::endl;
-    std::cout << "Initial graph got: " << matches_provider_->pairWise_matches_.size() << " view pairs" << std::endl;
+    // In order to guarantee the same connectivity as the initial graph, we add a MST to the pairs
+    const int nb_trees = 1;
+    const auto mst_pairs = selectMST(matches_provider_->pairWise_matches_, nb_trees);
+    selected_pairs.insert(mst_pairs.begin(), mst_pairs.end());
   }
-    break;
-  case 2:
+  break;
+  case EGraphSimplification::MST_X:
   {
       // Select X random MST
-      const int nb_trees = 5; // Could it be dynamic depending of the node degree (median)
+      const int nb_trees = graph_simplification_value_;
+      //Note: nb_trees could be dynamic depending of the node degree (median)
       selected_pairs = selectMST(matches_provider_->pairWise_matches_, nb_trees);
-
   }
   break;
   
   default:
+    OPENMVG_LOG_ERROR << "Unknown graph simplification method";
     break;
   }
+
+  OPENMVG_LOG_INFO << "Will use: " << selected_pairs.size() << " relative pose pairs.";
+  OPENMVG_LOG_INFO << "Initial graph got: " << matches_provider_->pairWise_matches_.size() << " view pairs";
 
   // Compute a relative pose for each edge of the pose pair graph
   relative_poses = [&]
@@ -307,8 +324,6 @@ void StellarSfMReconstructionEngine::ComputeRelativeMotions(
     else
       return relative_pose_engine.Get_Relative_Poses();
   }();
-
-
 
   /// Export to a JSON cache (for the relative motions):
   /*
@@ -325,9 +340,9 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
 (
   const Hash_Map<Pair, geometry::Pose3> & relative_poses,
   Hash_Map<IndexT, StellarPodRelativeMotions > & stellar_reconstruction_per_pose
-)
+) const
 {
-  std::cout << "::Compute_Stellar_Reconstructions" << std::endl;
+  OPENMVG_LOG_INFO << "::Compute_Stellar_Reconstructions";
 
   // List all stellar configurations
   using StellarPods = Hash_Map<IndexT, Pair_Set>;
@@ -341,15 +356,14 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
 
   // Display some debug information about the stellar pods
   {
-    std::cout << "Stellar debug: \n"
-      << "#Poses: " << stellar_pods.size() << "\n"
-      << std::endl;
+    OPENMVG_LOG_INFO << "Stellar debug: \n"
+      << "#Poses: " << stellar_pods.size();
 
     for (const auto & stellar_pod_it : stellar_pods)
     {
       const IndexT node_id = stellar_pod_it.first;
       const Pair_Set & pairs = stellar_pod_it.second;
-      std::cout << node_id << " => #pairs: " << pairs.size() << std::endl;
+      OPENMVG_LOG_INFO << node_id << " => #pairs: " << pairs.size();
     }
   }
 
@@ -386,7 +400,7 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
     Poses poses;
     if (!stellar_pod_solver.Solve(poses))
     {
-      std::cout << "Failure" << std::endl;
+      OPENMVG_LOG_WARNING << "Cannot solve this Stellar pod";
       continue;
     }
 
@@ -419,9 +433,9 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
 (
   const rotation_averaging::RelativeRotations & relatives_R,
   Hash_Map<IndexT, Mat3> & global_rotations
-)
+) const
 {
-  if(relatives_R.empty())
+  if (relatives_R.empty())
     return false;
   // Log statistics about the relative rotation graph
   {
@@ -432,10 +446,10 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
       set_pose_ids.insert(relative_R.j);
     }
 
-    std::cout << "\n-------------------------------" << "\n"
+    OPENMVG_LOG_INFO << "-------------------------------" << "\n"
       << " Global rotations computation: " << "\n"
       << "  #relative rotations: " << relatives_R.size() << "\n"
-      << "  #global rotations: " << set_pose_ids.size() << std::endl;
+      << "  #global rotations: " << set_pose_ids.size();
   }
 
   // Global Rotation solver:
@@ -450,8 +464,8 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
       ROTATION_AVERAGING_L2, eRelativeRotationInferenceMethod,
       relatives_R, global_rotations);
 
-  std::cout << "Found #global_rotations: " << global_rotations.size() << "\n"
-    << "in " << timer.elapsed() << " seconds." << std::endl;
+  OPENMVG_LOG_INFO << "Found #global_rotations: " << global_rotations.size() << "\n"
+    << "in " << timer.elapsed() << " seconds.";
 
   if (b_rotation_averaging)
   {
@@ -481,17 +495,17 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
     {
       Histogram<float> histo(0.0f, *max_element(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend()), 20);
       histo.Add(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
-      std::cout
-        << "\nRelative rotations fitting error to global rotations:"
-        << histo.ToString() << std::endl;
+      OPENMVG_LOG_INFO
+        << "Relative rotations fitting error to global rotations:"
+        << histo.ToString();
       {
         Histogram<float> histo(0.0f, 5.0f, 20);
         histo.Add(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend());
-        std::cout
-          << "\nRelative rotations fitting error to global rotations {0,5}:"
-          << histo.ToString() << std::endl;
+        OPENMVG_LOG_INFO
+          << "Relative rotations fitting error to global rotations {0,5}:"
+          << histo.ToString();
       }
-      std::cout << "\nStatistics about global rotation fitting:" << std::endl;
+      OPENMVG_LOG_INFO << "Statistics about global rotation fitting:";
 
       minMaxMeanMedian<float>(vec_rotation_fitting_error.cbegin(), vec_rotation_fitting_error.cend(), std::cout);
     }
@@ -580,10 +594,10 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
   }
 
   const size_t iNview = poses_ids.size();
-  std::cout << "\n-------------------------------" << "\n"
+  OPENMVG_LOG_INFO << "-------------------------------" << "\n"
     << " Global translations computation: " << "\n"
     << "   - Ready to compute " << iNview << " global translations." << "\n"
-    << "     from #relative translations: " << relative_motion_count << std::endl;
+    << "     from #relative translations: " << relative_motion_count;
 
   openMVG::system::Timer timer_translation;
 
@@ -605,7 +619,7 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
   std::vector<Vec3> vec_translations;
   if (!solve_translations_problem_softl1(stellar_relative_motions, vec_translations))
   {
-    std::cerr << "Compute global translations: failed" << std::endl;
+    OPENMVG_LOG_ERROR << "Compute global translations: failed";
     return false;
   }
 
@@ -620,7 +634,7 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
       << "-- #global translations: " <<  vec_translations.size() << "\n"
       << " timing (s): " << timer_translation << ".\n"
       << "-------------------------------" << "\n";
-    std::cout << os.str() << std::endl;
+    OPENMVG_LOG_INFO << os.str();
   }
 
   // A valid solution was found:
@@ -692,9 +706,9 @@ bool StellarSfMReconstructionEngine::Compute_Initial_Structure(const int min_cov
     // Remove unstable depth points
     DepthCleaning(sfm_data_);
 
-    std::cout << "\n#removed tracks (invalid triangulation): " <<
-      trackCountBefore - IndexT(sfm_data_.GetLandmarks().size()) << std::endl;
-    std::cout << std::endl << "  Triangulation took (s): " << timer.elapsed() << std::endl;
+    OPENMVG_LOG_INFO << "#removed tracks (invalid triangulation): " <<
+      trackCountBefore - IndexT(sfm_data_.GetLandmarks().size());
+    OPENMVG_LOG_INFO << "  Triangulation took (s): " << timer.elapsed();
 
     // Export initial structure
     if (!logging_file_.empty())
