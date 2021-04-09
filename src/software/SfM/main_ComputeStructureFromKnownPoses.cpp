@@ -65,6 +65,8 @@ int main(int argc, char **argv)
   double dMax_reprojection_error = 4.0;
   unsigned int ui_max_cache_size = 0;
   std::string sTagTrackFile;
+  bool bOptimizeStructure = true;
+  bool bExportPaieWiseMatches = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
@@ -76,6 +78,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
   cmd.add( make_switch('d', "direct_triangulation"));
   cmd.add( make_option('T', sTagTrackFile, "tag_track_file"));
+  cmd.add( make_option('S', bOptimizeStructure, "optimize_structure"));
+  cmd.add( make_option('M', bExportPaieWiseMatches, "export_matches"));
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -104,6 +108,8 @@ int main(int argc, char **argv)
     << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
     << "  If not used, all regions will be load in memory.\n"
     << "[-T|--tag_track_file] given track file to compute points' position.\n"
+    << "[-S|--optimize_structure] whether to optimize structure.\n"
+    << "[-M|--export_matches] whether to export pairwise matches.\n"
 
     << std::endl;
 
@@ -386,6 +392,10 @@ int main(int argc, char **argv)
     //------------------------------------------
     SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
     structure_estimator.run(sfm_data, pairs, regions_provider);
+    if (bExportPaieWiseMatches) {
+      structure_estimator.save_triplets_matches(
+        stlplus::create_filespec(stlplus::folder_part(sOutFile), "match.txt"));
+    }
     std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
 
   }
@@ -422,7 +432,7 @@ int main(int argc, char **argv)
         Optimize_Options(
           cameras::Intrinsic_Parameter_Type::ADJUST_ALL,
           Extrinsic_Parameter_Type::ADJUST_ALL,
-          Structure_Parameter_Type::ADJUST_ALL)
+          bOptimizeStructure ? Structure_Parameter_Type::ADJUST_ALL : Structure_Parameter_Type::NONE)
       );
   }
 

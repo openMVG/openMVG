@@ -20,6 +20,7 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/tracks/tracks.hpp"
+#include "openMVG/matching/indMatch_utils.hpp"
 
 #include "third_party/progress/progress_display.hpp"
 
@@ -77,6 +78,11 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::run(
   match(sfm_data, pairs, regions_provider);
   filter(sfm_data, pairs, regions_provider);
   triangulate(sfm_data, regions_provider);
+}
+
+void SfM_Data_Structure_Estimation_From_Known_Poses::save_triplets_matches(
+  const std::string &output_match_file) {
+  Save(triplets_matches, output_match_file);
 }
 
 /// Use guided matching to find corresponding 2-view correspondences

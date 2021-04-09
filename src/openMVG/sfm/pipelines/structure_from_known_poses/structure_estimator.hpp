@@ -35,6 +35,8 @@ public:
     const Pair_Set & pairs,
     const std::shared_ptr<Regions_Provider> & regions_provider);
 
+  void save_triplets_matches(const std::string &output_match_file);
+
 private:
 
   /// Use guided matching to find corresponding 2-view correspondences
