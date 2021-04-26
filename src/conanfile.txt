@@ -1,0 +1,6 @@
+[requires]
+opencv/3.4.5@conan/stable
+
+[generators]
+cmake_paths
+cmake_find_package

@@ -126,21 +126,23 @@ void SortAndCleanSfMData(SfM_Data &sfm_data, std::vector<std::string> &view_name
   SfM_Data sfm_data_new;
   sfm_data_new.s_root_path = sfm_data.s_root_path;
 
-  for (IndexT idx = 0; idx < view_names.size(); ++idx)
+  IndexT idx = 0u;
+  for (IndexT i = 0; i < view_names.size(); ++i)
   {
-    auto iter = valid_name_id_map.find(view_names[idx]);
+    auto iter = valid_name_id_map.find(view_names[i]);
     if (iter == valid_name_id_map.end())
     {
       continue;
     }
 
-    auto view = sfm_data.views[iter->second];
+    auto &view = sfm_data.views[iter->second];
+    sfm_data_new.poses[idx] = sfm_data.poses[view->id_pose];
     view->id_view = idx;
     view->id_pose = idx;
     view->id_intrinsic = intrinsic_map[view->id_intrinsic];
-    sfm_data_new.views[idx] = view;
-    sfm_data_new.poses[idx] = sfm_data.poses[view->id_pose];
+    sfm_data_new.views[idx] = std::move(view);
     view_map[iter->second] = idx;
+    ++idx;
   }
 
   for (const auto & map : intrinsic_map)

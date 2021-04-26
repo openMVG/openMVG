@@ -23,8 +23,8 @@ if (OpenMVG_BUILD_GUI_SOFTWARES)
     target_link_libraries( openMVG_main_AlternativeVO Qt5::Widgets openMVG_image openMVG_features stlplus )
 
     if (OpenMVG_USE_OPENCV )
-      target_link_libraries( openMVG_main_AlternativeVO ${OpenCV_LIBS} )
-      target_include_directories( openMVG_main_AlternativeVO PRIVATE ${OpenCV_INCLUDE_DIRS} )
+      target_link_libraries( openMVG_main_AlternativeVO opencv::opencv )
+      target_include_directories( openMVG_main_AlternativeVO PRIVATE ${opencv_INCLUDE_DIRS} )
       target_compile_definitions( openMVG_main_AlternativeVO PRIVATE HAVE_OPENCV )
     endif( OpenMVG_USE_OPENCV )
 

@@ -42,9 +42,8 @@ if (OpenMVG_BUILD_OPENGL_EXAMPLES)
   )
 
   if(OpenMVG_USE_OPENCV)
-    target_link_libraries(openMVG_main_VO
-        ${OpenCV_LIBS})
-    target_include_directories(openMVG_main_VO PRIVATE ${OpenCV_INCLUDE_DIRS})
+    target_link_libraries(openMVG_main_VO opencv::opencv)
+    target_include_directories(openMVG_main_VO PRIVATE ${opencv_INCLUDE_DIRS})
     target_compile_definitions(openMVG_main_VO PRIVATE HAVE_OPENCV)
   endif(OpenMVG_USE_OPENCV)
 
