@@ -14,6 +14,7 @@ Required tools:
 Optional tools:
 
 - QT version >= v5.4
+- Conan (needed if build with opencv)
 
 Getting the sources (and the submodules):
 ```shell
@@ -158,6 +159,9 @@ $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 
 Using OpenCV sample
 --------------------
+
+Install opencv library using conan
+e.g. `conan install /folder/containing/conanfile.txt/`
 
 Add `-DOpenMVG_USE_OPENCV=ON` to your cmake command and set the OpenCV_DIR variable to your OpenCV build directory
 e.g. `-DOpenCV_DIR="/home/user/Dev/github/itseez/opencv_Build" -DOpenMVG_USE_OPENCV=ON`
