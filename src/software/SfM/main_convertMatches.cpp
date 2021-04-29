@@ -10,7 +10,6 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
@@ -79,19 +78,6 @@ int main(int argc, char ** argv)
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS))) {
     std::cerr << std::endl
       << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  //---------------------------------------
-  // Load SfM Scene regions
-  //---------------------------------------
-  // Init the regions_type from the image describer file (used for image regions extraction)
-  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
-  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
-  if (!regions_type)
-  {
-    std::cerr << "Invalid: "
-      << sImage_describer << " regions type file." << std::endl;
     return EXIT_FAILURE;
   }
 
