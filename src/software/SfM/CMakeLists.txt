@@ -72,6 +72,16 @@ target_link_libraries(openMVG_main_ComputeMatches
     ${STLPLUS_LIBRARY}
 )
 
+# - convert matches from one format (bin, txt) to the other format
+#
+add_executable(openMVG_main_convertMatches main_convertMatches.cpp)
+target_link_libraries(openMVG_main_convertMatches
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  ${STLPLUS_LIBRARY}
+)
+
 add_executable(openMVG_main_MatchesToTracks main_MatchesToTracks.cpp)
 target_link_libraries(openMVG_main_MatchesToTracks
   PRIVATE
