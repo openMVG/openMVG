@@ -74,8 +74,8 @@ target_link_libraries(openMVG_main_ComputeMatches
 
 # - convert matches from one format (bin, txt) to the other format
 #
-add_executable(openMVG_main_convertMatches main_convertMatches.cpp)
-target_link_libraries(openMVG_main_convertMatches
+add_executable(openMVG_main_ConvertMatches main_ConvertMatches.cpp)
+target_link_libraries(openMVG_main_ConvertMatches
   openMVG_system
   openMVG_features
   openMVG_sfm
