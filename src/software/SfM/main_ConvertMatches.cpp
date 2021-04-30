@@ -89,7 +89,7 @@ int main(int argc, char ** argv)
   }
 
   // Write the matches
-  if (!Save(matches_provider->pairWise_matches_, std::string(sOutMatchFile)))
+  if (!Save(matches_provider->pairWise_matches_, sOutMatchFile))
   {
     std::cerr
         << "Cannot save matches to: "
