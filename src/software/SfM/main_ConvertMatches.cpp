@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Export matches to text.\nUsage: " << argv[0] << "\n"
+      std::cerr << "Convert matches from bin to txt or txt to bin.\nUsage: " << argv[0] << "\n"
       << "[-i|--input_file file] path to a SfM_Data scene\n"
       << "[-d|--matchdir path]\n"
       << "[-m|--sMatchFile filename]\n"
@@ -88,11 +88,12 @@ int main(int argc, char ** argv)
     return EXIT_FAILURE;
   }
 
+  // Write the matches
   if (!Save(matches_provider->pairWise_matches_, std::string(sOutMatchFile)))
   {
     std::cerr
-        << "Cannot save computed matches in: "
-        << sMatchFile;
+        << "Cannot save matches to: "
+        << sOutMatchFile;
     return EXIT_FAILURE;
   }
 
