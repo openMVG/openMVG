@@ -49,6 +49,29 @@ using SIFT_Regions = openMVG::features::SIFT_Regions;
 //constexpr unsigned n_ids = 5;
 //unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
 
+static void
+revert_intrinsics(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_coords[2], 
+    double normalized_coords[2])
+{
+  double px = pix_coords;
+  const double nrm = normalized_coords;
+  px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
+  px[0] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
+}
+
+static void
+revert_intrinsics_tgt(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_tgt_coords[2], 
+    double normalized_tgt_coords[2])
+{
+  double tp = pix_tgt_coords;
+  const double t = normalized_tgt_coords;
+  tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
+  tp[0] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
+}
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;
   enum { MINIMUM_SAMPLES = 3 };
@@ -211,10 +234,15 @@ struct Trifocal3PointPositionTangentialSolver {
     // and report only one error
     Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
     Vec2 measured    = bearing.col(third_view).hnormalized();
-    cout << "error " << (reprojected - measured).squaredNorm() << "\n";
-    cout << "triang " <<triangulated_homg <<"\n";
+    //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
+    //cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
      
+    Vec2 pixel_reprojected;
+    Vec2 pixel_measured;
+    revert_intrinsics(K,pixel_reprojected,reprojected);
+    revert_intrinsics(K,pixel_measured,measured);
+    std::cerr << (pixel_reprojected-pixel_measured).squaredNorm()<<"\n";
     return (reprojected-measured).squaredNorm();
   }
 };
@@ -242,6 +270,7 @@ invert_intrinsics_tgt(
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
 }
+// See big notes eq. 5.2.13 at beginning of the code.
 
 int iteration_global_debug = 0;
 template<typename SolverArg,
