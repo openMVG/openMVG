@@ -34,12 +34,10 @@ int main(int argc, char ** argv)
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
-  std::string sMatchesDir;
   std::string sMatchFile;
   std::string sOutMatchFile = "";
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
-  cmd.add( make_option('d', sMatchesDir, "matchdir") );
   cmd.add( make_option('m', sMatchFile, "matchfile") );
   cmd.add( make_option('o', sOutMatchFile, "outmatchfile") );
 
@@ -49,7 +47,6 @@ int main(int argc, char ** argv)
   } catch (const std::string& s) {
       std::cerr << "Convert matches from bin to txt or txt to bin.\nUsage: " << argv[0] << "\n"
       << "[-i|--input_file file] path to a SfM_Data scene\n"
-      << "[-d|--matchdir path]\n"
       << "[-m|--sMatchFile filename]\n"
       << "[-o|--outmatchfile filename]\n"
       << std::endl;
@@ -58,10 +55,6 @@ int main(int argc, char ** argv)
       return EXIT_FAILURE;
   }
 
-  if (sMatchesDir.empty()) {
-    std::cerr << "\nmatchdir cannot be an empty option" << std::endl;
-    return EXIT_FAILURE;
-  }
   if (sMatchFile.empty()) {
     std::cerr << "\nmatchfile cannot be an empty option" << std::endl;
     return EXIT_FAILURE;
