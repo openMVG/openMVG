@@ -71,18 +71,17 @@ SfM_Data_Structure_Estimation_From_Known_Poses::SfM_Data_Structure_Estimation_Fr
 void SfM_Data_Structure_Estimation_From_Known_Poses::run(
   SfM_Data & sfm_data,
   const Pair_Set & pairs,
-  const std::shared_ptr<Regions_Provider> & regions_provider)
+  const std::shared_ptr<Regions_Provider> & regions_provider,
+  const std::string & output_match_file)
 {
   sfm_data.structure.clear();
 
   match(sfm_data, pairs, regions_provider);
   filter(sfm_data, pairs, regions_provider);
+  if (!output_match_file.empty()) {
+    Save(triplets_matches, output_match_file);
+  }
   triangulate(sfm_data, regions_provider);
-}
-
-void SfM_Data_Structure_Estimation_From_Known_Poses::save_triplets_matches(
-  const std::string &output_match_file) {
-  Save(triplets_matches, output_match_file);
 }
 
 /// Use guided matching to find corresponding 2-view correspondences

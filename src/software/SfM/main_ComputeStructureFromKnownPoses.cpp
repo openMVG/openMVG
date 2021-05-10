@@ -66,7 +66,6 @@ int main(int argc, char **argv)
   unsigned int ui_max_cache_size = 0;
   std::string sTagTrackFile;
   bool bOptimizeStructure = true;
-  bool bExportPaieWiseMatches = false;
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "match_dir") );
@@ -79,7 +78,7 @@ int main(int argc, char **argv)
   cmd.add( make_switch('d', "direct_triangulation"));
   cmd.add( make_option('T', sTagTrackFile, "tag_track_file"));
   cmd.add( make_option('S', bOptimizeStructure, "optimize_structure"));
-  cmd.add( make_option('M', bExportPaieWiseMatches, "export_matches"));
+  cmd.add( make_switch('M', "export_matches"));
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -391,11 +390,9 @@ int main(int argc, char **argv)
     // Compute Structure from known camera poses
     //------------------------------------------
     SfM_Data_Structure_Estimation_From_Known_Poses structure_estimator(dMax_reprojection_error);
-    structure_estimator.run(sfm_data, pairs, regions_provider);
-    if (bExportPaieWiseMatches) {
-      structure_estimator.save_triplets_matches(
-        stlplus::create_filespec(stlplus::folder_part(sOutFile), "match.txt"));
-    }
+    std::string output_match_file = cmd.used('M') ?
+      stlplus::create_filespec(stlplus::folder_part(sOutFile), "match.txt") : "";
+    structure_estimator.run(sfm_data, pairs, regions_provider, output_match_file);
     std::cout << "\nStructure estimation took (s): " << timer.elapsed() << "." << std::endl;
 
   }

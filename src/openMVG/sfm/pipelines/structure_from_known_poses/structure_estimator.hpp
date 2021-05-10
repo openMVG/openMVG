@@ -33,9 +33,8 @@ public:
   void run(
     SfM_Data & sfm_data,
     const Pair_Set & pairs,
-    const std::shared_ptr<Regions_Provider> & regions_provider);
-
-  void save_triplets_matches(const std::string &output_match_file);
+    const std::shared_ptr<Regions_Provider> & regions_provider,
+    const std::string & output_match_file);
 
 private:
 
