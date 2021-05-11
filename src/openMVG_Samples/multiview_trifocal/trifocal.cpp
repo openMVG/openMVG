@@ -203,9 +203,9 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
     const Vec &bearing_2,
-    const Vec &nrmbearing_0,
-    const Vec &nrmbearing_1,
-    const Vec &nrmbearing_2) {
+    const Vec &pixbearing_0,
+    const Vec &pixbearing_1,
+    const Vec &pixbearing_2) {
     //std::cerr << "TRIFOCAL LOG: Called Error()\n";
     // Return the cost related to this model and those sample data point
     // Ideal algorithm:
@@ -220,10 +220,10 @@ struct Trifocal3PointPositionTangentialSolver {
     bearing << bearing_0.head(2).homogeneous(),
                bearing_1.head(2).homogeneous(), 
                bearing_2.head(2).homogeneous();
-    Mat3 nrmbearing;
-    nrmbearing << nrmbearing_0.head(2).homogeneous(),
-                  nrmbearing_1.head(2).homogeneous(), 
-                  nrmbearing_2.head(2).homogeneous();
+    Mat3 pixbearing;
+    pixbearing << pixbearing_0.head(2).homogeneous(),
+                  pixbearing_1.head(2).homogeneous(), 
+                  pixbearing_2.head(2).homogeneous();
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
