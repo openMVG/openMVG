@@ -224,7 +224,6 @@ struct Trifocal3PointPositionTangentialSolver {
     //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
     //cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-    std::cerr << (pixel_reprojected-pixel_measured).squaredNorm()<<"\n";
     return (reprojected-measured).squaredNorm();
   }
 };
@@ -266,7 +265,7 @@ class ThreeViewKernel {
    using Model = ModelArg;
    using ErrorT = ErrorArg;
 
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3) : x1_(x1), x2_(x2), x3_(x3), nrmx1_(nrmx1), nrmx2_(nrmx2), nrmx3_(nrmx3) {}
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3) : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3) {}
 
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -284,7 +283,7 @@ class ThreeViewKernel {
   }
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
-    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample), nrmx1_.col(sample), nrmx2_.col(sample, nrmx3_.col(sample)));
+    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample), pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample));
   }
 
   /// Number of putative point
@@ -300,6 +299,7 @@ class ThreeViewKernel {
   protected:
     const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
     // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
+    const Mat &pxx1_, &pxx2_, &pxx3_;
 };
 
 
@@ -605,7 +605,7 @@ struct TrifocalSampleApp {
       }
     }
     //cout <<  Ds[0] << "\n";
-    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], nrmdatum_[0], nrmdatum_[1], nrmdatum_[2]);
+    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2]);
     //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
     const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
@@ -1022,6 +1022,7 @@ struct TrifocalSampleApp {
   map<IndexT, unique_ptr<features::Regions>> regions_per_image_;
   array<const SIFT_Regions*, 3> sio_regions_; // a cast on regions_per_image_
   array<Mat, io::pp::nviews> datum_; // x,y,orientation across 3 views
+  array<Mat, io::pp::nviews> pxdatum_; // pixel x,y,orientation across 3 views
   // datum_[view][4 /*xy tgtx tgty*/][npts /* total number of tracks */];
   // datum_[v][1][p] = y coordinate of point p in view v
   
