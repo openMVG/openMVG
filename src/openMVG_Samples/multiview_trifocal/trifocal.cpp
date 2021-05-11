@@ -63,8 +63,7 @@ struct Trifocal3PointPositionTangentialSolver {
       const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
-      std::vector<trifocal_model_t> *trifocal_tensor) 
-  {
+      std::vector<trifocal_model_t> *trifocal_tensor) {
     double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
     double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
 
@@ -390,7 +389,7 @@ struct TrifocalSampleApp {
       //
       datum_[0].resize(4, tracks_.size());
       datum_[1].resize(4, tracks_.size());
-      datum_[2].resize(4, tracks_.size());
+      datum_[2].resize(4, tracks_.size()); // XXX repeat for pixdatum
       int idx = 0;
       for (const auto &track_it: tracks_) {
         auto iter = track_it.second.cbegin();
@@ -403,14 +402,15 @@ struct TrifocalSampleApp {
         const auto feature_j = sio_regions_[1]->Features()[j];
         const auto feature_k = sio_regions_[2]->Features()[k];
         datum_[0].col(idx) << feature_i.x(), feature_i.y(), 
-          cos(feature_i.orientation()), sin(feature_i.orientation());
+                              cos(feature_i.orientation()), sin(feature_i.orientation());
         // datum_[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
         datum_[1].col(idx) << feature_j.x(), feature_j.y(), 
-          cos(feature_j.orientation()), sin(feature_j.orientation());
+                              cos(feature_j.orientation()), sin(feature_j.orientation());
         datum_[2].col(idx) << feature_k.x(), feature_k.y(), 
-          cos(feature_k.orientation()), sin(feature_k.orientation());
+                              cos(feature_k.orientation()), sin(feature_k.orientation());
+        // XXX fill up pxdatum directly WITHOUT invert_intrinsics
         for (unsigned v=0; v < 3; ++v) {
-          invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data());
+          invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data()); // XXX keep datum, new std::vector: px
           invert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
         }
         ++idx;
@@ -580,7 +580,7 @@ struct TrifocalSampleApp {
     using TrifocalKernel = 
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                       Trifocal3PointPositionTangentialSolver>;
-    Mat43 nrmdatum_; 
+    Mat43 nrmdatum_;  // XXX pxdatum
     constexpr unsigned n_ids = 5;
     unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
