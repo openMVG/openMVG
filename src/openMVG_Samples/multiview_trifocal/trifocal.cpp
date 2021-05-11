@@ -44,6 +44,37 @@ using namespace openMVG::robust;
 using namespace MiNuS;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 
+
+//Defining global variables
+
+//constexpr unsigned n_ids = 5;
+//unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
+
+static void
+revert_intrinsics(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_coords[2], 
+    double normalized_coords[2])
+{
+  double px = pix_coords;
+  const double nrm = normalized_coords;
+  px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
+  px[0] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
+}
+
+static void
+revert_intrinsics_tgt(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_tgt_coords[2], 
+    double normalized_tgt_coords[2])
+{
+  double tp = pix_tgt_coords;
+  const double t = normalized_tgt_coords;
+  tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
+  tp[0] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
+}
+
+
 //------------------------------------------------------------------------------
 //
 // Global variables
@@ -605,7 +636,7 @@ struct TrifocalSampleApp {
       }
     }
     //cout <<  Ds[0] << "\n";
-    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2]);
+    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2], K_);
     //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
     const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
