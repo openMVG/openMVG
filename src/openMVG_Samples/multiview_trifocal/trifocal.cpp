@@ -182,8 +182,11 @@ struct Trifocal3PointPositionTangentialSolver {
     const trifocal_model_t &tt,
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
-    const Vec &bearing_2) {
-    // std::cerr << "TRIFOCAL LOG: Called Error()\n";
+    const Vec &bearing_2,
+    const Vec &nrmbearing_0,
+    const Vec &nrmbearing_1,
+    const Vec &nrmbearing_2) {
+    //std::cerr << "TRIFOCAL LOG: Called Error()\n";
     // Return the cost related to this model and those sample data point
     // Ideal algorithm:
     // 1) reconstruct the 3D points and orientations
@@ -197,6 +200,10 @@ struct Trifocal3PointPositionTangentialSolver {
     bearing << bearing_0.head(2).homogeneous(),
                bearing_1.head(2).homogeneous(), 
                bearing_2.head(2).homogeneous();
+    Mat3 nrmbearing;
+    nrmbearing << nrmbearing_0.head(2).homogeneous(),
+                  nrmbearing_1.head(2).homogeneous(), 
+                  nrmbearing_2.head(2).homogeneous();
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
@@ -218,11 +225,6 @@ struct Trifocal3PointPositionTangentialSolver {
     //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
     //cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-     
-    Vec2 pixel_reprojected;
-    Vec2 pixel_measured;
-    revert_intrinsics(K, pixel_reprojected, reprojected);
-    revert_intrinsics(K, pixel_measured, measured);
     std::cerr << (pixel_reprojected-pixel_measured).squaredNorm()<<"\n";
     return (reprojected-measured).squaredNorm();
   }
@@ -265,7 +267,7 @@ class ThreeViewKernel {
    using Model = ModelArg;
    using ErrorT = ErrorArg;
 
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3) : x1_(x1), x2_(x2), x3_(x3) {}
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3) : x1_(x1), x2_(x2), x3_(x3), nrmx1_(nrmx1), nrmx2_(nrmx2), nrmx3_(nrmx3) {}
 
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -283,7 +285,7 @@ class ThreeViewKernel {
   }
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
-    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample));
+    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample), nrmx1_.col(sample), nrmx2_.col(sample, nrmx3_.col(sample)));
   }
 
   /// Number of putative point
@@ -578,6 +580,7 @@ struct TrifocalSampleApp {
     using TrifocalKernel = 
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                       Trifocal3PointPositionTangentialSolver>;
+    Mat43 nrmdatum_; 
     constexpr unsigned n_ids = 5;
     unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
@@ -602,7 +605,7 @@ struct TrifocalSampleApp {
       }
     }
     //cout <<  Ds[0] << "\n";
-    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
+    const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], nrmdatum_[0], nrmdatum_[1], nrmdatum_[2]);
     //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
     const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
