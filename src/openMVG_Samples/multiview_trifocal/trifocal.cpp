@@ -26,7 +26,7 @@
 
 //these are temporary includes, may be removed
 #include <Eigen/StdVector>
-#include<numeric>
+#include <numeric>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
@@ -44,35 +44,14 @@ using namespace openMVG::robust;
 using namespace MiNuS;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 
-//Defining global variables
+//------------------------------------------------------------------------------
+//
+// Global variables
+// 
+// constexpr unsigned n_ids = 5;
+// unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
 
-//constexpr unsigned n_ids = 5;
-//unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
-
-static void
-revert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    double pix_coords[2], 
-    const double normalized_coords[2])
-{
-  double *px = pix_coords;
-  const double *nrm = normalized_coords;
-  px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
-  px[0] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
-}
-
-static void
-revert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    double pix_tgt_coords[2], 
-    const double normalized_tgt_coords[2])
-{
-  double *tp = pix_tgt_coords;
-  const double *t = normalized_tgt_coords;
-  tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
-  tp[0] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
-}
-
+//------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;
   enum { MINIMUM_SAMPLES = 3 };
@@ -152,10 +131,11 @@ struct Trifocal3PointPositionTangentialSolver {
     //                    };
     
    //fill C0* with for loop
-     std::cerr << "Number of sols " << nsols_final << std::endl;
-   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
-   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
-   tt.resize(nsols_final);
+    std::cerr << "Number of sols " << nsols_final << std::endl;
+    std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
+    // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
+    // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
+    tt.resize(nsols_final);
     std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
     //using trifocal_model_t = array<Mat34, 3>;
     for (unsigned s=0; s < nsols_final; ++s) {
@@ -184,9 +164,9 @@ struct Trifocal3PointPositionTangentialSolver {
     //    }
     //  }                       
     //}
-   // cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
-   // cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
-   // cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
+    // cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
+    // cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
+    // cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
     
     // TODO: filter the solutions by:
     // - positive depth and 
@@ -249,7 +229,7 @@ struct Trifocal3PointPositionTangentialSolver {
     return (reprojected-measured).squaredNorm();
   }
 };
-
+//-----------------------------------------------------------------------------
 static void
 invert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
@@ -275,7 +255,9 @@ invert_intrinsics_tgt(
 }
 // See big notes eq. 5.2.13 at beginning of the code.
 
+//------------------------------------------------------------------------------
 int iteration_global_debug = 0;
+
 template<typename SolverArg,
          typename ErrorArg,
          typename ModelArg = Trifocal3PointPositionTangentialSolver::trifocal_model_t>
