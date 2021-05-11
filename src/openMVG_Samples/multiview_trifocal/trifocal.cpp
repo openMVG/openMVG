@@ -50,29 +50,58 @@ using SIFT_Regions = openMVG::features::SIFT_Regions;
 //constexpr unsigned n_ids = 5;
 //unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
 
+//------------------------------------------------------------------------------
 static void
 revert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_coords[2], 
-    double normalized_coords[2])
+    double pix_coords[2], 
+    const double normalized_coords[2])
 {
   double px = pix_coords;
   const double nrm = normalized_coords;
+  // XXX: usar a inversa da formula exatamente como em invert_intrinsics.
+  //      ter certeza que funciona se a entrada e saida forem mesmas posicoes de
+  //      memoria
   px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
-  px[0] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
+  px[1] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
 }
 
 static void
 revert_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_tgt_coords[2], 
-    double normalized_tgt_coords[2])
+    double pix_tgt_coords[2], 
+    const double normalized_tgt_coords[2])
 {
   double tp = pix_tgt_coords;
   const double t = normalized_tgt_coords;
   tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
-  tp[0] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
+  tp[1] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
 }
+
+static void
+invert_intrinsics(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_coords[2], 
+    double normalized_coords[2])
+{
+  const double *px = pix_coords;
+  double *nrm = normalized_coords;
+  nrm[1] = (px[1] - K[1][2]) /K[1][1];
+  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
+}
+
+static void
+invert_intrinsics_tgt(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double pix_tgt_coords[2], 
+    double normalized_tgt_coords[2])
+{
+  const double *tp = pix_tgt_coords;
+  double *t = normalized_tgt_coords;
+  t[1] = tp[1]/K[1][1];
+  t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
+}
+// See big notes eq. 5.2.13 at beginning of the code.
 
 
 //------------------------------------------------------------------------------
@@ -215,7 +244,8 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_2,
     const Vec &pixbearing_0,
     const Vec &pixbearing_1,
-    const Vec &pixbearing_2) {
+    const Vec &pixbearing_2,
+    const double K_[2][3]) {
     //std::cerr << "TRIFOCAL LOG: Called Error()\n";
     // Return the cost related to this model and those sample data point
     // Ideal algorithm:
@@ -230,10 +260,9 @@ struct Trifocal3PointPositionTangentialSolver {
     bearing << bearing_0.head(2).homogeneous(),
                bearing_1.head(2).homogeneous(), 
                bearing_2.head(2).homogeneous();
-    Mat3 pixbearing;
+    Mat2 pixbearing; // << XXX mat2
     pixbearing << pixbearing_0.head(2).homogeneous(),
-                  pixbearing_1.head(2).homogeneous(), 
-                  pixbearing_2.head(2).homogeneous();
+                  pixbearing_1.head(2).homogeneous();
     // Using triangulation.hpp
     Vec4 triangulated_homg;
     unsigned third_view = 0;
@@ -250,39 +279,18 @@ struct Trifocal3PointPositionTangentialSolver {
     // Computing the projection of triangulated points using projection.hpp
     // For prototyping and speed, for now we will only project to the third view
     // and report only one error
-    Vec2 reprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
-    Vec2 measured    = bearing.col(third_view).hnormalized();
+    Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
+    // XXX revert intrinsics to measure the error in pixels
+    revert_intrinsics(K, pxreprojected, pxreprojected);
+     
+    Vec2 pxmeasured    = pxbearing.col(third_view);
     //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
     //cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
     return (reprojected-measured).squaredNorm();
   }
 };
-//-----------------------------------------------------------------------------
-static void
-invert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_coords[2], 
-    double normalized_coords[2])
-{
-  const double *px = pix_coords;
-  double *nrm = normalized_coords;
-  nrm[1] = (px[1] - K[1][2]) /K[1][1];
-  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
-}
 
-static void
-invert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_tgt_coords[2], 
-    double normalized_tgt_coords[2])
-{
-  const double *tp = pix_tgt_coords;
-  double *t = normalized_tgt_coords;
-  t[1] = tp[1]/K[1][1];
-  t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
-}
-// See big notes eq. 5.2.13 at beginning of the code.
 
 //------------------------------------------------------------------------------
 int iteration_global_debug = 0;
@@ -291,12 +299,13 @@ template<typename SolverArg,
          typename ErrorArg,
          typename ModelArg = Trifocal3PointPositionTangentialSolver::trifocal_model_t>
 class ThreeViewKernel {
- public:
-   using Solver = SolverArg;
-   using Model = ModelArg;
-   using ErrorT = ErrorArg;
-
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3) : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3) {}
+public:
+  using Solver = SolverArg;
+  using Model = ModelArg;
+  using ErrorT = ErrorArg;
+  
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3, const double K_[2][3]) 
+    : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
 
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -331,6 +340,7 @@ class ThreeViewKernel {
     const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
     // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
     const Mat &pxx1_, &pxx2_, &pxx3_;
+    const (*K_)[3]; // pointer to 2x3 array
 };
 
 
@@ -611,7 +621,8 @@ struct TrifocalSampleApp {
     using TrifocalKernel = 
       ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                       Trifocal3PointPositionTangentialSolver>;
-    Mat43 nrmdatum_;  // XXX pxdatum
+    Mat43 nrmdatum_; 
+    Mat42 nrmdatum_;  // XXX pxdatum
     constexpr unsigned n_ids = 5;
     unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
     // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
