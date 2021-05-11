@@ -72,6 +72,7 @@ revert_intrinsics_tgt(
   tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
   tp[0] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
 }
+
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;
   enum { MINIMUM_SAMPLES = 3 };
@@ -244,7 +245,6 @@ struct Trifocal3PointPositionTangentialSolver {
     //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
     //cout << "triang " <<triangulated_homg <<"\n";
     //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-
     std::cerr << (pixel_reprojected-pixel_measured).squaredNorm()<<"\n";
     return (reprojected-measured).squaredNorm();
   }
@@ -449,8 +449,7 @@ struct TrifocalSampleApp {
     svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
 
     unsigned track_id=0;
-    for (const auto &track_it: tracks_)
-    {
+    for (const auto &track_it: tracks_) {
     //TODO: find examples of features: point in curve(3), edge(33) 
       auto iter = track_it.second.cbegin();
       const uint32_t
@@ -503,11 +502,11 @@ struct TrifocalSampleApp {
       track_id++;
     }
     ofstream svg_file( "trifocal_track_demo.svg" );
-    if (svg_file.is_open())
-    {
+    if (svg_file.is_open()) {
       svg_file << svg_stream.closeSvgFile().str();
     }
   }
+  
   void DisplayDesiredIds() {
     //
     // Display desired ids
@@ -634,10 +633,7 @@ struct TrifocalSampleApp {
     // TODO(gabriel) recontruct from inliers and best models to show as PLY
   }
 
-  void DisplayInliers() {
-    //
-    //Display inliers only
-    //
+  void DisplayInliers() { //Display inliers only
     const int svg_w = images_[0].Width();
     const int svg_h = images_[0].Height() + images_[1].Height() + images_[2].Height();
     svg::svgDrawer svg_stream(svg_w, svg_h);
