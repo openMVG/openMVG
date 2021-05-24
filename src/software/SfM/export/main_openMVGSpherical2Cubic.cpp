@@ -72,10 +72,6 @@ int main(int argc, char *argv[]) {
   SfM_Data sfm_data_out; // the sfm_data that stores the cubical image list
   sfm_data_out.s_root_path = s_out_dir;
 
-  const int cubic_image_size = 1024;
-  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
-    spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
-
   // Convert every spherical view to cubic views
   {
     std::cout << "Generating cubic views:";
@@ -111,6 +107,10 @@ int main(int argc, char *argv[]) {
           ++error_status;
           continue;
         }
+
+        const int cubic_image_size = spherical_image.Height()/2;
+        const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
+                spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
 
         const std::array<Mat3,6> rot_matrix = spherical::GetCubicRotations();
 
