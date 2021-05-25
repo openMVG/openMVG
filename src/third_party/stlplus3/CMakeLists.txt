@@ -1,3 +1,4 @@
+include(GNUInstallDirs)
 project(stlplus C CXX)
 
 file(GLOB LIBSLTPLUS_HPP_FILESYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/filesystemSimplified/*.hpp" )
@@ -21,7 +22,7 @@ set_property(TARGET openMVG_stlplus PROPERTY FOLDER OpenMVG/3rdParty)
 
 install(
   TARGETS openMVG_stlplus
-  DESTINATION lib
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
   EXPORT openMVG-targets
 )
 

@@ -1,4 +1,4 @@
-
+include(GNUInstallDirs)
 file(
   GLOB_RECURSE
   geometry_files_header
@@ -30,7 +30,7 @@ target_include_directories(openMVG_geometry
     $<INSTALL_INTERFACE:include>
 )
 
-install(TARGETS openMVG_geometry DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_geometry DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG convex_hull "openMVG_geometry")
 UNIT_TEST(openMVG rigid_transformation3D_srt "openMVG_geometry")

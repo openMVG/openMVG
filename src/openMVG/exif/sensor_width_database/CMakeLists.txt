@@ -1,4 +1,4 @@
-
+include(GNUInstallDirs)
 UNIT_TEST(openMVG ParseDatabase "openMVG_testing;${STLPLUS_LIBRARY}")
 
 # Installation rules

@@ -1,4 +1,4 @@
-
+include(GNUInstallDirs)
 project(matching)
 
 file(
@@ -55,7 +55,7 @@ if (USE_AVX2)
   endif (UNIX)
 endif (USE_AVX2)
 
-install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_matching DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG matching "openMVG_matching")
 UNIT_TEST(openMVG matching_filters "openMVG_matching")
