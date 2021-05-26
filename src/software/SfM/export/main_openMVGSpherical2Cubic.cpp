@@ -37,10 +37,12 @@ int main(int argc, char *argv[]) {
   std::string s_sfm_data_filename;
   std::string s_out_dir = "";
   int force_recompute_images = 1;
+  int size_cubic_images = 1024;
 
   cmd.add( make_option('i', s_sfm_data_filename, "sfmdata") );
   cmd.add( make_option('o', s_out_dir, "outdir") );
   cmd.add( make_option('f', force_recompute_images, "force_compute_cubic_images") );
+  cmd.add( make_option('s', size_cubic_images, "size-cubic-images") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -50,6 +52,8 @@ int main(int argc, char *argv[]) {
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"
       << "[-f|--force_recompute_images] (default 1)\n"
+      << "[-s|--size-cubic-images] (default 1024) pixel size of the resulting cubic images, "
+      << "non-positive values will automatically scale the output based on the input"
       << std::endl;
 
       std::cerr << s << std::endl;
@@ -57,6 +61,10 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << "force_recompute_images = " << force_recompute_images << std::endl;
+
+  std::cout << "size_cubic_images = ";
+  if(size_cubic_images > 0) std::cout << size_cubic_images << std::endl;
+  else std::cout << "auto" << std::endl;
 
   // Create output dir
   if (!stlplus::folder_exists(s_out_dir))
@@ -79,6 +87,10 @@ int main(int argc, char *argv[]) {
     const Views & views = sfm_data.GetViews();
     const Poses & poses = sfm_data.GetPoses();
     const Landmarks & structure = sfm_data.GetLandmarks();
+
+    openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
+    if(size_cubic_images > 0)
+        pinhole_camera = spherical::ComputeCubicCameraIntrinsics(size_cubic_images);
 
     // generate views and camera poses for each new views
     int error_status = 0;
@@ -108,9 +120,10 @@ int main(int argc, char *argv[]) {
           continue;
         }
 
-        const int cubic_image_size = spherical_image.Height()/2;
-        const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
-                spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
+        if(size_cubic_images <= 0) {
+            const int auto_cubic_size = spherical_image.Height()/2;
+            pinhole_camera = spherical::ComputeCubicCameraIntrinsics(auto_cubic_size);
+        }
 
         const std::array<Mat3,6> rot_matrix = spherical::GetCubicRotations();
 
