@@ -1,5 +1,5 @@
-
 // Copyright (c) 2019 Pierre MOULON.
+// \author Ricardo FABBRI, Gabriel ANDRADE and Pierre MOULON
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -291,27 +291,4 @@ static double Error(
   //cout << "triang " <<triangulated_homg <<"\n";
   //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
   return (reprojected-measured).squaredNorm();
-}
-
-//-------------------------------------------------------------------------------
-static int iteration_global_debug = 0;
-
-
-int main(int argc, char **argv) {
-  TrifocalSampleApp T;
-  
-  T.ProcessCmdLine(argc, argv);
-  T.ExtractKeypoints();
-  T.MatchKeypoints();
-  T.ComputeTracks();
-  T.Stats();
-  T.ExtractXYOrientation();
-  T.Display();
-  T.DisplayDesiredIds();
-  T.RobustSolve();
-  // T.DisplayInliers();
-  T.DisplayInliersCamerasAndPoints();
-  // T.DisplayInliersCamerasAndPointsSIFT();
-
-  return EXIT_SUCCESS;
 }
