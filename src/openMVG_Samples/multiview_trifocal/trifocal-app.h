@@ -7,24 +7,9 @@
 
 struct TrifocalSampleApp {
  public:
-   static int iteration_global_debug = 0;
+  static int iteration_global_debug = 0;
 
-   void ProcessCmdLine(int argc, char **argv) {
-     CmdLine cmd;
-     cmd.add( make_option('a', image_filenames_[0], "image_a") );
-     cmd.add( make_option('b', image_filenames_[1], "image_b") );
-     cmd.add( make_option('c', image_filenames_[2], "image_c") );
-     cmd.add( make_option('K', intrinsics_filename_, "K matrix") );
-    
-     try {
-       if (argc == 1) throw string("Invalid command line parameter.");
-       cmd.process(argc, argv);
-     } catch (const string& s) {
-       cerr << "Usage: " << argv[0] << '\n' << endl;
-       cerr << s << endl;
-       exit(EXIT_FAILURE);
-     }
-  }
+  void ProcessCmdLine(int argc, char **argv);
    
   void ExtractKeypoints() {
      // Call Keypoint extractor

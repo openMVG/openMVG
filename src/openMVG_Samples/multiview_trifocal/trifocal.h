@@ -54,20 +54,20 @@ public:
     Solver::Solve(x1, x2, x3, models);
     std::cout << "DEBUG: " << iteration_global_debug++ <<std::endl;
   }
+  
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
-    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample), pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample));
+    return ErrorArg::Error(model, 
+        x1_.col(sample), x2_.col(sample), x3_.col(sample), 
+        pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample));
   }
 
   /// Number of putative point
-  size_t NumSamples() const {
-    return static_cast<size_t>(x1_.cols());
-  }
+  size_t NumSamples() const { return static_cast<size_t>(x1_.cols()); }
 
   /// Compute a model on sampled datum_
   static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, vector<Model> *models) {
-    // By offering this, Kernel types can be passed to templates.
-    Solver::Solve(x1, x2, x3, models);
+    Solver::Solve(x1, x2, x3, models); // By offering this, Kernel types can be passed to templates.
   }
   protected:
     const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
