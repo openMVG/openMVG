@@ -43,63 +43,6 @@ using namespace openMVG;
 // unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
 //-------------------------------------------------------------------------------
 
-
-//------------------------------------------------------------------------------
-// Utilities
-//------------------------------------------------------------------------------
-static void
-revert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    double pix_coords[2], 
-    const double normalized_coords[2])
-{
-  double *px = pix_coords;
-  const double *nrm = normalized_coords;
-  // XXX: usar a inversa da formula exatamente como em invert_intrinsics.
-  //      ter certeza que funciona se a entrada e saida forem mesmas posicoes de
-  //      memoria
-  px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
-  px[1] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
-}
-
-static void
-revert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    double pix_tgt_coords[2], 
-    const double normalized_tgt_coords[2])
-{
-  double *tp = pix_tgt_coords;
-  const double *t = normalized_tgt_coords;
-  tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
-  tp[1] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
-}
-
-static void
-invert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_coords[2], 
-    double normalized_coords[2])
-{
-  const double *px = pix_coords;
-  double *nrm = normalized_coords;
-  nrm[1] = (px[1] - K[1][2]) /K[1][1];
-  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
-}
-
-static void
-invert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double pix_tgt_coords[2], 
-    double normalized_tgt_coords[2])
-{
-  const double *tp = pix_tgt_coords;
-  double *t = normalized_tgt_coords;
-  t[1] = tp[1]/K[1][1];
-  t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
-}
-// See big notes eq. 5.2.13 at beginning of the code.
-
-
 //-------------------------------------------------------------------------------
 // Trifocal3PointPositionTangentialSolver
 //-------------------------------------------------------------------------------
@@ -285,7 +228,7 @@ Error(
   //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
   //cout << "triang " <<triangulated_homg <<"\n";
   //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-  return (reprojected-measured).squaredNorm();
+  return (pxreprojected-pxmeasured).squaredNorm();
 }
 
 } // namespace trifocal3pt

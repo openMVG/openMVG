@@ -139,9 +139,9 @@ ExtractXYOrientation()
                           cos(feature_k.orientation()), sin(feature_k.orientation());
     // XXX fill up pxdatum directly WITHOUT invert_intrinsics
     for (unsigned v=0; v < 3; ++v) {
-      invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data()); 
+      revert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data()); 
       // XXX keep datum, new std::vector: px
-      invert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
+      revert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
     }
     ++idx;
   }
