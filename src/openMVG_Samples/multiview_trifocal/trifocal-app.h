@@ -6,9 +6,21 @@
 #ifndef trifocal_app_h_
 #define trifocal_app_h_
 
+#include <array>
+#include <string>
 #include "openMVG/tracks/tracks.hpp"
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
 
 namespace trifocal3pt {
+  
+using namespace std;
+using namespace openMVG;
+using namespace openMVG::image;
+using SIFT_Regions = openMVG::features::SIFT_Regions;
   
 struct TrifocalSampleApp {
   void ProcessCmdLine(int argc, char **argv);

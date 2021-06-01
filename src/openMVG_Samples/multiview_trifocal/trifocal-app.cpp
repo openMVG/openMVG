@@ -4,17 +4,12 @@
 //\author Gabriel ANDRADE Rio de Janeiro State U.
 //\author Pierre MOULON
 #include "trifocal.h"
-#include "trifocal_app.h"
+#include "trifocal-app.h"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
-#include "openMVG/image/image_io.hpp"
-#include "openMVG/image/image_concat.hpp"
-#include "openMVG/features/akaze/image_describer_akaze.hpp"
-#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
-#include "openMVG/matching/regions_matcher.hpp"
 
 namespace trifocal3pt {
   

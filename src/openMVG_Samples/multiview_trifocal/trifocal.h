@@ -54,7 +54,7 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
   
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K_[2][3]) 
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K[2][3]) 
     : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
 
   /// The minimal number of point required for the model estimation
