@@ -8,28 +8,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image_io.hpp"
-#include "openMVG/image/image_concat.hpp"
-#include "openMVG/features/akaze/image_describer_akaze.hpp"
-#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
-#include "openMVG/matching/regions_matcher.hpp"
-#include "openMVG/tracks/tracks.hpp"
 
-#include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
-//#include "openMVG/robust_estimation/robust_estimator_Ransac.hpp"
+// #include "openMVG/robust_estimation/robust_estimator_Ransac.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
-
-#include "third_party/cmdLine/cmdLine.h"
-#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <memory>
 #include <string>
+#include <numeric>
 
 //these are temporary includes, may be removed
 #include <Eigen/StdVector>
-#include <numeric>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 

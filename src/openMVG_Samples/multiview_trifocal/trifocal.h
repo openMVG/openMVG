@@ -6,7 +6,10 @@
 #ifndef trifocal_solver_h_
 #define trifocal_solver_h_
 
+#include "openMVG/numeric/extract_columns.hpp"
+
 static int iteration_global_debug = 0;
+
 
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {

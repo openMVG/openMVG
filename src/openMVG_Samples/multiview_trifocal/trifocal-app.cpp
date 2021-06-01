@@ -6,6 +6,21 @@
 #include "trifocal.h"
 #include "trifocal_app.h"
 
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+#include "third_party/vectorGraphics/svgDrawer.hpp"
+
+#include "openMVG/image/image_io.hpp"
+#include "openMVG/image/image_concat.hpp"
+#include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
+#include "openMVG/matching/regions_matcher.hpp"
+#include "openMVG/tracks/tracks.hpp"
+
+using namespace std;
+using namespace openMVG;
+using namespace openMVG::image;
+
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)
 {
@@ -64,7 +79,6 @@ MatchKeypoints()
     * regions_per_image_.at(2).get(),
     pairwise_matches_[{1,2}]);
 }
-
 
 void TrifocalSampleApp::
 ComputeTracks() 
@@ -130,7 +144,6 @@ ExtractXYOrientation()
     ++idx;
   }
 }
-
 
 void TrifocalSampleApp::
 Display() 
@@ -422,7 +435,8 @@ DisplayInliers()
 
 // Displays inliers and and tracks
 void TrifocalSampleApp::
-DisplayInliersCamerasAndPoints() {
+DisplayInliersCamerasAndPoints() 
+{
   // TODO We can then display the inlier and the 3D camera configuration as PLY
 
   const int svg_w = images_[0].Width();
