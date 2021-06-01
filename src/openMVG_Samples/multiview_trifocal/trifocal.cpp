@@ -35,12 +35,17 @@ using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
 
+//-------------------------------------------------------------------------------
+//
+// Global variables
+// 
+// constexpr unsigned n_ids = 5;
+// unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
+//-------------------------------------------------------------------------------
 
-//Defining global variables
 
-//constexpr unsigned n_ids = 5;
-//unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
-
+//------------------------------------------------------------------------------
+// Utilities
 //------------------------------------------------------------------------------
 static void
 revert_intrinsics(
@@ -96,15 +101,6 @@ invert_intrinsics_tgt(
 
 
 //-------------------------------------------------------------------------------
-//
-// Global variables
-// 
-// constexpr unsigned n_ids = 5;
-// unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
-//-------------------------------------------------------------------------------
-
-
-//-------------------------------------------------------------------------------
 // Trifocal3PointPositionTangentialSolver
 //-------------------------------------------------------------------------------
 
@@ -121,18 +117,18 @@ Solve(
   std::cerr << "TRIFOCAL LOG: Called Solve()\n";
   // pack into solver's efficient representation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
-    p[0][ip][0] = datum_0(0,ip);
-    p[0][ip][1] = datum_0(1,ip);
+      p[0][ip][0] = datum_0(0,ip);
+      p[0][ip][1] = datum_0(1,ip);
     tgt[0][ip][0] = datum_0(2,ip); 
     tgt[0][ip][1] = datum_0(3,ip); 
     
-    p[1][ip][0] = datum_1(0,ip);
-    p[1][ip][1] = datum_1(1,ip);
+      p[1][ip][0] = datum_1(0,ip);
+      p[1][ip][1] = datum_1(1,ip);
     tgt[1][ip][0] = datum_1(2,ip); 
     tgt[1][ip][1] = datum_1(3,ip); 
     
-    p[2][ip][0] = datum_2(0,ip);
-    p[2][ip][1] = datum_2(1,ip);
+      p[2][ip][0] = datum_2(0,ip);
+      p[2][ip][1] = datum_2(1,ip);
     tgt[2][ip][0] = datum_2(2,ip); 
     tgt[2][ip][1] = datum_2(3,ip); 
   }
@@ -145,6 +141,10 @@ Solve(
   MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
   //std::cerr << datum_0  "\n"; 
     
+  //---- HARDODED CASE SOLUTION -----------------------------------------------------
+  // Uncomment to hardcode solution for known case to test.
+  // This is as if MINUS was run and returned the following
+  // 
   // double R0[3][3] = {
   //                    {1,0,0},
   //                    {0,1,0},
@@ -179,8 +179,9 @@ Solve(
   //                      {-14.05063273},
   //                      {-352.44248798}
   //                    };
+  //---- !HARDODED CASE SOLUTION -----------------------------------------------------
   
- //fill C0* with for loop
+  // fill C0* with for loop
   std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
   // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
@@ -196,33 +197,37 @@ Solve(
           tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
     }
   }
-  //This is for hard coding test 
-  //tt[0][0] = Mat34::Identity();
-  //tt[0][1] = Mat34::Identity();
-  //tt[0][2] = Mat34::Identity();
-  //for(unsigned i=0;i<3;i++){
-  //  for(unsigned j=0;j<4;j++){
-  //    if(j<3){
-  //      tt[0][0](i,j) = R0[i][j];
-  //      tt[0][1](i,j) = R1[i][j];
-  //      tt[0][2](i,j) = R2[i][j];
-  //    }
-  //    else{
-  //      tt[0][0](i,j) = T0[i][1];
-  //      tt[0][1](i,j) = T1[i][1];
-  //      tt[0][2](i,j) = T2[i][1];
-  //    }
-  //  }                       
-  //}
-  // cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
-  // cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
-  // cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
+  //---- HARDODED CASE SOLUTION -----------------------------------------------------
+  // This is for hard coding test 
+  // tt[0][0] = Mat34::Identity();
+  // tt[0][1] = Mat34::Identity();
+  // tt[0][2] = Mat34::Identity();
+  // for(unsigned i=0;i<3;i++){
+  //   for(unsigned j=0;j<4;j++){
+  //     if(j<3){
+  //       tt[0][0](i,j) = R0[i][j];
+  //       tt[0][1](i,j) = R1[i][j];
+  //       tt[0][2](i,j) = R2[i][j];
+  //     }
+  //     else{
+  //       tt[0][0](i,j) = T0[i][1];
+  //       tt[0][1](i,j) = T1[i][1];
+  //       tt[0][2](i,j) = T2[i][1];
+  //     }
+  //   }                       
+  // }
+  //---- !HARDODED CASE SOLUTION -----------------------------------------------------
+
+
+  //  cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
+  //  cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
+  //  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
   
   // TODO: filter the solutions by:
   // - positive depth and 
   // - using tangent at 3rd point
   //
-  //  if we know the rays are perfectly coplanar, we can just use cross
+  // If we know the rays are perfectly coplanar, we can just use cross
   // product within the plane instead of SVD
   std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
 }
@@ -233,10 +238,10 @@ Error(
   const Vec &bearing_0, // x,y,tangentialx,tangentialy
   const Vec &bearing_1,
   const Vec &bearing_2,
-  const Vec &pixbearing_0,
-  const Vec &pixbearing_1,
-  const Vec &pixbearing_2,
-  const double K_[2][3]) 
+  const Vec &pxbearing_0,
+  const Vec &pxbearing_1,
+  const Vec &pxbearing_2,
+  const double K[2][3]) 
 {
   //std::cerr << "TRIFOCAL LOG: Called Error()\n";
   // Return the cost related to this model and those sample data point
@@ -252,9 +257,6 @@ Error(
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
-  Mat2 pixbearing; // << XXX mat2
-  pixbearing << pixbearing_0.head(2).homogeneous(),
-                pixbearing_1.head(2).homogeneous();
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
@@ -267,6 +269,10 @@ Error(
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
     third_view = 1;
   }
+  
+  Mat2 pxbearing; // << XXX mat2
+  pxbearing << pxbearing_0.head(2).homogeneous(),
+               pxbearing_1.head(2).homogeneous();
   
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view

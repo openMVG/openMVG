@@ -45,10 +45,11 @@ struct Trifocal3PointPositionTangentialSolver {
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
     const Vec &bearing_2,
-    const Vec &pixbearing_0,
-    const Vec &pixbearing_1,
-    const Vec &pixbearing_2,
-    const double K_[2][3]);
+    // --
+    const Vec &pxbearing_0,  // TODO: remove. Pixel coordinates is for development/debug, we want to compute the error in pixels
+    const Vec &pxbearing_1,
+    const Vec &pxbearing_2,
+    const double K[2][3]);
 };
 
 //------------------------------------------------------------------------------
@@ -65,7 +66,9 @@ public:
   /// The number of models that the minimal solver could return.
   enum { MAX_MODELS = Solver::MAX_MODELS };
   
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K[2][3]) 
+  ThreeViewKernel(
+      const Mat &x1, const Mat &x2, const Mat &x3, 
+      const Mat &pxx1, const Mat &pxx2, const Mat &pxx3, const double K[2][3]) 
     : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
 
   /// Extract required sample and fit model(s) to the sample
@@ -82,7 +85,7 @@ public:
   double Error(uint32_t sample, const Model &model) const {
     return ErrorArg::Error(model, 
         x1_.col(sample), x2_.col(sample), x3_.col(sample), 
-        pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample));
+        pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample), K_);
   }
 
   /// Number of putative point
@@ -96,6 +99,7 @@ public:
 protected:
   const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
   // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
+  // -- Below in pixels for debug
   const Mat &pxx1_, &pxx2_, &pxx3_;
   const double (*K_)[3]; // pointer to 2x3 array
 };
