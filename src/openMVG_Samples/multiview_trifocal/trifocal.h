@@ -1,5 +1,12 @@
+//:\file
+//\author Ricardo Fabbri, Brown & Rio de Janeiro State U. (rfabbri.github.io) 
+//\date Tue Jun  1 11:55:58 -03 2021
+//\author Gabriel ANDRADE Rio de Janeiro State U.
+//\author Pierre MOULON
 #ifndef trifocal_solver_h_
 #define trifocal_solver_h_
+
+static int iteration_global_debug = 0;
 
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {

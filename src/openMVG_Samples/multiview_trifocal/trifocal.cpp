@@ -1,5 +1,8 @@
 // Copyright (c) 2019 Pierre MOULON.
-// \author Ricardo FABBRI, Gabriel ANDRADE and Pierre MOULON
+//:\file
+//\author Pierre MOULON
+//\author Gabriel ANDRADE Rio de Janeiro State U.
+//\author Ricardo Fabbri, Brown & Rio de Janeiro State U. (rfabbri.github.io) 
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
