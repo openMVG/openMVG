@@ -13,7 +13,7 @@ namespace trifocal3pt {
 
 // NoteToSelf(gabriel) For intrinsic parameter transform, see big notes eq. 5.2.13 at beginning of the code.
 void
-revert_intrinsics(
+apply_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
     double px_coords[2], 
     const double normalized_coords[2])
@@ -28,7 +28,7 @@ revert_intrinsics(
 }
 
 void
-revert_intrinsics_tgt(
+apply_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
     double px_tgt_coords[2], 
     const double normalized_tgt_coords[2])
@@ -63,4 +63,4 @@ invert_intrinsics_tgt(
   t[0] = (tp[0] - K[0][1]*tp[1])/K[0][0];
 }
 // See big notes eq. 5.2.13 at beginning of the code.
-}
+} // namespace trifocal3pt

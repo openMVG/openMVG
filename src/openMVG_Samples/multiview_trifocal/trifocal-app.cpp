@@ -5,6 +5,7 @@
 //\author Pierre MOULON
 #include "trifocal.h"
 #include "trifocal-app.h"
+#include "trifocal-util.h"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -130,18 +131,17 @@ ExtractXYOrientation()
     const auto feature_i = sio_regions_[0]->Features()[i];
     const auto feature_j = sio_regions_[1]->Features()[j];
     const auto feature_k = sio_regions_[2]->Features()[k];
-    datum_[0].col(idx) << feature_i.x(), feature_i.y(), 
-                          cos(feature_i.orientation()), sin(feature_i.orientation());
-    // datum_[0].col(idx) << feature_i.x(), feature_i.y(), feature_i.orientation();
-    datum_[1].col(idx) << feature_j.x(), feature_j.y(), 
-                          cos(feature_j.orientation()), sin(feature_j.orientation());
-    datum_[2].col(idx) << feature_k.x(), feature_k.y(), 
-                          cos(feature_k.orientation()), sin(feature_k.orientation());
-    // XXX fill up pxdatum directly WITHOUT invert_intrinsics
+    datum_[0].col(idx) << 
+      feature_i.x(), feature_i.y(), cos(feature_i.orientation()), sin(feature_i.orientation());
+    datum_[1].col(idx) << 
+      feature_j.x(), feature_j.y(), cos(feature_j.orientation()), sin(feature_j.orientation());
+    datum_[2].col(idx) << 
+      feature_k.x(), feature_k.y(), cos(feature_k.orientation()), sin(feature_k.orientation());
+    pxdatum_ = datum_;
+    
     for (unsigned v=0; v < 3; ++v) {
-      revert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data()); 
-      // XXX keep datum, new std::vector: px
-      revert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
+      invert_intrinsics(K_, datum_[v].col(idx).data(), datum_[v].col(idx).data()); 
+      invert_intrinsics_tgt(K_, datum_[v].col(idx).data()+2, datum_[v].col(idx).data()+2);
     }
     ++idx;
   }
@@ -317,9 +317,8 @@ RobustSolve()
 {
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
-  Mat43 nrmdatum_; 
-  Mat42 nrmdatum_;  // XXX pxdatum
   constexpr unsigned n_ids = 5;
+  
   unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
   // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
   array<Mat,3> Ds;

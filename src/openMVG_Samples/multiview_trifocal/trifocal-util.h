@@ -9,26 +9,22 @@ namespace trifocal3pt {
 //------------------------------------------------------------------------------
 // Utilities
 //------------------------------------------------------------------------------
-void
-revert_intrinsics(
+void apply_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
     double px_coords[2], 
     const double normalized_coords[2]);
 
-void
-revert_intrinsics_tgt(
+void apply_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
     double px_tgt_coords[2], 
     const double normalized_tgt_coords[2]);
 
-void
-invert_intrinsics(
+void invert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
     const double px_coords[2], 
     double normalized_coords[2]);
 
-void
-invert_intrinsics_tgt(
+void invert_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
     const double px_tgt_coords[2], 
     double normalized_tgt_coords[2]);

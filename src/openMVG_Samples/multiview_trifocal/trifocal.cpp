@@ -21,6 +21,7 @@
 #include "minus/chicago-default.h"
 #include "minus/chicago14a-default-data.hxx"
 
+#include "trifocal-util.h"
 #include "trifocal.h"
 
 
@@ -213,7 +214,7 @@ Error(
     third_view = 1;
   }
   
-  Mat2 pxbearing; // << XXX mat2
+  Mat2 pxbearing;
   pxbearing << pxbearing_0.head(2).homogeneous(),
                pxbearing_1.head(2).homogeneous();
   
@@ -221,13 +222,15 @@ Error(
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
   Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
-  // XXX revert intrinsics to measure the error in pixels
-  revert_intrinsics(K, pxreprojected, pxreprojected);
+  apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
+  // The above two lines do K*[R|T]
+  // to measure the error in pixels.
+  // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
    
-  Vec2 pxmeasured    = pxbearing.col(third_view);
-  //cout << "error " << (reprojected - measured).squaredNorm() << "\n";
-  //cout << "triang " <<triangulated_homg <<"\n";
-  //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
+  Vec2 pxmeasured = pxbearing.col(third_view);
+  // cout << "error " << (reprojected - measured).squaredNorm() << "\n";
+  // cout << "triang " <<triangulated_homg <<"\n";
+  // std::cerr << "TRIFOCAL LOG: Finished Error()\n";
   return (pxreprojected-pxmeasured).squaredNorm();
 }
 
