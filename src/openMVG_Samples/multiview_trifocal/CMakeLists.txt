@@ -1,4 +1,9 @@
-add_executable(openMVG_sample_multiview_trifocal trifocal.cpp)
+set(trifocal_sources
+  trifocal.cpp trifocal.h  # TODO(future): make into .hpp header-only lib
+  trifocal-app.cpp trifocal-app.h 
+)
+
+add_executable(openMVG_sample_multiview_trifocal ${trifocal_sources} )
 target_link_libraries(openMVG_sample_multiview_trifocal
   openMVG_image
   openMVG_multiview
