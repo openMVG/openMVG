@@ -23,10 +23,13 @@
 
 #include "trifocal.h"
 
+
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
 namespace trifocal3pt {
+  
+int iteration_global_debug = 0;
   
 using namespace std;
 using namespace MiNuS;

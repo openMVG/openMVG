@@ -13,9 +13,9 @@
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 
-static int iteration_global_debug = 0;
 
 namespace trifocal3pt {
+extern int iteration_global_debug;
   
 using namespace std;
 using namespace openMVG;
@@ -60,14 +60,13 @@ public:
   using Solver = SolverArg;
   using Model = ModelArg;
   using ErrorT = ErrorArg;
-  
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K[2][3]) 
-    : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
-
   /// The minimal number of point required for the model estimation
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   /// The number of models that the minimal solver could return.
   enum { MAX_MODELS = Solver::MAX_MODELS };
+  
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K[2][3]) 
+    : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
 
   /// Extract required sample and fit model(s) to the sample
   void Fit(const vector<uint32_t> &samples, vector<Model> *models) const {
@@ -93,11 +92,12 @@ public:
   static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, vector<Model> *models) {
     Solver::Solve(x1, x2, x3, models); // By offering this, Kernel types can be passed to templates.
   }
-  protected:
-    const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
-    // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
-    const Mat &pxx1_, &pxx2_, &pxx3_;
-    const double (*K_)[3]; // pointer to 2x3 array
+  
+protected:
+  const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
+  // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
+  const Mat &pxx1_, &pxx2_, &pxx3_;
+  const double (*K_)[3]; // pointer to 2x3 array
 };
 
 
