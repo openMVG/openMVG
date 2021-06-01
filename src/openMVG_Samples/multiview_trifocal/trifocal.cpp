@@ -12,9 +12,6 @@
 #include <string>
 #include <numeric>
 
-#include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
-// #include "openMVG/robust_estimation/robust_estimator_Ransac.hpp"
-
 //these are temporary includes, may be removed
 #include <Eigen/StdVector>
 #include "openMVG/multiview/projection.hpp"
@@ -34,7 +31,6 @@ namespace trifocal3pt {
 using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
-using namespace openMVG::robust;
 
 
 //Defining global variables

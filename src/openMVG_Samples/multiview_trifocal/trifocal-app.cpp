@@ -10,6 +10,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
+#include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
 
@@ -20,6 +21,7 @@ using namespace openMVG;
 using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 using namespace MiNuS;
+using namespace openMVG::robust;
 
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)

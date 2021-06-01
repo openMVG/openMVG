@@ -33,7 +33,7 @@ struct Trifocal3PointPositionTangentialSolver {
 
   //EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(trifocal_model_t);
   // datum_i[4 /*xy tgtx tgty*/][pp:npoints /* 3 for Chicago */]
-  void Solve(
+  static void Solve(
       const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
