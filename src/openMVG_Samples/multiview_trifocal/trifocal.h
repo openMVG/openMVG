@@ -6,10 +6,17 @@
 #ifndef trifocal_solver_h_
 #define trifocal_solver_h_
 
+#include <iostream>
 #include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+
 
 static int iteration_global_debug = 0;
 
+namespace trifocal3pt {
+  
+using namespace std;
+using namespace openMVG;
 
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {
@@ -47,7 +54,7 @@ public:
   using Model = ModelArg;
   using ErrorT = ErrorArg;
   
-  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, &nrmx2, &nrmx3, const double K_[2][3]) 
+  ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3, const Mat &nrmx1, const Mat &nrmx2, const Mat &nrmx3, const double K_[2][3]) 
     : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
 
   /// The minimal number of point required for the model estimation
@@ -83,8 +90,9 @@ public:
     const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
     // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
     const Mat &pxx1_, &pxx2_, &pxx3_;
-    const (*K_)[3]; // pointer to 2x3 array
+    const double (*K_)[3]; // pointer to 2x3 array
 };
 
 
-#endif trifocal_sample_h_
+} // namespace trifocal3pt
+#endif // trifocal_sample_h_

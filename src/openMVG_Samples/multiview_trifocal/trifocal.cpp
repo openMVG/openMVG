@@ -8,14 +8,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <memory>
+#include <string>
+#include <numeric>
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 // #include "openMVG/robust_estimation/robust_estimator_Ransac.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
-
-#include <memory>
-#include <string>
-#include <numeric>
 
 //these are temporary includes, may be removed
 #include <Eigen/StdVector>
@@ -31,12 +30,13 @@
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
+namespace trifocal3pt {
+  
 using namespace std;
-using namespace openMVG;
-using namespace openMVG::image;
-using namespace openMVG::robust;
 using namespace MiNuS;
-using SIFT_Regions = openMVG::features::SIFT_Regions;
+using namespace openMVG;
+using namespace openMVG::robust;
+using Mat2 = Eigen::Matrix<double, 2, 2>;
 
 
 //Defining global variables
@@ -51,8 +51,8 @@ revert_intrinsics(
     double pix_coords[2], 
     const double normalized_coords[2])
 {
-  double px = pix_coords;
-  const double nrm = normalized_coords;
+  double *px = pix_coords;
+  const double *nrm = normalized_coords;
   // XXX: usar a inversa da formula exatamente como em invert_intrinsics.
   //      ter certeza que funciona se a entrada e saida forem mesmas posicoes de
   //      memoria
@@ -66,8 +66,8 @@ revert_intrinsics_tgt(
     double pix_tgt_coords[2], 
     const double normalized_tgt_coords[2])
 {
-  double tp = pix_tgt_coords;
-  const double t = normalized_tgt_coords;
+  double *tp = pix_tgt_coords;
+  const double *t = normalized_tgt_coords;
   tp[0] = t[0]*K[0][0]+t[1]*K[0][1]+t[2]*K[0][2];
   tp[1] = t[0]*K[1][0]+t[1]*K[1][1]+t[2]*K[1][2];
 }
@@ -230,8 +230,8 @@ Solve(
   std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
 }
 
-void Trifocal3PointPositionTangentialSolver::
-static double Error(
+double Trifocal3PointPositionTangentialSolver::
+Error(
   const trifocal_model_t &tt,
   const Vec &bearing_0, // x,y,tangentialx,tangentialy
   const Vec &bearing_1,
@@ -284,3 +284,5 @@ static double Error(
   //std::cerr << "TRIFOCAL LOG: Finished Error()\n";
   return (reprojected-measured).squaredNorm();
 }
+
+} // namespace trifocal3pt

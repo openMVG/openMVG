@@ -6,7 +6,10 @@
 #ifndef trifocal_app_h_
 #define trifocal_app_h_
 
+#include "openMVG/tracks/tracks.hpp"
 
+namespace trifocal3pt {
+  
 struct TrifocalSampleApp {
   void ProcessCmdLine(int argc, char **argv);
   void ExtractKeypoints(); 
@@ -58,5 +61,7 @@ struct TrifocalSampleApp {
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers_;
 };
+
+} // namespace trifocal3pt
 
 #endif

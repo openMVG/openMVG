@@ -15,11 +15,13 @@
 #include "openMVG/features/akaze/image_describer_akaze.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
-#include "openMVG/tracks/tracks.hpp"
 
+namespace trifocal3pt {
+  
 using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
+using SIFT_Regions = openMVG::features::SIFT_Regions;
 
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)
@@ -733,9 +735,13 @@ DisplayInliersCamerasAndPointsSIFT()
       svg_file << svg_stream.closeSvgFile().str();
     }
 }
+} // namespace trifocal3pt
 
+using namespace trifocal3sifts;
 //-------------------------------------------------------------------------------
-int main(int argc, char **argv) {
+int 
+main(int argc, char **argv) 
+{
   TrifocalSampleApp T;
   
   T.ProcessCmdLine(argc, argv);
