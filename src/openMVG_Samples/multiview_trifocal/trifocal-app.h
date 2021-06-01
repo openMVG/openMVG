@@ -8,6 +8,8 @@
 
 #include <array>
 #include <string>
+#include "minus/minus.h"
+#include "minus/chicago-default.h"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/image_concat.hpp"
@@ -21,6 +23,7 @@ using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
+
   
 struct TrifocalSampleApp {
   void ProcessCmdLine(int argc, char **argv);

@@ -14,7 +14,6 @@
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 // #include "openMVG/robust_estimation/robust_estimator_Ransac.hpp"
-#include "openMVG/robust_estimation/score_evaluator.hpp"
 
 //these are temporary includes, may be removed
 #include <Eigen/StdVector>
@@ -36,7 +35,6 @@ using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
 using namespace openMVG::robust;
-using Mat2 = Eigen::Matrix<double, 2, 2>;
 
 
 //Defining global variables

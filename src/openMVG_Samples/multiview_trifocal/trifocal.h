@@ -7,6 +7,8 @@
 #define trifocal_solver_h_
 
 #include <iostream>
+#include <array>
+#include <vector>
 #include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
@@ -17,6 +19,11 @@ namespace trifocal3pt {
   
 using namespace std;
 using namespace openMVG;
+
+using Mat2  = Eigen::Matrix<double, 2, 2>;
+using Mat34 = Eigen::Matrix<double, 3, 4>;
+using Mat43 = Eigen::Matrix<double, 4, 3>;
+using Mat42 = Eigen::Matrix<double, 4, 2>;
 
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {

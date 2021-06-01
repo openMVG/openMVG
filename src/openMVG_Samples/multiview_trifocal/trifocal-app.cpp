@@ -10,6 +10,8 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
+#include "openMVG/robust_estimation/score_evaluator.hpp"
+
 
 namespace trifocal3pt {
   
@@ -17,6 +19,7 @@ using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
+using namespace MiNuS;
 
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)
@@ -732,7 +735,8 @@ DisplayInliersCamerasAndPointsSIFT()
 }
 } // namespace trifocal3pt
 
-using namespace trifocal3sifts;
+using namespace openMVG::features;
+using namespace trifocal3pt;
 //-------------------------------------------------------------------------------
 int 
 main(int argc, char **argv) 
