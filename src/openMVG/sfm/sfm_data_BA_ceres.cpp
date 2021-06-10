@@ -112,7 +112,8 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 : bVerbose_(bVerbose),
   nb_threads_(1),
   parameter_tolerance_(1e-8), //~= numeric_limits<float>::epsilon()
-  bUse_loss_function_(true)
+  bUse_loss_function_(true),
+  max_num_iterations_(500)
 {
   #ifdef OPENMVG_USE_OPENMP
     nb_threads_ = omp_get_max_threads();
@@ -455,7 +456,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options ceres_config_options;
-  ceres_config_options.max_num_iterations = 500;
+  ceres_config_options.max_num_iterations = ceres_options_.max_num_iterations_;
   ceres_config_options.preconditioner_type =
     static_cast<ceres::PreconditionerType>(ceres_options_.preconditioner_type_);
   ceres_config_options.linear_solver_type =
