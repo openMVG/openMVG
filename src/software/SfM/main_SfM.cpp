@@ -145,7 +145,7 @@ int main(int argc, char **argv)
     filename_match,
     directory_output,
     engine_name = "INCREMENTAL";
-  
+
   // Bundle adjustment options:
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   std::string sExtrinsic_refinement_options = "ADJUST_ALL";
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
   // Global SfM
   int rotation_averaging_method = int (ROTATION_AVERAGING_L2);
   int translation_averaging_method = int (TRANSLATION_AVERAGING_SOFTL1);
- 
+
 
   // Common options
   cmd.add( make_option('i', filename_sfm_data, "input_file") );
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
   cmd.add( make_option('e', sExtrinsic_refinement_options, "refine_extrinsic_config") );
   cmd.add( make_switch('P', "prior_usage") );
-  
+
   // Incremental SfM pipeline options
   cmd.add( make_option('t', triangulation_method, "triangulation_method"));
   cmd.add( make_option('r', resection_method, "resection_method"));
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
   cmd.add( make_option('e', sExtrinsic_refinement_options, "refine_extrinsic_config") );
   cmd.add( make_switch('P', "prior_usage") );
-  
+
   // Incremental SfM pipeline options
   cmd.add( make_option(' ', triangulation_method, "triangulation_method"));
   cmd.add( make_option(' ', resection_method, "resection_method"));
@@ -310,13 +310,13 @@ int main(int argc, char **argv)
       << "\t\t 1 -> L1 minimization\n"
       << "\t\t 2 -> L2 minimization of sum of squared Chordal distances\n"
       << "\t\t 3 -> SoftL1 minimization (default)\n";
-    
+
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
   b_use_motion_priors = cmd.used('P');
-  
+
   // Check validity of command line parameters:
   if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
     OPENMVG_LOG_ERROR << "Invalid triangulation method";
@@ -379,7 +379,10 @@ int main(int argc, char **argv)
 
   // Load input SfM_Data scene
   SfM_Data sfm_data;
-  if (!Load(sfm_data, filename_sfm_data, ESfM_Data(VIEWS|INTRINSICS))) {
+  const ESfM_Data sfm_data_loading_etypes =
+    scene_initializer_enum == ESfMSceneInitializer::INITIALIZE_EXISTING_POSES ?
+      ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS) : ESfM_Data(VIEWS|INTRINSICS);
+  if (!Load(sfm_data, filename_sfm_data, sfm_data_loading_etypes)) {
     OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< filename_sfm_data << "\" cannot be read.";
     return EXIT_FAILURE;
   }
@@ -401,7 +404,7 @@ int main(int argc, char **argv)
     directory_match = stlplus::folder_part(filename_match);
     filename_match = stlplus::filename_part(filename_match);
   }
-  
+
   // Init the regions_type from the image describer file (used for image regions extraction)
   using namespace openMVG::features;
   const std::string sImage_describer = stlplus::create_filespec(directory_match, "image_describer", "json");
@@ -471,12 +474,12 @@ int main(int argc, char **argv)
   {
   case ESfMEngine::INCREMENTAL:
   {
-    SequentialSfMReconstructionEngine * engine = 
+    SequentialSfMReconstructionEngine * engine =
       new SequentialSfMReconstructionEngine(
         sfm_data,
         directory_output,
         stlplus::create_filespec(directory_output, "Reconstruction_Report.html"));
-    
+
     // Configuration:
     engine->SetFeaturesProvider(feats_provider.get());
     engine->SetMatchesProvider(matches_provider.get());
@@ -499,7 +502,7 @@ int main(int argc, char **argv)
       }
       engine->setInitialPair(initial_pair_index);
     }
-    
+
     sfm_engine.reset(engine);
   }
     break;
@@ -533,7 +536,7 @@ int main(int argc, char **argv)
         sfm_data,
         directory_output,
         stlplus::create_filespec(directory_output, "Reconstruction_Report.html"));
-    
+
     // Configuration:
     engine->SetFeaturesProvider(feats_provider.get());
     engine->SetMatchesProvider(matches_provider.get());
