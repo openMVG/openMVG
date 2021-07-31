@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', directory_match, "match_dir") );
   cmd.add( make_option('M', filename_match, "match_file") );
   cmd.add( make_option('o', directory_output, "output_dir") );
-  cmd.add( make_option('s', engine_name, "engine") );
+  cmd.add( make_option('s', engine_name, "sfm_engine") );
 
   // Bundle adjustment options
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
@@ -196,32 +196,6 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-
-  cmd.add( make_option('i', filename_sfm_data, "input_file") );
-  cmd.add( make_option('m', directory_match, "match_dir") );
-  cmd.add( make_option('M', filename_match, "match_file") );
-  cmd.add( make_option('o', directory_output, "output_dir") );
-  cmd.add( make_option('s', engine_name, "sfm_engine") );
-
-  // Bundle adjustment options
-  cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
-  cmd.add( make_option('e', sExtrinsic_refinement_options, "refine_extrinsic_config") );
-  cmd.add( make_switch('P', "prior_usage") );
-
-  // Incremental SfM pipeline options
-  cmd.add( make_option(' ', triangulation_method, "triangulation_method"));
-  cmd.add( make_option(' ', resection_method, "resection_method"));
-  cmd.add( make_option('c', user_camera_model, "camera_model") );
-  // Incremental SfM2
-  cmd.add( make_option('S', sfm_initializer_method, "sfm_initializer") );
-  // Incremental SfM1
-  cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
-  cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
-  // Global SfM
-  cmd.add( make_option('r', rotation_averaging_method, "rotationAveraging") );
-  cmd.add( make_option('t', translation_averaging_method, "translationAveraging") );
-
-
 
     OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
     << "[Required]\n"
