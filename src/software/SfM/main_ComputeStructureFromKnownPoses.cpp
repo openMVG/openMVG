@@ -56,6 +56,8 @@ int main(int argc, char **argv)
   using namespace std;
   OPENMVG_LOG_INFO << "Compute Structure from the provided poses";
 
+  static const int min_track_length = 2;
+
   CmdLine cmd;
 
   std::string sSfM_Data_Filename;
@@ -63,6 +65,7 @@ int main(int argc, char **argv)
   std::string sMatchFile;
   std::string sPairFile;
   std::string sOutFile = "";
+  std::string sSfm_data_tracks;
   double dMax_reprojection_error = 4.0;
   unsigned int ui_max_cache_size = 0;
   int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
@@ -77,6 +80,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', ui_max_cache_size, "cache_size") );
   cmd.add( make_switch('d', "direct_triangulation"));
   cmd.add( make_option('t', triangulation_method, "triangulation_method"));
+  cmd.add( make_option('T', sSfm_data_tracks, "sfm_data_tracks"));
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -90,18 +94,22 @@ int main(int argc, char **argv)
     <<    "(i.e. path/sfm_data_structure.bin)\n"
 
     << "\n[Triangulation mode]:\n"
-    << " [No Provided Matches -> Triangulation of guided epipolar geometry matches (default mode)]\n"
+    << " [A. No Provided Matches -> Triangulation of guided epipolar geometry matches (default mode)]\n"
     << "\t[-p|--pair_file] path to a pairs file (only those pairs will be considered to compute the structure)\n"
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
 
-    << " [Provided Matches -> Robust triangulation of the match file (activated by -d)]\n"
+    << " [B. Provided Matches -> Robust triangulation of the match file (activated by -d)]\n"
     << "\t[-d|--direct_triangulation] Robustly triangulate the tracks computed from the file given by [-f|--match_file]\n"
     << "\t[-f|--match_file] path to a matches file (loaded pair indexes will be used)\n"
-    << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
-    << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
+
+    << " [C. Tracks stored as landmark observations in a sfm_data file]\n"
+    << "\t[-T|--sfm_data_tracks] path to sfm_data files with Landmarks observations (i.e from openMVG_main_VO)\n"
+
+    << "[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
     << "\n[Optional]\n"
     << "[-b|--bundle_adjustment] (switch) perform a bundle adjustment on the scene (OFF by default)\n"
     << "[-r|--residual_threshold] maximal pixels reprojection error that will be considered for triangulations (4.0 by default)\n"
@@ -124,39 +132,6 @@ int main(int argc, char **argv)
     OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
-
-  // Init the regions_type from the image describer file (used for image regions extraction)
-  using namespace openMVG::features;
-  const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
-  std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
-  if (!regions_type)
-  {
-    OPENMVG_LOG_ERROR << "Invalid: "
-      << sImage_describer << " regions type file.";
-    return EXIT_FAILURE;
-  }
-
-  // Prepare the Regions provider
-  std::shared_ptr<Regions_Provider> regions_provider;
-  if (ui_max_cache_size == 0)
-  {
-    // Default regions provider (load & store all regions in memory)
-    regions_provider = std::make_shared<Regions_Provider>();
-  }
-  else
-  {
-    // Cached regions provider (load & store regions on demand)
-    regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
-  }
-
-  // Show the progress on the command line:
-  system::LoggerProgress progress;
-
-  if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
-    OPENMVG_LOG_ERROR << "Cannot find the view corresponding regions in : " << sMatchesDir;
-    return EXIT_FAILURE;
-  }
-
   OPENMVG_LOG_INFO
     << "Loaded a sfm_data scene with:\n"
     << " #views: " << sfm_data.GetViews().size() << "\n"
@@ -166,85 +141,144 @@ int main(int argc, char **argv)
 
   const bool bDirect_triangulation = cmd.used('d');
 
+  // Load regions only if necessary
+  std::shared_ptr<Regions_Provider> regions_provider;
+
+  if (sSfm_data_tracks.empty() || !bDirect_triangulation)
+  {
+    // Init the regions_type from the image describer file (used for image regions extraction)
+    using namespace openMVG::features;
+    const std::string sImage_describer = stlplus::create_filespec(sMatchesDir, "image_describer", "json");
+    std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
+    if (!regions_type)
+    {
+      OPENMVG_LOG_ERROR << "Invalid: "
+        << sImage_describer << " regions type file.";
+      return EXIT_FAILURE;
+    }
+
+    // Prepare the Regions provider
+    if (ui_max_cache_size == 0)
+    {
+      // Default regions provider (load & store all regions in memory)
+      regions_provider = std::make_shared<Regions_Provider>();
+    }
+    else
+    {
+      // Cached regions provider (load & store regions on demand)
+      regions_provider = std::make_shared<Regions_Provider_Cache>(ui_max_cache_size);
+    }
+
+    // Show the progress on the command line:
+    system::LoggerProgress progress;
+
+    if (!regions_provider->load(sfm_data, sMatchesDir, regions_type, &progress)) {
+      OPENMVG_LOG_ERROR << "Cannot find the view corresponding regions in: " << sMatchesDir;
+      return EXIT_FAILURE;
+    }
+  }
+
   if (bDirect_triangulation)
   {
-    // Check that a match file have been provided
-    if (sMatchFile.empty() || !sPairFile.empty())
+    // Load some structure observations to triangulate
+    // Either from a sfm_data file (tracks)
+    // Or from a match/pair file
+    // Check if tracks are provided by a sfm_data file
+    if (!sSfm_data_tracks.empty())
     {
-       OPENMVG_LOG_ERROR << "You must provide a match file thanks to the [-f|--match_file] option";
-      return EXIT_FAILURE;
-    }
-    OPENMVG_LOG_INFO
-      << "\n======================================\n"
-      << "Robust triangulation of the match file\n"
-      << "======================================";
-    PairWiseMatches matches;
-    if (!Load(matches, sMatchFile))
-    {
-      OPENMVG_LOG_ERROR << "Unable to read the matches file.";
-      return EXIT_FAILURE;
-    }
-    // Compute the tracks from the pairwise estimation
-    // Compute tracks from matches
-    const int min_track_length = 2;
-    openMVG::tracks::STLMAPTracks tracks;
-    {
-      // List of features matches for each couple of images
-      OPENMVG_LOG_INFO << "Building tracks...";
-      tracks::TracksBuilder tracks_builder;
-      tracks_builder.Build(matches);
-      OPENMVG_LOG_INFO << "Filtering tracks...";
-      tracks_builder.Filter(min_track_length);
-      //-- Build tracks with STL compliant type :
-      tracks_builder.ExportToSTL(tracks);
+      SfM_Data sfm_data_tracks;
+      if (!Load(sfm_data_tracks, sSfm_data_tracks, ESfM_Data(STRUCTURE))) {
+        OPENMVG_LOG_ERROR << "Can't load SfM_Data track file \""<< sSfm_data_tracks << "\"";
+        return EXIT_FAILURE;
+      }
+      OPENMVG_LOG_INFO
+        << "Loaded a track scene with:\n"
+        << " #tracks: " << sfm_data_tracks.GetLandmarks().size();
 
-      // Display some statistics about the computed tracks
+      sfm_data.structure = sfm_data_tracks.structure;
+      OPENMVG_LOG_INFO
+        << "\n======================================\n"
+        << "Robust triangulation of the a track file\n"
+        << "======================================";
+    }
+    else
+    {
+      // Check that a match file have been provided
+      if (sMatchFile.empty() || !sPairFile.empty())
       {
-        std::ostringstream track_stream;
-        //-- Display stats :
-        //    - number of images
-        //    - number of tracks
-        std::set<uint32_t> images_id;
-        tracks::TracksUtilsMap::ImageIdInTracks(tracks, images_id);
-        track_stream
-          << "------------------" << "\n"
-          << "-- Tracks Stats --" << "\n"
-          << " Tracks number: " << tracks_builder.NbTracks() << "\n"
-          << " Images Id: " << "\n";
-        std::copy(images_id.begin(), images_id.end(),
-          std::ostream_iterator<uint32_t>(track_stream, ", "));
-        track_stream << "\n------------------" << "\n";
+        OPENMVG_LOG_ERROR << "You must provide a match file thanks to the [-f|--match_file] option";
+        return EXIT_FAILURE;
+      }
+      OPENMVG_LOG_INFO
+        << "\n======================================\n"
+        << "Robust triangulation of the match file\n"
+        << "======================================";
+      PairWiseMatches matches;
+      if (!Load(matches, sMatchFile))
+      {
+        OPENMVG_LOG_ERROR << "Unable to read the matches file.";
+        return EXIT_FAILURE;
+      }
 
-        std::map<uint32_t, uint32_t> track_length_histogram;
-        tracks::TracksUtilsMap::TracksLength(tracks, track_length_histogram);
-        track_stream << "TrackLength, Count" << "\n";
-        for (const auto & it : track_length_histogram)  {
-          track_stream << "\t" << it.first << "\t" << it.second << "\n";
+      // Compute tracks from matches
+      openMVG::tracks::STLMAPTracks tracks;
+      {
+        // List of features matches for each couple of images
+        OPENMVG_LOG_INFO << "Building tracks...";
+        tracks::TracksBuilder tracks_builder;
+        tracks_builder.Build(matches);
+        OPENMVG_LOG_INFO << "Filtering tracks...";
+        tracks_builder.Filter(min_track_length);
+        //-- Build tracks with STL compliant type :
+        tracks_builder.ExportToSTL(tracks);
+
+        // Display some statistics about the computed tracks
+        {
+          std::ostringstream track_stream;
+          //-- Display stats :
+          //    - number of images
+          //    - number of tracks
+          std::set<uint32_t> images_id;
+          tracks::TracksUtilsMap::ImageIdInTracks(tracks, images_id);
+          track_stream
+            << "------------------" << "\n"
+            << "-- Tracks Stats --" << "\n"
+            << " Tracks number: " << tracks_builder.NbTracks() << "\n"
+            << " Images Id: " << "\n";
+          std::copy(images_id.begin(), images_id.end(),
+            std::ostream_iterator<uint32_t>(track_stream, ", "));
+          track_stream << "\n------------------" << "\n";
+
+          std::map<uint32_t, uint32_t> track_length_histogram;
+          tracks::TracksUtilsMap::TracksLength(tracks, track_length_histogram);
+          track_stream << "TrackLength, Count" << "\n";
+          for (const auto & it : track_length_histogram)  {
+            track_stream << "\t" << it.first << "\t" << it.second << "\n";
+          }
+          track_stream << "\n";
+          OPENMVG_LOG_INFO << track_stream.str();
         }
-        track_stream << "\n";
-        OPENMVG_LOG_INFO << track_stream.str();
+      }
+      // Fill sfm_data with the computed tracks (no 3D yet)
+      Landmarks & structure = sfm_data.structure;
+      IndexT idx(0);
+      for (const auto & tracks_it : tracks)
+      {
+        structure[idx] = {};
+        Observations & obs = structure.at(idx).obs;
+        for (const auto & track_it : tracks_it.second)
+        {
+          const auto imaIndex = track_it.first;
+          const auto featIndex = track_it.second;
+          const Vec2 & pt = regions_provider->get(imaIndex)->GetRegionPosition(featIndex);
+          obs[imaIndex] = {pt, featIndex};
+        }
+        ++idx;
       }
     }
 
     OPENMVG_LOG_INFO
-      << "Robust triangulation of the tracks: [tracks computed from a match file]";
-
-    // Fill sfm_data with the computed tracks (no 3D yet)
-    Landmarks & structure = sfm_data.structure;
-    IndexT idx(0);
-    for (const auto & tracks_it : tracks)
-    {
-      structure[idx] = {};
-      Observations & obs = structure.at(idx).obs;
-      for (const auto & track_it : tracks_it.second)
-      {
-        const auto imaIndex = track_it.first;
-        const auto featIndex = track_it.second;
-        const Vec2 & pt = regions_provider->get(imaIndex)->GetRegionPosition(featIndex);
-        obs[imaIndex] = {pt, featIndex};
-      }
-      ++idx;
-    }
+      << "Robust triangulation of the tracks:";
 
     // Compute 3D position of the landmark of the structure by robust triangulation of the observations
     {
