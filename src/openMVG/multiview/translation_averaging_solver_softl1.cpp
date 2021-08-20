@@ -231,7 +231,7 @@ bool solve_translations_problem_softl1
   cpt = 0;
   for (unsigned int i = 0; i < nb_poses; ++i, cpt+=3)
   {
-    translations[i] = Eigen::Map<openMVG::Vec3>(&vec_translations[cpt]);
+    translations[i] = Eigen::Map<Eigen::Vector3d>(&vec_translations[cpt]);
   }
   return true;
 }
