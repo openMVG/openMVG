@@ -134,7 +134,7 @@ void EightPointSolver::Solve
     MatX9 epipolar_constraint(x1.cols(), 9);
     epipolar_constraint.fill(0.0);
     EncodeEpipolarEquation(x1, x2, &epipolar_constraint);
-    Eigen::SelfAdjointEigenSolver<MatX9> solver
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> solver
       (epipolar_constraint.transpose() * epipolar_constraint);
     f = solver.eigenvectors().leftCols<1>();
   }
