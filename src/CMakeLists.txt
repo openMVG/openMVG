@@ -11,7 +11,7 @@ project(openMVG C CXX)
 
 # Run automoc on .hh files in new versions of cmake
 if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
-    ${CMAKE_VERSION} VERSION_GREATER "3.17")
+    ${CMAKE_VERSION} VERSION_EQUAL "3.17")
   cmake_policy(SET CMP0100 NEW)
 endif()
 
