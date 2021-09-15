@@ -11,6 +11,7 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/geometry/pose3.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -43,10 +44,18 @@ public:
   );
 
   // Relative poses accessor
-  Relative_Pair_Poses Get_Relative_Poses() const;
+  const Relative_Pair_Poses& Get_Relative_Poses() const;
+
+  /// Configure the 2view triangulation method used by the RelativePose computing engine
+  void SetTriangulationMethod(const ETriangulationMethod method)
+  {
+    triangulation_method_ = method;
+  }
 
 private:
   Relative_Pair_Poses relative_poses_;
+
+  ETriangulationMethod triangulation_method_ = ETriangulationMethod::DEFAULT;
 };
 
 } // namespace sfm

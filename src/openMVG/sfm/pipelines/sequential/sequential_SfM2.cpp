@@ -148,12 +148,14 @@ bool SequentialSfMReconstructionEngine2::Process() {
 
   // Incrementally estimate the pose of the cameras based on a confidence score.
   // The confidence score is based on the track_inlier_ratio.
-  // First the camera with the most of 2D-3D overlap are added the we added
-  // the one with lower confidence.
+  // First the camera with the most of 2D-3D overlap are added then we add
+  // ones with lower confidence.
   const std::array<float, 2> track_inlier_ratios = {0.2, 0.0};
-  for (const float track_inlier_ratio : track_inlier_ratios)
+  for (auto track_inlier_ratio = track_inlier_ratios.cbegin();
+    track_inlier_ratio < track_inlier_ratios.cend(); ++track_inlier_ratio)
   {
-    while (AddingMissingView(track_inlier_ratio))
+    IndexT pose_before = sfm_data_.GetPoses().size();
+    while (AddingMissingView(*track_inlier_ratio))
     {
       // Create new 3D points
       Triangulation();
@@ -163,7 +165,20 @@ bool SequentialSfMReconstructionEngine2::Process() {
       RemoveOutliers_AngleError(sfm_data_, 2.0);
       RemoveOutliers_PixelResidualError(sfm_data_, 4.0);
       eraseUnstablePosesAndObservations(sfm_data_);
+
+      std::ostringstream os;
+      os << std::setw(8) << std::setfill('0') << resection_round << "_Resection";
+      Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
       ++resection_round;
+
+      // Stop if no cameras have been added
+      // Note: some cameras could have been removed due to instable camera positions.
+      const IndexT pose_after = sfm_data_.GetPoses().size();
+      if (pose_before >= pose_after)
+        break;
+      pose_before = sfm_data_.GetPoses().size();
+      // Since we have augmented our set of poses we can reset our track inlier ratio iterator
+      track_inlier_ratio = track_inlier_ratios.cbegin();
     }
   }
 
@@ -264,7 +279,8 @@ bool SequentialSfMReconstructionEngine2::Triangulation()
   SfM_Data_Structure_Computation_Robust triangulation_engine(
       max_reprojection_error,
       min_required_inliers,
-      min_sample_index);
+      min_sample_index,
+      triangulation_method_);
 
   triangulation_engine.triangulate(sfm_data_);
 
@@ -380,7 +396,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
         geometry::Pose3 pose;
         const bool bResection = sfm::SfM_Localizer::Localize
         (
-          intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+          intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
           {view->ui_width, view->ui_height},
           intrinsic ? intrinsic.get() : nullptr,
           resection_data,

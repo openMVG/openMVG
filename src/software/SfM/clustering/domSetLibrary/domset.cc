@@ -251,7 +251,7 @@ void Domset::voxelGridFilter( const float &sizeX, const float &sizeY, const floa
   // std::cerr << "Number of points = " << points.size() << std::endl;
 } // voxelGridFilter
 
-Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
+Eigen::MatrixXf Domset::getSimilarityMatrix( const std::map<size_t, size_t> &xId2vId )
 {
 //  std::cout << "Generating Similarity Matrix " << std::endl;
   const size_t numC = xId2vId.size();
@@ -276,8 +276,8 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
   {
     for_parallel( xId2, numC )
     {
-      const size_t vId1 = xId2vId[ xId1 ];
-      const size_t vId2 = xId2vId[ xId2 ];
+      const size_t vId1 = xId2vId.at( xId1 );
+      const size_t vId2 = xId2vId.at( xId2 );
       if ( vId1 == vId2 )
       {
         simMat( xId1, xId2 ) = 0;
@@ -286,7 +286,7 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
       {
         const View v2   = views[ vId2 ];
         const View v1   = views[ vId1 ];
-        const float sv  = computeViewSimilaity( v1, v2 );
+        const float sv  = computeViewSimilarity( v1, v2 );
         const float sd  = computeViewDistance( vId1, vId2, medianDist );
         const float sim = sv * sd;
         simMat( xId1, xId2 ) = sim;
@@ -296,7 +296,7 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
   return simMat;
 } // getSimilarityMatrix
 
-float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const float &medianDist )
+float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const float &medianDist ) const
 {
   if ( vId1 == vId2 )
     return 1.f;
@@ -304,7 +304,8 @@ float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const
   const float dm = 1.f + exp( -( vd - medianDist ) / medianDist );
   return 1.f / dm;
 }
-float Domset::getDistanceMedian( const std::map<size_t, size_t> &xId2vId )
+
+float Domset::getDistanceMedian( const std::map<size_t, size_t> &xId2vId ) const
 {
 //  std::cout << "Finding Distance Median\n";
 
@@ -356,7 +357,7 @@ void Domset::getAllDistances()
 }
 
 void Domset::findCommonPoints( const View &v1, const View &v2,
-                               std::vector<size_t> &commonPoints )
+                               std::vector<size_t> &commonPoints ) const
 {
   commonPoints.clear();
   const size_t numVP1 = v1.viewPoints.size();
@@ -367,12 +368,12 @@ void Domset::findCommonPoints( const View &v1, const View &v2,
   //std::sort(v2.viewPoints.begin(), v2.viewPoints.end());
   commonPoints.resize( minNum );
 
-  const auto it = std::set_intersection( v1.viewPoints.begin(), v1.viewPoints.end(),
-                                         v2.viewPoints.begin(), v2.viewPoints.end(), commonPoints.begin() );
+  const auto it = std::set_intersection( v1.viewPoints.cbegin(), v1.viewPoints.cend(),
+                                         v2.viewPoints.cbegin(), v2.viewPoints.cend(), commonPoints.begin() );
   commonPoints.resize( it - commonPoints.begin() );
 } // findCommonPoints
 
-const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
+float Domset::computeViewSimilarity( const View &v1, const View &v2 ) const
 {
   std::vector<size_t> commonPoints;
   findCommonPoints( v1, v2, commonPoints );
@@ -398,7 +399,7 @@ const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
   }
   const float ans = w / numCP;
   return ( ans != ans ) ? 0 : ans;
-} // computeViewSimilaity
+} // computeViewSimilarity
 
 void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
                                 std::vector<std::vector<size_t>> &clusters )
@@ -650,7 +651,7 @@ void Domset::printClusters()
   std::cout << ss.str();
 }
 
-void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints )
+void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints ) const
 {
   std::stringstream plys;
   plys << "ply\n"

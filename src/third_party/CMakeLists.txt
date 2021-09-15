@@ -108,11 +108,11 @@ if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   add_subdirectory(eigen)
 endif()
 
-list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
+list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics hnswlib)
 foreach(inDirectory ${directories})
 install(
   DIRECTORY ./${inDirectory}
-  DESTINATION include/openMVG/third_party/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )

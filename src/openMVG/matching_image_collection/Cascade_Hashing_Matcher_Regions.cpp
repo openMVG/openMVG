@@ -125,12 +125,12 @@ void Match
   }
 
   // Perform matching between all the pairs
-  for (const auto & pairs : map_Pairs)
+  for (const auto & pair_it : map_Pairs)
   {
     if (my_progress_bar->hasBeenCanceled())
       break;
-    const IndexT I = pairs.first;
-    const std::vector<IndexT> & indexToCompare = pairs.second;
+    const IndexT I = pair_it.first;
+    const std::vector<IndexT> & indexToCompare = pair_it.second;
 
     const std::shared_ptr<features::Regions> regionsI = regions_provider.get(I);
     if (regionsI->RegionCount() == 0)

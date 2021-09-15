@@ -8,7 +8,6 @@
 
 #include "openMVG/features/feature.hpp"
 
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
@@ -164,4 +163,3 @@ std::istream& operator>>(std::istream& in, AffinePointFeature& rhs)
 
 } // namespace features
 } // namespace openMVG
-

@@ -25,6 +25,7 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_multiview
+    cereal
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
 
@@ -56,5 +57,6 @@ UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;${STLPLUS
 UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm")
+UNIT_TEST(openMVG sfm_data_triangulation "openMVG_sfm;openMVG_multiview_test_data")
 
 add_subdirectory(pipelines)

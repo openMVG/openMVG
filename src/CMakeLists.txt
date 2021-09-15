@@ -101,7 +101,6 @@ endif()
 set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
-AutodetectHostArchitecture()
 OptimizeForArchitecture()
 
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
@@ -228,12 +227,16 @@ ENDMACRO(UNIT_TEST)
 # - internal if cereal not found
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
-if (NOT cereal_FOUND)
-  set(CEREAL_INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include)
+if (NOT TARGET cereal)
+  add_library(cereal INTERFACE)
+  target_include_directories(cereal
+    INTERFACE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include>
+      $<INSTALL_INTERFACE:include/openMVG_dependencies/cereal/include>
+  )
+  install(TARGETS cereal EXPORT openMVG-targets)
+
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
-else()
-  get_target_property(CEREAL_INCLUDE_DIRS cereal INTERFACE_INCLUDE_DIRECTORIES)
 endif()
 
 # ==============================================================================
@@ -243,8 +246,8 @@ endif()
 # - external if EIGEN_INCLUDE_DIR_HINTS is defined
 # - internal if Eigen not found
 # ==============================================================================
-find_package(eigen3 QUIET)
-if (NOT eigen3_FOUND)
+find_package(Eigen3 QUIET)
+if (NOT Eigen3_FOUND)
   set(EIGEN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
   set(OpenMVG_USE_INTERNAL_EIGEN ON)
   find_package(Eigen QUIET)
@@ -294,11 +297,11 @@ endif()
 if (NOT DEFINED COINUTILS_INCLUDE_DIR_HINTS)
   set(COINUTILS_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(OpenMVG_USE_INTERNAL_COINUTILS ON)
-endif()
-find_package(CoinUtils QUIET)
-if (NOT COINUTILS_FOUND OR OpenMVG_USE_INTERNAL_COINUTILS)
+  find_package(CoinUtils QUIET)
   set(COINUTILS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/CoinUtils/src/)
   set(COINUTILS_LIBRARY lib_CoinUtils)
+else()
+  find_package(CoinUtils QUIET)
 endif()
 
 ## ==============================================================================
@@ -310,13 +313,13 @@ endif()
 if (NOT DEFINED CLP_INCLUDE_DIR_HINTS)
   set(CLP_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/)
   set(OpenMVG_USE_INTERNAL_CLP ON)
-endif()
-find_package(Clp QUIET)
-if (NOT CLP_FOUND OR OpenMVG_USE_INTERNAL_CLP)
+  find_package(Clp QUIET)
   set(CLP_INCLUDE_DIRS
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/
      ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Clp/src/OsiClp/)
   set(CLP_LIBRARIES lib_clp lib_OsiClpSolver)
+else()
+  find_package(Clp QUIET)
 endif()
 
 # ==============================================================================
@@ -328,11 +331,11 @@ endif()
 if (NOT DEFINED OSI_INCLUDE_DIR_HINTS)
   set(OSI_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/)
   set(OpenMVG_USE_INTERNAL_OSI ON)
-endif()
-find_package(Osi QUIET)
-if (NOT OSI_FOUND OR OpenMVG_USE_INTERNAL_OSI)
+  find_package(Osi QUIET)
   set(OSI_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/osi_clp/Osi/src/Osi/)
   set(OSI_LIBRARY lib_Osi)
+else()
+  find_package(Osi QUIET)
 endif()
 
 # ==============================================================================

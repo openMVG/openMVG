@@ -135,7 +135,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     */
     Mat3X operator () ( const Mat2X& points ) const override
     {
-      return Kinv_ * points.colwise().homogeneous();
+      return (Kinv_ * points.colwise().homogeneous()).colwise().normalized();
     }
 
     /**

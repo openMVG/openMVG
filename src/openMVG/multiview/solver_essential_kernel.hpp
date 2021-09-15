@@ -177,7 +177,7 @@ using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
 
 //-- Solver kernel for the 3pt Orthographic Essential Matrix Estimation
 using ThreePointKernel = essential::kernel::EssentialOrthoKernel<ThreePointSolver,
-        essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
+  essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
 
 }  // namespace kernel
 }  // namespace essential

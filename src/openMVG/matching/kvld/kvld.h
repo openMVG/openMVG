@@ -103,7 +103,7 @@ public:
     diff[ 0 ] = 0;
     diff[ 1 ] = 0;
 
-    if (contrast > 300 || vld2.contrast > 300  || contrast <= 0 || vld2.contrast <=0 )
+    if (contrast > maxContrast || vld2.contrast > maxContrast  || contrast <= 0 || vld2.contrast <=0 )
       return 128;
 
     for (int i = 0; i < dimension; i++ )

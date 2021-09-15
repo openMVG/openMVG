@@ -82,6 +82,8 @@ int main(int argc, char **argv)
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
   bool b_use_motion_priors = false;
+  int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
+  int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
 
   cmd.add( make_option('i', sSfM_Data_Filename, "input_file") );
   cmd.add( make_option('m', sMatchesDir, "matchdir") );
@@ -92,6 +94,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_option('f', sIntrinsic_refinement_options, "refineIntrinsics") );
   cmd.add( make_switch('P', "prior_usage") );
+  cmd.add( make_option('t', triangulation_method, "triangulation_method"));
+  cmd.add( make_option('r', resection_method, "resection_method"));
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -124,10 +128,26 @@ int main(int argc, char **argv)
       << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
       <<      "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
     << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
-    << "[-M|--match_file] path to the match file to use.\n"
+    << "[-M|--match_file] path to the match file to use (default=matches.f.txt then matches.f.bin).\n"
+    << "[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
+    << "\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
+    << "[-r|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+    << "\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
+    << "\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
+    << "\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
+    << "\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
+    << "\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
     << std::endl;
 
     std::cerr << s << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
+    std::cerr << "\n Invalid triangulation method" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -216,6 +236,8 @@ int main(int argc, char **argv)
   sfmEngine.SetUnknownCameraType(EINTRINSIC(i_User_camera_model));
   b_use_motion_priors = cmd.used('P');
   sfmEngine.Set_Use_Motion_Prior(b_use_motion_priors);
+  sfmEngine.SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
+  sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(resection_method));
 
   // Handle Initial pair parameter
   if (!initialPairString.first.empty() && !initialPairString.second.empty())

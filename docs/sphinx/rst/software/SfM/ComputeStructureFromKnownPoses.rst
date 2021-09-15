@@ -3,7 +3,7 @@
 openMVG_main_ComputeStructureFromKnownPoses
 ********************************************
 
-This application compute corresponding features and robustly triangulate them according the geometry of the known camera intrinsics & poses.
+This application computes corresponding features and robustly triangulates them according to the geometry of the known camera intrinsics & poses.
 
 Algorithm of the application
 
@@ -26,7 +26,7 @@ Information and usage
 ========================
 
 The chain is designed to run on a sfm_data.json file and some pre-computed matches.
-The sfm_data file should contains:
+The sfm_data file should contain:
 - valid view with some defined intrinsics and camera poses,
 - (optional existing structure).
 
@@ -34,7 +34,7 @@ The sfm_data file should contains:
   
     $ openMVG_main_ComputeStructureFromKnownPoses -i Dataset/out_Reconstruction/sfm_data.json -o Dataset/out_Reconstruction/robustFitting.json
 
-Arguments description:
+Argument descriptions:
 
 **Required parameters:**
 
@@ -44,7 +44,7 @@ Arguments description:
 
   - **[-m|--matchdir]**
 
-    - path were image descriptions were stored
+    - path where image descriptions were stored
 
   - **[-o|--outdir]**
 

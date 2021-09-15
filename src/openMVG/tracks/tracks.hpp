@@ -123,37 +123,26 @@ struct TracksBuilder
   /// Remove bad tracks (too short or track with ids collision)
   bool Filter(size_t nLengthSupTo = 2)
   {
-    // Remove bad tracks:
-    // - track that are too short,
-    // - track with id conflicts:
-    //    i.e. tracks that have many times the same image index
+    // Build the Track observations & mark tracks that have id collision:
+    std::map<uint32_t, std::set<uint32_t>> tracks; // {track_id, {image_id, image_id, ...}}
+    std::set<uint32_t> problematic_track_id; // {track_id, ...}
 
-    // From the UF tree, create tracks of the image indexes.
-    //  If an image index appears two time the track must disappear
-    //  If a track is too short it has to be removed.
-    std::map<uint32_t, std::set<uint32_t>> tracks;
-
-    std::set<uint32_t> problematic_track_id;
-    // Build tracks from the UF tree, track problematic ids.
+    // For each node retrieve its track id from the UF tree and add the node to the track
+    // - if an image id is observed multiple time, then mark the track as invalid
+    //   - a track cannot list many times the same image index
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
       const uint32_t & track_id = uf_tree.Find(k);
-      if (problematic_track_id.count(track_id) != 0)
-        continue; // Track already marked
-
       const auto & feat = map_node_to_index[k];
 
-      if (tracks[track_id].count(feat.first.first))
+      // Augment the track and mark if invalid (an image can only be listed once)
+      if (tracks[track_id].insert(feat.first.first).second == false)
       {
-        problematic_track_id.insert(track_id);
-      }
-      else
-      {
-        tracks[track_id].insert(feat.first.first);
+        problematic_track_id.insert(track_id); // invalid
       }
     }
 
-    // - track that are too short,
+    // Reject tracks that have too few observations
     for (const auto & val : tracks)
     {
       if (val.second.size() < nLengthSupTo)
@@ -162,6 +151,7 @@ struct TracksBuilder
       }
     }
 
+    // Reset the marked invalid track ids in the UF Tree
     for (uint32_t & root_index : uf_tree.m_cc_parent)
     {
       if (problematic_track_id.count(root_index) > 0)
@@ -191,7 +181,7 @@ struct TracksBuilder
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
       const auto & feat = map_node_to_index[k];
-      const uint32_t track_id = uf_tree.m_cc_parent[k];
+      const uint32_t & track_id = uf_tree.m_cc_parent[k];
       if
       (
         // ensure never add rejected elements (track marked as invalid)
@@ -384,48 +374,6 @@ struct TracksUtilsMap
       }
     }
     return !feat_ids->empty();
-  }
-
-  /**
-   * @brief Convert a trackId to a vector of indexed Matches.
-   *
-   * @param[in]  map_tracks: set of tracks with only 2 elements
-   *             (image A and image B) in each submapTrack.
-   * @param[in]  vec_filterIndex: the track indexes to retrieve.
-   *             Only track indexes contained in this filter vector are kept.
-   * @param[out] pvec_index: list of matches
-   *             (feature index in image A, feature index in image B).
-   *
-   * @warning The input tracks must be composed of only two images index.
-   * @warning Image index are considered sorted (increasing order).
-   */
-  static void TracksToIndexedMatches
-  (
-    const STLMAPTracks & map_tracks,
-    const std::vector<IndexT> & vec_filterIndex,
-    std::vector<matching::IndMatch> * pvec_index
-  )
-  {
-    std::vector<matching::IndMatch> & vec_indexref = *pvec_index;
-    vec_indexref.clear();
-    for ( const auto & id : vec_filterIndex )
-    {
-      // Retrieve the track information from the current index id.
-      auto itF =
-        find_if(
-          map_tracks.begin(), map_tracks.end(),
-          [id] (const std::pair<uint32_t, submapTrack> & s) { return (id == s.first); }
-        );
-      // The current track.
-      const submapTrack & map_ref = itF->second;
-
-      // We have 2 elements for a track.
-      assert(map_ref.size() == 2);
-      const IndexT indexI = (map_ref.begin())->second;
-      const IndexT indexJ = (++map_ref.begin())->second;
-
-      vec_indexref.emplace_back(indexI, indexJ);
-    }
   }
 
   /// Return the occurrence of tracks length.

@@ -439,7 +439,8 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
               tracks::submapTrack::const_iterator iter = iterT->second.begin();
               const Vec2 featI = features_provider_->feats_per_view[I][iter->second].coords().cast<double>();
               const Vec2 featJ = features_provider_->feats_per_view[J][(++iter)->second].coords().cast<double>();
-              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, featI, featJ));
+              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J,
+                cam_I->get_ud_pixel(featI), cam_J->get_ud_pixel(featJ)));
             }
             // Compute the median triangulation angle
             const unsigned median_index = vec_angles.size() / 2;
@@ -581,13 +582,22 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
-      TriangulateDLT(Pose_I.asMatrix(), (*cam_I)(cam_I->get_ud_pixel(x1)),
-                     Pose_J.asMatrix(), (*cam_J)(cam_J->get_ud_pixel(x2)), &X);
-      Observations obs;
-      obs[view_I->id_view] = Observation(x1, i);
-      obs[view_J->id_view] = Observation(x2, j);
-      landmarks[track_iterator.first].obs = std::move(obs);
-      landmarks[track_iterator.first].X = X;
+      if (Triangulate2View(
+            Pose_I.rotation(),
+            Pose_I.translation(),
+            (*cam_I)(cam_I->get_ud_pixel(x1)),
+            Pose_J.rotation(),
+            Pose_J.translation(),
+            (*cam_J)(cam_J->get_ud_pixel(x2)),
+            X,
+            triangulation_method_))
+      {
+        Observations obs;
+        obs[view_I->id_view] = Observation(x1, i);
+        obs[view_J->id_view] = Observation(x2, j);
+        landmarks[track_iterator.first].obs = std::move(obs);
+        landmarks[track_iterator.first].X = X;
+      }
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
 
@@ -632,7 +642,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
         ob_xJ_ud = cam_J->get_ud_pixel(ob_xJ.x);
 
       const double angle = AngleBetweenRay(
-        pose_I, cam_I, pose_J, cam_J, ob_xI.x, ob_xJ.x);
+        pose_I, cam_I, pose_J, cam_J, ob_xI_ud, ob_xJ_ud);
       const Vec2 residual_I = cam_I->residual(pose_I(landmark.X), ob_xI.x);
       const Vec2 residual_J = cam_J->residual(pose_J(landmark.X), ob_xJ.x);
       if (angle > 2.0 &&
@@ -943,7 +953,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   geometry::Pose3 pose;
   const bool bResection = sfm::SfM_Localizer::Localize
   (
-    optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+    optional_intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
     {view_I->ui_width, view_I->ui_height},
     optional_intrinsic.get(),
     resection_data,
@@ -1124,31 +1134,38 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 xI_ud = cam_I->get_ud_pixel(xI),
                 xJ_ud = cam_J->get_ud_pixel(xJ);
               Vec3 X = Vec3::Zero();
-              TriangulateDLT(pose_I.asMatrix(), (*cam_I)(xI_ud),
-                             pose_J.asMatrix(), (*cam_J)(xJ_ud),
-                             &X);
-              // Check triangulation result
-              const double angle = AngleBetweenRay(pose_I, cam_I, pose_J, cam_J, xI, xJ);
-              const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
-              const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
-              if (
-                  //  - Check angle (small angle leads to imprecise triangulation)
-                  angle > 2.0 &&
-                  //  - Check positive depth
-                  CheiralityTest((*cam_I)(xI_ud), pose_I,
-                                 (*cam_J)(xJ_ud), pose_J,
-                                 X) &&
-                  //  - Check residual values (must be inferior to the found view's AContrario threshold)
-                  residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
-                  residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
-                 )
+
+              if (Triangulate2View(
+                    pose_I.rotation(),
+                    pose_I.translation(),
+                    (*cam_I)(xI_ud),
+                    pose_J.rotation(),
+                    pose_J.translation(),
+                    (*cam_J)(xJ_ud),
+                    X,
+                    triangulation_method_))
               {
-                // Add a new track
-                Landmark & landmark = sfm_data_.structure[trackId];
-                landmark.X = X;
-                new_track_observations_valid_views.insert(I);
-                new_track_observations_valid_views.insert(J);
-              } // 3D point is valid
+                // Check triangulation result
+                const double angle = AngleBetweenRay(
+                  pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
+                const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
+                const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
+                if (
+                    //  - Check angle (small angle leads to imprecise triangulation)
+                    angle > 2.0 &&
+                    //  - Check residual values (must be inferior to the found view's AContrario threshold)
+                    residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
+                    residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
+                    // Cheirality as been tested already in Triangulate2View
+                   )
+                {
+                  // Add a new track
+                  Landmark & landmark = sfm_data_.structure[trackId];
+                  landmark.X = X;
+                  new_track_observations_valid_views.insert(I);
+                  new_track_observations_valid_views.insert(J);
+                } // 3D point is valid
+              }
               else
               {
                 // We mark the view to add the observations once the point is triangulated

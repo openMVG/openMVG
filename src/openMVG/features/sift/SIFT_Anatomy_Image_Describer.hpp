@@ -48,7 +48,6 @@ Changes are:
 #ifndef OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 #define OPENMVG_FEATURES_SIFT_SIFT_ANATOMY_IMAGE_DESCRIBER_HPP
 
-#include <iostream>
 #include <numeric>
 #include <vector>
 
@@ -190,11 +189,9 @@ public:
           if (maskIma(k.y, k.x) == 0)
             continue;
         }
-
-        Descriptor<unsigned char, 128> descriptor;
-        descriptor << (k.descr.cast<unsigned char>());
+        // Create the SIFT region
         {
-          regions->Descriptors().emplace_back(descriptor);
+          regions->Descriptors().emplace_back(k.descr.cast<unsigned char>());
           regions->Features().emplace_back(k.x, k.y, k.sigma, k.theta);
         }
       }

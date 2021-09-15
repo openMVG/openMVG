@@ -49,12 +49,12 @@ bool find_largest_stellar_configuration
   // Find the stellar configuration with the most correspondences support
   std::vector<float> matches_count_per_stellar_pod(stellar_pods.size(), 0);
   IndexT id = 0;
-  for (const auto & stellar_pod : stellar_pods)
+  for (const auto & stellar_pod_it : stellar_pods)
   {
-    const Pair_Set & pairs = stellar_pod.second;
-    for (const auto & pair : pairs)
+    const Pair_Set & pairs = stellar_pod_it.second;
+    for (const auto & pair_it : pairs)
     {
-      const matching::IndMatches & matches = matches_provider->pairWise_matches_.at(pair);
+      const matching::IndMatches & matches = matches_provider->pairWise_matches_.at(pair_it);
       matches_count_per_stellar_pod[id] += matches.size();
     }
     matches_count_per_stellar_pod[id] /= pairs.size();

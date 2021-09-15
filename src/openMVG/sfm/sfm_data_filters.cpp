@@ -102,7 +102,7 @@ IndexT RemoveOutliers_AngleError
 
         const double angle = AngleBetweenRay(
           pose1, intrinsic1, pose2, intrinsic2,
-          itObs1->second.x, itObs2->second.x);
+          intrinsic1->get_ud_pixel(itObs1->second.x), intrinsic2->get_ud_pixel(itObs2->second.x));
         max_angle = std::max(angle, max_angle);
       }
     }
@@ -271,6 +271,13 @@ bool IsTracksOneCC
       ++iterJ;
     }
   }
+
+  // Run path compression to identify all the CC id belonging to every item
+  for (unsigned int i = 0; i < uf_tree.GetNumNodes(); ++i)
+  {
+    uf_tree.Find(i);
+  }
+
   // Count the number of CC
   const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
   return parent_id.size() == 1;

@@ -4,8 +4,8 @@
 
 FIND_PATH(COINUTILS_DIR CoinUtilsConfig.h
     HINTS "${COINUTILS_ROOT}" "$ENV{COINUTILS_ROOT}" "${COINUTILS_INCLUDE_DIR_HINTS}"
-    PATHS "$ENV{PROGRAMFILES}/CoinUtils" "$ENV{PROGRAMW6432}/CoinUtils" "/usr" "/usr/local"
-    PATH_SUFFIXES CoinUtils
+    PATHS "$ENV{PROGRAMFILES}" "$ENV{PROGRAMW6432}" "/usr" "/usr/local"
+    PATH_SUFFIXES coin
     DOC "Root directory of COINUTILS includes")
 
 ##====================================================
@@ -59,10 +59,9 @@ IF(EXISTS "${COINUTILS_DIR}" AND NOT "${COINUTILS_DIR}" STREQUAL "")
 
         MESSAGE(STATUS "CoinUtils ${COINUTILS_VERSION} found (include: ${COINUTILS_INCLUDE_DIRS})")
 ELSE()
-  MESSAGE(FATAL_ERROR "You are attempting to build without CoinUtils. "
+  MESSAGE(STATUS "You are attempting to build without CoinUtils. "
           "Please use cmake variable -DCOINUTILS_INCLUDE_DIR_HINTS:STRING=\"PATH\" "
           "or COINUTILS_INCLUDE_DIR_HINTS env. variable to a valid CoinUtils path. "
           "Or install last CoinUtils version.")
-  package_report_not_found(COINUTILS "CoinUtils cannot be found")
 ENDIF()
 ##====================================================
