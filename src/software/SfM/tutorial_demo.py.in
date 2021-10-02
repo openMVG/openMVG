@@ -83,7 +83,7 @@ pFiltering.wait()
 
 reconstruction_dir = os.path.join(output_dir,"reconstruction_global")
 print ("3. Do Global reconstruction")
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--engine", "GLOBAL", "--input_file", matches_dir+"/sfm_data.json", "--match_file", matches_dir+"/matches.e.bin", "--output_dir", reconstruction_dir] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "GLOBAL", "--input_file", matches_dir+"/sfm_data.json", "--match_file", matches_dir+"/matches.e.bin", "--output_dir", reconstruction_dir] )
 pRecons.wait()
 
 print ("5. Colorize Structure")
@@ -93,5 +93,3 @@ pRecons.wait()
 print ("4. Structure from Known Poses (robust triangulation)")
 pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", reconstruction_dir+"/sfm_data.bin", "-m", matches_dir, "-o", os.path.join(reconstruction_dir,"robust.ply")] )
 pRecons.wait()
-
-

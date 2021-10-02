@@ -370,6 +370,9 @@ int main( int argc, char** argv )
       return EXIT_FAILURE;
     }
 
+    // -- export Geometric View Graph statistics
+    graph::getGraphStatistics(sfm_data.GetViews().size(), getPairs(map_GeometricMatches));
+
     OPENMVG_LOG_INFO << "Task done in (s): " << timer.elapsed();
 
     //-- export Adjacency matrix

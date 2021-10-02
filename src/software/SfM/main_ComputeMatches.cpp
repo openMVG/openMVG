@@ -365,6 +365,9 @@ int main( int argc, char** argv )
 
   OPENMVG_LOG_INFO << "#Putative pairs: " << map_PutativeMatches.size();
 
+  // -- export Putative View Graph statistics
+  graph::getGraphStatistics(sfm_data.GetViews().size(), getPairs(map_PutativeMatches));
+
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG( vec_fileNames.size(),
                                         map_PutativeMatches,

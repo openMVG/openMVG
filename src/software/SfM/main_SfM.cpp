@@ -306,7 +306,7 @@ int main(int argc, char **argv)
     cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
   if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
   {
-    OPENMVG_LOG_ERROR << "Invalid input for Bundle Adjusment Intrinsic parameter refinement option";
+    OPENMVG_LOG_ERROR << "Invalid input for Bundle Adjustment Intrinsic parameter refinement option";
     return EXIT_FAILURE;
   }
 
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
     sfm::StringTo_Extrinsic_Parameter_Type(sExtrinsic_refinement_options);
   if (extrinsic_refinement_options == static_cast<sfm::Extrinsic_Parameter_Type>(0) )
   {
-    OPENMVG_LOG_ERROR << "Invalid input for the Bundle Adjusment Extrinsic parameter refinement option";
+    OPENMVG_LOG_ERROR << "Invalid input for the Bundle Adjustment Extrinsic parameter refinement option";
     return EXIT_FAILURE;
   }
 
