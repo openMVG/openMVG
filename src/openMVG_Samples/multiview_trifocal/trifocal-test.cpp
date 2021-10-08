@@ -129,7 +129,7 @@ Solve(
   // fill C0* with for loop
   std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
-  This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
+  // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
   tt.resize(nsols_final);
   std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
@@ -143,7 +143,7 @@ Solve(
     }
   }
   //---- HARDODED CASE SOLUTION -----------------------------------------------------
-  This is for hard coding test 
+  // This is for hard coding test 
   tt[0][0] = Mat34::Identity();
   tt[0][1] = Mat34::Identity();
   tt[0][2] = Mat34::Identity();
@@ -168,12 +168,12 @@ Solve(
    cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
    cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
   
-  TODO: filter the solutions by:
-  - positive depth and 
-  - using tangent at 3rd point
+  // TODO: filter the solutions by:
+  // - positive depth and 
+  // - using tangent at 3rd point
   
-  If we know the rays are perfectly coplanar, we can just use cross
-  product within the plane instead of SVD
+  // If we know the rays are perfectly coplanar, we can just use cross
+  // product within the plane instead of SVD
   std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
 }
 
