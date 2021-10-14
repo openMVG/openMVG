@@ -62,7 +62,7 @@ SfM [1], GlobalSfM [4] or Tracks [2]`:
 
 ```
 @inproceedings{moulon2016openmvg,
-  title={Openmvg: Open multiple view geometry},
+  title={Open{MVG}: Open multiple view geometry},
   author={Moulon, Pierre and Monasse, Pascal and Perrot, Romuald and Marlet, Renaud},
   booktitle={International Workshop on Reproducible Research in Pattern Recognition},
   pages={60--74},
