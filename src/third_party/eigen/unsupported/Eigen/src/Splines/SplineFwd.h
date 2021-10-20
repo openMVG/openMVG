@@ -10,7 +10,7 @@
 #ifndef EIGEN_SPLINES_FWD_H
 #define EIGEN_SPLINES_FWD_H
 
-#include <Eigen/Core>
+#include "../../../../Eigen/Core"
 
 namespace Eigen
 {

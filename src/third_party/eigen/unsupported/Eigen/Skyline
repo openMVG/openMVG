@@ -10,9 +10,9 @@
 #define EIGEN_SKYLINE_MODULE_H
 
 
-#include "Eigen/Core"
+#include "../../Eigen/Core"
 
-#include "Eigen/src/Core/util/DisableStupidWarnings.h"
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 #include <map>
 #include <cstdlib>
@@ -34,6 +34,6 @@
 #include "src/Skyline/SkylineInplaceLU.h"
 #include "src/Skyline/SkylineProduct.h"
 
-#include "Eigen/src/Core/util/ReenableStupidWarnings.h"
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_SKYLINE_MODULE_H

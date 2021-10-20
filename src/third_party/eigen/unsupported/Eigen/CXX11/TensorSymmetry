@@ -10,9 +10,9 @@
 #ifndef EIGEN_CXX11_TENSORSYMMETRY_MODULE
 #define EIGEN_CXX11_TENSORSYMMETRY_MODULE
 
-#include <unsupported/Eigen/CXX11/Tensor>
+#include "Tensor"
 
-#include <Eigen/src/Core/util/DisableStupidWarnings.h>
+#include "../../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 #include "src/util/CXX11Meta.h"
 
@@ -33,7 +33,7 @@
 #include "src/TensorSymmetry/StaticSymmetry.h"
 #include "src/TensorSymmetry/DynamicSymmetry.h"
 
-#include <Eigen/src/Core/util/ReenableStupidWarnings.h>
+#include "../../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_CXX11_TENSORSYMMETRY_MODULE
 

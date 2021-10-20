@@ -20,8 +20,8 @@ namespace Eigen {
  *  e.g. \f$ 1 + 3x^2 \f$ is stored as a vector \f$ [ 1, 0, 3 ] \f$.
  * \param[in] x : the value to evaluate the polynomial at.
  *
- * <i><b>Note for stability:</b></i>
- *  <dd> \f$ |x| \le 1 \f$ </dd>
+ * \note for stability:
+ *   \f$ |x| \le 1 \f$
  */
 template <typename Polynomials, typename T>
 inline
@@ -67,8 +67,8 @@ T poly_eval( const Polynomials& poly, const T& x )
  *  by degrees i.e. poly[i] is the coefficient of degree i of the polynomial
  *  e.g. \f$ 1 + 3x^2 \f$ is stored as a vector \f$ [ 1, 0, 3 ] \f$.
  *
- *  <i><b>Precondition:</b></i>
- *  <dd> the leading coefficient of the input polynomial poly must be non zero </dd>
+ *  \pre
+ *   the leading coefficient of the input polynomial poly must be non zero
  */
 template <typename Polynomial>
 inline

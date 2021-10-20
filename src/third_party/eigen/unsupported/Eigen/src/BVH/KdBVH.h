@@ -35,6 +35,7 @@ struct get_boxes_helper {
   {
     outBoxes.insert(outBoxes.end(), boxBegin, boxEnd);
     eigen_assert(outBoxes.size() == objects.size());
+    EIGEN_ONLY_USED_FOR_DEBUG(objects);
   }
 };
 
@@ -170,7 +171,7 @@ private:
   typedef internal::vector_int_pair<Scalar, Dim> VIPair;
   typedef std::vector<VIPair, aligned_allocator<VIPair> > VIPairList;
   typedef Matrix<Scalar, Dim, 1> VectorType;
-  struct VectorComparator //compares vectors, or, more specificall, VIPairs along a particular dimension
+  struct VectorComparator //compares vectors, or more specifically, VIPairs along a particular dimension
   {
     VectorComparator(int inDim) : dim(inDim) {}
     inline bool operator()(const VIPair &v1, const VIPair &v2) const { return v1.first[dim] < v2.first[dim]; }
