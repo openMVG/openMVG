@@ -2657,6 +2657,7 @@ Kodak EasyShare Z1485 IS;7.44
 Kodak EasyShare Z5010;6.16
 Kodak EasyShare Z5120;6.08
 Kodak EasyShare Z612;5.744
+EASTMAN KODAK COMPANY KODAK Z612 ZOOM DIGITAL CAMERA;5.744
 Kodak EasyShare Z650;5.744
 Kodak EasyShare Z700;5.744
 Kodak EasyShare Z710;5.744
