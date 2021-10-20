@@ -61,13 +61,13 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
   return true;
 }
 
-std::pair<bool, Vec3> checkGPS
+bool getGPS
 (
   const std::string & filename,
-  const int & GPS_to_XYZ_method = 0
+  const int & GPS_to_XYZ_method,
+  Vec3 & pose_center
 )
 {
-  std::pair<bool, Vec3> val(false, Vec3::Zero());
   std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
   if (exifReader)
   {
@@ -81,21 +81,21 @@ std::pair<bool, Vec3> checkGPS
            exifReader->GPSAltitude( &altitude ) )
       {
         // Add ECEF or UTM XYZ position to the GPS position array
-        val.first = true;
         switch (GPS_to_XYZ_method)
         {
           case 1:
-            val.second = lla_to_utm( latitude, longitude, altitude );
+            pose_center = lla_to_utm( latitude, longitude, altitude );
             break;
           case 0:
           default:
-            val.second = lla_to_ecef( latitude, longitude, altitude );
+            pose_center = lla_to_ecef( latitude, longitude, altitude );
             break;
         }
+        return true;
       }
     }
   }
-  return val;
+  return false;
 }
 
 
@@ -140,8 +140,8 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
-  std::string sPriorWeights;
-  std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
+  std::string sPriorWeights = "1.0;1.0;1.0";
+  std::pair<bool, Vec3> prior_w_info(false, Vec3());
 
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
@@ -194,6 +194,8 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
   }
 
+  bool b_Use_pose_prior = cmd.used('P');
+
   std::cout << " You called : " <<std::endl
             << argv[0] << std::endl
             << "--imageDirectory " << sImageDir << std::endl
@@ -203,6 +205,12 @@ int main(int argc, char **argv)
             << "--intrinsics " << sKmatrix << std::endl
             << "--camera_model " << i_User_camera_model << std::endl
             << "--group_camera_model " << b_Group_camera_model << std::endl;
+  if (b_Use_pose_prior)
+  {
+    std::cout << "--use_pose_prior" << std::endl;
+  }
+  std::cout << "--prior_weights " << sPriorWeights << std::endl
+            << "--gps_to_xyz_method " << i_GPS_XYZ_method << std::endl;
 
   // Expected properties for each image
   double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
@@ -256,13 +264,9 @@ int main(int argc, char **argv)
   }
 
   // Check if prior weights are given
-  if (cmd.used('P') && !sPriorWeights.empty())
+  if (b_Use_pose_prior)
   {
     prior_w_info = checkPriorWeightsString(sPriorWeights);
-  }
-  else if (cmd.used('P'))
-  {
-    prior_w_info.first = true;
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -331,12 +335,11 @@ int main(int argc, char **argv)
 
       const bool bHaveValidExifMetadata =
         exifReader->doesHaveExifInfo()
-        && !exifReader->getModel().empty();
+        && !exifReader->getModel().empty()
+        && !exifReader->getBrand().empty();
 
       if (bHaveValidExifMetadata) // If image contains meta data
       {
-        const std::string sCamModel = exifReader->getModel();
-
         // Handle case where focal length is equal to 0
         if (exifReader->getFocal() == 0.0f)
         {
@@ -347,6 +350,8 @@ int main(int argc, char **argv)
         else
         // Create the image entry in the list file
         {
+          const std::string sCamModel = exifReader->getBrand() + " " + exifReader->getModel();
+
           Datasheet datasheet;
           if ( getInfo( sCamModel, vec_database, datasheet ))
           {
@@ -403,8 +408,8 @@ int main(int argc, char **argv)
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename, i_GPS_XYZ_method);
-    if (gps_info.first && cmd.used('P'))
+    Vec3 pose_center;
+    if (getGPS(sImageFilename, i_GPS_XYZ_method, pose_center) && b_Use_pose_prior)
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
@@ -422,7 +427,7 @@ int main(int argc, char **argv)
       }
 
       v.b_use_pose_center_ = true;
-      v.pose_center_ = gps_info.second;
+      v.pose_center_ = pose_center;
       // prior weights
       if (prior_w_info.first == true)
       {
