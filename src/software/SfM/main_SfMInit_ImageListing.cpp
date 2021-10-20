@@ -202,7 +202,7 @@ int main(int argc, char **argv)
     << "\n--intrinsics " << sKmatrix
     << "\n--camera_model " << i_User_camera_model
     << "\n--group_camera_model " << b_Group_camera_model
-    << "\n--use_pose_prior" << b_Use_pose_prior
+    << "\n--use_pose_prior " << b_Use_pose_prior
     << "\n--prior_weights " << sPriorWeights
     << "\n--gps_to_xyz_method " << i_GPS_XYZ_method;
 
@@ -407,7 +407,7 @@ int main(int argc, char **argv)
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == nullptr)
+      if (!intrinsic)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
       View v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == nullptr)
+      if (!intrinsic)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)
