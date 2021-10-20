@@ -22,7 +22,7 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/eigen.hpp"
 #ifdef USE_OCVSIFT
-#include "opencv2/xfeatures2d.hpp"
+#include "opencv2/features2d.hpp"
 #endif
 
 #include <cstdlib>
@@ -158,8 +158,13 @@ class SIFT_OPENCV_Image_describer : public Image_describer
 {
 public:
   using Regions_type = SIFT_Regions;
+  // Declare a SIFT detector
+  cv::Ptr<cv::Feature2D> siftdetector;
 
-  SIFT_OPENCV_Image_describer() : Image_describer() {}
+  SIFT_OPENCV_Image_describer() : Image_describer() {
+    // Create a SIFT detector
+    siftdetector = cv::SIFT::create();
+  }
 
   ~SIFT_OPENCV_Image_describer() {}
 
@@ -204,10 +209,9 @@ public:
       cv::eigen2cv(mask->GetMat(), m_mask);
     }
 
-    // Create a SIFT detector
+    // Create a Keypoints & Descriptors container
     std::vector< cv::KeyPoint > v_keypoints;
     cv::Mat m_desc;
-    cv::Ptr<cv::Feature2D> siftdetector = cv::xfeatures2d::SIFT::create();
 
     // Process SIFT computation
     siftdetector->detectAndCompute(img, m_mask, v_keypoints, m_desc);
