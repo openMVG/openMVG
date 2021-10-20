@@ -16,6 +16,7 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/rotation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -36,7 +37,7 @@ inline void KeepOnlyReferencedElement(
   const std::set<IndexT> & Ids,
   T & toFilter)
 {
-  std::cout << "Must be specialized for your type" << std::endl;
+  OPENMVG_LOG_ERROR << "Must be specialized for your type";
 }
 
 // Specialization for RelativeInfo_Map
@@ -45,7 +46,7 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   RelativeInfo_Map& map_relatives)
 {
-  RelativeInfo_Map map_relatives_infered;
+  RelativeInfo_Map map_relatives_inferred;
   for (RelativeInfo_Map::const_iterator
     iter = map_relatives.begin();
     iter != map_relatives.end(); ++iter)
@@ -53,10 +54,10 @@ void KeepOnlyReferencedElement(
     if (set_remainingIds.count(iter->first.first) &&
         set_remainingIds.count(iter->first.second))
     {
-      map_relatives_infered.insert(*iter);
+      map_relatives_inferred.insert(*iter);
     }
   }
-  map_relatives.swap(map_relatives_infered);
+  map_relatives.swap(map_relatives_inferred);
 }
 
 // Specialization for RelativeInfo_Map
@@ -66,7 +67,7 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   rotation_averaging::RelativeRotations& relative_info)
 {
-  rotation_averaging::RelativeRotations relatives_infered;
+  rotation_averaging::RelativeRotations relatives_inferred;
   for (rotation_averaging::RelativeRotations::const_iterator
     iter = relative_info.begin();
     iter != relative_info.end(); ++iter)
@@ -74,10 +75,10 @@ void KeepOnlyReferencedElement(
     if (set_remainingIds.count(iter->i) &&
         set_remainingIds.count(iter->j))
     {
-      relatives_infered.push_back(*iter);
+      relatives_inferred.push_back(*iter);
     }
   }
-  relative_info.swap(relatives_infered);
+  relative_info.swap(relatives_inferred);
 }
 
 // Specialization for PairWiseMatches
@@ -87,17 +88,17 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   openMVG::matching::PairWiseMatches& map_matches)
 {
-  openMVG::matching::PairWiseMatches map_matches_E_infered;
+  openMVG::matching::PairWiseMatches map_matches_E_inferred;
   for (openMVG::matching::PairWiseMatches::const_iterator iter = map_matches.begin();
     iter != map_matches.end(); ++iter)
   {
     if (set_remainingIds.count(iter->first.first) &&
         set_remainingIds.count(iter->first.second))
     {
-      map_matches_E_infered.insert(*iter);
+      map_matches_E_inferred.insert(*iter);
     }
   }
-  map_matches.swap(map_matches_E_infered);
+  map_matches.swap(map_matches_E_inferred);
 }
 
 // Specialization for std::map<IndexT,Mat3>
@@ -107,16 +108,16 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   std::map<IndexT,Mat3>& map_Mat3)
 {
-  std::map<IndexT,Mat3> map_infered;
+  std::map<IndexT,Mat3> map_inferred;
   for (std::map<IndexT,Mat3>::const_iterator iter = map_Mat3.begin();
     iter != map_Mat3.end(); ++iter)
   {
     if (set_remainingIds.count(iter->first))
     {
-      map_infered.insert(*iter);
+      map_inferred.insert(*iter);
     }
   }
-  map_Mat3.swap(map_infered);
+  map_Mat3.swap(map_inferred);
 }
 
 // Specialization for RelativeInfo_Vec
@@ -126,17 +127,17 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   RelativeInfo_Vec & relativeInfo_vec)
 {
-  RelativeInfo_Vec map_infered;
+  RelativeInfo_Vec map_inferred;
   for (RelativeInfo_Vec::const_iterator iter = relativeInfo_vec.begin();
     iter != relativeInfo_vec.end(); ++iter)
   {
     if (set_remainingIds.count(iter->first.first) &&
         set_remainingIds.count(iter->first.second))
     {
-      map_infered.push_back(*iter);
+      map_inferred.push_back(*iter);
     }
   }
-  relativeInfo_vec.swap(map_infered);
+  relativeInfo_vec.swap(map_inferred);
 }
 
 // Specialization for std::vector<RelativeInfo_Vec>
@@ -146,7 +147,7 @@ void KeepOnlyReferencedElement(
   const std::set<IndexT> & set_remainingIds,
   std::vector<RelativeInfo_Vec> & relative_motion_group)
 {
-  std::vector<RelativeInfo_Vec> infered_relative_motion;
+  std::vector<RelativeInfo_Vec> inferred_relative_motion;
   for (const openMVG::RelativeInfo_Vec & iter : relative_motion_group)
   {
     RelativeInfo_Vec group;
@@ -160,10 +161,10 @@ void KeepOnlyReferencedElement(
     }
     if (!group.empty())
     {
-      infered_relative_motion.push_back(std::move(group));
+      inferred_relative_motion.push_back(std::move(group));
     }
   }
-  relative_motion_group.swap(infered_relative_motion);
+  relative_motion_group.swap(inferred_relative_motion);
 }
 
 } // namespace sfm

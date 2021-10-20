@@ -13,6 +13,7 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -31,6 +32,7 @@ public:
   :sOut_directory_(soutDirectory),
     sfm_data_(sfm_data),
     intrinsic_refinement_options_(cameras::Intrinsic_Parameter_Type::ADJUST_ALL),
+    extrinsic_refinement_options_(sfm::Extrinsic_Parameter_Type::ADJUST_ALL),
     b_use_motion_prior_(false)
   {
   }
@@ -50,6 +52,19 @@ public:
   )
   {
     intrinsic_refinement_options_ = rhs;
+  }
+
+  Extrinsic_Parameter_Type Get_Extrinsics_Refinement_Type() const
+  {
+    return extrinsic_refinement_options_;
+  }
+
+  void Set_Extrinsics_Refinement_Type
+  (
+    sfm::Extrinsic_Parameter_Type rhs
+  )
+  {
+    extrinsic_refinement_options_ = rhs;
   }
 
   void Set_Use_Motion_Prior
@@ -74,6 +89,7 @@ protected:
   //-- Reconstruction parameters
   //-----
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
+  sfm::Extrinsic_Parameter_Type extrinsic_refinement_options_;
   bool b_use_motion_prior_;
 };
 

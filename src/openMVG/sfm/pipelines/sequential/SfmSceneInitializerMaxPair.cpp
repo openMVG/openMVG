@@ -15,6 +15,7 @@
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 
@@ -60,7 +61,7 @@ bool SfMSceneInitializerMaxPair::Process()
     openMVG::matching::PairWiseMatches::const_iterator iter = matches_provider_->pairWise_matches_.cbegin();
     std::advance(iter, index);
 
-    std::cout << "(" << iter->first.first << "," << iter->first.second <<"): "
+    OPENMVG_LOG_INFO << "(" << iter->first.first << "," << iter->first.second <<"): "
       << iter->second.size() << " matches" << std::endl;
 
     const IndexT

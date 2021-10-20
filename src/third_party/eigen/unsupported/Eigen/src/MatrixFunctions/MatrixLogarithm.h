@@ -62,8 +62,8 @@ void matrix_log_compute_2x2(const MatrixType& A, MatrixType& result)
   else
   {
     // computation in previous branch is inaccurate if A(1,1) \approx A(0,0)
-    int unwindingNumber = static_cast<int>(ceil((imag(logA11 - logA00) - RealScalar(EIGEN_PI)) / RealScalar(2*EIGEN_PI)));
-    result(0,1) = A(0,1) * (numext::log1p(y/A(0,0)) + Scalar(0,2*EIGEN_PI*unwindingNumber)) / y;
+    RealScalar unwindingNumber = ceil((imag(logA11 - logA00) - RealScalar(EIGEN_PI)) / RealScalar(2*EIGEN_PI));
+    result(0,1) = A(0,1) * (numext::log1p(y/A(0,0)) + Scalar(0,RealScalar(2*EIGEN_PI)*unwindingNumber)) / y;
   }
 }
 
@@ -135,7 +135,8 @@ void matrix_log_compute_pade(MatrixType& result, const MatrixType& T, int degree
   const int minPadeDegree = 3;
   const int maxPadeDegree = 11;
   assert(degree >= minPadeDegree && degree <= maxPadeDegree);
-
+  // FIXME this creates float-conversion-warnings if these are enabled.
+  // Either manually convert each value, or disable the warning locally
   const RealScalar nodes[][maxPadeDegree] = { 
     { 0.1127016653792583114820734600217600L, 0.5000000000000000000000000000000000L,  // degree 3
       0.8872983346207416885179265399782400L }, 
@@ -232,12 +233,13 @@ void matrix_log_compute_big(const MatrixType& A, MatrixType& result)
   int degree;
   MatrixType T = A, sqrtT;
 
-  int maxPadeDegree = matrix_log_max_pade_degree<Scalar>::value;
-  const RealScalar maxNormForPade = maxPadeDegree<= 5? 5.3149729967117310e-1L:                    // single precision
+  const int maxPadeDegree = matrix_log_max_pade_degree<Scalar>::value;
+  const RealScalar maxNormForPade = RealScalar(
+                                    maxPadeDegree<= 5? 5.3149729967117310e-1L:                    // single precision
                                     maxPadeDegree<= 7? 2.6429608311114350e-1L:                    // double precision
                                     maxPadeDegree<= 8? 2.32777776523703892094e-1L:                // extended precision
                                     maxPadeDegree<=10? 1.05026503471351080481093652651105e-1L:    // double-double
-                                                       1.1880960220216759245467951592883642e-1L;  // quadruple precision
+                                                       1.1880960220216759245467951592883642e-1L); // quadruple precision
 
   while (true) {
     RealScalar normTminusI = (T - MatrixType::Identity(T.rows(), T.rows())).cwiseAbs().colwise().sum().maxCoeff();
@@ -254,7 +256,7 @@ void matrix_log_compute_big(const MatrixType& A, MatrixType& result)
   }
 
   matrix_log_compute_pade(result, T, degree);
-  result *= pow(RealScalar(2), numberOfSquareRoots);
+  result *= pow(RealScalar(2), RealScalar(numberOfSquareRoots)); // TODO replace by bitshift if possible
 }
 
 /** \ingroup MatrixFunctions_Module
@@ -324,7 +326,7 @@ public:
   
   /** \brief Compute the matrix logarithm.
     *
-    * \param[out]  result  Logarithm of \p A, where \A is as specified in the constructor.
+    * \param[out]  result  Logarithm of \c A, where \c A is as specified in the constructor.
     */
   template <typename ResultType>
   inline void evalTo(ResultType& result) const
@@ -332,10 +334,8 @@ public:
     typedef typename internal::nested_eval<Derived, 10>::type DerivedEvalType;
     typedef typename internal::remove_all<DerivedEvalType>::type DerivedEvalTypeClean;
     typedef internal::traits<DerivedEvalTypeClean> Traits;
-    static const int RowsAtCompileTime = Traits::RowsAtCompileTime;
-    static const int ColsAtCompileTime = Traits::ColsAtCompileTime;
     typedef std::complex<typename NumTraits<Scalar>::Real> ComplexScalar;
-    typedef Matrix<ComplexScalar, Dynamic, Dynamic, 0, RowsAtCompileTime, ColsAtCompileTime> DynMatrixType;
+    typedef Matrix<ComplexScalar, Dynamic, Dynamic, 0, Traits::RowsAtCompileTime, Traits::ColsAtCompileTime> DynMatrixType;
     typedef internal::MatrixLogarithmAtomic<DynMatrixType> AtomicType;
     AtomicType atomic;
     

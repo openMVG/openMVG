@@ -143,7 +143,7 @@ template<typename _Tp>
 bool SerializeSave(const _Tp& obj, const std::string& fileName, uint32_t version=MVSI_PROJECT_VER) {
 	// open the output stream
 	std::ofstream stream(fileName, std::ofstream::binary);
-	if (!stream.is_open())
+	if (!stream)
 		return false;
 	// write header
 	if (version > 0) {
@@ -164,7 +164,7 @@ template<typename _Tp>
 bool SerializeLoad(_Tp& obj, const std::string& fileName, uint32_t* pVersion=NULL) {
 	// open the input stream
 	std::ifstream stream(fileName, std::ifstream::binary);
-	if (!stream.is_open())
+	if (!stream)
 		return false;
 	// read header
 	uint32_t version(0);

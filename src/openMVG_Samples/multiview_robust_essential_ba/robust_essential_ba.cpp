@@ -236,25 +236,28 @@ int main() {
     const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relativePose_info.relativePose;
 
     // Init structure by inlier triangulation
-    const Mat34 P1 = tiny_scene.intrinsics[tiny_scene.views[0]->id_intrinsic]->get_projective_equivalent(pose0);
-    const Mat34 P2 = tiny_scene.intrinsics[tiny_scene.views[1]->id_intrinsic]->get_projective_equivalent(pose1);
     Landmarks & landmarks = tiny_scene.structure;
-    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
-      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_];
-      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
+    for (const auto inlier_idx : relativePose_info.vec_inliers)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[inlier_idx].i_];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[inlier_idx].j_];
       // Point triangulation
       Vec3 X;
-      TriangulateDLT(
-        P1, LL.coords().cast<double>().homogeneous(),
-        P2, RR.coords().cast<double>().homogeneous(), &X);
-      // Reject point that is behind the camera
-      if (Depth(pose0.rotation(), pose0.translation(), X) < 0 &&
-          Depth(pose1.rotation(), pose1.translation(), X) < 0)
-        continue;
-      // Add a new landmark (3D point with it's 2d observations)
-      landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_);
-      landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_);
-      landmarks[i].X = X;
+      const ETriangulationMethod triangulation_method = ETriangulationMethod::DEFAULT;
+      if (Triangulate2View
+      (
+        pose0.rotation(), pose0.translation(), (*tiny_scene.intrinsics[0])(LL.coords().cast<double>()),
+        pose1.rotation(), pose1.translation(), (*tiny_scene.intrinsics[1])(RR.coords().cast<double>()),
+        X,
+        triangulation_method
+      ))
+      {
+        // Add a new landmark (3D point with it's 2d observations)
+        Landmark landmark;
+        landmark.obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[inlier_idx].i_);
+        landmark.obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[inlier_idx].j_);
+        landmark.X = X;
+        landmarks.insert({landmarks.size(), landmark});
+      }
     }
     Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));
 
@@ -277,7 +280,7 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K)
   // Load the K matrix
   ifstream in;
   in.open( fileName.c_str(), ifstream::in);
-  if (in.is_open())  {
+  if (in)  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)
         in >> K(j,i);

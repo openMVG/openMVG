@@ -13,7 +13,6 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
 
@@ -75,7 +74,7 @@ inline void exportToGraphvizData
 )
 {
   // Export the graph as a DOT (graph description language) file
-  std::ofstream file(sfile.c_str());
+  std::ofstream file(sfile);
   openMVG::graph::exportToGraphvizFormat_Nodal(graph, file);
   file.close();
 

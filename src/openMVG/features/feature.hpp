@@ -10,13 +10,13 @@
 #define OPENMVG_FEATURES_FEATURE_HPP
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
 #include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {
@@ -142,7 +142,7 @@ protected:
 };
 
 /// Read feats from file
-template<typename FeaturesT >
+template<typename FeaturesT>
 static bool loadFeatsFromFile(
   const std::string & sfileNameFeats,
   FeaturesT & vec_feat)
@@ -172,7 +172,7 @@ static bool saveFeatsToFile(
   std::ofstream file(sfileNameFeats.c_str());
   if (!file.is_open())
     return false;
-  std::copy(vec_feat.begin(), vec_feat.end(),
+  std::copy(vec_feat.cbegin(), vec_feat.cend(),
             std::ostream_iterator<typename FeaturesT::value_type >(file,"\n"));
   const bool bOk = file.good();
   file.close();
@@ -186,14 +186,11 @@ void PointsToMat(
   Mat& m)
 {
   m.resize(2, vec_feats.size());
-  using ValueT = typename FeaturesT::value_type; // Container type
 
   size_t i = 0;
-  for (typename FeaturesT::const_iterator iter = vec_feats.begin();
-    iter != vec_feats.end(); ++iter, ++i)
+  for (const auto &feat : vec_feats)
   {
-    const ValueT & feat = *iter;
-    m.col(i) << feat.x(), feat.y();
+    m.col(i++) << feat.x(), feat.y();
   }
 }
 

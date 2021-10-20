@@ -9,14 +9,15 @@
 #include "openMVG/image/image_io.hpp"
 
 #include <cmath>
-#include <cstring>
-#include <iostream>
+#include <string>
 
 extern "C" {
   #include "png.h"
   #include "tiffio.h"
   #include "jpeglib.h"
 }
+
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace image {
@@ -106,10 +107,10 @@ int ReadJpg(const char * filename,
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
-  int res = ReadJpgStream(file, ptr, w, h, depth);
+  const int res = ReadJpgStream(file, ptr, w, h, depth);
   fclose(file);
   return res;
 }
@@ -138,7 +139,7 @@ int ReadJpgStream(FILE * file,
   jerr.pub.error_exit = &jpeg_error;
 
   if (setjmp(jerr.setjmp_buffer)) {
-    std::cerr << "Error JPG: Failed to decompress.";
+    OPENMVG_LOG_ERROR << "Error JPG: Failed to decompress.";
     jpeg_destroy_decompress(&cinfo);
     return 0;
   }
@@ -148,7 +149,7 @@ int ReadJpgStream(FILE * file,
   jpeg_read_header(&cinfo, TRUE);
   jpeg_start_decompress(&cinfo);
 
-  int row_stride = cinfo.output_width * cinfo.output_components;
+  const int row_stride = cinfo.output_width * cinfo.output_components;
 
   *h = cinfo.output_height;
   *w = cinfo.output_width;
@@ -177,7 +178,7 @@ int WriteJpg(const char * filename,
              int quality) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = WriteJpgStream(file, array, w, h, depth, quality);
@@ -192,7 +193,7 @@ int WriteJpgStream(FILE *file,
                    int depth,
                    int quality) {
   if (quality < 0 || quality > 100)
-    std::cerr << "Error: The quality parameter should be between 0 and 100";
+    OPENMVG_LOG_ERROR << "The quality parameter should be between 0 and 100";
 
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -210,7 +211,7 @@ int WriteJpgStream(FILE *file,
   } else if (cinfo.input_components==1) {
     cinfo.in_color_space = JCS_GRAYSCALE;
   } else {
-    std::cerr << "Error: Unsupported number of channels in file";
+    OPENMVG_LOG_ERROR << "Unsupported number of channels in file";
     jpeg_destroy_compress(&cinfo);
     return 0;
   }
@@ -244,7 +245,7 @@ int ReadPng(const char *filename,
             int * depth) {
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   int res = ReadPngStream(file, ptr, w, h, depth);
@@ -332,7 +333,7 @@ int ReadPngStream(FILE *file,
   if ((ppbRowPointers = (png_bytepp) malloc(hPNG
     * sizeof(png_bytep))) == nullptr)
   {
-    std::cerr << "PNG: out of memory" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot allocate the image memory buffer";
     return 0;
   }
 
@@ -366,7 +367,7 @@ int WritePng(const char * filename,
              int depth) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = WritePngStream(file, ptr, w, h, depth);
@@ -429,7 +430,7 @@ int ReadPnm(const char * filename,
             int * depth)  {
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = ReadPnmStream(file, array, w, h, depth);
@@ -525,7 +526,7 @@ int WritePnm(const char * filename,
               int depth) {
   FILE *file = fopen(filename, "wb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   const int res = WritePnmStream(file, array, w, h, depth);
@@ -567,7 +568,7 @@ int ReadTiff(const char * filename,
 {
   TIFF* tiff = TIFFOpen(filename, "r");
   if (!tiff) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   uint16 bps, spp;
@@ -608,7 +609,7 @@ int WriteTiff(const char * filename,
 {
   TIFF* tiff = TIFFOpen(filename, "w");
   if (!tiff) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Couldn't open " << filename << " fopen returned 0";
     return 0;
   }
   TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, w);
@@ -644,6 +645,7 @@ bool ReadImageHeader(const char * filename, ImageHeader * imgheader)
     case Tiff:
       return Read_TIFF_ImageHeader(filename, imgheader);
     default:
+      OPENMVG_LOG_ERROR << "Unsupported image format header";
       return false;
   };
 }
@@ -653,6 +655,7 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
   bool bStatus = false;
   FILE *file = fopen(filename, "rb");
   if (!file) {
+    OPENMVG_LOG_ERROR << "Cannot open the PNG file: " << filename << ".";
     return false;
   }
 
@@ -713,7 +716,7 @@ bool Read_JPG_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
-    std::cerr << "Error: Couldn't open " << filename << " fopen returned 0";
+    OPENMVG_LOG_ERROR << "Cannot open the JPG file: " << filename << ".";
     return 0;
   }
 
@@ -757,6 +760,7 @@ bool Read_PNM_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   FILE *file = fopen(filename, "rb");
   if (!file) {
+    OPENMVG_LOG_ERROR << "Cannot open the PNM file: " << filename << ".";
     return false;
   }
 
@@ -845,6 +849,7 @@ bool Read_TIFF_ImageHeader(const char * filename, ImageHeader * imgheader)
 
   TIFF* tiff = TIFFOpen(filename, "r");
   if (!tiff) {
+    OPENMVG_LOG_ERROR << "Cannot open TIFF image: " << filename << ".";
     return false;
   }
 

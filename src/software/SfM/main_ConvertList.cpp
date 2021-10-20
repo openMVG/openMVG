@@ -43,10 +43,10 @@ int main(int argc, char **argv)
   cmd.add( make_option('g', b_Group_camera_model, "group_camera_model") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-o|--outputDirectory]\n"
       << "[-c|--camera_model] Camera model type:\n"
@@ -57,31 +57,29 @@ int main(int argc, char **argv)
       << "\t 5: Pinhole with a simple Fish-eye distortion\n"
       << "[-g|--group_camera_model]\n"
       << "\t 0-> each view have it's own camera intrinsic parameters,\n"
-      << "\t 1-> views can share some camera intrinsic parameters (default)\n"
-      << std::endl;
+      << "\t 1-> views can share some camera intrinsic parameters (default)";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--imageDirectory " << sImageDir << std::endl
-            << "--outputDirectory " << sOutputDir << std::endl
-            << "--camera_model " << i_User_camera_model << std::endl
-            << "--group_camera_model " << b_Group_camera_model << std::endl;
+  OPENMVG_LOG_INFO << " You called : " << argv[0]
+    << "\n--imageDirectory " << sImageDir
+    << "\n--outputDirectory " << sOutputDir
+    << "\n--camera_model " << i_User_camera_model
+    << "\n--group_camera_model " << b_Group_camera_model;
 
   const EINTRINSIC e_User_camera_model = EINTRINSIC(i_User_camera_model);
 
   if ( !stlplus::folder_exists( sImageDir ) )
   {
-    std::cerr << "\nThe input directory doesn't exist" << std::endl;
+    OPENMVG_LOG_ERROR << "The input directory doesn't exist";
     return EXIT_FAILURE;
   }
 
   if (sOutputDir.empty())
   {
-    std::cerr << "\nInvalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -89,7 +87,7 @@ int main(int argc, char **argv)
   {
     if ( !stlplus::folder_create( sOutputDir ))
     {
-      std::cerr << "\nCannot create output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create output directory";
       return EXIT_FAILURE;
     }
   }
@@ -98,7 +96,7 @@ int main(int argc, char **argv)
   const std::string sListsFile = stlplus::create_filespec( sOutputDir, "lists.txt" );
   if ( !stlplus::is_file( sListsFile ) )
   {
-    std::cerr << "\nThe input lists.txt file doesn't exist" << std::endl;
+    OPENMVG_LOG_ERROR << "The input lists.txt file doesn't exist";
     return EXIT_FAILURE;
   }
 
@@ -110,7 +108,7 @@ int main(int argc, char **argv)
                                       vec_intrinsicGroups,
                                       sListsFile) )
   {
-    std::cerr << "\nEmpty image list." << std::endl;
+    OPENMVG_LOG_ERROR << "Empty image list.";
     return EXIT_FAILURE;
   }
 
@@ -161,7 +159,7 @@ int main(int argc, char **argv)
         intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>(width, height, focal, ppx, ppy);
         break;
         default:
-          std::cerr << "Invalid camera model." << std::endl;
+          OPENMVG_LOG_ERROR << "Invalid camera model.";
           return EXIT_FAILURE;
       }
     }

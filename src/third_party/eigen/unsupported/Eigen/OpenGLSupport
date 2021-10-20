@@ -10,7 +10,7 @@
 #ifndef EIGEN_OPENGL_MODULE
 #define EIGEN_OPENGL_MODULE
 
-#include <Eigen/Geometry>
+#include "../../Eigen/Geometry"
 
 #if defined(__APPLE_CC__)
   #include <OpenGL/gl.h>
@@ -25,7 +25,7 @@ namespace Eigen {
   *
   * This module provides wrapper functions for a couple of OpenGL functions
   * which simplify the way to pass Eigen's object to openGL.
-  * Here is an exmaple:
+  * Here is an example:
   * 
   * \code
   * // You need to add path_to_eigen/unsupported to your include path.
@@ -184,7 +184,7 @@ inline void glRotate(const Rotation2D<float>& rot)
 }
 inline void glRotate(const Rotation2D<double>& rot)
 {
-  glRotated(rot.angle()*180.0/EIGEN_PI, 0.0, 0.0, 1.0);
+  glRotated(rot.angle()*180.0/double(EIGEN_PI), 0.0, 0.0, 1.0);
 }
 
 template<typename Derived> void glRotate(const RotationBase<Derived,3>& rot)

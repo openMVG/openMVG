@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/geometry/frustum.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -145,10 +146,12 @@ bool Frustum::export_Ply
   const std::string & filename
 )
 {
-  std::ofstream of(filename.c_str());
-  if (!of.is_open())
+  std::ofstream of(filename);
+  if (!of)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open the ply file: " << filename << ".";
     return false;
-
+  }
   // Vertex count evaluation
   const size_t vertex_count = frustum.frustum_points().size();
   // Faces count evaluation

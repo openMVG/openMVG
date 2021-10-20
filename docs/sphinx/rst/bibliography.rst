@@ -4,7 +4,7 @@
 Bibliography
 ============
 
-.. [Ke] **An Efficient Algebraic Solution to the Perspective-Three-Point Proble.**
+.. [Ke] **An Efficient Algebraic Solution to the Perspective-Three-Point Problem.**
     Ke, T.; Roumeliotis, S.
     CVPR 2017
 
@@ -45,12 +45,12 @@ Bibliography
     Pierre Moulon, Pascal Monasse and Renaud Marlet.
     In ICCV, 2013.
 
-.. [TracksCVMP12] **Unordered feature tracking made fast and easy**
+.. [TracksCVMP12] **Unordered feature tracking made fast and easy.**
     Pierre Moulon and Pascal Monasse, CVMP 2012.
 
 .. [KVLD12] **Virtual Line Descriptor and Semi-Local Graph Matching Method for Reliable Feature Correspondence.**
     Zhe LIU and Renaud MARLET, BMVC 2012.
-    
+
 .. [Moulon13] **Global Multiple-View Color Consistency.**
     Pierre Moulon, Bruno Duisit and Pascal Monasse, CVMP 2013.
 
@@ -87,31 +87,42 @@ Bibliography
     Moisan, Lionel, Pierre Moulon, and Pascal Monasse.
     Image Processing On Line 10 (2012)
 
-.. [VLFEAT]  **VLFeat: An Open and Portable Library of Computer Vision Algorithms**
+.. [VLFEAT]  **VLFeat: An Open and Portable Library of Computer Vision Algorithms.**
     A. Vedaldi and B. Fulkerson, 2008. http://www.vlfeat.org/, http://www.vlfeat.org/overview/sift.html.
 
 .. [OlssonDuality] **Outlier Removal Using Duality.**
     Carl Olsson, Anders Eriksson and Richard Hartley, Richard. CVPR 2010.
 
-.. [CASCADEHASHING] **Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction**
+.. [CASCADEHASHING] **Fast and Accurate Image Matching with Cascade Hashing for 3D Reconstruction.**
    Jian Cheng, Cong Leng, Jiaxiang Wu, Hainan Cui, Hanqing Lu. CVPR 2014.
-   
-.. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers**
+
+.. [HNSW] **Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs.**
+   Yu. A. Malkov, D. A. Yashunin, TPAMI 2018.
+
+.. [Bellavia_IJCV20] **Is There Anything New to Say About SIFT Matching?**
+   Bellavia, Fabio; Colombo, Carlo. In International Journal of Computer Vision, 2020.
+
+.. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers.**
    Magnus Oskarsson. In Journal of Mathematical Imaging and Vision, 2017.
 
-.. [Nordberg] **"Lambda Twist: An Accurate Fast Robust Perspective Three Point (P3P) Solver**
-   Persson, Mikael; Nordberg, Klas. ECCV 2018
+.. [Nordberg] **Lambda Twist: An Accurate Fast Robust Perspective Three Point (P3P) Solver.**
+   Persson, Mikael; Nordberg, Klas. ECCV 2018.
 
-.. [Ceres] **Ceres Solver**
+.. [Lee_ICCV19] **Closed-Form Optimal Triangulation Based on Angular Errors.**
+   S.H. Lee, J. Civera. ICCV 2019.
+
+.. [Lee_BMVC19] **Triangulation: Why Optimize?**
+   S.H. Lee, J. Civera. BMVC 2019.
+
+.. [Ceres] **Ceres Solver.**
     Sameer Agarwal and Keir Mierle and Others, http://ceres-solver.org
 
-.. [CppUnitLite] **CppUnitLite** http://c2.com/cgi/wiki?CppUnitLite
+.. [CppUnitLite] **CppUnitLite.** http://c2.com/cgi/wiki?CppUnitLite
 
-.. [Eigen] **Eigen** http://eigen.tuxfamily.org/index.php?title=Main_Page
+.. [Eigen] **Eigen.** http://eigen.tuxfamily.org/index.php?title=Main_Page
 
-.. [LEMON] **Lemon** http://lemon.cs.elte.hu/trac/lemon
+.. [LEMON] **Lemon.** http://lemon.cs.elte.hu/trac/lemon
 
-.. [STLplus] **STLplus** http://stlplus.sourceforge.net/
+.. [STLplus] **STLplus.** http://stlplus.sourceforge.net/
 
-.. [LP] **Linear Programming** http://en.wikipedia.org/wiki/Linear_programming
-
+.. [LP] **Linear Programming.** http://en.wikipedia.org/wiki/Linear_programming

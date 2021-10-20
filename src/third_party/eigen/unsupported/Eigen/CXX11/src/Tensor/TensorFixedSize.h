@@ -20,7 +20,7 @@ namespace Eigen {
   * The fixed sized equivalent of
   * Eigen::Tensor<float, 3> t(3, 5, 7);
   * is
-  * Eigen::TensorFixedSize<float, Size<3,5,7>> t;
+  * Eigen::TensorFixedSize<float, Sizes<3,5,7>> t;
   */
 
 template<typename Scalar_, typename Dimensions_, int Options_, typename IndexType>
@@ -40,10 +40,17 @@ class TensorFixedSize : public TensorBase<TensorFixedSize<Scalar_, Dimensions_, 
 
     enum {
       IsAligned = bool(EIGEN_MAX_ALIGN_BYTES>0),
+      PacketAccess = (internal::packet_traits<Scalar>::size > 1),
+      BlockAccess = false,
+      PreferBlockAccess = false,
       Layout = Options_ & RowMajor ? RowMajor : ColMajor,
       CoordAccess = true,
       RawAccess = true
     };
+
+  //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
+  typedef internal::TensorBlockNotImplemented TensorBlock;
+  //===--------------------------------------------------------------------===//
 
   typedef Dimensions_ Dimensions;
   static const std::size_t NumIndices = Dimensions::count;
@@ -333,27 +340,10 @@ class TensorFixedSize : public TensorBase<TensorFixedSize<Scalar_, Dimensions_, 
       internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
     }
 
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorFixedSize& operator=(const TensorFixedSize& other)
-    {
-      // FIXME: check that the dimensions of other match the dimensions of *this.
-      // Unfortunately this isn't possible yet when the rhs is an expression.
-      typedef TensorAssignOp<Self, const TensorFixedSize> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-    template<typename OtherDerived>
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorFixedSize& operator=(const OtherDerived& other)
-    {
-      // FIXME: check that the dimensions of other match the dimensions of *this.
-      // Unfortunately this isn't possible yet when the rhs is an expression.
-      typedef TensorAssignOp<Self, const OtherDerived> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
+    // FIXME: check that the dimensions of other match the dimensions of *this.
+    // Unfortunately this isn't possible yet when the rhs is an expression.
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(TensorFixedSize)
+
 
   protected:
     EIGEN_DEVICE_FUNC

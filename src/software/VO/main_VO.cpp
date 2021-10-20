@@ -9,7 +9,9 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/features/feature.hpp"
 
+#if defined HAVE_OPENGL
 #include "software/VO/CGlWindow.hpp"
+#endif
 #include "software/VO/Monocular_VO.hpp"
 #include "software/VO/Tracker.hpp"
 #if defined HAVE_OPENCV
@@ -85,6 +87,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+#if defined HAVE_OPENGL
   if ( !glfwInit() )
   {
     return EXIT_FAILURE;
@@ -96,7 +99,7 @@ int main(int argc, char **argv)
 
   CGlWindow window;
   GLuint text2D;
-
+#endif
   //---------------------------------------
   // VO: Visual Odometry
   //---------------------------------------
@@ -114,7 +117,7 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < vec_image.size(); ++i)
     {
       if (openMVG::image::GetFormat(vec_image[i].c_str()) != openMVG::image::Unknown)
-        vec_image_.push_back(vec_image[i]);
+        vec_image_.emplace_back(vec_image[i]);
     }
     vec_image_.swap(vec_image);
   }
@@ -156,6 +159,7 @@ int main(int argc, char **argv)
     const std::string sImageFilename = stlplus::create_filespec( sImaDirectory, *iterFile );
     if (openMVG::image::ReadImage( sImageFilename.c_str(), &currentImage))
     {
+#if defined HAVE_OPENGL
       if (window._height < 0)
       {
         // no window created yet, initialize it with the first frame
@@ -187,7 +191,7 @@ int main(int argc, char **argv)
       // Clear the depth buffer so the drawn image become the background
       glClear(GL_DEPTH_BUFFER_BIT);
       glDisable(GL_LIGHTING);
-
+#endif
       //--
       //-- Feature tracking
       //    . track features
@@ -195,6 +199,7 @@ int main(int argc, char **argv)
       //--
       monocular_vo.nextFrame(currentImage, frameId);
 
+      #if defined HAVE_OPENGL
       //--
       // Draw feature trajectories
       //--
@@ -260,6 +265,7 @@ int main(int argc, char **argv)
       glFlush();
 
       window.Swap(); // Swap openGL buffer
+      #endif
     }
   }
 
@@ -269,6 +275,8 @@ int main(int argc, char **argv)
   if (!Save(sfm_data, sOutFile, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL)))
     return EXIT_FAILURE;
 
+#if defined HAVE_OPENGL
   glfwTerminate();
+#endif
   return 0;
 }

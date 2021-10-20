@@ -9,6 +9,7 @@
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/tracks/union_find.hpp"
 
 #include <utility>
@@ -460,7 +461,7 @@ double DepthCleaning
     }
     landmark_it.second.obs.swap(obs);
   }
-  std::cout << "#point depth filter: " << cpt << " measurements removed" <<std::endl;
+  OPENMVG_LOG_INFO << "#point depth filter: " << cpt << " measurements removed";
 
   // Remove orphans
   eraseUnstablePosesAndObservations(sfm_data, k_min_point_per_pose, k_min_track_length);

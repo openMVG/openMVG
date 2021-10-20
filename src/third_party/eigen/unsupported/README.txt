@@ -20,7 +20,7 @@ However, it:
  - must rely on Eigen,
  - must be highly related to math,
  - should have some general purpose in the sense that it could
-   potentially become an offical Eigen module (or be merged into another one).
+   potentially become an official Eigen module (or be merged into another one).
 
 In doubt feel free to contact us. For instance, if your addons is very too specific
 but it shows an interesting way of using Eigen, then it could be a nice demo.

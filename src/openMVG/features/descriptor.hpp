@@ -11,12 +11,12 @@
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <fstream>
 #include <string>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace features {
@@ -96,7 +96,7 @@ inline std::istream& operator>>(std::istream& in, Descriptor<T, N>& obj)
 template<typename T>
 inline std::ostream& printT(std::ostream& os, T *tab, uint32_t N)
 {
-  std::copy( tab, &tab[N], std::ostream_iterator<T>(os," "));
+  std::copy(tab, &tab[N], std::ostream_iterator<T>(os," "));
   return os;
 }
 
@@ -169,7 +169,7 @@ inline bool saveDescsToFile(
   std::ofstream file(sfileNameDescs.c_str());
   if (!file.is_open())
     return false;
-  std::copy(vec_desc.begin(), vec_desc.end(),
+  std::copy(vec_desc.cbegin(), vec_desc.cend(),
             std::ostream_iterator<typename DescriptorsT::value_type >(file,"\n"));
   const bool bOk = file.good();
   file.close();
@@ -216,9 +216,9 @@ inline bool saveDescsToBinFile(
   //Write the number of descriptor
   const std::size_t cardDesc = vec_desc.size();
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
-  for (typename DescriptorsT::const_iterator iter = vec_desc.begin();
-    iter != vec_desc.end(); ++iter) {
-    file.write((const char*) (*iter).data(),
+  //Write descriptor content
+  for (const auto iter : vec_desc) {
+    file.write((const char*) iter.data(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = file.good();

@@ -24,8 +24,12 @@ namespace Eigen
   */
 }
 
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
+
 #include "src/Splines/SplineFwd.h"
 #include "src/Splines/Spline.h"
 #include "src/Splines/SplineFitting.h"
+
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_SPLINES_MODULE_H

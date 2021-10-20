@@ -11,13 +11,14 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #define _USE_EIGEN
 #include "InterfaceMVS.h"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/progress/progress_display.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -46,18 +47,17 @@ bool exportToOpenMVS(
     stlplus::folder_create(sOutDir);
     if (!stlplus::is_folder(sOutDir))
     {
-      std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot access to one of the desired output directory";
       return false;
     }
   }
 
   // Export data :
-  MVS::Interface scene;
+  _INTERFACE_NAMESPACE::Interface scene;
   size_t nPoses(0);
   const uint32_t nViews((uint32_t)sfm_data.GetViews().size());
 
-  C_Progress_display my_progress_bar(nViews,
-      std::cout, "\n- PROCESS VIEWS -\n");
+  system::LoggerProgress my_progress_bar(nViews,"- PROCESS VIEWS -");
 
   // OpenMVG can have not contiguous index, use a map to create the required OpenMVS contiguous ID index
   std::map<openMVG::IndexT, uint32_t> map_intrinsic, map_view;
@@ -70,9 +70,11 @@ bool exportToOpenMVS(
       const Pinhole_Intrinsic * cam = dynamic_cast<const Pinhole_Intrinsic*>(intrinsic.second.get());
       if (map_intrinsic.count(intrinsic.first) == 0)
         map_intrinsic.insert(std::make_pair(intrinsic.first, scene.platforms.size()));
-      MVS::Interface::Platform platform;
+      _INTERFACE_NAMESPACE::Interface::Platform platform;
       // add the camera
-      MVS::Interface::Platform::Camera camera;
+      _INTERFACE_NAMESPACE::Interface::Platform::Camera camera;
+      camera.width = cam->w();
+      camera.height = cam->h();
       camera.K = cam->K();
       // sub-pose
       camera.R = Mat3::Identity();
@@ -86,42 +88,43 @@ bool exportToOpenMVS(
   scene.images.reserve(nViews);
   for (const auto& view : sfm_data.GetViews())
   {
-    map_view[view.first] = scene.images.size();
-    MVS::Interface::Image image;
+    ++my_progress_bar;
+
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
-    image.name = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
-    image.platformID = map_intrinsic.at(view.second->id_intrinsic);
-    MVS::Interface::Platform& platform = scene.platforms[image.platformID];
-    image.cameraID = 0;
     if (!stlplus::is_file(srcImage))
     {
-      std::cout << "Cannot read the corresponding image: " << srcImage << std::endl;
-      return EXIT_FAILURE;
+      OPENMVG_LOG_INFO << "Cannot read the corresponding image: " << srcImage;
+      return false;
     }
-    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
+
+    if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get())) 
     {
-      MVS::Interface::Platform::Pose pose;
+      map_view[view.first] = scene.images.size();
+
+      _INTERFACE_NAMESPACE::Interface::Image image;
+      image.name = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
+      image.platformID = map_intrinsic.at(view.second->id_intrinsic);
+      _INTERFACE_NAMESPACE::Interface::Platform& platform = scene.platforms[image.platformID];
+      image.cameraID = 0;
+
+      _INTERFACE_NAMESPACE::Interface::Platform::Pose pose;
       image.poseID = platform.poses.size();
       const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
       pose.R = poseMVG.rotation();
       pose.C = poseMVG.center();
       platform.poses.push_back(pose);
       ++nPoses;
+
+      scene.images.emplace_back(image);
     }
     else
     {
-      // image have not valid pose, so set an undefined pose
-      image.poseID = NO_ID;
-      // just copy the image
-      //stlplus::file_copy(srcImage, image.name);
+      OPENMVG_LOG_INFO << "Cannot read the corresponding pose or intrinsic of view " << view.first;
     }
-    scene.images.emplace_back(image);
-    ++my_progress_bar;
   }
 
   // Export undistorted images
-  C_Progress_display my_progress_bar_images(sfm_data.views.size(),
-      std::cout, "\n- UNDISTORT IMAGES -\n" );
+  system::LoggerProgress my_progress_bar_images(sfm_data.views.size(), "- UNDISTORT IMAGES " );
   std::atomic<bool> bOk(true); // Use a boolean to track the status of the loop process
 #ifdef OPENMVG_USE_OPENMP
   const unsigned int nb_max_thread = (iNumThreads > 0)? iNumThreads : omp_get_max_threads();
@@ -143,12 +146,6 @@ bool exportToOpenMVS(
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view->s_Img_path);
     const std::string imageName = stlplus::create_filespec(sOutDir, view->s_Img_path);
 
-    if (!stlplus::is_file(srcImage))
-    {
-      std::cerr << "Cannot read the corresponding image: " << srcImage << std::endl;
-      bOk = false;
-      continue;
-    }
     if (sfm_data.IsPoseAndIntrinsicDefined(view))
     {
       // export undistorted images
@@ -157,12 +154,20 @@ bool exportToOpenMVS(
       {
         // undistort image and save it
         Image<openMVG::image::RGBColor> imageRGB, imageRGB_ud;
+        Image<uint8_t> image_gray, image_gray_ud;
         try
         {
           if (ReadImage(srcImage.c_str(), &imageRGB))
           {
             UndistortImage(imageRGB, cam, imageRGB_ud, BLACK);
             bOk = WriteImage(imageName.c_str(), imageRGB_ud);
+          }
+          else // If RGBColor reading fails, try to read as gray image
+          if (ReadImage(srcImage.c_str(), &image_gray))
+          {
+            UndistortImage(image_gray, cam, image_gray_ud, BLACK);
+            const bool bRes = WriteImage(imageName.c_str(), image_gray_ud);
+            bOk = bOk & bRes;
           }
           else
           {
@@ -189,9 +194,9 @@ bool exportToOpenMVS(
 
   if (!bOk)
   {
-    std::cerr << "Catched a memory error in the image conversion."
+    OPENMVG_LOG_ERROR << "Catched a memory error in the image conversion."
      << " Please consider to use less threads ([-n|--numThreads])." << std::endl;
-    return EXIT_FAILURE;
+    return false;
   }
 
   // define structure
@@ -199,13 +204,13 @@ bool exportToOpenMVS(
   for (const auto& vertex: sfm_data.GetLandmarks())
   {
     const Landmark & landmark = vertex.second;
-    MVS::Interface::Vertex vert;
-    MVS::Interface::Vertex::ViewArr& views = vert.views;
+    _INTERFACE_NAMESPACE::Interface::Vertex vert;
+    _INTERFACE_NAMESPACE::Interface::Vertex::ViewArr& views = vert.views;
     for (const auto& observation: landmark.obs)
     {
       const auto it(map_view.find(observation.first));
       if (it != map_view.end()) {
-        MVS::Interface::Vertex::View view;
+        _INTERFACE_NAMESPACE::Interface::Vertex::View view;
         view.imageID = it->second;
         view.confidence = 0;
         views.push_back(view);
@@ -215,7 +220,7 @@ bool exportToOpenMVS(
       continue;
     std::sort(
       views.begin(), views.end(),
-      [] (const MVS::Interface::Vertex::View& view0, const MVS::Interface::Vertex::View& view1)
+      [] (const _INTERFACE_NAMESPACE::Interface::Vertex::View& view0, const _INTERFACE_NAMESPACE::Interface::Vertex::View& view1)
       {
         return view0.imageID < view1.imageID;
       }
@@ -224,52 +229,20 @@ bool exportToOpenMVS(
     scene.vertices.push_back(vert);
   }
 
-  // normalize camera intrinsics
-  for (size_t p=0; p<scene.platforms.size(); ++p)
-  {
-    MVS::Interface::Platform& platform = scene.platforms[p];
-    for (size_t c=0; c<platform.cameras.size(); ++c) {
-      MVS::Interface::Platform::Camera& camera = platform.cameras[c];
-      // find one image using this camera
-      MVS::Interface::Image* pImage(nullptr);
-      for (MVS::Interface::Image& image: scene.images)
-      {
-        if (image.platformID == p && image.cameraID == c && image.poseID != NO_ID)
-        {
-          pImage = &image;
-          break;
-        }
-      }
-      if (!pImage)
-      {
-        std::cerr << "error: no image using camera " << c << " of platform " << p << std::endl;
-        continue;
-      }
-      // read image meta-data
-      ImageHeader imageHeader;
-      ReadImageHeader(pImage->name.c_str(), &imageHeader);
-      const double fScale(1.0/std::max(imageHeader.width, imageHeader.height));
-      camera.K(0, 0) *= fScale;
-      camera.K(1, 1) *= fScale;
-      camera.K(0, 2) *= fScale;
-      camera.K(1, 2) *= fScale;
-    }
-  }
-
   // write OpenMVS data
-  if (!MVS::ARCHIVE::SerializeSave(scene, sOutFile))
+  if (!_INTERFACE_NAMESPACE::ARCHIVE::SerializeSave(scene, sOutFile))
     return false;
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Scene saved to OpenMVS interface format:\n"
-    << " #platforms: " << scene.platforms.size() << std::endl;
+    << " #platforms: " << scene.platforms.size();
     for (int i = 0; i < scene.platforms.size(); ++i)
     {
-      std::cout << "  platform ( " << i << " ) #cameras: " << scene.platforms[i].cameras.size() << std::endl;
+      OPENMVG_LOG_INFO << "  platform ( " << i << " ) #cameras: " << scene.platforms[i].cameras.size();
     }
-  std::cout
+  OPENMVG_LOG_INFO
     << "  " << scene.images.size() << " images (" << nPoses << " calibrated)\n"
-    << "  " << scene.vertices.size() << " Landmarks\n";
+    << "  " << scene.vertices.size() << " Landmarks";
   return true;
 }
 
@@ -289,42 +262,40 @@ int main(int argc, char *argv[])
 #endif
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outfile] OpenMVS scene file\n"
       << "[-d|--outdir] undistorted images path\n"
 #ifdef OPENMVG_USE_OPENMP
       << "[-n|--numThreads] number of thread(s)\n"
 #endif
-      << std::endl;
+      ;
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
   if (stlplus::extension_part(sOutFile) != "mvs") {
-    std::cerr << std::endl
-      << "Invalid output file extension: " << sOutFile << std::endl
-      << "You must use a filename with a .mvs extension." << std::endl;
+    OPENMVG_LOG_ERROR
+      << "Invalid output file extension: " << sOutFile << "."
+      << "You must use a filename with a .mvs extension.";
       return EXIT_FAILURE;
   }
 
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
   // Export OpenMVS data structure
   if (!exportToOpenMVS(sfm_data, sOutFile, sOutDir, iNumThreads))
   {
-    std::cerr << std::endl
-      << "The output openMVS scene file cannot be written" << std::endl;
+    OPENMVG_LOG_ERROR << "The output openMVS scene file cannot be written";
     return EXIT_FAILURE;
   }
 

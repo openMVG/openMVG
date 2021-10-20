@@ -8,6 +8,7 @@
 
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/numeric/l1_solver_admm.hpp"
+#include "openMVG/system/logger.hpp"
 
 #ifdef HAVE_BOOST
 #include <boost/accumulators/accumulators.hpp>
@@ -431,7 +432,7 @@ bool SolveL1RA
     CorrectMatrix(x, nMainViewID, Rs);
   } while (++iter < 32 && e > 1e-5 && (ep-e)/e > 1e-2);
 
-  std::cout << "L1RA Converged in " << iter << " iterations." << std::endl;
+  OPENMVG_LOG_INFO << "L1RA Converged in " << iter << " iterations.";
 
   return true;
 }
@@ -456,12 +457,12 @@ bool SolveIRLS
 
   // Since the sparsity pattern will not change with each linear solve
   //  compute it once to speed up the solution time.
-  using Linear_Solver_T = Eigen::SimplicialLDLT<sMat >;
+  using Linear_Solver_T = Eigen::SimplicialLDLT<sMat>;
 
   Linear_Solver_T linear_solver;
   linear_solver.analyzePattern(A.transpose() * A);
   if (linear_solver.info() != Eigen::Success) {
-    std::cerr << "Cholesky decomposition failed." << std::endl;
+    OPENMVG_LOG_ERROR << "Cholesky decomposition failed.";
     return false;
   }
 
@@ -488,14 +489,14 @@ bool SolveIRLS
     const sMat at_weight = A.transpose() * weights.matrix().asDiagonal();
     linear_solver.factorize(at_weight * A);
     if (linear_solver.info() != Eigen::Success) {
-      std::cerr << "Failed to factorize the least squares system." << std::endl;
+      OPENMVG_LOG_ERROR << "Failed to factorize the least squares system.";
       return false;
     }
 
     // Solve the least squares problem
     x = linear_solver.solve(at_weight * b);
     if (linear_solver.info() != Eigen::Success) {
-      std::cerr << "Failed to solve the least squares system." << std::endl;
+      OPENMVG_LOG_ERROR << "Failed to solve the least squares system.";
       return false;
     }
 
@@ -506,7 +507,7 @@ bool SolveIRLS
 
   } while (++iter < 32 && e > 1e-5 && (ep-e)/e > 1e-2);
 
-  std::cout << "IRLS Converged in " << iter << " iterations." << std::endl;
+  OPENMVG_LOG_INFO << "IRLS Converged in " << iter << " iterations.";
 
   return true;
 }
@@ -539,22 +540,22 @@ bool RefineRotationsAvgL1IRLS(
 
   if (!internal::SolveL1RA(RelRs, Rs, A, nMainViewID))
   {
-    std::cerr << "Could not solve the L1 regression step." << std::endl;
+    OPENMVG_LOG_ERROR << "Could not solve the L1 regression step.";
     return false;
   }
 
   if (!internal::SolveIRLS(RelRs, Rs, A, nMainViewID, sigma))
   {
-    std::cerr << "Could not solve the ILRS step." << std::endl;
+    OPENMVG_LOG_ERROR << "Could not solve the ILRS step.";
     return false;
   }
 
   double fMinAfter, fMaxAfter;
   const double fMeanAfter = RelRotationAvgError(RelRs, Rs, &fMinAfter, &fMaxAfter);
 
-  std::cout << "Refine global rotations using L1RA-IRLS and " << nObss << " relative rotations:\n"
+  OPENMVG_LOG_INFO << "Refine global rotations using L1RA-IRLS and " << nObss << " relative rotations:\n"
     << " error reduced from " << fMeanBefore << "(" <<fMinBefore << " min, " << fMaxBefore << " max)\n"
-    << " to " << fMeanAfter << "(" << fMinAfter << "min,"<< fMaxAfter<< "max)" << std::endl;
+    << " to " << fMeanAfter << "(" << fMinAfter << "min,"<< fMaxAfter<< "max)";
 
   return true;
 } // RefineRotationsAvgL1IRLS

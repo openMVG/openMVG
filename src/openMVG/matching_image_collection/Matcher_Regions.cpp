@@ -10,8 +10,8 @@
 #include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-
-#include "third_party/progress/progress.hpp"
+#include "openMVG/system/progressinterface.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {
@@ -32,19 +32,18 @@ Matcher_Regions::Matcher_Regions
 void Matcher_Regions::Match(
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatchesContainer & map_PutativesMatches,
-  C_Progress * my_progress_bar
-) const
+  PairWiseMatchesContainer & map_PutativeMatches,
+  system::ProgressInterface * my_progress_bar)const
 {
   if (!my_progress_bar)
-    my_progress_bar = &C_Progress::dummy();
+    my_progress_bar = &system::ProgressInterface::dummy();
 #ifdef OPENMVG_USE_OPENMP
-  std::cout << "Using the OPENMP thread interface" << std::endl;
+  OPENMVG_LOG_INFO << "Using the OPENMP thread interface";
   const bool b_multithreaded_pair_search = (eMatcherType_ == CASCADE_HASHING_L2);
   // -> set to true for CASCADE_HASHING_L2, since OpenMP instructions are not used in this matcher
 #endif
 
-  my_progress_bar->restart(pairs.size(), "\n- Matching -\n");
+  my_progress_bar->Restart(pairs.size(), "- Matching -");
 
   // Sort pairs according the first index to minimize the MatcherT build operations
   using Map_vectorT = std::map<IndexT, std::vector<IndexT>>;
@@ -90,16 +89,16 @@ void Matcher_Regions::Match(
         continue;
       }
 
-      IndMatches vec_putatives_matches;
-      matcher->MatchDistanceRatio(f_dist_ratio_, *regionsJ.get(), vec_putatives_matches);
+      IndMatches vec_putative_matches;
+      matcher->MatchDistanceRatio(f_dist_ratio_, *regionsJ.get(), vec_putative_matches);
 
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp critical
 #endif
       {
-        if (!vec_putatives_matches.empty())
+        if (!vec_putative_matches.empty())
         {
-          map_PutativesMatches.insert( { {I,J}, std::move(vec_putatives_matches) } );
+          map_PutativeMatches.insert( { {I,J}, std::move(vec_putative_matches) } );
         }
       }
       ++(*my_progress_bar);

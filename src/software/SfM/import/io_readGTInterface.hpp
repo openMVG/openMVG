@@ -10,7 +10,6 @@
 #define IO_READ_GT_INTERFACE_HPP
 
 #include "openMVG/sfm/sfm_data.hpp"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
@@ -39,12 +38,12 @@ public:
 
     if (!loadGT())
     {
-      std::cerr << "Error: Failed to Load Ground Truth!" << std::endl;
+      OPENMVG_LOG_ERROR << "Error: Failed to Load Ground Truth!";
       return false;
     };
     if (!loadImages())
     {
-      std::cerr << "Error: Failed to Load Images!" << std::endl;
+      OPENMVG_LOG_ERROR << "Error: Failed to Load Images!";
       return false;
     };
 

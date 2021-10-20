@@ -9,6 +9,7 @@
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
+#include "openMVG/cameras/Camera_Pinhole_Fisheye.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/features/feature.hpp"
@@ -16,9 +17,9 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_colorization.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iomanip>
@@ -100,14 +101,31 @@ bool CreateLineCameraFile(  const IndexT camera_id,
       }
       break; 
     case PINHOLE_CAMERA_BROWN: 
-      std::cout << "PINHOLE_CAMERA_BROWN is not supported. Aborting ..." << std::endl;
+      OPENMVG_LOG_ERROR << "PINHOLE_CAMERA_BROWN is not supported. Aborting ...";
       return false;
       break;      
     case PINHOLE_CAMERA_FISHEYE: 
-      std::cout << "PINHOLE_CAMERA_FISHEYE is not supported. Aborting ..." << std::endl;
-      return false;
+      //OpenMVG's PINHOLE_CAMERA_FISHEYE corresponds to Colmap's OPENCV_FISHEYE
+      //Parameters: fx, fy, cx, cy, k1, k2, k3, k4
+      {
+        std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Fisheye> pinhole_intrinsic_fisheye(
+            dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Fisheye * >(intrinsic->clone()));
+        
+        came_line_ss << camera_id << " " << 
+          "OPENCV_FISHEYE" << " " <<
+          pinhole_intrinsic_fisheye->w() << " " << 
+          pinhole_intrinsic_fisheye->h() << " " <<
+          pinhole_intrinsic_fisheye->focal() << " " << 
+          pinhole_intrinsic_fisheye->focal() << " " << 
+          pinhole_intrinsic_fisheye->principal_point().x() << " " << 
+          pinhole_intrinsic_fisheye->principal_point().y() << " " << 
+          pinhole_intrinsic_fisheye->getParams().at(3) << " " << //k1
+          pinhole_intrinsic_fisheye->getParams().at(4) << " " << //k2
+          pinhole_intrinsic_fisheye->getParams().at(5) << " " << //k3
+          pinhole_intrinsic_fisheye->getParams().at(6) << " " << "\n"; //k4
+      }
       break; 
-    default: std::cout << "Camera Type " << current_type << " is not supported. Aborting ..." << std::endl;
+    default: OPENMVG_LOG_ERROR << "Camera Type " << current_type << " is not supported. Aborting ...";
     return false;
   }
   camera_linie = came_line_ss.str();
@@ -125,7 +143,7 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
   std::ofstream camera_file( sCamerasFilename );
   if ( ! camera_file )
   {
-    std::cerr << "Cannot write file" << sCamerasFilename << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot write file" << sCamerasFilename;
     return false;
   }
   camera_file << "# Camera list with one line of data per camera:\n";
@@ -133,7 +151,7 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
   camera_file << "# Number of cameras: X\n";
 
   std::vector<std::string> camera_lines;
-  C_Progress_display my_progress_bar( sfm_data.GetIntrinsics().size(), std::cout, "\n- CREATE CAMERA FILE -\n" );
+  system::LoggerProgress my_progress_bar( sfm_data.GetIntrinsics().size(), "- CREATE CAMERA FILE -" );
   for (Intrinsics::const_iterator iter = sfm_data.GetIntrinsics().begin();
     iter != sfm_data.GetIntrinsics().end(); ++iter, ++my_progress_bar)
   {
@@ -171,7 +189,7 @@ bool CreateImageFile( const SfM_Data & sfm_data,
 
   if ( ! images_file )
   {
-    std::cerr << "Cannot write file" << sImagesFilename << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot write file" << sImagesFilename;
     return false;
   }
   images_file << "# Image list with two lines of data per image:\n";
@@ -199,7 +217,7 @@ bool CreateImageFile( const SfM_Data & sfm_data,
   }
 
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- CREATE IMAGE FILE -\n" );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size(), "- CREATE IMAGE FILE -" );
 
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
          iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
@@ -270,7 +288,7 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
 
   if ( ! points3D_file )
   {
-    std::cerr << "Cannot write file" << sPoints3DFilename << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot write file" << sPoints3DFilename;
     return false;
   }
   points3D_file << "# 3D point list with one line of data per point:\n";
@@ -284,7 +302,7 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
     return false;
   }
 
-  C_Progress_display my_progress_bar( landmarks.size(), std::cout, "\n- CREATE POINT3D FILE  -\n" );
+  system::LoggerProgress my_progress_bar( landmarks.size(), "- CREATE POINT3D FILE  -" );
   int point_index = 0;
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin();
         iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar )
@@ -366,7 +384,7 @@ bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirecto
   bool bOk = false;
   if ( !stlplus::is_folder( sOutDirectory ) )
   {
-    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    OPENMVG_LOG_INFO << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
     stlplus::folder_create( sOutDirectory );
     bOk = stlplus::is_folder( sOutDirectory );
   }
@@ -377,7 +395,7 @@ bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirecto
 
   if ( !bOk )
   {
-    std::cerr << "Cannot access one of the desired output directories" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot access one of the desired output directories";
     return false;
   }
   const std::string sCamerasFilename = stlplus::create_filespec( sOutDirectory , "cameras.txt" );
@@ -385,7 +403,7 @@ bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirecto
   const std::string sPoints3DFilename = stlplus::create_filespec( sOutDirectory , "points3D.txt" );
   if ( ! CreateColmapFolder( sfm_data , sOutDirectory , sCamerasFilename, sImagesFilename, sPoints3DFilename) )
   {
-    std::cerr << "There was an error exporting project" << std::endl;
+    OPENMVG_LOG_ERROR << "There was an error exporting project";
     return false;
   }
   return true;
@@ -402,7 +420,7 @@ int main( int argc , char ** argv )
   cmd.add( make_option( 'i', sSfM_Data_Filename, "sfmdata" ) );
   cmd.add( make_option( 'o', sOutDir, "outdir" ) );
 
-  std::cout << "Note:  this program writes output in Colmap file format.\n";
+  OPENMVG_LOG_INFO << "Note: this program writes output in Colmap file format.\n";
 
   try
   {
@@ -414,12 +432,12 @@ int main( int argc , char ** argv )
   }
   catch ( const std::string& s )
   {
-    std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO 
+              << "Usage: " << argv[0] << '\n'
               << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-              << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved\n"
-              << std::endl;
+              << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
@@ -432,14 +450,14 @@ int main( int argc , char ** argv )
   SfM_Data sfm_data;
   if ( !Load( sfm_data, sSfM_Data_Filename, ESfM_Data( ALL ) ) )
   {
-    std::cerr << std::endl
-              << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR
+              << "\nThe input SfM_Data file \"" << sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
   if ( ! exportToColmap( sfm_data , sOutDir ) )
   {
-    std::cerr << "There was an error during export of the file" << std::endl;
+    OPENMVG_LOG_ERROR << "There was an error during export of the file";
     return EXIT_FAILURE;
   }
 

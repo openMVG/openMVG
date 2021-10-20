@@ -20,8 +20,7 @@ set(STLPLUS_LIBRARY openMVG_stlplus PARENT_SCOPE)
 # Add graph library
 if(DEFINED OpenMVG_USE_INTERNAL_LEMON)
   add_subdirectory(lemon)
-  set_property(TARGET openMVG_lemon PROPERTY FOLDER OpenMVG/3rdParty/lemon)
-  set_property(TARGET check PROPERTY FOLDER OpenMVG/3rdParty/lemon)
+  set(LEMON_LIBRARY openMVG_lemon PARENT_SCOPE)
 endif()
 
 ##
@@ -92,15 +91,15 @@ add_subdirectory(fast)
 ##
 if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
   #Configure Eigen install
-  set(EIGEN_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
+  set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/eigen)
   add_subdirectory(eigen)
 endif()
 
-list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics)
+list(APPEND directories cmdLine histogram htmlDoc progress vectorGraphics hnswlib)
 foreach(inDirectory ${directories})
 install(
   DIRECTORY ./${inDirectory}
-  DESTINATION include/openMVG/third_party/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/openMVG/third_party/
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
 )

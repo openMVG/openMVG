@@ -8,7 +8,7 @@ It handles storage of SfM related data and method to solve SfM problems (camera 
 A generic SfM data container
 =============================
 
-:class:`SfM_Data` class contains all the data used to describe input of a SfM problem:
+The :class:`SfM_Data` class contains all the data used to describe input of a SfM problem:
 
 * a collection of **View**
 
@@ -48,7 +48,7 @@ A generic SfM data container
 View concept
 --------------
 
-The view store information related to an image:
+A view stores information related to an image:
 
 * image filename
 * id_view (must be unique)
@@ -58,18 +58,18 @@ The view store information related to an image:
 
 Note that thanks to the usage of ids we can defined shared poses & shared intrinsics.
 
-View type is **abstract** and provide a way to add new custom View type: i.e. GeoLocatedView (add GPS position, ...)
+The View type is **abstract** and provides a way to add new custom View types: i.e. GeoLocatedView (add GPS position, ...)
 
 Camera Poses concept
 ---------------------
 
-The camera pose store a 3D pose that define a camera rotation and position (camera rotation and center).
+The camera pose stores a 3D pose that defines a camera rotation and position (camera rotation and center).
 
 Camera Intrinsic concept
 --------------------------
 
-Define the parameter of a camera. It can be shared or not.
-Intrinsics parameter are **abstract** and provide a way to easily add new custom camera type.
+Defines the parameter of a camera. It can be shared or not.
+Intrinsics parameters are **abstract** and provide a way to easily add new custom camera types.
 
 Structure/Landmarks concept
 ----------------------------
@@ -81,38 +81,38 @@ It defines the structure:
 SfM_Data cleaning
 ==================
 
-Generic interface are defined to remove outlier observations:
+Generic interfaces are defined to remove outlier observations. Two methods include:
 
-* use a given residual pixel error to discard outlier,
-* use a minimal angle along the track bearing vectors.
+* using a given residual pixel error
+* using a minimal angle along the track bearing vectors
 
 Triangulation
 ==================
 
-Once the SfM_Data is filled with some landmark observations and poses we can compute their 3D location.
+Once the SfM_Data is filled with some landmark observations and poses, we can compute their 3D location.
 
-Two method are proposed:
+Two methods are proposed:
 
 * A blind method:
 
-  * Triangulate tracks using all observations,
+  * Triangulate tracks using all observations
 
-  * Inlier/Outlier classification is done with a cheirality test,
+  * Inlier/Outlier classification is done with a cheirality test
 
 * A robust method:
 
-  * Triangulate tracks using a RANSAC scheme,
+  * Triangulate tracks using a RANSAC scheme
 
-  * Check cheirality and a pixel residual error.
+  * Check cheirality and pixel residual error
 
 Non linear refinement, Bundle Adjustment
 ==========================================
 
 OpenMVG provides a generic bundle_adjustment framework to refine or keep as constant the following parameters:
 
-* internal orientation parameters (intrinsics: camera projection model),
-* external orientation parameters (extrinsics: camera poses),
-* structure (3D points).
+* internal orientation parameters (intrinsics: camera projection model)
+* external orientation parameters (extrinsics: camera poses)
+* structure (3D points)
 
 .. code-block:: c++
 
@@ -129,28 +129,28 @@ OpenMVG provides a generic bundle_adjustment framework to refine or keep as cons
   const double dResidual_after = RMSE(sfm_data);
 
 Bundle Adjustment (ajustement de faisceaux), is a non linear optimization problem.
-It looks to minimizing the residual error of a series of user cost functions (the reprojection errors of the structure :math:`X_j` to the images measures :math:`x_j^i`).
-According:
+It aims to minimize the residual error of a series of user cost functions (the reprojection errors of the structure :math:`X_j` to the image measures :math:`x_j^i`).
+Accordingly:
 
 * :math:`X_j` the Jnth 3D point of the structure of the scene,
 * :math:`x_j^i` the observation of the projection of the 3D point :math:`X_j` in the image :math:`i`,
 * :math:`P_i` the projection matrix of the image :math:`i`
 
-From a user provided initial guess the vector of parameters: :math:`\{X_j,P_i\}_{i,j}`: camera parameters :math:`\{P_i\}_i` and the scene structure :math:`\{X_j\}_j` are refined in order to minimizes the residual reprojection cost:
+From a user provided initial guess the vector of parameters: :math:`\{X_j,P_i\}_{i,j}`: camera parameters :math:`\{P_i\}_i` and the scene structure :math:`\{X_j\}_j` are refined in order to minimize the residual reprojection cost:
 
 .. math::
   \underset{ \{P_i\}_i, \{X_j\}_j}{minimize} \left\| \sum_{j=0}^{m} \sum_{i=0}^{n} x_j^i - P_i X_j \right\|_2
 
-OpenMVG proposes options in order to tell if a parameter group must be kept as constant or refined during the minimization.
+OpenMVG provides options in order to tell if a parameter group must be kept as constant or refined during the minimization.
 
 SfM Pipelines
 ==============
 
 OpenMVG provides ready to use and customizable pipelines for:
 
-* solving sequential/incremental SfM,
-* solving global SfM,
-* computing a Structure from known camera poses.
+* solving sequential/incremental SfM
+* solving global SfM
+* computing a Structure from known camera poses
 
 
 .. figure:: ../../software/SfM/structureFromMotion.png
@@ -196,7 +196,7 @@ Global SfM
 
 [GlobalACSfM]_ is based on the paper "Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion."  published at ICCV 2013.
 
-Multi-view structure from motion (SfM) estimates the position and orientation of pictures in a common 3D coordinate frame. When views are treated incrementally, this external calibration can be subject to drift, contrary to global methods that distribute residual errors evenly. Here the method propose a new global calibration approach based on the fusion of relative motions between image pairs. 
+Multi-view structure from motion (SfM) estimates the position and orientation of pictures in a common 3D coordinate frame. When views are treated incrementally, this external calibration can be subject to drift, contrary to global methods that distribute residual errors evenly. Here, this method proposes a new global calibration approach based on the fusion of relative motions between image pairs. 
 
 .. code-block:: c++
 

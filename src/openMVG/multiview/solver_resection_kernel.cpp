@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_resection_kernel.hpp"
-
 #include "openMVG/multiview/projection.hpp"
 
 #include <cassert>
@@ -136,16 +135,6 @@ void SixPointResectionSolver::Solve
     P /= P(2,3);
     Ps->push_back(P);
   }
-}
-
-double SixPointResectionSolver::Error
-(
-  const Mat34 & P,
-  const Vec2 & pt2D,
-  const Vec3 & pt3D
-)
-{
-  return (pt2D - Project(P, pt3D)).norm();
 }
 
 }  // namespace kernel

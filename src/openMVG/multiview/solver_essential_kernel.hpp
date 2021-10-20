@@ -43,7 +43,7 @@ namespace kernel {
 /**
  * Five-point algorithm to solve the Essential matrix from 5 points
  * correspondences. It solves the relative pose problem.
- * Input point must be normalized one.
+ * Input points must be normalized.
  */
 struct FivePointSolver {
   enum { MINIMUM_SAMPLES = 5 };
@@ -54,7 +54,7 @@ struct FivePointSolver {
 /**
  * three-point algorithm to solve the orthographic Essential matrix from 3 points
  * correspondences. It solves the relative pose problem.
- * Input point must be normalized one.
+ * Input points must be normalized.
  */
 struct ThreePointSolver {
     enum { MINIMUM_SAMPLES = 3 };
@@ -177,7 +177,7 @@ using FivePointKernel = essential::kernel::EssentialKernel<FivePointSolver,
 
 //-- Solver kernel for the 3pt Orthographic Essential Matrix Estimation
 using ThreePointKernel = essential::kernel::EssentialOrthoKernel<ThreePointSolver,
-        essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
+  essential::kernel::OrthographicSymmetricEpipolarDistanceError, Mat3>;
 
 }  // namespace kernel
 }  // namespace essential

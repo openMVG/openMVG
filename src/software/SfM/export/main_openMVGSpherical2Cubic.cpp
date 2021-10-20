@@ -6,20 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/cameras/Camera_Spherical.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/image/sample.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/spherical/cubic_image_sampler.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <array>
@@ -33,108 +31,18 @@ using namespace openMVG::geometry;
 using namespace openMVG::image;
 using namespace openMVG::sfm;
 
-/// Compute a rectilinear camera focal for a given angular desired FoV and image size
-double FocalFromPinholeHeight
-(
-  int h,
-  double thetaMax = openMVG::D2R(60) // Camera FoV
-)
-{
-  float f = 1.f;
-  while ( thetaMax < atan2( h / (2 * f) , 1))
-  {
-    ++f;
-  }
-  return f;
-}
-
-const std::array<openMVG::Mat3,6> GetCubicRotations()
-{
-  using namespace openMVG;
-  return {
-    RotationAroundY(D2R(0)),     // front
-    RotationAroundY(D2R(-90)),   // right
-    RotationAroundY(D2R(-180)),  // behind
-    RotationAroundY(D2R(-270)),  // left
-    RotationAroundX(D2R(-90)),   // up
-    RotationAroundX(D2R(+90))    // down
-  };
-}
-
-void ComputeCubicCameraIntrinsics(const int cubic_image_size,
-                                  openMVG::cameras::Pinhole_Intrinsic & pinhole_camera)
-{
-  const double focal = FocalFromPinholeHeight(cubic_image_size, D2R(45));
-  const double principal_point_xy = cubic_image_size / 2;
-  pinhole_camera = Pinhole_Intrinsic(cubic_image_size,
-                                     cubic_image_size,
-                                     focal,
-                                     principal_point_xy,
-                                     principal_point_xy);
-}
-
-template <typename ImageT>
-void SphericalToCubic
-(
-  const ImageT & equirectangular_image,
-  const openMVG::cameras::Pinhole_Intrinsic & pinhole_camera,
-  std::vector<ImageT> & cube_images
-)
-{
-  using namespace openMVG;
-  using namespace openMVG::cameras;
-
-  const image::Sampler2d<image::SamplerLinear> sampler;
-
-  //
-  // Initialize a camera model for each image domain
-  // - the equirectangular panorama
-  const Intrinsic_Spherical sphere_camera(equirectangular_image.Width()  - 1,
-                                          equirectangular_image.Height() - 1);
-  // - the cube faces
-  //
-  // Perform backward/inverse rendering:
-  // - For each cube face (rotation)
-  // - Sample the panorama pixel by camera to camera bearing vector projection
-  const int cubic_image_size = pinhole_camera.h();
-  cube_images.resize(6, ImageT(cubic_image_size, cubic_image_size));
-
-  // Initialize the rotation matrices corresponding to each cube face
-  const std::array<Mat3, 6> rot_matrix = GetCubicRotations();
-
-  for (const int i_rot : {0, 1, 2, 3, 4, 5})
-  {
-    auto & pinhole_image = cube_images[i_rot];
-    const int image_width = pinhole_image.Width();
-    const int image_height = pinhole_image.Height();
-
-    // For every pinhole image pixels
-    for (int x = 0; x < image_width; ++x)
-    {
-      for (int y = 0; y < image_height; ++y)
-      { // Project the pinhole bearing vector to the spherical camera
-        const Vec3 pinhole_bearing = rot_matrix[i_rot].transpose() * pinhole_camera(Vec2(x, y));
-        const Vec2 sphere_proj = sphere_camera.project(pinhole_bearing);
-
-        if (equirectangular_image.Contains(sphere_proj(1), sphere_proj(0)))
-        {
-          pinhole_image(y, x) = sampler(equirectangular_image, sphere_proj(1), sphere_proj(0));
-        }
-      }
-    }
-  }
-}
-
 int main(int argc, char *argv[]) {
 
   CmdLine cmd;
   std::string s_sfm_data_filename;
   std::string s_out_dir = "";
   int force_recompute_images = 1;
+  int size_cubic_images = 1024;
 
   cmd.add( make_option('i', s_sfm_data_filename, "sfmdata") );
   cmd.add( make_option('o', s_out_dir, "outdir") );
   cmd.add( make_option('f', force_recompute_images, "force_compute_cubic_images") );
+  cmd.add( make_option('s', size_cubic_images, "size-cubic-images") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -144,13 +52,19 @@ int main(int argc, char *argv[]) {
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"
       << "[-f|--force_recompute_images] (default 1)\n"
+      << "[-s|--size-cubic-images] (default 1024) pixel size of the resulting cubic images, "
+      << "non-positive values will automatically scale the output based on the input"
       << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
   }
 
-  std::cout << "force_recompute_images = " << force_recompute_images << std::endl;
+  OPENMVG_LOG_INFO << "force_recompute_images = " << force_recompute_images;
+
+  std::cout << "size_cubic_images = ";
+  if(size_cubic_images > 0) std::cout << size_cubic_images << std::endl;
+  else std::cout << "auto" << std::endl;
 
   // Create output dir
   if (!stlplus::folder_exists(s_out_dir))
@@ -158,8 +72,8 @@ int main(int argc, char *argv[]) {
 
   SfM_Data sfm_data;
   if (!Load(sfm_data, s_sfm_data_filename, ESfM_Data(ALL))) {
-      std::cerr << std::endl
-      << "The input SfM_Data file \""<< s_sfm_data_filename << "\" cannot be read." << std::endl;
+      OPENMVG_LOG_ERROR << "The input SfM_Data file \""
+        << s_sfm_data_filename << "\" cannot be read.";
       return EXIT_FAILURE;
   }
 
@@ -168,11 +82,16 @@ int main(int argc, char *argv[]) {
 
   // Convert every spherical view to cubic views
   {
-    std::cout << "Generating cubic views:";
-    C_Progress_display my_progress_bar(sfm_data.GetViews().size());
+    system::LoggerProgress my_progress_bar(
+      sfm_data.GetViews().size(),
+      "Generating cubic views:");
     const Views & views = sfm_data.GetViews();
     const Poses & poses = sfm_data.GetPoses();
     const Landmarks & structure = sfm_data.GetLandmarks();
+
+    openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
+    if(size_cubic_images > 0)
+        pinhole_camera = spherical::ComputeCubicCameraIntrinsics(size_cubic_images);
 
     // generate views and camera poses for each new views
     int error_status = 0;
@@ -202,16 +121,30 @@ int main(int argc, char *argv[]) {
           continue;
         }
 
-        openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
-        const int cubic_image_size = 1024;
-        ComputeCubicCameraIntrinsics(cubic_image_size, pinhole_camera);
+        if(size_cubic_images <= 0) {
+            const int auto_cubic_size = spherical_image.Height()/2;
+            pinhole_camera = spherical::ComputeCubicCameraIntrinsics(auto_cubic_size);
+        }
+
+        const std::array<Mat3,6> rot_matrix = spherical::GetCubicRotations();
 
         // when cubical image computation is needed
         std::vector<image::Image<image::RGBColor>> cube_images;
         if (force_recompute_images)
-          SphericalToCubic(spherical_image, pinhole_camera, cube_images);
-
-        const std::array<Mat3,6> rot_matrix = GetCubicRotations();
+        {
+          std::vector<Mat3> rot_matrix_transposed(rot_matrix.cbegin(), rot_matrix.cend());
+          std::transform(
+            rot_matrix_transposed.begin(),
+            rot_matrix_transposed.end(),
+            rot_matrix_transposed.begin(),
+            [](const Mat3 & mat) -> Mat3 { return mat.transpose(); });
+          spherical::SphericalToPinholes(
+            spherical_image,
+            pinhole_camera,
+            cube_images,
+            rot_matrix_transposed,
+            image::Sampler2d<image::SamplerLinear>());
+        }
 
         for (const int cubic_image_id : {0,1,2,3,4,5})
         {
@@ -228,7 +161,7 @@ int main(int argc, char *argv[]) {
           {
             if (!WriteImage(dst_cube_image.c_str(), cube_images[cubic_image_id]))
             {
-              std::cout << "Cannot export cubic images to: " << dst_cube_image << std::endl;
+              OPENMVG_LOG_ERROR << "Cannot export cubic images to: " << dst_cube_image;
               #pragma omp atomic
               ++error_status;
               continue;
@@ -249,7 +182,7 @@ int main(int argc, char *argv[]) {
           Mat3 tmp_rotation = poses.at(view->id_pose).rotation();
           if (tmp_rotation.determinant() < 0)
           {
-            std::cout << "Negative determinant" << std::endl;
+            OPENMVG_LOG_INFO << "Negative determinant";
             tmp_rotation = tmp_rotation*(-1.0f);
           }
 
@@ -264,7 +197,7 @@ int main(int argc, char *argv[]) {
     }
     else
     {
-      std::cout << "Loaded scene does not have spherical camera" << std::endl;
+      OPENMVG_LOG_INFO << "Loaded scene does not have spherical camera";
       #pragma omp atomic
       ++error_status;
       continue;
@@ -276,9 +209,7 @@ int main(int argc, char *argv[]) {
 
   // generate structure and associate it with new camera views
   {
-    std::cout << "Creating cubic sfm_data structure:";
-
-    C_Progress_display my_progress_bar(structure.size());
+    system::LoggerProgress my_progress_bar(structure.size(), "Creating cubic sfm_data structure:");
     for (const auto & it_structure : structure)
     {
       ++my_progress_bar;
@@ -337,16 +268,16 @@ int main(int argc, char *argv[]) {
             stlplus::create_filespec(stlplus::folder_append_separator(s_out_dir),
                                      "sfm_data_perspective.bin"),
             ESfM_Data(ALL))) {
-    std::cerr << std::endl
-    << "Cannot save the output sfm_data file" << std::endl;
+    OPENMVG_LOG_ERROR << std::endl
+    << "Cannot save the output sfm_data file";
     return EXIT_FAILURE;
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << " #views: " << sfm_data_out.views.size() << "\n"
     << " #poses: " << sfm_data_out.poses.size() << "\n"
     << " #intrinsics: " << sfm_data_out.intrinsics.size() << "\n"
-    << " #tracks: " << sfm_data_out.structure.size() << "\n" << std::endl;
+    << " #tracks: " << sfm_data_out.structure.size();
 
   // Exit program
   return EXIT_SUCCESS;

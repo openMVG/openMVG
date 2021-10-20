@@ -321,6 +321,44 @@ TEST( clustering, threeClustersEigenVec )
   }
 }
 
+// std::vector<Vecf> specialization
+template <>
+std::vector< Vecf > ConvertMat2T<std::vector< Vecf >>(const Mat & mat)
+{
+  std::vector< Vecf > pts(mat.cols());
+  for (int i = 0; i < mat.cols(); ++i)
+    pts[i] = mat.col(i).cast<float>();
+  return pts;
+}
+
+TEST( clustering, threeClustersEigenVecf )
+{
+  const int dimension = 6;
+  using DataPointType = Vecf;
+  using ContainerType = std::vector<DataPointType>;
+
+  for (const auto kmean_init_type : KMEAN_INIT_TYPES)
+  {
+    std::vector<uint32_t> ids;
+    std::vector<DataPointType> centers;
+    KMeanTesting<ContainerType>
+    (
+      ids,
+      centers,
+      dimension,
+      kmean_init_type
+    );
+
+    KMEANS_CHECK_VALIDITY(NB_CLUSTER, ids);
+
+    std::cout << "Centers with kmean init type(" << (int)kmean_init_type << "): " << std::endl;
+    for( const auto & it : centers )
+    {
+      std::cout << it.transpose() << std::endl;
+    }
+  }
+}
+
 /* ************************************************************************* */
 int main()
 {

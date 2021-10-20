@@ -14,6 +14,7 @@
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stlMap.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 
@@ -49,12 +50,12 @@ bool find_largest_stellar_configuration
   // Find the stellar configuration with the most correspondences support
   std::vector<float> matches_count_per_stellar_pod(stellar_pods.size(), 0);
   IndexT id = 0;
-  for (const auto & stellar_pod : stellar_pods)
+  for (const auto & stellar_pod_it : stellar_pods)
   {
-    const Pair_Set & pairs = stellar_pod.second;
-    for (const auto & pair : pairs)
+    const Pair_Set & pairs = stellar_pod_it.second;
+    for (const auto & pair_it : pairs)
     {
-      const matching::IndMatches & matches = matches_provider->pairWise_matches_.at(pair);
+      const matching::IndMatches & matches = matches_provider->pairWise_matches_.at(pair_it);
       matches_count_per_stellar_pod[id] += matches.size();
     }
     matches_count_per_stellar_pod[id] /= pairs.size();
@@ -102,7 +103,7 @@ bool SfMSceneInitializerStellar::Process()
         matches_provider_,
         selected_putative_stellar_pod))
   {
-    std::cerr << "Unable to find a valid stellar configuration." << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to find a valid stellar configuration.";
     return false;
   }
 
@@ -132,11 +133,11 @@ bool SfMSceneInitializerStellar::Process()
         matches_provider_,
         selected_stellar_pod))
   {
-    std::cerr << "Unable to select a valid stellar configuration from the computed relative poses." << std::endl;
+    OPENMVG_LOG_ERROR << "Unable to select a valid stellar configuration from the computed relative poses.";
     return false;
   }
 
-  std::cout << "The chosen stellar pod has " << selected_stellar_pod.size() << " pairs." << std::endl;
+  OPENMVG_LOG_INFO << "The chosen stellar pod has " << selected_stellar_pod.size() << " pairs.";
 
   // Configure the stellar pod optimization to use all the matches relating to the considered view id.
   // The found camera poses will be better thanks to the larger point support.

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <openMVG/features/svg_features.hpp>
+#include <openMVG/system/logger.hpp>
 #include "third_party/vectorGraphics/svgDrawer.hpp"
 
 namespace openMVG {
@@ -36,13 +37,14 @@ bool Features2SVG
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -69,13 +71,14 @@ bool Features2SVG
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -131,13 +134,14 @@ bool Features2SVG
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -192,13 +196,14 @@ bool Features2SVG
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename);
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 

@@ -22,7 +22,7 @@ matrix:
             - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
-          
+
     # works on Precise and Trusty
     - os: linux
       addons:
@@ -56,47 +56,36 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+
     # works on macOS 10.13
     - os: osx
       osx_image: xcode9.4
-    
+
     # works on macOS 10.14
     - os: osx
       osx_image: xcode10.2
-       
-    - os: osx
-      osx_image: xcode11
 
     - os: osx
-      osx_image: xcode10.2
-      addons:
-        homebrew:
-          packages:
-          - gcc@5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-          
-    - os: osx
-      osx_image: xcode10.2
-      addons:
-        homebrew:
-          packages:
-          - gcc@7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-          
-    # allowed to fail: an exact topy is below in allow_failures
-    # watching for Apple updates.
-    # there are problems with GCC including new but nonstandard Apple .h
-    # https://github.com/Homebrew/homebrew-core/issues/40676
-    - os: osx
       osx_image: xcode11
-      addons:
-        homebrew:
-          packages:
-          - gcc@5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
     # works on Precise and Trusty
     - os: linux
@@ -166,7 +155,7 @@ matrix:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-          
+
   allow_failures:
     - os: osx
       osx_image: xcode11
@@ -176,7 +165,38 @@ matrix:
           - gcc@5
       env:
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-  
+
+    - os: osx
+      osx_image: xcode10.2
+      addons:
+        homebrew:
+          packages:
+          - gcc@5
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
+    - os: osx
+      osx_image: xcode10.2
+      addons:
+        homebrew:
+          packages:
+          - gcc@7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+    # allowed to fail: an exact topy is below in allow_failures
+    # watching for Apple updates.
+    # there are problems with GCC including new but nonstandard Apple .h
+    # https://github.com/Homebrew/homebrew-core/issues/40676
+    - os: osx
+      osx_image: xcode11
+      addons:
+        homebrew:
+          packages:
+          - gcc@5
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
 addons:
   apt:
     sources:
@@ -216,12 +236,13 @@ before_script:
       -DOpenMVG_BUILD_EXAMPLES=ON \
       -DOpenMVG_BUILD_SOFTWARES=ON \
       -DSCHUR_SPECIALIZATIONS=OFF \
+      -DTARGET_ARCHITECTURE=core \
       . $OPENMVG_SOURCE
 
 script:
   - |
     # -j2 to limit GCC builds to a reduced number of thread for the virtual machine
-    if [ "$TRAVIS_OS_NAME" = "osx" ] && (echo $CC | grep -qo gcc-) then 
+    if [ "$TRAVIS_OS_NAME" = "osx" ] && (echo $CC | grep -qo gcc-) then
       echo 'filter out linker warnings to avoid travis log size limits'
       time make all -j 2 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*' | grep --color=always -i 'warning\|error\|$'
     else

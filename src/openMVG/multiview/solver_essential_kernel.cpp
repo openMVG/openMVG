@@ -31,8 +31,6 @@
 #include "openMVG/multiview/solver_essential_five_point.hpp"
 #include "openMVG/multiview/solver_essential_kernel.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/numeric/nullspace.hpp"
-#include "openMVG/numeric/poly.h"
 
 #include <cassert>
 

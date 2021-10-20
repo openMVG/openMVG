@@ -1,6 +1,4 @@
 
-project(matching)
-
 file(
   GLOB
   matching_files_header
@@ -48,12 +46,20 @@ endif()
 set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 
+
 if (USE_AVX2)
   target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX2")
   if (UNIX)
     target_compile_options(openMVG_matching PUBLIC "-mavx2")
   endif (UNIX)
 endif (USE_AVX2)
+
+if (USE_AVX)
+  target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX")
+  if (UNIX)
+    target_compile_options(openMVG_matching PUBLIC "-mavx")
+  endif (UNIX)
+endif (USE_AVX)
 
 install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
 

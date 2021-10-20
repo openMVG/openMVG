@@ -17,6 +17,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include "ceres/ceres.h"
@@ -77,9 +78,7 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
 
   system::Timer t;
 
-  std::unique_ptr<C_Progress> progress_status
-    (new C_Progress_display(posewise_matches.size(),
-      std::cout, "\n- Relative pose computation -\n" ));
+  system::LoggerProgress my_progress_bar(posewise_matches.size(),"- Relative pose computation -" );
 
   #ifdef OPENMVG_USE_OPENMP
     #pragma omp parallel for schedule(dynamic)
@@ -87,7 +86,7 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
   // Compute the relative pose from pairwise point matches:
   for (int i = 0; i < static_cast<int>(posewise_matches.size()); ++i)
   {
-    ++(*progress_status);
+    ++my_progress_bar;
     {
       PoseWiseMatches::const_iterator iter (posewise_matches.begin());
       std::advance(iter, i);
@@ -104,7 +103,7 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
       // Select common bearing vectors
       if (match_pairs.size() > 1)
       {
-        std::cerr << "Compute relative pose between more than two view is not supported" << std::endl;
+        OPENMVG_LOG_ERROR << "Compute relative pose between more than two view (rigid camera rigs) is not supported ";        continue;
         continue;
       }
 
@@ -169,15 +168,22 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
         for (Mat::Index k = 0; k < x1.cols(); ++k)
         {
           Vec3 X;
-          TriangulateDLT(pose_I.asMatrix(), (*cam_I)(x1.col(k)),
-                         pose_J.asMatrix(), (*cam_J)(x2.col(k)), &X);
-          Observations obs;
-          const Vec2 obs_I = features_provider_->feats_per_view.at(I)[matches[k].i_].coords().cast<double>();
-          const Vec2 obs_J = features_provider_->feats_per_view.at(J)[matches[k].j_].coords().cast<double>();
-          obs[view_I->id_view] = {obs_I, matches[k].i_};
-          obs[view_J->id_view] = {obs_J, matches[k].j_};
-          landmarks[k].obs = obs;
-          landmarks[k].X = X;
+          if (Triangulate2View
+          (
+            pose_I.rotation(), pose_I.translation(), (*cam_I)(x1.col(k)),
+            pose_J.rotation(), pose_J.translation(), (*cam_J)(x2.col(k)),
+            X,
+            triangulation_method_
+          ))
+          {
+            Observations obs;
+            const Vec2 obs_I = features_provider_->feats_per_view.at(I)[matches[k].i_].coords().cast<double>();
+            const Vec2 obs_J = features_provider_->feats_per_view.at(J)[matches[k].j_].coords().cast<double>();
+            obs[view_I->id_view] = {obs_I, matches[k].i_};
+            obs[view_J->id_view] = {obs_J, matches[k].j_};
+            landmarks[k].obs = obs;
+            landmarks[k].X = X;
+          }
         }
         // - refine only Structure and Rotations & translations (keep intrinsic constant)
         Bundle_Adjustment_Ceres::BA_Ceres_options options(false, false);
@@ -215,12 +221,12 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
       }
     }
   }
-  std::cout << "Relative motion computation took: " << t.elapsedMs() << "(ms)" << std::endl;
+  OPENMVG_LOG_INFO << "Relative motion computation took: " << t.elapsedMs() << "(ms)";
   return !relative_poses_.empty();
 }
 
 // Relative poses accessor
-Relative_Pose_Engine::Relative_Pair_Poses
+const Relative_Pose_Engine::Relative_Pair_Poses&
 Relative_Pose_Engine::Get_Relative_Poses() const
 {
   return relative_poses_;

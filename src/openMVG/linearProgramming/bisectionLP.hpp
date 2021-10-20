@@ -9,11 +9,11 @@
 #ifndef OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 #define OPENMVG_LINEAR_PROGRAMMING_BISECTIONLP_HPP
 
-#include <iostream>
 #include <iterator>
 #include <vector>
 
 #include "openMVG/linearProgramming/linearProgrammingInterface.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG   {
 namespace linearProgramming  {
@@ -62,15 +62,15 @@ bool BisectionLP(
       bModelFound = true;
 
       if (bVerbose)
-        std::cout << "\n" << k<<"/"<<maxIteration
+        OPENMVG_LOG_INFO << "\n" << k<<"/"<<maxIteration
           << "\t gamma " << gamma
-          << "\t gammaUp-gammaLow " << gammaUp-gammaLow << std::endl;
+          << "\t gammaUp-gammaLow " << gammaUp-gammaLow;
     }
     else
     {
       gammaLow = gamma;
       if (bVerbose)
-        std::cout << "\nNot feasible with gamma: " << gamma << std::endl;
+        OPENMVG_LOG_INFO << "\nNot feasible with gamma: " << gamma;
     }
   } while (k < maxIteration && gammaUp - gammaLow > eps);
 

@@ -14,11 +14,12 @@
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_utils.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <string>
-#include <vector>
 
 bool LoadImages
 (
@@ -30,17 +31,17 @@ bool LoadImages
 {
   if (image_dir.empty() || !stlplus::is_folder(image_dir))
   {
-    std::cerr << "Invalid input image directory" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid input image directory";
     return false;
   }
   if (images.empty())
   {
-    std::cerr << "Invalid input image sequence" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid input image sequence";
     return false;
   }
   if (cameras.empty())
   {
-    std::cerr << "Invalid input camera data" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid input camera data";
     return false;
   }
 
@@ -50,7 +51,7 @@ bool LoadImages
   Poses & poses = sfm_data.poses;
   Intrinsics & intrinsics = sfm_data.intrinsics;
 
-  C_Progress_display my_progress_bar( images.size(), std::cout, "\n- Loading dataset images -\n" );
+  system::LoggerProgress my_progress_bar( images.size(), "- Loading dataset images -" );
   std::ostringstream error_report_stream;
   auto iter_camera = cameras.cbegin();
   for ( auto iter_image = images.cbegin();
@@ -106,8 +107,8 @@ bool LoadImages
   // Display saved warning & error messages if any.
   if (!error_report_stream.str().empty())
   {
-    std::cerr
-      << "\nWarning & Error messages:" << std::endl
+    OPENMVG_LOG_ERROR
+      << "\nWarning & Error messages:\n"
       << error_report_stream.str() << std::endl;
   }
 

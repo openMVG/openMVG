@@ -40,8 +40,8 @@ inline bool Save_BAF(
   const std::string & filename,
   ESfM_Data flags_part)
 {
-  std::ofstream stream(filename.c_str());
-  if (!stream.is_open())
+  std::ofstream stream(filename);
+  if (!stream)
     return false;
 
   bool bOk = false;
@@ -117,8 +117,8 @@ inline bool Save_BAF(
     const std::string sFile = stlplus::create_filespec(
       stlplus::folder_part(filename), stlplus::basename_part(filename) + std::string("_imgList"), "txt");
 
-    stream.open(sFile.c_str());
-    if (!stream.is_open())
+    stream.open(sFile);
+    if (!stream)
       return false;
     for ( const auto & iterV : sfm_data.GetViews() )
     {

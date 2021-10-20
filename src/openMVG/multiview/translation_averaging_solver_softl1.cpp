@@ -9,6 +9,7 @@
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 
 #ifdef OPENMVG_USE_OPENMP
@@ -117,7 +118,7 @@ bool solve_translations_problem_softl1
   // - relative translation scales (one per group)
   // - relative rotations
 
-  std::vector<double> vec_translations(relative_info_count*3, 1.0);
+  std::vector<double> vec_translations(nb_poses*3, 1.0);
   const unsigned nb_scales = vec_relative_group_estimates.size();
   std::vector<double> vec_scales(nb_scales, 1.0);
 
@@ -222,7 +223,7 @@ bool solve_translations_problem_softl1
 
   if (!summary.IsSolutionUsable())
   {
-    std::cout << summary.FullReport() << std::endl;
+    OPENMVG_LOG_INFO << summary.FullReport();
     return false;
   }
 
@@ -231,7 +232,7 @@ bool solve_translations_problem_softl1
   cpt = 0;
   for (unsigned int i = 0; i < nb_poses; ++i, cpt+=3)
   {
-    translations[i] << vec_translations[cpt], vec_translations[cpt+1], vec_translations[cpt+2];
+    translations[i] = Eigen::Map<Eigen::Vector3d>(&vec_translations[cpt]);
   }
   return true;
 }

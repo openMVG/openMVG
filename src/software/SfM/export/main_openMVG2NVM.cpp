@@ -13,9 +13,9 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_colorization.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iomanip>
@@ -45,7 +45,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   const std::string sOutViewsDirectory = stlplus::folder_append_separator( sOutDirectory ) + "views";
   if ( !stlplus::folder_exists( sOutViewsDirectory ) )
   {
-    std::cout << "\033[1;31mCreating directory:  " << sOutViewsDirectory << "\033[0m\n";
+    OPENMVG_LOG_INFO << "[Creating directory:  " << sOutViewsDirectory << "]";
     stlplus::folder_create( sOutViewsDirectory );
   }
 
@@ -54,10 +54,10 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
 
   if ( ! file )
   {
-    std::cerr << "Cannot write file" << filename << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot write file" << filename;
     return false;
   }
-  file << "NVM_V3" << std::endl;
+  file << "NVM_V3" << "\n";
 
   // we reindex the poses to ensure a contiguous pose list.
   Hash_Map<IndexT, IndexT> map_viewIdToContiguous;
@@ -78,11 +78,11 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
   // Number of cameras
   // For each camera : File_name Focal Qw Qx Qy Qz Cx Cy Cz D0 0
 
-  file << nb_cam << std::endl;
+  file << nb_cam << "\n";
 
   // Export undistorted images
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXPORT UNDISTORTED IMAGES -\n" );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size(), "- EXPORT UNDISTORTED IMAGES -" );
     Image<RGBColor> image, image_ud;
   #ifdef OPENMVG_USE_OPENMP
       #pragma omp parallel for schedule(dynamic) private(image, image_ud)
@@ -148,7 +148,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
 
   // Export camera parameters
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(), std::cout, "\n- EXPORT CAMERA PARAMETERS -\n" );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size(), "- EXPORT CAMERA PARAMETERS -" );
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
          iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
@@ -194,7 +194,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
          << Cy << " "
          << Cz << " "
          << d0 << " "
-         << 0 << std::endl;
+         << 0 << "\n";
     }
   }
 
@@ -211,7 +211,7 @@ bool CreateNVMFile( const SfM_Data & sfm_data ,
     return false;
   }
   int point_index = 0;
-  C_Progress_display my_progress_bar( featureCount, std::cout, "\n- EXPORT LANDMARKS DATA -\n" );
+  system::LoggerProgress my_progress_bar( featureCount, "- EXPORT LANDMARKS DATA -" );
   for ( Landmarks::const_iterator iterLandmarks = landmarks.begin();
         iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar )
   {
@@ -256,7 +256,7 @@ bool exportToNVM( const SfM_Data & sfm_data , const std::string & sOutDirectory 
   bool bOk = false;
   if ( !stlplus::is_folder( sOutDirectory ) )
   {
-    std::cout << "\033[1;31mCreating directory:  " << sOutDirectory << "\033[0m\n";
+    OPENMVG_LOG_INFO << "[Creating directory:  " << sOutDirectory << "]";
     stlplus::folder_create( sOutDirectory );
     bOk = stlplus::is_folder( sOutDirectory );
   }
@@ -267,13 +267,13 @@ bool exportToNVM( const SfM_Data & sfm_data , const std::string & sOutDirectory 
 
   if ( !bOk )
   {
-    std::cerr << "Cannot access one of the desired output directories" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot access one of the desired output directories";
     return false;
   }
   const std::string sFilename = stlplus::create_filespec( sOutDirectory , "scene.nvm" );
   if ( ! CreateNVMFile( sfm_data , sOutDirectory , sFilename ) )
   {
-    std::cerr << "There was an error exporting project" << std::endl;
+    OPENMVG_LOG_ERROR << "There was an error exporting project";
     return false;
   }
   return true;
@@ -294,7 +294,7 @@ int main( int argc , char ** argv )
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
-  std::cout << "Note:  this program writes output in NVM file format.\n";
+  OPENMVG_LOG_INFO << "Note:  this program writes output in NVM file format.";
 
   try
   {
@@ -306,15 +306,15 @@ int main( int argc , char ** argv )
   }
   catch ( const std::string& s )
   {
-    std::cerr << "Usage: " << argv[0] << '\n'
-              << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-              << "[-o|--outdir] path where the scene.nvm will be saved\n"
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
+      << "[-o|--outdir] path where the scene.nvm will be saved\n"
 #ifdef OPENMVG_USE_OPENMP
-              << "[-n|--numThreads] number of thread(s)\n"
+      << "[-n|--numThreads] number of thread(s)"
 #endif
-              << std::endl;
+      ;
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
@@ -337,15 +337,14 @@ int main( int argc , char ** argv )
   SfM_Data sfm_data;
   if ( !Load( sfm_data, sSfM_Data_Filename, ESfM_Data( ALL ) ) )
   {
-    std::cerr << std::endl
-              << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
   if ( ! exportToNVM( sfm_data , sOutDir ) )
   {
-    std::cerr << "There was an error during export of the file" << std::endl;
-    exit( EXIT_FAILURE );
+    OPENMVG_LOG_ERROR << "There was an error during exporting the NVM the file";
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;

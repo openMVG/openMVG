@@ -717,7 +717,7 @@ struct ResidualErrorFunctor_Intrinsic_Spherical
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
