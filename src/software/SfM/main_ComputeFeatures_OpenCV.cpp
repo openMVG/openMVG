@@ -62,7 +62,11 @@ class AKAZE_OCV_Image_describer : public Image_describer
 public:
   using Regions_type = AKAZE_OpenCV_Regions;
 
-  AKAZE_OCV_Image_describer():Image_describer(){}
+  cv::Ptr<cv::Feature2D> extractor;
+
+  AKAZE_OCV_Image_describer():Image_describer(){
+    extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
+  }
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override
   {
@@ -108,7 +112,6 @@ public:
     std::vector< cv::KeyPoint > vec_keypoints;
     cv::Mat m_desc;
 
-    cv::Ptr<cv::Feature2D> extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
     extractor->detectAndCompute(img, m_mask, vec_keypoints, m_desc);
 
     if (!vec_keypoints.empty())
