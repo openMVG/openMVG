@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/graph/graph.hpp"
+#include "openMVG/graph/graph_stats.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/pairwiseAdjacencyDisplay.hpp"
@@ -299,11 +300,12 @@ int main(int argc, char **argv) {
   // Normalization: Each VLAD flavor come with different schemes of
   // normalization (mainly to handle visual bursts)
   // -----------------------------
-  
+
+  system::Timer timer;
   std::unique_ptr<VLADBase> vlad_builder;
   if (dynamic_cast<const SIFT_Regions*>(regions_type.get())){
     OPENMVG_LOG_INFO << "SIFT";
-    vlad_builder.reset(new VLAD<SIFT_Regions>); 
+    vlad_builder.reset(new VLAD<SIFT_Regions>);
   }
   else
   if (dynamic_cast<const AKAZE_Float_Regions*>(regions_type.get())) {
@@ -332,14 +334,14 @@ int main(int argc, char **argv) {
 
   VLADBase::DescriptorVector codebook;
   codebook = vlad_builder->BuildCodebook(descriptor_array);
-  
+
   // Freeing some memory
   descriptor_array.clear();
   descriptor_array.shrink_to_fit();
 
   std::unique_ptr<features::Regions> codebook_regions(regions_type->EmptyClone());
   vlad_builder->CodebookToRegions(codebook_regions, codebook);
-  
+
   std::shared_ptr<Regions_Provider> embedding_regions_provider;
   if (max_feats <= 0) {
     embedding_regions_provider = std::move(learning_regions_provider);
@@ -423,10 +425,15 @@ int main(int argc, char **argv) {
     }
   }
 
+  OPENMVG_LOG_INFO << "Task done in (s): " << timer.elapsed();
+
+  // -- export Putative View Graph statistics
+  graph::getGraphStatistics(sfm_data.GetViews().size(), resulting_pairs);
+
   // Export pairs into a text file
   savePairs(sPairFile, resulting_pairs);
 
-  saveAdjacencyMatrixViewGraph(resulting_pairs, sfm_data, stlplus::basename_part(sMatchesDirectory));
+  saveAdjacencyMatrixViewGraph(resulting_pairs, sfm_data, sMatchesDirectory);
 
   // Export the retrieval matrix
   saveRetrievalMatrix(
@@ -441,5 +448,5 @@ int main(int argc, char **argv) {
 
   savePairwiseSimilarityScores(sSimFile, result_ordered_by_similarity);
 
-  return EXIT_SUCCESS;  
+  return EXIT_SUCCESS;
 }
