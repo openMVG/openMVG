@@ -63,7 +63,7 @@ pFiltering.wait()
 
 reconstruction_dir = os.path.join(output_dir,"reconstruction_sequential")
 print ("3. Do Incremental/Sequential reconstruction") #set manually the initial pair to avoid the prompt question
-pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--engine", "INCREMENTAL", "--input_file", matches_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfM"), "--sfm_engine", "INCREMENTAL", "--input_file", matches_dir+"/sfm_data.json", "--match_dir", matches_dir, "--output_dir", reconstruction_dir] )
 pRecons.wait()
 
 print ("5. Colorize Structure")
