@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest] #windows-latest (cmake command line cannot be multiline), macOS-latest (PNG lib error)
+        os: [ubuntu-latest,  macOS-latest] #windows-latest (cmake command line cannot be multiline)
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
