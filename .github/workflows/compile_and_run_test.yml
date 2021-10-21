@@ -30,7 +30,7 @@ jobs:
       - name: Configure CMake
         working-directory: ./build
         run: |
-          cmake .. \
+          cmake ../src \
            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
            -DBUILD_SHARED_LIBS:BOOL=ON \
            -DOpenMVG_BUILD_TESTS=ON \
