@@ -30,7 +30,6 @@ jobs:
         working-directory: ./build
         run: |
           cmake ../src \
-           -DOpenMVG_BUILD_SHARED:BOOL=ON \
            -DOpenMVG_BUILD_TESTS=ON \
            -DOpenMVG_BUILD_EXAMPLES=ON \
            -DOpenMVG_BUILD_SOFTWARES=ON \
