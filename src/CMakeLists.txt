@@ -20,6 +20,8 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
 
+set(CMAKE_FIND_FRAMEWORK LAST)
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
