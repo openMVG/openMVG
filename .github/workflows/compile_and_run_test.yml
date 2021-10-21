@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop, ci_test]
+  pull_request:
+    branches: [main, master, develop, ci_test]
+
+ # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-tests:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    env:
+      BUILD_TYPE: Release
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Git submodule
+        run: |
+          mkdir ./build
+          git submodule update -i
+
+      - name: Configure CMake
+        working-directory: ./build
+        run: |
+          cmake .. \
+           -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+           -DBUILD_SHARED_LIBS:BOOL=ON \
+           -DOpenMVG_BUILD_TESTS=ON \
+           -DOpenMVG_BUILD_EXAMPLES=ON \
+           -DOpenMVG_BUILD_SOFTWARES=ON \
+           -DSCHUR_SPECIALIZATIONS=OFF \
+           -DTARGET_ARCHITECTURE=core
+      
+      - name: Build
+        working-directory: ./build
+        run: |
+          cmake --build . -- -j$(nproc)
+
+      - name: Unit Tests
+        working-directory: ./build
+        run: |
+          ctest -j$(nproc)
