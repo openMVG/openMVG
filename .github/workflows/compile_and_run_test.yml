@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,  macOS-latest] #windows-latest (cmake command line cannot be multiline)
+        os: [ubuntu-latest,  macOS-latest, windows-latest] #windows-latest (cmake command line cannot be multiline)
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
@@ -29,12 +29,7 @@ jobs:
       - name: Configure CMake
         working-directory: ./build
         run: |
-          cmake ../src \
-           -DOpenMVG_BUILD_TESTS=ON \
-           -DOpenMVG_BUILD_EXAMPLES=ON \
-           -DOpenMVG_BUILD_SOFTWARES=ON \
-           -DSCHUR_SPECIALIZATIONS=OFF \
-           -DTARGET_ARCHITECTURE=core
+          cmake ../src -DOpenMVG_BUILD_TESTS=ON -DOpenMVG_BUILD_EXAMPLES=ON -DOpenMVG_BUILD_SOFTWARES=ON -DSCHUR_SPECIALIZATIONS=OFF -DTARGET_ARCHITECTURE=core
       
       - name: Build
         working-directory: ./build
