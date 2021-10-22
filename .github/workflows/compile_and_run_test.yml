@@ -34,7 +34,12 @@ jobs:
       - name: Build
         working-directory: ./build
         run: |
-          cmake --build . -- -j$(nproc)
+           if [ "$RUNNER_OS" == "Windows" ]; then
+              cmake --build . -- --parallel$(nproc)
+           else
+              cmake --build . -- -j$(nproc)
+           fi
+          
 
       - name: Unit Tests
         working-directory: ./build
