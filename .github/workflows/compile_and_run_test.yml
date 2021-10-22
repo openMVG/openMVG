@@ -35,7 +35,7 @@ jobs:
         working-directory: ./build
         run: |
            if [ "$RUNNER_OS" == "Windows" ]; then
-              cmake --build .
+              cmake --build . --config Release
            else
               cmake --build . -- -j$(nproc)
            fi
