@@ -45,4 +45,4 @@ jobs:
       - name: Unit Tests
         working-directory: ./build
         run: |
-          ctest -j$(nproc) --config Release
+          ctest -j$(nproc) --build-config Release
