@@ -35,10 +35,11 @@ jobs:
         working-directory: ./build
         run: |
            if [ "$RUNNER_OS" == "Windows" ]; then
-              cmake --build . -- --parallel$(nproc)
+              cmake --build . -- --parallel $(nproc)
            else
               cmake --build . -- -j$(nproc)
            fi
+        shell: bash
           
 
       - name: Unit Tests
