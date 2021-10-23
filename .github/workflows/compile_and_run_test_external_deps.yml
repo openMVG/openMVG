@@ -28,7 +28,6 @@ jobs:
           cmake \
           coinor-libclp-dev \
           libceres-dev \
-          libflann-dev \
           libjpeg-dev \
           libpng-dev \
           libtiff-dev
@@ -42,9 +41,7 @@ jobs:
           -DOpenMVG_BUILD_TESTS=ON \
           -DOpenMVG_BUILD_EXAMPLES=ON \
           -DOpenMVG_BUILD_SOFTWARES=ON \
-          -DSCHUR_SPECIALIZATIONS=OFF \
           -DTARGET_ARCHITECTURE=core \
-          -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
           -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
           -DCLP_INCLUDE_DIR_HINTS=/usr/include \
           -DOSI_INCLUDE_DIR_HINTS=/usr/include
