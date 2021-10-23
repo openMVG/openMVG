@@ -23,17 +23,15 @@ jobs:
 
       - name: 3rd Party libs
         run: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y \
           cmake \
           coinor-libclp-dev \
           libceres-dev \
           libflann-dev \
-          liblemon-dev \
           libjpeg-dev \
           libpng-dev \
-          libtiff-dev \
-          python-minimal; \
+          libtiff-dev
           apt-get autoclean && apt-get clean
 
       - name: Configure CMake
