@@ -45,7 +45,6 @@ jobs:
           -DSCHUR_SPECIALIZATIONS=OFF \
           -DTARGET_ARCHITECTURE=core \
           -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
-          -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
           -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
           -DCLP_INCLUDE_DIR_HINTS=/usr/include \
           -DOSI_INCLUDE_DIR_HINTS=/usr/include
