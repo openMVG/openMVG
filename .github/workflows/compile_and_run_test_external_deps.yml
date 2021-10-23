@@ -1,0 +1,68 @@
+name: CI-external-deps
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+ # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-tests:
+    name: ubuntu-latest - external deps
+    runs-on: ubuntu-latest
+    env:
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Git submodule
+        run: |
+          mkdir ./build
+          git submodule update -i
+
+      - name: 3rd Party libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+          cmake \
+          coinor-libclp-dev \
+          libceres-dev \
+          libflann-dev \
+          liblemon-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev \
+          python-minimal; \
+          apt-get autoclean && apt-get clean
+
+      - name: Configure CMake
+        working-directory: ./build
+        run: |
+          cmake ../src \
+          -DOpenMVG_BUILD_SHARED=ON \
+          -DOpenMVG_BUILD_TESTS=ON \
+          -DOpenMVG_BUILD_EXAMPLES=ON \
+          -DOpenMVG_BUILD_SOFTWARES=ON \
+          -DSCHUR_SPECIALIZATIONS=OFF \
+          -DTARGET_ARCHITECTURE=core \
+          -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
+          -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
+          -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
+          -DCLP_INCLUDE_DIR_HINTS=/usr/include \
+          -DOSI_INCLUDE_DIR_HINTS=/usr/include \
+        shell: bash
+
+      - name: Build
+        working-directory: ./build
+        run: |
+              cmake --build . -- -j$(nproc)
+        shell: bash
+
+
+      - name: Unit Tests
+        working-directory: ./build
+        run: |
+          ctest -j$(nproc) --build-config Release
