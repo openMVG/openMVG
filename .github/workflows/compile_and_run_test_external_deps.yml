@@ -32,7 +32,7 @@ jobs:
           libjpeg-dev \
           libpng-dev \
           libtiff-dev
-          apt-get autoclean && apt-get clean
+          sudo apt-get autoclean && sudo apt-get clean
 
       - name: Configure CMake
         working-directory: ./build
