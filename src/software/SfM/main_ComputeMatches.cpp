@@ -58,7 +58,7 @@ int main( int argc, char** argv )
 
   //required
   cmd.add( make_option( 'i', sSfM_Data_Filename, "input_file" ) );
-  cmd.add( make_option( 'o', sOutputMatchesFilename, "out_dir" ) );
+  cmd.add( make_option( 'o', sOutputMatchesFilename, "output_file" ) );
   cmd.add( make_option( 'p', sPredefinedPairList, "pair_list" ) );
   // Options
   cmd.add( make_option( 'r', fDistRatio, "ratio" ) );
