@@ -117,6 +117,7 @@ int main( int argc, char** argv )
                      << "   e: essential matrix,\n"
                      << "   h: homography matrix.\n"
                      << "   a: essential matrix with an angular parametrization,\n"
+                     << "   u: upright essential matrix with an angular parametrization,\n"
                      << "   o: orthographic essential matrix.\n"
                      << "[-r|--guided_matching]  Use the found model to improve the pairwise correspondences.\n"
                      << "[-c|--cache_size]\n"
@@ -161,26 +162,24 @@ int main( int argc, char** argv )
   const std::string sMatchesDirectory = stlplus::folder_part( sPutativeMatchesFilename );
 
   EGeometricModel eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
-  switch ( sGeometricModel[ 0 ] )
+  switch ( std::tolower(sGeometricModel[ 0 ], std::locale()) )
   {
     case 'f':
-    case 'F':
       eGeometricModelToCompute = FUNDAMENTAL_MATRIX;
       break;
     case 'e':
-    case 'E':
       eGeometricModelToCompute = ESSENTIAL_MATRIX;
       break;
     case 'h':
-    case 'H':
       eGeometricModelToCompute = HOMOGRAPHY_MATRIX;
       break;
     case 'a':
-    case 'A':
       eGeometricModelToCompute = ESSENTIAL_MATRIX_ANGULAR;
       break;
+    case 'u':
+      eGeometricModelToCompute = ESSENTIAL_MATRIX_UPRIGHT;
+      break;
     case 'o':
-    case 'O':
       eGeometricModelToCompute = ESSENTIAL_MATRIX_ORTHO;
       break;
     default:
@@ -344,6 +343,14 @@ int main( int argc, char** argv )
       {
         filter_ptr->Robust_model_estimation(
           GeometricFilter_ESphericalMatrix_AC_Angular<false>(4.0, imax_iteration),
+          map_PutativeMatches, bGuided_matching, d_distance_ratio, &progress);
+        map_GeometricMatches = filter_ptr->Get_geometric_matches();
+      }
+      break;
+      case ESSENTIAL_MATRIX_UPRIGHT:
+      {
+        filter_ptr->Robust_model_estimation(
+          GeometricFilter_ESphericalMatrix_AC_Angular<true>(4.0, imax_iteration),
           map_PutativeMatches, bGuided_matching, d_distance_ratio, &progress);
         map_GeometricMatches = filter_ptr->Get_geometric_matches();
       }
