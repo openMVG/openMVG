@@ -36,6 +36,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <locale>
 #include <memory>
 #include <string>
 
