@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     << "\n\n"
     << "[Common]\n"
     << "[-M|--match_file] path to the match file to use (i.e matches.f.txt or matches.f.bin)\n"
-    << "[-f|--refine_extrinsic_config] Intrinsic parameters refinement option\n"
+    << "[-f|--refine_intrinsic_config] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
       << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
