@@ -127,12 +127,12 @@ $ cd openMVG_Build
 
 If you want to use Xcode and compile by using the command line, run
 ```
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../openMVG/src/
+$ cmake -DCMAKE_BUILD_TYPE=RELEASE -G "Xcode" . ../src/
 $ xcodebuild -configuration Release
 ```
 otherwise you can use standard makefiles
 ```shell
-$ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
+$ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../src/
 ```
 After, you build
 ```
