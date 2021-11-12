@@ -23,6 +23,7 @@ using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 using namespace MiNuS;
 using namespace openMVG::robust;
+using namespace openMVG::features;
 
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)
@@ -60,6 +61,7 @@ ExtractKeypoints()
     if (ReadImage(image_filenames_[image_idx].c_str(), &images_[image_idx]))
       image_describer->Describe(images_[image_idx], regions_per_image_[image_idx]);
     else {
+      std::cout << "aqui" << endl;	    
       cerr << "Problem reading image" << endl;
       exit(EXIT_FAILURE);
     }
@@ -351,7 +353,8 @@ RobustSolve()
   //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
   const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
-  const unsigned max_iteration =1; // testing
+  // Gabriel: Error model based on euclidian distance
+  const unsigned max_iteration =3; // testing
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
   // TODO(gabriel) recontruct from inliers and best models to show as PLY
@@ -741,26 +744,3 @@ DisplayInliersCamerasAndPointsSIFT()
 }
 } // namespace trifocal3pt
 
-using namespace openMVG::features;
-using namespace trifocal3pt;
-//-------------------------------------------------------------------------------
-int 
-main(int argc, char **argv) 
-{
-  TrifocalSampleApp T;
-  
-  T.ProcessCmdLine(argc, argv);
-  T.ExtractKeypoints();
-  T.MatchKeypoints();
-  T.ComputeTracks();
-  T.Stats();
-  T.ExtractXYOrientation();
-  T.Display();
-  T.DisplayDesiredIds();
-  T.RobustSolve();
-  // T.DisplayInliers();
-  T.DisplayInliersCamerasAndPoints();
-  // T.DisplayInliersCamerasAndPointsSIFT();
-
-  return EXIT_SUCCESS;
-}
