@@ -81,17 +81,18 @@ TEST(TrifocalApp;RobustSolve){
 			}
 		}                       
 	}
+	const solverResult=  
 	for(unsigned i=0;i<3;i++){
 		for(unsigned j=0;j<4;j++){
 			if(j<3){
-				tt[0][0](i,j) = R0[i][j];
-				tt[0][1](i,j) = R1[i][j];
-				tt[0][2](i,j) = R2[i][j];
+				EXPECT_NEAR(solverResult[0][0](i,j) , R0[i][j]);
+				EXPECT_NEAR(solverResult[0][1](i,j) , R1[i][j]);
+				EXPECT_NEAR(solverResult[0][2](i,j) , R2[i][j]);
 			}
 			else{
-				tt[0][0](i,j) = T0[i][1];
-				tt[0][1](i,j) = T1[i][1];
-				tt[0][2](i,j) = T2[i][1];
+				EXPECT_NEAR(solverResult[0][0](i,j) , T0[i][1]);
+				EXPECT_NEAR(solverResult[0][1](i,j) , T1[i][1]);
+				EXPECT_NEAR(solverResult[0][2](i,j) , T2[i][1]);
 			}
 		}                       
 	}
