@@ -333,7 +333,7 @@ int main(int argc, char **argv) {
           << std::endl;
 
   VLADBase::DescriptorVector codebook;
-  codebook = vlad_builder->BuildCodebook(descriptor_array);
+  codebook = vlad_builder->BuildCodebook(descriptor_array, codebook_size);
 
   // Freeing some memory
   descriptor_array.clear();
