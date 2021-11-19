@@ -34,9 +34,12 @@ ProcessCmdLine(int argc, char **argv)
   cmd.add( make_option('c', image_filenames_[2], "image_c") );
   cmd.add( make_option('K', intrinsics_filename_, "K matrix") );
   
-  try {
+  try{ 
     if (argc == 1) throw string("Invalid command line parameter.");
+    cerr << "Vazio? " << image_filenames_.empty() << endl;
+    cerr << "Tamanho: " << image_filenames_.size() << endl;
     cmd.process(argc, argv);
+    cerr << "Image loaded:" << image_filenames_[1] << endl;
   } catch (const string& s) {
     cerr << "Usage: " << argv[0] << '\n' << endl;
     cerr << s << endl;
@@ -58,6 +61,8 @@ ExtractKeypoints()
   }
   for (const int image_idx : {0,1,2})
   {
+    // cerr << "IMG: " << image_filenames_[image_idx].c_str() << endl; 
+    // cerr << ReadImage(image_filenames_[image_idx].c_str(), &images_[image_idx]) << endl; 
     if (ReadImage(image_filenames_[image_idx].c_str(), &images_[image_idx]))
       image_describer->Describe(images_[image_idx], regions_per_image_[image_idx]);
     else {

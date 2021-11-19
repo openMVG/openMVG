@@ -103,8 +103,12 @@ using namespace trifocal3pt;
 TEST(TrifocalSampleApp, fullrun) 
 {
   TrifocalSampleApp T;
-  int argcTest = 4;
-  char *argvTest[4] ={"./frame_00001.png","./frame_00030.png","./frame_00066.png","this is a stun"}  ;
+  int argcTest = 9;
+  char argvTestData[9][50] = {"fullrun","-a" ,"/home/bielhpp/openMVG_bin/frame_00001.png","-b" ,"/home/bielhpp/openMVG_bin/frame_00030.png","-c" ,"/home/bielhpp/openMVG_bin/frame_00066.png","-K" ,"this is a stun"} ;
+  char *argvTest[9];
+  for (unsigned i = 0; i < argcTest ; i++) {
+    argvTest[i] = (char *)argvTestData[i];
+  }
   T.ProcessCmdLine(argcTest, argvTest);
   T.ExtractKeypoints();
   T.MatchKeypoints();
