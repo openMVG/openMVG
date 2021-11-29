@@ -372,9 +372,10 @@ bool computePosesNordberg(
     for(const double s : ss)
     {
         // u = V(:, 1) - sV(:,2)
-        const double u1 = V(0) - s*V(1);
-        const double u2 = V(3) - s*V(4);
-        const double u3 = V(6) - s*V(7);
+        const Vec3 U = V.col(0) - s * V.col(1);
+        const double u1 = U(0);
+        const double u2 = U(1);
+        const double u3 = U(2);
 
         // we are computing lambda using a linear relation
         // u1*l1 + u2*l2 + u3*l3=0
