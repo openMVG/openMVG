@@ -17,7 +17,9 @@
 #include <numeric>
 
 #include <cstdint>
+#if defined(__amd64__) || defined(__i386__)
 #include <immintrin.h>
+#endif
 
 namespace openMVG {
 namespace matching {
