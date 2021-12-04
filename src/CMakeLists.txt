@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
 project(openMVG C CXX)
 
@@ -139,17 +139,16 @@ endif (CXX11_COMPILER)
 if (OpenMVG_USE_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
-    register_definitions(-DOPENMVG_USE_OPENMP)
-    if (NOT MSVC)
-      if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # for those using the clang with OpenMP support
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES omp)
-      else()
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
-      endif()
-    endif (NOT MSVC)
+    if(NOT TARGET OpenMP::OpenMP_CXX)
+      find_package(Threads REQUIRED)
+      add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+      # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+      list(APPEND OPENMVG_LIBRARY_DEPENDENCIES ${OpenMP_CXX_FLAGS})
+    endif()
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
