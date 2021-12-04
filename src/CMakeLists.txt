@@ -238,7 +238,7 @@ ENDMACRO(UNIT_TEST)
 # - internal if cereal not found
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
-if (NOT TARGET cereal)
+if (NOT cereal_FOUND)
   add_library(cereal INTERFACE)
   target_include_directories(cereal
     INTERFACE
@@ -246,7 +246,6 @@ if (NOT TARGET cereal)
       $<INSTALL_INTERFACE:include/openMVG_dependencies/cereal/include>
   )
   install(TARGETS cereal EXPORT openMVG-targets)
-
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
 endif()
 
