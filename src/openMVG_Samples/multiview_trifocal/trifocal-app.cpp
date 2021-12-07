@@ -25,6 +25,8 @@ using namespace MiNuS;
 using namespace openMVG::robust;
 using namespace openMVG::features;
 
+
+
 void TrifocalSampleApp::
 ProcessCmdLine(int argc, char **argv)
 {
@@ -117,6 +119,8 @@ Stats()
     << pairwise_matches_.at({1,2}).size() << " #matches with Distance Ratio filter" << endl
     << tracks_.size() << " #tracks" << endl;
 }
+int desired_ids_array[tracks_.size()];
+int non_desired_ids_array[tracks_.size()];
 
 void TrifocalSampleApp::
 ExtractXYOrientation() 
@@ -232,7 +236,44 @@ Display()
     svg_file << svg_stream.closeSvgFile().str();
   }
 }
-
+  bool TrifocalSampleApp::
+  FilterIds(int desired_ids[], int n_ids){
+  // Checks if my given IDs are OK
+    unsigned track_id=0;
+    bool found=false;
+    for (const auto &track_it: tracks_)
+    {
+      found = false;
+      for (unsigned i=0; i < n_ids; ++i)
+        if (track_id == desired_ids[i])
+          found = true;
+        if (!found) {
+          //cout<< found << endl;
+          track_id++;
+        continue;
+        }
+   }
+   return found;
+  }
+  void TrifocalSampleApp::
+  SeparateIds( int desired_ids[],int non_desired_ids[]){
+  
+  // Separate my desired ids and non desired ids from the total
+    unsigned track_id=0;
+    bool found=false;
+    for (const auto &track_it: tracks_)
+    {
+      found = false;
+      for (unsigned i=0; i < n_ids; ++i)
+        if (track_id == desired_ids[i])
+          found = true;
+        if (!found) {
+          //cout<< found << endl;
+	  non_desired_ids[i] = track_id;
+          track_id++;
+        continue;
+        }
+  }
 void TrifocalSampleApp::
 DisplayDesiredIds() 
 {
