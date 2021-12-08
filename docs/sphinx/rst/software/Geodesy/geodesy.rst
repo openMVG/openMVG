@@ -97,7 +97,7 @@ Scene initialization
 ~~~~~~~~~~~~~~~~~~~~~
 
   .. code-block:: c++
-  
+
     $ openMVG_main_SfMInit_ImageListing -P [other args]
 
 **Optional parameters:**
@@ -108,15 +108,14 @@ Scene initialization
 
   - **[-w]**
 
-    - Allow to customize the pose prior weight in each XYZ dimention i.e. default is equivalent to "1.0;1.0;1.0"
+    - Allow to customize the pose prior weight in each XYZ dimension i.e. default is equivalent to "1.0;1.0;1.0"
 
 Force pose prior usage
 ~~~~~~~~~~~~~~~~~~~~~~
 
   .. code-block:: c++
-  
-    $ openMVG_main_IncrementalSfM -P [other args]
-    $ openMVG_main_GlobalSfM -P [other args]
+
+    $ openMVG_main_SfM -P [other args]
 
 **Optional parameters:**
 
@@ -185,4 +184,3 @@ In green the SFM poses, and in blue the GPS Exif ECEF poses. We clearly see that
 
 .. figure:: swiss_quarry_registered.png
    :align: center
-

@@ -196,7 +196,7 @@ Global SfM
 
 [GlobalACSfM]_ is based on the paper "Global Fusion of Relative Motions for Robust, Accurate and Scalable Structure from Motion."  published at ICCV 2013.
 
-Multi-view structure from motion (SfM) estimates the position and orientation of pictures in a common 3D coordinate frame. When views are treated incrementally, this external calibration can be subject to drift, contrary to global methods that distribute residual errors evenly. Here, this method proposes a new global calibration approach based on the fusion of relative motions between image pairs. 
+Multi-view structure from motion (SfM) estimates the position and orientation of pictures in a common 3D coordinate frame. When views are treated incrementally, this external calibration can be subject to drift, contrary to global methods that distribute residual errors evenly. Here, this method proposes a new global calibration approach based on the fusion of relative motions between image pairs.
 
 .. code-block:: c++
 
@@ -240,5 +240,5 @@ This class allows to compute valid 3D triangulation from 2D matches and known ca
   for triplets of view
     - filter 3-view correspondences that leads to invalid triangulation
   merge 3-view validated correspondences
-    - robustly triangulate them 
+    - robustly triangulate them
   save the scene with the update structure
