@@ -119,8 +119,6 @@ Stats()
     << pairwise_matches_.at({1,2}).size() << " #matches with Distance Ratio filter" << endl
     << tracks_.size() << " #tracks" << endl;
 }
-int desired_ids_array[tracks_.size()];
-int non_desired_ids_array[tracks_.size()];
 
 void TrifocalSampleApp::
 ExtractXYOrientation() 
@@ -256,24 +254,29 @@ Display()
    return found;
   }
   void TrifocalSampleApp::
-  SeparateIds( int desired_ids[],int non_desired_ids[]){
+  SeparateIds( unsigned desired_ids[], unsigned non_desired_ids[], unsigned n_ids ) {
   
   // Separate my desired ids and non desired ids from the total
     unsigned track_id=0;
     bool found=false;
+    unsigned j = 0;
     for (const auto &track_it: tracks_)
     {
       found = false;
-      for (unsigned i=0; i < n_ids; ++i)
+      for (unsigned i = 0; i < n_ids; ++i){
         if (track_id == desired_ids[i])
           found = true;
         if (!found) {
           //cout<< found << endl;
-	  non_desired_ids[i] = track_id;
+	  non_desired_ids[j] = track_id;
           track_id++;
-        continue;
+	  j++;
+          continue;
+
         }
-  }
+      }
+    }
+  }  
 void TrifocalSampleApp::
 DisplayDesiredIds() 
 {
@@ -363,6 +366,96 @@ DisplayDesiredIds()
   }
 }
 
+void TrifocalSampleApp::
+DisplayNonDesiredIds() 
+{
+  //
+  // Display rest of ids
+  //
+  const int svg_w = images_[0].Width();
+  const int svg_h = images_[0].Height() + images_[1].Height() + images_[2].Height();
+  svg::svgDrawer svg_stream(svg_w, svg_h);
+
+  // Draw image side by side
+  svg_stream.drawImage(image_filenames_[0], images_[0].Width(), images_[0].Height());
+  svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
+  svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
+
+  constexpr unsigned n_ids = 5;
+  unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
+  unsigned non_desired_ids[tracks_.size()-n_ids];
+  SeparateIds(desired_ids,non_desired_ids,n_ids);
+  unsigned track_id=0;
+  for (const auto &track_it: tracks_)
+  {
+    bool found = false;
+    for (unsigned i=0; i < n_ids; ++i)
+      if (track_id == non_desired_ids[i])
+        found = true;
+        
+    if (!found) {
+      //cout<< found << endl;
+      track_id++;
+      continue;
+    }
+  //TODO: find examples of features: point in curve(3), edge(33) 
+    auto iter = track_it.second.cbegin();
+    
+ uint32_t
+      i = iter->second,
+      j = (++iter)->second,
+      k = (++iter)->second;
+    //
+    const auto feature_i = sio_regions_[0]->Features()[i];
+    const auto feature_j = sio_regions_[1]->Features()[j];
+    const auto feature_k = sio_regions_[2]->Features()[k];
+
+    svg_stream.drawCircle(
+      feature_i.x(), feature_i.y(), feature_i.scale(),
+      svg::svgStyle().stroke("red", 1));
+    svg_stream.drawCircle(
+      feature_j.x(), feature_j.y() + images_[0].Height(), feature_k.scale(),
+      svg::svgStyle().stroke("red", 1));
+    svg_stream.drawCircle(
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_j.scale(),
+      svg::svgStyle().stroke("red", 1));
+    //TODO: Tangent line segments in yellow and if inlier -> in green
+    svg_stream.drawText(
+      feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_id));
+   
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_i.x()+20*cos(feature_i.orientation()), feature_i.y() + 20*sin(feature_i.orientation()) ,
+      svg::svgStyle().stroke("yellow", 1)); 
+    svg_stream.drawLine(
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      feature_j.x()+20*cos(feature_j.orientation()), feature_j.y() + images_[0].Height()+ 20*sin(feature_j.orientation()),
+      svg::svgStyle().stroke("yellow", 1));
+    svg_stream.drawLine(
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+      feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()), //it seems that this last tangent is wrong!!
+      svg::svgStyle().stroke("yellow", 1));
+
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      svg::svgStyle().stroke("blue", 1));
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      svg::svgStyle().stroke("blue", 1));
+    svg_stream.drawLine(
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+      svg::svgStyle().stroke("blue", 1));
+    track_id++;
+  }
+  ofstream svg_file( "trifocal_track_desired_ids.svg" );
+  if (svg_file.is_open())
+  {
+    svg_file << svg_stream.closeSvgFile().str();
+  }
+}
 // 3 files trifocal_track,trifocal_inlier,track_inlier, return the correct matrices, 
 // pass to solver datum desired i,print feature sca scale
 void TrifocalSampleApp::
