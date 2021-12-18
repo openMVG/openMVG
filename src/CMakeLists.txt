@@ -149,6 +149,17 @@ if (OpenMVG_USE_OPENMP)
       set_property(TARGET OpenMP::OpenMP_CXX
                    PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
     endif()
+    if( ${OpenMP_CXX_INCLUDE_DIRS} )
+      include_directories( ${OpenMP_CXX_INCLUDE_DIRS} )
+    else()
+      # Macports fix
+      #   find_package(OpenMP) is able to find the openMP dylib but fails to find the include dir,
+      #   we force it by hand.
+      if( APPLE AND EXISTS "/opt/local/lib/libomp" AND EXISTS "/opt/local/include/libomp" )
+        set_property( TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_INCLUDE_DIRECTORIES "/opt/local/include/libomp" )
+        include_directories( "/opt/local/include/libomp")
+      endif()  
+    endif()
     list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
