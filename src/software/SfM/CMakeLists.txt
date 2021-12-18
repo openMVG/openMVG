@@ -314,10 +314,19 @@ install(TARGETS openMVG_main_evalQuality DESTINATION bin/)
 # Export tutorial with valid path thanks to a configuration file
 ##
 set(OPENMVG_SOFTWARE_SFM_SRC_DIR ${CMAKE_CURRENT_LIST_DIR})
-if(MSVC OR APPLE)
+if(MSVC)
   set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}")
 else()
-  set(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+  if( APPLE )
+    if( CMAKE_GENERATOR MATCHES "Xcode" )
+      set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}")
+    else()
+      set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}")
+    endif()
+  else()
+    # Linux
+    set(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+  endif()
 endif()
 
 set(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/tutorial_demo.py.in")
