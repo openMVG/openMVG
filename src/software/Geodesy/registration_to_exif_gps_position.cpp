@@ -45,12 +45,12 @@ int main(int argc, char **argv)
     sSfM_Data_Filename_In,
     sSfM_Data_Filename_Out;
   unsigned int rigid_registration_method = ERegistrationType::RIGID_REGISTRATION_ALL_POINTS;
-
+  int i_GPS_XYZ_method = 0;
   CmdLine cmd;
   cmd.add(make_option('i', sSfM_Data_Filename_In, "input_file"));
   cmd.add(make_option('o', sSfM_Data_Filename_Out, "output_file"));
   cmd.add(make_option('m', rigid_registration_method, "method"));
-
+  cmd.add(make_option('M', i_GPS_XYZ_method, "gps_to_xyz_method"));
   try
   {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -66,6 +66,9 @@ int main(int argc, char **argv)
       << "[-m|--method] method to use for the rigid registration\n"
       << "\t0 => registration is done using a robust estimation,\n"
       << "\t1 (default)=> registration is done using all points.\n"
+	  << "[-M|--gps_to_xyz_method] XZY Coordinate system:\n"
+	  << "\t 0: ECEF (default)\n"
+	  << "\t 1: UTM"
       << std::endl;
 
     std::cerr << s << std::endl;
@@ -125,8 +128,17 @@ int main(int argc, char **argv)
          exifReader->GPSLongitude( &longitude ) &&
          exifReader->GPSAltitude( &altitude ) )
     {
-      // Add ECEF XYZ position to the GPS position array
-      vec_gps_center.push_back( lla_to_ecef( latitude, longitude, altitude ) );
+      // Add XYZ position to the GPS position array
+      switch (i_GPS_XYZ_method)
+      {
+      case 1:
+        vec_gps_center.push_back(lla_to_utm(latitude, longitude, altitude));
+        break;
+      case 0:
+      default:
+        vec_gps_center.push_back(lla_to_ecef(latitude, longitude, altitude));
+        break;
+      }
       const openMVG::geometry::Pose3 pose(sfm_data.GetPoseOrDie(view_it.second.get()));
       vec_sfm_center.push_back( pose.center() );
     }
