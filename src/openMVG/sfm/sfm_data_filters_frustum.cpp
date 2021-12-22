@@ -13,8 +13,7 @@
 #include "openMVG/image/pixel_types.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
-
-#include "third_party/progress/progress_display.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -97,9 +96,9 @@ const
   std::transform(z_near_z_far_perView.cbegin(), z_near_z_far_perView.cend(),
     std::back_inserter(viewIds), stl::RetrieveKey());
 
-  C_Progress_display my_progress_bar(
+  system::LoggerProgress my_progress_bar(
     viewIds.size() * (viewIds.size()-1)/2,
-    std::cout, "\nCompute frustum intersection\n");
+    "Computing frustum intersection");
 
   // Exhaustive comparison (use the fact that the intersect function is symmetric)
 #ifdef OPENMVG_USE_OPENMP
@@ -140,8 +139,8 @@ bool Frustum_Filter::export_Ply
 )
 const
 {
-  std::ofstream of(filename.c_str());
-  if (!of.is_open())
+  std::ofstream of(filename);
+  if (!of)
     return false;
   // Vertex count evaluation
   // Faces count evaluation

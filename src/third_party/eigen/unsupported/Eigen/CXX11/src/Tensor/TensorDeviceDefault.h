@@ -21,6 +21,12 @@ struct DefaultDevice {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void deallocate(void* buffer) const {
     internal::aligned_free(buffer);
   }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void* allocate_temp(size_t num_bytes) const {
+    return allocate(num_bytes);
+  }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void deallocate_temp(void* buffer) const {
+    deallocate(buffer);
+  }
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void memcpy(void* dst, const void* src, size_t n) const {
     ::memcpy(dst, src, n);
   }
@@ -33,11 +39,18 @@ struct DefaultDevice {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void memset(void* buffer, int c, size_t n) const {
     ::memset(buffer, c, n);
   }
+  template<typename Type>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Type get(Type data) const { 
+    return data;
+  }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE size_t numThreads() const {
-#ifndef __CUDA_ARCH__
+#if !defined(EIGEN_GPU_COMPILE_PHASE)
     // Running on the host CPU
     return 1;
+#elif defined(EIGEN_HIP_DEVICE_COMPILE)
+    // Running on a HIP device
+    return 64;
 #else
     // Running on a CUDA device
     return 32;
@@ -45,9 +58,12 @@ struct DefaultDevice {
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE size_t firstLevelCacheSize() const {
-#ifndef __CUDA_ARCH__
+#if !defined(EIGEN_GPU_COMPILE_PHASE) && !defined(SYCL_DEVICE_ONLY)
     // Running on the host CPU
     return l1CacheSize();
+#elif defined(EIGEN_HIP_DEVICE_COMPILE)
+    // Running on a HIP device
+    return 48*1024; // FIXME : update this number for HIP
 #else
     // Running on a CUDA device, return the amount of shared memory available.
     return 48*1024;
@@ -55,9 +71,12 @@ struct DefaultDevice {
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE size_t lastLevelCacheSize() const {
-#ifndef __CUDA_ARCH__
+#if !defined(EIGEN_GPU_COMPILE_PHASE) && !defined(SYCL_DEVICE_ONLY)
     // Running single threaded on the host CPU
     return l3CacheSize();
+#elif defined(EIGEN_HIP_DEVICE_COMPILE)
+    // Running on a HIP device
+    return firstLevelCacheSize(); // FIXME : update this number for HIP
 #else
     // Running on a CUDA device
     return firstLevelCacheSize();
@@ -65,13 +84,17 @@ struct DefaultDevice {
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE int majorDeviceVersion() const {
-#ifndef __CUDA_ARCH__
+#if !defined(EIGEN_GPU_COMPILE_PHASE)
     // Running single threaded on the host CPU
     // Should return an enum that encodes the ISA supported by the CPU
     return 1;
+#elif defined(EIGEN_HIP_DEVICE_COMPILE)
+    // Running on a HIP device
+    // return 1 as major for HIP
+    return 1;
 #else
     // Running on a CUDA device
-    return __CUDA_ARCH__ / 100;
+    return EIGEN_CUDA_ARCH / 100;
 #endif
   }
 };

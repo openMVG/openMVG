@@ -8,9 +8,9 @@
 #include "openMVG/cameras/Camera_Pinhole_Radial.hpp"
 #include "openMVG/cameras/Camera_undistort_image.hpp"
 #include "openMVG/image/image_io.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   Image<RGBColor> imageRGBIn, imageRGBU;
   Image<RGBAColor> imageRGBAIn, imageRGBAU;
 
-  C_Progress_display my_progress_bar( vec_fileNames.size() );
+  system::LoggerProgress my_progress_bar( vec_fileNames.size() );
   for (size_t j = 0; j < vec_fileNames.size(); ++j, ++my_progress_bar)
   {
     //read the depth

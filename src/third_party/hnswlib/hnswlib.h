@@ -1,6 +1,6 @@
 #pragma once
 #ifndef NO_MANUAL_VECTORIZATION
-#ifdef __SSE__
+#if defined (__SSE__) || defined (__SSE2__)
 #define USE_SSE
 #ifdef __AVX__
 #define USE_AVX

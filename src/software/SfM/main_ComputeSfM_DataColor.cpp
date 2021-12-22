@@ -8,11 +8,13 @@
 
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_colorization.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
+
 #include "software/SfM/SfMPlyHelper.hpp"
 #include "third_party/cmdLine/cmdLine.h"
 
-#include "openMVG/sfm/sfm_data_colorization.hpp"
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -46,19 +48,17 @@ int main(int argc, char **argv)
       if (argc == 1) throw std::string("Invalid command line parameter.");
       cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+      OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
         << "[-i|--input_file] path to the input SfM_Data scene\n"
-        << "[-o|--output_file] path to the output PLY file\n"
-        << std::endl;
+        << "[-o|--output_file] path to the output PLY file";
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
   if (sOutputPLY_Out.empty())
   {
-    std::cerr << std::endl
-      << "No output PLY filename specified." << std::endl;
+    OPENMVG_LOG_ERROR << "No output PLY filename specified.";
     return EXIT_FAILURE;
   }
 
@@ -66,8 +66,7 @@ int main(int argc, char **argv)
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename_In, ESfM_Data(ALL)))
   {
-    std::cerr << std::endl
-      << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << sSfM_Data_Filename_In << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 

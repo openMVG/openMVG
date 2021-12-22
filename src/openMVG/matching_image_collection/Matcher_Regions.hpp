@@ -39,8 +39,8 @@ class Matcher_Regions : public Matcher
   (
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs,
-    matching::PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
-    C_Progress *  progress = nullptr
+    matching::PairWiseMatchesContainer & map_PutativeMatches, // the pairwise photometric corresponding points
+    system::ProgressInterface *  progress = nullptr
   ) const override;
 
   private:

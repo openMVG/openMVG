@@ -14,10 +14,10 @@
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
 #include "openMVG/spherical/cubic_image_sampler.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <array>
@@ -37,10 +37,12 @@ int main(int argc, char *argv[]) {
   std::string s_sfm_data_filename;
   std::string s_out_dir = "";
   int force_recompute_images = 1;
+  int size_cubic_images = 1024;
 
   cmd.add( make_option('i', s_sfm_data_filename, "sfmdata") );
   cmd.add( make_option('o', s_out_dir, "outdir") );
   cmd.add( make_option('f', force_recompute_images, "force_compute_cubic_images") );
+  cmd.add( make_option('s', size_cubic_images, "size-cubic-images") );
 
   try {
       if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -50,13 +52,19 @@ int main(int argc, char *argv[]) {
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-o|--outdir path]\n"
       << "[-f|--force_recompute_images] (default 1)\n"
+      << "[-s|--size-cubic-images] (default 1024) pixel size of the resulting cubic images, "
+      << "non-positive values will automatically scale the output based on the input"
       << std::endl;
 
       std::cerr << s << std::endl;
       return EXIT_FAILURE;
   }
 
-  std::cout << "force_recompute_images = " << force_recompute_images << std::endl;
+  OPENMVG_LOG_INFO << "force_recompute_images = " << force_recompute_images;
+
+  std::cout << "size_cubic_images = ";
+  if(size_cubic_images > 0) std::cout << size_cubic_images << std::endl;
+  else std::cout << "auto" << std::endl;
 
   // Create output dir
   if (!stlplus::folder_exists(s_out_dir))
@@ -64,25 +72,26 @@ int main(int argc, char *argv[]) {
 
   SfM_Data sfm_data;
   if (!Load(sfm_data, s_sfm_data_filename, ESfM_Data(ALL))) {
-      std::cerr << std::endl
-      << "The input SfM_Data file \""<< s_sfm_data_filename << "\" cannot be read." << std::endl;
+      OPENMVG_LOG_ERROR << "The input SfM_Data file \""
+        << s_sfm_data_filename << "\" cannot be read.";
       return EXIT_FAILURE;
   }
 
   SfM_Data sfm_data_out; // the sfm_data that stores the cubical image list
   sfm_data_out.s_root_path = s_out_dir;
 
-  const int cubic_image_size = 1024;
-  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera =
-    spherical::ComputeCubicCameraIntrinsics(cubic_image_size);
-
   // Convert every spherical view to cubic views
   {
-    std::cout << "Generating cubic views:";
-    C_Progress_display my_progress_bar(sfm_data.GetViews().size());
+    system::LoggerProgress my_progress_bar(
+      sfm_data.GetViews().size(),
+      "Generating cubic views:");
     const Views & views = sfm_data.GetViews();
     const Poses & poses = sfm_data.GetPoses();
     const Landmarks & structure = sfm_data.GetLandmarks();
+
+    openMVG::cameras::Pinhole_Intrinsic pinhole_camera;
+    if(size_cubic_images > 0)
+        pinhole_camera = spherical::ComputeCubicCameraIntrinsics(size_cubic_images);
 
     // generate views and camera poses for each new views
     int error_status = 0;
@@ -110,6 +119,11 @@ int main(int argc, char *argv[]) {
           #pragma omp atomic
           ++error_status;
           continue;
+        }
+
+        if(size_cubic_images <= 0) {
+            const int auto_cubic_size = spherical_image.Height()/2;
+            pinhole_camera = spherical::ComputeCubicCameraIntrinsics(auto_cubic_size);
         }
 
         const std::array<Mat3,6> rot_matrix = spherical::GetCubicRotations();
@@ -147,7 +161,7 @@ int main(int argc, char *argv[]) {
           {
             if (!WriteImage(dst_cube_image.c_str(), cube_images[cubic_image_id]))
             {
-              std::cout << "Cannot export cubic images to: " << dst_cube_image << std::endl;
+              OPENMVG_LOG_ERROR << "Cannot export cubic images to: " << dst_cube_image;
               #pragma omp atomic
               ++error_status;
               continue;
@@ -168,7 +182,7 @@ int main(int argc, char *argv[]) {
           Mat3 tmp_rotation = poses.at(view->id_pose).rotation();
           if (tmp_rotation.determinant() < 0)
           {
-            std::cout << "Negative determinant" << std::endl;
+            OPENMVG_LOG_INFO << "Negative determinant";
             tmp_rotation = tmp_rotation*(-1.0f);
           }
 
@@ -183,7 +197,7 @@ int main(int argc, char *argv[]) {
     }
     else
     {
-      std::cout << "Loaded scene does not have spherical camera" << std::endl;
+      OPENMVG_LOG_INFO << "Loaded scene does not have spherical camera";
       #pragma omp atomic
       ++error_status;
       continue;
@@ -195,9 +209,7 @@ int main(int argc, char *argv[]) {
 
   // generate structure and associate it with new camera views
   {
-    std::cout << "Creating cubic sfm_data structure:";
-
-    C_Progress_display my_progress_bar(structure.size());
+    system::LoggerProgress my_progress_bar(structure.size(), "Creating cubic sfm_data structure:");
     for (const auto & it_structure : structure)
     {
       ++my_progress_bar;
@@ -256,16 +268,16 @@ int main(int argc, char *argv[]) {
             stlplus::create_filespec(stlplus::folder_append_separator(s_out_dir),
                                      "sfm_data_perspective.bin"),
             ESfM_Data(ALL))) {
-    std::cerr << std::endl
-    << "Cannot save the output sfm_data file" << std::endl;
+    OPENMVG_LOG_ERROR << std::endl
+    << "Cannot save the output sfm_data file";
     return EXIT_FAILURE;
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << " #views: " << sfm_data_out.views.size() << "\n"
     << " #poses: " << sfm_data_out.poses.size() << "\n"
     << " #intrinsics: " << sfm_data_out.intrinsics.size() << "\n"
-    << " #tracks: " << sfm_data_out.structure.size() << "\n" << std::endl;
+    << " #tracks: " << sfm_data_out.structure.size();
 
   // Exit program
   return EXIT_SUCCESS;

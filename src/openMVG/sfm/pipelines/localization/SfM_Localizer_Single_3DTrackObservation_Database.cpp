@@ -12,6 +12,7 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
 
 using namespace openMVG::matching;
 
@@ -32,8 +33,7 @@ namespace sfm {
   {
     if (sfm_data.GetPoses().empty() || sfm_data.GetLandmarks().empty())
     {
-      std::cerr << std::endl
-        << "The input SfM_Data file have not 3D content to match with." << std::endl;
+      OPENMVG_LOG_ERROR<< "The input SfM_Data file have no 3D content to match with.";
       return false;
     }
 
@@ -57,16 +57,16 @@ namespace sfm {
         }
       }
     }
-    std::cout << "Init retrieval database ... " << std::endl;
+    OPENMVG_LOG_INFO << "Init retrieval database ... ";
     // Initialize the matching interface
     matching_interface_ =
       RegionMatcherFactory(matching::ANN_L2, *landmark_observations_descriptors_);
     if (!matching_interface_)
       return false;
 
-    std::cout << "Retrieval database initialized with:\n"
+    OPENMVG_LOG_INFO << "Retrieval database initialized with:\n"
       << "#landmarks: " << sfm_data.GetLandmarks().size() << "\n"
-      << "#descriptors: " << landmark_observations_descriptors_->RegionCount() << std::endl;
+      << "#descriptors: " << landmark_observations_descriptors_->RegionCount();
 
     sfm_data_ = &sfm_data;
 
@@ -86,6 +86,7 @@ namespace sfm {
   {
     if (!sfm_data_ || !matching_interface_)
     {
+      OPENMVG_LOG_ERROR << "Invalid sfm_data or invalid matching_interface.";
       return false;
     }
 
@@ -95,7 +96,7 @@ namespace sfm {
       return false;
     }
 
-    std::cout << "#3D2d putative correspondences: " << vec_putative_matches.size() << std::endl;
+    OPENMVG_LOG_INFO << "#3D2d putative correspondences: " << vec_putative_matches.size();
     // Init the 3D-2d correspondences array
     Image_Localizer_Match_Data resection_data;
     if (resection_data_ptr)

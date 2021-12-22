@@ -28,24 +28,21 @@ bool computeSimilarity(
   double *Sout, Mat3 * Rout, Vec3 * tout)
 {
   if (vec_camPosGT.size() != vec_camPosComputed.size()) {
-    std::cerr << "Cannot perform registration, vector sizes are different" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot perform registration, vector sizes are different";
     return false;
   }
 
-  // Move input point in appropriate container
-  Mat x1(3, vec_camPosGT.size());
-  Mat x2(3, vec_camPosGT.size());
-  for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-    x1.col(i) = vec_camPosComputed[i];
-    x2.col(i) = vec_camPosGT[i];
-  }
+  // Move input points in appropriate container
+  const Eigen::Map<const Mat3X> x1(vec_camPosComputed[0].data(), 3, vec_camPosComputed.size());
+  const Eigen::Map<const Mat3X> x2(vec_camPosGT[0].data(), 3, vec_camPosGT.size());
+
   // Compute rigid transformation p'i = S R pi + t
 
   double S;
   Vec3 t;
   Mat3 R;
   openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  std::cout << "\n Non linear refinement" << std::endl;
+  OPENMVG_LOG_INFO << "Non linear refinement";
   openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
@@ -78,7 +75,7 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
     << '\n' << "property uchar red"
     << '\n' << "property uchar green"
     << '\n' << "property uchar blue"
-    << '\n' << "end_header" << std::endl;
+    << '\n' << "end_header" << "\n";
 
   for (size_t i=0; i < vec_camPosGT.size(); ++i)  {
     outfile << vec_camPosGT[i].transpose()
@@ -97,13 +94,15 @@ static bool exportToPly(const std::vector<Vec3> & vec_camPosGT,
 
 /// Compare two camera path (translation and rotation residual after a 7DOF rigid registration)
 /// Export computed statistics to a HTLM stream
-void EvaluteToGT(
+void EvaluateToGT(
   const std::vector<Vec3> & vec_camPosGT,
   const std::vector<Vec3> & vec_camPosComputed,
   const std::vector<Mat3> & vec_camRotGT,
   const std::vector<Mat3> & vec_camRotComputed,
   const std::string & sOutPath,
-  htmlDocument::htmlDocumentStream * _htmlDocStream
+  htmlDocument::htmlDocumentStream * _htmlDocStream,
+  std::vector<double>& vec_distance_residuals,
+  std::vector<double>& vec_rotation_angular_residuals
   )
 {
   // Compute global 3D similarity between the camera position
@@ -118,16 +117,16 @@ void EvaluteToGT(
   // -b. angle between rotation matrix
 
   // -a. distance between camera center
-  std::vector<double> vec_residualErrors;
+  vec_distance_residuals.clear();
   {
     for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
       const double dResidual = (vec_camPosGT[i] - vec_camPosComputed_T[i]).norm();
-      vec_residualErrors.push_back(dResidual);
+      vec_distance_residuals.push_back(dResidual);
     }
   }
 
   // -b. angle between rotation matrix
-  std::vector<double> vec_angularErrors;
+  vec_rotation_angular_residuals.clear();
   {
     std::vector<Mat3>::const_iterator iter1 = vec_camRotGT.begin();
     for (std::vector<Mat3>::const_iterator iter2 = vec_camRotComputed.begin();
@@ -136,25 +135,31 @@ void EvaluteToGT(
         const Mat3 R2T = *iter2 * R.transpose(); // Computed
 
         const double angularErrorDegree = R2D(getRotationMagnitude(R1 * R2T.transpose()));
-        vec_angularErrors.push_back(angularErrorDegree);
+        vec_rotation_angular_residuals.push_back(angularErrorDegree);
     }
   }
 
   // Display residual errors :
-  std::cout << "\nBaseline residuals (in GT unit)\n";
-  copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
-  std::cout << "\nAngular residuals (Degree) \n";
-  copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(std::cout, " , "));
+  std::ostringstream os;
+  os << "Baseline residuals (in GT unit)\n";
+  copy(vec_distance_residuals.cbegin(), vec_distance_residuals.cend(), std::ostream_iterator<double>(os, " , "));
+  os << "\nAngular residuals (Degree) \n";
+  copy(vec_rotation_angular_residuals.cbegin(), vec_rotation_angular_residuals.cend(), std::ostream_iterator<double>(os, " , "));
 
-  std::cout << std::endl << "\nBaseline error statistics : \n ";
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end());
+  os << "\nBaseline error statistics: \n";
+  minMaxMeanMedian<double>(vec_distance_residuals.cbegin(), vec_distance_residuals.cend(), os);
+
+  os << "\nAngular error statistics: \n";
+  minMaxMeanMedian<double>(vec_rotation_angular_residuals.cbegin(), vec_rotation_angular_residuals.cend(), os);
+  OPENMVG_LOG_INFO << os.str();
+
+
   double minB, maxB, meanB, medianB;
-  minMaxMeanMedian<double>(vec_residualErrors.begin(), vec_residualErrors.end(), minB, maxB, meanB, medianB);
+  minMaxMeanMedian<double>(vec_distance_residuals.cbegin(), vec_distance_residuals.cend(), minB, maxB, meanB, medianB);
 
-  std::cout << std::endl << "\nAngular error statistics : \n ";
-  minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end());
   double minA, maxA, meanA, medianA;
-  minMaxMeanMedian<double>(vec_angularErrors.begin(), vec_angularErrors.end(), minA, maxA, meanA, medianA);
+  minMaxMeanMedian<double>(vec_rotation_angular_residuals.cbegin(), vec_rotation_angular_residuals.cend(), minA, maxA, meanA, medianA);
+
 
   // Export camera position (viewable)
   exportToPly(vec_camPosGT, vec_camPosComputed_T,
@@ -174,7 +179,7 @@ void EvaluteToGT(
 
     std::ostringstream os;
     os << "Baseline_Residual=[";
-    std::copy(vec_residualErrors.begin(), vec_residualErrors.end(), std::ostream_iterator<double>(os, " "));
+    std::copy(vec_distance_residuals.cbegin(), vec_distance_residuals.cend(), std::ostream_iterator<double>(os, " "));
     os <<"];";
     _htmlDocStream->pushInfo("<hr>");
     _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));
@@ -191,7 +196,7 @@ void EvaluteToGT(
 
     os.str("");
     os << "Angular_residuals=[";
-    std::copy(vec_angularErrors.begin(), vec_angularErrors.end(), std::ostream_iterator<double>(os, " "));
+    std::copy(vec_rotation_angular_residuals.begin(), vec_rotation_angular_residuals.end(), std::ostream_iterator<double>(os, " "));
     os <<"];";
     _htmlDocStream->pushInfo("<br>");
     _htmlDocStream->pushInfo( htmlDocument::htmlMarkup("pre", os.str()));

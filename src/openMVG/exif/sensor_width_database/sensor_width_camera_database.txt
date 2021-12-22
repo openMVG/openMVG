@@ -1339,6 +1339,7 @@ DJI FC6310S;13.2
 DJI FC6510;13.2
 DJI FC6520;17.3
 DJI FC6540;23.5
+DJI FC7303;6.16
 DJI Phantom 4;6.3
 DJI PHANTOM VISION FC200;6.17
 DJI Phantom4 Pro;13.2
@@ -1465,12 +1466,6 @@ Estar Takee 1;4.69
 Eton Extreme 95;4.69
 Fairphone 2;4.61
 Fairphone FP2;4.61
-FC220;6.17
-FC300S;6.16
-FC300X;6.16
-FC330;6.16
-FC350;6.17
-FC350Z;6.17
 Firefly Aurii Envy;4.69
 Firefly Aurii Secret;4.71
 Fly Power Plus 2;3.67
@@ -2662,6 +2657,7 @@ Kodak EasyShare Z1485 IS;7.44
 Kodak EasyShare Z5010;6.16
 Kodak EasyShare Z5120;6.08
 Kodak EasyShare Z612;5.744
+EASTMAN KODAK COMPANY KODAK Z612 ZOOM DIGITAL CAMERA;5.744
 Kodak EasyShare Z650;5.744
 Kodak EasyShare Z700;5.744
 Kodak EasyShare Z710;5.744

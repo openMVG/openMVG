@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/geometry/box.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <fstream>
 
@@ -58,15 +59,15 @@ Box::Box
   const Vec3 points_[8] =
   {
     // Top face
-    Vec3(x_min, y_min, z_max),
-    Vec3(x_min, y_max, z_max),
-    Vec3(x_max, y_max, z_max),
-    Vec3(x_max, y_min, z_max),
+    {x_min, y_min, z_max},
+    {x_min, y_max, z_max},
+    {x_max, y_max, z_max},
+    {x_max, y_min, z_max},
     // Bottom face
-    Vec3(x_min, y_min, z_min),
-    Vec3(x_min, y_max, z_min),
-    Vec3(x_max, y_max, z_min),
-    Vec3(x_max, y_min, z_min),
+    {x_min, y_min, z_min},
+    {x_min, y_max, z_min},
+    {x_max, y_max, z_min},
+    {x_max, y_min, z_min}
   };
   std::copy(points_, points_ + 8, points);
 
@@ -87,9 +88,12 @@ bool Box::export_Ply
   const Vec3 color
 )
 {
-  std::ofstream of(filename.c_str());
-  if (!of.is_open())
+  std::ofstream of(filename);
+  if (!of)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open ply file: " << filename;
     return false;
+  }
 
   of << "ply" << '\n'
     << "format ascii 1.0" << '\n'

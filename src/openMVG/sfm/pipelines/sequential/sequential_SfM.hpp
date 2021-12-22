@@ -53,10 +53,7 @@ public:
   /// Initialize tracks
   bool InitLandmarkTracks();
 
-  /// Select a candidate initial pair
-  bool ChooseInitialPair(Pair & initialPairIndex) const;
-
-  /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
+  /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
 
   /// Automatic initial pair selection (based on a 'baseline' computation score)

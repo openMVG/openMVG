@@ -19,9 +19,8 @@
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/tracks/tracks.hpp"
-
-#include "third_party/progress/progress_display.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -87,8 +86,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
   const Pair_Set & pairs,
   const std::shared_ptr<Regions_Provider> & regions_provider)
 {
-  C_Progress_display my_progress_bar( pairs.size(), std::cout,
-    "Compute pairwise fundamental guided matching:\n" );
+  system::LoggerProgress my_progress_bar( pairs.size(),
+    "Pairwise fundamental guided matching" );
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
@@ -165,7 +164,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::match(
       #pragma omp critical
   #endif // OPENMVG_USE_OPENMP
         {
-          putatives_matches[pair].insert(putatives_matches[pair].end(),
+          putative_matches[pair].insert(putative_matches[pair].end(),
             vec_corresponding_indexes.begin(), vec_corresponding_indexes.end());
         }
         ++my_progress_bar;
@@ -187,8 +186,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
   using Triplets = std::vector<graph::Triplet>;
   const Triplets triplets = graph::TripletListing(pairs);
 
-  C_Progress_display my_progress_bar( triplets.size(), std::cout,
-    "Per triplet tracks validation (discard spurious correspondences):\n" );
+  system::LoggerProgress my_progress_bar( triplets.size(),
+    "Per triplet tracks validation (discard spurious correspondences)" );
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel
 #endif // OPENMVG_USE_OPENMP
@@ -207,14 +206,14 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
       openMVG::tracks::TracksBuilder tracksBuilder;
       {
         PairWiseMatches map_matchesIJK;
-        if (putatives_matches.count({I,J}))
-          map_matchesIJK.insert(*putatives_matches.find({I,J}));
+        if (putative_matches.count({I,J}))
+          map_matchesIJK.insert(*putative_matches.find({I,J}));
 
-        if (putatives_matches.count({I,K}))
-          map_matchesIJK.insert(*putatives_matches.find({I,K}));
+        if (putative_matches.count({I,K}))
+          map_matchesIJK.insert(*putative_matches.find({I,K}));
 
-        if (putatives_matches.count({J,K}))
-          map_matchesIJK.insert(*putatives_matches.find({J,K}));
+        if (putative_matches.count({J,K}))
+          map_matchesIJK.insert(*putative_matches.find({J,K}));
 
         if (map_matchesIJK.size() >= 2) {
           tracksBuilder.Build(map_matchesIJK);
@@ -293,7 +292,7 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::filter(
     }
   }
   // Clear putatives matches since they are no longer required
-  matching::PairWiseMatches().swap(putatives_matches);
+  matching::PairWiseMatches().swap(putative_matches);
 }
 
 /// Init & triangulate landmark observations from the fused validated 3-view correspondences
@@ -320,8 +319,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
     min_required_inliers,
     min_sample_index,
     triangulation_method);
-  C_Progress_display my_progress_bar( map_tracksCommon.size(), std::cout,
-    "Tracks to structure conversion:\n" );
+  system::LoggerProgress my_progress_bar( map_tracksCommon.size(),
+    "Tracks to structure conversion:" );
   // Fill sfm_data with the computed tracks (no 3D yet)
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for schedule(dynamic)

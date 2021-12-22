@@ -67,14 +67,14 @@ Solve_stellar_translation_scales_averaging
 )
 {
   const Pair_Set used_pairs = Relative_Scale::Get_pairs(vec_relative_scales);
-  std::cout << "Stellar reconstruction with center node: " << node_id << "\n"
+  OPENMVG_LOG_INFO << "Stellar reconstruction with center node: " << node_id << "\n"
     << "#relative scales: " << vec_relative_scales.size() << "\n"
-    << "#pairs : " << used_pairs.size() << std::endl;
+    << "#pairs : " << used_pairs.size();
 
   // Assert that the relative scales pose ids defined a unique connected component
   if (!Relative_scales_are_one_cc(vec_relative_scales))
   {
-    std::cerr << "The stellar edges are not giving a single connected component." << std::endl;
+    OPENMVG_LOG_ERROR << "The stellar edges are not giving a single connected component.";
     return false;
   }
 
@@ -252,7 +252,9 @@ Solve_stellar_translation_scales_averaging
         break;
       }
     }
-    std::cout << "Pair: " << selected_pair.first << "," << selected_pair.second << "; scaling: " << x_scales[i] << std::endl;
+    OPENMVG_LOG_INFO
+      << "Pair: " << selected_pair.first << "," << selected_pair.second
+      << "; scaling: " << x_scales[i];
     stellar_ids.insert(selected_pair.first);
     stellar_ids.insert(selected_pair.second);
 

@@ -7,19 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /*
-*
-* Define fast AVX2 squared euclidean distance computation for SIFT array
+* Define fast AVX2 and SSE distance function mostly taylored for SIFT arrays
 */
 
-#ifndef OPENMVG_MATCHING_METRIC_AVX2_HPP
-#define OPENMVG_MATCHING_METRIC_AVX2_HPP
+#ifndef OPENMVG_MATCHING_METRIC_SIMD_HPP
+#define OPENMVG_MATCHING_METRIC_SIMD_HPP
 
 #include <array>
 #include <numeric>
 
-#ifdef OPENMVG_USE_AVX2
 #include <cstdint>
+#if defined(OPENMVG_USE_AVX2) || defined(OPENMVG_USE_AVX)
 #include <immintrin.h>
+#endif
 
 namespace openMVG {
 namespace matching {
@@ -30,6 +30,7 @@ namespace matching {
 #define ALIGNED32 __attribute__((aligned(32)))
 #endif
 
+#ifdef OPENMVG_USE_AVX2
 inline int L2_AVX2
 (
   const uint8_t * a,
@@ -64,8 +65,10 @@ inline int L2_AVX2
   __m128i r = _mm_hadd_epi32(_mm_add_epi32(h, l), _mm_setzero_si128());
   return _mm_extract_epi32(r, 0) + _mm_extract_epi32(r, 1);
 }
+#endif // OPENMVG_USE_AVX2
 
-inline float L2_AVX2
+#ifdef OPENMVG_USE_AVX
+inline float L2_AVX
 (
   const float * a,
   const float * b,
@@ -85,9 +88,9 @@ inline float L2_AVX2
   _mm256_store_ps(acc_float, acc);
   return std::accumulate(acc_float, acc_float + 8, 0.f);
 }
+#endif // OPENMVG_USE_AVX
 
 }  // namespace matching
 }  // namespace openMVG
-#endif
 
-#endif // OPENMVG_MATCHING_METRIC_AVX2_HPP
+#endif // OPENMVG_MATCHING_METRIC_SIMD_HPP

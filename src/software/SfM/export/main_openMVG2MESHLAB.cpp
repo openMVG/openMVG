@@ -10,6 +10,7 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -35,24 +36,22 @@ int main(int argc, char **argv)
   cmd.add( make_option('o', sOutDir, "outdir") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
       << "[-p|--ply] path\n"
-      << "[-o|--outdir] path\n"
-      << std::endl;
+      << "[-o|--outdir] path\n";
 
-      std::cerr << s << std::endl;
-      return EXIT_FAILURE;
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--sfmdata " << sSfM_Data_Filename << std::endl
-            << "--ply " << sPly << std::endl
-            << "--outdir " << sOutDir << std::endl;
+  OPENMVG_LOG_INFO << " You called : " << argv[0]
+    << "\n--sfmdata " << sSfM_Data_Filename
+    << "\n--ply " << sPly
+    << "\n--outdir " << sOutDir;
 
   // Create output dir
   if (!stlplus::folder_exists(sOutDir))
@@ -61,8 +60,7 @@ int main(int argc, char **argv)
   // Read the SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(VIEWS|INTRINSICS|EXTRINSICS))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -110,7 +108,7 @@ int main(int argc, char **argv)
     const Vec3 optical_center = R.transpose() * t;
 
     outfile
-      << "  <MLRaster label=\"" << stlplus::filename_part(view->s_Img_path) << "\">" << std::endl
+      << "  <MLRaster label=\"" << stlplus::filename_part(view->s_Img_path) << "\">" << "\n"
       << "   <VCGCamera TranslationVector=\""
       << optical_center[0] << " "
       << optical_center[1] << " "
@@ -125,14 +123,14 @@ int main(int argc, char **argv)
       << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << " 0 "
       << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << " 0 "
       << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << " 0 "
-      << "0 0 0 1 \"/>"  << std::endl;
+      << "0 0 0 1 \"/>"  << "\n";
 
     // Link the image plane
-    outfile << "   <Plane semantic=\"\" fileName=\"" << srcImage << "\"/> "<< std::endl;
-    outfile << "  </MLRaster>" << std::endl;
+    outfile << "   <Plane semantic=\"\" fileName=\"" << srcImage << "\"/> "<< "\n";
+    outfile << "  </MLRaster>" << "\n";
   }
-  outfile << "   </RasterGroup>" << std::endl
-    << "</MeshLabProject>" << std::endl;
+  outfile << "   </RasterGroup>" << "\n"
+    << "</MeshLabProject>" << "\n";
 
   outfile.close();
 

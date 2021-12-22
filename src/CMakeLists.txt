@@ -5,12 +5,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
 project(openMVG C CXX)
 
 # Run automoc on .hh files in new versions of cmake
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17")
+if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
+    ${CMAKE_VERSION} VERSION_EQUAL "3.17")
   cmake_policy(SET CMP0100 NEW)
 endif()
 
@@ -18,6 +19,8 @@ endif()
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
+
+set(CMAKE_FIND_FRAMEWORK LAST)
 
 # ==============================================================================
 # OpenMVG build options
@@ -80,6 +83,10 @@ ENDMACRO()
 if (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  if(WIN32)
+    # Avoid to use the dllexport markup
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
 else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
@@ -132,17 +139,17 @@ endif (CXX11_COMPILER)
 if (OpenMVG_USE_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     register_definitions(-DOPENMVG_USE_OPENMP)
-    if (NOT MSVC)
-      if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # for those using the clang with OpenMP support
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES omp)
-      else()
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
-      endif()
-    endif (NOT MSVC)
+    if(NOT TARGET OpenMP::OpenMP_CXX)
+      find_package(Threads REQUIRED)
+      add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+      # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+    endif()
+    list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
@@ -231,7 +238,7 @@ ENDMACRO(UNIT_TEST)
 # - internal if cereal not found
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
-if (NOT TARGET cereal)
+if (NOT cereal_FOUND)
   add_library(cereal INTERFACE)
   target_include_directories(cereal
     INTERFACE
@@ -239,7 +246,6 @@ if (NOT TARGET cereal)
       $<INSTALL_INTERFACE:include/openMVG_dependencies/cereal/include>
   )
   install(TARGETS cereal EXPORT openMVG-targets)
-
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
 endif()
 
@@ -368,7 +374,6 @@ if (NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
   set(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
     ${PROJECT_BINARY_DIR}/third_party/lemon)
-  set(LEMON_LIBRARY openMVG_lemon)
 endif()
 
 # ==============================================================================

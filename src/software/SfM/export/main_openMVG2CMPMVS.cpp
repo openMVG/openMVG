@@ -7,9 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/cameras/Camera_undistort_image.hpp"
+#include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/image/image_io.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -18,7 +20,6 @@ using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cstdlib>
@@ -42,14 +43,14 @@ bool exportToCMPMVSFormat(
 
   if (!bOk)
   {
-    std::cerr << "Cannot access to one of the desired output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot access to one of the desired output directory";
     return false;
   }
   else
   {
     // Export data:
 
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size()*2 );
+    system::LoggerProgress my_progress_bar( sfm_data.GetViews().size()*2 );
 
     // Since CMPMVS requires contiguous camera index, and that some views can have some missing poses,
     // we reindex the poses to ensure a contiguous pose list.
@@ -109,7 +110,7 @@ bool exportToCMPMVSFormat(
         if (cam->w() != w_h_image_size.first ||
             cam->h() != w_h_image_size.second)
         {
-          std::cerr << "CMPMVS support only image having the same image size";
+          OPENMVG_LOG_ERROR << "CMPMVS support only image having the same image size";
           return false;
         }
       }
@@ -234,15 +235,14 @@ int main(int argc, char *argv[]) {
   cmd.add( make_option('o', sOutDir, "outdir") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-      << "[-o|--outdir] path\n"
-      << std::endl;
+      << "[-o|--outdir] path";
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
@@ -253,8 +253,7 @@ int main(int argc, char *argv[]) {
   // Read the input SfM scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 

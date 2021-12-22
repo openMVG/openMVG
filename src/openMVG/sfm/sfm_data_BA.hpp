@@ -26,6 +26,22 @@ enum class Extrinsic_Parameter_Type : int
   ADJUST_ALL = ADJUST_ROTATION | ADJUST_TRANSLATION
 };
 
+inline constexpr Extrinsic_Parameter_Type
+operator|(Extrinsic_Parameter_Type x, Extrinsic_Parameter_Type y)
+{
+  return static_cast<Extrinsic_Parameter_Type>
+    (static_cast<std::underlying_type<Extrinsic_Parameter_Type>::type>(x) |
+     static_cast<std::underlying_type<Extrinsic_Parameter_Type>::type>(y));
+}
+
+inline constexpr Extrinsic_Parameter_Type
+operator&(Extrinsic_Parameter_Type x, Extrinsic_Parameter_Type y)
+{
+  return static_cast<Extrinsic_Parameter_Type>
+    (static_cast<std::underlying_type<Extrinsic_Parameter_Type>::type>(x) &
+     static_cast<std::underlying_type<Extrinsic_Parameter_Type>::type>(y));
+}
+
 /// Enum to control if the Structure must be refined or not
 enum class Structure_Parameter_Type : bool
 {

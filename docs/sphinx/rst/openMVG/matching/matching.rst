@@ -25,6 +25,8 @@ This module works for data of any dimensionality, it could be use to search near
 Note:
 
 * Since the distance metric is configurable you can use it with Scalar (L1, L2, .. distance), or binary vector (Hamming distance).
+  This can be leveraged for example for SIFT regions, when they are quantized as unsigned char. In this case, it has been demonstrated 
+  by [Bellavia_IJCV20]_ that matching SIFT region with the L1 norm is faster and more accurate than using the L2 norm.
 
 Using the **Nearest neighbor search (NNS)** let you find pairs of elements (``(i,j)``) from sets ``A`` and ``B`` that are the closest for a given metric ``d``:
 

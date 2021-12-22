@@ -11,7 +11,6 @@
 #include <iterator>
 #include <fstream>
 #include <string>
-#include <vector>
 
 namespace openMVG {
 namespace features {

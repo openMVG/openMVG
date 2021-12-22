@@ -99,6 +99,9 @@ Bibliography
 .. [HNSW] **Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs.**
    Yu. A. Malkov, D. A. Yashunin, TPAMI 2018.
 
+.. [Bellavia_IJCV20] **Is There Anything New to Say About SIFT Matching?**
+   Bellavia, Fabio; Colombo, Carlo. In International Journal of Computer Vision, 2020.
+
 .. [Magnus] **Two-View Orthographic Epipolar Geometry: Minimal and Optimal Solvers.**
    Magnus Oskarsson. In Journal of Mathematical Imaging and Vision, 2017.
 

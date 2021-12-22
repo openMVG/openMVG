@@ -61,7 +61,7 @@ private:
   //--
   // DATA (temporary)
   //--
-  matching::PairWiseMatches putatives_matches;
+  matching::PairWiseMatches putative_matches;
   matching::PairWiseMatches triplets_matches;
   double max_reprojection_error_;
 };

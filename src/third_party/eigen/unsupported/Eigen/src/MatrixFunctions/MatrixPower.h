@@ -40,7 +40,6 @@ class MatrixPowerParenthesesReturnValue : public ReturnByValue< MatrixPowerParen
 {
   public:
     typedef typename MatrixType::RealScalar RealScalar;
-    typedef typename MatrixType::Index Index;
 
     /**
      * \brief Constructor.
@@ -57,8 +56,8 @@ class MatrixPowerParenthesesReturnValue : public ReturnByValue< MatrixPowerParen
      * \param[out] result
      */
     template<typename ResultType>
-    inline void evalTo(ResultType& res) const
-    { m_pow.compute(res, m_p); }
+    inline void evalTo(ResultType& result) const
+    { m_pow.compute(result, m_p); }
 
     Index rows() const { return m_pow.rows(); }
     Index cols() const { return m_pow.cols(); }
@@ -81,7 +80,7 @@ class MatrixPowerParenthesesReturnValue : public ReturnByValue< MatrixPowerParen
  *
  * \note Currently this class is only used by MatrixPower. One may
  * insist that this be nested into MatrixPower. This class is here to
- * faciliate future development of triangular matrix functions.
+ * facilitate future development of triangular matrix functions.
  */
 template<typename MatrixType>
 class MatrixPowerAtomic : internal::noncopyable
@@ -94,7 +93,6 @@ class MatrixPowerAtomic : internal::noncopyable
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
     typedef std::complex<RealScalar> ComplexScalar;
-    typedef typename MatrixType::Index Index;
     typedef Block<MatrixType,Dynamic,Dynamic> ResultType;
 
     const MatrixType& m_A;
@@ -162,11 +160,11 @@ template<typename MatrixType>
 void MatrixPowerAtomic<MatrixType>::computePade(int degree, const MatrixType& IminusT, ResultType& res) const
 {
   int i = 2*degree;
-  res = (m_p-degree) / (2*i-2) * IminusT;
+  res = (m_p-RealScalar(degree)) / RealScalar(2*i-2) * IminusT;
 
   for (--i; i; --i) {
     res = (MatrixType::Identity(IminusT.rows(), IminusT.cols()) + res).template triangularView<Upper>()
-	.solve((i==1 ? -m_p : i&1 ? (-m_p-i/2)/(2*i) : (m_p-i/2)/(2*i-2)) * IminusT).eval();
+	.solve((i==1 ? -m_p : i&1 ? (-m_p-RealScalar(i/2))/RealScalar(2*i) : (m_p-RealScalar(i/2))/RealScalar(2*i-2)) * IminusT).eval();
   }
   res += MatrixType::Identity(IminusT.rows(), IminusT.cols());
 }
@@ -196,11 +194,12 @@ void MatrixPowerAtomic<MatrixType>::computeBig(ResultType& res) const
 {
   using std::ldexp;
   const int digits = std::numeric_limits<RealScalar>::digits;
-  const RealScalar maxNormForPade = digits <=  24? 4.3386528e-1L                            // single precision
+  const RealScalar maxNormForPade = RealScalar(
+                                    digits <=  24? 4.3386528e-1L                            // single precision
                                   : digits <=  53? 2.789358995219730e-1L                    // double precision
                                   : digits <=  64? 2.4471944416607995472e-1L                // extended precision
                                   : digits <= 106? 1.1016843812851143391275867258512e-1L    // double-double
-                                  :                9.134603732914548552537150753385375e-2L; // quadruple precision
+                                  :                9.134603732914548552537150753385375e-2L); // quadruple precision
   MatrixType IminusT, sqrtT, T = m_A.template triangularView<Upper>();
   RealScalar normIminusT;
   int degree, degree2, numberOfSquareRoots = 0;
@@ -298,8 +297,8 @@ MatrixPowerAtomic<MatrixType>::computeSuperDiag(const ComplexScalar& curr, const
 
   ComplexScalar logCurr = log(curr);
   ComplexScalar logPrev = log(prev);
-  int unwindingNumber = ceil((numext::imag(logCurr - logPrev) - RealScalar(EIGEN_PI)) / RealScalar(2*EIGEN_PI));
-  ComplexScalar w = numext::log1p((curr-prev)/prev)/RealScalar(2) + ComplexScalar(0, EIGEN_PI*unwindingNumber);
+  RealScalar unwindingNumber = ceil((numext::imag(logCurr - logPrev) - RealScalar(EIGEN_PI)) / RealScalar(2*EIGEN_PI));
+  ComplexScalar w = numext::log1p((curr-prev)/prev)/RealScalar(2) + ComplexScalar(0, RealScalar(EIGEN_PI)*unwindingNumber);
   return RealScalar(2) * exp(RealScalar(0.5) * p * (logCurr + logPrev)) * sinh(p * w) / (curr - prev);
 }
 
@@ -340,7 +339,6 @@ class MatrixPower : internal::noncopyable
   private:
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
-    typedef typename MatrixType::Index Index;
 
   public:
     /**
@@ -600,7 +598,6 @@ class MatrixPowerReturnValue : public ReturnByValue< MatrixPowerReturnValue<Deri
   public:
     typedef typename Derived::PlainObject PlainObject;
     typedef typename Derived::RealScalar RealScalar;
-    typedef typename Derived::Index Index;
 
     /**
      * \brief Constructor.
@@ -618,8 +615,8 @@ class MatrixPowerReturnValue : public ReturnByValue< MatrixPowerReturnValue<Deri
      * constructor.
      */
     template<typename ResultType>
-    inline void evalTo(ResultType& res) const
-    { MatrixPower<PlainObject>(m_A.eval()).compute(res, m_p); }
+    inline void evalTo(ResultType& result) const
+    { MatrixPower<PlainObject>(m_A.eval()).compute(result, m_p); }
 
     Index rows() const { return m_A.rows(); }
     Index cols() const { return m_A.cols(); }
@@ -648,7 +645,6 @@ class MatrixComplexPowerReturnValue : public ReturnByValue< MatrixComplexPowerRe
   public:
     typedef typename Derived::PlainObject PlainObject;
     typedef typename std::complex<typename Derived::RealScalar> ComplexScalar;
-    typedef typename Derived::Index Index;
 
     /**
      * \brief Constructor.
@@ -669,8 +665,8 @@ class MatrixComplexPowerReturnValue : public ReturnByValue< MatrixComplexPowerRe
      * constructor.
      */
     template<typename ResultType>
-    inline void evalTo(ResultType& res) const
-    { res = (m_p * m_A.log()).exp(); }
+    inline void evalTo(ResultType& result) const
+    { result = (m_p * m_A.log()).exp(); }
 
     Index rows() const { return m_A.rows(); }
     Index cols() const { return m_A.cols(); }

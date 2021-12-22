@@ -14,8 +14,8 @@
 #include "openMVG/image/pixel_types.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
@@ -32,9 +32,7 @@ bool ColorizeTracks(
   //   and iterate to provide a color to each 3D point
 
   {
-    C_Progress_display my_progress_bar(sfm_data.GetLandmarks().size(),
-                                       std::cout,
-                                       "\nCompute scene structure color\n");
+    system::LoggerProgress my_progress_bar(sfm_data.GetLandmarks().size(),"- Compute scene structure color -" );
 
     vec_tracksColor.resize(sfm_data.GetLandmarks().size());
     vec_3dPoints.resize(sfm_data.GetLandmarks().size());
@@ -86,7 +84,7 @@ bool ColorizeTracks(
       std::vector<sort_index_packet_descend<IndexT, IndexT>> packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
-      // First image index with the most of occurence
+      // First image index with the most of occurrence
       std::map<IndexT, IndexT>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
       const size_t view_index = iterTT->first;
@@ -101,7 +99,7 @@ bool ColorizeTracks(
         const bool b_gray_image = ReadImage(sView_filename.c_str(), &image_gray);
         if (!b_gray_image)
         {
-          std::cerr << "Cannot open provided the image." << std::endl;
+          OPENMVG_LOG_ERROR << "Cannot open provided the image.";
           return false;
         }
       }

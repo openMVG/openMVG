@@ -17,10 +17,10 @@
 #include "openMVG/sfm/sfm_data_utils.hpp"
 #include "openMVG/sfm/sfm_view.hpp"
 #include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <fstream>
@@ -42,7 +42,7 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
   std::vector<std::string> vec_str;
   stl::split(Kmatrix, ';', vec_str);
   if (vec_str.size() != 9)  {
-    std::cerr << "\n Missing ';' character" << std::endl;
+    OPENMVG_LOG_ERROR << "\n Missing ';' character";
     return false;
   }
   // Check that all K matrix value are valid numbers
@@ -51,7 +51,7 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
     std::stringstream ss;
     ss.str(vec_str[i]);
     if (! (ss >> readvalue) )  {
-      std::cerr << "\n Used an invalid not a number character" << std::endl;
+      OPENMVG_LOG_ERROR << "\n Used an invalid not a number character";
       return false;
     }
     if (i==0) focal = readvalue;
@@ -61,13 +61,13 @@ bool checkIntrinsicStringValidity(const std::string & Kmatrix, double & focal, d
   return true;
 }
 
-std::pair<bool, Vec3> checkGPS
+bool getGPS
 (
   const std::string & filename,
-  const int & GPS_to_XYZ_method = 0
+  const int & GPS_to_XYZ_method,
+  Vec3 & pose_center
 )
 {
-  std::pair<bool, Vec3> val(false, Vec3::Zero());
   std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
   if (exifReader)
   {
@@ -81,21 +81,21 @@ std::pair<bool, Vec3> checkGPS
            exifReader->GPSAltitude( &altitude ) )
       {
         // Add ECEF or UTM XYZ position to the GPS position array
-        val.first = true;
         switch (GPS_to_XYZ_method)
         {
           case 1:
-            val.second = lla_to_utm( latitude, longitude, altitude );
+            pose_center = lla_to_utm( latitude, longitude, altitude );
             break;
           case 0:
           default:
-            val.second = lla_to_ecef( latitude, longitude, altitude );
+            pose_center = lla_to_ecef( latitude, longitude, altitude );
             break;
         }
+        return true;
       }
     }
   }
-  return val;
+  return false;
 }
 
 
@@ -110,7 +110,7 @@ std::pair<bool, Vec3> checkPriorWeightsString
   stl::split(sWeights, ';', vec_str);
   if (vec_str.size() != 3)
   {
-    std::cerr << "\n Missing ';' character in prior weights" << std::endl;
+    OPENMVG_LOG_ERROR << "Missing ';' character in prior weights";
     val.first = false;
   }
   // Check that all weight values are valid numbers
@@ -120,7 +120,7 @@ std::pair<bool, Vec3> checkPriorWeightsString
     std::stringstream ss;
     ss.str(vec_str[i]);
     if (! (ss >> readvalue) )  {
-      std::cerr << "\n Used an invalid not a number character in local frame origin" << std::endl;
+      OPENMVG_LOG_ERROR << "Used an invalid not a number character in local frame origin";
       val.first = false;
     }
     val.second[i] = readvalue;
@@ -140,8 +140,8 @@ int main(int argc, char **argv)
     sOutputDir = "",
     sKmatrix;
 
-  std::string sPriorWeights;
-  std::pair<bool, Vec3> prior_w_info(false, Vec3(1.0,1.0,1.0));
+  std::string sPriorWeights = "1.0;1.0;1.0";
+  std::pair<bool, Vec3> prior_w_info(false, Vec3());
 
   int i_User_camera_model = PINHOLE_CAMERA_RADIAL3;
 
@@ -163,10 +163,10 @@ int main(int argc, char **argv)
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
 
   try {
-      if (argc == 1) throw std::string("Invalid command line parameter.");
-      cmd.process(argc, argv);
+    if (argc == 1) throw std::string("Invalid command line parameter.");
+    cmd.process(argc, argv);
   } catch (const std::string& s) {
-      std::cerr << "Usage: " << argv[0] << '\n'
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[-i|--imageDirectory]\n"
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
@@ -187,22 +187,24 @@ int main(int argc, char **argv)
       << "[-W|--prior_weights] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
       << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
-      << "\t 1: UTM\n"
-      << std::endl;
+      << "\t 1: UTM";
 
-      std::cerr << s << std::endl;
+      OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
   }
 
-  std::cout << " You called : " <<std::endl
-            << argv[0] << std::endl
-            << "--imageDirectory " << sImageDir << std::endl
-            << "--sensorWidthDatabase " << sfileDatabase << std::endl
-            << "--outputDirectory " << sOutputDir << std::endl
-            << "--focal " << focal_pixels << std::endl
-            << "--intrinsics " << sKmatrix << std::endl
-            << "--camera_model " << i_User_camera_model << std::endl
-            << "--group_camera_model " << b_Group_camera_model << std::endl;
+  const bool b_Use_pose_prior = cmd.used('P');
+  OPENMVG_LOG_INFO << " You called : " << argv[0]
+    << "\n--imageDirectory " << sImageDir
+    << "\n--sensorWidthDatabase " << sfileDatabase
+    << "\n--outputDirectory " << sOutputDir
+    << "\n--focal " << focal_pixels
+    << "\n--intrinsics " << sKmatrix
+    << "\n--camera_model " << i_User_camera_model
+    << "\n--group_camera_model " << b_Group_camera_model
+    << "\n--use_pose_prior " << b_Use_pose_prior
+    << "\n--prior_weights " << sPriorWeights
+    << "\n--gps_to_xyz_method " << i_GPS_XYZ_method;
 
   // Expected properties for each image
   double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
@@ -211,13 +213,13 @@ int main(int argc, char **argv)
 
   if ( !stlplus::folder_exists( sImageDir ) )
   {
-    std::cerr << "\nThe input directory doesn't exist" << std::endl;
+    OPENMVG_LOG_ERROR << "The input directory doesn't exist";
     return EXIT_FAILURE;
   }
 
   if (sOutputDir.empty())
   {
-    std::cerr << "\nInvalid output directory" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid output directory";
     return EXIT_FAILURE;
   }
 
@@ -225,7 +227,7 @@ int main(int argc, char **argv)
   {
     if ( !stlplus::folder_create( sOutputDir ))
     {
-      std::cerr << "\nCannot create output directory" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create output directory";
       return EXIT_FAILURE;
     }
   }
@@ -233,13 +235,13 @@ int main(int argc, char **argv)
   if (sKmatrix.size() > 0 &&
     !checkIntrinsicStringValidity(sKmatrix, focal, ppx, ppy) )
   {
-    std::cerr << "\nInvalid K matrix input" << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid K matrix input";
     return EXIT_FAILURE;
   }
 
   if (sKmatrix.size() > 0 && focal_pixels != -1.0)
   {
-    std::cerr << "\nCannot combine -f and -k options" << std::endl;
+    OPENMVG_LOG_ERROR << "Cannot combine -f and -k options";
     return EXIT_FAILURE;
   }
 
@@ -248,21 +250,17 @@ int main(int argc, char **argv)
   {
     if ( !parseDatabase( sfileDatabase, vec_database ) )
     {
-      std::cerr
-       << "\nInvalid input database: " << sfileDatabase
-       << ", please specify a valid file." << std::endl;
+      OPENMVG_LOG_ERROR
+       << "Invalid input database: " << sfileDatabase
+       << ", please specify a valid file.";
       return EXIT_FAILURE;
     }
   }
 
   // Check if prior weights are given
-  if (cmd.used('P') && !sPriorWeights.empty())
+  if (b_Use_pose_prior)
   {
     prior_w_info = checkPriorWeightsString(sPriorWeights);
-  }
-  else if (cmd.used('P'))
-  {
-    prior_w_info.first = true;
   }
 
   std::vector<std::string> vec_image = stlplus::folder_files( sImageDir );
@@ -274,8 +272,7 @@ int main(int argc, char **argv)
   Views & views = sfm_data.views;
   Intrinsics & intrinsics = sfm_data.intrinsics;
 
-  C_Progress_display my_progress_bar( vec_image.size(),
-      std::cout, "\n- Image listing -\n" );
+  system::LoggerProgress my_progress_bar(vec_image.size(), "- Listing images -" );
   std::ostringstream error_report_stream;
   for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
     iter_image != vec_image.end();
@@ -331,12 +328,11 @@ int main(int argc, char **argv)
 
       const bool bHaveValidExifMetadata =
         exifReader->doesHaveExifInfo()
-        && !exifReader->getModel().empty();
+        && !exifReader->getModel().empty()
+        && !exifReader->getBrand().empty();
 
       if (bHaveValidExifMetadata) // If image contains meta data
       {
-        const std::string sCamModel = exifReader->getModel();
-
         // Handle case where focal length is equal to 0
         if (exifReader->getFocal() == 0.0f)
         {
@@ -347,6 +343,8 @@ int main(int argc, char **argv)
         else
         // Create the image entry in the list file
         {
+          const std::string sCamModel = exifReader->getBrand() + " " + exifReader->getModel();
+
           Datasheet datasheet;
           if ( getInfo( sCamModel, vec_database, datasheet ))
           {
@@ -397,19 +395,19 @@ int main(int argc, char **argv)
              (width, height);
         break;
         default:
-          std::cerr << "Error: unknown camera model: " << (int) e_User_camera_model << std::endl;
+          OPENMVG_LOG_ERROR << "Error: unknown camera model: " << (int) e_User_camera_model;
           return EXIT_FAILURE;
       }
     }
 
     // Build the view corresponding to the image
-    const std::pair<bool, Vec3> gps_info = checkGPS(sImageFilename, i_GPS_XYZ_method);
-    if (gps_info.first && cmd.used('P'))
+    Vec3 pose_center;
+    if (getGPS(sImageFilename, i_GPS_XYZ_method, pose_center) && b_Use_pose_prior)
     {
       ViewPriors v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == nullptr)
+      if (!intrinsic)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)
@@ -422,7 +420,7 @@ int main(int argc, char **argv)
       }
 
       v.b_use_pose_center_ = true;
-      v.pose_center_ = gps_info.second;
+      v.pose_center_ = pose_center;
       // prior weights
       if (prior_w_info.first == true)
       {
@@ -437,7 +435,7 @@ int main(int argc, char **argv)
       View v(*iter_image, views.size(), views.size(), views.size(), width, height);
 
       // Add intrinsic related to the image (if any)
-      if (intrinsic == nullptr)
+      if (!intrinsic)
       {
         //Since the view have invalid intrinsic data
         // (export the view, with an invalid intrinsic field value)
@@ -457,9 +455,9 @@ int main(int argc, char **argv)
   // Display saved warning & error messages if any.
   if (!error_report_stream.str().empty())
   {
-    std::cerr
-      << "\nWarning & Error messages:" << std::endl
-      << error_report_stream.str() << std::endl;
+    OPENMVG_LOG_WARNING
+      << "Warning & Error messages:\n"
+      << error_report_stream.str();
   }
 
   // Group camera that share common properties if desired (leads to more faster & stable BA).
@@ -477,11 +475,11 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  std::cout << std::endl
+  OPENMVG_LOG_INFO
     << "SfMInit_ImageListing report:\n"
     << "listed #File(s): " << vec_image.size() << "\n"
     << "usable #File(s) listed in sfm_data: " << sfm_data.GetViews().size() << "\n"
-    << "usable #Intrinsic(s) listed in sfm_data: " << sfm_data.GetIntrinsics().size() << std::endl;
+    << "usable #Intrinsic(s) listed in sfm_data: " << sfm_data.GetIntrinsics().size();
 
   return EXIT_SUCCESS;
 }

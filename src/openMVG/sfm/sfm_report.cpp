@@ -31,14 +31,14 @@ bool Generate_SfM_Report
 {
   // Computes:
   // - Statistics per view (mean, max, median residual values)
-  // - Global tracks length statistic (length occurence)
+  // - Global tracks length statistic (length occurrence)
   IndexT residualCount = 0;
   Hash_Map<IndexT, std::vector<double>> residuals_per_view;
-  std::map<IndexT, IndexT> track_length_occurences;
+  std::map<IndexT, IndexT> track_length_occurrences;
   for ( const auto & iterTracks : sfm_data.GetLandmarks() )
   {
     const Observations & obs = iterTracks.second.obs;
-    track_length_occurences[obs.size()] += 1;
+    track_length_occurrences[obs.size()] += 1;
     for ( const auto & itObs : obs )
     {
       const View * view = sfm_data.GetViews().at(itObs.first).get();
@@ -78,15 +78,15 @@ bool Generate_SfM_Report
   htmlDocStream.pushInfo( sFullLine );
 
   // Track length statistics
-  if (!track_length_occurences.empty() && !sfm_data.GetLandmarks().empty())
+  if (!track_length_occurrences.empty() && !sfm_data.GetLandmarks().empty())
   {
-    const IndexT min_track_length = track_length_occurences.cbegin()->first;
-    const IndexT max_track_length = track_length_occurences.crbegin()->first;
+    const IndexT min_track_length = track_length_occurrences.cbegin()->first;
+    const IndexT max_track_length = track_length_occurrences.crbegin()->first;
     // Compute the mean track length
     IndexT sum = 0;
-    for (const auto & pair_length_occurence : track_length_occurences)
+    for (const auto & pair_length_occurrence : track_length_occurrences)
     {
-      sum += pair_length_occurence.first * pair_length_occurence.second;
+      sum += pair_length_occurrence.first * pair_length_occurrence.second;
     }
     const IndexT mean_track_length = sum / static_cast<double>(sfm_data.GetLandmarks().size());
 

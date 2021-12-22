@@ -134,6 +134,10 @@ otherwise you can use standard makefiles
 ```shell
 $ cmake -DCMAKE_BUILD_TYPE=RELEASE . ../openMVG/src/
 ```
+After, you build
+```
+$ cmake --build . --target install
+```
 
 Compiling using VCPKG
 -----------------------

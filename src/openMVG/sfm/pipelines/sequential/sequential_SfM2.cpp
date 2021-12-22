@@ -18,10 +18,10 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
-#include "third_party/progress/progress.hpp"
 
 #include <array>
 #include <ceres/types.h>
@@ -99,12 +99,12 @@ bool SequentialSfMReconstructionEngine2::Process() {
   {
     if (!scene_initializer_ || !scene_initializer_->Process())
     {
-      std::cout << "Initialization status: Failed" << std::endl;
+      OPENMVG_LOG_ERROR << "Initialization status: Failed";
       return false;
     }
     else
     {
-      std::cout << "Initialization status : Success" << std::endl;
+      OPENMVG_LOG_INFO << "Initialization status : Success";
       sfm_data_.poses = scene_initializer_->Get_sfm_data().GetPoses();
     }
 
@@ -119,12 +119,13 @@ bool SequentialSfMReconstructionEngine2::Process() {
       RemoveOutliers_PixelResidualError(sfm_data_, Square(4.0));
 
       //-- Display some statistics
-      std::cout << "\n\n-------------------------------" << "\n"
+      OPENMVG_LOG_INFO
+        << "\n\n-------------------------------" << "\n"
         << "-- Starting Structure from Motion (statistics) with:\n"
         << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
         << " from " << sfm_data_.GetViews().size() << " input images.\n"
         << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "\n"
-        << "-------------------------------" << "\n";
+        << "-------------------------------";
 
       if (!bTriangulation)
       {
@@ -189,13 +190,14 @@ bool SequentialSfMReconstructionEngine2::Process() {
 
   //-- Reconstruction done.
   //-- Display some statistics
-  std::cout << "\n\n-------------------------------" << "\n"
+  OPENMVG_LOG_INFO
+    << "\n-------------------------------" << "\n"
     << "-- Structure from Motion (statistics):\n"
     << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
     << " from " << sfm_data_.GetViews().size() << " input images.\n"
     << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "\n"
     << "-- #Poses loop used: " << resection_round << "\n"
-    << "-------------------------------" << "\n";
+    << "-------------------------------";
 
   return true;
 }
@@ -209,7 +211,7 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
     tracksBuilder.Filter();
     tracksBuilder.ExportToSTL(map_tracks_);
 
-    std::cout << "\n" << "Track stats" << std::endl;
+    OPENMVG_LOG_INFO << "\n" << "Track stats";
     {
       std::ostringstream osTrack;
       //-- Display stats :
@@ -227,20 +229,20 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
         std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
-      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurence_TrackLength);
+      std::map<uint32_t, uint32_t> map_Occurrence_TrackLength;
+      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurrence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (const auto & it : map_Occurence_TrackLength)  {
+      for (const auto & it : map_Occurrence_TrackLength)  {
         osTrack << "\t" << it.first << "\t" << it.second << "\n";
       }
       osTrack << "\n";
-      std::cout << osTrack.str();
+      OPENMVG_LOG_INFO << osTrack.str();
     }
   }
 
   // Init the putative landmarks
   {
-    // For every track add the obervations:
+    // For every track add the observations:
     // - views and feature positions that see this landmark
     for ( const auto & iterT : map_tracks_ )
     {
@@ -348,11 +350,10 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
       }();
 
       const double track_ratio = track_id_for_resection.size() / static_cast<float>(view_tracks_ids.size() + 1);
-      std::cout
+      OPENMVG_LOG_INFO
         << "ViewId: " << view_id
         << "; #number of 2D-3D matches: " << track_id_for_resection.size()
-        << "; " << track_ratio * 100 << " % of the view track coverage."
-        << std::endl;
+        << "; " << track_ratio * 100 << " % of the view track coverage.";
 
       if (!track_id_for_resection.empty() && track_ratio > track_inlier_ratio)
       {
@@ -405,7 +406,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
         resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 
         const float inlier_ratio = resection_data.vec_inliers.size()/static_cast<float>(feature_id_for_resection.size());
-        std::cout
+        OPENMVG_LOG_INFO
           << std::endl
           << "-------------------------------" << "\n"
           << "-- Robust Resection of camera index: <" << view_id << "> image: "
@@ -416,7 +417,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
           << "-- Nb points validated by robust estimation: " << resection_data.vec_inliers.size() << "\n"
           << "-- % points validated: "
           << inlier_ratio * 100 << "\n"
-          << "-------------------------------" << std::endl;
+          << "-------------------------------";
 
         // Refine the pose of the found camera pose by using a BA and fix 3D points.
         if (bResection && inlier_ratio > 0.5)
@@ -459,7 +460,7 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
                   (view->ui_width, view->ui_height, focal, principal_point(0), principal_point(1));
               break;
               default:
-                std::cerr << "Try to create an unknown camera type." << std::endl;
+                OPENMVG_LOG_ERROR << "Try to create an unknown camera type.";
             }
           }
           const bool b_refine_pose = true;
@@ -523,7 +524,7 @@ bool SequentialSfMReconstructionEngine2::BundleAdjustment()
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   const Optimize_Options ba_refine_options
     ( ReconstructionEngine::intrinsic_refinement_options_,
-      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+      ReconstructionEngine::extrinsic_refinement_options_,
       Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
       Control_Point_Parameter(),
       this->b_use_motion_prior_

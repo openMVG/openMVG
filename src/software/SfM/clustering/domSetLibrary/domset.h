@@ -52,7 +52,6 @@ namespace nomoko {
              const float& _kVoxelsize):
                points(_points), views(_views),
                cameras(_cameras), kVoxelSize(_kVoxelsize) {
-        std::cout << " [ Dominant set clustering of views ] " << std::endl;
         computeInformation();
       }
 
