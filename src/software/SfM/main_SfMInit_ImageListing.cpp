@@ -150,6 +150,7 @@ int main(int argc, char **argv)
   int i_GPS_XYZ_method = 0;
 
   double focal_pixels = -1.0;
+  double focal_multiplier = 1.2;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
@@ -161,6 +162,7 @@ int main(int argc, char **argv)
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weights"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
+  cmd.add( make_option('F', focal_multiplier, "focal_multiplier") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -171,6 +173,7 @@ int main(int argc, char **argv)
       << "[-d|--sensorWidthDatabase]\n"
       << "[-o|--outputDirectory]\n"
       << "[-f|--focal] (pixels)\n"
+      << "[-F|--focal_multiplier] (default: " << focal_multiplier << ")\n"
       << "[-k|--intrinsics] Kmatrix: \"f;0;ppx;0;f;ppy;0;0;1\"\n"
       << "[-c|--camera_model] Camera model type:\n"
       << "\t" << static_cast<int>(PINHOLE_CAMERA) << ": Pinhole\n"
@@ -199,6 +202,7 @@ int main(int argc, char **argv)
     << "\n--sensorWidthDatabase " << sfileDatabase
     << "\n--outputDirectory " << sOutputDir
     << "\n--focal " << focal_pixels
+    << "\n--focal_multiplier " << focal_multiplier
     << "\n--intrinsics " << sKmatrix
     << "\n--camera_model " << i_User_camera_model
     << "\n--group_camera_model " << b_Group_camera_model
@@ -255,6 +259,10 @@ int main(int argc, char **argv)
        << ", please specify a valid file.";
       return EXIT_FAILURE;
     }
+  }
+  else
+  {
+    OPENMVG_LOG_WARNING << "No input camera dataset used";
   }
 
   // Check if prior weights are given
@@ -348,19 +356,29 @@ int main(int argc, char **argv)
           Datasheet datasheet;
           if ( getInfo( sCamModel, vec_database, datasheet ))
           {
-            // The camera model was found in the database so we can compute it's approximated focal length
+            // The camera model was found in the database so we can compute its approximated focal length
             const double ccdw = datasheet.sensorSize_;
             focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
           }
           else
           {
-            error_report_stream
-              << stlplus::basename_part(sImageFilename)
-              << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
-              << "Please consider add your camera model and sensor width in the database." << "\n";
+            if (!sfileDatabase.empty())
+              error_report_stream
+                << stlplus::basename_part(sImageFilename)
+                << "\" model \"" << sCamModel << "\" doesn't exist in the database" << "\n"
+                << "Please consider add your camera model and sensor width in the database." << "\n";
           }
         }
       }
+    }
+    // Handle the case where focal_multiplier will be used
+    if (focal == -1  && focal_multiplier > 0)
+    {
+       focal = std::max ( width, height ) * focal_multiplier;
+       error_report_stream
+         << stlplus::basename_part(sImageFilename)
+         << " | (not in camera database) Focal length approximated to: "
+         << focal << " (pixels)\n";
     }
     // Build intrinsic parameter related to the view
     std::shared_ptr<IntrinsicBase> intrinsic;
