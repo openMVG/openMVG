@@ -93,7 +93,7 @@ using namespace trifocal3pt;
 //				EXPECT_NEAR(solverResult[0][2](i,j) , R2[i][j]);
 //			}
 //			else{
-//				EXPECT_NEAR(solverResult[0][0](i,j) , T0[i][1]);
+//				NEAR(solverResult[0][0](i,j) , T0[i][1]);
 //				EXPECT_NEAR(solverResult[0][1](i,j) , T1[i][1]);
 //				EXPECT_NEAR(solverResult[0][2](i,j) , T2[i][1]);
 //			}
@@ -113,10 +113,14 @@ TEST(TrifocalSampleApp, fullrun)
   T.ExtractKeypoints();
   T.MatchKeypoints();
   T.ComputeTracks();
+  //int n_ids = 5;
+  //int desired_ids[n_ids] = {13, 23, 33, 63, 53};
+  //CHECK(T.FilterIds(desired_ids, n_ids));
   T.Stats();
   T.ExtractXYOrientation();
   T.Display();
   T.DisplayDesiredIds();
+  T.DisplayNonDesiredIds();
   T.RobustSolve();
   // T.DisplayInliers();
   T.DisplayInliersCamerasAndPoints();
