@@ -234,49 +234,55 @@ Display()
     svg_file << svg_stream.closeSvgFile().str();
   }
 }
-  bool TrifocalSampleApp::
-  FilterIds(int desired_ids[], int n_ids){
-  // Checks if my given IDs are OK
-    unsigned track_id=0;
-    bool found=false;
-    for (const auto &track_it: tracks_)
-    {
-      found = false;
-      for (unsigned i=0; i < n_ids; ++i)
-        if (track_id == desired_ids[i])
-          found = true;
-        if (!found) {
-          //cout<< found << endl;
-          track_id++;
-        continue;
-        }
-   }
-   return found;
-  }
-  void TrifocalSampleApp::
-  SeparateIds( unsigned desired_ids[], unsigned non_desired_ids[], unsigned n_ids ) {
-  
-  // Separate my desired ids and non desired ids from the total
-    unsigned track_id=0;
-    bool found=false;
-    unsigned j = 0;
-    for (const auto &track_it: tracks_)
-    {
-      found = false;
-      for (unsigned i = 0; i < n_ids; ++i){
-        if (track_id == desired_ids[i])
-          found = true;
-        if (!found) {
-          //cout<< found << endl;
-	  non_desired_ids[j] = track_id;
-          track_id++;
-	  j++;
-          continue;
 
-        }
+bool TrifocalSampleApp::
+FilterIds(int desired_ids[], int n_ids)
+{
+  // Checks if my given IDs are OK
+  bool found = false;
+
+  for (unsigned i = 0; i < n_ids; ++i) {
+    found = false;
+    unsigned track_id = 0;
+    for (const auto &track_it: tracks_) {
+      if (track_id == desired_ids[i]) {
+        found = true;
       }
+      track_id++;
     }
-  }  
+    if(!found){
+      return false;
+    }
+  }
+  return found;
+}
+
+void TrifocalSampleApp::
+SeparateIds( unsigned desired_ids[], unsigned non_desired_ids[], unsigned n_ids )
+{
+  //
+  // Separate my desired ids and non desired ids from the total
+  //
+  unsigned track_id = 0;
+  bool found = false;
+  unsigned j = 0;
+  for (const auto &track_it: tracks_)
+  {
+    found = false;
+    for (unsigned i = 0; i < n_ids; ++i) {
+      if (track_id == desired_ids[i])
+        found = true;
+    }
+    if (!found) {
+      //cout<< found << endl;
+      non_desired_ids[j] = track_id;
+      track_id++;
+      j++;
+      continue;
+    }
+  }
+}
+
 void TrifocalSampleApp::
 DisplayDesiredIds() 
 {
@@ -294,11 +300,11 @@ DisplayDesiredIds()
 
   constexpr unsigned n_ids = 5;
   unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
-  unsigned track_id=0;
+  unsigned track_id = 0;
   for (const auto &track_it: tracks_)
   {
     bool found=false;
-    for (unsigned i=0; i < n_ids; ++i)
+    for (unsigned i = 0; i < n_ids; ++i)
       if (track_id == desired_ids[i])
         found = true;
         
@@ -384,12 +390,12 @@ DisplayNonDesiredIds()
   constexpr unsigned n_ids = 5;
   unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
   unsigned non_desired_ids[tracks_.size()-n_ids];
-  SeparateIds(desired_ids,non_desired_ids,n_ids);
+  SeparateIds(desired_ids, non_desired_ids, n_ids);
   unsigned track_id=0;
   for (const auto &track_it: tracks_)
   {
     bool found = false;
-    for (unsigned i=0; i < n_ids; ++i)
+    for (unsigned i=0; i < tracks_.size()-n_ids; ++i)
       if (track_id == non_desired_ids[i])
         found = true;
         
@@ -450,7 +456,7 @@ DisplayNonDesiredIds()
       svg::svgStyle().stroke("blue", 1));
     track_id++;
   }
-  ofstream svg_file( "trifocal_track_desired_ids.svg" );
+  ofstream svg_file( "trifocal_track_non_desired_ids.svg" );
   if (svg_file.is_open())
   {
     svg_file << svg_stream.closeSvgFile().str();

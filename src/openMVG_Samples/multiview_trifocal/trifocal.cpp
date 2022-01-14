@@ -130,6 +130,7 @@ Solve(
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
   // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
+  std::cerr <<  cameras << std::endl;
   tt.resize(nsols_final);
   std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
   //using trifocal_model_t = array<Mat34, 3>;

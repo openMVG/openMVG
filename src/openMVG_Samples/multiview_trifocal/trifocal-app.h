@@ -33,7 +33,10 @@ struct TrifocalSampleApp {
   void Stats();
   void ExtractXYOrientation(); 
   void Display(); 
+  bool FilterIds(int desired_ids[], int n_ids);
+  void SeparateIds(unsigned desired_ids[], unsigned non_desired_ids[], unsigned n_ids);
   void DisplayDesiredIds(); 
+  void DisplayNonDesiredIds(); 
   void RobustSolve();
   void DisplayInliers();
   void DisplayInliersCamerasAndPoints(); // display inliers and and tracks
