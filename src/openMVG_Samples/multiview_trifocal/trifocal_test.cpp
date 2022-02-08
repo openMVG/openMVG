@@ -100,6 +100,17 @@ using namespace trifocal3pt;
 //		}                       
 //	}
 //}
+//std::cerr << "Solutions:\n";
+//for(unsigned i = 0;i < nsols_final; ++i){
+//  for(unsigned j = 0;j < io::pp::nviews; ++j){
+//    std::cerr << "Matrix" << i << " " << j << std::endl;
+//    std::cerr << tt[i][j] << std::endl;
+//    std::cerr << "\n";
+//  }
+//}
+//  cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
+//  cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
+//  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
 TEST(TrifocalSampleApp, fullrun) 
 {
   TrifocalSampleApp T;

@@ -83,54 +83,12 @@ Solve(
   
   std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
   MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
-  //std::cerr << datum_0  "\n"; 
     
-  //---- HARDODED CASE SOLUTION -----------------------------------------------------
-  // Uncomment to hardcode solution for known case to test.
-  // This is as if MINUS was run and returned the following
-  // 
-  // double R0[3][3] = {
-  //                    {1,0,0},
-  //                    {0,1,0},
-  //                    {0,0,1}
-  //                   };
-  //   
-  //  double T0[3][1] = {
-  //                      {13.022176},
-  //                      {-1.6546488},
-  //                      {352.47945}
-  //                     };
-
-  //  double R1[3][3] = {   
-  //                     {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
-  //                     {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
-  //                     {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
-  //                    };
-  //  double T1[3][1] = { 
-  //                      {8.70420714},
-  //                      {-1.62157456},
-  //                      {-352.61248141}
-  //                    };
-
-  //  double R2[3][3] = {
-  //                     {0.970091125581631,   0.235130101826381,   0.060307903987350},
-  //                     {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
-  //                     {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
-  //                    };
-
-  //  double T2[3][1] = { 
-  //                      {0.88920328},
-  //                      {-14.05063273},
-  //                      {-352.44248798}
-  //                    };
-  //---- !HARDODED CASE SOLUTION -----------------------------------------------------
-  
   // fill C0* with for loop
   std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
   // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
-  std::cerr <<  cameras << std::endl;
   tt.resize(nsols_final);
   std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
   //using trifocal_model_t = array<Mat34, 3>;
@@ -142,32 +100,6 @@ Solve(
           tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
     }
   }
-  //---- HARDODED CASE SOLUTION -----------------------------------------------------
-  // This is for hard coding test 
-  // tt[0][0] = Mat34::Identity();
-  // tt[0][1] = Mat34::Identity();
-  // tt[0][2] = Mat34::Identity();
-  // for(unsigned i=0;i<3;i++){
-  //   for(unsigned j=0;j<4;j++){
-  //     if(j<3){
-  //       tt[0][0](i,j) = R0[i][j];
-  //       tt[0][1](i,j) = R1[i][j];
-  //       tt[0][2](i,j) = R2[i][j];
-  //     }
-  //     else{
-  //       tt[0][0](i,j) = T0[i][1];
-  //       tt[0][1](i,j) = T1[i][1];
-  //       tt[0][2](i,j) = T2[i][1];
-  //     }
-  //   }                       
-  // }
-  //---- !HARDODED CASE SOLUTION -----------------------------------------------------
-
-
-  //  cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
-  //  cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
-  //  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
-  
   // TODO: filter the solutions by:
   // - positive depth and 
   // - using tangent at 3rd point
@@ -188,7 +120,6 @@ Error(
   const Vec &pxbearing_2,
   const double K[2][3]) 
 {
-  //std::cerr << "TRIFOCAL LOG: Called Error()\n";
   // Return the cost related to this model and those sample data point
   // Ideal algorithm:
   // 1) reconstruct the 3D points and orientations
@@ -196,12 +127,14 @@ Error(
   // 3) compute error 
   // 
   // In practice we ignore the directions and only reproject to one third view
-  
+  std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
+  std::cerr << "bearing_0 head homogeneous" << bearing_0.head(2).homogeneous() << std::endl;
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
+  // std::cerr << "bearing:" << bearing << "\n";
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
@@ -214,11 +147,12 @@ Error(
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
     third_view = 1;
   }
-  
-  Mat2 pxbearing;
+  // std::cerr << "pxbearing_1:" << pxbearing_2.head(2).homogeneous() << std::endl;
+  Eigen::MatrixXd pxbearing(2,3);
   pxbearing << pxbearing_0.head(2).homogeneous(),
-               pxbearing_1.head(2).homogeneous();
-  
+               pxbearing_1.head(2).homogeneous(),
+               pxbearing_2.head(2).homogeneous();
+  // std::cerr << "pxbearing:" << pxbearing << "\n";
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
