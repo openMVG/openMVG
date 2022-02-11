@@ -39,6 +39,8 @@ bool CreateLineCameraFile(  const IndexT camera_id,
                             std::string & camera_linie)
 {
   std::stringstream came_line_ss;
+  came_line_ss.precision(16);
+  
   EINTRINSIC current_type = intrinsic->getType();
   switch(current_type) 
   {
@@ -289,7 +291,7 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
 
   std::ofstream points3D_file( sPoints3DFilename );
   points3D_file.precision(16);
-  
+
   if ( ! points3D_file )
   {
     OPENMVG_LOG_ERROR << "Cannot write file" << sPoints3DFilename;
