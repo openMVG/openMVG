@@ -141,6 +141,8 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
       # Number of cameras: X
   */ 
   std::ofstream camera_file( sCamerasFilename );
+  camera_file.precision(16);
+
   if ( ! camera_file )
   {
     OPENMVG_LOG_ERROR << "Cannot write file" << sCamerasFilename;
@@ -186,6 +188,7 @@ bool CreateImageFile( const SfM_Data & sfm_data,
 
   // Header
   std::ofstream images_file( sImagesFilename );
+  images_file.precision(16);
 
   if ( ! images_file )
   {
@@ -285,7 +288,8 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
   */
 
   std::ofstream points3D_file( sPoints3DFilename );
-
+  points3D_file.precision(16);
+  
   if ( ! points3D_file )
   {
     OPENMVG_LOG_ERROR << "Cannot write file" << sPoints3DFilename;
