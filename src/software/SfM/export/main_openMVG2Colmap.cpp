@@ -35,9 +35,9 @@ using namespace openMVG::features;
 
 
 bool CreateLineCameraFile(const IndexT camera_id,
-  std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic,
-  std::string& camera_linie,
-  const int& floating_point_precision_digit)
+                          std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic,
+                          std::string& camera_linie,
+                          const int& floating_point_precision_digit)
 {
   std::stringstream came_line_ss;
   came_line_ss.precision(floating_point_precision_digit);
@@ -48,61 +48,61 @@ bool CreateLineCameraFile(const IndexT camera_id,
   case PINHOLE_CAMERA:
     //OpenMVG's PINHOLE_CAMERA corresponds to Colmap's SIMPLE_PINHOLE
     //Parameters: f, cx, cy  
-  {
-    std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic> pinhole_intrinsic(
-      dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(intrinsic->clone()));
+    {
+      std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic> pinhole_intrinsic(
+        dynamic_cast<openMVG::cameras::Pinhole_Intrinsic*>(intrinsic->clone()));
 
-    came_line_ss << camera_id << " " <<
-      "SIMPLE_PINHOLE" << " " <<
-      pinhole_intrinsic->w() << " " <<
-      pinhole_intrinsic->h() << " " <<
-      pinhole_intrinsic->focal() << " " <<
-      pinhole_intrinsic->principal_point().x() << " " <<
-      pinhole_intrinsic->principal_point().y() << "\n";
-  }
-  break;
+      came_line_ss << camera_id << " " <<
+        "SIMPLE_PINHOLE" << " " <<
+        pinhole_intrinsic->w() << " " <<
+        pinhole_intrinsic->h() << " " <<
+        pinhole_intrinsic->focal() << " " <<
+        pinhole_intrinsic->principal_point().x() << " " <<
+        pinhole_intrinsic->principal_point().y() << "\n";
+    }
+    break;
   case PINHOLE_CAMERA_RADIAL1:
     //OpenMVG's PINHOLE_CAMERA_RADIAL1 corresponds to Colmap's SIMPLE_RADIAL
     //Parameters: f, cx, cy, k1   
-  {
-    std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K1> pinhole_intrinsic_radial(
-      dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K1*>(intrinsic->clone()));
+    {
+      std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K1> pinhole_intrinsic_radial(
+        dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K1*>(intrinsic->clone()));
 
-    came_line_ss << camera_id << " " <<
-      "SIMPLE_RADIAL" << " " <<
-      pinhole_intrinsic_radial->w() << " " <<
-      pinhole_intrinsic_radial->h() << " " <<
-      pinhole_intrinsic_radial->focal() << " " <<
-      pinhole_intrinsic_radial->principal_point().x() << " " <<
-      pinhole_intrinsic_radial->principal_point().y() << " " <<
-      pinhole_intrinsic_radial->getParams().at(3) << "\n";   //k1
-  }
-  break;
+      came_line_ss << camera_id << " " <<
+        "SIMPLE_RADIAL" << " " <<
+        pinhole_intrinsic_radial->w() << " " <<
+        pinhole_intrinsic_radial->h() << " " <<
+        pinhole_intrinsic_radial->focal() << " " <<
+        pinhole_intrinsic_radial->principal_point().x() << " " <<
+        pinhole_intrinsic_radial->principal_point().y() << " " <<
+        pinhole_intrinsic_radial->getParams().at(3) << "\n"; //k1
+    }
+    break;
   case PINHOLE_CAMERA_RADIAL3:
     //OpenMVG's PINHOLE_CAMERA_RADIAL3 corresponds to Colmap's FULL_OPENCV
     //Parameters: fx, fy, cx, cy, k1, k2, p1, p2, k3, k4, k5, k6
-  {
-    std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K3> pinhole_intrinsic_radial(
-      dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K3*>(intrinsic->clone()));
+    {
+      std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Radial_K3> pinhole_intrinsic_radial(
+        dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Radial_K3*>(intrinsic->clone()));
 
-    came_line_ss << camera_id << " " <<
-      "FULL_OPENCV" << " " <<
-      pinhole_intrinsic_radial->w() << " " <<
-      pinhole_intrinsic_radial->h() << " " <<
-      pinhole_intrinsic_radial->focal() << " " <<
-      pinhole_intrinsic_radial->focal() << " " <<
-      pinhole_intrinsic_radial->principal_point().x() << " " <<
-      pinhole_intrinsic_radial->principal_point().y() << " " <<
-      pinhole_intrinsic_radial->getParams().at(3) << " " << //k1
-      pinhole_intrinsic_radial->getParams().at(4) << " " << //k2
-      0.0 << " " << //p1
-      0.0 << " " << //p2
-      pinhole_intrinsic_radial->getParams().at(5) << " " << //k3
-      0.0 << " " << // k4
-      0.0 << " " << // k5
-      0.0 << "\n";  // k6
-  }
-  break;
+      came_line_ss << camera_id << " " <<
+        "FULL_OPENCV" << " " <<
+        pinhole_intrinsic_radial->w() << " " <<
+        pinhole_intrinsic_radial->h() << " " <<
+        pinhole_intrinsic_radial->focal() << " " <<
+        pinhole_intrinsic_radial->focal() << " " <<
+        pinhole_intrinsic_radial->principal_point().x() << " " <<
+        pinhole_intrinsic_radial->principal_point().y() << " " <<
+        pinhole_intrinsic_radial->getParams().at(3) << " " << //k1
+        pinhole_intrinsic_radial->getParams().at(4) << " " << //k2
+        0.0 << " " << //p1
+        0.0 << " " << //p2
+        pinhole_intrinsic_radial->getParams().at(5) << " " << //k3
+        0.0 << " " << // k4
+        0.0 << " " << // k5
+        0.0 << "\n"; // k6
+    }
+    break;
   case PINHOLE_CAMERA_BROWN:
     OPENMVG_LOG_ERROR << "PINHOLE_CAMERA_BROWN is not supported. Aborting ...";
     return false;
@@ -110,24 +110,24 @@ bool CreateLineCameraFile(const IndexT camera_id,
   case PINHOLE_CAMERA_FISHEYE:
     //OpenMVG's PINHOLE_CAMERA_FISHEYE corresponds to Colmap's OPENCV_FISHEYE
     //Parameters: fx, fy, cx, cy, k1, k2, k3, k4
-  {
-    std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Fisheye> pinhole_intrinsic_fisheye(
-      dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Fisheye*>(intrinsic->clone()));
+    {
+      std::shared_ptr<openMVG::cameras::Pinhole_Intrinsic_Fisheye> pinhole_intrinsic_fisheye(
+        dynamic_cast<openMVG::cameras::Pinhole_Intrinsic_Fisheye*>(intrinsic->clone()));
 
-    came_line_ss << camera_id << " " <<
-      "OPENCV_FISHEYE" << " " <<
-      pinhole_intrinsic_fisheye->w() << " " <<
-      pinhole_intrinsic_fisheye->h() << " " <<
-      pinhole_intrinsic_fisheye->focal() << " " <<
-      pinhole_intrinsic_fisheye->focal() << " " <<
-      pinhole_intrinsic_fisheye->principal_point().x() << " " <<
-      pinhole_intrinsic_fisheye->principal_point().y() << " " <<
-      pinhole_intrinsic_fisheye->getParams().at(3) << " " << //k1
-      pinhole_intrinsic_fisheye->getParams().at(4) << " " << //k2
-      pinhole_intrinsic_fisheye->getParams().at(5) << " " << //k3
-      pinhole_intrinsic_fisheye->getParams().at(6) << " " << "\n"; //k4
-  }
-  break;
+      came_line_ss << camera_id << " " <<
+        "OPENCV_FISHEYE" << " " <<
+        pinhole_intrinsic_fisheye->w() << " " <<
+        pinhole_intrinsic_fisheye->h() << " " <<
+        pinhole_intrinsic_fisheye->focal() << " " <<
+        pinhole_intrinsic_fisheye->focal() << " " <<
+        pinhole_intrinsic_fisheye->principal_point().x() << " " <<
+        pinhole_intrinsic_fisheye->principal_point().y() << " " <<
+        pinhole_intrinsic_fisheye->getParams().at(3) << " " << //k1
+        pinhole_intrinsic_fisheye->getParams().at(4) << " " << //k2
+        pinhole_intrinsic_fisheye->getParams().at(5) << " " << //k3
+        pinhole_intrinsic_fisheye->getParams().at(6) << " " << "\n"; //k4
+    }
+    break;
   default: OPENMVG_LOG_ERROR << "Camera Type " << current_type << " is not supported. Aborting ...";
     return false;
   }
@@ -136,8 +136,8 @@ bool CreateLineCameraFile(const IndexT camera_id,
 }
 
 bool CreateCameraFile(const SfM_Data& sfm_data,
-  const std::string& sCamerasFilename,
-  const int& floating_point_precision_digit)
+                      const std::string& sCamerasFilename,
+                      const int& floating_point_precision_digit)
 {
   /* cameras.txt
      # Camera list with one line of data per camera:
@@ -159,7 +159,7 @@ bool CreateCameraFile(const SfM_Data& sfm_data,
   std::vector<std::string> camera_lines;
   system::LoggerProgress my_progress_bar(sfm_data.GetIntrinsics().size(), "- CREATE CAMERA FILE -");
   for (Intrinsics::const_iterator iter = sfm_data.GetIntrinsics().begin();
-    iter != sfm_data.GetIntrinsics().end(); ++iter, ++my_progress_bar)
+       iter != sfm_data.GetIntrinsics().end(); ++iter, ++my_progress_bar)
   {
     const IndexT camera_id = iter->first;
     std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic = iter->second;
@@ -181,8 +181,8 @@ bool CreateCameraFile(const SfM_Data& sfm_data,
 }
 
 bool CreateImageFile(const SfM_Data& sfm_data,
-  const std::string& sImagesFilename,
-  const int& floating_point_precision_digit)
+                     const std::string& sImagesFilename,
+                     const int& floating_point_precision_digit)
 
 {
   /* images.txt
@@ -192,7 +192,7 @@ bool CreateImageFile(const SfM_Data& sfm_data,
      # Number of images: X, mean observations per image: Y
    */
 
-   // Header
+  // Header
   std::ofstream images_file(sImagesFilename);
   images_file.precision(floating_point_precision_digit);
 
@@ -206,11 +206,11 @@ bool CreateImageFile(const SfM_Data& sfm_data,
   images_file << "#   POINTS2D[] as (X, Y, POINT3D_ID)\n";
   images_file << "# Number of images: X, mean observations per image: Y\n";
 
-  std::map< IndexT, std::vector< std::tuple<double, double, IndexT> > > viewIdToPoints2D;
+  std::map<IndexT, std::vector<std::tuple<double, double, IndexT>>> viewIdToPoints2D;
   const Landmarks& landmarks = sfm_data.GetLandmarks();
   {
     for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
-      iterLandmarks != landmarks.end(); ++iterLandmarks)
+         iterLandmarks != landmarks.end(); ++iterLandmarks)
     {
       const IndexT point3d_id = iterLandmarks->first;
 
@@ -229,7 +229,7 @@ bool CreateImageFile(const SfM_Data& sfm_data,
     system::LoggerProgress my_progress_bar(sfm_data.GetViews().size(), "- CREATE IMAGE FILE -");
 
     for (Views::const_iterator iter = sfm_data.GetViews().begin();
-      iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
+         iter != sfm_data.GetViews().end(); ++iter, ++my_progress_bar)
     {
       const View* view = iter->second.get();
 
@@ -285,8 +285,8 @@ bool CreateImageFile(const SfM_Data& sfm_data,
 }
 
 bool CreatePoint3DFile(const SfM_Data& sfm_data,
-  const std::string& sPoints3DFilename,
-  const int& floating_point_precision_digit)
+                       const std::string& sPoints3DFilename,
+                       const int& floating_point_precision_digit)
 {
   /* points3D.txt
      # 3D point list with one line of data per point:
@@ -309,14 +309,15 @@ bool CreatePoint3DFile(const SfM_Data& sfm_data,
   const Landmarks& landmarks = sfm_data.GetLandmarks();
 
   std::vector<Vec3> vec_3dPoints, vec_tracksColor;
-  if (!ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor)) {
+  if (!ColorizeTracks(sfm_data, vec_3dPoints, vec_tracksColor))
+  {
     return false;
   }
 
   system::LoggerProgress my_progress_bar(landmarks.size(), "- CREATE POINT3D FILE  -");
   int point_index = 0;
   for (Landmarks::const_iterator iterLandmarks = landmarks.begin();
-    iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar)
+       iterLandmarks != landmarks.end(); ++iterLandmarks, ++my_progress_bar)
   {
     const Vec3 exportPoint = iterLandmarks->second.X;
     const IndexT point3d_id = iterLandmarks->first;
@@ -331,7 +332,7 @@ bool CreatePoint3DFile(const SfM_Data& sfm_data,
 
     ++point_index;
 
-    const double error = 0.0;     // Some error
+    const double error = 0.0; // Some error
     points3D_file << error;
 
     const Observations& obs = iterLandmarks->second.obs;
@@ -360,11 +361,11 @@ bool CreatePoint3DFile(const SfM_Data& sfm_data,
 * @param floating_point_precision_digit Decimal precision to be used to format floating-point values for output files
 */
 bool CreateColmapFolder(const SfM_Data& sfm_data,
-  const std::string& sOutDirectory,
-  const std::string& sCamerasFilename,
-  const std::string& sImagesFilename,
-  const std::string& sPoints3DFilename,
-  const int& floating_point_precision_digit)
+                        const std::string& sOutDirectory,
+                        const std::string& sCamerasFilename,
+                        const std::string& sImagesFilename,
+                        const std::string& sPoints3DFilename,
+                        const int& floating_point_precision_digit)
 {
   /* Colmap Output structure:
     cameras.txt
@@ -391,7 +392,8 @@ bool CreateColmapFolder(const SfM_Data& sfm_data,
 * @param sfm_data Structure from Motion file to export
 * @param sOutDirectory Output directory
 */
-bool exportToColmap(const SfM_Data& sfm_data, const std::string& sOutDirectory, const int& floating_point_precision_digit)
+bool exportToColmap(const SfM_Data& sfm_data, const std::string& sOutDirectory,
+                    const int& floating_point_precision_digit)
 {
   // Create output directory
   bool bOk = false;
@@ -414,18 +416,17 @@ bool exportToColmap(const SfM_Data& sfm_data, const std::string& sOutDirectory, 
   const std::string sCamerasFilename = stlplus::create_filespec(sOutDirectory, "cameras.txt");
   const std::string sImagesFilename = stlplus::create_filespec(sOutDirectory, "images.txt");
   const std::string sPoints3DFilename = stlplus::create_filespec(sOutDirectory, "points3D.txt");
-  if (!CreateColmapFolder(sfm_data, sOutDirectory, sCamerasFilename, sImagesFilename, sPoints3DFilename, floating_point_precision_digit))
+  if (!CreateColmapFolder(sfm_data, sOutDirectory, sCamerasFilename, sImagesFilename, sPoints3DFilename,
+                          floating_point_precision_digit))
   {
     OPENMVG_LOG_ERROR << "There was an error exporting project";
     return false;
   }
   return true;
-
 }
 
 int main(int argc, char** argv)
 {
-
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
