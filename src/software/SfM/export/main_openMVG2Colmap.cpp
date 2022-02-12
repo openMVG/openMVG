@@ -37,7 +37,7 @@ using namespace openMVG::features;
 bool CreateLineCameraFile(  const IndexT camera_id, 
                             std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic,
                             std::string & camera_linie,
-							const int& floating_point_precision_digit)
+                            const int& floating_point_precision_digit)
 
 {
   std::stringstream came_line_ss;
@@ -138,7 +138,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
 
 bool CreateCameraFile( const SfM_Data & sfm_data, 
                       const std::string & sCamerasFilename,
-					  const int& floating_point_precision_digit)
+                      const int& floating_point_precision_digit)
 {
    /* cameras.txt
       # Camera list with one line of data per camera:
@@ -183,7 +183,7 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
 
 bool CreateImageFile( const SfM_Data & sfm_data,
                       const std::string & sImagesFilename,
-					  const int& floating_point_precision_digit)
+                      const int& floating_point_precision_digit)
 
 {
  /* images.txt
@@ -286,7 +286,7 @@ bool CreateImageFile( const SfM_Data & sfm_data,
 
 bool CreatePoint3DFile( const SfM_Data & sfm_data,
                       const std::string & sPoints3DFilename,
-					  const int& floating_point_precision_digit)
+                      const int& floating_point_precision_digit)
 {
  /* points3D.txt
       # 3D point list with one line of data per point:
@@ -364,7 +364,7 @@ bool CreateColmapFolder( const SfM_Data & sfm_data,
                     const std::string & sCamerasFilename,
                     const std::string & sImagesFilename, 
                     const std::string & sPoints3DFilename,
-					const int& floating_point_precision_digit)
+                    const int& floating_point_precision_digit)
 {
   /* Colmap Output structure:
       cameras.txt
