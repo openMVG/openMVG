@@ -36,7 +36,7 @@ using namespace openMVG::features;
 
 bool CreateLineCameraFile(  const IndexT camera_id, 
                             std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic,
-                            std::string & camera_linie,
+                            std::string & camera_line,
                             const int& floating_point_precision_digit)
 
 {
@@ -132,7 +132,7 @@ bool CreateLineCameraFile(  const IndexT camera_id,
     default: OPENMVG_LOG_ERROR << "Camera Type " << current_type << " is not supported. Aborting ...";
     return false;
   }
-  camera_linie = came_line_ss.str();
+  camera_line = came_line_ss.str();
   return true;
 }
 
