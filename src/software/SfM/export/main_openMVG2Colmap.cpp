@@ -452,7 +452,7 @@ int main( int argc , char ** argv )
               << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
               << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved"
               << "\n[Optional]\n"
-              << "[-p|--precision] sets the decimal precision to be used to format floating-point values (default = 16)";
+              << "[-p|--precision] sets the decimal precision to be used to format floating-point values (default = "<<floating_point_precision_digit<< ")";
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
