@@ -135,57 +135,51 @@ Error(
   std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
-  // std::cerr << "bearing_0 head homogeneous \n" << bearing_0.head(2).homogeneous() << std::endl;
+  std::cerr << "bearing_0 head homogeneous \n" << bearing_0.head(2).homogeneous() << std::endl;
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
-  // std::cerr << "bearing mtrx:\n " << bearing << endl;
+  std::cerr << "bearing mtrx:\n " << bearing << endl;
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
-  std::cerr << "tt[0] mtrx:\n " << tt[0] << endl;
-  std::cerr << "tt[1] mtrx:\n " << tt[1] << endl;
-  std::cerr << "tt[2] mtrx:\n " << tt[2] << endl;
-  std::cerr << "0 mtrx:\n " << Eigen::MatrixXd::Zero(3,3) << endl;
-  if(tt[0] == Eigen::MatrixXd::Zero(3,4) || tt[1] == Eigen::MatrixXd::Zero(3,4) || tt[2] == Eigen::MatrixXd::Zero(3,4)){
-  
-     std::cerr << "0 Matrix Found\n";
-     exit(EXIT_FAILURE); 
-  }else{
-    // pick the wider baseline. TODO: measure all pairwise translation distances
-    if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
-      // TODO use triangulation from the three views at once
-      TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
-      third_view = 2;
-      std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
-    } else {
-      TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
-      std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
-      third_view = 1;
-    }
-    std::cerr << "tt[0] mtrx:\n " << tt[0] << endl;
-    std::cerr << "tt[1] mtrx:\n " << tt[1] << endl;
-    std::cerr << "tt[2] mtrx:\n " << tt[2] << endl;
-    Mat2 pxbearing;
-    // std::cerr << "pxbearing 0 mtrx: " << pxbearing_0.head(2).rows() << "X" << pxbearing_0.head(2).cols() << endl;
-    pxbearing << pxbearing_0.head(1).homogeneous(),
-                 pxbearing_1.head(1).homogeneous();
-    // std::cerr << "pxbearing mtrx:\n " << pxbearing << endl;
-    // Computing the projection of triangulated points using projection.hpp
-    // For prototyping and speed, for now we will only project to the third view
-    // and report only one error
-    Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
-    apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
-    // The above two lines do K*[R|T]
-    // to measure the error in pixels.
-    // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
-     
-    Vec2 pxmeasured = pxbearing.col(third_view);
-    // cout << "error " << (reprojected - measured).squaredNorm() << "\n";
-    // cout << "triang " <<triangulated_homg <<"\n";
-    std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-    return (pxreprojected-pxmeasured).squaredNorm();
+  // std::cerr << "tt[1] mtrx:\n " << tt[1] << endl;
+  // std::cerr << "tt[2] mtrx:\n " << tt[2] << endl;
+  // pick the wider baseline. TODO: measure all pairwise translation distances
+  if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
+    // TODO use triangulation from the three views at once
+    TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
+    third_view = 2;
+    std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
+  } else {
+    TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
+    std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
+    third_view = 1;
   }
+  std::cerr << "pxbearing_0: " << pxbearing_0.head(2).homogeneous() << endl;
+  Mat2 pxbearing;
+  std::cerr << "pxbearing pre alloc mtrx:\n " << pxbearing << endl;
+  pxbearing << pxbearing_0.head(2).homogeneous().head(2),
+               pxbearing_1.head(2).homogeneous().head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
+  std::cerr << "pxbearing post alloc mtrx:\n " << pxbearing << endl;
+  // Computing the projection of triangulated points using projection.hpp
+  // For prototyping and speed, for now we will only project to the third view
+  // and report only one error
+  Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
+  std::cerr << "pxreprojected mtrx:\n " << pxreprojected.data() << endl;
+  apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
+  std::cerr << "pxreprojected mtrx:\n " << pxreprojected << endl;
+  // The above two lines do K*[R|T]
+  // to measure the error in pixels.
+  // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
+   
+  Vec2 pxmeasured = pxbearing.col(third_view);
+  std::cerr << "pxmeasured mtrx:\n " << pxmeasured << endl;
+  // cout << "error " << (reprojected - measured).squaredNorm() << "\n";
+  // cout << "triang " <<triangulated_homg <<"\n";
+  std::cerr << "TRIFOCAL LOG: Finished Error()\n";
+  return (pxreprojected-pxmeasured).squaredNorm();
+  
 }
 
 } // namespace trifocal3pt
