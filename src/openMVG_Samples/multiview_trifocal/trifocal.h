@@ -10,7 +10,7 @@
 #include <array>
 #include <vector>
 #include "openMVG/numeric/extract_columns.hpp"
-#include "openMVG/numeric/eigen_alias_definition.hpp"
+// #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 
 
@@ -24,7 +24,7 @@ using Mat2  = Eigen::Matrix<double, 2, 2>;
 using Mat34 = Eigen::Matrix<double, 3, 4>;
 using Mat43 = Eigen::Matrix<double, 4, 3>;
 using Mat42 = Eigen::Matrix<double, 4, 2>;
-
+using Mat23 = Eigen::Matrix<double, 2, 3>;
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;
@@ -83,6 +83,7 @@ public:
   
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
+    // std::cerr << "\n" << sample << "\n";
     return ErrorArg::Error(model, 
         x1_.col(sample), x2_.col(sample), x3_.col(sample), 
         pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample), K_);

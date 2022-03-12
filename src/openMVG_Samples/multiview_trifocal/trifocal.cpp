@@ -31,7 +31,7 @@
 namespace trifocal3pt {
   
 int iteration_global_debug = 0;
-  
+int max_solve_tries = 100; 
 using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
@@ -82,46 +82,51 @@ Solve(
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
   std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
-  MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
-    for (unsigned s=0; s < nsols_final; ++s) {
-      for (unsigned v=1; v < io::pp::nviews; ++v) {
-          for (unsigned i=0; i < 4; ++i) {
-            for (unsigned j=0; j < 3; ++j) {
-              cout << cameras[s][v][i][j] << " \n"[j == 2];
-            }
-          }
-          cout << "\n";
-      }
-      cout << "\n";
+  for ( unsigned i=0; i < max_solve_tries; ++i ){
+    if( MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final) )
+      break;
+    else if( i == max_solve_tries && !( MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final) )){   
+      std::cerr << "Minus failed to compute tracks\n";
+      exit(EXIT_FAILURE);
     }
-  if(cameras){
-    // fill C0* with for loop
-    std::cerr << "Number of sols " << nsols_final << std::endl;
-    std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
-    // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
-    // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
-    tt.resize(nsols_final);
-    std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
-    //using trifocal_model_t = array<Mat34, 3>;
-    for (unsigned s=0; s < nsols_final; ++s) {
-      tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
-      for (unsigned v=1; v < io::pp::nviews; ++v) {
-          memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
-          for (unsigned r=0; r < 3; ++r)
-            tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
-      }
+  }
+  //  for (unsigned s=0; s < nsols_final; ++s) {
+  //    for (unsigned v=1; v < io::pp::nviews; ++v) {
+  //        for (unsigned i=0; i < 4; ++i) {
+  //          for (unsigned j=0; j < 3; ++j) {
+  //            cout << cameras[s][v][i][j] << " \n"[j == 2];
+  //          }
+  //        }
+  //        cout << "\n";
+  //    }
+  //    cout << "\n";
+  //  }
+  // fill C0* with for loop
+   std::cerr << "Number of sols " << nsols_final << std::endl;
+  std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
+  // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
+  // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
+  tt.resize(nsols_final);
+  std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
+  //using trifocal_model_t = array<Mat34, 3>;
+  for (unsigned s=0; s < nsols_final; ++s) {
+    tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
+    for (unsigned v=1; v < io::pp::nviews; ++v) {
+        memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
+        for (unsigned r=0; r < 3; ++r)
+          tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
     }
-    // TODO: filter the solutions by:
-    // - positive depth and 
-    // - using tangent at 3rd point
-    //
-    // If we know the rays are perfectly coplanar, we can just use cross
-    // product within the plane instead of SVD
-    std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
-  } else{
-    std::cerr << "Minus failed to compute tracks\n";
-    exit(EXIT_FAILURE);
-  } 
+  }
+  // TODO: filter the solutions by:
+  // - positive depth and 
+  // - using tangent at 3rd point
+  //
+  // If we know the rays are perfectly coplanar, we can just use cross
+  // product within the plane instead of SVD
+  std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
+  // std::cerr << "Minus failed to compute tracks\n";
+  // exit(EXIT_FAILURE);
+   
 }
 
 double Trifocal3PointPositionTangentialSolver::
