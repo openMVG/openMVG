@@ -81,9 +81,19 @@ Solve(
   unsigned nsols_final = 0;
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
-  
   std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
   MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final);
+    for (unsigned s=0; s < nsols_final; ++s) {
+      for (unsigned v=1; v < io::pp::nviews; ++v) {
+          for (unsigned i=0; i < 4; ++i) {
+            for (unsigned j=0; j < 3; ++j) {
+              cout << cameras[s][v][i][j] << " \n"[j == 2];
+            }
+          }
+          cout << "\n";
+      }
+      cout << "\n";
+    }
   if(cameras){
     // fill C0* with for loop
     std::cerr << "Number of sols " << nsols_final << std::endl;
@@ -157,23 +167,24 @@ Error(
     third_view = 1;
   }
   std::cerr << "pxbearing_0: " << pxbearing_0.head(2).homogeneous() << endl;
-  Mat2 pxbearing;
+  Mat23 pxbearing; // 2x2 matrix
   std::cerr << "pxbearing pre alloc mtrx:\n " << pxbearing << endl;
-  pxbearing << pxbearing_0.head(2).homogeneous().head(2),
-               pxbearing_1.head(2).homogeneous().head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
+  pxbearing << pxbearing_0.homogeneous().head(2),
+               pxbearing_1.homogeneous().head(2),
+               pxbearing_2.homogeneous().head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
   std::cerr << "pxbearing post alloc mtrx:\n " << pxbearing << endl;
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
   Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
-  std::cerr << "pxreprojected mtrx:\n " << pxreprojected.data() << endl;
+  std::cerr << "pxreprojected mtrx before apply_intrinsics:\n " << pxreprojected << endl;
   apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
-  std::cerr << "pxreprojected mtrx:\n " << pxreprojected << endl;
+  std::cerr << "pxreprojected mtrx after apply_intrinsics:\n " << pxreprojected << endl;
   // The above two lines do K*[R|T]
   // to measure the error in pixels.
   // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
    
-  Vec2 pxmeasured = pxbearing.col(third_view);
+  Vec2 pxmeasured = pxbearing.col(third_view).head(2);
   std::cerr << "pxmeasured mtrx:\n " << pxmeasured << endl;
   // cout << "error " << (reprojected - measured).squaredNorm() << "\n";
   // cout << "triang " <<triangulated_homg <<"\n";
