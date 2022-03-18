@@ -288,7 +288,7 @@ void ImageSeparableConvolution( const Image<float> & img ,
   const VecKernel vert_k_cast = vert_k.template cast< typename openMVG::Accumulator<pix_t>::Type >();
 
   out.resize( img.Width(), img.Height() );
-  SeparableConvolution2d( img.GetMat(), horiz_k_cast, vert_k_cast, &( ( Image<float>::Base& )out ) );
+  SeparableConvolution2d( img.GetMat(), horiz_k_cast, vert_k_cast, &out );
 }
 
 } // namespace image

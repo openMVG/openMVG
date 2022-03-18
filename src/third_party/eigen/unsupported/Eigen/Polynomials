@@ -9,11 +9,11 @@
 #ifndef EIGEN_POLYNOMIALS_MODULE_H
 #define EIGEN_POLYNOMIALS_MODULE_H
 
-#include <Eigen/Core>
+#include "../../Eigen/Core"
 
-#include <Eigen/src/Core/util/DisableStupidWarnings.h>
+#include "../../Eigen/Eigenvalues"
 
-#include <Eigen/Eigenvalues>
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 // Note that EIGEN_HIDE_HEAVY_CODE has to be defined per module
 #if (defined EIGEN_EXTERN_INSTANTIATIONS) && (EIGEN_EXTERN_INSTANTIATIONS>=2)
@@ -132,7 +132,6 @@
   Output: \verbinclude PolynomialSolver1.out
 */
 
-#include <Eigen/src/Core/util/ReenableStupidWarnings.h>
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_POLYNOMIALS_MODULE_H
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

@@ -140,16 +140,6 @@ class Pose3
     }
 
     /**
-    * @brief Return the depth (distance) of a point respect to the camera center
-    * @param X Input point
-    * @return Distance to center
-    */
-    double depth( const Vec3 &X ) const
-    {
-      return ( rotation_ * ( X - center_ ) )[2];
-    }
-
-    /**
     * Serialization out
     * @param ar Archive
     */

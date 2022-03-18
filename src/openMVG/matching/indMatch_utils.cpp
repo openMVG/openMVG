@@ -11,6 +11,7 @@
 
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/indMatch_io.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -34,46 +35,51 @@ bool Load
 )
 {
   matches.clear();
+  std::ifstream stream;
   const std::string ext = stlplus::extension_part(filename);
   if (ext == "txt")
   {
-    std::ifstream stream(filename.c_str());
-    if (!stream.is_open())
+    stream.open(filename);
+    if (stream)
     {
-      return false;
-    }
-    // Read from the text file
-    // I J
-    // #matches count
-    // idx idx
-    // ...
-    size_t I, J, number;
-    while (stream >> I >> J >> number)  {
-      std::vector<IndMatch> read_matches(number);
-      for (size_t i = 0; i < number; ++i) {
-        stream >> read_matches[i];
+      // Read from the text file
+      // I J
+      // #matches count
+      // idx idx
+      // ...
+      size_t I, J, number;
+      while (stream >> I >> J >> number)  {
+        std::vector<IndMatch> read_matches(number);
+        for (size_t i = 0; i < number; ++i) {
+          stream >> read_matches[i];
+        }
+        matches[{I,J}] = std::move(read_matches);
       }
-      matches[{I,J}] = std::move(read_matches);
+      stream.clear(); // necessary since we hit eof with the while
+      stream.close();
     }
-    stream.close();
-    return true;
   }
   else if (ext == "bin")
   {
-    std::ifstream stream (filename.c_str(), std::ios::in | std::ios::binary);
-    if (stream.is_open())
+    stream.open(filename.c_str(), std::ios::in | std::ios::binary);
+    if (stream)
     {
       cereal::PortableBinaryInputArchive archive(stream);
       archive(matches);
       stream.close();
-      return true;
     }
   }
   else
   {
-    std::cerr << "Unknown PairWiseMatches input format: " << ext << std::endl;
+    OPENMVG_LOG_ERROR << "Unknown PairWiseMatches file extension: (" << ext << ").";
   }
-  return false;
+
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot open the matche file: " << filename << ".";
+  }
+
+  return static_cast<bool>(stream);
 }
 
 bool Save
@@ -83,42 +89,45 @@ bool Save
 )
 {
   const std::string ext = stlplus::extension_part(filename);
+  std::ofstream stream;
   if (ext == "txt")
   {
-    std::ofstream stream(filename.c_str());
-    if (!stream.is_open())
+    stream.open(filename);
+    if (stream)
     {
-      return false;
-    }
-    for ( const auto & cur_match : matches )
-    {
-      const auto& I = cur_match.first.first;
-      const auto& J = cur_match.first.second;
+      for ( const auto & cur_match : matches )
+      {
+        const auto& I = cur_match.first.first;
+        const auto& J = cur_match.first.second;
 
-      const std::vector<IndMatch> & pair_matches = cur_match.second;
-      stream << I << " " << J << '\n' << pair_matches.size() << '\n';
-      copy(pair_matches.begin(), pair_matches.end(),
-           std::ostream_iterator<IndMatch>(stream, "\n"));
+        const std::vector<IndMatch> & pair_matches = cur_match.second;
+        stream << I << " " << J << '\n' << pair_matches.size() << '\n';
+        copy(pair_matches.cbegin(), pair_matches.cend(),
+             std::ostream_iterator<IndMatch>(stream, "\n"));
+      }
+      stream.close();
     }
-    stream.close();
-    return true;
   }
   else if (ext == "bin")
   {
-    std::ofstream stream (filename.c_str(), std::ios::out | std::ios::binary);
-    if (stream.is_open())
+    stream.open(filename.c_str(), std::ios::out | std::ios::binary);
+    if (stream)
     {
       cereal::PortableBinaryOutputArchive archive(stream);
       archive(matches);
       stream.close();
-      return true;
     }
   }
   else
   {
-    std::cerr << "Unknown PairWiseMatches output format: " << ext << std::endl;
+    OPENMVG_LOG_ERROR << "Unknown PairWiseMatches output file extension: " << filename;
   }
-  return false;
+
+  if (!stream)
+  {
+    OPENMVG_LOG_ERROR << "Cannot save the matche file: " << filename << ".";
+  }
+  return static_cast<bool>(stream);
 }
 }  // namespace matching
 }  // namespace openMVG

@@ -17,6 +17,7 @@
 #include "openMVG/sfm/sfm_data_io_cereal.hpp"
 #include "openMVG/sfm/sfm_data_io_ply.hpp"
 #include "openMVG/stl/stlMap.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -29,25 +30,23 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
   const bool bCheck_Intrinsic = (flags_part & INTRINSICS) == INTRINSICS;
   const bool bCheck_Extrinsic = (flags_part & EXTRINSICS) == EXTRINSICS;
 
-  std::set<IndexT> set_id_intrinsics;
-  transform(sfm_data.GetIntrinsics().begin(), sfm_data.GetIntrinsics().end(),
+  std::set<IndexT> set_id_intrinsics; // unique so we can use a set
+  transform(sfm_data.GetIntrinsics().cbegin(), sfm_data.GetIntrinsics().cend(),
     std::inserter(set_id_intrinsics, set_id_intrinsics.begin()), stl::RetrieveKey());
 
-  std::set<IndexT> set_id_extrinsics; //unique so can use a set
-  transform(sfm_data.GetPoses().begin(), sfm_data.GetPoses().end(),
+  std::set<IndexT> set_id_extrinsics; // unique so we can use a set
+  transform(sfm_data.GetPoses().cbegin(), sfm_data.GetPoses().cend(),
     std::inserter(set_id_extrinsics, set_id_extrinsics.begin()), stl::RetrieveKey());
 
   // Collect existing id_intrinsic && id_extrinsic from views
   std::set<IndexT> reallyDefined_id_intrinsics;
   std::set<IndexT> reallyDefined_id_extrinsics;
-  for (Views::const_iterator iter = sfm_data.GetViews().begin();
-    iter != sfm_data.GetViews().end();
-    ++iter)
+  for (const auto view_it : sfm_data.GetViews())
   {
     // If a pose is defined, at least the intrinsic must be valid,
     // In order to generate a valid camera.
-    const IndexT id_pose = iter->second->id_pose;
-    const IndexT id_intrinsic = iter->second->id_intrinsic;
+    const IndexT id_pose = view_it.second->id_pose;
+    const IndexT id_intrinsic = view_it.second->id_intrinsic;
 
     if (set_id_extrinsics.count(id_pose))
       reallyDefined_id_extrinsics.insert(id_pose); //at least it exists
@@ -64,7 +63,7 @@ bool ValidIds(const SfM_Data & sfm_data, ESfM_Data flags_part)
     bRet &= set_id_extrinsics.size() == reallyDefined_id_extrinsics.size();
 
   if (bRet == false)
-    std::cout << "There is orphan intrinsics data or poses (do not depend on any view)" << std::endl;
+    OPENMVG_LOG_INFO << "There is orphan intrinsics data or poses (some pose(s) or intrinsic(s) do not depend on any view)";
 
   return bRet;
 }
@@ -81,7 +80,7 @@ bool Load(SfM_Data & sfm_data, const std::string & filename, ESfM_Data flags_par
     bStatus = Load_Cereal<cereal::XMLInputArchive>(sfm_data, filename, flags_part);
   else
   {
-    std::cerr << "Unknown sfm_data input format: " << ext << std::endl;
+    OPENMVG_LOG_ERROR << "Unknown sfm_data input format: " << filename;
     return false;
   }
 
@@ -111,7 +110,7 @@ bool Save(const SfM_Data & sfm_data, const std::string & filename, ESfM_Data fla
     return Save_BAF(sfm_data, filename, flags_part);
   else
   {
-    std::cerr << "Unknown sfm_data export format: " << ext << std::endl;
+    OPENMVG_LOG_ERROR << "Unknown sfm_data export format: " << filename;
   }
   return false;
 }

@@ -187,7 +187,7 @@ template<typename _Scalar, int _Options, typename _StorageIndex>
     /** Does nothing: provided for compatibility with SparseMatrix */
     inline void finalize() {}
 
-    /** Suppress all nonzeros which are smaller than \a reference under the tolerence \a epsilon */
+    /** Suppress all nonzeros which are smaller than \a reference under the tolerance \a epsilon */
     void prune(Scalar reference, RealScalar epsilon = NumTraits<RealScalar>::dummy_precision())
     {
       for (Index j=0; j<outerSize(); ++j)
@@ -224,31 +224,43 @@ template<typename _Scalar, int _Options, typename _StorageIndex>
       }
     }
 
-    /** The class DynamicSparseMatrix is deprectaed */
+    /** The class DynamicSparseMatrix is deprecated */
     EIGEN_DEPRECATED inline DynamicSparseMatrix()
       : m_innerSize(0), m_data(0)
     {
+      #ifdef EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+        EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+      #endif
       eigen_assert(innerSize()==0 && outerSize()==0);
     }
 
-    /** The class DynamicSparseMatrix is deprectaed */
+    /** The class DynamicSparseMatrix is deprecated */
     EIGEN_DEPRECATED inline DynamicSparseMatrix(Index rows, Index cols)
       : m_innerSize(0)
     {
+      #ifdef EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+        EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+      #endif
       resize(rows, cols);
     }
 
-    /** The class DynamicSparseMatrix is deprectaed */
+    /** The class DynamicSparseMatrix is deprecated */
     template<typename OtherDerived>
     EIGEN_DEPRECATED explicit inline DynamicSparseMatrix(const SparseMatrixBase<OtherDerived>& other)
       : m_innerSize(0)
     {
-    Base::operator=(other.derived());
+      #ifdef EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+        EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+      #endif
+      Base::operator=(other.derived());
     }
 
     inline DynamicSparseMatrix(const DynamicSparseMatrix& other)
       : Base(), m_innerSize(0)
     {
+      #ifdef EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+        EIGEN_SPARSE_CREATE_TEMPORARY_PLUGIN
+      #endif
       *this = other.derived();
     }
 

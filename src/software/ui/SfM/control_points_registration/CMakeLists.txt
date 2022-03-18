@@ -32,16 +32,15 @@ if(Qt5Widgets_FOUND)
   # Add the following files, modules and libraries to the project.
   # ==============================================================================
   # Files
-  ADD_EXECUTABLE(${ProjectName} 
+  ADD_EXECUTABLE(${ProjectName}
   ${SourceFiles}
-  ${HeaderFiles} )
-  #${MocSourceFiles})
+  ${HeaderFiles})
 
   # Linking with Qt Libraries.
   TARGET_LINK_LIBRARIES(${ProjectName}
   Qt5::Widgets Qt5::Gui
-  ${OpenMVG_LIBRARIES}
-  )
+  openMVG_sfm
+  ${STLPLUS_LIBRARY})
 
   SET_PROPERTY(TARGET ${ProjectName} PROPERTY FOLDER OpenMVG/software/ui)
   INSTALL(TARGETS ${ProjectName} DESTINATION bin/)

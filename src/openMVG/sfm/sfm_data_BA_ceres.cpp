@@ -23,6 +23,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 
 #include <ceres/rotation.h>
@@ -112,7 +113,8 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 : bVerbose_(bVerbose),
   nb_threads_(1),
   parameter_tolerance_(1e-8), //~= numeric_limits<float>::epsilon()
-  bUse_loss_function_(true)
+  bUse_loss_function_(true),
+  max_num_iterations_(500)
 {
   #ifdef OPENMVG_USE_OPENMP
     nb_threads_ = omp_get_max_threads();
@@ -232,6 +234,10 @@ bool Bundle_Adjustment_Ceres::Adjust
           openMVG::sfm::ApplySimilarity(sim_to_center, sfm_data, true);
         }
       }
+      else
+      {
+        OPENMVG_LOG_WARNING << "Cannot used the motion prior, insufficient number of motion priors/poses";
+      }
     }
   }
 
@@ -319,7 +325,7 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
     else
     {
-      std::cerr << "Unsupported camera type." << std::endl;
+      OPENMVG_LOG_ERROR << "Unsupported camera type.";
     }
   }
 
@@ -367,7 +373,7 @@ bool Bundle_Adjustment_Ceres::Adjust
       }
       else
       {
-        std::cerr << "Cannot create a CostFunction for this camera model." << std::endl;
+        OPENMVG_LOG_ERROR << "Cannot create a CostFunction for this camera model.";
         return false;
       }
     }
@@ -421,9 +427,9 @@ bool Bundle_Adjustment_Ceres::Adjust
       }
       if (obs.empty())
       {
-        std::cerr
+        OPENMVG_LOG_ERROR
           << "Cannot use this GCP id: " << gcp_landmark_it.first
-          << ". There is not linked image observation." << std::endl;
+          << ". There is not linked image observation.";
       }
       else
       {
@@ -458,7 +464,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   // Configure a BA engine and run it
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options ceres_config_options;
-  ceres_config_options.max_num_iterations = 500;
+  ceres_config_options.max_num_iterations = ceres_options_.max_num_iterations_;
   ceres_config_options.preconditioner_type =
     static_cast<ceres::PreconditionerType>(ceres_options_.preconditioner_type_);
   ceres_config_options.linear_solver_type =
@@ -468,20 +474,21 @@ bool Bundle_Adjustment_Ceres::Adjust
   ceres_config_options.minimizer_progress_to_stdout = ceres_options_.bVerbose_;
   ceres_config_options.logging_type = ceres::SILENT;
   ceres_config_options.num_threads = ceres_options_.nb_threads_;
+#if CERES_VERSION_MAJOR < 2
   ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
+#endif
   ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
 
   // Solve BA
   ceres::Solver::Summary summary;
   ceres::Solve(ceres_config_options, &problem, &summary);
   if (ceres_options_.bCeres_summary_)
-    std::cout << summary.FullReport() << std::endl;
+    OPENMVG_LOG_INFO << summary.FullReport();
 
   // If no error, get back refined parameters
   if (!summary.IsSolutionUsable())
   {
-    if (ceres_options_.bVerbose_)
-      std::cout << "Bundle Adjustment failed." << std::endl;
+    OPENMVG_LOG_ERROR << "IsSolutionUsable is false. Bundle Adjustment failed.";
     return false;
   }
   else // Solution is usable
@@ -489,8 +496,8 @@ bool Bundle_Adjustment_Ceres::Adjust
     if (ceres_options_.bVerbose_)
     {
       // Display statistics about the minimization
-      std::cout << std::endl
-        << "Bundle Adjustment statistics (approximated RMSE):\n"
+      OPENMVG_LOG_INFO
+        << "\nBundle Adjustment statistics (approximated RMSE):\n"
         << " #views: " << sfm_data.views.size() << "\n"
         << " #poses: " << sfm_data.poses.size() << "\n"
         << " #intrinsics: " << sfm_data.intrinsics.size() << "\n"
@@ -498,10 +505,9 @@ bool Bundle_Adjustment_Ceres::Adjust
         << " #residuals: " << summary.num_residuals << "\n"
         << " Initial RMSE: " << std::sqrt( summary.initial_cost / summary.num_residuals) << "\n"
         << " Final RMSE: " << std::sqrt( summary.final_cost / summary.num_residuals) << "\n"
-        << " Time (s): " << summary.total_time_in_seconds << "\n"
-        << std::endl;
-      if (options.use_motion_priors_opt)
-        std::cout << "Usable motion priors: " << (int)b_usable_prior << std::endl;
+        << " Time (s): " << summary.total_time_in_seconds
+        << " \n--\n"
+        << " Used motion prior: " << static_cast<int>(b_usable_prior);
     }
 
     // Update camera poses with refined data
@@ -516,7 +522,22 @@ bool Bundle_Adjustment_Ceres::Adjust
         Vec3 t_refined(map_poses.at(indexPose)[3], map_poses.at(indexPose)[4], map_poses.at(indexPose)[5]);
         // Update the pose
         Pose3 & pose = pose_it.second;
-        pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_ROTATION)
+        {
+            // Update only rotation
+            pose.rotation() = R_refined;
+        }
+        else if (options.extrinsics_opt == Extrinsic_Parameter_Type::ADJUST_TRANSLATION)
+        {
+            // Update only translation
+            Vec3 C_refined = -R_refined.transpose() * t_refined;
+            pose.center() = C_refined;
+        }
+        else
+        {
+            // Update rotation + translation
+            pose = Pose3(R_refined, -R_refined.transpose() * t_refined);
+        }
       }
     }
 
@@ -558,12 +579,14 @@ bool Bundle_Adjustment_Ceres::Adjust
       if (X_GPS.size() > 3)
       {
         // Compute the median residual error
-        Vec residual = (Eigen::Map<Mat3X>(X_SfM[0].data(), 3, X_SfM.size()) - Eigen::Map<Mat3X>(X_GPS[0].data(), 3, X_GPS.size())).colwise().norm();
-        std::cout
+        const Vec residual = (Eigen::Map<Mat3X>(X_SfM[0].data(), 3, X_SfM.size()) - Eigen::Map<Mat3X>(X_GPS[0].data(), 3, X_GPS.size())).colwise().norm();
+        std::ostringstream os;
+        os
           << "Pose prior statistics (user units):\n"
           << " - Starting median fitting error: " << pose_center_robust_fitting_error << "\n"
-          << " - Final fitting error:";
-        minMaxMeanMedian<Vec::Scalar>(residual.data(), residual.data() + residual.size());
+          << " - Final fitting error:\n";
+        minMaxMeanMedian<Vec::Scalar>(residual.data(), residual.data() + residual.size(), os);
+        OPENMVG_LOG_INFO << os.str();
       }
     }
     return true;

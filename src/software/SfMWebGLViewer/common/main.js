@@ -79,9 +79,6 @@ function init()
   var bs = ComputeBoundingSphere( modelPos );
   camera.FitBoundingSphere( bs , bs[3] ); 
   trackball.setPosition( bs );
-  var d = Vector.norm( Vector.sub( camera.m_pos , camera.m_dir ) );
-  var arad = DegToRad( camera.m_fov ); 
-  var new_rad = d * Math.sin( arad * 0.5 ); 
   trackball.setRadius( bs[3] * 0.8 ); 
 
   setEventListeners();
@@ -233,7 +230,6 @@ function onMouseMove( e )
 
     if (e.shiftKey )
     { 
-      var dx = mouseCurX - mouseLastPosition.x;
       var dy = mouseCurY - mouseLastPosition.y;
 
       // Zoom camera 
@@ -245,7 +241,7 @@ function onMouseMove( e )
       var new_rad = d * Math.sin( arad * 0.5 ); 
       trackball.setRadius( new_rad * 0.8 ); 
     }
-    else if (e.altKey )
+    else if (e.altKey || e.ctrlKey)
     {
       // Pan 
       var p_old = camera.pointOnPlane( mouseLastPosition.x , canvas.height - mouseLastPosition.y );
@@ -267,10 +263,10 @@ function onMouseMove( e )
       // Axis of rotation 
       var d1 = Vector.sub( p_new , camera.m_dir );
       var d2 = Vector.sub( p_old , camera.m_dir ); 
-      var axis = Vector.cross( d1 , d2 );
-      
       d1 = Vector.normalize( d1 );
       d2 = Vector.normalize( d2 ); 
+      var axis = Vector.cross( d1 , d2 );
+      
       var d = Vector.norm( Vector.sub( p_old , p_new ) );
       // Angle of rotation 
       var angle = 0.75 * d / trackball.getRadius(); 
@@ -428,9 +424,6 @@ function resetView()
   var bs = ComputeBoundingSphere( modelPos );
   camera.FitBoundingSphere( bs , bs[3] ); 
   trackball.setPosition( bs );
-  var d = Vector.norm( Vector.sub( camera.m_pos , camera.m_dir ) );
-  var arad = DegToRad( camera.m_fov ); 
-  var new_rad = d * Math.sin( arad * 0.5 ); 
   trackball.setRadius( bs[3] * 0.8 ); 
   
   // Default values for interface

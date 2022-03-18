@@ -24,7 +24,7 @@ namespace VO  {
 
 // Implement tracking by description:
 //  - Each tracked point uses a local description and is tracked thanks to descriptor matching
-struct Tracker_fast_dipole : public Abstract_Tracker
+struct Tracker_fast_dipole final: public Abstract_Tracker
 {
   // data for tracking
   image::Image<unsigned char> _prev_img;

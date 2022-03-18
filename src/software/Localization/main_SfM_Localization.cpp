@@ -9,14 +9,14 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/image/image_io.hpp>
-#include <software/SfM/SfMPlyHelper.hpp>
-
+#include <openMVG/sfm/sfm.hpp>
+#include <openMVG/system/loggerprogress.hpp>
 #include <openMVG/system/timer.hpp>
-#include "openMVG/stl/stl.hpp"
+#include <openMVG/stl/stl.hpp>
+#include <software/SfM/SfMPlyHelper.hpp>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
@@ -67,6 +67,7 @@ int main(int argc, char **argv)
   int i_User_camera_model = cameras::PINHOLE_CAMERA_RADIAL3;
   bool bUseSingleIntrinsics = false;
   bool bExportStructure = false;
+  int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
 
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_switch('s', "single_intrinsics"));
   cmd.add( make_switch('e', "export_structure"));
+  cmd.add( make_option('R', resection_method, "resection_method"));
 
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
@@ -115,6 +117,12 @@ int main(int argc, char **argv)
       << "\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t 5: Pinhole fisheye\n"
       << "\t 7: Spherical camera\n"
+    << "[-R|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+      << "\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
+      << "\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
 #ifdef OPENMVG_USE_OPENMP
     << "[-n|--numThreads] number of thread(s)\n"
 #endif
@@ -172,7 +180,7 @@ int main(int argc, char **argv)
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    if (!stream)
       return EXIT_FAILURE;
 
     try
@@ -194,7 +202,7 @@ int main(int argc, char **argv)
   }
 
   // Show the progress on the command line:
-  C_Progress_display progress;
+  system::LoggerProgress progress;
 
   // Load the SfM_Data region's views
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
@@ -382,7 +390,7 @@ int main(int argc, char **argv)
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
-      optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+      optional_intrinsic ? static_cast<resection::SolverType>(resection_method) : resection::SolverType::DLT_6POINTS,
       {imageGray.Width(), imageGray.Height()},
       optional_intrinsic.get(),
       *(query_regions.get()),

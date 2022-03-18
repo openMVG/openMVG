@@ -1,6 +1,6 @@
 
 /**
- * @file svgDrawer.h
+ * @file svgDrawer.hpp
  * @brief Simple svg drawing from C++
  * @author Pierre MOULON
  *
@@ -12,10 +12,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef THE_FRENCH_LEAF_SVG_DRAWER_H
-#define THE_FRENCH_LEAF_SVG_DRAWER_H
+#ifndef THE_FRENCH_LEAF_SVG_DRAWER_HPP
+#define THE_FRENCH_LEAF_SVG_DRAWER_HPP
 
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -25,46 +26,52 @@ namespace svg {
 /// Basic svg style
 class svgStyle
 {
-  std::string _sFillCol, _sStrokeCol, _sToolTip;
-  float _strokeW;
+  std::string sFillCol_, sStrokeCol_, sToolTip_;
+  float strokeW_;
+  float opacity_; // Must be in the range [0; 1]
 public:
 
-  svgStyle():_sFillCol(""), _sStrokeCol("black"), _sToolTip(""),
-    _strokeW(1.0f) {}
+  svgStyle():sFillCol_(""), sStrokeCol_("black"), sToolTip_(""),
+    strokeW_(1.0f), opacity_(-1.0) {}
 
   // Configure fill color
   svgStyle & fill(const std::string & sFillCol)
-  { _sFillCol = sFillCol; return * this;}
+  { sFillCol_ = sFillCol; return * this;}
 
   // Configure stroke color and width
   svgStyle & stroke(const std::string & sStrokeCol, float strokeWitdh = 1.f)
-  { _sStrokeCol = sStrokeCol;  _strokeW = strokeWitdh; return * this;}
+  { sStrokeCol_ = sStrokeCol;  strokeW_ = strokeWitdh; return * this;}
 
   // Configure with no stroke
   svgStyle & noStroke()
-  { _sStrokeCol = "";  _strokeW = 0.f; return * this;}
+  { sStrokeCol_ = "";  strokeW_ = 0.f; return * this;}
 
   // Configure tooltip
   svgStyle & tooltip(const std::string & sTooltip)
-  { _sToolTip = sTooltip; return * this;}
+  { sToolTip_ = sTooltip; return * this;}
+
+  svgStyle & opacity(const float & opacity)
+  { opacity_ = opacity; return *this; }
 
   const std::string getSvgStream() const {
     std::ostringstream os;
 
-    if (!_sStrokeCol.empty())
-      os << " stroke=\"" << _sStrokeCol << "\" stroke-width=\"" << _strokeW << "\"";
-    if (_sFillCol.empty())
+    if (!sStrokeCol_.empty())
+      os << " stroke=\"" << sStrokeCol_ << "\" stroke-width=\"" << strokeW_ << "\"";
+    if (sFillCol_.empty())
       os << " fill=\"none\"";
     else
-      os << " fill=\"" << _sFillCol << "\"";
-    if (!_sToolTip.empty())
+      os << " fill=\"" << sFillCol_ << "\"";
+    if (opacity_ > 0)
+      os << " opacity=\"" << opacity_ << "\"";
+    if (!sToolTip_.empty())
       os << " tooltip=\"enable\">"
-      << "<title>" << _sToolTip << "</title>";
+      << "<title>" << sToolTip_ << "</title>";
 
     return os.str();
   }
 
-  bool bTooltip() const { return !_sToolTip.empty();}
+  bool bTooltip() const { return !sToolTip_.empty();}
 };
 
 
@@ -75,24 +82,24 @@ public:
   ///Constructor
   svgDrawer(size_t W = 0, size_t H = 0)
   {
-    svgStream << "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
+    svgStream_ << "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
 
-    svgStream << "<!-- SVG graphic -->" << std::endl
+    svgStream_ << "<!-- SVG graphic -->" << std::endl
       << "<svg xmlns='http://www.w3.org/2000/svg'"
       << " xmlns:xlink='http://www.w3.org/1999/xlink'" << "\n";
 
     if (W > 0 && H > 0)
-      svgStream <<"width=\"" << W << "px\" height=\""<< H << "px\""
+      svgStream_ <<"width=\"" << W << "px\" height=\""<< H << "px\""
       << " preserveAspectRatio=\"xMinYMin meet\""
       << " viewBox=\"0 0 " << W << ' ' << H <<"\"";
 
-    svgStream <<" version=\"1.1\">" << std::endl;
+    svgStream_ <<" version=\"1.1\">" << std::endl;
   }
   ///Circle draw -> x,y position and radius
   void drawCircle(float cx, float cy, float r,
     const svgStyle & style)
   {
-    svgStream << "<circle cx=\"" << cx << "\"" << " cy=\"" << cy << "\""
+    svgStream_ << "<circle cx=\"" << cx << "\"" << " cy=\"" << cy << "\""
       << " r=\"" << r << "\""
       << style.getSvgStream() + (style.bTooltip() ? "</circle>" : "/>\n");  }
 
@@ -100,7 +107,7 @@ public:
   void drawLine(float ax, float ay, float bx, float by,
     const svgStyle & style)
   {
-    svgStream <<
+    svgStream_ <<
       "<polyline points=\""<< ax << "," << ay << "," << bx << "," << by <<"\""
       << style.getSvgStream() +  (style.bTooltip() ? "</polyline>" : "/>\n");
   }
@@ -109,7 +116,7 @@ public:
   void drawImage(const std::string & simagePath, int W, int H,
     int posx = 0, int posy = 0, float opacity =1.f)
   {
-    svgStream <<
+    svgStream_ <<
       "<image x=\""<< posx << "\"" << " y=\""<< posy << "\""
       << " width=\""<< W << "px\"" << " height=\""<< H << "px\""
       << " opacity=\""<< opacity << "\""
@@ -127,7 +134,7 @@ public:
   void drawRectangle(float cx, float cy, float W, float H,
     const svgStyle & style)
   {
-    svgStream << "<rect x=\"" << cx << "\""
+    svgStream_ << "<rect x=\"" << cx << "\""
       << " y=\"" << cy << "\""
       << " width=\"" << W << "\""
       << " height=\"" << H << "\""
@@ -138,12 +145,12 @@ public:
   void drawText(float cx, float cy, float fontSize = 1.0f, const std::string & stext ="",
     const std::string & scol = "")
   {
-    svgStream << "<text" << " x=\"" << cx << "\"" << " y=\"" << cy << "\""
+    svgStream_ << "<text" << " x=\"" << cx << "\"" << " y=\"" << cy << "\""
       << " font-size=\"" << fontSize << "\"";
     if (!scol.empty())
-      svgStream << " fill=\"" << scol << "\"";
+      svgStream_ << " fill=\"" << scol << "\"";
 
-    svgStream << ">" << stext << "</text>\n";
+    svgStream_ << ">" << stext << "</text>\n";
   }
 
   template< typename DataInputIteratorX, typename DataInputIteratorY>
@@ -151,27 +158,40 @@ public:
      DataInputIteratorY yStart, DataInputIteratorY yEnd,
     const svgStyle & style)
   {
-    svgStream << "<polyline points=\"";
+    svgStream_ << "<polyline points=\"";
 
     DataInputIteratorY itery = yStart;
     for (DataInputIteratorX iterx = xStart;
       iterx != xEnd;
       std::advance(iterx, 1), std::advance(itery, 1))
     {
-      svgStream << *iterx << ',' << *itery << ' ';
+      svgStream_ << *iterx << ',' << *itery << ' ';
     }
-    svgStream << "\""
+    svgStream_ << "\""
+      << style.getSvgStream() + (style.bTooltip() ? "</polyline>" : "/>\n");
+  }
+
+  template< typename DataInputIteratorXY>
+  void drawPolyline(DataInputIteratorXY points,
+    const svgStyle & style)
+  {
+    svgStream_ << "<polyline points=\"";
+
+    std::copy(points.cbegin(), points.cend(),
+      std::ostream_iterator<typename DataInputIteratorXY::value_type>(svgStream_, ","));
+
+    svgStream_ << "\""
       << style.getSvgStream() + (style.bTooltip() ? "</polyline>" : "/>\n");
   }
 
   ///Close the svg tag.
   std::ostringstream & closeSvgFile()
   {
-    svgStream <<"</svg>";
-    return svgStream;
+    svgStream_ <<"</svg>";
+    return svgStream_;
   }
 private:
-  std::ostringstream svgStream;
+  std::ostringstream svgStream_;
 };
 
 /// Helper to draw a SVG histogram
@@ -242,4 +262,4 @@ struct svgHisto
 
 } // namespace svg
 
-#endif // THE_FRENCH_LEAF_SVG_DRAWER_H
+#endif // THE_FRENCH_LEAF_SVG_DRAWER_HPP

@@ -10,6 +10,7 @@ target_link_libraries(openMVG_main_SfM_Localization
   openMVG_matching_image_collection
   openMVG_sfm
   openMVG_exif
+  ${STLPLUS_LIBRARY}
   vlsift
   )
 

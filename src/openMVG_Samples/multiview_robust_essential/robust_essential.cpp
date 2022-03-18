@@ -189,36 +189,37 @@ int main() {
     std::vector<Vec3> vec_3DPoints;
 
     // Setup camera intrinsic and poses
-    Pinhole_Intrinsic intrinsic0(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2));
-    Pinhole_Intrinsic intrinsic1(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2));
+    const Pinhole_Intrinsic intrinsic0(imageL.Width(), imageL.Height(), K(0, 0), K(0, 2), K(1, 2));
+    const Pinhole_Intrinsic intrinsic1(imageR.Width(), imageR.Height(), K(0, 0), K(0, 2), K(1, 2));
 
     const Pose3 pose0 = Pose3(Mat3::Identity(), Vec3::Zero());
     const Pose3 pose1 = relativePose_info.relativePose;
 
-    // Init structure by inlier triangulation
-    const Mat34 P1 = intrinsic0.get_projective_equivalent(pose0);
-    const Mat34 P2 = intrinsic1.get_projective_equivalent(pose1);
+    // Init structure by triangulation of the inlier
     std::vector<double> vec_residuals;
     vec_residuals.reserve(relativePose_info.vec_inliers.size() * 4);
-    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
-      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_];
-      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
+    for (const auto inlier_idx : relativePose_info.vec_inliers)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[inlier_idx].i_];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[inlier_idx].j_];
       // Point triangulation
       Vec3 X;
-      TriangulateDLT(
-        P1, LL.coords().cast<double>().homogeneous(),
-        P2, RR.coords().cast<double>().homogeneous(), &X);
-      // Reject point that is behind the camera
-      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
-        continue;
-
-      const Vec2 residual0 = intrinsic0.residual(pose0(X), LL.coords().cast<double>());
-      const Vec2 residual1 = intrinsic1.residual(pose1(X), RR.coords().cast<double>());
-      vec_residuals.push_back(std::abs(residual0(0)));
-      vec_residuals.push_back(std::abs(residual0(1)));
-      vec_residuals.push_back(std::abs(residual1(0)));
-      vec_residuals.push_back(std::abs(residual1(1)));
-      vec_3DPoints.emplace_back(X);
+      const ETriangulationMethod triangulation_method = ETriangulationMethod::DEFAULT;
+      if (Triangulate2View
+      (
+        pose0.rotation(), pose0.translation(), intrinsic0(LL.coords().cast<double>()),
+        pose1.rotation(), pose1.translation(), intrinsic1(RR.coords().cast<double>()),
+        X,
+        triangulation_method
+      ))
+      {
+        const Vec2 residual0 = intrinsic0.residual(pose0(X), LL.coords().cast<double>());
+        const Vec2 residual1 = intrinsic1.residual(pose1(X), RR.coords().cast<double>());
+        vec_residuals.emplace_back(std::abs(residual0(0)));
+        vec_residuals.emplace_back(std::abs(residual0(1)));
+        vec_residuals.emplace_back(std::abs(residual1(0)));
+        vec_residuals.emplace_back(std::abs(residual1(1)));
+        vec_3DPoints.emplace_back(X);
+      }
     }
 
     // Display some statistics of reprojection errors
@@ -247,7 +248,7 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K)
   // Load the K matrix
   ifstream in;
   in.open( fileName.c_str(), ifstream::in);
-  if (in.is_open())  {
+  if (in)  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)
         in >> K(j,i);

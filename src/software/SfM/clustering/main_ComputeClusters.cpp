@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/image/image_io.hpp"
 #include "openMVG/sfm/sfm.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
+
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
@@ -30,7 +31,6 @@
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
-using namespace openMVG::image;
 using namespace openMVG::sfm;
 
 /**
@@ -90,11 +90,10 @@ bool domsetImporter(
     points.push_back( p );
   }
 
-  std::cout << std::endl
-            << "Number of views  = " << views.size() << std::endl
-            << "Number of points = " << points.size() << std::endl
-            << "Loading data took (s): "
-            << loadDataTimer.elapsed() << std::endl;
+  OPENMVG_LOG_INFO
+    << "Number of views  = " << views.size()
+    << "\nNumber of points = " << points.size()
+    << "\nLoading data took (s): " << loadDataTimer.elapsed();
   return true;
 }
 
@@ -154,8 +153,7 @@ bool exportData( const SfM_Data &sfm_data,
 int main( int argc, char **argv )
 {
   using namespace std;
-  std::cout << "Dominant Set Clustering" << std::endl
-            << std::endl;
+  OPENMVG_LOG_INFO << "Dominant Set Clustering";
 
   CmdLine cmd;
 
@@ -179,29 +177,29 @@ int main( int argc, char **argv )
   }
   catch ( const std::string &s )
   {
-    std::cerr << "Usage: " << argv[ 0 ] << "\n"
-              << "[-i|--input_file] path to a SfM_Data scene\n"
-              << "[-o|--outdir path] path to output directory\n"
-              << "[-l|--cluster_size_lower_bound] lower bound to cluster size\n"
-              << "[-u|--cluster_size_upper_bound] upper bound to cluster size\n"
-              << "[-v|--voxel_grid_size] voxel grid size\n"
-              << std::endl;
+    OPENMVG_LOG_INFO << "Usage: " << argv[ 0 ] << "\n"
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-o|--outdir path] path to output directory\n"
+      << "[-l|--cluster_size_lower_bound] lower bound to cluster size\n"
+      << "[-u|--cluster_size_upper_bound] upper bound to cluster size\n"
+      << "[-v|--voxel_grid_size] voxel grid size";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
-  std::cout << "Params: " << argv[ 0 ]  << std::endl
-            << "[Input file]      = "   << sSfM_Data_Filename << std::endl
-            << "[Outdir path]     = "   << sOutDir << std::endl
-            << "[Cluster size:"         << std::endl
-            << "    Lower bound   = "   << clusterSizeLowerBound << std::endl
-            << "    Upper bound]   = "  << clusterSizeUpperBound << std::endl
-            << "[Voxel grid size]  = "  << voxelGridSize << std::endl;
+  OPENMVG_LOG_INFO
+    << "Params: " << argv[ 0 ]
+    << "\n[Input file]      = "   << sSfM_Data_Filename
+    << "\n[Outdir path]     = "   << sOutDir
+    << "\n[Cluster size:"
+    << "\n    Lower bound   = "   << clusterSizeLowerBound
+    << "\n    Upper bound]   = "  << clusterSizeUpperBound
+    << "\n[Voxel grid size]  = "  << voxelGridSize;
 
   if ( sSfM_Data_Filename.empty() )
   {
-    std::cerr << "\nIt is an invalid file input" << std::endl;
+    OPENMVG_LOG_ERROR << "It is an invalid file input";
     return EXIT_FAILURE;
   }
 
@@ -209,16 +207,14 @@ int main( int argc, char **argv )
   if ( !stlplus::folder_exists( sOutDir ) )
     if ( !stlplus::folder_create( sOutDir ))
     {
-      std::cerr << "Cannot create: " << sOutDir << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create: " << sOutDir;
       return EXIT_FAILURE;
     }
 
   SfM_Data sfm_data;
   if ( !Load( sfm_data, sSfM_Data_Filename, ESfM_Data( ALL ) ) )
   {
-    std::cerr << std::endl
-              << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" can't be read."
-              << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << sSfM_Data_Filename << "\" can't be read.";
     return EXIT_FAILURE;
   }
 
@@ -230,7 +226,7 @@ int main( int argc, char **argv )
   std::map<openMVG::IndexT, uint32_t> origViewMap; // need to keep track of original views ids
   if ( !domsetImporter( sfm_data, cameras, views, points, origViewMap ) )
   {
-    std::cerr << "Error: can't import data" << std::endl;
+    OPENMVG_LOG_ERROR << "Error: can't import data";
     return EXIT_FAILURE;
   }
 
@@ -242,8 +238,7 @@ int main( int argc, char **argv )
   nomoko::Domset domset( points, views, cameras, voxelGridSize );
   domset.clusterViews( clusterSizeLowerBound, clusterSizeUpperBound );
 
-  std::cout << "Clustering view took (s): "
-            << clusteringTimer.elapsed() << std::endl;
+  OPENMVG_LOG_INFO << "Clustering view took (s): " << clusteringTimer.elapsed();
 
   // export to ply to visualize
   const std::string viewOut = sOutDir + "/views.ply";
@@ -270,7 +265,7 @@ int main( int argc, char **argv )
   }
 
   const size_t numClusters = finalClusters.size();
-  std::cout << "Number of clusters = " << numClusters << std::endl;
+  OPENMVG_LOG_INFO << "Number of clusters = " << numClusters;
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for
@@ -286,16 +281,12 @@ int main( int argc, char **argv )
 #pragma omp critical
 #endif
     {
-      std::stringstream ss;
-      ss << "Writing cluster to " << filename.str() << std::endl;
-      std::cout << ss.str();
+      OPENMVG_LOG_INFO << "Writing cluster to " << filename.str();
     }
 
     if ( !exportData( sfm_data, filename.str(), finalClusters[ i ] ) )
     {
-      std::stringstream str;
-      str << "Could not write cluster : " << filename.str() << std::endl;
-      std::cerr << str.str();
+      OPENMVG_LOG_ERROR << "Could not write cluster : " << filename.str();
     }
   }
   return EXIT_SUCCESS;

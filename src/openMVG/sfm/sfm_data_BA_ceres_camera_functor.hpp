@@ -9,6 +9,8 @@
 #ifndef OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 #define OPENMVG_SFM_SFM_DATA_BA_CERES_CAMERA_FUNCTOR_HPP
 
+#include <memory>
+
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
@@ -83,7 +85,7 @@ struct WeightedCostFunction
     return false;
   }
 
-  ceres::internal::scoped_ptr<CostFunctor> functor_;
+  std::unique_ptr<CostFunctor> functor_;
   const double weight_;
 };
 
@@ -715,7 +717,7 @@ struct ResidualErrorFunctor_Intrinsic_Spherical
     return true;
   }
 
-  static const int num_residuals() { return 2; }
+  static int num_residuals() { return 2; }
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.

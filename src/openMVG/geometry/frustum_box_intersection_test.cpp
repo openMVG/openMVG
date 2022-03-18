@@ -18,7 +18,6 @@
 #include <Eigen/Geometry>
 
 #include <fstream>
-#include <iostream>
 
 using namespace openMVG;
 using namespace openMVG::geometry;

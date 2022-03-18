@@ -15,6 +15,7 @@
 #include "openMVG/color_harmonization/selection_interface.hpp"
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/matching/kvld/kvld_draw.h"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace color_harmonization {
@@ -64,9 +65,9 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
 
     std::vector<double> vec_score;
 
-    //In order to illustrate the gvld(or vld)-consistant neighbors, the following two parameters has been externalized as inputs of the function KVLD.
+    //In order to illustrate the gvld(or vld)-consistent neighbors, the following two parameters has been externalized as inputs of the function KVLD.
     openMVG::Mat E = openMVG::Mat::Ones( _vec_PutativeMatches.size(), _vec_PutativeMatches.size() ) * ( -1 );
-    // gvld-consistancy matrix, intitialized to -1,  >0 consistancy value, -1=unknow, -2=false
+    // gvld-consistency matrix, intitialized to -1,  >0 consistency value, -1=unknow, -2=false
     std::vector<bool> valide( _vec_PutativeMatches.size(), true );// indices of match in the initial matches, if true at the end of KVLD, a match is kept.
 
     size_t it_num = 0;
@@ -82,7 +83,7 @@ class commonDataByPair_VLDSegment  : public commonDataByPair
         vec_score, E, valide, kvldparameters ) )
     {
       kvldparameters.inlierRate /= 2;
-      std::cout<<"low inlier rate, re-select matches with new rate="<<kvldparameters.inlierRate<<std::endl;
+      OPENMVG_LOG_INFO << "low inlier rate, re-select matches with new rate=" << kvldparameters.inlierRate;
       kvldparameters.K = 2;
       it_num++;
     }

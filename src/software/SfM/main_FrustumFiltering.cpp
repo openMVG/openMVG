@@ -61,13 +61,12 @@ Pair_Set BuildPairsFromFrustumsIntersections(
 int main(int argc, char **argv)
 {
   using namespace std;
-  std::cout << std::endl
-    << "-----------------------------------------------------------\n"
-    << "Frustum filtering:\n"
-    << "-----------------------------------------------------------\n"
-    << "Compute camera cones that share some putative visual content.\n"
-    << "------------------------------------------------------------"
-    << std::endl;
+  OPENMVG_LOG_INFO
+    << "\n-----------------------------------------------------------"
+    << "\nFrustum filtering:"
+    << "\n-----------------------------------------------------------"
+    << "\nCompute camera cones that share some putative visual content."
+    << "\n------------------------------------------------------------";
 
   CmdLine cmd;
 
@@ -85,14 +84,13 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-o|--output_file] filename of the output pair file\n"
-    << "[-n|--z_near] 'optional' distance of the near camera plane\n"
-    << "[-f|--z_far] 'optional' distance of the far camera plane\n"
-    << std::endl;
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-o|--output_file] filename of the output pair file\n"
+      << "[-n|--z_near] 'optional' distance of the near camera plane\n"
+      << "[-f|--z_far] 'optional' distance of the far camera plane";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
@@ -104,8 +102,7 @@ int main(int argc, char **argv)
   // Load input SfM_Data scene
   SfM_Data sfm_data;
   if (!Load(sfm_data, sSfM_Data_Filename, ESfM_Data(ALL))) {
-    std::cerr << std::endl
-      << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< sSfM_Data_Filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -114,8 +111,8 @@ int main(int argc, char **argv)
   const Pair_Set pairs = BuildPairsFromFrustumsIntersections(sfm_data, z_near, z_far, stlplus::folder_part(sOutFile));
   /*const Pair_Set pairs = BuildPairsFromStructureObservations(sfm_data); */
 
-  std::cout << "#pairs: " << pairs.size() << std::endl;
-  std::cout << std::endl << " Pair filtering took (s): " << timer.elapsed() << std::endl;
+  OPENMVG_LOG_INFO << "#pairs: " << pairs.size();
+  OPENMVG_LOG_INFO << "Pair filtering took (s): " << timer.elapsed();
 
   // export pairs on disk
   if (savePairs(sOutFile, pairs))

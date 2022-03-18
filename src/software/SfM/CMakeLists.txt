@@ -10,6 +10,7 @@ target_link_libraries(openMVG_main_SfMInit_ImageListing
     openMVG_features
     openMVG_sfm
     openMVG_exif
+    ${STLPLUS_LIBRARY}
 )
 
 #convert a v0.6 lists.txt file to the new sfm_data.X format
@@ -19,6 +20,7 @@ target_link_libraries(openMVG_main_ConvertList
     openMVG_system
     openMVG_features
     openMVG_sfm
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
@@ -41,9 +43,12 @@ target_link_libraries(openMVG_main_ComputeFeatures
     openMVG_features
     openMVG_multiview
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
     vlsift
 )
+if (MSVC)
+  set_target_properties(openMVG_main_ComputeFeatures PROPERTIES COMPILE_FLAGS "/bigobj")
+endif (MSVC)
 
 add_executable(openMVG_main_ListMatchingPairs main_ListMatchingPairs.cpp)
 target_link_libraries(openMVG_main_ListMatchingPairs
@@ -52,7 +57,57 @@ target_link_libraries(openMVG_main_ListMatchingPairs
     openMVG_multiview
     openMVG_sfm
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable( openMVG_main_PairGenerator main_PairGenerator.cpp )
+target_link_libraries( openMVG_main_PairGenerator
+  PRIVATE
+    openMVG_features
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
+# - convert matches from one format (bin, txt) to the other format
+#
+add_executable(openMVG_main_ConvertMatches main_ConvertMatches.cpp)
+target_link_libraries(openMVG_main_ConvertMatches
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_benchANN main_benchANN.cpp)
+target_link_libraries(openMVG_main_benchANN
+  PRIVATE
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_ComputeVLAD main_ComputeVLAD.cpp)
+target_link_libraries(openMVG_main_ComputeVLAD
+  PRIVATE
+    openMVG_features
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_MatchingRetrievalQuality main_MatchingRetrievalQuality.cpp)
+target_link_libraries(openMVG_main_MatchingRetrievalQuality
+  PRIVATE
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ComputeMatches main_ComputeMatches.cpp)
@@ -64,45 +119,59 @@ target_link_libraries(openMVG_main_ComputeMatches
     openMVG_multiview
     openMVG_sfm
     openMVG_system
-    stlplus
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_GeometricFilter main_GeometricFilter.cpp)
+target_link_libraries(openMVG_main_GeometricFilter
+  PRIVATE
+    openMVG_graph
+    openMVG_features
+    openMVG_matching_image_collection
+    openMVG_multiview
+    openMVG_sfm
+    openMVG_system
+    ${STLPLUS_LIBRARY}
+)
+
+add_executable(openMVG_main_MatchesToTracks main_MatchesToTracks.cpp)
+target_link_libraries(openMVG_main_MatchesToTracks
+  PRIVATE
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_sfm
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
-set_property(TARGET openMVG_main_ComputeFeatures PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeFeatures DESTINATION bin/)
-set_property(TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/)
-set_property(TARGET openMVG_main_ComputeMatches PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ComputeMatches DESTINATION bin/)
+set_property( TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_ComputeFeatures   PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_PairGenerator     PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_ComputeVLAD       PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_ComputeMatches    PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_GeometricFilter   PROPERTY FOLDER OpenMVG/software )
+set_property( TARGET openMVG_main_MatchesToTracks   PROPERTY FOLDER OpenMVG/software )
+
+install( TARGETS openMVG_main_ListMatchingPairs DESTINATION bin/ )
+install( TARGETS openMVG_main_ComputeFeatures   DESTINATION bin/ )
+install( TARGETS openMVG_main_PairGenerator     DESTINATION bin/ )
+install( TARGETS openMVG_main_ComputeVLAD       DESTINATION bin/ )
+install( TARGETS openMVG_main_ComputeMatches    DESTINATION bin/ )
+install( TARGETS openMVG_main_GeometricFilter   DESTINATION bin/ )
+install( TARGETS openMVG_main_MatchesToTracks   DESTINATION bin/ )
 
 ###
-# SfM Pipelines
-# - Incremental/Sequential
-# - Global
+# SfM Pipelines & SfM Data format tools, ...
 ###
-# - Convert SfM_Data format (from one to another)
-# - Pair filtering (from frustum)
-# - Compute structure from known camera poses
-# - Compute structure color
-###
-add_executable(openMVG_main_IncrementalSfM main_IncrementalSfM.cpp)
-target_link_libraries(openMVG_main_IncrementalSfM
+add_executable(openMVG_main_SfM main_SfM.cpp)
+target_link_libraries(openMVG_main_SfM
   PRIVATE
     openMVG_system
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
-)
-
-add_executable(openMVG_main_GlobalSfM main_GlobalSfM.cpp)
-target_link_libraries(openMVG_main_GlobalSfM
-  PRIVATE
-    openMVG_system
-    openMVG_image
-    openMVG_features
-    openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
@@ -111,7 +180,7 @@ target_link_libraries(openMVG_main_ConvertSfM_DataFormat
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_FrustumFiltering main_FrustumFiltering.cpp)
@@ -120,16 +189,21 @@ target_link_libraries(openMVG_main_FrustumFiltering
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_ComputeStructureFromKnownPoses main_ComputeStructureFromKnownPoses.cpp)
+target_include_directories(openMVG_main_ComputeStructureFromKnownPoses
+  PRIVATE
+    ${CERES_INCLUDE_DIRS}
+)
 target_link_libraries(openMVG_main_ComputeStructureFromKnownPoses
   PRIVATE
     openMVG_system
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
+    ${CERES_LIBRARIES}
 )
 
 add_executable(openMVG_main_ComputeSfM_DataColor main_ComputeSfM_DataColor.cpp)
@@ -139,7 +213,7 @@ target_link_libraries(openMVG_main_ComputeSfM_DataColor
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 add_executable(openMVG_main_PointsFiltering main_PointsFiltering.cpp)
@@ -147,7 +221,7 @@ target_link_libraries(openMVG_main_PointsFiltering
   PRIVATE
     openMVG_system
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 target_include_directories(openMVG_main_PointsFiltering PRIVATE ${EIGEN_INCLUDE_DIRS})
 
@@ -158,14 +232,12 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
     openMVG_image
     openMVG_features
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
-set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
-set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
+set_property(TARGET openMVG_main_SfM PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_SfM DESTINATION bin/)
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
@@ -186,190 +258,23 @@ target_link_libraries(openMVG_main_SplitMatchFileIntoMatchFiles
   openMVG_image
   openMVG_features
   openMVG_sfm
-  stlplus
+  ${STLPLUS_LIBRARY}
 )
 
 # Installation rules
 set_property(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
 
-###
-# SfM tools to visualize feature tracking data
-###
-
-# - View extracted Keypoints
-#
-add_executable(openMVG_main_exportKeypoints main_exportKeypoints.cpp)
-target_link_libraries(openMVG_main_exportKeypoints
-  openMVG_system
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-
-# - View computed matches (putatives, geometrics) per image pair
-#
-add_executable(openMVG_main_exportMatches main_exportMatches.cpp)
-target_link_libraries(openMVG_main_exportMatches
-  openMVG_system
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - View tracks per image pair
-#
-add_executable(openMVG_main_exportTracks main_exportTracks.cpp)
-target_link_libraries(openMVG_main_exportTracks
-  openMVG_system
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export undistorted images related to a sfm_data file
-#
-add_executable(openMVG_main_ExportUndistortedImages main_ExportUndistortedImages.cpp)
-target_link_libraries(openMVG_main_ExportUndistortedImages
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
+# ControlPointsRegistration
 add_executable(openMVG_main_ControlPointsRegistration main_ControlPointsRegistration.cpp)
 target_link_libraries(openMVG_main_ControlPointsRegistration
   openMVG_system
   openMVG_features
   openMVG_sfm
   stlplus)
-  
-# installation rules
-set_property(TARGET openMVG_main_exportKeypoints PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportKeypoints DESTINATION bin/)
-set_property(TARGET openMVG_main_exportMatches PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportMatches DESTINATION bin/)
-set_property(TARGET openMVG_main_exportTracks PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_exportTracks DESTINATION bin/)
-set_property(TARGET openMVG_main_ExportUndistortedImages PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ExportUndistortedImages DESTINATION bin/)
+
 set_property(TARGET openMVG_main_ControlPointsRegistration PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ControlPointsRegistration DESTINATION bin/)
-
-###
-# SfM export to X
-# - PMVS + bundler data format
-# - OpenMVS
-# - CMPMVS
-# - Meshlab
-# - MVE (File format v2)
-###
-
-# - Export a SfM openMVG scene to PMVS format
-#
-add_executable(openMVG_main_openMVG2PMVS main_openMVG2PMVS.cpp)
-target_link_libraries(openMVG_main_openMVG2PMVS
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export a SfM openMVG scene to openMVS format
-#
-add_executable(openMVG_main_openMVG2openMVS main_openMVG2openMVS.cpp)
-target_link_libraries(openMVG_main_openMVG2openMVS
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export a SfM openMVG scene to CMPMVS format
-#
-add_executable(openMVG_main_openMVG2CMPMVS main_openMVG2CMPMVS.cpp)
-target_link_libraries(openMVG_main_openMVG2CMPMVS
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-
-# - Export a SfM openMVG scene to MVE(v2) format
-#
-add_executable(openMVG_main_openMVG2MVE2 main_openMVG2MVE2.cpp)
-target_link_libraries(openMVG_main_openMVG2MVE2
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export a SfM openMVG scene to meshlab scene with rasters
-# -
-add_executable(openMVG_main_openMVG2MESHLAB main_openMVG2MESHLAB.cpp)
-target_link_libraries(openMVG_main_openMVG2MESHLAB
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export a SfM openMVG scene to mvs-texturing scene folder
-# -
-add_executable(openMVG_main_openMVG2MVSTEXTURING main_openMVG2MVSTEXTURING.cpp)
-target_link_libraries(openMVG_main_openMVG2MVSTEXTURING
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export SfM openMVG camera scene as triangle meshes
-# -
-add_executable(openMVG_main_ExportCameraFrustums main_ExportCameraFrustums.cpp)
-target_link_libraries(openMVG_main_ExportCameraFrustums
-  openMVG_system
-  openMVG_features
-  openMVG_sfm
-  stlplus
-)
-
-# - Export SfM openMVG scene to NVM (N-View Match) file
-add_executable(openMVG_main_openMVG2NVM main_openMVG2NVM.cpp)
-target_link_libraries( openMVG_main_openMVG2NVM
-  openMVG_system
-  openMVG_image
-  openMVG_features
-  openMVG_sfm
-  stlplus )
-
-# installation rules
-set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2openMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2openMVS DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2CMPMVS PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2CMPMVS DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2MESHLAB PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MESHLAB DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2MVSTEXTURING PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MVSTEXTURING DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2MVE2 PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2MVE2 DESTINATION bin/)
-set_property(TARGET openMVG_main_ExportCameraFrustums PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_ExportCameraFrustums DESTINATION bin/)
-set_property(TARGET openMVG_main_openMVG2NVM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_openMVG2NVM DESTINATION bin/)
 
 # -
 # Use openCV Feature detector to describe the images
@@ -383,7 +288,7 @@ if(OpenMVG_USE_OPENCV)
     openMVG_features
     openMVG_multiview
     openMVG_sfm
-    stlplus
+    ${STLPLUS_LIBRARY}
     vlsift
     ${OpenCV_LIBS})
   target_include_directories(openMVG_main_ComputeFeatures_OpenCV PRIVATE ${OpenCV_INCLUDE_DIRS})
@@ -405,10 +310,11 @@ endif(OpenMVG_USE_OPENCV)
 ###
 add_executable(openMVG_main_evalQuality main_evalQuality.cpp)
 target_link_libraries(openMVG_main_evalQuality
-  openMVG_system
   openMVG_features
+  openMVG_image
   openMVG_sfm
-  stlplus
+  openMVG_system
+  ${STLPLUS_LIBRARY}
 )
 
 #installation rules
@@ -419,10 +325,19 @@ install(TARGETS openMVG_main_evalQuality DESTINATION bin/)
 # Export tutorial with valid path thanks to a configuration file
 ##
 set(OPENMVG_SOFTWARE_SFM_SRC_DIR ${CMAKE_CURRENT_LIST_DIR})
-if(MSVC OR APPLE)
+if(MSVC)
   set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}")
 else()
-  set(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+  if( APPLE )
+    if( CMAKE_GENERATOR MATCHES "Xcode" )
+      set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}")
+    else()
+      set(OPENMVG_SOFTWARE_SFM_BUILD_DIR "${EXECUTABLE_OUTPUT_PATH}")
+    endif()
+  else()
+    # Linux
+    set(OPENMVG_SOFTWARE_SFM_BUILD_DIR ${EXECUTABLE_OUTPUT_PATH})
+  endif()
 endif()
 
 set(OPENMVG_TUTORIAL_IN_FILE "${CMAKE_CURRENT_LIST_DIR}/tutorial_demo.py.in")
@@ -438,3 +353,5 @@ configure_file(${OPENMVG_TUTORIAL_IN_FILE}
     "${CMAKE_CURRENT_BINARY_DIR}/SfM_SequentialPipeline.py" @ONLY)
 
 add_subdirectory(clustering)
+add_subdirectory(export)
+add_subdirectory(import)

@@ -15,14 +15,14 @@
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Fisheye::save( Archive & ar ) const
 {
-    ar(cereal::base_class<Pinhole_Intrinsic>(this));
+    Pinhole_Intrinsic::save( ar );
     ar( cereal::make_nvp( "fisheye", params_ ) );
 }
 
 template <class Archive>
 inline void openMVG::cameras::Pinhole_Intrinsic_Fisheye::load( Archive & ar )
 {
-    ar(cereal::base_class<Pinhole_Intrinsic>(this));
+    Pinhole_Intrinsic::load( ar );
     ar( cereal::make_nvp( "fisheye", params_ ) );
 }
 

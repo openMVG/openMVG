@@ -74,6 +74,11 @@ public:
   /// Add the Inth region to another Region container
   virtual void CopyRegion(size_t i, Regions *) const = 0;
 
+  /// Sort the regions according the scale of the feature
+  /// If the regions are not Scale invariant nothing is done and false is returned
+  /// keep_count is used to save feature from largest scale to lower (-1 keep everything)
+  virtual bool SortAndSelectByRegionScale(int keep_count = -1) = 0;
+
   virtual Regions * EmptyClone() const = 0;
 
 };

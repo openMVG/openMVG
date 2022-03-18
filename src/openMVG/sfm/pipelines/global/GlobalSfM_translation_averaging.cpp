@@ -29,6 +29,7 @@
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 
 #include <vector>
@@ -103,14 +104,14 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
     const std::set<IndexT> index = getIndexT(vec_relative_motion_);
 
     const size_t iNview = index.size();
-    std::cout << "\n-------------------------------" << "\n"
+    OPENMVG_LOG_INFO << "\n-------------------------------" << "\n"
       << " Global translations computation: " << "\n"
       << "   - Ready to compute " << iNview << " global translations." << "\n"
-      << "     from #relative translations: " << vec_relative_motion_.size()*3 << std::endl;
+      << "     from #relative translations: " << vec_relative_motion_.size()*3;
 
     if (iNview < 3)
     {
-      // Too tiny image set to perform motion averaging
+      OPENMVG_LOG_ERROR << "Motion averaging is not possible. The image graph is not BiEdge compatible.";
       return false;
     }
     //-- Update initial estimates from [minId,maxId] to range [0->Ncam]
@@ -148,14 +149,13 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           //--
           // Solving
           const bool bFeasible = solverLP.solve();
-          std::cout << " \n Feasibility " << bFeasible << std::endl;
           //--
           if (bFeasible)  {
             solverLP.getSolution(vec_solution);
             gamma = vec_solution[vec_solution.size()-1];
           }
           else  {
-            std::cerr << "Compute global translations: failed" << std::endl;
+            OPENMVG_LOG_ERROR << "Compute global translations: TRANSLATION_AVERAGING_L1 failed";
             return false;
           }
         }
@@ -165,28 +165,30 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         {
 
           std::ostringstream os;
-          os << "Translation fusion statistics.";
-          os.str("");
-          os << "-------------------------------" << "\n"
+          os << "Translation fusion statistics.\n"
+            << "-------------------------------" << "\n"
             << "-- #relative estimates: " << vec_relative_motion_cpy.size()
             << " converge with gamma: " << gamma << ".\n"
             << " timing (s): " << timeLP_translation << ".\n"
-            << "-------------------------------" << "\n";
-          std::cout << os.str() << std::endl;
+            << "-------------------------------";
+          OPENMVG_LOG_INFO << os.str();
         }
 
-        std::cout << "Found solution:\n";
-        std::copy(vec_solution.begin(), vec_solution.end(), std::ostream_iterator<double>(std::cout, " "));
+        std::ostringstream os;
+        os << "Found solution:\n";
+        std::copy(vec_solution.cbegin(), vec_solution.cend(), std::ostream_iterator<double>(os, " "));
 
         std::vector<double> vec_camTranslation(iNview*3,0);
         std::copy(&vec_solution[0], &vec_solution[iNview*3], &vec_camTranslation[0]);
 
         std::vector<double> vec_camRelLambdas(&vec_solution[iNview*3], &vec_solution[iNview*3 + vec_relative_motion_cpy.size()]);
-        std::cout << "\ncam position: " << std::endl;
-        std::copy(vec_camTranslation.begin(), vec_camTranslation.end(), std::ostream_iterator<double>(std::cout, " "));
-        std::cout << "\ncam Lambdas: " << std::endl;
-        std::copy(vec_camRelLambdas.begin(), vec_camRelLambdas.end(), std::ostream_iterator<double>(std::cout, " "));
-        std::cout << std::endl;
+        os << "\ncam position: ";
+        std::copy(vec_camTranslation.cbegin(), vec_camTranslation.cend(), std::ostream_iterator<double>(os, " "));
+
+
+        os << "\ncam Lambdas: ";
+        std::copy(vec_camRelLambdas.cbegin(), vec_camRelLambdas.cend(), std::ostream_iterator<double>(os, " "));
+        OPENMVG_LOG_INFO << os.str();
 
         // Update the view poses according the found camera centers
         for (size_t i = 0; i < iNview; ++i)
@@ -205,7 +207,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
         if (!solve_translations_problem_softl1(
           vec_relative_motion_cpy, vec_translations))
         {
-          std::cerr << "Compute global translations: failed" << std::endl;
+          OPENMVG_LOG_ERROR << "Compute global translations: TRANSLATION_AVERAGING_SOFTL1 failed";
           return false;
         }
 
@@ -267,7 +269,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
           function_tolerance,
           parameter_tolerance,
           max_iterations))  {
-            std::cerr << "Compute global translations: failed" << std::endl;
+            OPENMVG_LOG_ERROR << "Compute global translations: TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL failed";
             return false;
         }
 
@@ -283,7 +285,7 @@ bool GlobalSfM_Translation_AveragingSolver::Translation_averaging(
       break;
       default:
       {
-        std::cerr << "Unknown translation averaging method" << std::endl;
+        OPENMVG_LOG_ERROR << "Unknown translation averaging method";
         return false;
       }
     }
@@ -300,9 +302,10 @@ void GlobalSfM_Translation_AveragingSolver::Compute_translations
   matching::PairWiseMatches &tripletWise_matches
 )
 {
-  std::cout << "\n-------------------------------" << "\n"
+  OPENMVG_LOG_INFO
+    << "\n-------------------------------" << "\n"
     << " Relative translations computation: " << "\n"
-    << "-------------------------------" << std::endl;
+    << "-------------------------------";
 
   // Compute relative translations over the graph of global rotations
   //  thanks to an edge coverage algorithm
@@ -358,7 +361,7 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   // List putative triplets (from global rotations Ids)
   const std::vector<graph::Triplet> vec_triplets =
     graph::TripletListing(rotation_pose_id_graph);
-  std::cout << "#Triplets: " << vec_triplets.size() << std::endl;
+  OPENMVG_LOG_INFO << "#Triplets: " << vec_triplets.size();
 
   {
     // Compute triplets of translations
@@ -409,10 +412,8 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
 
     openMVG::sfm::MutexSet<myEdge> m_mutexSet;
 
-    C_Progress_display my_progress_bar(
-      vec_edges.size(),
-      std::cout,
-      "\nRelative translations computation (edge coverage algorithm)\n");
+    system::LoggerProgress my_progress_bar(vec_edges.size(),
+      "Relative translations computation (edge coverage algorithm)");
 
 #  ifdef OPENMVG_USE_OPENMP
     std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(omp_get_max_threads());
@@ -455,9 +456,9 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
           const graph::Triplet & triplet = vec_triplets[triplet_index];
 
           // If the triplet is already estimated by another thread; try the next one
-          if (m_mutexSet.count(Pair(triplet.i, triplet.j)) &&
-              m_mutexSet.count(Pair(triplet.i, triplet.k)) &&
-              m_mutexSet.count(Pair(triplet.j, triplet.k)))
+          if (m_mutexSet.count({triplet.i, triplet.j}) &&
+              m_mutexSet.count({triplet.i, triplet.k}) &&
+              m_mutexSet.count({triplet.j, triplet.k}))
           {
             continue;
           }
@@ -577,13 +578,13 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
   }
 
   const double timeLP_triplet = timerLP_triplet.elapsed();
-  std::cout << "TRIPLET COVERAGE TIMING:\n"
+  OPENMVG_LOG_INFO << "TRIPLET COVERAGE TIMING:\n"
     << "-------------------------------" << "\n"
     << "-- #Relative triplet of translations estimates: " << vec_triplet_relative_motion.size()
     << " computed from " << vec_triplets.size() << " triplets.\n"
     << "-- resulting in " << vec_triplet_relative_motion.size()*3 << " translations estimation.\n"
     << "-- time to compute triplets of relative translations: " << timeLP_triplet << " seconds.\n"
-    << "-------------------------------" << std::endl;
+    << "-------------------------------";
 }
 
 // Robust estimation and refinement of a triplet of translations
@@ -705,7 +706,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
   // compute 3D scene base on motion estimation
   SfM_Data    tiny_scene;
 
-  // intialize poses (which are now shared by a group of images)
+  // initialize poses (which are now shared by a group of images)
   tiny_scene.poses[poses_id.i] = Pose3(vec_global_R_Triplet[0], -vec_global_R_Triplet[0].transpose() * vec_tis[0]);
   tiny_scene.poses[poses_id.j] = Pose3(vec_global_R_Triplet[1], -vec_global_R_Triplet[1].transpose() * vec_tis[1]);
   tiny_scene.poses[poses_id.k] = Pose3(vec_global_R_Triplet[2], -vec_global_R_Triplet[2].transpose() * vec_tis[2]);
@@ -787,10 +788,10 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
 #ifdef DEBUG_TRIPLET
   {
-    std::cout << "Triplet : status: " << bTest
+    OPENMVG_LOG_INFO << "Triplet : status: " << bTest
       << " AC: " << std::sqrt(dPrecision)
       << " inliers % " << double(vec_inliers.size()) / tracks.size() * 100.0
-      << " total putative " << tracks.size() << std::endl;
+      << " total putative " << tracks.size();
   }
 #endif
 

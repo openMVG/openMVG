@@ -12,7 +12,7 @@
 
 #include "../../../Eigen/Core"
 
-#include <Eigen/src/Core/util/DisableStupidWarnings.h>
+#include "../../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 /** \defgroup CXX11_ThreadPool_Module C++11 ThreadPool Module
   *
@@ -30,10 +30,9 @@
 
 // The code depends on CXX11, so only include the module if the
 // compiler supports it.
-#if __cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900
+#if (EIGEN_COMP_CXXVER >= 11)
 #include <cstddef>
 #include <cstring>
-#include <stdint.h>
 #include <time.h>
 
 #include <vector>
@@ -44,22 +43,32 @@
 #include <thread>
 #include <functional>
 #include <memory>
+#include <utility>
+
+// There are non-parenthesized calls to "max" in the  <unordered_map> header,
+// which trigger a check in test/main.h causing compilation to fail.
+// We work around the check here by removing the check for max in
+// the case where we have to emulate thread_local.
+#ifdef max
+#undef max
+#endif
+#include <unordered_map>
 
 #include "src/util/CXX11Meta.h"
 #include "src/util/MaxSizeVector.h"
 
 #include "src/ThreadPool/ThreadLocal.h"
 #include "src/ThreadPool/ThreadYield.h"
+#include "src/ThreadPool/ThreadCancel.h"
 #include "src/ThreadPool/EventCount.h"
 #include "src/ThreadPool/RunQueue.h"
 #include "src/ThreadPool/ThreadPoolInterface.h"
 #include "src/ThreadPool/ThreadEnvironment.h"
-#include "src/ThreadPool/SimpleThreadPool.h"
+#include "src/ThreadPool/Barrier.h"
 #include "src/ThreadPool/NonBlockingThreadPool.h"
 
 #endif
 
-#include <Eigen/src/Core/util/ReenableStupidWarnings.h>
+#include "../../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_CXX11_THREADPOOL_MODULE
-

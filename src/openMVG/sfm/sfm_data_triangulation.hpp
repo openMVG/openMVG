@@ -12,6 +12,7 @@
 #include <set>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
 #include "openMVG/sfm/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
 
@@ -51,9 +52,10 @@ struct SfM_Data_Structure_Computation_Robust: public SfM_Data_Structure_Computat
 {
   explicit SfM_Data_Structure_Computation_Robust
   (
-    const double max_reprojection_error = 4, // pixels
+    const double max_reprojection_error = 4.0, // pixels
     const IndexT min_required_inliers = 3,
     const IndexT min_sample_index = 3,
+    const ETriangulationMethod etri_method = ETriangulationMethod::DEFAULT,
     bool bConsoleVerbose = false
   );
 
@@ -77,6 +79,7 @@ private:
   double max_reprojection_error_;
   const IndexT min_required_inliers_;
   const IndexT min_sample_index_;
+  const ETriangulationMethod etri_method_;
 
 };
 

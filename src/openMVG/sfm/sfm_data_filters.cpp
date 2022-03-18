@@ -9,6 +9,7 @@
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/tracks/union_find.hpp"
 
 #include <utility>
@@ -102,7 +103,7 @@ IndexT RemoveOutliers_AngleError
 
         const double angle = AngleBetweenRay(
           pose1, intrinsic1, pose2, intrinsic2,
-          itObs1->second.x, itObs2->second.x);
+          intrinsic1->get_ud_pixel(itObs1->second.x), intrinsic2->get_ud_pixel(itObs2->second.x));
         max_angle = std::max(angle, max_angle);
       }
     }
@@ -271,6 +272,13 @@ bool IsTracksOneCC
       ++iterJ;
     }
   }
+
+  // Run path compression to identify all the CC id belonging to every item
+  for (unsigned int i = 0; i < uf_tree.GetNumNodes(); ++i)
+  {
+    uf_tree.Find(i);
+  }
+
   // Count the number of CC
   const std::set<unsigned int> parent_id(uf_tree.m_cc_parent.cbegin(), uf_tree.m_cc_parent.cend());
   return parent_id.size() == 1;
@@ -369,6 +377,96 @@ void KeepLargestViewCCTracks
       }
     }
   }
+}
+
+/**
+* @brief Implement a statistical Structure filter that remove 3D points that have:
+* - a depth that is too large (threshold computed as factor * median ~= X84)
+* @param sfm_data The sfm scene to filter (inplace filtering)
+* @param k_factor The factor applied to the median depth per view
+* @param k_min_point_per_pose Keep only poses that have at least this amount of points
+* @param k_min_track_length Keep only tracks that have at least this length
+* @return The min_median_value observed for all the view
+*/
+double DepthCleaning
+(
+  SfM_Data & sfm_data,
+  const double k_factor,
+  const IndexT k_min_point_per_pose,
+  const IndexT k_min_track_length
+)
+{
+  using DepthAccumulatorT = std::vector<double>;
+  std::map<IndexT, DepthAccumulatorT > map_depth_accumulator;
+
+  // For each landmark accumulate the camera/point depth info for each view
+  for (const auto & landmark_it : sfm_data.structure)
+  {
+    const Observations & obs = landmark_it.second.obs;
+    for (const auto & obs_it : obs)
+    {
+      const View * view = sfm_data.views.at(obs_it.first).get();
+      if (sfm_data.IsPoseAndIntrinsicDefined(view))
+      {
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
+        const double depth = Depth(pose.rotation(), pose.translation(), landmark_it.second.X);
+        if (depth > 0)
+        {
+          map_depth_accumulator[view->id_view].push_back(depth);
+        }
+      }
+    }
+  }
+
+  double min_median_value = std::numeric_limits<double>::max();
+  std::map<IndexT, double > map_median_depth;
+  for (const auto & iter : sfm_data.GetViews())
+  {
+    const View * v = iter.second.get();
+    const IndexT view_id = v->id_view;
+    if (map_depth_accumulator.count(view_id) == 0)
+      continue;
+    // Compute median from the depth distribution
+    const auto & acc = map_depth_accumulator.at(view_id);
+    double min, max, mean, median;
+    if (minMaxMeanMedian(acc.begin(), acc.end(), min, max, mean, median))
+    {
+
+      min_median_value = std::min(min_median_value, median);
+      // Compute depth threshold for each view: factor * medianDepth
+      map_median_depth[view_id] = k_factor * median;
+    }
+  }
+  map_depth_accumulator.clear();
+
+  // Delete invalid observations
+  size_t cpt = 0;
+  for (auto & landmark_it : sfm_data.structure)
+  {
+    Observations obs;
+    for (auto & obs_it : landmark_it.second.obs)
+    {
+      const View * view = sfm_data.views.at(obs_it.first).get();
+      if (sfm_data.IsPoseAndIntrinsicDefined(view))
+      {
+        const Pose3 pose = sfm_data.GetPoseOrDie(view);
+        const double depth = Depth(pose.rotation(), pose.translation(), landmark_it.second.X);
+        if ( depth > 0
+            && map_median_depth.count(view->id_view)
+            && depth < map_median_depth[view->id_view])
+          obs.insert(obs_it);
+        else
+          ++cpt;
+      }
+    }
+    landmark_it.second.obs.swap(obs);
+  }
+  OPENMVG_LOG_INFO << "#point depth filter: " << cpt << " measurements removed";
+
+  // Remove orphans
+  eraseUnstablePosesAndObservations(sfm_data, k_min_point_per_pose, k_min_track_length);
+
+  return min_median_value;
 }
 
 } // namespace sfm
