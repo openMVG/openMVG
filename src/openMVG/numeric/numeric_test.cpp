@@ -33,6 +33,7 @@
 #include "testing/testing.h"
 
 #include <iostream>
+#include <set>
 
 using namespace openMVG;
 using namespace std;
@@ -119,6 +120,26 @@ TEST(Numeric, MeanAndVarianceAlongRows) {
   EXPECT_NEAR(1.5, mean(1), 1e-8);
   EXPECT_NEAR(0.25, variance(0), 1e-8);
   EXPECT_NEAR(1.25, variance(1), 1e-8);
+}
+
+TEST(Numeric, minMaxMeanMedian)
+{
+  const int vec_size = 12;
+  std::vector<double> values(vec_size);
+  std::iota(values.begin(), values.end(), 0.0);
+  double min, max, mean, median;
+  minMaxMeanMedian(values.cbegin(), values.cend(), min, max, mean, median);
+
+  // For the GT value, use a set to sort the value
+  //  and then collect the min, max, median and mean value
+  const std::set<double> set_values(values.cbegin(), values.cend());
+  EXPECT_NEAR(0.0, min, 1e-8);
+  EXPECT_NEAR(values.size() - 1, max, 1e-8);
+  auto set_begin_it = set_values.cbegin();
+  std::advance (set_begin_it, values.size() / 2);
+  EXPECT_NEAR(*set_begin_it, median, 1e-8);
+  const double mean_gt = std::accumulate(values.begin(), values.end(), 0.0) / static_cast<double>(values.size());
+  EXPECT_NEAR(mean_gt, mean, 1e-8);
 }
 
 /* ************************************************************************* */

@@ -52,11 +52,13 @@ struct PacketType : internal::packet_traits<Scalar> {
 };
 
 // For CUDA packet types when using a GpuDevice
-#if defined(EIGEN_USE_GPU) && defined(__CUDACC__) && defined(EIGEN_HAS_CUDA_FP16)
-template <>
+#if defined(EIGEN_USE_GPU) && defined(EIGEN_HAS_GPU_FP16)
+
+typedef ulonglong2 Packet4h2;
+template<>
 struct PacketType<half, GpuDevice> {
-  typedef half2 type;
-  static const int size = 2;
+  typedef Packet4h2 type;
+  static const int size = 8;
   enum {
     HasAdd    = 1,
     HasSub    = 1,
@@ -75,6 +77,7 @@ struct PacketType<half, GpuDevice> {
     HasSqrt   = 1,
     HasRsqrt  = 1,
     HasExp    = 1,
+    HasExpm1  = 0,
     HasLog    = 1,
     HasLog1p  = 0,
     HasLog10  = 0,
@@ -84,9 +87,57 @@ struct PacketType<half, GpuDevice> {
 #endif
 
 #if defined(EIGEN_USE_SYCL)
-template <typename T>
-  struct PacketType<T, SyclDevice> {
-  typedef T type;
+
+namespace TensorSycl {
+namespace internal {
+
+template <typename Index, Index A, Index B> struct PlusOp {
+  static constexpr Index Value = A + B;
+};
+
+template <typename Index, Index A, Index B> struct DivOp {
+  static constexpr Index Value = A / B;
+};
+
+template <typename Index, Index start, Index end, Index step,
+          template <class Indx, Indx...> class StepOp>
+struct static_for {
+  template <typename UnaryOperator>
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void loop(UnaryOperator op) {
+    op(start);
+    static_for<Index, StepOp<Index, start, step>::Value, end, step,
+               StepOp>::loop(op);
+  }
+};
+template <typename Index, Index end, Index step,
+          template <class Indx, Indx...> class StepOp>
+struct static_for<Index, end, end, step, StepOp> {
+  template <typename UnaryOperator>
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void loop(UnaryOperator) {}
+};
+
+template <typename OutScalar, typename Device, bool Vectorizable>
+struct Vectorise {
+  static const int PacketSize = 1;
+  typedef OutScalar PacketReturnType;
+};
+
+template <typename OutScalar, typename Device>
+struct Vectorise<OutScalar, Device, true> {
+  static const int PacketSize = Eigen::PacketType<OutScalar, Device>::size;
+  typedef typename Eigen::PacketType<OutScalar, Device>::type PacketReturnType;
+};
+
+static EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE Index roundUp(Index x, Index y) {
+  return ((((x) + (y)-1) / (y)) * (y));
+}
+
+} // namespace internal
+} // namespace TensorSycl
+
+template <>
+  struct PacketType<half, SyclDevice> {
+  typedef half type;
   static const int size = 1;
   enum {
     HasAdd    = 0,
@@ -103,8 +154,58 @@ template <typename T>
     HasBlend  = 0
   };
 };
-#endif
+template <typename Scalar>
+struct PacketType<Scalar, SyclDevice> : internal::default_packet_traits {
+  typedef Scalar type;
+  typedef Scalar half;
+  enum {
+    Vectorizable = 0,
+    size = 1,
+    AlignedOnScalar = 0,
+    HasHalfPacket = 0
+  };
+  enum {
+    HasAdd    = 0,
+    HasSub    = 0,
+    HasMul    = 0,
+    HasNegate = 0,
+    HasAbs    = 0,
+    HasAbs2   = 0,
+    HasMin    = 0,
+    HasMax    = 0,
+    HasConj   = 0,
+    HasSetLinear = 0
+  };
 
+};
+
+template <typename Scalar>
+struct PacketType<Scalar, const SyclDevice> : PacketType<Scalar, SyclDevice>{};
+
+#ifndef EIGEN_DONT_VECTORIZE_SYCL
+#define PACKET_TYPE(CVQual, Type, val, lengths, DEV)\
+template<> struct PacketType<CVQual Type, DEV> : internal::sycl_packet_traits<val, lengths> \
+{\
+  typedef typename internal::packet_traits<Type>::type type;\
+  typedef typename internal::packet_traits<Type>::half half;\
+};
+
+
+PACKET_TYPE(const, float, 1, 4, SyclDevice)
+PACKET_TYPE(, float, 1, 4, SyclDevice)
+PACKET_TYPE(const, float, 1, 4, const SyclDevice)
+PACKET_TYPE(, float, 1, 4, const SyclDevice)
+
+PACKET_TYPE(const, double, 0, 2, SyclDevice)
+PACKET_TYPE(, double, 0, 2, SyclDevice)
+PACKET_TYPE(const, double, 0, 2, const SyclDevice)
+PACKET_TYPE(, double, 0, 2, const SyclDevice)
+#undef PACKET_TYPE
+
+template<> struct PacketType<half, const SyclDevice>: PacketType<half, SyclDevice>{};
+template<> struct PacketType<const half, const SyclDevice>: PacketType<half, SyclDevice>{};
+#endif
+#endif
 
 // Tuple mimics std::pair but works on e.g. nvcc.
 template <typename U, typename V> struct Tuple {
@@ -120,14 +221,6 @@ template <typename U, typename V> struct Tuple {
 
   EIGEN_CONSTEXPR EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   Tuple(const U& f, const V& s) : first(f), second(s) {}
-
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  Tuple& operator= (const Tuple& rhs) {
-    if (&rhs == this) return *this;
-    first = rhs.first;
-    second = rhs.second;
-    return *this;
-  }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   void swap(Tuple& rhs) {
@@ -168,12 +261,12 @@ template <typename Idx> struct IndexPair {
 #ifdef EIGEN_HAS_SFINAE
 namespace internal {
 
-  template<typename IndexType, Index... Is>
+  template<typename IndexType, typename Index, Index... Is>
   EIGEN_CONSTEXPR EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   array<Index, sizeof...(Is)> customIndices2Array(IndexType& idx, numeric_list<Index, Is...>) {
     return { idx[Is]... };
   }
-  template<typename IndexType>
+  template<typename IndexType, typename Index>
   EIGEN_CONSTEXPR EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   array<Index, 0> customIndices2Array(IndexType&, numeric_list<Index>) {
     return array<Index, 0>();

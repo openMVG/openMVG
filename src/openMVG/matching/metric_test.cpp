@@ -34,8 +34,8 @@ TEST(Metric, L2)
   EXPECT_EQ(168, DistanceT<L2<uint16_t>>());
   EXPECT_EQ(168, DistanceT<L2<int16_t>>());
   EXPECT_EQ(168, DistanceT<L2<int32_t>>());
-  EXPECT_EQ(168, DistanceT<L2<float>>());
-  EXPECT_EQ(168, DistanceT<L2<double>>());
+  EXPECT_EQ(168.f, DistanceT<L2<float>>());
+  EXPECT_EQ(168.0, DistanceT<L2<double>>());
 }
 
 TEST(Metric, HAMMING_BITSET)
@@ -129,7 +129,7 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
   }
 }
 
-TEST(METRIC, DIM128)
+TEST(Metric, L2DIM128)
 {
   // Test SIFT like descriptor (uint8_t)
   {
@@ -154,13 +154,23 @@ TEST(METRIC, DIM128)
     const double GTL2 = (a-b).squaredNorm();
     const L2<float> metricL2{};
     EXPECT_NEAR(GTL2, metricL2(a.data(), b.data(), 128), 1e-4);
-    #ifdef OPENMVG_USE_AVX2
+    #ifdef OPENMVG_USE_AVX
       openMVG::system::CpuInstructionSet cpu_instruction_set;
-      EXPECT_TRUE(cpu_instruction_set.supportAVX2());
-      EXPECT_NEAR(GTL2, L2_AVX2(a.data(), b.data(), 128), 1e-4);
+      EXPECT_TRUE(cpu_instruction_set.supportAVX());
+      EXPECT_NEAR(GTL2, L2_AVX(a.data(), b.data(), 128), 1e-4);
     #endif
   }
 }
+
+TEST(Metric, L1DIM128) {
+    using VecUC128 = Eigen::Matrix<uint8_t, 128, 1>;
+    const VecUC128 a = VecUC128::Random();
+    const VecUC128 b = VecUC128::Random();
+    const unsigned int GTL1 = (a.cast<int>()-b.cast<int>()).lpNorm<1>();
+    const L1<uint8_t> metricL1{};
+    EXPECT_NEAR(GTL1, metricL1(a.data(), b.data(), 128), 1e-4);
+}
+
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

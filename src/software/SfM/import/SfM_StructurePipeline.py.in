@@ -1,0 +1,76 @@
+#!/usr/bin/python
+#! -*- encoding: utf-8 -*-
+
+# This file is part of OpenMVG (Open Multiple View Geometry) C++ library.
+
+# Python implementation of the bash script written by Romuald Perrot
+# Created by @vins31
+# Modified by Yannnnnnnnnnnn
+#
+# this script is for easy use of OpenMVG
+#
+# usage : python openmvg.py image_dir gt_dir output_dir
+#
+# image_dir is the input directory where images are located
+# gt_dir is the input directory where ground truth are located
+# output_dir is where the project must be saved
+#
+# if output_dir is not present script will create it
+#
+
+# Indicate the openMVG binary directory
+OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
+
+# Indicate the openMVG camera sensor width directory
+CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/../../openMVG/exif/sensor_width_database"
+
+import os
+import subprocess
+import sys
+
+if len(sys.argv) < 5:
+    print ("Usage %s image_dir gt_dir gt_type output_dir" % sys.argv[0])
+    print ("gt_type: %s 1:Strecha's Dataset 2:MiddleBury's Dataset 3:DTU MVS Dataset 4:ETH 3D Dataset 5:Kitti Odometry Dataset" % sys.argv[0])
+    sys.exit(1)
+
+input_dir = sys.argv[1]
+gt_dir    = sys.argv[2]
+gt_type   = sys.argv[3]
+output_dir = sys.argv[4]
+matches_dir = os.path.join(output_dir, "matches")
+reconstruction_dir = os.path.join(output_dir, "reconstruction_structure")
+camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_camera_database.txt")
+
+print ("Using input dir  : ", input_dir)
+print ("      gt_dir     : ", gt_dir)
+print ("      gt_type    : ", gt_type)
+print ("      output_dir : ", output_dir)
+
+# Create the ouput/matches folder if not present
+if not os.path.exists(output_dir):
+  os.mkdir(output_dir)
+if not os.path.exists(matches_dir):
+  os.mkdir(matches_dir)
+
+# Create the reconstruction if not present
+if not os.path.exists(reconstruction_dir):
+    os.mkdir(reconstruction_dir)
+
+print ("1. Load GT")
+pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMInit_ImageListingFromKnownPoses"),  "-i", input_dir, "-g", gt_dir, "-t", gt_type, "-o", output_dir] )
+pIntrisics.wait()
+
+print ("2. Compute features")
+pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", output_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT","-p","HIGH"] )
+pFeatures.wait()
+
+print ("3. Compute structure")
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeStructureFromKnownPoses"),  "-i", output_dir+"/sfm_data.json", "-m", matches_dir, "-o", reconstruction_dir+"/sfm_structure.bin","-b"] )
+pRecons.wait()
+
+print ("4. Colorize Structure")
+pRecons = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeSfM_DataColor"),  "-i", reconstruction_dir+"/sfm_structure.bin", "-o", reconstruction_dir+"/sfm_structure_color.ply"] )
+pRecons.wait()
+
+
+

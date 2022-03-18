@@ -1,6 +1,5 @@
-*****************************************
-OpenMVS Open Multiple View Stereovision
-*****************************************
+Export to  OpenMVS Open Multiple View Stereovision
+**************************************************
 
 `OpenMVS <http://cdcseacave.github.io/openMVS/>`_ allows to compute dense points cloud, surface and textured surfaces of OpenMVG scenes.
 

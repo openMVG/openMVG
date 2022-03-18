@@ -9,9 +9,7 @@
 #ifndef EIGEN_ARPACKSUPPORT_MODULE_H
 #define EIGEN_ARPACKSUPPORT_MODULE_H
 
-#include <Eigen/Core>
-
-#include <Eigen/src/Core/util/DisableStupidWarnings.h>
+#include "../../Eigen/Core"
 
 /** \defgroup ArpackSupport_Module Arpack support module
   *
@@ -22,10 +20,11 @@
   * \endcode
   */
 
-#include <Eigen/SparseCholesky>
+#include "../../Eigen/SparseCholesky"
+
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 #include "src/Eigenvalues/ArpackSelfAdjointEigenSolver.h"
 
-#include <Eigen/src/Core/util/ReenableStupidWarnings.h>
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_ARPACKSUPPORT_MODULE_H
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

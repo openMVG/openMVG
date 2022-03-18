@@ -114,7 +114,7 @@ TEST(LM, MimimaSearchViaLM) {
 
     std::ostringstream osSvg;
     osSvg << "exponentialRegression_unit_test.svg";
-    std::ofstream svgFile( osSvg.str().c_str());
+    std::ofstream svgFile( osSvg.str());
     svgFile << svgSurface.closeSvgFile().str();
   }
 }

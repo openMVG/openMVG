@@ -10,7 +10,6 @@
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_PAIR_BUILDER_HPP
 
 #include <fstream>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <string>
@@ -18,6 +17,7 @@
 
 #include "openMVG/types.hpp"
 #include "openMVG/stl/split.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 
@@ -50,11 +50,11 @@ inline bool loadPairs(
      const std::string &sFileName, // filename of the list file,
      Pair_Set & pairs)  // output pairs read from the list file
 {
-  std::ifstream in(sFileName.c_str());
-  if (!in.is_open())
+  std::ifstream in(sFileName);
+  if (!in)
   {
-    std::cerr << std::endl
-      << "loadPairs: Impossible to read the specified file: \"" << sFileName << "\"." << std::endl;
+    OPENMVG_LOG_ERROR
+      << "loadPairs: Impossible to read the specified file: \"" << sFileName << "\".";
     return false;
   }
   std::string sValue;
@@ -66,7 +66,7 @@ inline bool loadPairs(
     const IndexT str_size (vec_str.size());
     if (str_size < 2)
     {
-      std::cerr << "loadPairs: Invalid input file: \"" << sFileName << "\"." << std::endl;
+      OPENMVG_LOG_ERROR << "loadPairs: Invalid input file: \"" << sFileName << "\".";
       return false;
     }
     std::stringstream oss;
@@ -79,14 +79,15 @@ inline bool loadPairs(
       oss >> J;
       if ( I > N-1 || J > N-1) //I&J always > 0 since we use unsigned type
       {
-        std::cerr << "loadPairs: Invalid input file. Image out of range. "
-                << "I: " << I << " J:" << J << " N:" << N << std::endl
-                << "File: \"" << sFileName << "\"." << std::endl;
+        OPENMVG_LOG_ERROR
+          << "loadPairs: Invalid input file. Image out of range. "
+          << "I: " << I << " J:" << J << " N:" << N << "\n"
+          << "File: \"" << sFileName << "\".";
         return false;
       }
       if ( I == J )
       {
-        std::cerr << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\"." << std::endl;
+        OPENMVG_LOG_ERROR << "loadPairs: Invalid input file. Image " << I << " see itself. File: \"" << sFileName << "\".";
         return false;
       }
       // Insert the pair such that .first < .second
@@ -103,10 +104,10 @@ inline bool loadPairs(
 /// ...
 inline bool savePairs(const std::string &sFileName, const Pair_Set & pairs)
 {
-  std::ofstream outStream(sFileName.c_str());
-  if (!outStream.is_open())  {
-    std::cerr << std::endl
-      << "savePairs: Impossible to open the output specified file: \"" << sFileName << "\"." << std::endl;
+  std::ofstream outStream(sFileName);
+  if (!outStream)  {
+    OPENMVG_LOG_ERROR
+      << "savePairs: Impossible to open the output specified file: \"" << sFileName << "\".";
     return false;
   }
   for ( const auto & cur_pair : pairs )

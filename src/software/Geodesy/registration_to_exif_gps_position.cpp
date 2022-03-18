@@ -181,7 +181,7 @@ int main(int argc, char **argv)
           std::cout << "\n3D Similarity fitting error using all points (in target coordinate system units):";
           minMaxMeanMedian<float>(
             vec_fitting_errors_eigen.data(),
-            vec_fitting_errors_eigen.data() + vec_fitting_errors_eigen.rows() );
+            vec_fitting_errors_eigen.data() + vec_fitting_errors_eigen.rows(), std::cout);
         }
         // INLIERS only
         {
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
           std::cout << "\nFound: " << vec_fitting_errors.size() << " inliers"
            << " from " << X_SfM.cols() << " points." << std::endl;
           std::cout << "\n3D Similarity fitting error using only the fitted inliers (in target coordinate system units):";
-          minMaxMeanMedian<float>( vec_fitting_errors.cbegin(), vec_fitting_errors.cend() );
+          minMaxMeanMedian<float>( vec_fitting_errors.cbegin(), vec_fitting_errors.cend(), std::cout);
         }
       }
       break;
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
         double S;
         if (!openMVG::geometry::FindRTS(X_SfM, X_GPS, &S, &t, &R))
         {
-          std::cerr << "Failed to comute the registration" << std::endl;
+          std::cerr << "Failed to compute the registration" << std::endl;
           return EXIT_FAILURE;
         }
 
@@ -226,7 +226,8 @@ int main(int argc, char **argv)
           std::cout << "\n3D Similarity fitting error (in target coordinate system units):";
           minMaxMeanMedian<float>(
             vec_fitting_errors_eigen.data(),
-            vec_fitting_errors_eigen.data() + vec_fitting_errors_eigen.rows() );
+            vec_fitting_errors_eigen.data() + vec_fitting_errors_eigen.rows(),
+            std::cout);
         }
       }
       break;

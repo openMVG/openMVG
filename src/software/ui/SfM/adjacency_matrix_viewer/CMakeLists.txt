@@ -20,10 +20,10 @@ if (Qt5Widgets_FOUND AND Qt5Svg_FOUND )
   endif( APPLE )
 
   target_include_directories( ui_openMVG_MatchesViewer PUBLIC ${OPENMVG_INCLUDE_DIRS} )
-  target_link_libraries( ui_openMVG_MatchesViewer Qt5::Widgets Qt5::Svg ${OpenMVG_LIBRARIES} )
+  target_link_libraries( ui_openMVG_MatchesViewer Qt5::Widgets Qt5::Svg openMVG_sfm ${STLPLUS_LIBRARY})
 
   find_package( Qt5OpenGL )
-  if (Qt5OpenGL_FOUND )
+  if (Qt5OpenGL_FOUND)
     target_link_libraries( ui_openMVG_MatchesViewer Qt5::OpenGL)
   else()
     add_definitions(-DQT_NO_OPENGL)

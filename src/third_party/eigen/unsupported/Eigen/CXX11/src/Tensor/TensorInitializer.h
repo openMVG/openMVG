@@ -32,7 +32,7 @@ struct Initializer {
                   Eigen::array<typename traits<Derived>::Index, traits<Derived>::NumDimensions>* indices,
                   const InitList& vals) {
     int i = 0;
-    for (auto v : vals) {
+    for (const auto& v : vals) {
       (*indices)[traits<Derived>::NumDimensions - N] = i++;
       Initializer<Derived, N - 1>::run(tensor, indices, v);
     }
@@ -48,7 +48,7 @@ struct Initializer<Derived, 1> {
                   const InitList& vals) {
     int i = 0;
     // There is likely a faster way to do that than iterating.
-    for (auto v : vals) {
+    for (const auto& v : vals) {
       (*indices)[traits<Derived>::NumDimensions - 1] = i++;
       tensor.coeffRef(*indices) = v;
     }

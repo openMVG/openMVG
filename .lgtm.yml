@@ -1,0 +1,6 @@
+path_classifiers:
+  library:
+    - src/dependencies
+    - src/third_party
+queries:
+  - exclude: src/dependencies

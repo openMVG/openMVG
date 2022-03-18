@@ -1,5 +1,4 @@
-***************************************
-MVE (Multi-View Environment)
+Export to MVE (Multi-View Environment)
 ***************************************
 
 `MVE <https://github.com/simonfuhrmann/mve>`_ can import a converted openMVG SfM scene and use it to create dense depth map and complete dense 3D models.

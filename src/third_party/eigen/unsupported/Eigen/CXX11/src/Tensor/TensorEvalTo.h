@@ -32,6 +32,7 @@ struct traits<TensorEvalToOp<XprType, MakePointer_> >
   typedef typename remove_reference<Nested>::type _Nested;
   static const int NumDimensions = XprTraits::NumDimensions;
   static const int Layout = XprTraits::Layout;
+  typedef typename MakePointer_<Scalar>::Type PointerType;
 
   enum {
     Flags = 0
@@ -41,6 +42,8 @@ struct traits<TensorEvalToOp<XprType, MakePointer_> >
     // Intermediate typedef to workaround MSVC issue.
     typedef MakePointer_<T> MakePointerT;
     typedef typename MakePointerT::Type Type;
+
+
   };
 };
 
@@ -73,6 +76,8 @@ class TensorEvalToOp : public TensorBase<TensorEvalToOp<XprType, MakePointer_>, 
   typedef typename Eigen::internal::traits<TensorEvalToOp>::StorageKind StorageKind;
   typedef typename Eigen::internal::traits<TensorEvalToOp>::Index Index;
 
+  static const int NumDims = Eigen::internal::traits<TensorEvalToOp>::NumDimensions;
+
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvalToOp(PointerType buffer, const XprType& expr)
       : m_xpr(expr), m_buffer(buffer) {}
 
@@ -98,37 +103,59 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
   typedef typename XprType::Index Index;
   typedef typename internal::remove_const<typename XprType::CoeffReturnType>::type CoeffReturnType;
   typedef typename PacketType<CoeffReturnType, Device>::type PacketReturnType;
-  static const int PacketSize = internal::unpacket_traits<PacketReturnType>::size;
-
+  static const int PacketSize = PacketType<CoeffReturnType, Device>::size;
+  typedef typename Eigen::internal::traits<XprType>::PointerType TensorPointerType;
+  typedef StorageMemory<CoeffReturnType, Device> Storage;
+  typedef typename Storage::Type EvaluatorPointerType;
   enum {
-    IsAligned = TensorEvaluator<ArgType, Device>::IsAligned,
-    PacketAccess = TensorEvaluator<ArgType, Device>::PacketAccess,
-    Layout = TensorEvaluator<ArgType, Device>::Layout,
-    CoordAccess = false,  // to be implemented
-    RawAccess = true
+    IsAligned         = TensorEvaluator<ArgType, Device>::IsAligned,
+    PacketAccess      = TensorEvaluator<ArgType, Device>::PacketAccess,
+    BlockAccess       = true,
+    PreferBlockAccess = false,
+    Layout            = TensorEvaluator<ArgType, Device>::Layout,
+    CoordAccess       = false,  // to be implemented
+    RawAccess         = true
   };
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
-      : m_impl(op.expression(), device), m_device(device),
-          m_buffer(op.buffer()), m_op(op), m_expression(op.expression())
-  { }
+  static const int NumDims = internal::traits<ArgType>::NumDimensions;
 
-  // Used for accessor extraction in SYCL Managed TensorMap:
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const XprType& op() const {
-    return m_op;
-  }
-  
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ~TensorEvaluator() {
+  //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
+  typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
+  typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
+
+  typedef typename TensorEvaluator<const ArgType, Device>::TensorBlock
+      ArgTensorBlock;
+
+  typedef internal::TensorBlockAssignment<
+      CoeffReturnType, NumDims, typename ArgTensorBlock::XprType, Index>
+      TensorBlockAssignment;
+  //===--------------------------------------------------------------------===//
+
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
+      : m_impl(op.expression(), device), m_buffer(device.get(op.buffer())), m_expression(op.expression()){}
+
+
+  EIGEN_STRONG_INLINE ~TensorEvaluator() {
   }
 
-  typedef typename internal::traits<const TensorEvalToOp<ArgType, MakePointer_> >::template MakePointer<CoeffReturnType>::Type DevicePointer;
+
   EIGEN_DEVICE_FUNC const Dimensions& dimensions() const { return m_impl.dimensions(); }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(DevicePointer scalar) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType scalar) {
     EIGEN_UNUSED_VARIABLE(scalar);
     eigen_assert(scalar == NULL);
     return m_impl.evalSubExprsIfNeeded(m_buffer);
   }
+
+#ifdef EIGEN_USE_THREADS
+  template <typename EvalSubExprsCallback>
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+      EvaluatorPointerType scalar, EvalSubExprsCallback done) {
+    EIGEN_UNUSED_VARIABLE(scalar);
+    eigen_assert(scalar == NULL);
+    m_impl.evalSubExprsIfNeededAsync(m_buffer, std::move(done));
+  }
+#endif
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalScalar(Index i) {
     m_buffer[i] = m_impl.coeff(i);
@@ -137,7 +164,34 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
     internal::pstoret<CoeffReturnType, PacketReturnType, Aligned>(m_buffer + i, m_impl.template packet<TensorEvaluator<ArgType, Device>::IsAligned ? Aligned : Unaligned>(i));
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
+    return m_impl.getResourceRequirements();
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlock(
+      TensorBlockDesc& desc, TensorBlockScratch& scratch) {
+    // Add `m_buffer` as destination buffer to the block descriptor.
+    desc.template AddDestinationBuffer<Layout>(
+        /*dst_base=*/m_buffer + desc.offset(),
+        /*dst_strides=*/internal::strides<Layout>(m_impl.dimensions()));
+
+    ArgTensorBlock block =
+        m_impl.block(desc, scratch, /*root_of_expr_ast=*/true);
+
+    // If block was evaluated into a destination buffer, there is no need to do
+    // an assignment.
+    if (block.kind() != internal::TensorBlockKind::kMaterializedInOutput) {
+      TensorBlockAssignment::Run(
+          TensorBlockAssignment::target(
+              desc.dimensions(), internal::strides<Layout>(m_impl.dimensions()),
+              m_buffer, desc.offset()),
+          block.expr());
+    }
+    block.cleanup();
+  }
+
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
   }
 
@@ -159,19 +213,20 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
         TensorOpCost(0, sizeof(CoeffReturnType), 0, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC DevicePointer data() const { return m_buffer; }
+  EIGEN_DEVICE_FUNC EvaluatorPointerType data() const { return m_buffer; }
   ArgType expression() const { return m_expression; }
+  #ifdef EIGEN_USE_SYCL
+  // binding placeholder accessors to a command group handler for SYCL
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void bind(cl::sycl::handler &cgh) const {
+    m_impl.bind(cgh);
+    m_buffer.bind(cgh);
+  }
+  #endif
 
-  /// required by sycl in order to extract the accessor
-  const TensorEvaluator<ArgType, Device>& impl() const { return m_impl; }
-  /// added for sycl in order to construct the buffer from the sycl device
-  const Device& device() const{return m_device;}
 
  private:
   TensorEvaluator<ArgType, Device> m_impl;
-  const Device& m_device;
-  DevicePointer m_buffer;
-  const XprType& m_op;
+  EvaluatorPointerType m_buffer;
   const ArgType m_expression;
 };
 

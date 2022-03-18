@@ -7,7 +7,7 @@ target_link_libraries(openMVG_sample_multiview_robustEssential_spherical
   openMVG_matching
   openMVG_system
   openMVG_sfm
-  stlplus)
+  ${STLPLUS_LIBRARY})
 target_compile_definitions(openMVG_sample_multiview_robustEssential_spherical
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 set_property(TARGET openMVG_sample_multiview_robustEssential_spherical PROPERTY FOLDER OpenMVG/Samples)

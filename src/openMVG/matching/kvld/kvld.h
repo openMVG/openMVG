@@ -10,7 +10,6 @@
 #define OPENMVG_MATCHING_KVLD_H
 
 #include <algorithm>
-#include <iostream>
 #include <vector>
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
@@ -103,7 +102,7 @@ public:
     diff[ 0 ] = 0;
     diff[ 1 ] = 0;
 
-    if (contrast > 300 || vld2.contrast > 300  || contrast <= 0 || vld2.contrast <=0 )
+    if (contrast > maxContrast || vld2.contrast > maxContrast  || contrast <= 0 || vld2.contrast <=0 )
       return 128;
 
     for (int i = 0; i < dimension; i++ )
@@ -119,30 +118,7 @@ public:
 
     diff[ 0 ] *= 0.36;
     diff[ 1 ] *= 0.64 / ( binNum );
-    //std::cout<<"diff = "<<diff[0]<<" "<<diff[1]<<std::endl;
     return diff[ 0 ] + diff[ 1 ];
-  }
-
-  inline void test() const
-  {
-    std::cout << "contrast = " << contrast << std::endl;
-    std::cout << std::endl << "distance= " << distance << std::endl;
-
-    std::cout << "weights   : ";
-    for (int i = 0; i < dimension; i++ )
-    {
-      std::cout << weight[ i ] << " ";
-    }
-    std::cout << std::endl;
-    for (int i = 0; i < dimension; i++ )
-    {
-      //cout<<"principle= "<<principleAngle[i]<<endl;
-      for (int j = 0; j < subdirection; j++ )
-      {
-        std::cout << descriptor[ i * subdirection + j ] << " ";
-      }
-      std::cout << std::endl;
-    }
   }
 
 };
@@ -159,7 +135,7 @@ public:
 //
 //matchesFiltered: the output list of matches filled by KVLD process.(it will be cleared to empty at the beginning of KVLD).
 //
-//score: list of score for output matches. If geometric verification is set to true, each element presents the geometric consistancy score of the corresponding match with its neighbor matches
+//score: list of score for output matches. If geometric verification is set to true, each element presents the geometric consistency score of the corresponding match with its neighbor matches
 //        otherwise, it presents the average photometric consistency score with its neighbor matches.
 //
 //E: gvld(or vld)-consistency matrix, for illustration reason, it has been externalized as an input of KVLD. it should be initialized to be a matches.size*matche.sizes table with all equal to -1

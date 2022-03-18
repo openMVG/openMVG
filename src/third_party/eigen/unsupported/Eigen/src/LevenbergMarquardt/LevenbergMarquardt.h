@@ -117,7 +117,7 @@ class LevenbergMarquardt : internal::no_assignment_operator
     typedef typename JacobianType::RealScalar RealScalar; 
     typedef typename QRSolver::StorageIndex PermIndex;
     typedef Matrix<Scalar,Dynamic,1> FVectorType;
-    typedef PermutationMatrix<Dynamic,Dynamic> PermutationType;
+    typedef PermutationMatrix<Dynamic,Dynamic,int> PermutationType;
   public:
     LevenbergMarquardt(FunctorType& functor) 
     : m_functor(functor),m_nfev(0),m_njev(0),m_fnorm(0.0),m_gnorm(0),
@@ -233,9 +233,9 @@ class LevenbergMarquardt : internal::no_assignment_operator
     
     /** 
      * \brief Reports whether the minimization was successful
-     * \returns \c Success if the minimization was succesful,
+     * \returns \c Success if the minimization was successful,
      *         \c NumericalIssue if a numerical problem arises during the 
-     *          minimization process, for exemple during the QR factorization
+     *          minimization process, for example during the QR factorization
      *         \c NoConvergence if the minimization did not converge after 
      *          the maximum number of function evaluation allowed
      *          \c InvalidInput if the input matrix is invalid

@@ -9,8 +9,11 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/cameras/Camera_IO.hpp"
 #include "openMVG/cameras/cameras_io.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::cameras;
@@ -19,22 +22,6 @@ using namespace openMVG::cameras;
 
 using std::string;
 
-TEST(Camera_IO, PinholeSaveRead) {
-
-  const Mat3 R = Mat3
-    (Eigen::AngleAxisd(rand(), Vec3::UnitX())
-    * Eigen::AngleAxisd(rand(), Vec3::UnitY())
-    * Eigen::AngleAxisd(rand(), Vec3::UnitZ()));
-  const PinholeCamera camGT( Mat3::Identity(), R, Vec3(0,1,2));
-
-  EXPECT_TRUE( save( "pinholeCam.bin", camGT));
-  EXPECT_FALSE( save( "pinholeCam.txt", camGT)); // extension must be .bin
-
-  PinholeCamera cam;
-  EXPECT_TRUE( load( "pinholeCam.bin", cam));
-  EXPECT_MATRIX_NEAR(camGT._P, cam._P, 1e-3);
-}
-
 TEST(Camera_IO_ceral, SaveRead) {
 
   const std::vector<EINTRINSIC> vec_camera_model_type =
@@ -42,7 +29,8 @@ TEST(Camera_IO_ceral, SaveRead) {
       PINHOLE_CAMERA,
       PINHOLE_CAMERA_RADIAL1, PINHOLE_CAMERA_RADIAL3,
       PINHOLE_CAMERA_BROWN,
-      PINHOLE_CAMERA_FISHEYE
+      PINHOLE_CAMERA_FISHEYE,
+      CAMERA_SPHERICAL
     };
 
   for (const auto cam_type : vec_camera_model_type)
@@ -78,6 +66,11 @@ TEST(Camera_IO_ceral, SaveRead) {
       intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
         (width, height, focal, ppx, ppy);
       break;
+    case CAMERA_SPHERICAL:
+      intrinsic = std::make_shared<Intrinsic_Spherical>(width, height);
+      break;
+    default:
+        continue;
     }
 
     const std::string filename("camera_io.json");
@@ -85,7 +78,7 @@ TEST(Camera_IO_ceral, SaveRead) {
     // Writing
     {
       std::ofstream stream(filename, std::ios::binary | std::ios::out);
-      CHECK(stream.is_open());
+      CHECK(stream);
 
       cereal::JSONOutputArchive archive(stream);
       archive(cereal::make_nvp("intrinsics", intrinsic));
@@ -93,7 +86,7 @@ TEST(Camera_IO_ceral, SaveRead) {
     // Reading
     {
       std::ifstream stream(filename, std::ios::binary | std::ios::in);
-      CHECK(stream.is_open());
+      CHECK(stream);
 
       cereal::JSONInputArchive archive(stream);
       archive(cereal::make_nvp("intrinsics", intrinsic));

@@ -47,6 +47,10 @@ This program includes works distributed under the terms of another license(s) an
     Copyright (c) Jansson Consulting & Pierre Moulon.
     Licensed under the [MPL2 license](http://opensource.org/licenses/MPL-2.0).
 
+*   __hnswlib__<br />
+    Copyright (c) hnswlib authors.
+    Licensed under the [Apache-2.0 license](https://opensource.org/licenses/Apache-2.0).
+
 *   __htmlDoc__<br />
     Copyright (c) Pierre Moulon.
     Licensed under the [MPL2 license](http://opensource.org/licenses/MPL-2.0).

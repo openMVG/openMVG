@@ -41,6 +41,7 @@ class Bundle_Adjustment_Ceres : public Bundle_Adjustment
     int sparse_linear_algebra_library_type_;
     double parameter_tolerance_;
     bool bUse_loss_function_;
+    int max_num_iterations_;
 
     BA_Ceres_options(const bool bVerbose = true, bool bmultithreaded = true);
   };

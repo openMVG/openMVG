@@ -40,7 +40,7 @@
 # undef realloc
 #endif
 
-#include <Eigen/Core>
+#include "../../Eigen/Core"
 
 namespace Eigen {
 
@@ -73,6 +73,9 @@ inline const adouble& real(const adouble& x)  { return x; }
 inline adouble imag(const adouble&)    { return 0.; }
 inline adouble abs(const adouble&  x)  { return fabs(x); }
 inline adouble abs2(const adouble& x)  { return x*x; }
+
+inline bool (isinf)(const adouble& x) { return (Eigen::numext::isinf)(x.getValue()); }
+inline bool (isnan)(const adouble& x) { return (Eigen::numext::isnan)(x.getValue()); }
 
 }
 

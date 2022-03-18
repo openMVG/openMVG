@@ -20,11 +20,13 @@
 
 #include "openMVG/matching/matcher_kdtree_flann.hpp"
 using namespace openMVG::matching;
+#include "openMVG/system/logger.hpp"
 
 namespace nomoko
 {
 void Domset::computeInformation()
 {
+  OPENMVG_LOG_INFO << "[ Dominant set clustering of views ]";
   normalizePointCloud();
   voxelGridFilter( kVoxelSize, kVoxelSize, kVoxelSize );
   getAllDistances();
@@ -132,7 +134,7 @@ void Domset::voxelGridFilter( const float &sizeX, const float &sizeY, const floa
 {
   if ( sizeX <= 0.0f || sizeY <= 0.0f || sizeZ <= 0.0f )
   {
-    std::cerr << "Invalid voxel grid dimensions error.\n";
+    OPENMVG_LOG_ERROR << "Invalid voxel grid dimensions error.";
     exit( 0 );
   }
 
@@ -251,14 +253,14 @@ void Domset::voxelGridFilter( const float &sizeX, const float &sizeY, const floa
   // std::cerr << "Number of points = " << points.size() << std::endl;
 } // voxelGridFilter
 
-Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
+Eigen::MatrixXf Domset::getSimilarityMatrix( const std::map<size_t, size_t> &xId2vId )
 {
 //  std::cout << "Generating Similarity Matrix " << std::endl;
   const size_t numC = xId2vId.size();
   const size_t numP = points.size();
   if ( numC == 0 || numP == 0 )
   {
-    std::cerr << "Invalid Data\n";
+    OPENMVG_LOG_ERROR << "Invalid Data";
     exit( 0 );
   }
   const float medianDist = getDistanceMedian( xId2vId );
@@ -276,8 +278,8 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
   {
     for_parallel( xId2, numC )
     {
-      const size_t vId1 = xId2vId[ xId1 ];
-      const size_t vId2 = xId2vId[ xId2 ];
+      const size_t vId1 = xId2vId.at( xId1 );
+      const size_t vId2 = xId2vId.at( xId2 );
       if ( vId1 == vId2 )
       {
         simMat( xId1, xId2 ) = 0;
@@ -286,7 +288,7 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
       {
         const View v2   = views[ vId2 ];
         const View v1   = views[ vId1 ];
-        const float sv  = computeViewSimilaity( v1, v2 );
+        const float sv  = computeViewSimilarity( v1, v2 );
         const float sd  = computeViewDistance( vId1, vId2, medianDist );
         const float sim = sv * sd;
         simMat( xId1, xId2 ) = sim;
@@ -296,7 +298,7 @@ Eigen::MatrixXf Domset::getSimilarityMatrix( std::map<size_t, size_t> &xId2vId )
   return simMat;
 } // getSimilarityMatrix
 
-float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const float &medianDist )
+float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const float &medianDist ) const
 {
   if ( vId1 == vId2 )
     return 1.f;
@@ -304,13 +306,14 @@ float Domset::computeViewDistance( const size_t &vId1, const size_t &vId2, const
   const float dm = 1.f + exp( -( vd - medianDist ) / medianDist );
   return 1.f / dm;
 }
-float Domset::getDistanceMedian( const std::map<size_t, size_t> &xId2vId )
+
+float Domset::getDistanceMedian( const std::map<size_t, size_t> &xId2vId ) const
 {
 //  std::cout << "Finding Distance Median\n";
 
   if ( xId2vId.empty() )
   {
-    std::cerr << "No Views initialized \n";
+    OPENMVG_LOG_ERROR << "No Views initialized";
     exit( 0 );
   }
 
@@ -339,7 +342,7 @@ void Domset::getAllDistances()
   const size_t numC = views.size();
   if ( numC == 0 )
   {
-    std::cerr << "No Views initialized \n";
+    OPENMVG_LOG_ERROR << "No Views initialized";
     exit( 0 );
   }
   viewDists.resize( numC, numC );
@@ -356,7 +359,7 @@ void Domset::getAllDistances()
 }
 
 void Domset::findCommonPoints( const View &v1, const View &v2,
-                               std::vector<size_t> &commonPoints )
+                               std::vector<size_t> &commonPoints ) const
 {
   commonPoints.clear();
   const size_t numVP1 = v1.viewPoints.size();
@@ -367,12 +370,12 @@ void Domset::findCommonPoints( const View &v1, const View &v2,
   //std::sort(v2.viewPoints.begin(), v2.viewPoints.end());
   commonPoints.resize( minNum );
 
-  const auto it = std::set_intersection( v1.viewPoints.begin(), v1.viewPoints.end(),
-                                         v2.viewPoints.begin(), v2.viewPoints.end(), commonPoints.begin() );
+  const auto it = std::set_intersection( v1.viewPoints.cbegin(), v1.viewPoints.cend(),
+                                         v2.viewPoints.cbegin(), v2.viewPoints.cend(), commonPoints.begin() );
   commonPoints.resize( it - commonPoints.begin() );
 } // findCommonPoints
 
-const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
+float Domset::computeViewSimilarity( const View &v1, const View &v2 ) const
 {
   std::vector<size_t> commonPoints;
   findCommonPoints( v1, v2, commonPoints );
@@ -398,7 +401,7 @@ const float Domset::computeViewSimilaity( const View &v1, const View &v2 )
   }
   const float ans = w / numCP;
   return ( ans != ans ) ? 0 : ans;
-} // computeViewSimilaity
+} // computeViewSimilarity
 
 void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
                                 std::vector<std::vector<size_t>> &clusters )
@@ -406,7 +409,7 @@ void Domset::computeClustersAP( std::map<size_t, size_t> &xId2vId,
   const size_t numX = xId2vId.size();
   if ( numX == 0 )
   {
-    std::cout << "Invalid map size\n";
+    OPENMVG_LOG_ERROR << "Invalid map size";
     exit( 0 );
   }
 
@@ -646,11 +649,11 @@ void Domset::printClusters()
     }
     ss << "\n\n";
   }
-  std::cout << "Number of clusters = " << finalClusters.size() << std::endl;
-  std::cout << ss.str();
+  OPENMVG_LOG_INFO << "Number of clusters = " << finalClusters.size()
+    << "\n" << ss.str();
 }
 
-void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints )
+void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints ) const
 {
   std::stringstream plys;
   plys << "ply\n"
@@ -687,7 +690,7 @@ void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints )
       const auto & pos = views[ id ].trans;
       plys
           << pos( 0 ) << " " << pos( 1 ) << " " << pos( 2 ) << " "
-          << red << " " << green << " " << blue << std::endl;
+          << red << " " << green << " " << blue << "\n";
     }
   }
 
@@ -698,14 +701,14 @@ void Domset::exportToPLY( const std::string &plyFilename, bool exportPoints )
       const auto &pos = pt.pos;
 
       plys << pos( 0 ) << " " << pos( 1 ) << " " << pos( 2 )
-           << " 255 255 255" << std::endl;
+           << " 255 255 255" << "\n";
     }
   }
 
   std::ofstream plyFile( plyFilename );
-  if ( !plyFile.is_open() )
+  if ( !plyFile )
   {
-    std::cout << "Cant open " << plyFilename << " file\n";
+    OPENMVG_LOG_ERROR << "Cant open " << plyFilename << " file";
   }
   else
   {

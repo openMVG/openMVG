@@ -54,7 +54,7 @@ namespace kernel {
 // error, but can never access the samples themselves.
 //
 // The Kernel objects must follow the following concept so that the robust
-// fitting alogrithm can fit this type of relation:
+// fitting algorithm can fit this type of relation:
 //
 //   1. Kernel::MAX_MODELS
 //   2. Kernel::MINIMUM_SAMPLES
@@ -124,7 +124,7 @@ public:
     NormalizePoints(x2, &x2_normalized, &T2);
 
     SolverArg::Solve(x1_normalized, x2_normalized, models);
-    // Unormalize model from the computed conditioning.
+    // Unnormalize model from the computed conditioning.
     for (int i = 0; i < models->size(); ++i) {
       UnnormalizerArg::Unnormalize(T1, T2, &(*models)[i]);
     }

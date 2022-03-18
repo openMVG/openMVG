@@ -90,7 +90,7 @@ Dependencies
 --------------
 OpenMVG comes as a standalone distribution, you don't need to install libraries to make it compiles
 and run.
-On Linux openMVG will use the local png, zlib and jpeg libraries if they are availables.
+On Linux openMVG will use the local png, zlib and jpeg libraries if they are available.
 
 Indices and tables
 ----------------------

@@ -12,7 +12,7 @@
 #define OPENMVG_SYSTEM_TIMER_HPP
 
 #include <chrono>
-#include <iostream>
+#include <ostream>
 
 namespace openMVG
 {

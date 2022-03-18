@@ -85,8 +85,6 @@ inline void EncodeEpipolarEquation(const TMatX &x1, const TMatX &x2, TMatA *A) {
   assert(x1.cols() == x2.cols());
   assert(x1.rows() == 3);
   for (typename TMatX::Index i = 0; i < x1.cols(); ++i) {
-    const auto xx1 = x1.col(i).homogeneous().transpose();
-    const auto xx2 = x2.col(i).homogeneous().transpose();
     A->row(i) <<
       x2(0, i) * x1.col(i).transpose(),
       x2(1, i) * x1.col(i).transpose(),
