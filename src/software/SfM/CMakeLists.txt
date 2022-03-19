@@ -271,7 +271,8 @@ target_link_libraries(openMVG_main_ControlPointsRegistration
   openMVG_system
   openMVG_features
   openMVG_sfm
-  stlplus)
+  ${STLPLUS_LIBRARY}
+)
 
 set_property(TARGET openMVG_main_ControlPointsRegistration PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ControlPointsRegistration DESTINATION bin/)
