@@ -8,7 +8,6 @@
 
 #include <array>
 #include <string>
-#include "minus/minus.h"
 #include "minus/chicago-default.h"
 #include "openMVG/tracks/tracks.hpp"
 #include "openMVG/image/image_io.hpp"

@@ -13,9 +13,13 @@
 #include "testing/testing.h"
 
 using namespace trifocal3pt;
+using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_t;
+
 //-------------------------------------------------------------------------------
 //
 // Global variables
+trifocal_model_t tt_gt; // corresp. to minus' cameras_gt_
+
 
 //---- HARDODED CASE SOLUTION -----------------------------------------------------
 // Uncomment to hardcode solution for known case to test.
@@ -149,6 +153,23 @@ probe_solutions(
   
   return io::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solution_index);
 }
+
+static void
+initialize_gt()
+{
+  data::initialize_gt();
+  
+  double cameras_gt_relative[2][4][3];
+  // get relative cameras in usual format
+  solution2cams(cameras_gt_quat_, cameras_gt_relative)
+
+  tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
+  for (unsigned v=1; v < io::pp::nviews; ++v) {
+    memcpy(tt_gt_[v].data(), cameras_gt_relative, 9*sizeof(double));
+    for (unsigned r=0; r < 3; ++r)
+      tt_gt_[v](r,3) = tt_gt_relative[v][3][r];
+  }
+}
   
 
 // Directly runs the solver and test
@@ -160,7 +181,6 @@ probe_solutions(
 // - also check if Trifocal3PointPositionTangentialSolver::error function returns zero
 TEST(TrifocalSampleApp, solver) 
 {
-  using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_t;
   
   array<Mat, 3> datum; // x,y,orientation across 3 views
   // datum[view](coord,point)
@@ -188,24 +208,6 @@ TEST(TrifocalSampleApp, solver)
   CHECK(found);
 }
 
-void
-initialize_gt()
-{
-  data::initialize_gt();
-  
-  double cameras_gt_relative[2][4][3];
-  // get relative cameras in usual format
-  solution2cams(cameras_gt_quat_, cameras_gt_relative)
-
-  tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
-  
-  // xxx
-  for (unsigned v=1; v < io::pp::nviews; ++v) {
-    memcpy(tt_gt_[v].data(), , 9*sizeof(double));
-    for (unsigned r=0; r < 3; ++r)
-      tt_gt_[v](r,3) = cameras_gt_relative[id_sols[s]][v][3][r];
-  }
-}
 
 // Runs the solve through ransac 
 // - first, synthetic data with three perfect points

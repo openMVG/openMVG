@@ -21,7 +21,6 @@ using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
-using namespace MiNuS;
 using namespace openMVG::robust;
 using namespace openMVG::features;
 

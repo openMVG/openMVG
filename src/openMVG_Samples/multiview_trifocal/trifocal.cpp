@@ -31,7 +31,7 @@
 namespace trifocal3pt {
   
 int iteration_global_debug = 0;
-int max_solve_tries = 100; 
+int max_solve_tries = 5; 
 using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
@@ -80,7 +80,7 @@ Solve(
       break;
     else if( i == max_solve_tries && !( MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final) )){   
       std::cerr << "Minus failed to compute tracks\n";
-      exit(EXIT_FAILURE);
+      exit(EXIT_FAILURE); // TODO: return error code instead
     }
   }
   //  for (unsigned s=0; s < nsols_final; ++s) {
