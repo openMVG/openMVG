@@ -9,11 +9,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <testing/testing.h>
+#include "minus/chicago-default.h"
 #include "trifocal-app.h"
-#include "testing/testing.h"
+#include "trifocal-util.h"
+
 
 using namespace trifocal3pt;
 using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_t;
+// using namespace MiNuS;
 
 //-------------------------------------------------------------------------------
 //
@@ -161,7 +165,7 @@ initialize_gt()
   
   double cameras_gt_relative[2][4][3];
   // get relative cameras in usual format
-  solution2cams(cameras_gt_quat_, cameras_gt_relative)
+  io::solution2cams(cameras_gt_quat_, cameras_gt_relative);
 
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
   for (unsigned v=1; v < io::pp::nviews; ++v) {
@@ -181,7 +185,6 @@ initialize_gt()
 // - also check if Trifocal3PointPositionTangentialSolver::error function returns zero
 TEST(TrifocalSampleApp, solver) 
 {
-  
   array<Mat, 3> datum; // x,y,orientation across 3 views
   // datum[view](coord,point)
   
@@ -193,8 +196,8 @@ TEST(TrifocalSampleApp, solver)
       datum[v](1,ip) = data::p_[0][ip][1];
       datum[v](2,ip) = data::tgt_[0][ip][0];
       datum[v](3,ip) = data::tgt_[0][ip][1];
-      invert_intrinsics(K, datum[v].col(ip).data(), datum[v].col(ip).data()); 
-      invert_intrinsics_tgt(K, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      trifocal3pt::invert_intrinsics(K, datum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(K, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
   }
 
