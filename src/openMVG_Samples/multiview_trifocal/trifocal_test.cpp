@@ -113,6 +113,44 @@ using namespace trifocal3pt;
 //  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
 
 
+// Converts a trifocal_model to quaternion-translation format
+//
+// Assumes tt[0] is identity
+void
+tt2qt(
+  const trifocal_model &tt
+  Float tt_qt[M::nve])
+{
+  util::rotm2qt(tt[1].data(), tt_qt);
+  util::rotm2qt(tt[2].data(), tt_qt+4);
+  for (unsigned i=0; i < 3; ++i) {
+    tt_qt[8+i]   = tt[1](i,3);
+    tt_qt[8+3+i] = tt[2](i,3);
+  }
+}
+
+// Finds a ground truth camera among a std::vector of possible ones
+static bool
+probe_solutions(
+    const std::vector<trifocal_model> &solutions, 
+    trifocal_model &gt, 
+    unsigned *solution_index)
+{
+  Float cameras_quat[M::nsols][M::nve];
+
+  // translate trifocal_model from RC to QT (quaternion-translation)
+  // - for each solution
+  // -   translate to internal matrix form
+  // -   call RC to QT
+
+  tt2qt(gt, gt_quat);
+  for (unsigned s=0; s < sols.size(); ++s)
+    tt2qt(solutions[i], cameras_quat[s]);
+  
+  return io::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solution_index);
+}
+  
+
 // Directly runs the solver and test
 // - define synthetic data
 // - directly passo to solver
@@ -122,33 +160,32 @@ using namespace trifocal3pt;
 // - also check if Trifocal3PointPositionTangentialSolver::error function returns zero
 TEST(TrifocalSampleApp, solver) 
 {
-  trifocal_model_t tt; // std::vector of 3-cam solutions
-
-  Mat d0, d1, d2;
-  d0.resize(4,3);
-  d1.resize(4,3);
-  d2.resize(4,3);
-
-  for (unsigned ip=0; ip < 3; ++ip) {
-    d0(0,ip) = 
-    d0(1,ip) = 
-    d0(2,ip) = 
-    d0(3,ip) = 
-    
-    d1(0,ip) = 
-    d1(1,ip) = 
-    d1(2,ip) = 
-    d1(3,ip) = 
-    
-    d2(0,ip) = 
-    d2(1,ip) = 
-    d2(2,ip) = 
-    d2(3,ip) = 
-  }
+  using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_t;
   
-  Trifocal3PointPositionTangentialSolver::Solve(d0, d1, d2, &tt);
+  array<Mat, 3> datum; // x,y,orientation across 3 views
+  // datum[view](coord,point)
+  
+  // todo: invert K matrix
+  for (unsigned v=0; v < 3; ++v) {
+    datum_[v].resize(4, 3);
+    for (unsigned ip=0; ip < 3; ++ip) {
+      datum[v](0,ip) = data::p_[0][ip][0];
+      datum[v](1,ip) = data::p_[0][ip][1];
+      datum[v](2,ip) = data::tgt_[0][ip][0];
+      datum[v](3,ip) = data::tgt_[0][ip][1];
+    }
+    invert_intrinsics(K, datum[v].col(idx).data(), datum[v].col(idx).data()); 
+    invert_intrinsics_tgt(K, datum[v].col(idx).data()+2, datum[v].col(idx).data()+2);
+  }
 
-  CHECK(true);
+  std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
+  Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
+
+  data::initialize_gt();
+  bool found = probe_solutions(sols, data::cameras_gt_, &sol_id);
+  if (found)
+    std::cerr << "Found solution at id " << sol_id << std::endl;
+  CHECK(found);
 }
 
 // Runs the solve through ransac 
