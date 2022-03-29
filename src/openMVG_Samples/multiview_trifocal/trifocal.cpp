@@ -17,9 +17,13 @@
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
-#include "minus/minus.hxx"
+#include "minus/minus.h"
 #include "minus/chicago-default.h"
+
+/* If you want to compile header-only, include these, so no link is necessary
+#include "minus/minus.hxx"
 #include "minus/chicago14a-default-data.hxx"
+*/
 
 #include "trifocal-util.h"
 #include "trifocal.h"

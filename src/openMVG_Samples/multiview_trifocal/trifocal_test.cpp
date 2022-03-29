@@ -11,6 +11,7 @@
 
 #include <testing/testing.h>
 #include "minus/chicago-default.h"
+#include "trifocal.h"
 #include "trifocal-app.h"
 #include "trifocal-util.h"
 
@@ -126,7 +127,7 @@ trifocal_model_t tt_gt; // corresp. to minus' cameras_gt_
 // Assumes tt[0] is identity
 void
 tt2qt(
-  const trifocal_model &tt
+  const trifocal_model_t &tt
   Float tt_qt[M::nve])
 {
   util::rotm2qt(tt[1].data(), tt_qt);
