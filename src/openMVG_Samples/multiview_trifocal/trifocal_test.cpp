@@ -173,19 +173,38 @@ TEST(TrifocalSampleApp, solver)
       datum[v](1,ip) = data::p_[0][ip][1];
       datum[v](2,ip) = data::tgt_[0][ip][0];
       datum[v](3,ip) = data::tgt_[0][ip][1];
+      invert_intrinsics(K, datum[v].col(ip).data(), datum[v].col(ip).data()); 
+      invert_intrinsics_tgt(K, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
-    invert_intrinsics(K, datum[v].col(idx).data(), datum[v].col(idx).data()); 
-    invert_intrinsics_tgt(K, datum[v].col(idx).data()+2, datum[v].col(idx).data()+2);
   }
 
   std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
   Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
 
-  data::initialize_gt();
-  bool found = probe_solutions(sols, data::cameras_gt_, &sol_id);
+  initialize_gt();
+  bool found = probe_solutions(sols, tt_gt_, &sol_id);
   if (found)
     std::cerr << "Found solution at id " << sol_id << std::endl;
   CHECK(found);
+}
+
+void
+initialize_gt()
+{
+  data::initialize_gt();
+  
+  double cameras_gt_relative[2][4][3];
+  // get relative cameras in usual format
+  solution2cams(cameras_gt_quat_, cameras_gt_relative)
+
+  tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
+  
+  // xxx
+  for (unsigned v=1; v < io::pp::nviews; ++v) {
+    memcpy(tt_gt_[v].data(), , 9*sizeof(double));
+    for (unsigned r=0; r < 3; ++r)
+      tt_gt_[v](r,3) = cameras_gt_relative[id_sols[s]][v][3][r];
+  }
 }
 
 // Runs the solve through ransac 
