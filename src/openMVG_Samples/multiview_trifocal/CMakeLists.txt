@@ -10,6 +10,7 @@ set(trifocal_sample_sources
 ) 
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # -- MINUS ---------------------------------------------------------------------
 # optional, header-only library can be used without this library
