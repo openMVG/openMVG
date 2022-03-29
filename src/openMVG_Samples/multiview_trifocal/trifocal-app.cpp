@@ -469,8 +469,9 @@ RobustSolve()
 {
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
-  constexpr unsigned n_ids = 5;
   
+  /*
+  constexpr unsigned n_ids = 5;
   unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
   // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
   array<Mat,3> Ds;
@@ -494,14 +495,15 @@ RobustSolve()
     }
   }
   //cout <<  Ds[0] << "\n";
+  */
   const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2], K_);
   //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
-  const double threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
+  double constexpr threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
   // Gabriel: Error model based on euclidian distance
-  const unsigned max_iteration =3; // testing
+  unsigned constexpr max_iteration =3; // testing
   const auto model = MaxConsensus(trifocal_kernel, 
-      ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_,max_iteration);
+      ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers_, max_iteration);
   // TODO(gabriel) recontruct from inliers and best models to show as PLY
 }
 

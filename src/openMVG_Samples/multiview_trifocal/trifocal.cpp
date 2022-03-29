@@ -95,7 +95,7 @@ Solve(
   //    cout << "\n";
   //  }
   // fill C0* with for loop
-   std::cerr << "Number of sols " << nsols_final << std::endl;
+  std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
   // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
@@ -119,7 +119,6 @@ Solve(
   std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
   // std::cerr << "Minus failed to compute tracks\n";
   // exit(EXIT_FAILURE);
-   
 }
 
 double Trifocal3PointPositionTangentialSolver::

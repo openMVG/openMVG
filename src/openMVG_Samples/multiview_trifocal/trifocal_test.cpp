@@ -111,6 +111,54 @@ using namespace trifocal3pt;
 //  cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
 //  cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
 //  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
+
+
+// Directly runs the solver and test
+// - define synthetic data
+// - directly passo to solver
+//    - use Trifocal3PointPositionTangentialSolver::Solve
+// - check if the solver returns any known root
+// - might fail 5% of the time
+// - also check if Trifocal3PointPositionTangentialSolver::error function returns zero
+TEST(TrifocalSampleApp, solver) 
+{
+  trifocal_model_t tt; // std::vector of 3-cam solutions
+
+  Mat d0, d1, d2;
+  d0.resize(4,3);
+  d1.resize(4,3);
+  d2.resize(4,3);
+
+  for (unsigned ip=0; ip < 3; ++ip) {
+    d0(0,ip) = 
+    d0(1,ip) = 
+    d0(2,ip) = 
+    d0(3,ip) = 
+    
+    d1(0,ip) = 
+    d1(1,ip) = 
+    d1(2,ip) = 
+    d1(3,ip) = 
+    
+    d2(0,ip) = 
+    d2(1,ip) = 
+    d2(2,ip) = 
+    d2(3,ip) = 
+  }
+  
+  Trifocal3PointPositionTangentialSolver::Solve(d0, d1, d2, &tt);
+
+  CHECK(true);
+}
+
+// Runs the solve through ransac 
+// - first, synthetic data with three perfect points
+// - second, synthetic data with one outlier
+TEST(TrifocalSampleApp, solver) 
+{
+  CHECK(true);
+}
+
 TEST(TrifocalSampleApp, fullrun) 
 {
   TrifocalSampleApp T;
@@ -139,7 +187,6 @@ TEST(TrifocalSampleApp, fullrun)
   std::cout<<"hej"<<std::endl;
   //return EXIT_SUCCESS;
   CHECK(true);
-
 }
 
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
