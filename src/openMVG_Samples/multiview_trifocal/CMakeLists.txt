@@ -5,7 +5,7 @@ set(trifocal_sources
 set(trifocal_app_sources
   trifocal-app.cpp trifocal-app.h
 ) 
-set(trifocal_sample_source
+set(trifocal_sample_sources
   trifocal-sample.cpp 
 ) 
 
@@ -26,9 +26,9 @@ set(minus_sources
 #
   minus/problem-defs.h
   
-  minus-chicago-alltypes-allformulations+double.cxx
-  minus_io_common+double.cxx
-  minus_util+double.cxx
+  minus/Templates/minus-chicago-alltypes-allformulations+double.cxx
+  minus/Templates/minus_io_common+double.cxx
+  minus/Templates/minus_util+double.cxx
 )
 # this library can be used if you want to precompile instantiations
 # but header-only will also work, see README.md
