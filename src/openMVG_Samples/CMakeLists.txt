@@ -8,6 +8,7 @@ add_subdirectory(multiview_robust_fundamental_guided)
 add_subdirectory(multiview_robust_essential)
 add_subdirectory(multiview_robust_essential_spherical)
 add_subdirectory(multiview_robust_essential_ba)
+add_subdirectory(multiview_trifocal)
 
 add_subdirectory(exif_Parsing)
 
