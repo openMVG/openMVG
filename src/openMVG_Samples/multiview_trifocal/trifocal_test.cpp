@@ -28,7 +28,7 @@ typedef MiNuS::minus_util<Float> util;
 //-------------------------------------------------------------------------------
 //
 // Global variables
-trifocal_model_t tt_gt; // corresp. to minus' cameras_gt_
+trifocal_model_t tt_gt_; // corresp. to minus' cameras_gt_
 
 
 //---- HARDODED CASE SOLUTION -----------------------------------------------------
@@ -157,11 +157,11 @@ probe_solutions(
   // -   translate to internal matrix form
   // -   call RC to QT
 
-  tt2qt(gt, gt_quat);
-  for (unsigned s=0; s < sols.size(); ++s)
-    tt2qt(solutions[i], cameras_quat[s]);
+  tt2qt(gt, data::cameras_gt_quat_);
+  for (unsigned s=0; s < solutions.size(); ++s)
+    tt2qt(solutions[s], cameras_quat[s]);
   
-  return io::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solution_index);
+  return io14::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solutions.size(), solution_index);
 }
 
 static void
@@ -171,13 +171,13 @@ initialize_gt()
   
   double cameras_gt_relative[2][4][3];
   // get relative cameras in usual format
-  io::solution2cams(cameras_gt_quat_, cameras_gt_relative);
+  io14::solution2cams(data::cameras_gt_quat_, cameras_gt_relative);
 
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
   for (unsigned v=1; v < io::pp::nviews; ++v) {
-    memcpy(tt_gt_[v].data(), cameras_gt_relative, 9*sizeof(double));
-    for (unsigned r=0; r < 3; ++r)
-      tt_gt_[v](r,3) = tt_gt_relative[v][3][r];
+    memcpy(tt_gt_[v].data(), cameras_gt_relative, 9*sizeof(double)); // copy rotation
+    for (unsigned r=0; r < 3; ++r) // copy translation
+      tt_gt_[v](r,3) = cameras_gt_relative[v][3][r];
   }
 }
   
@@ -196,14 +196,14 @@ TEST(TrifocalSampleApp, solver)
   
   // todo: invert K matrix
   for (unsigned v=0; v < 3; ++v) {
-    datum_[v].resize(4, 3);
+    datum[v].resize(4, 3);
     for (unsigned ip=0; ip < 3; ++ip) {
       datum[v](0,ip) = data::p_[0][ip][0];
       datum[v](1,ip) = data::p_[0][ip][1];
       datum[v](2,ip) = data::tgt_[0][ip][0];
       datum[v](3,ip) = data::tgt_[0][ip][1];
-      trifocal3pt::invert_intrinsics(K, datum[v].col(ip).data(), datum[v].col(ip).data()); 
-      trifocal3pt::invert_intrinsics_tgt(K, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      trifocal3pt::invert_intrinsics(data::K_, datum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
   }
 
@@ -211,6 +211,7 @@ TEST(TrifocalSampleApp, solver)
   Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
 
   initialize_gt();
+  unsigned sol_id;
   bool found = probe_solutions(sols, tt_gt_, &sol_id);
   if (found)
     std::cerr << "Found solution at id " << sol_id << std::endl;
@@ -221,7 +222,7 @@ TEST(TrifocalSampleApp, solver)
 // Runs the solve through ransac 
 // - first, synthetic data with three perfect points
 // - second, synthetic data with one outlier
-TEST(TrifocalSampleApp, solver) 
+TEST(TrifocalSampleApp, solveRansac) 
 {
   CHECK(true);
 }
