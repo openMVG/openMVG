@@ -34,8 +34,11 @@ set(minus_sources
 # this library can be used if you want to precompile instantiations
 # but header-only will also work, see README.md
 add_library( minus ${minus_sources} )
+# always build minus with specially tweaked optimizations.
+# these were copied directly from minus original flags
 set_target_properties(minus PROPERTIES LINKER_LANGUAGE CXX)
-# XXX set optimized compiler flags here
+set_target_properties(minus PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
+set_target_properties(minus PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 # ------------------------------------------------------------------------------
 
 
@@ -50,6 +53,14 @@ target_link_libraries(openMVG_trifocal
   ${STLPLUS_LIBRARY})
 UNIT_TEST(openMVG trifocal_stub "openMVG_trifocal" "minus")
 UNIT_TEST(openMVG trifocal "openMVG_trifocal_app" "minus")
+
+# set(CMAKE_CXX_FLAGS "-g") # XXX temporary for build cycle
+# set(CMAKE_C_FLAGS "-g") # XXX temporary for build cycle
+# These work better: they add -g but they won't override previous flags
+set_target_properties(openMVG_test_trifocal PROPERTIES COMPILE_FLAGS "-g")
+set_target_properties(openMVG_test_trifocal_stub PROPERTIES COMPILE_FLAGS "-g")
+set_target_properties(openMVG_trifocal PROPERTIES COMPILE_FLAGS "-g")
+set_target_properties(openMVG_trifocal_app PROPERTIES COMPILE_FLAGS "-g")
 
 target_link_libraries(openMVG_trifocal_app openMVG_trifocal minus)
 add_executable(openMVG_sample_multiview_trifocal ${trifocal_sample_sources})
