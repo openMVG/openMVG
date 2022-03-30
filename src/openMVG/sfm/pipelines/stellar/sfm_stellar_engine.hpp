@@ -81,13 +81,15 @@ protected:
   bool Compute_Global_Rotations
   (
     const openMVG::rotation_averaging::RelativeRotations & vec_relatives_R,
-    Hash_Map<IndexT, Mat3> & map_globalR
+    Hash_Map<IndexT, Mat3> & map_globalR,
+    Pair_Set & used_pairs
   ) const;
 
   /// Compute global translations
   bool Compute_Global_Translations
   (
     const Hash_Map<IndexT, Mat3> & global_rotations,
+    const Pair_Set & used_pairs,
     const Hash_Map<IndexT, StellarPodRelativeMotions> & stellar_reconstruction_per_pose
   );
 

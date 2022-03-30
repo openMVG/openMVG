@@ -15,6 +15,8 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
+#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
+
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
@@ -116,46 +118,57 @@ bool StellarSfMReconstructionEngine::Process()
   OPENMVG_LOG_INFO << "#Stellar reconstruction pod: " << stellar_reconstruction_per_pose.size();
 
   // Perform the rotation averaging and compute the global rotations
+  //a- extract largest CC first
   openMVG::rotation_averaging::RelativeRotations relatives_R;
+  Pair_Set pairs;
+  std::set<IndexT> base_nodes;
   for (const auto & pod_it : stellar_reconstruction_per_pose)
   {
     for (const auto & rel_it : pod_it.second.relative_motions)
     {
-      relatives_R.emplace_back(
-        rel_it.first.first, rel_it.first.second, // {i,j}
-        rel_it.second.rotation, // R_ij, the relative rotation
-        1.0); // Weight
+      pairs.insert({rel_it.first.first, rel_it.first.second});
+      base_nodes.insert(rel_it.first.first);
+      base_nodes.insert(rel_it.first.second);
     }
   }
 
+  const auto largest_cc_nodes = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(pairs);
+  OPENMVG_LOG_INFO << "Largest CC => Keeping " << largest_cc_nodes.size() << " nodes from " << base_nodes.size() << " base nodes";
+  
+  for (const auto & pod_it : stellar_reconstruction_per_pose)
+  {
+    for (const auto & rel_it : pod_it.second.relative_motions)
+    {
+      if(largest_cc_nodes.count(rel_it.first.first) && largest_cc_nodes.count(rel_it.first.second)) {
+        relatives_R.emplace_back(
+          rel_it.first.first, rel_it.first.second, // {i,j}
+          rel_it.second.rotation, // R_ij, the relative rotation
+          1.0); // Weight
+      }
+    }
+  }
+  
+  //b- the rotation averaging step 
   Hash_Map<IndexT, Mat3> global_rotations;
-  if (!Compute_Global_Rotations(relatives_R, global_rotations))
+  Pair_Set selected_pairs;
+  if (!Compute_Global_Rotations(relatives_R, global_rotations, selected_pairs))
   {
     OPENMVG_LOG_ERROR << "GlobalSfM:: Rotation Averaging failure!";
     return false;
   }
 
-  if (!Compute_Global_Translations(global_rotations, stellar_reconstruction_per_pose))
+  
+  // Perform the translation averaging and compute the global positions
+  //a- be sure rotation averaging has not disconnected the graph
+  const auto largest_cc_nodes_rot = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(selected_pairs);
+  assert(largest_cc_nodes_rot.size() == global_rotations.size());
+  
+  //b- translation averaging sterp
+  if (!Compute_Global_Translations(global_rotations, selected_pairs, stellar_reconstruction_per_pose))
   {
     OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
     return false;
   }
-
-  // Test the retriangulation
-  //for (int i : {0,1,2})
-  /*{
-    if (!Compute_Initial_Structure(3))
-    {
-      std::cerr << "GlobalSfM:: Cannot initialize an initial structure!" << std::endl;
-      return false;
-    }
-
-    if (!Adjust())
-    {
-      std::cerr << "GlobalSfM:: Non-linear adjustment failure!" << std::endl;
-      return false;
-    }
-  }*/
 
   {
     const int min_covisibility = 2;
@@ -432,7 +445,8 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
 bool StellarSfMReconstructionEngine::Compute_Global_Rotations
 (
   const rotation_averaging::RelativeRotations & relatives_R,
-  Hash_Map<IndexT, Mat3> & global_rotations
+  Hash_Map<IndexT, Mat3> & global_rotations,
+  Pair_Set & used_pairs
 ) const
 {
   if (relatives_R.empty())
@@ -469,6 +483,7 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
 
   if (b_rotation_averaging)
   {
+    used_pairs = rotation_averaging_solver.GetUsedPairs();
     // Compute fitting error
     std::vector<float> vec_rotation_fitting_error;
     vec_rotation_fitting_error.reserve(relatives_R.size());
@@ -548,6 +563,7 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
 bool StellarSfMReconstructionEngine::Compute_Global_Translations
 (
   const Hash_Map<IndexT, Mat3> & global_rotations,
+  const Pair_Set & used_pairs,
   const Hash_Map<IndexT, StellarPodRelativeMotions> & stellar_reconstruction_per_pose
 )
 {
@@ -569,9 +585,9 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
         const IndexT i = relative_info_it.first.first;
         const IndexT j = relative_info_it.first.second;
 
-        if (global_rotations.count(i)==0 || global_rotations.count(j)==0)
+        if (global_rotations.count(i)==0 || global_rotations.count(j)==0 || used_pairs.count(relative_info_it.first) == 0) 
           continue;
-
+        
         valid_pairs.insert({i,j});
         poses_ids.insert(i);
         poses_ids.insert(j);
