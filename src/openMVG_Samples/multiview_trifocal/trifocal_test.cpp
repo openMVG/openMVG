@@ -11,13 +11,18 @@
 
 #include <testing/testing.h>
 #include "minus/chicago-default.h"
+#include "minus/internal-util.h"
+// #include "minus/debug-common.h"
 #include "trifocal.h"
 #include "trifocal-app.h"
 #include "trifocal-util.h"
 
+#define Float double
+typedef std::complex<Float> complex;
 
 using namespace trifocal3pt;
 using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_t;
+typedef MiNuS::minus_util<Float> util;
 // using namespace MiNuS;
 
 //-------------------------------------------------------------------------------
@@ -127,11 +132,11 @@ trifocal_model_t tt_gt; // corresp. to minus' cameras_gt_
 // Assumes tt[0] is identity
 void
 tt2qt(
-  const trifocal_model_t &tt
-  Float tt_qt[M::nve])
+  const trifocal_model_t &tt,
+  double tt_qt[M::nve])
 {
-  util::rotm2qt(tt[1].data(), tt_qt);
-  util::rotm2qt(tt[2].data(), tt_qt+4);
+  util::rotm2quat(tt[1].data(), tt_qt);
+  util::rotm2quat(tt[2].data(), tt_qt+4);
   for (unsigned i=0; i < 3; ++i) {
     tt_qt[8+i]   = tt[1](i,3);
     tt_qt[8+3+i] = tt[2](i,3);
@@ -141,8 +146,8 @@ tt2qt(
 // Finds a ground truth camera among a std::vector of possible ones
 static bool
 probe_solutions(
-    const std::vector<trifocal_model> &solutions, 
-    trifocal_model &gt, 
+    const std::vector<trifocal_model_t> &solutions, 
+    trifocal_model_t &gt, 
     unsigned *solution_index)
 {
   Float cameras_quat[M::nsols][M::nve];
