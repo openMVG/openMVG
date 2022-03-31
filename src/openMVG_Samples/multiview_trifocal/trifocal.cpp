@@ -109,7 +109,7 @@ Solve(
   for (unsigned s=0; s < nsols_final; ++s) {
     tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
     for (unsigned v=1; v < io::pp::nviews; ++v) {
-        memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v], 9*sizeof(double));
+        memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v-1], 9*sizeof(double));
         for (unsigned r=0; r < 3; ++r)
           tt[s][v](r,3) = cameras[id_sols[s]][v][3][r];
     }

@@ -175,7 +175,7 @@ initialize_gt()
 
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
   for (unsigned v=1; v < io::pp::nviews; ++v) {
-    memcpy(tt_gt_[v].data(), cameras_gt_relative, 9*sizeof(double)); // copy rotation
+    memcpy(tt_gt_[v].data(), cameras_gt_relative[v], 9*sizeof(double)); // copy rotation
     for (unsigned r=0; r < 3; ++r) // copy translation
       tt_gt_[v](r,3) = cameras_gt_relative[v][3][r];
   }

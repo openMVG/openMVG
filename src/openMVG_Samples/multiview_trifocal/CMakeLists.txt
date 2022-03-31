@@ -60,6 +60,7 @@ UNIT_TEST(openMVG trifocal "openMVG_trifocal_app")
 # set(CMAKE_C_FLAGS "-g") # XXX temporary for build cycle
 # These work better: they add -g but they won't override previous flags
 set_target_properties(openMVG_test_trifocal PROPERTIES COMPILE_FLAGS "-g")
+#set_target_properties(openMVG_test_trifocal PROPERTIES COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
 set_target_properties(openMVG_test_trifocal_stub PROPERTIES COMPILE_FLAGS "-g")
 set_target_properties(openMVG_trifocal PROPERTIES COMPILE_FLAGS "-g")
 set_target_properties(openMVG_trifocal_app PROPERTIES COMPILE_FLAGS "-g")
