@@ -12,6 +12,7 @@
 #include <testing/testing.h>
 #include "minus/chicago-default.h"
 #include "minus/internal-util.h"
+#include <minus/debug-common.h>
 // #include "minus/debug-common.h"
 #include "trifocal.h"
 #include "trifocal-app.h"
@@ -135,8 +136,8 @@ tt2qt(
   const trifocal_model_t &tt,
   double tt_qt[M::nve])
 {
-  util::rotm2quat(tt[1].data(), tt_qt);
-  util::rotm2quat(tt[2].data(), tt_qt+4);
+  util::rotm2quat(tt[1].transpose().data(), tt_qt);
+  util::rotm2quat(tt[2].transpose().data(), tt_qt+4);
   for (unsigned i=0; i < 3; ++i) {
     tt_qt[8+i]   = tt[1](i,3);
     tt_qt[8+3+i] = tt[2](i,3);
@@ -175,9 +176,26 @@ initialize_gt()
 
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
   for (unsigned v=1; v < io::pp::nviews; ++v) {
-    memcpy(tt_gt_[v].data(), cameras_gt_relative[v-1], 9*sizeof(double)); // copy rotation TODO check if MAT row-major
+    // eigen is col-major but minus is row-major, so memcpy canot be used.
+    // memcpy(tt_gt_[v].data(), cameras_gt_relative[v-1], 9*sizeof(double));
+    for (unsigned ir = 0; ir < 3; ++ir)
+      for (unsigned ic = 0; ic < 3; ++ic)
+        tt_gt_[v](ir, ic) = cameras_gt_relative[v-1][ir][ic];
     for (unsigned r=0; r < 3; ++r) // copy translation
       tt_gt_[v](r,3) = cameras_gt_relative[v-1][3][r];
+  }
+
+  std::cerr << "cams relative: " << std::endl;
+  for (unsigned ir = 0; ir < 3; ++ir) {
+    for (unsigned ic = 0; ic < 3; ++ic)
+      std::cerr << cameras_gt_relative[0][ir][ic];
+    std::cerr << std::endl;
+  }
+  std::cerr  << "tt_gt_[1]: " << std::endl;
+  for (unsigned ir = 0; ir < 3; ++ir) {
+    for (unsigned ic = 0; ic < 3; ++ic)
+      std::cerr << tt_gt_[1](ir,ic) << " ";
+    std::cerr << std::endl;
   }
 }
   
