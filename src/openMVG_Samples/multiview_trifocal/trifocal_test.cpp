@@ -198,10 +198,10 @@ TEST(TrifocalSampleApp, solver)
   for (unsigned v=0; v < 3; ++v) {
     datum[v].resize(4, 3);
     for (unsigned ip=0; ip < 3; ++ip) {
-      datum[v](0,ip) = data::p_[0][ip][0];
-      datum[v](1,ip) = data::p_[0][ip][1];
-      datum[v](2,ip) = data::tgt_[0][ip][0];
-      datum[v](3,ip) = data::tgt_[0][ip][1];
+      datum[v](0,ip) = data::p_[v][ip][0];
+      datum[v](1,ip) = data::p_[v][ip][1];
+      datum[v](2,ip) = data::tgt_[v][ip][0];
+      datum[v](3,ip) = data::tgt_[v][ip][1];
       trifocal3pt::invert_intrinsics(data::K_, datum[v].col(ip).data(), datum[v].col(ip).data()); 
       trifocal3pt::invert_intrinsics_tgt(data::K_, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
