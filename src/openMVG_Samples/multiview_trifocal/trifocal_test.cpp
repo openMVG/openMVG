@@ -218,15 +218,26 @@ TEST(TrifocalSampleApp, solver)
     }
   }
 
-  std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
   
-  Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
-
   initialize_gt();
-  unsigned sol_id=(unsigned)-1;
-  bool found = probe_solutions(sols, tt_gt_, &sol_id);
-  if (found)
-    std::cerr << "Found solution at id " << sol_id << std::endl;
+  unsigned constexpr max_solve_tries=5;
+  bool found = false;
+
+  for (unsigned i = 0; i < max_solve_tries; ++i) {
+    std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
+    
+    std::cerr << "Test log: Trying to solve, attempt: " << i+1 << std::endl;
+    Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
+
+    unsigned sol_id = (unsigned)-1;
+    found = probe_solutions(sols, tt_gt_, &sol_id);
+    if (found) {
+      std::cerr << "Found solution at id " << sol_id << std::endl;
+      break;
+    }
+    std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
+  }
+
   CHECK(found);
 }
 

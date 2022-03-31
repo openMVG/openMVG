@@ -35,7 +35,7 @@
 namespace trifocal3pt {
   
 int iteration_global_debug = 0;
-int max_solve_tries = 5; 
+unsigned constexpr max_solve_tries = 5; 
 using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
@@ -56,7 +56,7 @@ Solve(
   double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
   
   //std::cerr << "Datum 0 mtrx: " << datum_0.rows() << "X" << datum_0.cols() << endl;
-  std::cerr << "TRIFOCAL LOG: Called Solve()\n";
+//  std::cerr << "TRIFOCAL LOG: Called Solve()\n";
   // pack into solver's efficient representation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
@@ -78,7 +78,7 @@ Solve(
   unsigned nsols_final = 0;
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
-  std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
+//  std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
   for (unsigned i = 0; i < max_solve_tries; ++i) {
     std::cerr << "Trying to solve\n";
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
@@ -103,7 +103,7 @@ Solve(
   // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
   tt.resize(nsols_final);
-  std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
+//  std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
   //using trifocal_model_t = array<Mat34, 3>;
   for (unsigned s=0; s < nsols_final; ++s) {
     tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
@@ -123,7 +123,7 @@ Solve(
   //
   // If we know the rays are perfectly coplanar, we can just use cross
   // product within the plane instead of SVD
-  std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
+//  std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
   // std::cerr << "Minus failed to compute tracks\n";
   // exit(EXIT_FAILURE);
 }
