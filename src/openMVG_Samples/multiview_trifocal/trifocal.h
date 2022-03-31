@@ -10,9 +10,10 @@
 #include <array>
 #include <vector>
 #include "openMVG/numeric/extract_columns.hpp"
-// #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 
 
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(std::array<openMVG::Mat34,3>)
 
 namespace trifocal3pt {
 extern int iteration_global_debug;
@@ -20,11 +21,6 @@ extern int iteration_global_debug;
 using namespace std;
 using namespace openMVG;
 
-using Mat2  = Eigen::Matrix<double, 2, 2>;
-using Mat34 = Eigen::Matrix<double, 3, 4>;
-using Mat43 = Eigen::Matrix<double, 4, 3>;
-using Mat42 = Eigen::Matrix<double, 4, 2>;
-using Mat23 = Eigen::Matrix<double, 2, 3>;
 //------------------------------------------------------------------------------
 struct Trifocal3PointPositionTangentialSolver {
   using trifocal_model_t = std::array<Mat34, 3>;

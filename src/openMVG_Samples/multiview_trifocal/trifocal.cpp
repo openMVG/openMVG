@@ -13,7 +13,7 @@
 #include <numeric>
 
 //these are temporary includes, may be removed
-#include <Eigen/StdVector>
+// #include <Eigen/StdVector>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
@@ -29,6 +29,7 @@
 #include "trifocal.h"
 
 
+
 // Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
 // Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
 
@@ -40,6 +41,7 @@ using namespace std;
 using namespace MiNuS;
 using namespace openMVG;
 
+using Mat23 = Eigen::Matrix<double, 2, 3>;
 
 //-------------------------------------------------------------------------------
 // Trifocal3PointPositionTangentialSolver
