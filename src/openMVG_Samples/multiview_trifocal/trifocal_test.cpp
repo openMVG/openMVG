@@ -174,11 +174,11 @@ initialize_gt()
   io14::solution2cams(data::cameras_gt_quat_, cameras_gt_relative);
 
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
-//  for (unsigned v=1; v < io::pp::nviews; ++v) {
-//    memcpy(tt_gt_[v].data(), cameras_gt_relative[v], 9*sizeof(double)); // copy rotation TODO check if MAT row-major
-//    for (unsigned r=0; r < 3; ++r) // copy translation
-//      tt_gt_[v](r,3) = cameras_gt_relative[v][3][r];
-//  }
+  for (unsigned v=1; v < io::pp::nviews; ++v) {
+    memcpy(tt_gt_[v].data(), cameras_gt_relative[v-1], 9*sizeof(double)); // copy rotation TODO check if MAT row-major
+    for (unsigned r=0; r < 3; ++r) // copy translation
+      tt_gt_[v](r,3) = cameras_gt_relative[v-1][3][r];
+  }
 }
   
 
