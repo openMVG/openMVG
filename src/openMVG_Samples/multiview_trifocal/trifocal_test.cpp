@@ -184,19 +184,12 @@ initialize_gt()
     for (unsigned r=0; r < 3; ++r) // copy translation
       tt_gt_[v](r,3) = cameras_gt_relative[v-1][3][r];
   }
-
-  std::cerr << "cams relative: " << std::endl;
-  for (unsigned ir = 0; ir < 3; ++ir) {
-    for (unsigned ic = 0; ic < 3; ++ic)
-      std::cerr << cameras_gt_relative[0][ir][ic];
-    std::cerr << std::endl;
-  }
-  std::cerr  << "tt_gt_[1]: " << std::endl;
-  for (unsigned ir = 0; ir < 3; ++ir) {
-    for (unsigned ic = 0; ic < 3; ++ic)
-      std::cerr << tt_gt_[1](ir,ic) << " ";
-    std::cerr << std::endl;
-  }
+//  std::cerr << "cams relative: " << std::endl;
+//  for (unsigned ir = 0; ir < 3; ++ir) {
+//    for (unsigned ic = 0; ic < 3; ++ic)
+//      std::cerr << cameras_gt_relative[0][ir][ic];
+//    std::cerr << std::endl;
+//  }
 }
   
 

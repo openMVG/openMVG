@@ -79,14 +79,13 @@ Solve(
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
   std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
-  for ( unsigned i=0; i < max_solve_tries; ++i ){
-    if( MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final) )
+  for (unsigned i = 0; i < max_solve_tries; ++i) {
+    std::cerr << "Trying to solve\n";
+    if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
-    else if( i == max_solve_tries && !( MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final) )){   
-      std::cerr << "Minus failed to compute tracks\n";
-      exit(EXIT_FAILURE); // TODO: return error code instead
-    }
+    std::cerr << "Minus failed once to compute tracks, perhaps retry\n";  // for a good test, this never fails
   }
+
   //  for (unsigned s=0; s < nsols_final; ++s) {
   //    for (unsigned v=1; v < io::pp::nviews; ++v) {
   //        for (unsigned i=0; i < 4; ++i) {
