@@ -41,7 +41,6 @@ set_target_properties(minus PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-m
 set_target_properties(minus PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 # ------------------------------------------------------------------------------
 
-
 add_library(openMVG_trifocal ${trifocal_sources})
 add_library(openMVG_trifocal_app ${trifocal_app_sources})
 
@@ -50,9 +49,12 @@ target_link_libraries(openMVG_trifocal
   openMVG_multiview
   openMVG_features
   openMVG_matching
-  ${STLPLUS_LIBRARY})
-UNIT_TEST(openMVG trifocal_stub "openMVG_trifocal" "minus")
-UNIT_TEST(openMVG trifocal "openMVG_trifocal_app" "minus")
+  ${STLPLUS_LIBRARY} minus)
+
+target_link_libraries(openMVG_trifocal_app openMVG_trifocal)
+
+UNIT_TEST(openMVG trifocal_stub "openMVG_trifocal")
+UNIT_TEST(openMVG trifocal "openMVG_trifocal_app")
 
 # set(CMAKE_CXX_FLAGS "-g") # XXX temporary for build cycle
 # set(CMAKE_C_FLAGS "-g") # XXX temporary for build cycle
@@ -62,9 +64,8 @@ set_target_properties(openMVG_test_trifocal_stub PROPERTIES COMPILE_FLAGS "-g")
 set_target_properties(openMVG_trifocal PROPERTIES COMPILE_FLAGS "-g")
 set_target_properties(openMVG_trifocal_app PROPERTIES COMPILE_FLAGS "-g")
 
-target_link_libraries(openMVG_trifocal_app openMVG_trifocal minus)
 add_executable(openMVG_sample_multiview_trifocal ${trifocal_sample_sources})
-target_link_libraries(openMVG_sample_multiview_trifocal openMVG_trifocal_app minus)
+target_link_libraries(openMVG_sample_multiview_trifocal openMVG_trifocal_app)
 target_compile_definitions(openMVG_sample_multiview_trifocal
   PRIVATE -DTHIS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 set_property(TARGET openMVG_sample_multiview_trifocal PROPERTY FOLDER OpenMVG/Samples)
