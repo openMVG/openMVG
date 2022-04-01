@@ -32,6 +32,8 @@
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 
+#include "openMVG/multiview/LiGT_algorithm_converter.hpp"
+
 #include <vector>
 
 namespace openMVG{
@@ -60,10 +62,38 @@ bool GlobalSfM_Translation_AveragingSolver::Run
     map_globalR,
     tripletWise_matches);
 
-  const bool b_translation = Translation_averaging(
-    eTranslationAveragingMethod,
-    sfm_data,
-    map_globalR);
+  // ====================  Add LiGT's module ===================
+  // [Note]: Since the function Translation_averaging() is not provided features information,
+  // we add our LiGT's module in this place.
+  bool b_translation;
+  if (eTranslationAveragingMethod == TRANSLATION_LIGT){
+
+      LiGT::LiGTBuilder problem(features_provider->feats_per_view,
+                                tripletWise_matches,
+                                sfm_data,
+                                map_globalR);
+
+      problem.Solution();
+
+      LiGT::Poses poses = problem.GetPoses();
+
+      // A valid solution was found:
+      // - Update the view poses according the found camera translations
+      for ( auto& pose : poses)
+      {
+        sfm_data.poses[pose.first] = {pose.second.R,pose.second.t};
+      }
+
+      b_translation = true;
+  }
+  else{
+      b_translation = Translation_averaging(
+        eTranslationAveragingMethod,
+        sfm_data,
+        map_globalR);
+  }
+
+  // =======================================================
 
   // Filter matches to keep only them link to view that have valid poses
   // (necessary since multiple components exists before translation averaging)
