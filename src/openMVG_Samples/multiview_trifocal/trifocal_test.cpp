@@ -233,6 +233,8 @@ TEST(TrifocalSampleApp, solver)
     found = probe_solutions(sols, tt_gt_, &sol_id);
     if (found) {
       std::cerr << "Found solution at id " << sol_id << std::endl;
+      for(unsigned j = 0; j < 3; j++)
+        std::cout << sols[sol_id][j] << "\n" << std::endl;
       break;
     }
     std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
