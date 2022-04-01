@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     << "\n\n"
     << "[Common]\n"
     << "[-M|--match_file] path to the match file to use (i.e matches.f.txt or matches.f.bin)\n"
-    << "[-f|--refine_intrinsic_config] Intrinsic parameters refinement option\n"
+    << "[-f|--refine_extrinsic_config] Intrinsic parameters refinement option\n"
       << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
       << "\t NONE -> intrinsic parameters are held as constant\n"
       << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
@@ -339,7 +339,7 @@ int main(int argc, char **argv)
   }
 
   if (translation_averaging_method < TRANSLATION_AVERAGING_L1 ||
-      translation_averaging_method > TRANSLATION_AVERAGING_SOFTL1 )  {
+      translation_averaging_method > TRANSLATION_LIGT )  {
     OPENMVG_LOG_ERROR << "Translation averaging method is invalid";
     return EXIT_FAILURE;
   }
