@@ -185,7 +185,6 @@ Error(
   Vec2 pxmeasured = pxbearing.col(third_view).head(2);
   std::cerr << "TRIFOCAL LOG: Finished Error()\n";
   return (pxreprojected-pxmeasured).squaredNorm();
-  
 }
 
 } // namespace trifocal3pt

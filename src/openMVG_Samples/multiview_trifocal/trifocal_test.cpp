@@ -243,11 +243,60 @@ TEST(TrifocalSampleApp, solver)
   CHECK(found);
 }
 
+#include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
+#include "openMVG/robust_estimation/score_evaluator.hpp"
+
+using namespace openMVG::robust;
+
 // Runs the solve through ransac 
 // - first, synthetic data with three perfect points
 // - second, synthetic data with one outlier
 TEST(TrifocalSampleApp, solveRansac) 
 {
+  { // 3 perfect points = 3 inliers --------------------------------------------
+  array<Mat, 3> datum;   // x,y,orientation across 3 views in normalized world units
+  array<Mat, 3> pxdatum; // x,y,orientation across 3 views in pixel units
+                         // datum[view](coord,point)
+  
+  // todo: invert K matrix
+  for (unsigned v=0; v < 3; ++v) {
+    datum[v].resize(4, 3);
+    pxdatum[v].resize(4, 3);
+    for (unsigned ip=0; ip < 3; ++ip) {
+      pxdatum[v](0,ip) = data::p_[v][ip][0];
+      pxdatum[v](1,ip) = data::p_[v][ip][1];
+      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
+      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+  }
+
+  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
+                         Trifocal3PointPositionTangentialSolver>;
+  
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
+  
+  double constexpr threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
+                                         // Gabriel: Error model based on euclidian distance
+  unsigned constexpr max_iteration = 3; // testing
+  // Vector of inliers for the best fit found
+  vector<uint32_t> vec_inliers;
+  const auto model = MaxConsensus(trifocal_kernel, 
+      ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers, max_iteration);
+
+  CHECK(vec_inliers.size() == 3);
+      
+  // TODO check the cameras
+  // initialize_gt();
+  }
+
+  { // 3 perfect points and 1 outlier - controlling threshold_pix
+  }
+  
+  { // 3 perfect points and n outliers
+  }
+
   CHECK(true);
 }
 
