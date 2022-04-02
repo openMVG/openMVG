@@ -18,6 +18,19 @@ list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILESUNITTEST})
 list(REMOVE_ITEM multiview_files_header ${REMOVEFILESUNITTEST_HEADER})
 list(REMOVE_ITEM multiview_files_cpp ${MULTIVIEWTESTDATA})
 
+# ==============================================================================
+# LiGT
+# ==============================================================================
+# - enabled only if OpenMVG_USE_LIGT is set to ON
+# ==============================================================================
+if (NOT OpenMVG_USE_LIGT)
+    file(GLOB_RECURSE REMOVEFILELIGT LiGT_*.cpp)
+    file(GLOB_RECURSE REMOVEFILELIGT_HEADER LiGT_*.hpp)
+    #Remove the LiGT files
+    list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILELIGT})
+    list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILELIGT_HEADER})
+endif()
+
 add_library(openMVG_multiview
   ${multiview_files_header}
   ${multiview_files_cpp})
