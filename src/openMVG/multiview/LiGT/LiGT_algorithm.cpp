@@ -348,7 +348,7 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
                                    const Track& track,
                                    const PtsId& pts_id,
                                    Eigen::MatrixXd& A_lr,
-                                   Eigen::MatrixXd& LTL){
+                                   Eigen::MatrixXd& ltl){
 
     for (ObsId i = 0; i < track.size(); i++) {
         ViewId i_view_id = track[i].view_id; // the current view id
@@ -365,8 +365,8 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
             auto a_lr = tmp_a_lr.transpose() * CrossProductMatrix(track[id_rbase].coord);
 
             // combine all a_lr vectors into a matrix form A, i.e., At > 0
-            A_lr.row(pts_id).block<1, 3>(0, lbase_view_id * 3) = a_lr * global_rotations_[rbase_view_id];
-            A_lr.row(pts_id).block<1, 3>(0, rbase_view_id * 3) = -a_lr * global_rotations_[rbase_view_id];
+            A_lr.row(0).block<1, 3>(0, lbase_view_id * 3) = a_lr * global_rotations_[rbase_view_id];
+            A_lr.row(0).block<1, 3>(0, rbase_view_id * 3) = -a_lr * global_rotations_[rbase_view_id];
 
             // theta_lr
             auto theta_lr_vector = CrossProductMatrix(track[id_rbase].coord)
@@ -392,13 +392,9 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
             tmp_LiGT_vec.block<3, 3>(0, lbase_view_id * 3) += Coefficient_D;
 
             // delete the reference view column
-            auto tmp_vec = tmp_LiGT_vec.rightCols(tmp_LiGT_vec.cols() - 3);
-
-            // calculate matrix LTL for SVD
-            LTL += tmp_vec.transpose() * tmp_vec;
+            ltl += tmp_LiGT_vec.rightCols(tmp_LiGT_vec.cols() - 3);
         }
     }
-
 }
 
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
@@ -428,6 +424,7 @@ void LiGTProblem::Solution() {
     Eigen::MatrixXd A_lr = Eigen::MatrixXd::Zero(tracks_.size(), 3 * num_view_);
 
     // construct LTL and A_lr matrix from 3D points
+    #pragma omp parallel for shared(A_lr, LTL)
     for (PtsId track_id = 0; track_id < tracks_.size(); track_id++) {
 
         TrackInfo& track_info = tracks_[track_id];
@@ -474,12 +471,19 @@ void LiGTProblem::Solution() {
             }
         }
 
-        // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
-        UpdateLiGTMatrix( lbase_view_id, rbase_view_id,
+        // [Step.3 in Pose-only algorithm]: calculate local L matrix,
+        Eigen::MatrixXd a_lr = Eigen::MatrixXd::Zero(1, 3 * num_view_);
+        Eigen::MatrixXd ltl = Eigen::MatrixXd::Zero(3, num_view_ * 3-3);
+        UpdateLiGTMatrix(lbase_view_id, rbase_view_id,
                           id_lbase, id_rbase,
                           track, track_id,
-                          A_lr, LTL);
-
+                          a_lr, ltl);
+        // Update global LTL and A_lr matrix
+        A_lr.row(track_id) = a_lr;
+        #pragma omp critical
+        {
+          LTL += ltl.transpose() * ltl;
+        }
     }
 
     //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
