@@ -85,7 +85,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
         // - Update the view poses according the found camera translations
         for ( auto& pose : poses)
         {
-            sfm_data.poses[pose.first] = {pose.second.R,pose.second.t};
+            sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
         }
 
         b_translation = true;

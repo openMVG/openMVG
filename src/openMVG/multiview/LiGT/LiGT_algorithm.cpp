@@ -58,12 +58,12 @@ LiGTProblem::LiGTProblem(const std::string& globalR_file,
 
     output_file_ = output_file;
     time_file_ = time_file;
-    cout<<"====================================================="<<endl;
-    cout<<"##  input info in LiGT algorithm (basic version)  ##"<<endl;
-    cout<<"Rotation file:="<<globalR_file<<endl;
-    cout<<"Track file:="<<track_file<<endl;
-    cout<<"fixed id:="<<fixed_id<<endl;
-    cout<<"-----------------------------------------------------"<<endl;
+    OPENMVG_LOG_INFO <<"=====================================================\n"
+      <<"##  input info in LiGT algorithm (basic version)  ##\n"
+      <<"Rotation file:="<<globalR_file << "\n"
+      <<"Track file:="<<track_file << "\n"
+      <<"fixed id:="<<fixed_id << "\n"
+      <<"-----------------------------------------------------";
     SetupOrientation(globalR_file);
     LoadTracks(track_file);
 }
@@ -96,12 +96,12 @@ LiGTProblem::LiGTProblem(Tracks tracks,
 
     // check tracks and build estimated information [EstInfo]
     if (!tracks_.size()){
-        cout<<"error: wrong track inputs to run LiGT" << endl;
+        OPENMVG_LOG_ERROR <<"error: wrong track inputs to run LiGT";
         return;
     }
 
     if (!global_rotations_.size()){
-        cout<<"error: wrong rotation inputs to run LiGT" << endl;
+        OPENMVG_LOG_ERROR <<"error: wrong rotation inputs to run LiGT";
         return;
     }
 
@@ -115,12 +115,12 @@ void LiGTProblem::Init(const int& fixed_id){
 
     // check tracks and build estimated information [EstInfo]
     if (!tracks_.size()){
-        cout<<"error: wrong track inputs to run LiGT" << endl;
+        OPENMVG_LOG_ERROR <<"error: wrong track inputs to run LiGT";
         return;
     }
 
     if (!global_rotations_.size()){
-        cout<<"error: wrong rotation inputs to run LiGT" << endl;
+        OPENMVG_LOG_ERROR <<"error: wrong rotation inputs to run LiGT";
         return;
     }
 
@@ -138,7 +138,7 @@ void LiGTProblem::SetupOrientation(const std::string& globalR_file) {
     fstream infile;
     infile.open(globalR_file, std::ios::in);
     if (!infile.is_open()) {
-        cout << "gR_file cannot open" << endl;
+        OPENMVG_LOG_ERROR << "gR_file cannot open";
         return;
     }
 
@@ -161,9 +161,9 @@ void LiGTProblem::SetupOrientation(const std::string& globalR_file) {
     // print time cost information
     auto end_time = steady_clock::now();
     auto duration = duration_cast<microseconds>(end_time - start_time);
-    cout << ">> time for loading global rotation file: "
+    OPENMVG_LOG_INFO << ">> time for loading global rotation file: "
          << double(duration.count()) * microseconds::period::num / microseconds::period::den
-         << "s" << endl;
+         << "s";
 
 }
 
@@ -174,7 +174,7 @@ void LiGTProblem::LoadTracks(const std::string& track_file) {
     // load tracks file
     std::fstream tracks_file(track_file, ios::in);
     if (!tracks_file.is_open()) {
-        std::cout << "tracks file cannot load" << std::endl;
+        OPENMVG_LOG_ERROR << "tracks file cannot load";
         return;
     }
 
@@ -224,26 +224,15 @@ void LiGTProblem::LoadTracks(const std::string& track_file) {
     // print time cost information
     auto end_time = steady_clock::now();
     auto duration = duration_cast<microseconds>(end_time - start_time);
-    cout << ">> time for loading tracks file: "
+    OPENMVG_LOG_INFO << ">> time for loading tracks file: "
          << double(duration.count()) * microseconds::period::num / microseconds::period::den
-         << "s" << endl;
+         << "s";
 
 }
-
-Matrix3d LiGTProblem::hat(const Vector3d& vector) {
-
-    Matrix3d hat_vector;
-    hat_vector <<  0, -vector(2),  vector(1)
-            ,  vector(2),     0, -vector(0)
-            , -vector(1),  vector(0),     0;
-    return hat_vector;
-
-}
-
 
 void LiGTProblem::CheckTracks(){
 
-    cout << "checking tracks information..." << endl;
+    OPENMVG_LOG_INFO << "checking tracks information...";
 
     Size tmp_num_obs = 0;
 
@@ -302,7 +291,7 @@ void LiGTProblem::CheckTracks(){
 
 void LiGTProblem::RecoverViewIds(){
 
-    cout << "recover the estimated view ids into original view ids" << endl;
+    OPENMVG_LOG_INFO << "recover the estimated view ids into original view ids";
 
     for (ViewId i = 0; i < num_view_; ++i){
         Pose tmp_pose(global_rotations_[i],global_translations_[i]);
@@ -315,7 +304,7 @@ void LiGTProblem::WriteTranslation(const std::string output_file) {
 
     fstream output(output_file, std::ios::out | ios::trunc);
     if (!output.is_open()) {
-        cout << "output file cannot create, please check path" << endl;
+        OPENMVG_LOG_ERROR << "output file cannot create, please check path";
         return;
     }
 
@@ -344,7 +333,7 @@ void LiGTProblem::WriteTime(const std::string& time_file) {
 
     fstream output(time_file, std::ios::out | ios::trunc);
     if (!output.is_open()) {
-        cout << "time file cannot create, please check path" << endl;
+        OPENMVG_LOG_ERROR << "time file cannot create, please check path";
         return;
     }
     output << setprecision(16) << time_use_ << ' ' << 1 << endl;
@@ -365,36 +354,36 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
         ViewId i_view_id = track[i].view_id; // the current view id
 
         if (i_view_id != lbase_view_id) {
-            Eigen::Matrix3d xi_cross = hat(track[i].coord);
+            Eigen::Matrix3d xi_cross = CrossProductMatrix(track[i].coord);
             Eigen::Matrix3d R_li = global_rotations_[i_view_id] * global_rotations_[lbase_view_id].transpose();
             Eigen::Matrix3d R_lr = global_rotations_[rbase_view_id] * global_rotations_[lbase_view_id].transpose();
 
-            Eigen::Vector3d tmp_a_lr = hat(R_lr * track[id_lbase].coord)
+            auto tmp_a_lr = CrossProductMatrix(R_lr * track[id_lbase].coord)
                     * track[id_rbase].coord;
 
             // a_lr (Row) vector in a_lr * t > 0
-            Eigen::RowVector3d a_lr = tmp_a_lr.transpose() * hat(track[id_rbase].coord);
+            auto a_lr = tmp_a_lr.transpose() * CrossProductMatrix(track[id_rbase].coord);
 
             // combine all a_lr vectors into a matrix form A, i.e., At > 0
             A_lr.row(pts_id).block<1, 3>(0, lbase_view_id * 3) = a_lr * global_rotations_[rbase_view_id];
             A_lr.row(pts_id).block<1, 3>(0, rbase_view_id * 3) = -a_lr * global_rotations_[rbase_view_id];
 
             // theta_lr
-            Eigen::Vector3d theta_lr_vector = hat(track[id_rbase].coord)
+            auto theta_lr_vector = CrossProductMatrix(track[id_rbase].coord)
                     * R_lr
                     * track[id_lbase].coord;
             double theta_lr = theta_lr_vector.squaredNorm();
 
             // caculate matrix B
-            Eigen::Matrix3d Coefficient_B =
+            auto Coefficient_B =
                     xi_cross * R_li * track[id_lbase].coord * a_lr * global_rotations_[rbase_view_id];
 
             // caculate matrix C
-            Eigen::Matrix3d Coefficient_C =
-                    theta_lr * hat(track[i].coord) * global_rotations_[i_view_id];
+            auto Coefficient_C =
+                    theta_lr * CrossProductMatrix(track[i].coord) * global_rotations_[i_view_id];
 
             // caculate matrix D
-            Eigen::Matrix3d Coefficient_D = -(Coefficient_B + Coefficient_C);
+            auto Coefficient_D = -(Coefficient_B + Coefficient_C);
 
             // calculate temp matrix L for a single 3D matrix
             Eigen::MatrixXd tmp_LiGT_vec = Eigen::MatrixXd::Zero(3, num_view_ * 3);// L matrix for a single 3D point
@@ -403,7 +392,7 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
             tmp_LiGT_vec.block<3, 3>(0, lbase_view_id * 3) += Coefficient_D;
 
             // delete the reference view column
-            Eigen::MatrixXd tmp_vec = tmp_LiGT_vec.rightCols(tmp_LiGT_vec.cols() - 3);
+            auto tmp_vec = tmp_LiGT_vec.rightCols(tmp_LiGT_vec.cols() - 3);
 
             // calculate matrix LTL for SVD
             LTL += tmp_vec.transpose() * tmp_vec;
@@ -414,32 +403,20 @@ void LiGTProblem::UpdateLiGTMatrix(const ViewId& lbase_view_id,
 
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
                                VectorXd& evectors) {
-
-    int positive_count = 0;
-    int nagative_count = 0;
-
     VectorXd judgeValue = A_lr * evectors;
+    int positive_count = (judgeValue.array() > 0).sum();
+    int negative_count = judgeValue.size() - positive_count;
 
-    for (int i = 0; i < judgeValue.size(); ++i) {
-        if (judgeValue[i] > 0){
-            positive_count++;
-        }
-        if (judgeValue[i] < 0){
-            nagative_count++;
-        }
-    }
-
-    if (positive_count < nagative_count) {
+    if (positive_count < negative_count) {
         evectors = -evectors;
     }
-
 }
 
 
 void LiGTProblem::Solution() {
     PrintCopyright();
-    cout<<"************  LiGT Solve Summary  **************"<<endl;
-    cout << "num_view = " << num_view_ << "; num_pts = " << num_pts_ << "; num_obs = " << num_obs_ << endl;
+    OPENMVG_LOG_INFO <<"\n************  LiGT Solve Summary  **************\n"
+      << "num_view = " << num_view_ << "; num_pts = " << num_pts_ << "; num_obs = " << num_obs_;
 
     // start time clock
     auto start_time = steady_clock::now();
@@ -507,6 +484,8 @@ void LiGTProblem::Solution() {
 
     //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
     JacobiSVD<Eigen::MatrixXd> svd(LTL, ComputeFullU | ComputeFullV);
+    if (svd.info() != Eigen::Success)
+      OPENMVG_LOG_ERROR << "SVD solver failure - expect to have invalid output";
     MatrixXd V = svd.matrixV();
     VectorXd evectors = VectorXd::Zero(V.rows() + 3);
     evectors.bottomRows(V.rows()) = V.col(V.cols() - 1);
@@ -517,9 +496,10 @@ void LiGTProblem::Solution() {
     // algorithm time cost
     auto end_time = steady_clock::now();
     auto duration = duration_cast<microseconds>(end_time - start_time);
-    cout <<  ">> time for LiGT algorithm:"
+    OPENMVG_LOG_INFO << ">> time for LiGT algorithm: "
           << double(duration.count()) * microseconds::period::num / microseconds::period::den
-          << "s" << endl;
+          << "s"
+          << "\n===============================================================";
     time_use_ = double(duration.count()) * microseconds::period::num / microseconds::period::den;
 
     // (optional) transform solution evectors into global_translations_
@@ -532,9 +512,6 @@ void LiGTProblem::Solution() {
 
     // (optional) translation recovery
     RecoverViewIds();
-
-    std::cout << "==============================================================="
-              << std::endl;
 }
 
 Tracks LiGTProblem::GetTracks(){
@@ -556,28 +533,13 @@ Attitudes LiGTProblem::GetRotations(){
 
 void LiGTProblem::PrintCopyright(){
 
-    std::cout << "==============================================================="
-              << std::endl;
-    std::cout << "    The LiGT Algorithm (Version 1.0) for global translation    "
-              << std::endl;
-
-    std::cout << std::endl
-              << "[Conditions of Use] The LiGT algorithm is distributed under the License "
-              << std::endl;
-
-    std::cout << "of Attribution-ShareAlike 4.0 International"
-              << std::endl;
-
-    std::cout << "(https://creativecommons.org/licenses/by-sa/4.0/)."
-              << std::endl;
-
-    std::cout << std::endl
-              << "If you use it for a publication, please see [Notes] in header file. "
-              << std::endl;
-
-    std::cout << "---------------------------------------------------------------" << std::endl;
-
-
+    OPENMVG_LOG_INFO << "\n===============================================================\n"
+      << "    The LiGT Algorithm (Version 1.0) for global translation\n"
+      << "[Conditions of Use] The LiGT algorithm is distributed under the License\n"
+      << "of Attribution-ShareAlike 4.0 International\n"
+      << "(https://creativecommons.org/licenses/by-sa/4.0/).\n"
+      << "If you use it for a publication, please see [Notes] in header file.\n"
+      << "---------------------------------------------------------------";
 }
 
 }

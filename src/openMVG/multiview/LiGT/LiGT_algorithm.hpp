@@ -78,9 +78,6 @@ public:
     // [web details in bal format: https://grail.cs.washington.edu/projects/bal/]
     void LoadTracks(const std::string& track_file);
 
-    // obtain the antisymmetric matrix from a vector
-    Matrix3d hat(const Vector3d& v);
-
     // write translation result
     void WriteTranslation(const std::string output_file);
 

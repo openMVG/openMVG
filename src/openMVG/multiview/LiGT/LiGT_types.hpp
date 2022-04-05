@@ -1,14 +1,22 @@
+// This file is part of a pose-only algorithm of Linear Global Translation (LiGT)
+
+// Copyright (c) 2022, Qi Cai and Yuanxin Wu
+
+// This Source Code Form is subject to the license terms of
+// Creative Commons Attribution Share Alike 4.0 International.
+// Details are available at https://choosealicense.com/licenses/cc-by-sa-4.0/
+
 
 #ifndef LIGT_TYPES
 #define LIGT_TYPES
 
 #include <vector>
 #include <Eigen/Core>
-#include <mutex>
 #include <memory>
 #include <set>
 #include <unordered_map>
 
+#include "openMVG/cameras/cameras.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching/svg_matches.hpp"
@@ -17,7 +25,6 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/tracks/tracks.hpp"
-#include "openMVG/cameras/cameras.hpp"
 
 using namespace openMVG;
 using namespace openMVG::matching;
@@ -41,22 +48,8 @@ typedef unsigned int Size;
 typedef vector<Eigen::Matrix3d> Attitudes;
 typedef vector<Eigen::Vector3d> Translations;
 
-struct Pose
-{
-    // Orientation matrix
-    Eigen::Matrix3d R;
-
-    // Center of camera
-    Eigen::Vector3d t;
-
-    Pose(const Eigen::Matrix3d& rotation,
-         const Eigen::Vector3d& translation){
-        R = rotation;
-        t = translation;
-    }
-};
-
-typedef unordered_map<ViewId, LiGT::Pose> Poses;
+using Pose = openMVG::geometry::Pose3;
+typedef unordered_map<ViewId, Pose> Poses;
 
 // image observation information
 struct ObsInfo {
