@@ -140,6 +140,7 @@ GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches,
   return sorted_pairwise_matches_iterators;
 }
 
+// XXX GetTripletWithMostMatches
 bool SequentialSfMReconstructionEngine::Process() {
 
   //-------------------
@@ -149,6 +150,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
+  // XXX Trifocal
   // Initial pair choice
   if (initial_pair_ == Pair(0,0))
   {
@@ -179,7 +181,17 @@ bool SequentialSfMReconstructionEngine::Process() {
 
   // Initial pair Essential Matrix and [R|t] estimation.
   if (!MakeInitialPair3D(initial_pair_))
+  // XXX Trifocal  if (!MakeInitialTriplet3D(initial_pair_))
     return false;
+
+  // XXX Trifocal
+  // Future:
+  /*
+  if (!MakeInitialTriplet3D(initial_pair_))
+    if (!MakeInitialPair3D(initial_pair_))
+      return false;
+      */
+  
 
   // Compute robust Resection of remaining images
   // - group of images will be selected and resection + scene completion will be tried
@@ -191,7 +203,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     // Add images to the 3D reconstruction
     for (const auto & iter : vec_possible_resection_indexes)
     {
-      bImageAdded |= Resection(iter);
+      bImageAdded |= Resection(iter);  // XXX P2Pt
       set_remaining_view_id_.erase(iter);
     }
 
@@ -929,6 +941,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   }
 
   // C. Do the resectioning: compute the camera pose
+  // XXX p2pt
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
 
   geometry::Pose3 pose;

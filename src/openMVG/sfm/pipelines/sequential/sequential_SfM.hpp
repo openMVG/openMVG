@@ -54,10 +54,14 @@ public:
   bool InitLandmarkTracks();
 
   /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
+  /// XXX runs solver
   bool MakeInitialPair3D(const Pair & initialPair);
 
   /// Automatic initial pair selection (based on a 'baseline' computation score)
   bool AutomaticInitialPairChoice(Pair & initialPair) const;
+  
+  /// XXX Automatic initial triplet selection (based on a 'baseline' computation score)
+  bool AutomaticInitialTripletChoice(Triplet & initialTriplet) const;
 
   /**
    * Set the default lens distortion type to use if it is declared unknown
