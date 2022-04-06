@@ -96,7 +96,6 @@ public:
                          ObsId& id_rbase);
 
     // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
-    // ALR and LTL are local update (to ease parallelism) and must be performed after calling this function
     void BuildLTL(Eigen::MatrixXd& LTL,
                   MatrixXd& A_lr);
 

@@ -283,7 +283,8 @@ int main(int argc, char **argv)
                                         << "\t[-t|--translationAveraging]:\n"
                                         << "\t\t 1 -> L1 minimization\n"
                                         << "\t\t 2 -> L2 minimization of sum of squared Chordal distances\n"
-                                        << "\t\t 3 -> SoftL1 minimization (default)\n";
+                                        << "\t\t 3 -> SoftL1 minimization (default)\n"
+                                        << "\t\t 4 -> LiGT: Linear Global Translation constraints from rotation and matches\n";
 
         OPENMVG_LOG_ERROR << s;
         return EXIT_FAILURE;
@@ -338,19 +339,17 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-#ifdef USE_PATENTED_LIGT
+#ifndef USE_PATENTED_LIGT
+    if (translation_averaging_method == TRANSLATION_LIGT) {
+        OPENMVG_LOG_ERROR << "OpenMVG was not compiled with USE_PATENTED_LIGT cmake option";
+        return EXIT_FAILURE;
+    }
+#endif
     if (translation_averaging_method < TRANSLATION_AVERAGING_L1 ||
             translation_averaging_method > TRANSLATION_LIGT )  {
         OPENMVG_LOG_ERROR << "Translation averaging method is invalid";
         return EXIT_FAILURE;
     }
-#else
-    if (translation_averaging_method < TRANSLATION_AVERAGING_L1 ||
-            translation_averaging_method > TRANSLATION_AVERAGING_SOFTL1 )  {
-        OPENMVG_LOG_ERROR << "Translation averaging method is invalid";
-        return EXIT_FAILURE;
-    }
-#endif
 
     if (directory_output.empty())  {
         OPENMVG_LOG_ERROR << "It is an invalid output directory";

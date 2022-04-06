@@ -64,13 +64,13 @@ bool GlobalSfM_Translation_AveragingSolver::Run
                 map_globalR,
                 tripletWise_matches);
 
-#ifdef USE_PATENTED_LIGT
-    // ====================  Add LiGT's module ===================
-    // [Note]: Since the function Translation_averaging() is not provided features information,
-    // we add our LiGT's module in this place.
-    bool b_translation;
+    bool b_translation = false;
 
     if (eTranslationAveragingMethod == TRANSLATION_LIGT){
+#ifdef USE_PATENTED_LIGT
+        // ====================  Add LiGT's module ===================
+        // [Note]: Since the function Translation_averaging() is not provided features information,
+        // we add our LiGT's module in this place.
 
         LiGT::LiGTBuilder problem(features_provider->feats_per_view,
                                   tripletWise_matches,
@@ -79,16 +79,17 @@ bool GlobalSfM_Translation_AveragingSolver::Run
 
         problem.Solution();
 
-        LiGT::Poses poses = problem.GetPoses();
+        const LiGT::Poses poses = problem.GetPoses();
 
         // A valid solution was found:
         // - Update the view poses according the found camera translations
         for ( auto& pose : poses)
         {
-            sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
+          sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
         }
 
         b_translation = true;
+#endif
     }
     else{
         b_translation = Translation_averaging(
@@ -96,12 +97,6 @@ bool GlobalSfM_Translation_AveragingSolver::Run
                     sfm_data,
                     map_globalR);
     }
-#else
-    bool b_translation = Translation_averaging(
-                eTranslationAveragingMethod,
-                sfm_data,
-                map_globalR);
-#endif
 
     // =======================================================
 
