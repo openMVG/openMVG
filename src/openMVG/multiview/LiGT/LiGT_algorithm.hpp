@@ -85,8 +85,7 @@ public:
     void WriteTime(const std::string& time_file);
 
     // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
-    // the update way of A_lr is based on the point id,
-    // where the dimension of A_lr is [num_pts] x [3*num_view]
+    // ALR and LTL are local update (to ease parallelism) and must be performed after calling this function
     void UpdateLiGTMatrix(const ViewId &lbase_view_id,
                             const ViewId &rbase_view_id,
                             const ObsId &id_lbase,
