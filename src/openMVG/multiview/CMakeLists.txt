@@ -40,6 +40,7 @@ install(TARGETS openMVG_multiview DESTINATION lib EXPORT openMVG-targets)
 target_link_libraries(openMVG_multiview
   PUBLIC
     openMVG_numeric
+    openMVG_system
 )
 target_link_libraries(openMVG_multiview
   LINK_PRIVATE
