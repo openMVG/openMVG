@@ -11,15 +11,20 @@
 
 #pragma once
 #include "LiGT_types.hpp"
-#include <iostream>
+#include <string>
 
 namespace LiGT {
 
-// ============== The LiGT Algorithm (Version 1.0) =============
+// ============== The LiGT Algorithm (Version 1.1) =============
+// [Version History]
+// v1.0: first release; parallelism by Pierre Moulon.
+// v1.1: Spectra replaces Eigen; Block manipulation to implement LTL matrix.
+//
 // Coded by: Drs. Qi Cai and Xinrui Li
+// Refined by: Pierre Moulon
 // Email: sipangyiyou@sjtu.edu.cn, yuanxin.wu@sjtu.edu.cn
 //
-// Conditions of Use: the LiGT algorithm is distributed under
+// [Conditions of Use]: the LiGT algorithm is distributed under
 // the License of Attribution-ShareAlike 4.0 International
 // (https://creativecommons.org/licenses/by-sa/4.0/).
 //
@@ -47,8 +52,7 @@ namespace LiGT {
 // the above-mentioned T-PAMI paper in terms of accuracy.
 //
 // 2. It does not consider the rank condition in Proposition 6 of the T-PAMI paper.
-// The Spectra library was not utilized in solving the SVD problem.
-
+//
 
 class LiGTProblem {
 public:
@@ -58,13 +62,13 @@ public:
     explicit LiGTProblem(LiGTProblem& problem);
 
     LiGTProblem(Tracks tracks,
-                         Attitudes global_R);
+                Attitudes global_R);
 
     LiGTProblem(const std::string& globalR_file,
-                         const std::string& track_file,
-                         const std::string& output_file,
-                         const std::string& time_file,
-                         const int& fixed_id);
+                const std::string& track_file,
+                const std::string& output_file,
+                const std::string& time_file,
+                const int& fixed_id);
 
     virtual ~LiGTProblem() = default;
 
@@ -79,25 +83,30 @@ public:
     void LoadTracks(const std::string& track_file);
 
     // write translation result
-    void WriteTranslation(const std::string output_file);
+    void WriteTranslation();
 
     // write time result
-    void WriteTime(const std::string& time_file);
+    void WriteTime();
+
+    // [Step.2 in Pose-only Algorithm]: select the left/right-base views
+    void SelectBaseViews(const Track& track,
+                         ViewId& lbase_view_id,
+                         ViewId& rbase_view_id,
+                         ObsId& id_lbase,
+                         ObsId& id_rbase);
 
     // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
     // ALR and LTL are local update (to ease parallelism) and must be performed after calling this function
-    void UpdateLiGTMatrix(const ViewId &lbase_view_id,
-                            const ViewId &rbase_view_id,
-                            const ObsId &id_lbase,
-                            const ObsId &id_rbase,
-                            const Track &track,
-                            const PtsId &pts_id,
-                            MatrixXd& A_lr,
-                            Eigen::MatrixXd& LTL);
+    void BuildLTL(Eigen::MatrixXd& LTL,
+                  MatrixXd& A_lr);
+
+    //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
+    void SolveLiGT(const Eigen::MatrixXd& LTL,
+                   VectorXd &evectors);
 
     // [Step.5 in Pose-only Algorithm]: identify the correct sign of the translation solution after using SVD
-    void IdentifySign(const MatrixXd &A_lr,
-                        VectorXd& evectors);
+    void IdentifySign(const MatrixXd& A_lr,
+                      VectorXd& evectors);
 
     // LiGT solution
     void Solution();
