@@ -24,7 +24,7 @@ src/software/SfM/SfM_SequentialPipeline.py.in
           - we are mainly targeting this one
           
         SfMEngine::INCREMENTALV2:
-          - this one allows to set the triples
+          - this one allows to set the triples and initializer (see\ref{pierre:comment})
   - also see main_GeometricFilter.cpp
 
 
@@ -39,17 +39,17 @@ O: pairs.bin                O: matches.putative.bin          O: matches.f.bin
 
 
 GeometricFilter 
-- From the topolevel .py file, it uses a fundamental matrix filtercing model
-- Why not use essential matrix when intrinsics available?
+- The toplevel .py shows it uses a fundamental matrix filtercing model
+- Why not essential matrix when intrinsics available?
     - TODO: investigate where intrinsics are provided, if we can fix it, and
       whether intrinsics are actually optimized / estimated
         - sfm_data has intrinsics and views (see \ref{sec:views} below)
 
 
-Useful structures:
+### Useful structures:
 
 Landmark 
-  - a associacao de um ponto em 3D e suas observacoes em imagens: sfm_landmark.hpp
+  - a associacao de um ponto em 3D e suas observacoes em imagens: `sfm_landmark.hpp`
 
 View: a struct with \label{sec:views}
   - image (caminho no disco)
@@ -60,11 +60,11 @@ Um problema seria que a Landmark guarda apenas coordenadas de pontos e a gente
 precisa da tangente/orientacao. Temos que pensar como seria isso.
 
 
-## TODO 
+### TODO 
   - search agan for all uses of the 5 pt algorithm and P3P and adapt for trifocal+p2pt
  
 
-## How to add orientation to OpenMVG?
+### How to add orientation to OpenMVG?
 
 Pierre: 
 
@@ -77,25 +77,23 @@ Or we would always load ScaleInvariantPoint ()
 The feature provider interface is the interface providing the data above the robust estimation in the SfM pipeline.
 The SfM_data container stores all the data once it is validated.
  
-## Path for Trifocal ##
+### Path for Trifocal
 
-Email from Pierre 29oct19
+Adapted from Pierre email 29oct19
 
 Here is the path I would follow for integration of new minimal solver.
 Here I target towards contributing for the community and for large scale experiments.
 
-1. Add the minimal solver in src/openMVG/multiview/XX.hpp XX.cpp or `src/openMVG/multiview/trifocal/*` if multiple files are needed
-2. Add corresponding unit test
-To do so I'm using a perfect set of camera and know 3D point and reprojection
-(synthetic data) solver_essential_five_point_test.cpp#L257 Camera path is set as a Ring or Heart shape.
+1. Add the minimal solver in src/openMVG/multiview/XX.hpp XX.cpp or `src/openMVG/multiview/trifocal/*` 
+2. Add corresponding unit test solver_essential_five_point_test.cpp#L257 
 => Make a PR here
 3. Add a sample to demonstrate the solver to the community on real data and let people experiment with it
 At this stage we will need to introduce the solver to the Robust Stage. OpenMVG
 is using the Kernel concept to embed the solver, the metric and the point
 selection to ACRansac in a generic way
 https://github.com/openMVG/openMVG/tree/master/src/openMVG_Samples
-4. Use the tested robust solver as bootstrapping for Incremental SfM
-As I said yesterday and as you have notice, OpenMVG is having two SfM pipeline
+4. Bootstrapping for Incremental SfM
+OpenMVG is having two SfM pipeline
 (the v1 close to my Accv2012 paper and v2 closer to what people do today to make
 the pipeline a bit faster)
 
@@ -104,10 +102,9 @@ As we have discussed yesterday, we could change the initial pair to a tuple, so 
 https://github.com/openMVG/openMVG/blob/master/src/openMVG/sfm/pipelines/sequential/sequential_SfM.hpp#L103
 Then we have to udpate AutomaticInitialPairChoice, ChooseInitialPair and MakeInitialPair3D
 
-SequentialSfMReconstructionEngine2 already have the abstraction of the mechanism to bootstrap the reconstruction -> SfMSceneInitializer
+SequentialSfMReconstructionEngine2 already have the abstraction of the mechanism to bootstrap the reconstruction -> SfMSceneInitializer \label{pierre:comment}
+Adding code in this engine could be simpler since you have to inherit and write you new SfMSceneInitializerTrifocal class
 
-So adding code in this engine could be simpler since you have to inherit and write you new SfMSceneInitializerTrifocal class
-
-5. As I said yesterday, we could also use the trifocal solver to bootstrap some GlobalSfM
+5. Bootstrap GlobalSfM
 Since your solver is using less points than some other solver, we could perhaps have better results (more stable, and less outliers triplets)
 
