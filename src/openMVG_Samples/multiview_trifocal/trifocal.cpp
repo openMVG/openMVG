@@ -148,13 +148,13 @@ Error(
   // 3) compute error 
   // 
   // In practice we ignore the directions and only reproject to one third view
-  std::cerr << "TRIFOCAL LOG: Entered error()\n";
+  // std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
-  std::cerr << "bearing mtrx:\n " << bearing << endl;
+  // std::cerr << "bearing mtrx:\n " << bearing << endl;
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
@@ -163,10 +163,10 @@ Error(
     // TODO use triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
     third_view = 2;
-    std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
+    // std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
-    std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
+    // std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
     third_view = 1;
   }
   Mat23 pxbearing; // 2x2 matrix
@@ -183,8 +183,17 @@ Error(
   // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
    
   Vec2 pxmeasured = pxbearing.col(third_view).head(2);
-  std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-  return (pxreprojected-pxmeasured).squaredNorm();
+  Vec2 pxdata = pxreprojected-pxmeasured;
+  // std::cerr << "TRIFOCAL LOG: Finished Error()\n";
+  // std::cerr << "TRIFOCAL LOG: Printing Euclidian Distance Error()\n";
+  // std::cerr << (pxreprojected-pxmeasured).squaredNorm() << "\n";
+  // std::cerr << "TRIFOCAL LOG: Printing City Block Error()\n";
+  // std::cerr << max(abs(pxdata(0)), abs(pxdata(1))) << "\n";
+  // std::cerr << "TRIFOCAL LOG: Printing ChessBoard distance Error()\n";
+  // std::cerr << abs(pxdata(0)) + abs(pxdata(1)) << "\n";
+  // return (pxreprojected-pxmeasured).squaredNorm();
+  return abs(pxdata(0)) + abs(pxdata(1));
+  // return max(abs(pxdata(0)), abs(pxdata(1)));
 }
 
 } // namespace trifocal3pt

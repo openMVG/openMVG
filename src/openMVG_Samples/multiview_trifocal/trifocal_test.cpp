@@ -263,28 +263,29 @@ TEST(TrifocalSampleApp, solveRansac)
     datum[v].resize(4, 3);
     pxdatum[v].resize(4, 3);
     for (unsigned ip=0; ip < 3; ++ip) {
-      pxdatum[v](0,ip) = data::p_[v][ip][0];
-      pxdatum[v](1,ip) = data::p_[v][ip][1];
-      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
-      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+      datum[v](0,ip) = data::p_[v][ip][0];
+      datum[v](1,ip) = data::p_[v][ip][1];
+      datum[v](2,ip) = data::tgt_[v][ip][0];
+      datum[v](3,ip) = data::tgt_[v][ip][1];
+      pxdatum[v] = datum[v];
       trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
       trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
   }
-
+  //std::cerr << "datum[1]:\n" << datum[1] << "\n";
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
-  double constexpr threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
+  double constexpr threshold_pix = 25; // 5*5 Gabriel's note : changing this for see what happens
                                          // Gabriel: Error model based on euclidian distance
   unsigned constexpr max_iteration = 3; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers, max_iteration);
-
+    std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
   CHECK(vec_inliers.size() == 3);
       
   // TODO check the cameras

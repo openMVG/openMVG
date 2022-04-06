@@ -498,7 +498,7 @@ RobustSolve()
   const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2], K_);
   //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
-  double constexpr threshold_pix = 0.01; // 5*5 Gabriel's note : changing this for see what happens
+  double constexpr threshold_pix = 25; // 5*5 Gabriel's note : changing this for see what happens
   // Gabriel: Error model based on euclidian distance
   unsigned constexpr max_iteration =3; // testing
   const auto model = MaxConsensus(trifocal_kernel, 
