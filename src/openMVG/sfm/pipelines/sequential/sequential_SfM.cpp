@@ -91,6 +91,7 @@ void SequentialSfMReconstructionEngine::SetMatchesProvider(Matches_Provider * pr
   matches_provider_ = provider;
 }
 
+// XXX GetTripletWithMostMatches
 // Get the PairWiseMatches that have the most support point
 std::vector<openMVG::matching::PairWiseMatches::const_iterator>
 GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches, int clamp_count = 10) {
@@ -140,7 +141,6 @@ GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches,
   return sorted_pairwise_matches_iterators;
 }
 
-// XXX GetTripletWithMostMatches
 bool SequentialSfMReconstructionEngine::Process() {
 
   //-------------------
@@ -150,7 +150,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  // XXX Trifocal
+  // XXX Trifocal - for now, just preset by hand
   // Initial pair choice
   if (initial_pair_ == Pair(0,0))
   {
@@ -177,20 +177,24 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
     }
   }
-  // Else a starting pair was already initialized before
+  // Else a starting pair was already initialized before // XXX this is the case
+  // at first for trifocal
 
+  // ---------------------------------------------------------------------------
+  // XXX Trifocal
+  // This is the first thing to work on
+  // 
   // Initial pair Essential Matrix and [R|t] estimation.
   if (!MakeInitialPair3D(initial_pair_))
-  // XXX Trifocal  if (!MakeInitialTriplet3D(initial_pair_))
     return false;
 
-  // XXX Trifocal
   // Future:
-  /*
+  /* Check initial tuple size.
   if (!MakeInitialTriplet3D(initial_pair_))
     if (!MakeInitialPair3D(initial_pair_))
       return false;
       */
+  // ---------------------------------------------------------------------------
   
 
   // Compute robust Resection of remaining images

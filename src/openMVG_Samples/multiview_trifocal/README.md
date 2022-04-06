@@ -14,11 +14,20 @@ src/software
 
 ## Inclusion into OpenMVG
 
-Main:
+### Next thing to work on
+MakeInitialPair3D
+sequential_SfM.cpp:188
+
+Make trifocal one
+
+
+## main() ##
+
+main_SfM.cpp is our main
 
 src/software/SfM/SfM_SequentialPipeline.py.in
   - calls all the executables from python.
-  - main: main_SfM.cpp
+  - main: main_SfM.cpp 
     - main funciton: ReconstructionEngine::Process() 
         SfMEngine::INCREMENTALV:
           - we are mainly targeting this one
@@ -35,8 +44,6 @@ O: pairs.bin                O: matches.putative.bin          O: matches.f.bin
 -->  main_SfM
      I: sfm_data.json, maatch_dir (matches.f.bin)
      O: reconstruction_sequential/
-
-
 
 GeometricFilter 
 - The toplevel .py shows it uses a fundamental matrix filtercing model
