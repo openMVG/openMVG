@@ -43,17 +43,18 @@ GeometricFilter
 - Why not use essential matrix when intrinsics available?
     - TODO: investigate where intrinsics are provided, if we can fix it, and
       whether intrinsics are actually optimized / estimated
+        - sfm_data has intrinsics and views (see \ref{sec:views} below)
 
 
 Useful structures:
 
-OpenMVG chama de Landmark a associacao de um ponto em 3D e suas observacoes em imagens:
-https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/sfm_landmark.hpp
+Landmark 
+  - a associacao de um ponto em 3D e suas observacoes em imagens: sfm_landmark.hpp
 
-Chama de View uma struct com 
+View: a struct with \label{sec:views}
   - imagem (caminho no disco)
-  - id dos parametros intrinsecos da camera 
-  - id dos parametros extrinsecos da camera (pose)
+  - id dos parametros intrinsecos da camera            (sometimes this is not set)
+  - id dos parametros extrinsecos da camera (pose)     (sometimes this is not set)
 
 Um problema seria que a Landmark guarda apenas coordenadas de pontos e a gente
 precisa da tangente/orientacao. Temos que pensar como seria isso.
