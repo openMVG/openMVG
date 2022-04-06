@@ -12,14 +12,14 @@ src/software
  - Complete software(s) build on openMVG libraries
 
 
-== Inclusion into OpenMVG ==
+## Inclusion into OpenMVG
 
 Main:
 
 src/software/SfM/SfM_SequentialPipeline.py.in
   - calls all the executables from python.
-  - main_SfM.cpp is our main file
-    - ReconstructionEngine::Process() is the main function
+  - main: main_SfM.cpp
+    - main funciton: ReconstructionEngine::Process() 
         SfMEngine::INCREMENTALV:
           - we are mainly targeting this one
           
@@ -52,7 +52,7 @@ Landmark
   - a associacao de um ponto em 3D e suas observacoes em imagens: sfm_landmark.hpp
 
 View: a struct with \label{sec:views}
-  - imagem (caminho no disco)
+  - image (caminho no disco)
   - id dos parametros intrinsecos da camera            (sometimes this is not set)
   - id dos parametros extrinsecos da camera (pose)     (sometimes this is not set)
 
@@ -60,6 +60,54 @@ Um problema seria que a Landmark guarda apenas coordenadas de pontos e a gente
 precisa da tangente/orientacao. Temos que pensar como seria isso.
 
 
-TODO
+## TODO 
   - search agan for all uses of the 5 pt algorithm and P3P and adapt for trifocal+p2pt
  
+
+## How to add orientation to OpenMVG?
+
+Pierre: 
+
+The simplest would be to add here orientation information to store it once validated.
+https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/sfm_landmark.hpp#L24
+
+You would still need to modify the input feature point provider too by adding perhaps a map of orientation here https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/pipelines/sfm_features_provider.hpp#L33
+Or we would always load ScaleInvariantPoint ()
+
+The feature provider interface is the interface providing the data above the robust estimation in the SfM pipeline.
+The SfM_data container stores all the data once it is validated.
+ 
+## Path for Trifocal ##
+
+Email from Pierre 29oct19
+
+Here is the path I would follow for integration of new minimal solver.
+Here I target towards contributing for the community and for large scale experiments.
+
+1. Add the minimal solver in src/openMVG/multiview/XX.hpp XX.cpp or `src/openMVG/multiview/trifocal/*` if multiple files are needed
+2. Add corresponding unit test
+To do so I'm using a perfect set of camera and know 3D point and reprojection
+(synthetic data) solver_essential_five_point_test.cpp#L257 Camera path is set as a Ring or Heart shape.
+=> Make a PR here
+3. Add a sample to demonstrate the solver to the community on real data and let people experiment with it
+At this stage we will need to introduce the solver to the Robust Stage. OpenMVG
+is using the Kernel concept to embed the solver, the metric and the point
+selection to ACRansac in a generic way
+https://github.com/openMVG/openMVG/tree/master/src/openMVG_Samples
+4. Use the tested robust solver as bootstrapping for Incremental SfM
+As I said yesterday and as you have notice, OpenMVG is having two SfM pipeline
+(the v1 close to my Accv2012 paper and v2 closer to what people do today to make
+the pipeline a bit faster)
+
+SequentialSfMReconstructionEngine:
+As we have discussed yesterday, we could change the initial pair to a tuple, so this way we could specify by hand the first triplet of camera to use for debugging.
+https://github.com/openMVG/openMVG/blob/master/src/openMVG/sfm/pipelines/sequential/sequential_SfM.hpp#L103
+Then we have to udpate AutomaticInitialPairChoice, ChooseInitialPair and MakeInitialPair3D
+
+SequentialSfMReconstructionEngine2 already have the abstraction of the mechanism to bootstrap the reconstruction -> SfMSceneInitializer
+
+So adding code in this engine could be simpler since you have to inherit and write you new SfMSceneInitializerTrifocal class
+
+5. As I said yesterday, we could also use the trifocal solver to bootstrap some GlobalSfM
+Since your solver is using less points than some other solver, we could perhaps have better results (more stable, and less outliers triplets)
+
