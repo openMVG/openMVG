@@ -99,11 +99,11 @@ MatchKeypoints()
 void TrifocalSampleApp::
 ComputeTracks() 
 {
+  // see bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
   openMVG::tracks::TracksBuilder track_builder;
   track_builder.Build(pairwise_matches_);
   track_builder.Filter(3);
   track_builder.ExportToSTL(tracks_);
-  // TODO(gabriel): keep only 3 true tracks
 }
 
 void TrifocalSampleApp::
