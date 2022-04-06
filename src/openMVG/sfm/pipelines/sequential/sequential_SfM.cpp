@@ -285,7 +285,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
   tracks::TracksBuilder tracksBuilder;
 
   {
-    // List of features matches for each couple of images
+    // List of features matches for each pair of images
     const openMVG::matching::PairWiseMatches & map_Matches = matches_provider_->pairWise_matches_;
     OPENMVG_LOG_INFO << "Track building";
 
@@ -305,7 +305,7 @@ bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
       tracks::TracksUtilsMap::ImageIdInTracks(map_tracks_, set_imagesId);
       osTrack << "\n------------------\n"
         << "-- Tracks Stats --" << "\n"
-        << " Tracks number: " << tracksBuilder.NbTracks() << "\n"
+        << " Number of tracks: " << tracksBuilder.NbTracks() << "\n"
         << " Images Id: " << "\n";
       std::copy(set_imagesId.begin(),
         set_imagesId.end(),

@@ -45,19 +45,80 @@ GeometricFilter
       whether intrinsics are actually optimized / estimated
         - sfm_data has intrinsics and views (see \ref{sec:views} below)
 
+### Sequential reconstruction engine v1
+
+SequentialSfMReconstructionEngine::Constructor()
+- initializes list of remaining images to reconstruct as all images
+
+SequentialSfMReconstructionEngine::Process()
+- InitLandmarkTracks
+  - map_tracks_: where tracks are stored
+  - tracks::TracksBuilder::Build
+  - tracks::TracksBuilder::Filter
+  - shared_track_visibility_helper_()
+    - Helper to compute if some image have some track in common
+  - Analogous to TrifocalSampleApp::ComputeTracks()
+    - Build
+    - Filter(3)
+
 
 ### Useful structures:
 
-Landmark 
+#### Landmark 
   - a associacao de um ponto em 3D e suas observacoes em imagens: `sfm_landmark.hpp`
 
-View: a struct with \label{sec:views}
+#### View: a struct with \label{sec:views}
   - image (caminho no disco)
   - id dos parametros intrinsecos da camera            (sometimes this is not set)
   - id dos parametros extrinsecos da camera (pose)     (sometimes this is not set)
-
 Um problema seria que a Landmark guarda apenas coordenadas de pontos e a gente
 precisa da tangente/orientacao. Temos que pensar como seria isso.
+
+#### Tracks
+
+TracksBuilder
+- Store tracks / correspondences
+  - Track / Tracks in TracksBuilder
+    - A Track 
+      - is a corresponding image points with their imageId and FeatureId.
+      - is called a submapTrack std::map<uint32_t, uint32_t>
+    - Tracks
+      - a collection of tracks is STLMAPTracks = std::map<uint32_t, submapTrack>;
+    - Each element of Tracks is thus:
+    (track_id, (image1_id, feature1_id), (image2_id, feature2_id),...)
+    or
+    {TrackIndex => {(imageIndex, featureIndex), ... ,(imageIndex, featureIndex)}
+    - featureindex indexes into
+      regions_per_image_.at(imageIndex).get()->Features()[featureIndex]
+  - UnionFind tree
+    - data structure to implement
+
+STLMAPTracks
+- tracks as a simpler map (each entry is a sequence of imageId and featureIndex):
+- map_tracks[track_id].insert(feat.first);
+  
+    
+- Build
+  - Fuse pairwise corrrespondences
+  - Input: PairwiseMatches
+- Filter
+  - Remove tracks that have conflict
+
+
+#### PairwiseMatches
+
+PairWiseMatches
+- map<Pair, IndMatches>
+  - pwm[image pair] = all maches between the pair of images
+  
+IndMatch
+- i,j
+- feature i matches feature j
+
+IndMatches
+- vector<IndMatch>
+- all features matching between two images
+
 
 
 ### TODO 
@@ -71,10 +132,13 @@ Pierre:
 The simplest would be to add here orientation information to store it once validated.
 https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/sfm_landmark.hpp#L24
 
-You would still need to modify the input feature point provider too by adding perhaps a map of orientation here https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/pipelines/sfm_features_provider.hpp#L33
+You would still need to modify the input feature point provider too by adding
+perhaps a map of orientation here
+https://github.com/openMVG/openMVG/blob/develop/src/openMVG/sfm/pipelines/sfm_features_provider.hpp#L33
 Or we would always load ScaleInvariantPoint ()
 
-The feature provider interface is the interface providing the data above the robust estimation in the SfM pipeline.
+The feature provider interface is the interface providing the data above the
+robust estimation in the SfM pipeline.
 The SfM_data container stores all the data once it is validated.
  
 ### Path for Trifocal
@@ -98,7 +162,8 @@ OpenMVG is having two SfM pipeline
 the pipeline a bit faster)
 
 SequentialSfMReconstructionEngine:
-As we have discussed yesterday, we could change the initial pair to a tuple, so this way we could specify by hand the first triplet of camera to use for debugging.
+As we have discussed yesterday, we could change the initial pair to a tuple, so
+this way we could specify by hand the first triplet of camera to use for debugging.
 https://github.com/openMVG/openMVG/blob/master/src/openMVG/sfm/pipelines/sequential/sequential_SfM.hpp#L103
 Then we have to udpate AutomaticInitialPairChoice, ChooseInitialPair and MakeInitialPair3D
 

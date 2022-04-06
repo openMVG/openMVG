@@ -67,7 +67,6 @@ ExtractKeypoints()
     if (ReadImage(image_filenames_[image_idx].c_str(), &images_[image_idx]))
       image_describer->Describe(images_[image_idx], regions_per_image_[image_idx]);
     else {
-      std::cout << "aqui" << endl;	    
       cerr << "Problem reading image" << endl;
       exit(EXIT_FAILURE);
     }

@@ -40,6 +40,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
 
+// XXX incremental v2: update for triplet 
 enum class ESfMSceneInitializer
 {
   INITIALIZE_EXISTING_POSES,
@@ -157,6 +158,7 @@ int main(int argc, char **argv)
   int user_camera_model = PINHOLE_CAMERA_RADIAL3;
 
   // SfM v1
+  // initial_tuple_string
   std::pair<std::string,std::string> initial_pair_string("","");
 
   // SfM v2
@@ -413,6 +415,7 @@ int main(int argc, char **argv)
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
   switch(scene_initializer_enum)
   {
+    // XXX incremental v2: update for triplet 
     case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
       OPENMVG_LOG_ERROR << "Not yet implemented.";
       return EXIT_FAILURE;
@@ -464,23 +467,26 @@ int main(int argc, char **argv)
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
 
+    // XXX set initial triplet parameter for now
+    // Set automatic pair selection for later
     // Handle Initial pair parameter
     if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())
     {
-      Pair initial_pair_index;
+      Pair initial_pair_index; // Tuple initial_pair_index
       if (!computeIndexFromImageNames(sfm_data, initial_pair_string, initial_pair_index))
+      // if (!computeIndexFromImageNames(sfm_data, initial_tuple_string, initial_tuple_index))
       {
-          OPENMVG_LOG_ERROR << "Could not find the initial pairs <" << initial_pair_string.first
+        OPENMVG_LOG_ERROR << "Could not find the initial pairs <" << initial_pair_string.first
             <<  ", " << initial_pair_string.second << ">!";
         return EXIT_FAILURE;
       }
       engine->setInitialPair(initial_pair_index);
+      // engine->setInitialTuple(initial_tuple_index);
     }
-
     sfm_engine.reset(engine);
   }
     break;
-  case ESfMEngine::INCREMENTALV2:
+  case ESfMEngine::INCREMENTALV2: // XXX could be easier to insert trifocal here
   {
     SequentialSfMReconstructionEngine2 * engine =
       new SequentialSfMReconstructionEngine2(
