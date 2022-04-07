@@ -63,6 +63,9 @@ static const IndexT UndefinedIndexT = std::numeric_limits<IndexT>::max();
 /// Standard Pair of IndexT
 using Pair = std::pair<IndexT, IndexT>;
 
+/// Standard Triplet of IndexT
+using Triplet = std::tuple<IndexT, IndexT, IndexT>;
+
 /// Set of Pair
 using Pair_Set = std::set<Pair>;
 

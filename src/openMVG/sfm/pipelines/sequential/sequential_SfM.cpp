@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <array>
 
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/geometry/pose3.hpp"
@@ -49,6 +50,7 @@ SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   : ReconstructionEngine(sfm_data, soutDirectory),
     sLogging_file_(sloggingFile),
     initial_pair_(0,0),
+    initial_triplet_(0,0,0),
     cam_type_(EINTRINSIC(PINHOLE_CAMERA_RADIAL3))
 {
   if (!sLogging_file_.empty())
@@ -462,6 +464,81 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
     initial_pair = scoring_per_pair.begin()->second;
     return true;
   }
+  return false;
+}
+// Compute the initial 3D seed (First camera t=0; R=Id, second and third by
+// Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
+// tensor / relative pose for ImageId [t[0],t[1],t[2]]
+bool SequentialSfMReconstructionEngine::
+MakeInitialTriplet3D(const Triplet &current_triplet)
+{
+
+  static constexpr unsigned nviews = 3;
+  std::array<IndexT, nviews> t{ {std::get<0>(current_triplet),
+                                 std::get<1>(current_triplet),
+                                 std::get<2>(current_triplet)} };
+  std::sort(t.begin(),t.end());
+
+  for (unsigned v=0; v < nviews; ++v) {
+    if (sfm_data_.GetViews().count(t[v]) == 0)
+    {
+      OPENMVG_LOG_ERROR << "Cannot find the view corresponding to the view id: " << t[v];
+      return false;
+    }
+  }
+
+  // a. Assert we have valid cameras
+  const View *view[nviews] = {
+    sfm_data_.GetViews().at(t[0]).get(),
+    sfm_data_.GetViews().at(t[1]).get(),
+    sfm_data_.GetViews().at(t[2]).get()
+  };
+    
+  const Intrinsics::const_iterator iterIntrinsic[nviews] = {
+    sfm_data_.GetIntrinsics().find(view[0]->id_intrinsic),
+    sfm_data_.GetIntrinsics().find(view[1]->id_intrinsic),
+    sfm_data_.GetIntrinsics().find(view[2]->id_intrinsic)
+  };
+
+  for (unsigned v=0; v < nviews; ++v) {
+    if (iterIntrinsic[v] == sfm_data_.GetIntrinsics().end())
+    {
+      OPENMVG_LOG_ERROR << "Views with valid intrinsic data are required but this failed for view " << v;
+      return false;
+    }
+  }
+  
+  const cameras::IntrinsicBase *cam[nviews] = {
+    iterIntrinsic[0]->second.get(),
+    iterIntrinsic[1]->second.get(),
+    iterIntrinsic[2]->second.get()
+  };
+  
+  for (unsigned v=0; v < nviews; ++v) {
+    if (!cam[v]) {
+      OPENMVG_LOG_ERROR << "Cannot get back the camera intrinsic model for the pair.";
+      return false;
+    }
+  }
+  
+  OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
+  for (unsigned v=0; v < nviews; ++v) {
+    OPENMVG_LOG_INFO << t[v] << " ";
+  }
+  OPENMVG_LOG_INFO << "\nview basename:";
+  for (unsigned v=0; v < nviews; ++v) {
+    OPENMVG_LOG_INFO << stlplus::basename_part(view[v]->s_Img_path) << " ";
+  }
+
+  // ---------------------------------------------------------------------------
+  // b. Get common features between the two view
+  // use the track to have a more dense match correspondence set
+  /* TODO adapt from trifocal sample
+  openMVG::tracks::STLMAPTracks map_tracksCommon;
+  shared_track_visibility_helper_->GetTracksInImages({I, J}, map_tracksCommon);
+  */
+
+  
   return false;
 }
 

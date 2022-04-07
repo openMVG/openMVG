@@ -49,6 +49,11 @@ public:
   {
     initial_pair_ = initialPair;
   }
+  
+  void setInitialTriplet(const Triplet & initialTriplet)
+  {
+    initial_triplet_ = initialTriplet;
+  }
 
   /// Initialize tracks
   bool InitLandmarkTracks();
@@ -56,12 +61,13 @@ public:
   /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
   /// XXX runs solver
   bool MakeInitialPair3D(const Pair & initialPair);
+  bool MakeInitialTriplet3D(const Triplet & current_triplet);
 
   /// Automatic initial pair selection (based on a 'baseline' computation score)
   bool AutomaticInitialPairChoice(Pair & initialPair) const;
   
   /// XXX Automatic initial triplet selection (based on a 'baseline' computation score)
-  bool AutomaticInitialTripletChoice(Triplet & initialTriplet) const;
+  // bool AutomaticInitialTripletChoice(Triple & initialTriplet) const;
 
   /**
    * Set the default lens distortion type to use if it is declared unknown
@@ -114,8 +120,12 @@ private:
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
   std::string sLogging_file_;
 
+  bool using_initial_triple() { return std::get<2>(initial_triplet_) != 0; }
+  
   // Parameter
+  Triplet initial_triplet_;
   Pair initial_pair_;
+  
   cameras::EINTRINSIC cam_type_; // The camera type for the unknown cameras
 
   //-- Data provider
