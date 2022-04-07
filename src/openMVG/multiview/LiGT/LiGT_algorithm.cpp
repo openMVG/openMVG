@@ -353,11 +353,24 @@ void LiGTProblem::WriteTime() {
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
                                VectorXd& evectors) {
     VectorXd judgeValue = A_lr * evectors;
-    int positive_count = (judgeValue.array() > 0).sum();
-    int negative_count = judgeValue.size() - positive_count;
+//    int positive_count = (judgeValue.array() > 0).sum();
+//    int negative_count = judgeValue.size() - positive_count;
+
+    int positive_count = 0;
+    int negative_count = 0;
+
+    for (int i = 0; i < judgeValue.rows(); ++i){
+        if (judgeValue[i]>0)
+            positive_count++;
+        else
+            negative_count++;
+    }
+
+    OPENMVG_LOG_INFO << "positive count = "<< positive_count<<", negative count = "<< negative_count;
 
     if (positive_count < negative_count) {
         evectors = -evectors;
+        OPENMVG_LOG_INFO << "signs are reversed!";
     }
 }
 
