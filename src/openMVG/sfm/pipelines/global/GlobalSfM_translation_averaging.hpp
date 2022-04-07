@@ -24,7 +24,6 @@ namespace openMVG { namespace sfm { struct SfM_Data; } }
 namespace openMVG{
 namespace sfm{
 
-#ifdef USE_PATENTED_LIGT
 enum ETranslationAveragingMethod
 {
   TRANSLATION_AVERAGING_L1 = 1,
@@ -32,14 +31,6 @@ enum ETranslationAveragingMethod
   TRANSLATION_AVERAGING_SOFTL1 = 3,
   TRANSLATION_LIGT = 4
 };
-#else
-enum ETranslationAveragingMethod
-{
-  TRANSLATION_AVERAGING_L1 = 1,
-  TRANSLATION_AVERAGING_L2_DISTANCE_CHORDAL = 2,
-  TRANSLATION_AVERAGING_SOFTL1 = 3,
-};
-#endif
 
 struct SfM_Data;
 struct Matches_Provider;

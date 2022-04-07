@@ -96,6 +96,7 @@ void LiGTBuilder::BuildLandmarks(const FeatsPerView& feats_per_view,
              itTracks != map_tracks.end();
              ++itTracks, ++idx)
         {
+          {
             const submapTrack& track = itTracks->second;
             landmarks[idx] = Landmark();
             Observations& obs = landmarks.at(idx).obs;
@@ -105,20 +106,16 @@ void LiGTBuilder::BuildLandmarks(const FeatsPerView& feats_per_view,
                 const size_t featIndex = it->second;
                 auto& pt = feats_per_view.at(imaIndex)[featIndex];
 
-                const Vec2 x = pt.coords().cast<double>();
-
                 const View* view = sfm_data.views.at(imaIndex).get();
                 const IntrinsicBase* cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
 
-                const Matrix3d& Kinv = dynamic_cast<const cameras::Pinhole_Intrinsic*>(cam)->Kinv();
-
                 // Note: LiGT needs to use the normalized feature coordinate
-                Vec2 normalized_coord;
-                normalized_coord(0) = Kinv(0,0) * x(0) + Kinv(0,1) * x(1) + Kinv(0,2) * 1;
-                normalized_coord(1) = Kinv(1,0) * x(0) + Kinv(1,1) * x(1) + Kinv(1,2) * 1;
+                const Vec2 x = cam->get_ud_pixel(pt.coords().cast<double>());
+                Vec2 normalized_coord = (*cam)(x).col(0).hnormalized();
 
                 obs[imaIndex] = Observation(normalized_coord, featIndex);
             }
+          }
         }
     }
 }

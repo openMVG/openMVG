@@ -525,7 +525,7 @@ void LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
     if (eigs.info() != CompInfo::Successful)
         OPENMVG_LOG_ERROR << " SymEigsShiftSolver failure - expect to have invalid output";
 
-    Eigen::VectorXd evalues = eigs.eigenvalues();
+    const Eigen::VectorXd evalues = eigs.eigenvalues();
     OPENMVG_LOG_INFO << "Eigenvalues found: " << evalues.transpose();
 
     evectors.bottomRows( 3 * num_view_ - 3) = eigs.eigenvectors();
@@ -560,9 +560,9 @@ void LiGTProblem::Solution() {
 
     // algorithm time cost
     double duration = timer.elapsedMs();
-    OPENMVG_LOG_INFO << ">> time for the LiGT algorithm:"
+    OPENMVG_LOG_INFO << ">> time for the LiGT algorithm: "
                      << duration
-                     << "Ms"
+                     << " ms"
                      << "\n===============================================================";
 
     time_use_ = duration;
