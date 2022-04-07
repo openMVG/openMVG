@@ -557,8 +557,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     
     uint32_t i=iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
-      const features::SIOPointFeature *feature = 
-        dynamic_cast<const features::SIOPointFeature *>( &(features_provider_->feats_per_view[t[v]][i]) );
+      const features::SIOPointFeature *feature = features_provider_->sio_feats_per_view[t[v]][i];
       if (!feature) {
         OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
         return false;
@@ -574,7 +573,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     ++cptIndex;
   }
-#if 0
   
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
@@ -583,15 +581,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   const std::pair<size_t, size_t>
     imageSize_I(cam_I->w(), cam_I->h()),
     imageSize_J(cam_J->w(), cam_J->h());
-
-  if (!robustRelativePoseTrifocal(
-    cam_I, cam_J, xI, xJ, relativePose_info, imageSize_I, imageSize_J, 4096))
+  
+  if (!robustRelativePoseTrifocal(cam, datum, relativePose_info, 1024))
   {
-    OPENMVG_LOG_ERROR << " /!\\ Robust estimation failed to compute E for this pair: "
+    OPENMVG_LOG_ERROR << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this pair: "
       << "{"<< current_pair.first << "," << current_pair.second << "}";
     return false;
   }
-  OPENMVG_LOG_INFO << "Relative pose a-contrario upper_bound residual is: "
+  OPENMVG_LOG_INFO << "Trifocal Relative Pose residual from all inliners is: "
     << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
@@ -599,16 +596,17 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   const bool bRefine_using_BA = true;
   if (bRefine_using_BA)
   {
-    // Refine the defined scene
     SfM_Data tiny_scene;
-    tiny_scene.views.insert(*sfm_data_.GetViews().find(view_I->id_view));
-    tiny_scene.views.insert(*sfm_data_.GetViews().find(view_J->id_view));
-    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_I->id_intrinsic));
-    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_J->id_intrinsic));
+    for (unsigned v = 0; v < nviews; ++v) {
+      // Refine the defined scene
+      tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
+      tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
+      
+      // Init poses
+      // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+      // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+    }
 
-    // Init poses
-    const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
 
     // Init structure
     Landmarks & landmarks = tiny_scene.structure;
@@ -626,6 +624,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
 
       Vec3 X;
+      // triangulate 3 views, or two furthest baselines only
       if (Triangulate2View(
             Pose_I.rotation(),
             Pose_I.translation(),
