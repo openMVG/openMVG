@@ -593,72 +593,76 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
+  /*
   const bool bRefine_using_BA = true;
   if (bRefine_using_BA)
   {
-    SfM_Data tiny_scene;
-    for (unsigned v = 0; v < nviews; ++v) {
-      // Refine the defined scene
-      tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-      tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
-      
-      // Init poses
-      // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-      // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
-    }
+      SfM_Data tiny_scene;
+    { // badj
+      for (unsigned v = 0; v < nviews; ++v) {
+        // Refine the defined scene
+        tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
+        tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
+        
+        // Init poses
+        // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+        // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+      }
 
 
-    // Init structure
-    Landmarks & landmarks = tiny_scene.structure;
+      // Init structure
+      Landmarks & landmarks = tiny_scene.structure;
 
-    for (const auto & track_iterator : map_tracksCommon)
-    {
-      // Get corresponding points
-      auto iter = track_iterator.second.cbegin();
-      const uint32_t
-        i = iter->second,
-        j = (++iter)->second;
-
-      const Vec2
-        x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
-        x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
-
-      Vec3 X;
-      // triangulate 3 views, or two furthest baselines only
-      if (Triangulate2View(
-            Pose_I.rotation(),
-            Pose_I.translation(),
-            (*cam_I)(cam_I->get_ud_pixel(x1)),
-            Pose_J.rotation(),
-            Pose_J.translation(),
-            (*cam_J)(cam_J->get_ud_pixel(x2)),
-            X,
-            triangulation_method_))
+      for (const auto & track_iterator : map_tracksCommon)
       {
-        Observations obs;
-        obs[view_I->id_view] = Observation(x1, i);
-        obs[view_J->id_view] = Observation(x2, j);
-        landmarks[track_iterator.first].obs = std::move(obs);
-        landmarks[track_iterator.first].X = X;
+        // Get corresponding points
+        auto iter = track_iterator.second.cbegin();
+        const uint32_t
+          i = iter->second,
+          j = (++iter)->second;
+
+        const Vec2
+          x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
+          x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
+
+        Vec3 X;
+        // triangulate 3 views, or two furthest baselines only
+        if (Triangulate2View(
+              Pose_I.rotation(),
+              Pose_I.translation(),
+              (*cam_I)(cam_I->get_ud_pixel(x1)),
+              Pose_J.rotation(),
+              Pose_J.translation(),
+              (*cam_J)(cam_J->get_ud_pixel(x2)),
+              X,
+              triangulation_method_))
+        {
+          Observations obs;
+          obs[view_I->id_view] = Observation(x1, i);
+          obs[view_J->id_view] = Observation(x2, j);
+          landmarks[track_iterator.first].obs = std::move(obs);
+          landmarks[track_iterator.first].X = X;
+        }
+      }
+      Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
+
+      // - refine only Structure and Rotations & translations (keep intrinsic constant)
+      Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
+      options.linear_solver_type_ = ceres::DENSE_SCHUR;
+      Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+      if (!bundle_adjustment_obj.Adjust(tiny_scene,
+          Optimize_Options
+          (
+            Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
+            Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+            Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
+          )
+        )
+      {
+        return false;
       }
     }
-    Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
-
-    // - refine only Structure and Rotations & translations (keep intrinsic constant)
-    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
-    options.linear_solver_type_ = ceres::DENSE_SCHUR;
-    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-    if (!bundle_adjustment_obj.Adjust(tiny_scene,
-        Optimize_Options
-        (
-          Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
-          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-          Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
-        )
-      )
-    {
-      return false;
-    }
+    */
 
     // Save computed data
     const Pose3 pose_I = sfm_data_.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
@@ -753,7 +757,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       htmlFileStream << html_doc_stream_->getDoc();
     }
   }
-#endif
   return !sfm_data_.structure.empty();
 }
 
