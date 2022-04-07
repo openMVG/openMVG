@@ -31,6 +31,7 @@ class PointFeature {
   friend std::istream& operator>>(std::istream& in, PointFeature& obj);
 
 public:
+  // virtual ~PointFeature() = default;
   PointFeature(float x=0.0f, float y=0.0f);
 
   float x() const;

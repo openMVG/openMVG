@@ -487,6 +487,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
   }
 
+  // ---------------------------------------------------------------------------
   // a. Assert we have valid cameras
   const View *view[nviews] = {
     sfm_data_.GetViews().at(t[0]).get(),
@@ -519,6 +520,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_ERROR << "Cannot get back the camera intrinsic model for the pair.";
       return false;
     }
+    if (!dynamic_cast<const Pinhole_Intrinsic *>(cam[v])) {
+      OPENMVG_LOG_ERROR << "Trifocal initialization only works for pinhole intrinsics K matrix.";
+      return false;
+    }
   }
   
   OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
@@ -533,13 +538,224 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // ---------------------------------------------------------------------------
   // b. Get common features between the two view
   // use the track to have a more dense match correspondence set
-  /* TODO adapt from trifocal sample
   openMVG::tracks::STLMAPTracks map_tracksCommon;
-  shared_track_visibility_helper_->GetTracksInImages({I, J}, map_tracksCommon);
-  */
+  shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
 
+
+  //-- Copy point to arrays XXX
+  const size_t n = map_tracksCommon.size();
   
-  return false;
+  std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
+                            // datum[view](coord,point)
+
+  for (unsigned v = 0; v < nviews; ++v)
+    pxdatum[v].resize(4,n);
+  
+  uint32_t cptIndex = 0;
+  for (const auto &track_iter : map_tracksCommon) {
+    auto iter = track_iter.second.cbegin();
+    
+    uint32_t i=iter->second;
+    for (unsigned v = 0; v < nviews; ++v) {
+      const features::SIOPointFeature *feature = 
+        dynamic_cast<const features::SIOPointFeature *>( &(features_provider_->feats_per_view[t[v]][i]) );
+      if (!feature) {
+        OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
+        return false;
+      }
+      
+      // TODO: store std::sin and std::cos already in the feature so we don't
+      // keep recomputing it
+      pxdatum[v].col(cptIndex) << 
+        feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
+      // TODO: provide undistortion for tangents for models that need it (get_ud_pixel)
+      
+      i=(++iter)->second;
+    }
+    ++cptIndex;
+  }
+#if 0
+  
+  // ---------------------------------------------------------------------------
+  // c. Robust estimation of the relative pose
+  RelativePoseTrifocal_Info relativePose_info;
+
+  const std::pair<size_t, size_t>
+    imageSize_I(cam_I->w(), cam_I->h()),
+    imageSize_J(cam_J->w(), cam_J->h());
+
+  if (!robustRelativePoseTrifocal(
+    cam_I, cam_J, xI, xJ, relativePose_info, imageSize_I, imageSize_J, 4096))
+  {
+    OPENMVG_LOG_ERROR << " /!\\ Robust estimation failed to compute E for this pair: "
+      << "{"<< current_pair.first << "," << current_pair.second << "}";
+    return false;
+  }
+  OPENMVG_LOG_INFO << "Relative pose a-contrario upper_bound residual is: "
+    << relativePose_info.found_residual_precision;
+  // Bound min precision at 1 pix.
+  relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
+
+  const bool bRefine_using_BA = true;
+  if (bRefine_using_BA)
+  {
+    // Refine the defined scene
+    SfM_Data tiny_scene;
+    tiny_scene.views.insert(*sfm_data_.GetViews().find(view_I->id_view));
+    tiny_scene.views.insert(*sfm_data_.GetViews().find(view_J->id_view));
+    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_I->id_intrinsic));
+    tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view_J->id_intrinsic));
+
+    // Init poses
+    const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+    const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+
+    // Init structure
+    Landmarks & landmarks = tiny_scene.structure;
+
+    for (const auto & track_iterator : map_tracksCommon)
+    {
+      // Get corresponding points
+      auto iter = track_iterator.second.cbegin();
+      const uint32_t
+        i = iter->second,
+        j = (++iter)->second;
+
+      const Vec2
+        x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
+        x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
+
+      Vec3 X;
+      if (Triangulate2View(
+            Pose_I.rotation(),
+            Pose_I.translation(),
+            (*cam_I)(cam_I->get_ud_pixel(x1)),
+            Pose_J.rotation(),
+            Pose_J.translation(),
+            (*cam_J)(cam_J->get_ud_pixel(x2)),
+            X,
+            triangulation_method_))
+      {
+        Observations obs;
+        obs[view_I->id_view] = Observation(x1, i);
+        obs[view_J->id_view] = Observation(x2, j);
+        landmarks[track_iterator.first].obs = std::move(obs);
+        landmarks[track_iterator.first].X = X;
+      }
+    }
+    Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
+
+    // - refine only Structure and Rotations & translations (keep intrinsic constant)
+    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
+    options.linear_solver_type_ = ceres::DENSE_SCHUR;
+    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+    if (!bundle_adjustment_obj.Adjust(tiny_scene,
+        Optimize_Options
+        (
+          Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
+        )
+      )
+    {
+      return false;
+    }
+
+    // Save computed data
+    const Pose3 pose_I = sfm_data_.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
+    const Pose3 pose_J = sfm_data_.poses[view_J->id_pose] = tiny_scene.poses[view_J->id_pose];
+    map_ACThreshold_.insert({I, relativePose_info.found_residual_precision});
+    map_ACThreshold_.insert({J, relativePose_info.found_residual_precision});
+    set_remaining_view_id_.erase(view_I->id_view);
+    set_remaining_view_id_.erase(view_J->id_view);
+
+    // List inliers and save them
+    for (const auto & landmark_entry : tiny_scene.GetLandmarks())
+    {
+      const IndexT trackId = landmark_entry.first;
+      const Landmark & landmark = landmark_entry.second;
+      const Observations & obs = landmark.obs;
+      Observations::const_iterator
+        iterObs_xI = obs.find(view_I->id_view),
+        iterObs_xJ = obs.find(view_J->id_view);
+
+      const Observation & ob_xI = iterObs_xI->second;
+      const Observation & ob_xJ = iterObs_xJ->second;
+      const Vec2
+        ob_xI_ud = cam_I->get_ud_pixel(ob_xI.x),
+        ob_xJ_ud = cam_J->get_ud_pixel(ob_xJ.x);
+
+      const double angle = AngleBetweenRay(
+        pose_I, cam_I, pose_J, cam_J, ob_xI_ud, ob_xJ_ud);
+      const Vec2 residual_I = cam_I->residual(pose_I(landmark.X), ob_xI.x);
+      const Vec2 residual_J = cam_J->residual(pose_J(landmark.X), ob_xJ.x);
+      if (angle > 2.0 &&
+          CheiralityTest((*cam_I)(ob_xI_ud), pose_I,
+                         (*cam_J)(ob_xJ_ud), pose_J,
+                         landmark.X) &&
+          residual_I.norm() < relativePose_info.found_residual_precision &&
+          residual_J.norm() < relativePose_info.found_residual_precision)
+      {
+        sfm_data_.structure[trackId] = landmarks[trackId];
+      }
+    }
+    // Save outlier residual information
+    Histogram<double> histoResiduals;
+    OPENMVG_LOG_INFO
+      << "\n=========================\n"
+      << " MSE Residual InitialPair Inlier:\n";
+    ComputeResidualsHistogram(&histoResiduals);
+
+    if (!sLogging_file_.empty())
+    {
+      using namespace htmlDocument;
+      html_doc_stream_->pushInfo(htmlMarkup("h1","Essential Matrix."));
+      std::ostringstream os;
+      os
+        << "-------------------------------" << "<br>"
+        << "-- Robust Essential matrix: <"  << I << "," <<J << "> images: "
+        << view_I->s_Img_path << ","
+        << view_J->s_Img_path << "<br>"
+        << "-- Threshold: " << relativePose_info.found_residual_precision << "<br>"
+        << "-- Resection status: " << "OK" << "<br>"
+        << "-- Nb points used for robust Essential matrix estimation: "
+        << xI.cols() << "<br>"
+        << "-- Nb points validated by robust estimation: "
+        << sfm_data_.structure.size() << "<br>"
+        << "-- % points validated: "
+        << sfm_data_.structure.size()/static_cast<float>(xI.cols())
+        << "<br>"
+        << "-------------------------------" << "<br>";
+      html_doc_stream_->pushInfo(os.str());
+
+      html_doc_stream_->pushInfo(htmlMarkup("h2",
+        "Residual of the robust estimation (Initial triangulation). Thresholded at: "
+        + toString(relativePose_info.found_residual_precision)));
+
+      html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of residuals"));
+
+      const std::vector<double> xBin = histoResiduals.GetXbinsValue();
+      const auto range = autoJSXGraphViewport<double>(xBin, histoResiduals.GetHist());
+
+      htmlDocument::JSXGraphWrapper jsxGraph;
+      jsxGraph.init("InitialPairTriangulationKeptInfo",600,300);
+      jsxGraph.addXYChart(xBin, histoResiduals.GetHist(), "line,point");
+      jsxGraph.addLine(relativePose_info.found_residual_precision, 0,
+        relativePose_info.found_residual_precision, histoResiduals.GetHist().front());
+      jsxGraph.UnsuspendUpdate();
+      jsxGraph.setViewport(range);
+      jsxGraph.close();
+      html_doc_stream_->pushInfo(jsxGraph.toStr());
+
+      html_doc_stream_->pushInfo("<hr>");
+
+      std::ofstream htmlFileStream( std::string(stlplus::folder_append_separator(sOut_directory_) +
+        "Reconstruction_Report.html"));
+      htmlFileStream << html_doc_stream_->getDoc();
+    }
+  }
+#endif
+  return !sfm_data_.structure.empty();
 }
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
