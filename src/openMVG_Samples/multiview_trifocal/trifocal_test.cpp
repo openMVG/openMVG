@@ -301,7 +301,7 @@ TEST(TrifocalSampleApp, solveRansac)
   CHECK(true);
 }
 
-#if 0 // this test is ready, just needs some debugging
+//#if 0 // this test is ready, just needs some debugging
 TEST(TrifocalSampleApp, fullrun) 
 {
   TrifocalSampleApp T;
@@ -326,11 +326,11 @@ TEST(TrifocalSampleApp, fullrun)
   T.RobustSolve();
   // T.DisplayInliers();
   T.DisplayInliersCamerasAndPoints();
-  // T.DisplayInliersCamerasAndPointsSIFT();
+  T.DisplayInliersCamerasAndPointsSIFT();
   std::cout<<"hej"<<std::endl;
   //return EXIT_SUCCESS;
   CHECK(true);
 }
-#endif
+//#endif
 
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
