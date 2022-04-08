@@ -192,7 +192,7 @@ bool SequentialSfMReconstructionEngine::Process() {
 
   // Future:
   /* Check initial tuple size.
-  if (!MakeInitialTriplet3D(initial_pair_))
+  if (!MakeInitialTriplet3D(initial_triplet_))
     if (!MakeInitialPair3D(initial_pair_))
       return false;
       */
@@ -536,7 +536,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   }
 
   // ---------------------------------------------------------------------------
-  // b. Get common features between the two view
+  // b. Get common features between the three views
   // use the track to have a more dense match correspondence set
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);

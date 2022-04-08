@@ -42,7 +42,7 @@ I: sfm_data.json            I: sfm_data.json, pairs.bin      I: sfm_data.json, m
 O: pairs.bin                O: matches.putative.bin          O: matches.f.bin
 
 -->  main_SfM
-     I: sfm_data.json, maatch_dir (matches.f.bin)
+     I: sfm_data.json, match_dir (matches.f.bin)
      O: reconstruction_sequential/
 
 GeometricFilter 
@@ -56,6 +56,7 @@ GeometricFilter
 
 SequentialSfMReconstructionEngine::Constructor()
 - initializes list of remaining images to reconstruct as all images
+- TODO: Idea: remaining images as priority queue based on number of matches
 
 SequentialSfMReconstructionEngine::Process()
 - InitLandmarkTracks
@@ -68,18 +69,19 @@ SequentialSfMReconstructionEngine::Process()
     - Build
     - Filter(3)
 
-
 ### Useful structures:
 
 #### Landmark 
   - a associacao de um ponto em 3D e suas observacoes em imagens: `sfm_landmark.hpp`
+  - TODO: improve with tangents
+  - TODO: in trifocal RANSAC project tangents
+  - TODO: Um problema seria que a Landmark guarda apenas coordenadas de pontos e
+    a gente precisa da tangente/orientacao. Temos que pensar como seria isso.
 
 #### View: a struct with \label{sec:views}
   - image (caminho no disco)
   - id dos parametros intrinsecos da camera            (sometimes this is not set)
   - id dos parametros extrinsecos da camera (pose)     (sometimes this is not set)
-Um problema seria que a Landmark guarda apenas coordenadas de pontos e a gente
-precisa da tangente/orientacao. Temos que pensar como seria isso.
 
 #### Tracks
 

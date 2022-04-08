@@ -23,14 +23,13 @@ namespace sfm {
 
 struct RelativePoseTrifocal_Info
 {
-  Mat3 essential_matrix;
-  geometry::Pose3 relativePose;
+  Trifocal3PointPositionTangentialSolver::trifocal_model_t RelativePoseTrifocal;
   std::vector<uint32_t> vec_inliers;
   double initial_residual_tolerance;
   double found_residual_precision;
 
-  RelativePose_Info()
-    :initial_residual_tolerance(std::numeric_limits<double>::infinity()),
+  RelativePoseTrifocal_Info() :
+    initial_residual_tolerance(std::numeric_limits<double>::infinity()),
     found_residual_precision(std::numeric_limits<double>::infinity())
   {}
 };
@@ -57,6 +56,8 @@ bool robustRelativePoseTrifocal
 )
 {
   /// XXX get bearing vectors datum
+
+  
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
   
@@ -67,5 +68,15 @@ bool robustRelativePoseTrifocal
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold_pix), &inliers, max_iteration_count);
 
+  // model is a trifocal_model_t = std::array<Mat34, 3>;
+
+  
+
+
+
   // get back the cameras
+  
+  // TODO important: reconstruct and reproject all inliers with orientations and
+  // check that orientations match either inside ransac or as post filtering of
+  // correspondences
 }
