@@ -16,11 +16,13 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
+
 namespace openMVG { namespace cameras { struct IntrinsicBase; } }
 
 namespace openMVG {
 namespace sfm {
 
+  
 struct RelativePoseTrifocal_Info
 {
   Trifocal3PointPositionTangentialSolver::trifocal_model_t RelativePoseTrifocal;
@@ -49,33 +51,37 @@ struct RelativePoseTrifocal_Info
  */
 bool robustRelativePoseTrifocal
 (
-  const cameras::IntrinsicBase *cam[nviews],
+  const cameras::IntrinsicBase *intrinsics[nviews],
   std::array<Mat, nviews> pxdatum,
-  RelativePose_Info & relativePose_info,
+  RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   const size_t max_iteration_count = 1024
 )
 {
-  /// XXX get bearing vectors datum
+  constexpr unsigned nviews = 3, npts = 3;
 
-  
+  std::array<Mat, nviews> datum;
+
+  for (unsigned v=0; v < nviews; ++v)
+    for (unsigned ip=0; ip < npts; ++ip)
+      datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
+        
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
   
-  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]);
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
-  double constexpr threshold_pix = 4;
-  vector<uint32_t> inliers;
-  const auto model = MaxConsensus(trifocal_kernel, 
-      ScorerEvaluator<TrifocalKernel>(threshold_pix), &inliers, max_iteration_count);
+  double constexpr threshold_pix = 4; // TODO: use ACRANSAC
+  relativePoseTrifocal_info.RelativePoseTrifocal 
+    = MaxConsensus(trifocal_kernel, 
+      ScorerEvaluator<TrifocalKernel>(threshold_pix), 
+      &relativePoseTrifocal_info.inliers, max_iteration_count);
 
-  // model is a trifocal_model_t = std::array<Mat34, 3>;
+  // TODO might have to re compute residual tolerance or agument the
+  // MaxConsensus parameters to return that number, not just inliers.
+  // Perhaps move to ACRansac since its interface already provides that.
 
-  
+  // chirality test is done inside the solve TODO
 
-
-
-  // get back the cameras
-  
   // TODO important: reconstruct and reproject all inliers with orientations and
   // check that orientations match either inside ransac or as post filtering of
   // correspondences
