@@ -183,7 +183,9 @@ Error(
   // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
    
   Vec2 pxmeasured = pxbearing.col(third_view).head(2);
-  Vec2 pxdata = pxreprojected-pxmeasured;
+  Vec2 pxdata = pxreprojected-pxmeasured;             // Gabriel: Difference between two coordinates
+  invert_intrinsics(K, pxdata.data(), pxdata.data()); // Gabriel: This is necessary to make the error measurement WITHIN the pixel space.
+  //std::cerr << pxdata << "\n";
   // std::cerr << "TRIFOCAL LOG: Finished Error()\n";
   // std::cerr << "TRIFOCAL LOG: Printing Euclidian Distance Error()\n";
   // std::cerr << (pxreprojected-pxmeasured).squaredNorm() << "\n";
