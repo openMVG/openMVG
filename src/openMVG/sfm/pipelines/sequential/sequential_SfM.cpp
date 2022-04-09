@@ -541,10 +541,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
 
-
-  //-- Copy point to arrays XXX
-  const size_t n = map_tracksCommon.size();
-  
+  constexpr size_t n = map_tracksCommon.size();
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                             // datum[view](coord,point)
 
@@ -557,16 +554,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     
     uint32_t i=iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
-      const features::SIOPointFeature *feature = features_provider_->sio_feats_per_view[t[v]][i];
-      if (!feature) {
+      if (!features_provider_.has_sio_features()) {
         OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
         return false;
       }
-      
-      // TODO: store std::sin and std::cos already in the feature so we don't
-      // keep recomputing it
-      pxdatum[v].col(cptIndex) << 
-        feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
+      pxdatum[v].col(cptIndex) == sio_feats_per_view[t[v]][i].all_coords();
+      //   feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
       // TODO: provide undistortion for tangents for models that need it (get_ud_pixel)
       
       i=(++iter)->second;

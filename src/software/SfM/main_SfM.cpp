@@ -391,6 +391,12 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  if (trifocal && !dynamic_cast<SIFT_Regions>(regions_type.get()))
+  {
+    OPENMVG_LOG_ERROR << "Trifocal initialization currently requires oriented features.";
+    return EXIT_FAILURE;
+  }
+
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, directory_match, regions_type)) {
