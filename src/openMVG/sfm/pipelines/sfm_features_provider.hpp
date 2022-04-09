@@ -79,15 +79,14 @@ struct Features_Provider
 #endif
 
         auto sift_regions = dynamic_cast<SIFT_Regions *>(regions_type.get());
-        if (sif_regions)
-        {
+        if (sift_regions && store_as_sio_features) {
           // save loaded Features as SIOPointFeature for SfM pipeline elements
           // that use feature orientation etc
           sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
-        }
-        {
+        } else {
           // save loaded Features as PointFeature
           feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
+          assert(!store_as_sio_features);
         }
         ++my_progress_bar;
       }
