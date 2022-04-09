@@ -55,6 +55,9 @@ public:
     initial_triplet_ = initialTriplet;
   }
 
+  bool hasInitialPair() { return initial_pair_ != Pair(0,0); }
+  bool hasInitialTriplet() { return initial_triplet_ != Pair(0,0,0); }
+
   /// Initialize tracks
   bool InitLandmarkTracks();
 
