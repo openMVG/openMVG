@@ -32,12 +32,21 @@ struct Features_Provider
   /// PointFeature array per ViewId of the considered SfM_Data container
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
+  /// SIOPointFeature array per ViewId of the considered SfM_Data container
+  /// This will only be active when feats_per_view is not
+  /// This is for backward compatibility with the usual Features_Provider
+  /// Ideally, we could have a better structure
+  Hash_Map<IndexT, features::SIOPointFeatures> sio_feats_per_view;
+
+  bool has_sio_features() { return !sio_feats_per_view.empty(); }
+
   virtual ~Features_Provider() = default;
 
   virtual bool load(
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
-    std::unique_ptr<features::Regions>& region_type)
+    std::unique_ptr<features::Regions>& region_type,
+    bool store_as_sio_features = false)
   {
     system::LoggerProgress my_progress_bar(sfm_data.GetViews().size(), "- Features Loading -");
     // Read for each view the corresponding features and store them as PointFeatures
@@ -68,6 +77,14 @@ struct Features_Provider
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
 #endif
+
+        auto sift_regions = dynamic_cast<SIFT_Regions *>(regions_type.get());
+        if (sif_regions)
+        {
+          // save loaded Features as SIOPointFeature for SfM pipeline elements
+          // that use feature orientation etc
+          sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
+        }
         {
           // save loaded Features as PointFeature
           feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
