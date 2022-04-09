@@ -40,7 +40,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
 
-// XXX incremental v2: update for triplet 
+// TODO(trifocal) incremental v2: update for triplet 
 enum class ESfMSceneInitializer
 {
   INITIALIZE_EXISTING_POSES,
@@ -130,6 +130,42 @@ bool computeIndexFromImageNames(
       initialPairIndex.second != UndefinedIndexT);
 }
 
+/// From 2 given image filenames, find the 3 corresponding index in the View list
+bool computeIndexFromImageNames(
+  const SfM_Data & sfm_data,
+  const std::pair<std::string,std::string,std::string>& initialTripletName,
+  Triplet& initialTripletIndex)
+{
+  if (get<0>(initialTripletName) == get<1>(initialTriplet) || 
+      get<0>(initialTripletName) == get<2>(initialTriplet) || 
+      get<1>(initialTripletName) == get<2>(initialTriplet))
+      
+  {
+    OPENMVG_LOG_ERROR << "Cannot use repeated images to initialize a triplet.";
+    return false;
+  }
+
+  initialTripletIndex = {UndefinedIndexT, UndefinedIndexT,UndefinedIndexT};
+
+  /// List views filenames and find the one that correspond to the user ones:
+  for (Views::const_iterator it =  sfm_data.GetViews().begin(); 
+                             it != sfm_data.GetViews().end(); ++it)
+  {
+    const View *v = it->second.get();
+    const std::string filename = stlplus::filename_part(v->s_Img_path);
+    if (filename == get<0>(initialTripletName))
+      get<0>(initialTripletIndex) = v->id_view;
+    else if (filename == get<1>(initialTripletName))
+      get<1>(initialTripletIndex) = v->id_view;
+    else if (filename == get<2>(initialTripletName))
+      get<2>(initialTripletIndex) = v->id_view;
+  }
+  return (
+      get<0>(initialTripletIndex) != UndefinedIndexT &&
+      get<1>(initialTripletIndex) != UndefinedIndexT &&
+      get<2>(initialTripletIndex) != UndefinedIndexT);
+}
+
 int main(int argc, char **argv)
 {
   using namespace std;
@@ -160,6 +196,7 @@ int main(int argc, char **argv)
   // SfM v1
   // initial_tuple_string
   std::pair<std::string,std::string> initial_pair_string("","");
+  std::tuple<std::string,std::string,std::string> initial_triplet_string("","","");
 
   // SfM v2
   std::string sfm_initializer_method = "STELLAR";
@@ -190,6 +227,14 @@ int main(int argc, char **argv)
   // Incremental SfM1
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
+  // Incremental SfM1 with trifocal initialization
+  // TODO If both initial triplet and initial pair are specified,
+  // then first try intial pair then try initial triplet if that fails
+  // OR try initial triplet first and initial pair if fails, which might be more
+  // reliable anyways
+  cmd.add( make_option('x', get<0>(getinitial_triplet_string), "initial_triplet_x") );
+  cmd.add( make_option('y', get<1>(initial_triplet_string), "initial_triplet_y") );
+  cmd.add( make_option('z', get<2>(initial_triplet_string), "initial_triplet_z") );
   // Global SfM
   cmd.add( make_option('r', rotation_averaging_method, "rotationAveraging") );
   cmd.add( make_option('t', translation_averaging_method, "translationAveraging") );
@@ -236,6 +281,9 @@ int main(int argc, char **argv)
     << "[INCREMENTAL]\n"
     << "\t[-a|--initial_pair_a] filename of the first image (without path)\n"
     << "\t[-b|--initial_pair_b] filename of the second image (without path)\n"
+    << "\t[-x|--initial_pair_x] filename of the first image (without path)\n"
+    << "\t[-y|--initial_pair_y] filename of the second image (without path)\n"
+    << "\t[-z|--initial_pair_z] filename of the thirds image (without path)\n"
     << "\t[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t\t 1: Pinhole \n"
       << "\t\t 2: Pinhole radial 1\n"
@@ -421,7 +469,7 @@ int main(int argc, char **argv)
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
   switch(scene_initializer_enum)
   {
-    // XXX incremental v2: update for triplet 
+    //TODO(trifocal) incremental v2: update for triplet 
     case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
       OPENMVG_LOG_ERROR << "Not yet implemented.";
       return EXIT_FAILURE;
@@ -472,27 +520,44 @@ int main(int argc, char **argv)
     engine->Set_Use_Motion_Prior(b_use_motion_priors);
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
-
-    // XXX set initial triplet parameter for now
-    // Set automatic pair selection for later
+1
     // Handle Initial pair parameter
     if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())
     {
-      Pair initial_pair_index; // Tuple initial_pair_index
+      Pair initial_pair_index;
       if (!computeIndexFromImageNames(sfm_data, initial_pair_string, initial_pair_index))
-      // if (!computeIndexFromImageNames(sfm_data, initial_tuple_string, initial_tuple_index))
       {
         OPENMVG_LOG_ERROR << "Could not find the initial pairs <" << initial_pair_string.first
             <<  ", " << initial_pair_string.second << ">!";
         return EXIT_FAILURE;
       }
       engine->setInitialPair(initial_pair_index);
-      // engine->setInitialTuple(initial_tuple_index);
     }
+
+    // Handle Initial triplet parameter
+    // TODO Set automatic pair selection for later
+    // set initial triplet parameter for now
+    if (!get<0>(initial_triplet_string).empty() && 
+        !get<1>(initial_triplet_string).empty() &&
+        !get<2>(initial_triplet_string).empty())
+    {
+      Triplet initial_triplet_index;
+      if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index))
+      {
+        OPENMVG_LOG_ERROR << "Could not find the initial triplets <" 
+          << get<0>(initial_triplet_string) <<  ", " 
+          << get<1>(initial_kriplet_string) <<  ", " 
+          << get<2>(initial_triplet_string) <<  ", " 
+          << ">!";
+        return EXIT_FAILURE;
+      }
+      engine->setInitialTriplet(initial_triplet_index);
+    }
+    
     sfm_engine.reset(engine);
   }
     break;
-  case ESfMEngine::INCREMENTALV2: // XXX could be easier to insert trifocal here
+  case ESfMEngine::INCREMENTALV2: // TODO(trifocal) could be easier to insert trifocal here
   {
     SequentialSfMReconstructionEngine2 * engine =
       new SequentialSfMReconstructionEngine2(
