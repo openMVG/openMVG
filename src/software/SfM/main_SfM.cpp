@@ -232,7 +232,7 @@ int main(int argc, char **argv)
   // then first try intial pair then try initial triplet if that fails
   // OR try initial triplet first and initial pair if fails, which might be more
   // reliable anyways
-  cmd.add( make_option('x', get<0>(getinitial_triplet_string), "initial_triplet_x") );
+  cmd.add( make_option('x', get<0>(initial_triplet_string), "initial_triplet_x") );
   cmd.add( make_option('y', get<1>(initial_triplet_string), "initial_triplet_y") );
   cmd.add( make_option('z', get<2>(initial_triplet_string), "initial_triplet_z") );
   // Global SfM
@@ -339,6 +339,10 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // We always use oriented trifocal for trifocal initialization
+  // as it uses only 3 points across 3 views (Fabbri CVPR'20)
+  bool oriented_trifocal = !get<0>(initial_triplet_string).empty();
+
   b_use_motion_priors = cmd.used('P');
 
   // Check validity of command line parameters:
@@ -439,7 +443,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (trifocal && !dynamic_cast<SIFT_Regions>(regions_type.get()))
+  if (oriented_trifocal && !dynamic_cast<SIFT_Regions>(regions_type.get()))
   {
     OPENMVG_LOG_ERROR << "Trifocal initialization currently requires oriented features.";
     return EXIT_FAILURE;
@@ -447,7 +451,7 @@ int main(int argc, char **argv)
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, directory_match, regions_type)) {
+  if (!feats_provider->load(sfm_data, directory_match, regions_type, oriented_trifocal)) {
     OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << directory_match << ".";
     return EXIT_FAILURE;
   }
