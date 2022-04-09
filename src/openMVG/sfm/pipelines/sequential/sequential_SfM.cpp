@@ -471,6 +471,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   }
   return false;
 }
+
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
 // Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
 // tensor / relative pose for ImageId [t[0],t[1],t[2]]
@@ -611,19 +612,19 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         // Init structure
         Landmarks & landmarks = tiny_scene.structure;
 
+        Mat3X X;
+        X.resize(3,3);
         for (const auto & track_iterator : map_tracksCommon)
         {
           // Get corresponding points
           auto iter = track_iterator.second.cbegin();
-          const uint32_t
-            i = iter->second,
-            j = (++iter)->second;
-
-          const Vec2
-            x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
-            x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
-
-          Vec3 X;
+          
+          uint32_t i = iter->second;
+          for (unsigned v = 0; v < nviews; ++v) {
+            X.col(v) = features_provider_.sio_feats_per_view[t[v] /* XXX*/][i].coords().cast<double>();
+            i=(++iter)->second;
+          }
+          
           // triangulate 3 views, or two furthest baselines only
           TriangulateNView ( const Mat3X &x, // x's are landmark bearing vectors in each camera 
               const std::vector<Mat34> &Ps, // Ps are projective cameras 
