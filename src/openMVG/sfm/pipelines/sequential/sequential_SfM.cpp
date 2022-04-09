@@ -93,7 +93,7 @@ void SequentialSfMReconstructionEngine::SetMatchesProvider(Matches_Provider * pr
   matches_provider_ = provider;
 }
 
-// XXX GetTripletWithMostMatches
+// TODO(trifocal) GetTripletWithMostMatches
 // Get the PairWiseMatches that have the most support point
 std::vector<openMVG::matching::PairWiseMatches::const_iterator>
 GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches, int clamp_count = 10) {
@@ -214,7 +214,7 @@ bool SequentialSfMReconstructionEngine::Process() {
     // Add images to the 3D reconstruction
     for (const auto & iter : vec_possible_resection_indexes)
     {
-      bImageAdded |= Resection(iter);  // XXX P2Pt
+      bImageAdded |= Resection(iter);  // TODO(p2pt)
       set_remaining_view_id_.erase(iter);
     }
 
@@ -563,8 +563,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
         return false;
       }
-      pxdatum[v].col(cptIndex) == sio_feats_per_view[t[v]][i].all_coords();
-      //   feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
+      SIOPointFeature *feature = features_provider_.sio_feats_per_view[t[v]][i];
+      pxdatum[v].col(cptIndex) << feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
       // TODO: provide undistortion for tangents for models that need it (get_ud_pixel)
       
       i=(++iter)->second;
@@ -591,59 +591,63 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
-  /*
-  const bool bRefine_using_BA = true;
+  constexpr bool bRefine_using_BA = true;
   if (bRefine_using_BA)
   {
-      SfM_Data tiny_scene;
+    SfM_Data tiny_scene;
     { // badj
-      for (unsigned v = 0; v < nviews; ++v) {
-        // Refine the defined scene
-        tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-        tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
-        
-        // Init poses
-        // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-        // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
-      }
+      { // initial structure ---------------------------------------------------
+        for (unsigned v = 0; v < nviews; ++v) {
+          // Refine the defined scene
+          tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
+          tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
+          
+          // Init poses
+          // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+          // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+        }
 
 
-      // Init structure
-      Landmarks & landmarks = tiny_scene.structure;
+        // Init structure
+        Landmarks & landmarks = tiny_scene.structure;
 
-      for (const auto & track_iterator : map_tracksCommon)
-      {
-        // Get corresponding points
-        auto iter = track_iterator.second.cbegin();
-        const uint32_t
-          i = iter->second,
-          j = (++iter)->second;
-
-        const Vec2
-          x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
-          x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
-
-        Vec3 X;
-        // triangulate 3 views, or two furthest baselines only
-        if (Triangulate2View(
-              Pose_I.rotation(),
-              Pose_I.translation(),
-              (*cam_I)(cam_I->get_ud_pixel(x1)),
-              Pose_J.rotation(),
-              Pose_J.translation(),
-              (*cam_J)(cam_J->get_ud_pixel(x2)),
-              X,
-              triangulation_method_))
+        for (const auto & track_iterator : map_tracksCommon)
         {
+          // Get corresponding points
+          auto iter = track_iterator.second.cbegin();
+          const uint32_t
+            i = iter->second,
+            j = (++iter)->second;
+
+          const Vec2
+            x1 = features_provider_->feats_per_view[I][i].coords().cast<double>(),
+            x2 = features_provider_->feats_per_view[J][j].coords().cast<double>();
+
+          Vec3 X;
+          // triangulate 3 views, or two furthest baselines only
+          TriangulateNView ( const Mat3X &x, // x's are landmark bearing vectors in each camera 
+              const std::vector<Mat34> &Ps, // Ps are projective cameras 
+              Vec4 *X);
+          // XXX
+          TriangulateNView(
+                Pose_I.rotation(),
+                Pose_I.translation(),
+                (*cam_I)(cam_I->get_ud_pixel(x1)),
+                Pose_J.rotation(),
+                Pose_J.translation(),
+                (*cam_J)(cam_J->get_ud_pixel(x2)),
+                X,
+                triangulation_method_);
           Observations obs;
           obs[view_I->id_view] = Observation(x1, i);
           obs[view_J->id_view] = Observation(x2, j);
           landmarks[track_iterator.first].obs = std::move(obs);
           landmarks[track_iterator.first].X = X;
         }
-      }
-      Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
+        Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
+      } // !initial structure
 
+      // -----------------------------------------------------------------------
       // - refine only Structure and Rotations & translations (keep intrinsic constant)
       Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
       options.linear_solver_type_ = ceres::DENSE_SCHUR;
@@ -659,8 +663,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       {
         return false;
       }
-    }
-    */
+    } // !badj
 
     // Save computed data
     const Pose3 pose_I = sfm_data_.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
@@ -1238,7 +1241,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   }
 
   // C. Do the resectioning: compute the camera pose
-  // XXX p2pt
+  // TODO(p2pt)
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
 
   geometry::Pose3 pose;
