@@ -57,7 +57,6 @@ Solve(
   double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
   double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
   
-//  std::cerr << "TRIFOCAL LOG: Called Solve()\n";
   // pack into solver's efficient representation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
@@ -79,7 +78,6 @@ Solve(
   unsigned nsols_final = 0;
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
-//  std::cerr << "TRIFOCAL LOG: Before minus::solve()\n" << std::endl;
   for (unsigned i = 0; i < max_solve_tries; ++i) {
     std::cerr << "Trying to solve\n";
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
@@ -90,15 +88,12 @@ Solve(
   // fill C0* with for loop
   std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
-  // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
-  // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
+                                                        // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   tt.resize(nsols_final);
-//  std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
   for (unsigned s=0; s < nsols_final; ++s) {
     tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
     for (unsigned v=1; v < io::pp::nviews; ++v) {
         // eigen is col-major but minus is row-major, so memcpy canot be used.
-        // memcpy(tt[s][v].data(), (double *) cameras[id_sols[s]][v-1], 9*sizeof(double));
         for (unsigned ir = 0; ir < 3; ++ir)
           for (unsigned ic = 0; ic < 3; ++ic)
             tt[s][v](ir, ic) = cameras[id_sols[s]][v-1][ir][ic];
@@ -112,9 +107,6 @@ Solve(
   //
   // If we know the rays are perfectly coplanar, we can just use cross
   // product within the plane instead of SVD
-//  std::cerr << "TRIFOCAL LOG: Finished ()Solve()\n";
-  // std::cerr << "Minus failed to compute tracks\n";
-  // exit(EXIT_FAILURE);
 }
 
 double Trifocal3PointPositionTangentialSolver::
