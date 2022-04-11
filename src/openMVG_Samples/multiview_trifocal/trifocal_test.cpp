@@ -177,19 +177,12 @@ initialize_gt()
   tt_gt_[0] = Mat34::Identity(); // view 0 [I | 0]
   for (unsigned v=1; v < io::pp::nviews; ++v) {
     // eigen is col-major but minus is row-major, so memcpy canot be used.
-    // memcpy(tt_gt_[v].data(), cameras_gt_relative[v-1], 9*sizeof(double));
     for (unsigned ir = 0; ir < 3; ++ir)
       for (unsigned ic = 0; ic < 3; ++ic)
         tt_gt_[v](ir, ic) = cameras_gt_relative[v-1][ir][ic];
     for (unsigned r=0; r < 3; ++r) // copy translation
       tt_gt_[v](r,3) = cameras_gt_relative[v-1][3][r];
   }
-//  std::cerr << "cams relative: " << std::endl;
-//  for (unsigned ir = 0; ir < 3; ++ir) {
-//    for (unsigned ic = 0; ic < 3; ++ic)
-//      std::cerr << cameras_gt_relative[0][ir][ic];
-//    std::cerr << std::endl;
-//  }
 }
   
 
@@ -239,7 +232,61 @@ TEST(TrifocalSampleApp, solver)
     }
     std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
   }
+  
+  CHECK(found);
+}
+// Testing Error()
+TEST(TrifocalSampleApp, error) 
+{
 
+  // Testing error model with 3 perfect points
+  array<Mat, 3> datum; // x,y,orientation across 3 views
+  array<Mat, 3> pxdatum;
+  vector<int> perfect {13, 23, 43};
+  double K[2][3] = {  // some default value for testing
+    {2584.9325098195013197, 0, 249.77137587221417903},
+    {0, 2584.7918606057692159, 278.31267937919352562}
+   //  0 0 1 
+  };
+
+  // todo: invert K matrix
+  std::cerr << io::pp::npoints << "\n";
+  for (unsigned v=0; v < 3; ++v) {
+    datum[v].resize(4, 3);
+    pxdatum[v].resize(4, 3);
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
+      pxdatum[v](0,ip) = data::p_[v][ip][0];
+      pxdatum[v](1,ip) = data::p_[v][ip][1];
+      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
+      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+  }
+
+  
+  initialize_gt();
+  unsigned constexpr max_solve_tries=5;
+  bool found = false;
+
+  std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
+  unsigned sol_id = (unsigned)-1;
+  for (unsigned i = 0; i < max_solve_tries; ++i) {
+    
+    std::cerr << "Test log: Trying to solve, attempt: " << i+1 << std::endl;
+    Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
+
+    found = probe_solutions(sols, tt_gt_, &sol_id);
+    if (found) {
+      std::cerr << "Found solution at id " << sol_id << std::endl;
+      for(unsigned j = 0; j < 3; j++)
+        std::cout << sols[sol_id][j] << "\n" << std::endl;
+      break;
+    }
+    std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
+  }
+  float err = Trifocal3PointPositionTangentialSolver::Error(sols[sol_id], datum[0].col(1), datum[1].col(1), datum[2].col(1), pxdatum[0].col(1), pxdatum[1].col(1), pxdatum[2].col(1), K); 
+  std::cerr << err << "\n";
   CHECK(found);
 }
 
@@ -301,7 +348,7 @@ TEST(TrifocalSampleApp, solveRansac)
   CHECK(true);
 }
 
-//#if 0 // this test is ready, just needs some debugging
+#if 0 // this test is ready, just needs some debugging
 TEST(TrifocalSampleApp, fullrun) 
 {
   TrifocalSampleApp T;
@@ -331,6 +378,6 @@ TEST(TrifocalSampleApp, fullrun)
   //return EXIT_SUCCESS;
   CHECK(true);
 }
-//#endif
+#endif
 
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
