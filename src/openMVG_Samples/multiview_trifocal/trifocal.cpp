@@ -57,7 +57,6 @@ Solve(
   double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
   double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
   
-  //std::cerr << "Datum 0 mtrx: " << datum_0.rows() << "X" << datum_0.cols() << endl;
 //  std::cerr << "TRIFOCAL LOG: Called Solve()\n";
   // pack into solver's efficient representation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
@@ -88,17 +87,6 @@ Solve(
     std::cerr << "Minus failed once to compute tracks, perhaps retry\n";  // for a good test, this never fails
   }
 
-  //  for (unsigned s=0; s < nsols_final; ++s) {
-  //    for (unsigned v=1; v < io::pp::nviews; ++v) {
-  //        for (unsigned i=0; i < 4; ++i) {
-  //          for (unsigned j=0; j < 3; ++j) {
-  //            cout << cameras[s][v][i][j] << " \n"[j == 2];
-  //          }
-  //        }
-  //        cout << "\n";
-  //    }
-  //    cout << "\n";
-  //  }
   // fill C0* with for loop
   std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
@@ -106,7 +94,6 @@ Solve(
   // std::cerr << "TRIFOCAL LOG: Antes de resize()\n" << std::endl;
   tt.resize(nsols_final);
 //  std::cerr << "TRIFOCAL LOG: Chamou resize()\n";
-  //using trifocal_model_t = array<Mat34, 3>;
   for (unsigned s=0; s < nsols_final; ++s) {
     tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
     for (unsigned v=1; v < io::pp::nviews; ++v) {
@@ -154,7 +141,6 @@ Error(
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
-  // std::cerr << "bearing mtrx:\n " << bearing << endl;
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
@@ -163,10 +149,8 @@ Error(
     // TODO use triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
     third_view = 2;
-    // std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
-    // std::cerr << "triangulated_homg mtrx:\n " << triangulated_homg << endl;
     third_view = 1;
   }
   Mat23 pxbearing; // 2x2 matrix
@@ -185,17 +169,8 @@ Error(
   Vec2 pxmeasured = pxbearing.col(third_view).head(2);
   Vec2 pxdata = pxreprojected-pxmeasured;             // Gabriel: Difference between two coordinates
   invert_intrinsics(K, pxdata.data(), pxdata.data()); // Gabriel: This is necessary to make the error measurement WITHIN the pixel space.
-  //std::cerr << pxdata << "\n";
-  // std::cerr << "TRIFOCAL LOG: Finished Error()\n";
-  // std::cerr << "TRIFOCAL LOG: Printing Euclidian Distance Error()\n";
-  // std::cerr << (pxreprojected-pxmeasured).squaredNorm() << "\n";
-  // std::cerr << "TRIFOCAL LOG: Printing City Block Error()\n";
-  // std::cerr << max(abs(pxdata(0)), abs(pxdata(1))) << "\n";
-  // std::cerr << "TRIFOCAL LOG: Printing ChessBoard distance Error()\n";
-  // std::cerr << abs(pxdata(0)) + abs(pxdata(1)) << "\n";
-  // return (pxreprojected-pxmeasured).squaredNorm();
-  return abs(pxdata(0)) + abs(pxdata(1));
-  // return max(abs(pxdata(0)), abs(pxdata(1)));
+  return (pxdata).squaredNorm();
+  
 }
 
 } // namespace trifocal3pt
