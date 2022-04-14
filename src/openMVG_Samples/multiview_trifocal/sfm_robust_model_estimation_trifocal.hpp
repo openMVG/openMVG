@@ -25,7 +25,7 @@ namespace sfm {
   
 struct RelativePoseTrifocal_Info
 {
-  Trifocal3PointPositionTangentialSolver::trifocal_model_t RelativePoseTrifocal;
+  Trifocal3PointPositionTangentialSolver::trifocal_model_t relativePoseTrifocal;
   std::vector<uint32_t> vec_inliers;
   double initial_residual_tolerance;
   double found_residual_precision;

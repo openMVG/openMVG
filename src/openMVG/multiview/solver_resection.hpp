@@ -19,6 +19,7 @@ enum class SolverType
   P3P_KNEIP_CVPR11 = 2,
   P3P_NORDBERG_ECCV18 = 3,
   UP2P_KUKELOVA_ACCV10 = 4,
+  //TODO(p2pt) 
   DEFAULT = P3P_NORDBERG_ECCV18
 };
 

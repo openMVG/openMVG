@@ -450,6 +450,8 @@ int main(int argc, char **argv)
   }
 
   // Features reading
+  // TODO(p2pt) if request p2pt resection, then load orientations
+  // 
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, directory_match, regions_type, oriented_trifocal)) {
     OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << directory_match << ".";

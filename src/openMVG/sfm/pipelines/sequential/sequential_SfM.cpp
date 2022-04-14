@@ -565,9 +565,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         return false;
       }
       SIOPointFeature *feature = features_provider_.sio_feats_per_view[t[v]][i];
-      pxdatum[v].col(cptIndex) << feature->x(), feature->y(), cos(feature->orientation()), sin(feature->orientation());
+      pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
+                                 cos(feature->orientation()), sin(feature->orientation());
       // TODO: provide undistortion for tangents for models that need it (get_ud_pixel)
-      
       i=(++iter)->second;
     }
     ++cptIndex;
@@ -576,18 +576,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
   RelativePoseTrifocal_Info relativePose_info;
-
-  const std::pair<size_t, size_t>
-    imageSize_I(cam_I->w(), cam_I->h()),
-    imageSize_J(cam_J->w(), cam_J->h());
-  
   if (!robustRelativePoseTrifocal(cam, datum, relativePose_info, 1024))
   {
     OPENMVG_LOG_ERROR << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this pair: "
       << "{"<< current_pair.first << "," << current_pair.second << "}";
     return false;
   }
-  OPENMVG_LOG_INFO << "Trifocal Relative Pose residual from all inliners is: "
+  OPENMVG_LOG_INFO 
+    << "Trifocal Relative Pose residual from all inliners is: "
     << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
@@ -598,49 +594,37 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     SfM_Data tiny_scene;
     { // badj
       { // initial structure ---------------------------------------------------
+        std::vector<Mat34> P(3);
         for (unsigned v = 0; v < nviews; ++v) {
           // Refine the defined scene
           tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-          tiny_scene.intrinsics.insert(*sfm_data_.GetIntrinsics().find(view[v]->id_intrinsic));
+          tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
           
-          // Init poses
-          // const Pose3 & Pose_I = tiny_scene.poses[view_I->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
-          // const Pose3 & Pose_J = tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+          // Init projection matrices
+          P.push_back(cam[v].K()*(relativePose_info.relativePoseTrifocal[v]));
         }
-
 
         // Init structure
         Landmarks & landmarks = tiny_scene.structure;
 
-        Mat3X X;
-        X.resize(3,3);
+        Mat3X x(3,3);
         for (const auto & track_iterator : map_tracksCommon)
         {
           // Get corresponding points
           auto iter = track_iterator.second.cbegin();
-          
           uint32_t i = iter->second;
+          Observations obs;
           for (unsigned v = 0; v < nviews; ++v) {
-            X.col(v) = features_provider_.sio_feats_per_view[t[v] /* XXX*/][i].coords().cast<double>();
+            x.col(v) = features_provider_.sio_feats_per_view[t[v]][i].coords().homogeneous().cast<double>();
+            // TODO get_ud_pixel
             i=(++iter)->second;
+            obs[view[v]->id_view] = Observation(x.col(v), i);
           }
           
-          // triangulate 3 views, or two furthest baselines only
-          TriangulateNView ( const Mat3X &x, // x's are landmark bearing vectors in each camera 
-              const std::vector<Mat34> &Ps, // Ps are projective cameras 
-              Vec4 *X);
-          // XXX
-          TriangulateNView(
-                Pose_I.rotation(),
-                Pose_I.translation(),
-                (*cam_I)(cam_I->get_ud_pixel(x1)),
-                Pose_J.rotation(),
-                Pose_J.translation(),
-                (*cam_J)(cam_J->get_ud_pixel(x2)),
-                X,
-                triangulation_method_);
-          Observations obs;
-          obs[view_I->id_view] = Observation(x1, i);
+          // triangulate 3 views
+          Vec4 X;
+          TriangulateNView(x, P, &X);
+          
           obs[view_J->id_view] = Observation(x2, j);
           landmarks[track_iterator.first].obs = std::move(obs);
           landmarks[track_iterator.first].X = X;
@@ -653,8 +637,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
       options.linear_solver_type_ = ceres::DENSE_SCHUR;
       Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-      if (!bundle_adjustment_obj.Adjust(tiny_scene,
-          Optimize_Options
+      if (!bundle_adjustment_obj.Adjust(tiny_scene, Optimize_Options
           (
             Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
             Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
