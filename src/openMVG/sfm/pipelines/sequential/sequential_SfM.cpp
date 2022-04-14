@@ -596,7 +596,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       { // initial structure ---------------------------------------------------
         std::vector<Mat34> P(3);
         for (unsigned v = 0; v < nviews; ++v) {
-          // Refine the defined scene
+          //  Init views and intrincics
           tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
           tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
           
@@ -612,24 +612,23 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         {
           // Get corresponding points
           auto iter = track_iterator.second.cbegin();
-          uint32_t i = iter->second;
+          uint32_t ifeat = iter->second;
           Observations obs;
           for (unsigned v = 0; v < nviews; ++v) {
-            x.col(v) = features_provider_.sio_feats_per_view[t[v]][i].coords().homogeneous().cast<double>();
-            // TODO get_ud_pixel
-            i=(++iter)->second;
-            obs[view[v]->id_view] = Observation(x.col(v), i);
+            x.col(v) = 
+              features_provider_.sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+            // TODO(future) get_ud_pixel
+            ifeat=(++iter)->second;
+            obs[view[v]->id_view] = Observation(x.col(v), t[v]]);
           }
+          landmarks[track_iterator.first].obs = std::move(obs);
           
           // triangulate 3 views
           Vec4 X;
           TriangulateNView(x, P, &X);
-          
-          obs[view_J->id_view] = Observation(x2, j);
-          landmarks[track_iterator.first].obs = std::move(obs);
           landmarks[track_iterator.first].X = X;
         }
-        Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialPair.ply"), ESfM_Data(ALL));
+        Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
       } // !initial structure
 
       // -----------------------------------------------------------------------
