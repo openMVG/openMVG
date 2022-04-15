@@ -478,7 +478,6 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 bool SequentialSfMReconstructionEngine::
 MakeInitialTriplet3D(const Triplet &current_triplet)
 {
-
   static constexpr unsigned nviews = 3;
   std::array<IndexT, nviews> t{ {std::get<0>(current_triplet),
                                  std::get<1>(current_triplet),
@@ -583,7 +582,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     return false;
   }
   OPENMVG_LOG_INFO 
-    << "Trifocal Relative Pose residual from all inliners is: "
+    << "Trifocal Relative Pose residual from all inliers is: "
     << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
@@ -598,7 +597,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         for (unsigned v = 0; v < nviews; ++v) {
           //  Init views and intrincics
           tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-          tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
+          tiny_scene.intrinsics.insert(iterIntrinsic[v]);
           
           // Init projection matrices
           P.push_back(cam[v].K()*(relativePose_info.relativePoseTrifocal[v]));
@@ -649,12 +648,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     } // !badj
 
     // Save computed data
-    const Pose3 pose_I = sfm_data_.poses[view_I->id_pose] = tiny_scene.poses[view_I->id_pose];
-    const Pose3 pose_J = sfm_data_.poses[view_J->id_pose] = tiny_scene.poses[view_J->id_pose];
-    map_ACThreshold_.insert({I, relativePose_info.found_residual_precision});
-    map_ACThreshold_.insert({J, relativePose_info.found_residual_precision});
-    set_remaining_view_id_.erase(view_I->id_view);
-    set_remaining_view_id_.erase(view_J->id_view);
+    const Pose3 * pose[nviews];
+    for (unsigned v = 0; v < nviews; ++v)  {
+      pose[v] = &sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
+      map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
+      set_remaining_view_id_.erase(view[v]->id_view);
+    }
 
     // List inliers and save them
     for (const auto & landmark_entry : tiny_scene.GetLandmarks())
@@ -662,13 +661,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       const IndexT trackId = landmark_entry.first;
       const Landmark & landmark = landmark_entry.second;
       const Observations & obs = landmark.obs;
-      Observations::const_iterator
-        iterObs_xI = obs.find(view_I->id_view),
-        iterObs_xJ = obs.find(view_J->id_view);
 
-      const Observation & ob_xI = iterObs_xI->second;
-      const Observation & ob_xJ = iterObs_xJ->second;
-      const Vec2
+      Observations::const_iterator iterObs_x[nviews];
+      const Observation *ob_x[nviews];
+      const Vec2 *v_obs;
+      for (unsigned v = 0; v < nviews; ++v) {
+        iterObs_x[v] = obs.find(view[v]->id_view),
+        ob_x[v] = &iterObs_x[v]->second;
+      }
         ob_xI_ud = cam_I->get_ud_pixel(ob_xI.x),
         ob_xJ_ud = cam_J->get_ud_pixel(ob_xJ.x);
 
@@ -742,6 +742,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
   }
   return !sfm_data_.structure.empty();
+  // XXX make sure view_I is accessed view[v] not view[t[v]]
 }
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
