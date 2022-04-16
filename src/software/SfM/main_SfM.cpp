@@ -189,8 +189,8 @@ int main(int argc, char **argv)
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
   // Global SfM
-  cmd.add( make_option('r', rotation_averaging_method, "rotationAveraging") );
-  cmd.add( make_option('t', translation_averaging_method, "translationAveraging") );
+  cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
+  cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -277,10 +277,10 @@ int main(int argc, char **argv)
     << "\t\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
     << "\n\n"
     << "[GLOBAL]\n"
-    << "\t[-r|--rotationAveraging]\n"
+    << "\t[-R|--rotationAveraging]\n"
       << "\t\t 1 -> L1 minimization\n"
       << "\t\t 2 -> L2 minimization (default)\n"
-    << "\t[-t|--translationAveraging]:\n"
+    << "\t[-T|--translationAveraging]:\n"
       << "\t\t 1 -> L1 minimization\n"
       << "\t\t 2 -> L2 minimization of sum of squared Chordal distances\n"
       << "\t\t 3 -> SoftL1 minimization (default)\n";
