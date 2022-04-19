@@ -242,12 +242,6 @@ TEST(TrifocalSampleApp, error)
   // Testing error model with 3 perfect points
   array<Mat, 3> datum; // x,y,orientation across 3 views
   array<Mat, 3> pxdatum;
-  vector<int> perfect {13, 23, 43};
-  double K[2][3] = {  // some default value for testing
-    {2584.9325098195013197, 0, 249.77137587221417903},
-    {0, 2584.7918606057692159, 278.31267937919352562}
-   //  0 0 1 
-  };
 
   // todo: invert K matrix
   std::cerr << io::pp::npoints << "\n";
@@ -266,7 +260,7 @@ TEST(TrifocalSampleApp, error)
 
   
   initialize_gt();
-  unsigned constexpr max_solve_tries=5;
+  unsigned constexpr max_solve_tries=15;
   bool found = false;
 
   std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
@@ -279,15 +273,13 @@ TEST(TrifocalSampleApp, error)
     found = probe_solutions(sols, tt_gt_, &sol_id);
     if (found) {
       std::cerr << "Found solution at id " << sol_id << std::endl;
-      for(unsigned j = 0; j < 3; j++)
-        std::cout << sols[sol_id][j] << "\n" << std::endl;
       break;
     }
     std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
   }
-  float err = Trifocal3PointPositionTangentialSolver::Error(sols[sol_id], datum[0].col(1), datum[1].col(1), datum[2].col(1), pxdatum[0].col(1), pxdatum[1].col(1), pxdatum[2].col(1), K); 
+  float err = Trifocal3PointPositionTangentialSolver::Error(sols[sol_id], datum[0].col(0), datum[1].col(0), datum[2].col(0), pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
   std::cerr << err << "\n";
-  CHECK(found);
+  CHECK(err < 0.001);
 }
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
