@@ -40,7 +40,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
 
-// TODO(trifocal) incremental v2: update for triplet 
+// TODO(trifocal future) incremental v2: update for triplet 
 enum class ESfMSceneInitializer
 {
   INITIALIZE_EXISTING_POSES,
@@ -228,10 +228,6 @@ int main(int argc, char **argv)
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
   // Incremental SfM1 with trifocal initialization
-  // TODO If both initial triplet and initial pair are specified,
-  // then first try intial pair then try initial triplet if that fails
-  // OR try initial triplet first and initial pair if fails, which might be more
-  // reliable anyways
   cmd.add( make_option('x', get<0>(initial_triplet_string), "initial_triplet_x") );
   cmd.add( make_option('y', get<1>(initial_triplet_string), "initial_triplet_y") );
   cmd.add( make_option('z', get<2>(initial_triplet_string), "initial_triplet_z") );
@@ -475,7 +471,7 @@ int main(int argc, char **argv)
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
   switch(scene_initializer_enum)
   {
-    //TODO(trifocal) incremental v2: update for triplet 
+    //TODO(trifocal future) incremental v2: update for triplet 
     case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
       OPENMVG_LOG_ERROR << "Not yet implemented.";
       return EXIT_FAILURE;
@@ -541,7 +537,7 @@ int main(int argc, char **argv)
     }
 
     // Handle Initial triplet parameter
-    // TODO Set automatic pair selection for later
+    // TODO(trifocal future) Set automatic pair selection for later
     // set initial triplet parameter for now
     if (!get<0>(initial_triplet_string).empty() && 
         !get<1>(initial_triplet_string).empty() &&
@@ -563,7 +559,7 @@ int main(int argc, char **argv)
     sfm_engine.reset(engine);
   }
     break;
-  case ESfMEngine::INCREMENTALV2: // TODO(trifocal) could be easier to insert trifocal here
+  case ESfMEngine::INCREMENTALV2: // TODO(trifocal future) could be easier to insert trifocal here
   {
     SequentialSfMReconstructionEngine2 * engine =
       new SequentialSfMReconstructionEngine2(

@@ -70,7 +70,7 @@ public:
   /// Automatic initial pair selection (based on a 'baseline' computation score)
   bool AutomaticInitialPairChoice(Pair & initialPair) const;
   
-  /// TODO(trifocal) Automatic initial triplet selection (based on a 'baseline' computation score)
+  /// TODO(trifocal future) Automatic initial triplet selection (based on a 'baseline' computation score)
   // bool AutomaticInitialTripletChoice(Triple & initialTriplet) const;
 
   /**

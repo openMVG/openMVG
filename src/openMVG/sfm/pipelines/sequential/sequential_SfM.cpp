@@ -93,7 +93,7 @@ void SequentialSfMReconstructionEngine::SetMatchesProvider(Matches_Provider * pr
   matches_provider_ = provider;
 }
 
-// TODO(trifocal) GetTripletWithMostMatches
+// TODO(trifocal future) GetTripletWithMostMatches
 // Get the PairWiseMatches that have the most support point
 std::vector<openMVG::matching::PairWiseMatches::const_iterator>
 GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches, int clamp_count = 10) {
@@ -152,29 +152,28 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
-  // Initial pair choice
-  if (!hasInitialPair())
-  {
+  // Initial images choice
+  // 
+  // TODO(trifocal future) Refine this: If both initial triplet and initial pair are specified,
+  // then first try intial pair then try initial triplet if that fails
+  // OR try initial triplet first and initial pair if fails, which might be more
+  // reliable anyways
+  if (!hasInitialPair()) {
     if (!hasInitialTriplet()) {
-      if (!AutomaticInitialPairChoice(initial_pair_))
-      {
+      if (!AutomaticInitialPairChoice(initial_pair_)) {
         // Cannot find a valid initial pair with the defined settings:
         // TODO(trifocal) Trifocal - try to set it automatically
         // - try to initialize a pair with less strict constraint
         //    testing only X pairs with most matches.
         const auto sorted_pairwise_matches_iterators =
           GetPairWithMostMatches(sfm_data_, matches_provider_->pairWise_matches_, 20);
-
-        for (const auto & it : sorted_pairwise_matches_iterators)
-        {
-          if (MakeInitialPair3D({it->first.first, it->first.second}))
-          {
+        for (const auto & it : sorted_pairwise_matches_iterators) {
+          if (MakeInitialPair3D({it->first.first, it->first.second})) {
             initial_pair_ = {it->first.first, it->first.second};
             break;
           }
         }
-        if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0))
-        {
+        if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0)) {
           OPENMVG_LOG_INFO << "Cannot find a valid initial pair - stop reconstruction.";
           return false;
         }
@@ -542,7 +541,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
 
-  constexpr size_t n = map_tracksCommon.size();
+  const size_t n = map_tracksCommon.size();
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                                    // datum[view](coord,point)
   for (unsigned v = 0; v < nviews; ++v)
@@ -561,7 +560,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       SIOPointFeature *feature = features_provider_.sio_feats_per_view[t[v]][i];
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
-      // TODO: provide undistortion for tangents for models that need it (get_ud_pixel)
+      // TODO(trifocal future): provide undistortion for tangents for models that need it (get_ud_pixel)
       i=(++iter)->second;
     }
     ++cptIndex;
@@ -569,7 +568,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
-  RelativePoseTrifocal_Info relativePose_info; // TODO(future): include image size
+  RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
   if (!robustRelativePoseTrifocal(cam, datum, relativePose_info, 1024))
   {
     OPENMVG_LOG_ERROR 
@@ -612,7 +611,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           for (unsigned v = 0; v < nviews; ++v) {
             x.col(v) = 
               features_provider_.sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
-            // TODO(future) get_ud_pixel
+            // TODO(trifocal future) get_ud_pixel
             ifeat=(++iter)->second;
             obs[view[v]->id_view] = Observation(x.col(v), t[v]]);
           }
