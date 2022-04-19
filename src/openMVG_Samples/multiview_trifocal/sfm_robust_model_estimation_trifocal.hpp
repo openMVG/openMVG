@@ -70,10 +70,14 @@ bool robustRelativePoseTrifocal
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
-  double constexpr threshold_pix = 4; // TODO: use ACRANSAC
+  // TODO: we are assuming all images have the same intrinsics
+  double constexpr threshold_normalized_squared 
+    = trifocal3pt::threshold_pixel_to_normalized(4.0, (dynamic_cast<const Pinhole_Intrinsic *> (intrinsics[0])).K().data(); // TODO: use ACRANSAC
+  
+  threshold_normalized_squared *= threshold_normalized_squared;
   relativePoseTrifocal_info.RelativePoseTrifocal 
     = MaxConsensus(trifocal_kernel, 
-      ScorerEvaluator<TrifocalKernel>(threshold_pix), 
+      ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
       &relativePoseTrifocal_info.inliers, max_iteration_count);
 
   // TODO might have to re compute residual tolerance or agument the

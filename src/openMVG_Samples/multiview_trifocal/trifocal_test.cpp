@@ -237,6 +237,7 @@ TEST(TrifocalSampleApp, solveRansac)
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
   double threshold = threshold_pixel_to_normalized(1.0, data::K_);
+  threshold *= threshold; // squared error
   unsigned constexpr max_iteration = 2; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
