@@ -87,7 +87,7 @@ void LiGTBuilder::BuildLandmarks(const FeatsPerView& feats_per_view,
                     Landmarks& landmarks){
     // Init the putative landmarks
     {
-        // For every track add the obervations:
+        // For every track add the observations:
         // - views and feature positions that see this landmark
         // Fill sfm_data with the computed tracks (no 3D yet)
 
