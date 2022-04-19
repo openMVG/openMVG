@@ -32,7 +32,6 @@ void invert_intrinsics_tgt(
     const double px_tgt_coords[2], 
     double normalized_tgt_coords[2]);
 
-
 // get a reasonable error threshold in normalized coordinates
 //
 // Take a (threshold,0) vector along the x axis and 
