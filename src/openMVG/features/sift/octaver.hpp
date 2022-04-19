@@ -27,6 +27,8 @@ struct Octaver
   :m_nb_octave(nb_octave), m_nb_slice(nb_slice)
   {};
 
+  virtual ~Octaver() = default;
+
   /**
   * @brief Set Initial image and update nb_octave if necessary
   * @param img Input image
