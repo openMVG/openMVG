@@ -79,14 +79,13 @@ Solve(
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
   for (unsigned i = 0; i < max_solve_tries; ++i) {
-    std::cerr << "Trying to solve\n";
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
     std::cerr << "Minus failed once to compute tracks, perhaps retry\n";  // for a good test, this never fails
   }
 
   // fill C0* with for loop
-  std::cerr << "Number of sols " << nsols_final << std::endl;
+  // std::cerr << "Number of sols " << nsols_final << std::endl;
   std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
                                                         // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
   tt.resize(nsols_final);
@@ -127,7 +126,6 @@ Error(
   // 3) compute error 
   // 
   // In practice we ignore the directions and only reproject to one third view
-  // std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
   bearing << bearing_0.head(2).homogeneous(),
@@ -139,33 +137,27 @@ Error(
   unsigned third_view = 0;
   // pick the wider baseline. TODO: measure all pairwise translation distances
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
-    // TODO use triangulation from the three views at once
+    // TODO(trifocal future) compare to triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
     third_view = 1;
   }
-  Mat23 pxbearing; // 2x2 matrix
-  pxbearing << pxbearing_0.head(2),
-               pxbearing_1.head(2),
-               pxbearing_2.head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
+  // std::cerr << "Third view: " << third_view << std::endl;
+
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
   Vec2 p_reprojected = (tt[third_view]*triangulated_homg).hnormalized();
-  return (p_reprojected-bearing.col(third_view).head(2)).squaredNorm();
-  /*
-  apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
-  // The above two lines do K*[R|T]
-  // to measure the error in pixels.
-  // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
-   
-  Vec2 pxmeasured = pxbearing.col(third_view);
-  Vec2 pxdata = pxreprojected-pxmeasured;             // Gabriel: Difference between two coordinates
-  invert_intrinsics(K, pxdata.data(), pxdata.data()); // Gabriel: This is necessary to make the error measurement WITHIN the pixel space.
-  return (pxdata).squaredNorm();
-  */
+//  std::cerr << "p_reprojected: \n" << p_reprojected << std::endl;
+//  std::cerr << "bearing(third_view): \n" << bearing.col(third_view).head(2) << std::endl;
+  Vec2 p_reprojected_pix;
+  apply_intrinsics(K,p_reprojected_pix.data(),p_reprojected.data());
+//  std::cerr << "p_reprojected pix: \n" <<  p_reprojected_pix << std::endl;
+//  std::cerr << "bearing(third_view) pix: \n" << pxbearing_1 << std::endl;
+  
+  return (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
 }
 
 } // namespace trifocal3pt

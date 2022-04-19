@@ -83,7 +83,6 @@ initialize_gt()
 }
   
 
-#if 0
 // Directly runs the solver and test
 // - define synthetic data
 // - directly passo to solver
@@ -109,7 +108,7 @@ TEST(TrifocalSampleApp, solver)
   }
   
   initialize_gt();
-  unsigned constexpr max_solve_tries=5;
+  unsigned constexpr max_solve_tries = 5;
   bool found = false;
 
   for (unsigned i = 0; i < max_solve_tries; ++i) {
@@ -122,8 +121,8 @@ TEST(TrifocalSampleApp, solver)
     found = probe_solutions(sols, tt_gt_, &sol_id);
     if (found) {
       std::cerr << "Found solution at id " << sol_id << std::endl;
-      for(unsigned j = 0; j < 3; j++)
-        std::cout << sols[sol_id][j] << "\n" << std::endl;
+      //      for(unsigned j = 0; j < 3; j++)
+      //        std::cout << sols[sol_id][j] << "\n" << std::endl;
       break;
     }
     std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
@@ -131,86 +130,74 @@ TEST(TrifocalSampleApp, solver)
   
   CHECK(found);
 }
-#endif
-
-#if 0
-
-// Testing Error()
-TEST(TrifocalSampleApp, error) 
-{
-
-  // Testing error model with 3 perfect points
-  array<Mat, 3> datum; // x,y,orientation across 3 views
-  array<Mat, 3> pxdatum;
-
-  // todo: invert K matrix
-  std::cerr << io::pp::npoints << "\n";
-  for (unsigned v=0; v < 3; ++v) {
-    datum[v].resize(4, 3);
-    pxdatum[v].resize(4, 3);
-    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
-      pxdatum[v](0,ip) = data::p_[v][ip][0];
-      pxdatum[v](1,ip) = data::p_[v][ip][1];
-      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
-      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
-      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
-      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
-    }
-  }
-
-  
-  initialize_gt();
-  unsigned constexpr max_solve_tries=15;
-  bool found = false;
-
-  std::vector<trifocal_model_t> sols; // std::vector of 3-cam solutions
-  unsigned sol_id = (unsigned)-1;
-  for (unsigned i = 0; i < max_solve_tries; ++i) {
-    
-    std::cerr << "Test log: Trying to solve, attempt: " << i+1 << std::endl;
-    Trifocal3PointPositionTangentialSolver::Solve(datum[0], datum[1], datum[2], &sols);
-
-    found = probe_solutions(sols, tt_gt_, &sol_id);
-    if (found) {
-      std::cerr << "Found solution at id " << sol_id << std::endl;
-      break;
-    }
-    std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
-  }
-  float err = Trifocal3PointPositionTangentialSolver::Error(sols[sol_id], datum[0].col(0), datum[1].col(0), datum[2].col(0), pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
-  std::cerr << err << "\n";
-  CHECK(err < 0.001);
-}
-#endif
 
 // Testing Error()
 TEST(TrifocalSampleApp, error_simple) 
 {
-  // Testing error model with 3 perfect points
+  initialize_gt(); // gets tt_gt_
+  
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "Error model with 3 perfect points\n";
+  
   array<Mat, 3> datum; // x,y,orientation across 3 views
   array<Mat, 3> pxdatum;
   
   for (unsigned v=0; v < 3; ++v) {
-    datum[v].resize(4, 3);
-    pxdatum[v].resize(4, 3);
-    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
-      pxdatum[v](0,ip) = data::p_[v][ip][0];
-      pxdatum[v](1,ip) = data::p_[v][ip][1];
-      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
-      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
-      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
-      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
-    }
+    datum[v].resize(4, 1);
+    pxdatum[v].resize(4, 1);
+    constexpr unsigned ip = 0;
+    pxdatum[v](0,ip) = data::p_[v][ip][0];
+    pxdatum[v](1,ip) = data::p_[v][ip][1];
+    pxdatum[v](2,ip) = data::tgt_[v][ip][0];
+    pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+    trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+    trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
   }
-
-  initialize_gt(); // gets tt_gt_
   
   float err = Trifocal3PointPositionTangentialSolver::Error(tt_gt_, 
       datum[0].col(0), datum[1].col(0), datum[2].col(0), 
       pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
   
-  std::cerr << err << "\n";
+  std::cerr << "Error (squared, normalized): " << err << "\n";
+  std::cerr << "Error (pixel, not squared): " << threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";
   CHECK(err < 0.001);
+  }
+  
+  // Testing error model with 2 perfect points and 1 perturbed point
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "Testing error model with 2 perfect points and 1 perturbed point\n";
+  array<Mat, 3> datum; // x,y,orientation across 3 views
+  array<Mat, 3> pxdatum;
+  
+  for (unsigned v = 0; v < 3; ++v) {
+    datum[v].resize(4,1);
+    pxdatum[v].resize(4,1);
+    constexpr unsigned ip = 0;
+    pxdatum[v](0,ip) = data::p_[v][ip][0];
+    pxdatum[v](1,ip) = data::p_[v][ip][1];
+    pxdatum[v](2,ip) = data::tgt_[v][ip][0];
+    pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+    trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+    trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+  }
+
+  {
+    constexpr unsigned v = 1, ip = 0;
+    pxdatum[v](0,ip) += 5;
+    pxdatum[v](1,ip) += 5;
+    trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+  }
+
+  float err = Trifocal3PointPositionTangentialSolver::Error(tt_gt_, 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0), 
+      pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
+  
+  std::cerr << "Error (squared, normalized): " << err << "\n";
+  std::cerr << "Error (pixel, not squared): " << threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";
+  CHECK(threshold_normalized_to_pixel(sqrt(err),data::K_) > 1);
+  }
 }
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
@@ -223,7 +210,9 @@ using namespace openMVG::robust;
 // - second, synthetic data with one outlier
 TEST(TrifocalSampleApp, solveRansac) 
 {
-  { // 3 perfect points = 3 inliers --------------------------------------------
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "3 perfect points = 3 inliers\n";
   array<Mat, 3> datum;   // x,y,orientation across 3 views in normalized world units
   array<Mat, 3> pxdatum; // x,y,orientation across 3 views in pixel units
                          // datum[view](coord,point)
@@ -248,18 +237,20 @@ TEST(TrifocalSampleApp, solveRansac)
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
   double threshold = threshold_pixel_to_normalized(1.0, data::K_);
-  unsigned constexpr max_iteration = 3; // testing
+  unsigned constexpr max_iteration = 2; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
-    std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
+  std::cerr << "Number of inliers (expect 3): "  << vec_inliers.size() << "\n";
   CHECK(vec_inliers.size() == 3);
       
   // TODO check the cameras
   }
 
-  { // 3 perfect points and 1 outlier - controlling threshold_pix
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "3 perfect points and 1 outlier\n";
   array<Mat, 3> datum;   // x,y,orientation across 3 views in normalized world units
   array<Mat, 3> pxdatum; // x,y,orientation across 3 views in pixel units
                          // datum[view](coord,point)
@@ -277,10 +268,11 @@ TEST(TrifocalSampleApp, solveRansac)
       trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
       trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
-    // 4th point is just the 1st one, perturbed
+    // 4th point is just the 2nd one, perturbed
     constexpr unsigned ip = 3;
-    pxdatum[v].col(ip) = pxdatum[v].col(0);
-    pxdatum[v](0,ip) += 500000.0;
+    pxdatum[v].col(ip) = pxdatum[v].col(1);
+    pxdatum[v](0,ip) += 5.0;
+    pxdatum[v](1,ip) += 5.0;
     trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
     trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
   }
@@ -291,14 +283,117 @@ TEST(TrifocalSampleApp, solveRansac)
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
   double threshold = threshold_pixel_to_normalized(1.0, data::K_);
-  std::cerr << "Threshold in normalized coords "  << threshold << std::endl;;;
-  unsigned constexpr max_iteration = 6; // testing
+  threshold *= threshold; // squared error
+  std::cerr << "Threshold squared in normalized coords "  << threshold << std::endl;
+  unsigned constexpr max_iteration = 2; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
-  // std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
-  CHECK(vec_inliers.size() == 3);
+  std::cerr << "Number of inliers (expect never 4): "  << vec_inliers.size() << "\n";
+  CHECK(vec_inliers.size() <= 3);
+  }
+  
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "3 perfect points, 1 outlier, increase threshold\n";
+  array<Mat, 3> datum;   // x,y,orientation across 3 views in normalized world units
+  array<Mat, 3> pxdatum; // x,y,orientation across 3 views in pixel units
+                         // datum[view](coord,point)
+  
+  // todo: invert K matrix
+  for (unsigned v=0; v < io::pp::nviews; ++v) {
+    datum[v].resize(4, 4);
+    pxdatum[v].resize(4, 4);
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
+      datum[v](0,ip) = data::p_[v][ip][0];
+      datum[v](1,ip) = data::p_[v][ip][1];
+      datum[v](2,ip) = data::tgt_[v][ip][0];
+      datum[v](3,ip) = data::tgt_[v][ip][1];
+      pxdatum[v] = datum[v];
+      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+    // 4th point is just the 2nd one, perturbed
+    constexpr unsigned ip = 3;
+    pxdatum[v].col(ip) = pxdatum[v].col(1);
+    pxdatum[v](0,ip) += 5.0;
+    pxdatum[v](1,ip) += 5.0;
+    trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+    trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+  }
+  
+  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
+                         Trifocal3PointPositionTangentialSolver>;
+  
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
+  
+  double threshold = threshold_pixel_to_normalized(100.0, data::K_);
+  threshold *= threshold; // squared error
+  std::cerr << "Threshold squared in normalized coords "  << threshold << std::endl;
+  unsigned constexpr max_iteration = 2; // testing
+  // Vector of inliers for the best fit found
+  vector<uint32_t> vec_inliers;
+  const auto model = MaxConsensus(trifocal_kernel, 
+      ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
+  std::cerr << "Number of inliers (expect 4): "  << vec_inliers.size() << "\n";
+  CHECK(vec_inliers.size() == 4);
+  }
+  
+  {
+  std::cerr << "----------------------------------------------------------------\n";
+  std::cerr << "3 perfect points, 1 outlier, 2 repeated perfect points\n";
+  array<Mat, 3> datum;   // x,y,orientation across 3 views in normalized world units
+  array<Mat, 3> pxdatum; // x,y,orientation across 3 views in pixel units
+                         // datum[view](coord,point)
+  
+  // todo: invert K matrix
+  for (unsigned v=0; v < io::pp::nviews; ++v) {
+    datum[v].resize(4, 6);
+    pxdatum[v].resize(4, 6);
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
+      datum[v](0,ip) = data::p_[v][ip][0];
+      datum[v](1,ip) = data::p_[v][ip][1];
+      datum[v](2,ip) = data::tgt_[v][ip][0];
+      datum[v](3,ip) = data::tgt_[v][ip][1];
+      pxdatum[v] = datum[v];
+      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+    {
+    // 4th point is just the 2nd one, perturbed
+    constexpr unsigned ip = 3;
+    pxdatum[v].col(ip) = pxdatum[v].col(1);
+    pxdatum[v](0,ip) += 5.0;
+    pxdatum[v](1,ip) += 5.0;
+    trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+    trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+
+    {
+    // 5th and 6th are 1st repeated
+    pxdatum[v].col(4) = pxdatum[v].col(0);
+    datum[v].col(4) = datum[v].col(0);
+    pxdatum[v].col(5) = pxdatum[v].col(0);
+    datum[v].col(5) = datum[v].col(0);
+    }
+  }
+  
+  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
+                         Trifocal3PointPositionTangentialSolver>;
+  
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
+  
+  double threshold = threshold_pixel_to_normalized(1.0, data::K_);
+  threshold *= threshold; // squared error
+  std::cerr << "Threshold squared in normalized coords "  << threshold << std::endl;
+  unsigned constexpr max_iteration = 2; // testing
+  // Vector of inliers for the best fit found
+  vector<uint32_t> vec_inliers;
+  const auto model = MaxConsensus(trifocal_kernel, 
+      ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
+  std::cerr << "Number of inliers (expect 5): "  << vec_inliers.size() << "\n";
+  CHECK(vec_inliers.size() == 5);
   }
   
   { // 3 perfect points and n outliers

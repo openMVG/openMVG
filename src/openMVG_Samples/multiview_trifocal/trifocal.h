@@ -16,7 +16,6 @@
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION_INITIALIZER_LIST(std::array<openMVG::Mat34,3>)
 
 namespace trifocal3pt {
-extern int iteration_global_debug;
   
 using namespace std;
 using namespace openMVG;
@@ -74,7 +73,6 @@ public:
       x2 = ExtractColumns(x2_, samples),
       x3 = ExtractColumns(x3_, samples);
     Solver::Solve(x1, x2, x3, models);
-    std::cout << "DEBUG: " << iteration_global_debug++ <<std::endl;
   }
   
   /// Return the error associated to the model and sample^nth point
