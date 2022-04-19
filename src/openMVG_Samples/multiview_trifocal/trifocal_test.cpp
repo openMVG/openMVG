@@ -196,9 +196,8 @@ initialize_gt()
 TEST(TrifocalSampleApp, solver) 
 {
   array<Mat, 3> datum; // x,y,orientation across 3 views
-  // datum[view](coord,point)
+                       // datum[view](coord,point)
   
-  // todo: invert K matrix
   for (unsigned v=0; v < 3; ++v) {
     datum[v].resize(4, 3);
     for (unsigned ip=0; ip < 3; ++ip) {
@@ -210,7 +209,6 @@ TEST(TrifocalSampleApp, solver)
       trifocal3pt::invert_intrinsics_tgt(data::K_, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
   }
-
   
   initialize_gt();
   unsigned constexpr max_solve_tries=5;
@@ -235,6 +233,7 @@ TEST(TrifocalSampleApp, solver)
   
   CHECK(found);
 }
+
 // Testing Error()
 TEST(TrifocalSampleApp, error) 
 {
@@ -282,6 +281,36 @@ TEST(TrifocalSampleApp, error)
   CHECK(err < 0.001);
 }
 
+// Testing Error()
+TEST(TrifocalSampleApp, error_simple) 
+{
+  // Testing error model with 3 perfect points
+  array<Mat, 3> datum; // x,y,orientation across 3 views
+  array<Mat, 3> pxdatum;
+  
+  for (unsigned v=0; v < 3; ++v) {
+    datum[v].resize(4, 3);
+    pxdatum[v].resize(4, 3);
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
+      pxdatum[v](0,ip) = data::p_[v][ip][0];
+      pxdatum[v](1,ip) = data::p_[v][ip][1];
+      pxdatum[v](2,ip) = data::tgt_[v][ip][0];
+      pxdatum[v](3,ip) = data::tgt_[v][ip][1];
+      trifocal3pt::invert_intrinsics(data::K_, pxdatum[v].col(ip).data(), datum[v].col(ip).data()); 
+      trifocal3pt::invert_intrinsics_tgt(data::K_, pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+    }
+  }
+
+  initialize_gt(); // gets tt_gt_
+  
+  float err = Trifocal3PointPositionTangentialSolver::Error(tt_gt_, 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0), 
+      pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
+  
+  std::cerr << err << "\n";
+  CHECK(err < 0.001);
+}
+
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
@@ -298,10 +327,10 @@ TEST(TrifocalSampleApp, solveRansac)
                          // datum[view](coord,point)
   
   // todo: invert K matrix
-  for (unsigned v=0; v < 3; ++v) {
+  for (unsigned v=0; v < io::pp::nviews; ++v) {
     datum[v].resize(4, 3);
     pxdatum[v].resize(4, 3);
-    for (unsigned ip=0; ip < 3; ++ip) {
+    for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       datum[v](0,ip) = data::p_[v][ip][0];
       datum[v](1,ip) = data::p_[v][ip][1];
       datum[v](2,ip) = data::tgt_[v][ip][0];
