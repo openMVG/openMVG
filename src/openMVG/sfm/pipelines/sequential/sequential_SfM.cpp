@@ -655,12 +655,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // List inliers and save them
     for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
       const IndexT trackId = landmark_entry.first;
-      const Landmark & landmark = landmark_entry.second;
-      const Observations & obs = landmark.obs;
+      const Landmark &landmark = landmark_entry.second;
+      const Observations &obs = landmark.obs;
 
       Observations::const_iterator iterObs_x[nviews];
       const Observation *ob_x[nviews];
-      const Vec2 ob_x_ud[nviews];
+      Vec2 ob_x_ud[nviews];
       for (unsigned v = 0; v < nviews; ++v) {
         iterObs_x[v] = obs.find(view[v]->id_view);
         ob_x[v] = &iterObs_x[v]->second;
@@ -668,24 +668,20 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       }
 
       bool include_landmark = true;
-      for (unsigned v0 = 0; v0 + 1 < nviews; ++v0) {
-        for (unsigned v1 = v0 +1; v1 < nviews; ++v1) {
+      for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
+        for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
           const double angle = AngleBetweenRay(
             *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
           
           const Vec2 residual_0 = cam[v0]->residual(pose[v0](landmark.X), ob_x[v0]->x);
           const Vec2 residual_1 = cam[v1]->residual(pose[v1](landmark.X), ob_x[v1]->x);
           if (angle <= 2.0 ||
-              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), pose_I,
-                             (*cam[v1])(ob_x_ud[v1]), pose_J,
-                             landmark.X) ||
-              residual_0.norm() >= relativePose_info.found_residual_precision &&
+              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), pose[v0],
+                              (*cam[v1])(ob_x_ud[v1]), pose[v1], landmark.X) ||
+              residual_0.norm() >= relativePose_info.found_residual_precision ||
               residual_1.norm() >= relativePose_info.found_residual_precision)
-          {
             include_landmark = false;
-          }
         }
-      }
       if (include_landmark)
         sfm_data_.structure[trackId] = landmarks[trackId];
     }
