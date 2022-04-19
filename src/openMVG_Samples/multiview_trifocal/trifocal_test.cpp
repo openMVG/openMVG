@@ -26,115 +26,12 @@ using trifocal_model_t = Trifocal3PointPositionTangentialSolver::trifocal_model_
 typedef MiNuS::minus_util<Float> util;
 // using namespace MiNuS;
 
-//-------------------------------------------------------------------------------
-//
-// Global variables
 trifocal_model_t tt_gt_; // corresp. to minus' cameras_gt_
 
-
-//---- HARDODED CASE SOLUTION -----------------------------------------------------
-// Uncomment to hardcode solution for known case to test.
-// This is as if MINUS was run and returned the following
-// 
-//constexpr unsigned n_ids = 5;
-//unsigned desired_ids[n_ids] = {13, 23, 33, 93, 53};
-//---- HARDODED CASE SOLUTION -----------------------------------------------------
-// This is for hard ding test 
-//class TrifocalAppTest : public TrifocalSampleApp {
-//
-//};
-//
-//TEST(TrifocalApp; Solve) {
-//
-//	double R0[3][3] = {
-//		     {1,0,0},
-//		     {0,1,0},
-//		     {0,0,1}
-//		    };
-//
-//	double T0[3][1] = {
-//		       {13.022176},
-//		       {-1.6546488},
-//		       {352.47945}
-//		      };
-//
-//	double R1[3][3] = {   
-//		      {9.4083600000000001e-01,   2.7502399999999999e-01,   1.9796300000000000e-01},
-//		      {2.9655799999999999e-01,  -3.8560499999999998e-01,  -8.7370599999999998e-01},
-//		      {-1.6395499999999999e-01,   8.8072200000000000e-01,  -4.4435100000000000e-01}
-//		     };
-//	double T1[3][1] = { 
-//		       {8.70420714},
-//		       {-1.62157456},
-//		       {-352.61248141}
-//		     };
-//
-//	double R2[3][3] = {
-//		      {0.970091125581631,   0.235130101826381,   0.060307903987350},
-//		      {0.151694164781553,  -0.393265050435905,  -0.906824944780907},
-//		      {-0.189504850701909,   0.888851188512892,  -0.417170799840706}
-//		     
-//	};
-//	double T2[3][1] = { 
-//		       {0.88920328},
-//		       {-14.05063273},
-//		       {-352.44248798}
-//		     };
-//
-//	tt[0][0] = Mat34::Identity();
-//	tt[0][1] = Mat34::Identity();
-//	tt[0][2] = Mat34::Identity();
-//	for(unsigned i=0;i<3;i++){
-//		for(unsigned j=0;j<4;j++){
-//			if(j<3){
-//				tt[0][0](i,j) = R0[i][j];
-//				tt[0][1](i,j) = R1[i][j];
-//				tt[0][2](i,j) = R2[i][j];
-//			}
-//			else{
-//				tt[0][0](i,j) = T0[i][1];
-//				tt[0][1](i,j) = T1[i][1];
-//				tt[0][2](i,j) = T2[i][1];
-//			}
-//		}                       
-//	}
-//	const solverResult=
-//	const double delta = 0.001;     	
-//	for(unsigned i=0;i<3;i++){
-//		for(unsigned j=0;j<4;j++){
-//			if(j<3){
-//				EXPECT_NEAR(solverResult[0][0](i,j) , R0[i][j], );
-//				EXPECT_NEAR(solverResult[0][1](i,j) , R1[i][j]);
-//				EXPECT_NEAR(solverResult[0][2](i,j) , R2[i][j]);
-//			}
-//			else{
-//				NEAR(solverResult[0][0](i,j) , T0[i][1]);
-//				EXPECT_NEAR(solverResult[0][1](i,j) , T1[i][1]);
-//				EXPECT_NEAR(solverResult[0][2](i,j) , T2[i][1]);
-//			}
-//		}                       
-//	}
-//}
-//std::cerr << "Solutions:\n";
-//for(unsigned i = 0;i < nsols_final; ++i){
-//  for(unsigned j = 0;j < io::pp::nviews; ++j){
-//    std::cerr << "Matrix" << i << " " << j << std::endl;
-//    std::cerr << tt[i][j] << std::endl;
-//    std::cerr << "\n";
-//  }
-//}
-//  cout << "this is [R0|T0] " << "\n"; cout << tt[0][0] << "\n";
-//  cout << "this is [R1|T1] " << "\n"; cout << tt[0][1] << "\n";
-//  cout << "this is [R2|T2] " << "\n"; cout << tt[0][2] << "\n";
-
-
 // Converts a trifocal_model to quaternion-translation format
-//
 // Assumes tt[0] is identity
 void
-tt2qt(
-  const trifocal_model_t &tt,
-  double tt_qt[M::nve])
+tt2qt(const trifocal_model_t &tt, double tt_qt[M::nve])
 {
   util::rotm2quat(tt[1].transpose().data(), tt_qt);
   util::rotm2quat(tt[2].transpose().data(), tt_qt+4);
@@ -394,12 +291,13 @@ TEST(TrifocalSampleApp, solveRansac)
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
   double threshold = threshold_pixel_to_normalized(1.0, data::K_);
+  std::cerr << "Threshold in normalized coords "  << threshold << std::endl;;;
   unsigned constexpr max_iteration = 6; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel, 
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
-    std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
+  // std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
   CHECK(vec_inliers.size() == 3);
   }
   
