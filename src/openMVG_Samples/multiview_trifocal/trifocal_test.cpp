@@ -316,7 +316,6 @@ TEST(TrifocalSampleApp, error_simple)
   CHECK(err < 0.001);
 }
 
-#if 0
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
@@ -352,13 +351,14 @@ TEST(TrifocalSampleApp, solveRansac)
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2], pxdatum[0], pxdatum[1], pxdatum[2], data::K_);
   
-  double constexpr threshold_pix = 25; // 5*5 Gabriel's note : changing this for see what happens
+  double threshold = threshold_pixel_to_normalized(25, data::K_); // 5*5 Gabriel's note : changing this for see what happens
                                          // Gabriel: Error model based on euclidian distance
+                                         // 
   unsigned constexpr max_iteration = 3; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel, 
-      ScorerEvaluator<TrifocalKernel>(threshold_pix), &vec_inliers, max_iteration);
+      ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers, max_iteration);
     std::cerr << "vec_inliers.size(): "  << vec_inliers.size() << "\n";
   CHECK(vec_inliers.size() == 3);
       
@@ -374,7 +374,6 @@ TEST(TrifocalSampleApp, solveRansac)
 
   CHECK(true);
 }
-#endif
 
 #if 0 // this test is ready, just needs some debugging
 TEST(TrifocalSampleApp, fullrun) 

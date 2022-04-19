@@ -118,7 +118,7 @@ Error(
   const Vec &pxbearing_0,
   const Vec &pxbearing_1,
   const Vec &pxbearing_2,
-  const double K[2][3]) 
+  const double K[2][3] /* for debugging */) 
 {
   // Return the cost related to this model and those sample data point
   // Ideal algorithm:
@@ -130,9 +130,10 @@ Error(
   // std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
-  bearing << bearing_0.homogeneous(),
-             bearing_1.homogeneous(), 
-             bearing_2.homogeneous();
+  bearing << bearing_0.head(2).homogeneous(),
+             bearing_1.head(2).homogeneous(), 
+             bearing_2.head(2).homogeneous();
+  
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
@@ -146,23 +147,25 @@ Error(
     third_view = 1;
   }
   Mat23 pxbearing; // 2x2 matrix
-  pxbearing << pxbearing_0.homogeneous().head(2),
-               pxbearing_1.homogeneous().head(2),
-               pxbearing_2.homogeneous().head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
+  pxbearing << pxbearing_0.head(2),
+               pxbearing_1.head(2),
+               pxbearing_2.head(2); // When I put homogeneous, I generate a Vec3 (x,y,1), so I'm taking from this Vec3, the Vec2 (x,y)
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
-  Vec2 pxreprojected = Vec3(tt[third_view]*triangulated_homg).hnormalized();
+  Vec2 p_reprojected = (tt[third_view]*triangulated_homg).hnormalized();
+  return (p_reprojected-bearing.col(third_view).head(2)).squaredNorm();
+  /*
   apply_intrinsics(K, pxreprojected.data(), pxreprojected.data());
   // The above two lines do K*[R|T]
   // to measure the error in pixels.
   // TODO(gabriel) Triple-check ACRANSAC probably does not need residuals in pixels
    
-  Vec2 pxmeasured = pxbearing.col(third_view).head(2);
+  Vec2 pxmeasured = pxbearing.col(third_view);
   Vec2 pxdata = pxreprojected-pxmeasured;             // Gabriel: Difference between two coordinates
   invert_intrinsics(K, pxdata.data(), pxdata.data()); // Gabriel: This is necessary to make the error measurement WITHIN the pixel space.
   return (pxdata).squaredNorm();
-  
+  */
 }
 
 } // namespace trifocal3pt

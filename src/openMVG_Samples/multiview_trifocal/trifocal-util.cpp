@@ -63,4 +63,5 @@ invert_intrinsics_tgt(
   t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
 }
 // See big notes eq. 5.2.13 at beginning of the code.
+
 } // namespace trifocal3pt
