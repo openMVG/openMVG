@@ -186,6 +186,7 @@ initialize_gt()
 }
   
 
+#if 0
 // Directly runs the solver and test
 // - define synthetic data
 // - directly passo to solver
@@ -233,6 +234,9 @@ TEST(TrifocalSampleApp, solver)
   
   CHECK(found);
 }
+#endif
+
+#if 0
 
 // Testing Error()
 TEST(TrifocalSampleApp, error) 
@@ -280,6 +284,7 @@ TEST(TrifocalSampleApp, error)
   std::cerr << err << "\n";
   CHECK(err < 0.001);
 }
+#endif
 
 // Testing Error()
 TEST(TrifocalSampleApp, error_simple) 
@@ -311,6 +316,7 @@ TEST(TrifocalSampleApp, error_simple)
   CHECK(err < 0.001);
 }
 
+#if 0
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
@@ -368,6 +374,7 @@ TEST(TrifocalSampleApp, solveRansac)
 
   CHECK(true);
 }
+#endif
 
 #if 0 // this test is ready, just needs some debugging
 TEST(TrifocalSampleApp, fullrun) 

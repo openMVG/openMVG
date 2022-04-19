@@ -130,9 +130,9 @@ Error(
   // std::cerr << "TRIFOCAL LOG: Entered error()\n";
   // 3x3: each column is x,y,1
   Mat3 bearing;
-  bearing << bearing_0.head(2).homogeneous(),
-             bearing_1.head(2).homogeneous(), 
-             bearing_2.head(2).homogeneous();
+  bearing << bearing_0.homogeneous(),
+             bearing_1.homogeneous(), 
+             bearing_2.homogeneous();
   // Using triangulation.hpp
   Vec4 triangulated_homg;
   unsigned third_view = 0;
