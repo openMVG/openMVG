@@ -11,7 +11,6 @@ namespace trifocal3pt {
 // Utilities
 //------------------------------------------------------------------------------
 
-// NoteToSelf(gabriel) For intrinsic parameter transform, see big notes eq. 5.2.13 at beginning of the code.
 void
 apply_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
@@ -20,9 +19,6 @@ apply_intrinsics(
 {
   double *px = px_coords;
   const double *nrm = normalized_coords;
-  // XXX: usar a inversa da formula exatamente como em invert_intrinsics.
-  //      ter certeza que funciona se a entrada e saida forem mesmas posicoes de
-  //      memoria
   px[0] = nrm[0]*K[0][0]+nrm[1]*K[0][1]+nrm[2]*K[0][2];
   px[1] = nrm[0]*K[1][0]+nrm[1]*K[1][1]+nrm[2]*K[1][2];
 }

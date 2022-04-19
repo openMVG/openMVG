@@ -12,30 +12,17 @@
 #include <string>
 #include <numeric>
 
-//these are temporary includes, may be removed
-// #include <Eigen/StdVector>
 #include "openMVG/multiview/projection.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
 #include "minus/minus.h"
 #include "minus/chicago-default.h"
 
-/* If you want to compile header-only, include these, so no link is necessary
-#include "minus/minus.hxx"
-#include "minus/chicago14a-default-data.hxx"
-*/
-
 #include "trifocal-util.h"
 #include "trifocal.h"
 
-
-
-// Mat is Eigen::MatrixXd - matrix of doubles with dynamic size
-// Vec3 is Eigen::Vector3d - Matrix< double, 3, 1 >
-
 namespace trifocal3pt {
   
-int iteration_global_debug = 0;
 unsigned constexpr max_solve_tries = 5; 
 using namespace std;
 using namespace MiNuS;
@@ -81,18 +68,16 @@ Solve(
   for (unsigned i = 0; i < max_solve_tries; ++i) {
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
-    std::cerr << "Minus failed once to compute tracks, perhaps retry\n";  // for a good test, this never fails
+    std::cerr << "Solver failed once to compute solutions, perhaps retry\n"; // should never happen
   }
-
-  // fill C0* with for loop
   // std::cerr << "Number of sols " << nsols_final << std::endl;
-  std::vector<trifocal_model_t> &tt = *trifocal_tensor; // if I use the STL container, 
-                                                        // This I would have to change the some other pieces of code, maybe altering the entire logic of this program!!
+
+  std::vector<trifocal_model_t> &tt = *trifocal_tensor;
   tt.resize(nsols_final);
-  for (unsigned s=0; s < nsols_final; ++s) {
-    tt[s][0] = Mat34::Identity(); // view 0 [I | 0]
+  for (unsigned s = 0; s < nsols_final; ++s) {
+    tt[s][0] = Mat34::Identity();
     for (unsigned v=1; v < io::pp::nviews; ++v) {
-        // eigen is col-major but minus is row-major, so memcpy canot be used.
+        // eigen is col-major but minus is row-major, so memcpy cannot be used.
         for (unsigned ir = 0; ir < 3; ++ir)
           for (unsigned ic = 0; ic < 3; ++ic)
             tt[s][v](ir, ic) = cameras[id_sols[s]][v-1][ir][ic];
@@ -103,9 +88,6 @@ Solve(
   // TODO: filter the solutions by:
   // - positive depth and 
   // - using tangent at 3rd point
-  //
-  // If we know the rays are perfectly coplanar, we can just use cross
-  // product within the plane instead of SVD
 }
 
 double Trifocal3PointPositionTangentialSolver::
@@ -113,11 +95,7 @@ Error(
   const trifocal_model_t &tt,
   const Vec &bearing_0, // x,y,tangentialx,tangentialy
   const Vec &bearing_1,
-  const Vec &bearing_2,
-  const Vec &pxbearing_0,
-  const Vec &pxbearing_1,
-  const Vec &pxbearing_2,
-  const double K[2][3] /* for debugging */) 
+  const Vec &bearing_2) 
 {
   // Return the cost related to this model and those sample data point
   // Ideal algorithm:
@@ -144,19 +122,11 @@ Error(
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
     third_view = 1;
   }
-  // std::cerr << "Third view: " << third_view << std::endl;
 
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
   Vec2 p_reprojected = (tt[third_view]*triangulated_homg).hnormalized();
-//  std::cerr << "p_reprojected: \n" << p_reprojected << std::endl;
-//  std::cerr << "bearing(third_view): \n" << bearing.col(third_view).head(2) << std::endl;
-  Vec2 p_reprojected_pix;
-  apply_intrinsics(K,p_reprojected_pix.data(),p_reprojected.data());
-//  std::cerr << "p_reprojected pix: \n" <<  p_reprojected_pix << std::endl;
-//  std::cerr << "bearing(third_view) pix: \n" << pxbearing_1 << std::endl;
-  
   return (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
 }
 

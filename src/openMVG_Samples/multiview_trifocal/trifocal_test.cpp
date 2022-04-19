@@ -143,7 +143,7 @@ TEST(TrifocalSampleApp, error_simple)
   std::cerr << "Error model with 3 perfect points\n";
   
   array<Mat, 3> datum; // x,y,orientation across 3 views
-  array<Mat, 3> pxdatum;
+  array<Mat, 3> pxdatum; // for debug
   
   for (unsigned v=0; v < 3; ++v) {
     datum[v].resize(4, 1);
@@ -158,8 +158,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
   
   float err = Trifocal3PointPositionTangentialSolver::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0), 
-      pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0)); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";
@@ -193,8 +192,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
 
   float err = Trifocal3PointPositionTangentialSolver::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0), 
-      pxdatum[0].col(0), pxdatum[1].col(0), pxdatum[2].col(0), data::K_); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0)); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";

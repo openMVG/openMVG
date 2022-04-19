@@ -26,25 +26,17 @@ struct Trifocal3PointPositionTangentialSolver {
   enum { MINIMUM_SAMPLES = 3 };
   enum { MAX_MODELS = 1 };
 
-  //EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(trifocal_model_t);
-  // datum_i[4 /*xy tgtx tgty*/][pp:npoints /* 3 for Chicago */]
   static void Solve(
       const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
       std::vector<trifocal_model_t> *trifocal_tensor);
   
-  // Gabriel's comment: If bearing is the bearing vector of the camera, Vec3 should be used instead of Mat32 or use &bearing.data()[0] 
   static double Error(
     const trifocal_model_t &tt,
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
-    const Vec &bearing_2,
-    // --
-    const Vec &pxbearing_0,  // TODO: remove. Pixel coordinates is for development/debug, we want to compute the error in pixels
-    const Vec &pxbearing_1,
-    const Vec &pxbearing_2,
-    const double K[2][3]);
+    const Vec &bearing_2);
 };
 
 //------------------------------------------------------------------------------
@@ -64,7 +56,7 @@ public:
   ThreeViewKernel(
       const Mat &x1, const Mat &x2, const Mat &x3, 
       const Mat &pxx1, const Mat &pxx2, const Mat &pxx3, const double K[2][3]) 
-    : x1_(x1), x2_(x2), x3_(x3), pxx1_(pxx1), pxx2_(pxx2), pxx3_(pxx3), K_(K) {}
+    : x1_(x1), x2_(x2), x3_(x3) {}
 
   /// Extract required sample and fit model(s) to the sample
   void Fit(const vector<uint32_t> &samples, vector<Model> *models) const {
@@ -77,10 +69,7 @@ public:
   
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
-    // std::cerr << "\n" << sample << "\n";
-    return ErrorArg::Error(model, 
-        x1_.col(sample), x2_.col(sample), x3_.col(sample), 
-        pxx1_.col(sample), pxx2_.col(sample), pxx3_.col(sample), K_);
+    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample));
   }
 
   /// Number of putative point
@@ -92,13 +81,7 @@ public:
   }
   
 protected:
-  const Mat &x1_, &x2_, &x3_; // corresponding point of the trifical configuration
-  // x_i[4 /*xy tgtx tgty*/][npts /* total number of tracks */]
-  // -- Below in pixels for debug
-  const Mat &pxx1_, &pxx2_, &pxx3_;
-  const double (*K_)[3]; // pointer to 2x3 array
+  const Mat &x1_, &x2_, &x3_; // corresponding point of the trifocal configuration
 };
-
-
 } // namespace trifocal3pt
 #endif // trifocal_sample_h_
