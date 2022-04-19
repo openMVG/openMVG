@@ -469,34 +469,7 @@ RobustSolve()
   using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
                          Trifocal3PointPositionTangentialSolver>;
   
-  /*
-  constexpr unsigned n_ids = 5;
-  unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
-  // example: vec_inliers_ = {2, 4}  --> {33, 53} ids into orig
-  array<Mat,3> Ds;
-  Ds[0].resize(4,n_ids);
-  Ds[1].resize(4,n_ids);
-  Ds[2].resize(4,n_ids);
-  //std::cerr << Ds[0].cols() << "\n";
-  unsigned track_id=0;
-  //going to try with calling the value of datum_[0].cols()
-  for(unsigned i=0;i<datum_[0].cols();i++){
-    for(unsigned j=0;j<n_ids;j++){
-      if(i ==  desired_ids[j]){
-        //cout << i<<"\n";
-        for(unsigned k=0;k<4;k++){
-          Ds[0](k, track_id) = datum_[0].col(desired_ids[j])[k];
-          Ds[1](k, track_id) = datum_[1].col(desired_ids[j])[k];
-          Ds[2](k, track_id) = datum_[2].col(desired_ids[j])[k];
-        }
-        track_id++;
-      }
-    }
-  }
-  //cout <<  Ds[0] << "\n";
-  */
   const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2], K_);
-  //const TrifocalKernel trifocal_kernel(Ds[0], Ds[1], Ds[2]);
 
   double threshold = threshold_pixel_to_normalized(25, K_); // 5*5 Gabriel's note : changing this for see what happens
   // Gabriel: Error model based on euclidian distance
@@ -605,21 +578,12 @@ DisplayInliersCamerasAndPoints()
   
   constexpr unsigned n_ids = 5;
   unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
-  // constexpr unsigned n_ids_test = 5;
-  // unsigned desired_ids_test[n_ids] = {13, 23, 33, 43, 53};
-  // constexpr unsigned n_inlier_pp = 3;
-  // unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};//the only inlier that matches with desired id is 13
   vector<uint32_t>desired_inliers_vector; 
   desired_inliers_vector.resize(vec_inliers_.size()) ;
   // using this for loop for get desired_inliers_vector output
   for (unsigned j = 0; j < desired_inliers_vector.size(); j++) {
-      // desired_inliers_vector.at(j) = desired_ids[vec_inliers_.at(j)];
       desired_inliers_vector.at(j) = vec_inliers_.at(j);
-      // cout << desired_inliers_vector.at(j) <<" " ;
     }
-  // unsigned desired_inliers[n_inlier_pp] = {desired_inliers_vector.at(13), 
-  //                                         desired_inliers_vector.at(23),
-  //                                         desired_inliers_vector.at(63)};
  
   // these are the selected inliers from vec_inliers_. 
   // Its easier select the result got from robustsolve() than select in robustsolve()
