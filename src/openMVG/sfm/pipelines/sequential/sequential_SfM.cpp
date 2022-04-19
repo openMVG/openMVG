@@ -650,42 +650,50 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // Save computed data
     const Pose3 * pose[nviews];
     for (unsigned v = 0; v < nviews; ++v)  {
-      pose[v] = &sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
+      sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
+      pose[v] = &sfm_data_.poses[view[v]->id_pose];
       map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
       set_remaining_view_id_.erase(view[v]->id_view);
     }
 
     // List inliers and save them
-    for (const auto & landmark_entry : tiny_scene.GetLandmarks())
-    {
+    for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
       const IndexT trackId = landmark_entry.first;
       const Landmark & landmark = landmark_entry.second;
       const Observations & obs = landmark.obs;
 
       Observations::const_iterator iterObs_x[nviews];
       const Observation *ob_x[nviews];
-      const Vec2 *v_obs;
+      const Vec2 ob_x_ud[nviews];
       for (unsigned v = 0; v < nviews; ++v) {
-        iterObs_x[v] = obs.find(view[v]->id_view),
+        iterObs_x[v] = obs.find(view[v]->id_view);
         ob_x[v] = &iterObs_x[v]->second;
+        ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
       }
-        ob_xI_ud = cam_I->get_ud_pixel(ob_xI.x),
-        ob_xJ_ud = cam_J->get_ud_pixel(ob_xJ.x);
 
-      const double angle = AngleBetweenRay(
-        pose_I, cam_I, pose_J, cam_J, ob_xI_ud, ob_xJ_ud);
-      const Vec2 residual_I = cam_I->residual(pose_I(landmark.X), ob_xI.x);
-      const Vec2 residual_J = cam_J->residual(pose_J(landmark.X), ob_xJ.x);
-      if (angle > 2.0 &&
-          CheiralityTest((*cam_I)(ob_xI_ud), pose_I,
-                         (*cam_J)(ob_xJ_ud), pose_J,
-                         landmark.X) &&
-          residual_I.norm() < relativePose_info.found_residual_precision &&
-          residual_J.norm() < relativePose_info.found_residual_precision)
-      {
-        sfm_data_.structure[trackId] = landmarks[trackId];
+      bool include_landmark = true;
+      for (unsigned v0 = 0; v0+1 < nviews; ++v0) {
+        for (unsigned v1 = v0+1; v1 < nviews; ++v1) {
+          const double angle = AngleBetweenRay(
+            pose[v0], cam[v0], pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
+          
+          const Vec2 residual_0 = cam[v0]->residual(pose[v0](landmark.X), ob_x[v0]->x);
+          const Vec2 residual_1 = cam[v1]->residual(pose[v1](landmark.X), ob_x[v1]->x);
+          if (angle <= 2.0 ||
+              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), pose_I,
+                             (*cam[v1])(ob_x_ud[v1]), pose_J,
+                             landmark.X) ||
+              residual_0.norm() >= relativePose_info.found_residual_precision &&
+              residual_1.norm() >= relativePose_info.found_residual_precision)
+          {
+            include_landmark = false;
+          }
+        }
       }
+      if (include_landmark)
+        sfm_data_.structure[trackId] = landmarks[trackId];
     }
+
     // Save outlier residual information
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
@@ -700,17 +708,18 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       std::ostringstream os;
       os
         << "-------------------------------" << "<br>"
-        << "-- Robust Essential matrix: <"  << I << "," <<J << "> images: "
-        << view_I->s_Img_path << ","
-        << view_J->s_Img_path << "<br>"
+        << "-- Robust calibrated Trifocal tensor: <"  << t[0] << "," << t[1] << "," << t[2] << "> images: "
+        << view[0]->s_Img_path << ","
+        << view[1]->s_Img_path << ","
+        << view[2]->s_Img_path << "<br>"
         << "-- Threshold: " << relativePose_info.found_residual_precision << "<br>"
         << "-- Resection status: " << "OK" << "<br>"
-        << "-- Nb points used for robust Essential matrix estimation: "
-        << xI.cols() << "<br>"
+        << "-- Nb points used for robust Trifocal tensor estimation: "
+        << datum[0].cols() << "<br>"
         << "-- Nb points validated by robust estimation: "
         << sfm_data_.structure.size() << "<br>"
         << "-- % points validated: "
-        << sfm_data_.structure.size()/static_cast<float>(xI.cols())
+        << sfm_data_.structure.size()/static_cast<float>(datum[0].cols())
         << "<br>"
         << "-------------------------------" << "<br>";
       html_doc_stream_->pushInfo(os.str());
@@ -740,9 +749,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         "Reconstruction_Report.html"));
       htmlFileStream << html_doc_stream_->getDoc();
     }
-  }
+  } // !list inliers and save them
   return !sfm_data_.structure.empty();
-  // XXX make sure view_I is accessed view[v] not view[t[v]]
 }
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
