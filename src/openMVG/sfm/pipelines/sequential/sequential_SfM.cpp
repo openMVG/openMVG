@@ -484,13 +484,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
                                  std::get<2>(current_triplet)} };
   std::sort(t.begin(),t.end());
 
-  for (unsigned v=0; v < nviews; ++v) {
-    if (sfm_data_.GetViews().count(t[v]) == 0)
-    {
+  for (unsigned v = 0; v < nviews; ++v)
+    if (sfm_data_.GetViews().count(t[v]) == 0) {
       OPENMVG_LOG_ERROR << "Cannot find the view corresponding to the view id: " << t[v];
       return false;
     }
-  }
 
   // ---------------------------------------------------------------------------
   // a. Assert we have valid cameras
@@ -522,7 +520,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   
   for (unsigned v=0; v < nviews; ++v) {
     if (!cam[v]) {
-      OPENMVG_LOG_ERROR << "Cannot get back the camera intrinsic model for the pair.";
+      OPENMVG_LOG_ERROR << "Cannot get back the camera intrinsic model for the triplet.";
       return false;
     }
     if (!dynamic_cast<const Pinhole_Intrinsic *>(cam[v])) {
@@ -532,13 +530,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   }
   
   OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
-  for (unsigned v=0; v < nviews; ++v) {
+  for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << t[v] << " ";
-  }
   OPENMVG_LOG_INFO << "\nview basename:";
-  for (unsigned v=0; v < nviews; ++v) {
+  for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << stlplus::basename_part(view[v]->s_Img_path) << " ";
-  }
 
   // ---------------------------------------------------------------------------
   // b. Get common features between the three views
@@ -548,8 +544,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   constexpr size_t n = map_tracksCommon.size();
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
-                            // datum[view](coord,point)
-
+                                   // datum[view](coord,point)
   for (unsigned v = 0; v < nviews; ++v)
     pxdatum[v].resize(4,n);
   
@@ -557,7 +552,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   for (const auto &track_iter : map_tracksCommon) {
     auto iter = track_iter.second.cbegin();
     
-    uint32_t i=iter->second;
+    uint32_t i = iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
       if (!features_provider_.has_sio_features()) {
         OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
@@ -574,11 +569,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
-  RelativePoseTrifocal_Info relativePose_info;
+  RelativePoseTrifocal_Info relativePose_info; // TODO(future): include image size
   if (!robustRelativePoseTrifocal(cam, datum, relativePose_info, 1024))
   {
-    OPENMVG_LOG_ERROR << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this pair: "
-      << "{"<< current_pair.first << "," << current_pair.second << "}";
+    OPENMVG_LOG_ERROR 
+      << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
+      << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
     return false;
   }
   OPENMVG_LOG_INFO 
@@ -595,7 +591,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       { // initial structure ---------------------------------------------------
         std::vector<Mat34> P(3);
         for (unsigned v = 0; v < nviews; ++v) {
-          //  Init views and intrincics
+          // Init views and intrincics
           tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
           tiny_scene.intrinsics.insert(iterIntrinsic[v]);
           
@@ -604,7 +600,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         }
 
         // Init structure
-        Landmarks & landmarks = tiny_scene.structure;
+        Landmarks &landmarks = tiny_scene.structure;
 
         Mat3X x(3,3);
         for (const auto & track_iterator : map_tracksCommon)
@@ -625,7 +621,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           // triangulate 3 views
           Vec4 X;
           TriangulateNView(x, P, &X);
-          landmarks[track_iterator.first].X = X;
+          landmarks[track_iterator.first].X = X.hnormalized();
         }
         Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
       } // !initial structure
@@ -648,7 +644,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     } // !badj
 
     // Save computed data
-    const Pose3 * pose[nviews];
+    Pose3 *pose[nviews];
     for (unsigned v = 0; v < nviews; ++v)  {
       sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
       pose[v] = &sfm_data_.poses[view[v]->id_pose];
@@ -672,10 +668,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       }
 
       bool include_landmark = true;
-      for (unsigned v0 = 0; v0+1 < nviews; ++v0) {
-        for (unsigned v1 = v0+1; v1 < nviews; ++v1) {
+      for (unsigned v0 = 0; v0 + 1 < nviews; ++v0) {
+        for (unsigned v1 = v0 +1; v1 < nviews; ++v1) {
           const double angle = AngleBetweenRay(
-            pose[v0], cam[v0], pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
+            *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
           
           const Vec2 residual_0 = cam[v0]->residual(pose[v0](landmark.X), ob_x[v0]->x);
           const Vec2 residual_1 = cam[v1]->residual(pose[v1](landmark.X), ob_x[v1]->x);
