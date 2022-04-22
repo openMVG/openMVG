@@ -1,5 +1,3 @@
-# include_directories(${MINUS_INCLUDE_DIRS})
-include_directories(/Users/rfabbri/cprg/vxlprg/lemsvpe/openMVG/src/dependencies/minus/minus)
 
 file(
   GLOB_RECURSE
@@ -14,8 +12,8 @@ file(
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
 # Remove the unit test files (not been used by the library)
-list(REMOVE_ITEM multiview_trifocal_files_cpp ${REMOVEFILESUNITTEST})
-list(REMOVE_ITEM multiview_trifocal_files_header ${REMOVEFILESUNITTEST_HEADER})
+list(REMOVE_ITEM ${multiview_trifocal_files_cpp} ${REMOVEFILESUNITTEST})
+list(REMOVE_ITEM ${multiview_trifocal_files_header} ${REMOVEFILESUNITTEST_HEADER})
 
 add_library(openMVG_multiview_trifocal
   ${multiview_trifocal_files_header}

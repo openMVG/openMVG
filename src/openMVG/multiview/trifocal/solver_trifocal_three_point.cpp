@@ -1,11 +1,11 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
-// 
+//
 // Copyright (c) 2019 Pierre MOULON.
 // Copyright (c) 2022 Ricardo Fabbri and Gabriel Andrade
-// 
+//
 //\author Pierre MOULON
 //\author Gabriel ANDRADE Rio de Janeiro State U.
-//\author Ricardo Fabbri Rio de Janeiro State U. (rfabbri.github.io) 
+//\author Ricardo Fabbri Rio de Janeiro State U. (rfabbri.github.io)
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,8 +18,8 @@
 
 namespace openMVG {
 namespace trifocal {
-  
-static unsigned constexpr max_solve_tries = 5; 
+
+static unsigned constexpr max_solve_tries = 5;
 using namespace MiNuS;
 
 void Trifocal3PointPositionTangentialSolver::
@@ -30,33 +30,33 @@ Solve(
       std::vector<trifocal_model_t> *trifocal_tensor)
 {
   double p[io::pp::nviews][io::pp::npoints][io::ncoords2d];
-  double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d]; 
-  
+  double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d];
+
   // pack into solver's efficient representation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
       p[0][ip][1] = datum_0(1,ip);
-    tgt[0][ip][0] = datum_0(2,ip); 
-    tgt[0][ip][1] = datum_0(3,ip); 
-    
+    tgt[0][ip][0] = datum_0(2,ip);
+    tgt[0][ip][1] = datum_0(3,ip);
+
       p[1][ip][0] = datum_1(0,ip);
       p[1][ip][1] = datum_1(1,ip);
-    tgt[1][ip][0] = datum_1(2,ip); 
-    tgt[1][ip][1] = datum_1(3,ip); 
-    
+    tgt[1][ip][0] = datum_1(2,ip);
+    tgt[1][ip][1] = datum_1(3,ip);
+
       p[2][ip][0] = datum_2(0,ip);
       p[2][ip][1] = datum_2(1,ip);
-    tgt[2][ip][0] = datum_2(2,ip); 
-    tgt[2][ip][1] = datum_2(3,ip); 
+    tgt[2][ip][0] = datum_2(2,ip);
+    tgt[2][ip][1] = datum_2(3,ip);
   }
-  
+
   unsigned nsols_final = 0;
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
   for (unsigned i = 0; i < max_solve_tries; ++i) {
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
-    assert(false);
+    return;
     // std::cerr << "Solver failed once to compute solutions, perhaps retry\n"; // should never happen
   }
   // std::cerr << "Number of sols " << nsols_final << std::endl;
@@ -75,7 +75,7 @@ Solve(
     }
   }
   // TODO: filter the solutions by:
-  // - positive depth and 
+  // - positive depth and
   // - using tangent at 3rd point
 }
 
