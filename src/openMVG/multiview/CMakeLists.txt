@@ -32,7 +32,6 @@ target_link_libraries(openMVG_multiview
   LINK_PRIVATE
     openMVG_graph
     ${CERES_LIBRARIES}
-    ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
 target_include_directories(openMVG_multiview
   PRIVATE
@@ -63,3 +62,5 @@ UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview_tes
 # Averaging routines
 UNIT_TEST(openMVG rotation_averaging "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_multiview")
+
+add_subdirectory(trifocal)

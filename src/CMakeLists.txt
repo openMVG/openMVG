@@ -251,6 +251,18 @@ if (NOT cereal_FOUND)
 endif()
 
 # ==============================================================================
+# minus
+# ==============================================================================
+# - always internal for now (very simple code)
+# ==============================================================================
+set(MINUS_INCLUDE_DIRS 
+  ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/minus/minus/)
+add_subdirectory(dependencies/minus/)
+# Move the following line to multiview/trifocal/CMakeLists.txt
+# But there CMake is ignoring the include directories, a bug?
+include_directories(${MINUS_INCLUDE_DIRS})
+
+# ==============================================================================
 # Eigen
 # ==============================================================================
 # - external by default
