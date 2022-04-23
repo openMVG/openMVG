@@ -1,19 +1,17 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_trifocal_files_header
   *.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_trifocal_files_cpp
   *.cpp
 )
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
+file(GLOB REMOVEFILESUNITTEST *_test.cpp)
 # Remove the unit test files (not been used by the library)
-list(REMOVE_ITEM ${multiview_trifocal_files_cpp} ${REMOVEFILESUNITTEST})
-list(REMOVE_ITEM ${multiview_trifocal_files_header} ${REMOVEFILESUNITTEST_HEADER})
+list(REMOVE_ITEM multiview_trifocal_files_cpp ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_multiview_trifocal
   ${multiview_trifocal_files_header}

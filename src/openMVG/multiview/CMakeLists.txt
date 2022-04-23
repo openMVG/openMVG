@@ -1,17 +1,17 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_files_header
   *.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_files_cpp
   *.cpp
 )
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
-file(GLOB_RECURSE MULTIVIEWTESTDATA *_data_sets*)
+file(GLOB REMOVEFILESUNITTEST *_test.cpp)
+file(GLOB REMOVEFILESUNITTEST_HEADER *_test.hpp)
+file(GLOB MULTIVIEWTESTDATA *_data_sets*)
 
 #Remove the unit test files (not been used by the library)
 list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILESUNITTEST})

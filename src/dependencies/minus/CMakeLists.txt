@@ -37,4 +37,4 @@ set_target_properties(minus PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-m
 set_target_properties(minus PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 find_package(Threads REQUIRED)
 target_include_directories(minus PUBLIC ${MINUS_INCLUDE_DIRS})
-target_link_libraries(minus PUBLIC Threads::Threads -pthread)
+target_link_libraries(minus PUBLIC Threads::Threads)
