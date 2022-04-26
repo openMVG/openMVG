@@ -144,15 +144,6 @@ target_link_libraries(openMVG_main_MatchesToTracks
     ${STLPLUS_LIBRARY}
 )
 
-add_executable(openMVG_main_LiGT main_LiGT_algorithm.cpp)
-target_link_libraries(openMVG_main_LiGT
-  PRIVATE
-    openMVG_system
-    openMVG_image
-    openMVG_features
-    openMVG_sfm
-    ${STLPLUS_LIBRARY}
-)
 
 # Installation rules
 set_property( TARGET openMVG_main_ListMatchingPairs PROPERTY FOLDER OpenMVG/software )
