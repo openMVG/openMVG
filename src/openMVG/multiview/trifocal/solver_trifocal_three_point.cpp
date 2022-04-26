@@ -23,8 +23,7 @@ static unsigned constexpr max_solve_tries = 5;
 using namespace MiNuS;
 
 void Trifocal3PointPositionTangentialSolver::
-Solve(
-      const Mat &datum_0,
+Solve(const Mat &datum_0,
       const Mat &datum_1,
       const Mat &datum_2,
       std::vector<trifocal_model_t> *trifocal_tensor)
@@ -53,12 +52,11 @@ Solve(
   unsigned nsols_final = 0;
   unsigned id_sols[M::nsols];
   double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
-  for (unsigned i = 0; i < max_solve_tries; ++i) {
+  for (unsigned i = 0; i < max_solve_tries; ++i)
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
-    return;
-    // std::cerr << "Solver failed once to compute solutions, perhaps retry\n"; // should never happen
-  }
+  // if (nsols_final == 0)
+  //    std::cerr << "Solver failed once to compute solutions, perhaps retry\n"; // should never happen
   // std::cerr << "Number of sols " << nsols_final << std::endl;
 
   std::vector<trifocal_model_t> &tt = *trifocal_tensor;
