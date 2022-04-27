@@ -28,7 +28,7 @@ using namespace openMVG::cameras;
 
 // set the minimal number of image observations in a track
 // recommend value: 2~3
-#define MIN_TRACKING_LENGTH 3
+#define MIN_TRACKING_LENGTH 2
 
 namespace LiGT {
 
