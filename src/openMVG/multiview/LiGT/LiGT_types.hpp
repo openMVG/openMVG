@@ -27,7 +27,7 @@ using PtsId = IndexT;
 using ObsId = IndexT;
 
 // pose storage
-using Attitudes = std::vector<Mat3>;
+using Rotations = std::vector<Mat3>;
 using Translations = std::vector<Vec3>;
 
 using Poses = std::unordered_map<ViewId, openMVG::geometry::Pose3>;

@@ -6,18 +6,11 @@
 // Creative Commons Attribution Share Alike 4.0 International.
 // Details are available at https://choosealicense.com/licenses/cc-by-sa-4.0/
 
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/SVD>
 #include <chrono>
-#include <fstream>
-#include <iomanip>
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
@@ -34,8 +27,7 @@
 #define MIN_TRACKING_LENGTH 2
 
 using namespace Eigen;
-using namespace std;
-using namespace chrono;
+using namespace std::chrono;
 using namespace Spectra;
 
 namespace LiGT {
@@ -48,35 +40,6 @@ LiGTProblem::LiGTProblem() {
     num_obs_ = 0;
     time_use_ = 0;
     fixed_id_ = 0;
-
-    output_file_ = "";
-    time_file_ = "";
-
-}
-
-LiGTProblem::LiGTProblem(const std::string& globalR_file,
-                         const std::string& track_file,
-                         const std::string& output_file,
-                         const std::string& time_file,
-                         const int& fixed_id) {
-    num_view_ = 0;
-    num_pts_ = 0;
-    num_obs_ = 0;
-    time_use_ = 0;
-    fixed_id_ = fixed_id;
-
-    output_file_ = output_file;
-    time_file_ = time_file;
-
-    OPENMVG_LOG_INFO <<"=====================================================\n"
-                     <<"##  input info in LiGT algorithm (basic version)  ##\n"
-                     <<"Rotation file:="<<globalR_file << "\n"
-                     <<"Track file:="<<track_file << "\n"
-                     <<"fixed id:="<<fixed_id << "\n"
-                     <<"-----------------------------------------------------";
-
-    SetupOrientation(globalR_file);
-    LoadTracks(track_file);
 }
 
 LiGTProblem::LiGTProblem(LiGTProblem& problem){
@@ -87,8 +50,6 @@ LiGTProblem::LiGTProblem(LiGTProblem& problem){
     num_view_ = problem.num_view_;
     num_pts_ = problem.num_pts_;
     num_obs_ = problem.num_obs_;
-    output_file_ = problem.output_file_;
-    time_file_ = problem.time_file_;
     est_info_.origin_view_ids = problem.est_info_.origin_view_ids;
     est_info_.estimated_view_ids = problem.est_info_.estimated_view_ids;
     est_info_.est2origin_view_ids = problem.est_info_.est2origin_view_ids;
@@ -97,147 +58,6 @@ LiGTProblem::LiGTProblem(LiGTProblem& problem){
     global_rotations_ = problem.global_rotations_;
     global_translations_ = problem.global_translations_;
     poses_ = problem.poses_;
-
-}
-LiGTProblem::LiGTProblem(Tracks tracks,
-                         Attitudes global_R){
-
-    tracks_.swap(tracks);
-    global_rotations_.swap(global_R);
-
-    // check tracks and build estimated information [EstInfo]
-    if (!tracks_.size()){
-        OPENMVG_LOG_ERROR <<"error: wrong track inputs to run LiGT";
-        return;
-    }
-
-    if (!global_rotations_.size()){
-        OPENMVG_LOG_ERROR <<"error: wrong rotation inputs to run LiGT";
-        return;
-    }
-
-    time_use_ = 0;
-    fixed_id_ = 0;
-
-    CheckTracks();
-}
-
-void LiGTProblem::Init(const int& fixed_id){
-
-    // check tracks and build estimated information [EstInfo]
-    if (!tracks_.size()){
-        OPENMVG_LOG_ERROR <<"error: wrong track inputs to run LiGT";
-        return;
-    }
-
-    if (!global_rotations_.size()){
-        OPENMVG_LOG_ERROR <<"error: wrong rotation inputs to run LiGT";
-        return;
-    }
-
-    time_use_ = 0;
-    fixed_id_ = fixed_id;
-
-    CheckTracks();
-}
-
-void LiGTProblem::SetupOrientation(const std::string& globalR_file) {
-
-    openMVG::system::Timer timer;
-    timer.reset();
-
-    // load global rotation file
-    fstream infile;
-    infile.open(globalR_file, std::ios::in);
-    if (!infile.is_open()) {
-        OPENMVG_LOG_ERROR << "gR_file cannot open";
-        return;
-    }
-
-    infile >> num_view_;
-
-    global_rotations_.clear();
-    global_rotations_.resize(num_view_);
-
-    for (ViewId i = 0; i < num_view_; i++) {
-        Eigen::Matrix3d tmp_R;
-        infile >> tmp_R(0, 0) >> tmp_R(1, 0) >> tmp_R(2, 0);
-        infile >> tmp_R(0, 1) >> tmp_R(1, 1) >> tmp_R(2, 1);
-        infile >> tmp_R(0, 2) >> tmp_R(1, 2) >> tmp_R(2, 2);
-
-        global_rotations_[i] = (tmp_R);
-    }
-
-    infile.close();
-
-    // print time cost information
-    double duration = timer.elapsed();
-    OPENMVG_LOG_INFO << ">> time for loading global rotation file: "
-                     << duration
-                     << "s";
-
-}
-
-void LiGTProblem::LoadTracks(const std::string& track_file) {
-
-    openMVG::system::Timer timer;
-    timer.reset();
-
-    // load tracks file
-    std::fstream tracks_file(track_file, ios::in);
-    if (!tracks_file.is_open()) {
-        OPENMVG_LOG_ERROR << "tracks file cannot load";
-        return;
-    }
-
-    // load header info
-    tracks_file >> num_view_ >> num_pts_ >> num_obs_;
-
-    // load tracks
-    int record_pts_id = -1;
-
-    TrackInfo track_info;
-    ObsInfo tmp_obs;
-
-    tracks_.reserve(num_pts_);
-
-    for (ObsId i = 0; i < num_obs_; i++) {
-
-        tracks_file >> tmp_obs.view_id
-                >> tmp_obs.pts_id
-                >> tmp_obs.coord(0)
-                >> tmp_obs.coord(1);
-
-        tmp_obs.coord(0) = -tmp_obs.coord(0);
-        tmp_obs.coord(1) = -tmp_obs.coord(1);
-        tmp_obs.coord(2) = 1;
-
-        if (tmp_obs.pts_id != record_pts_id) {
-            if (i > 0) {
-                if (track_info.track.size() < MIN_TRACKING_LENGTH) {
-                    //only need use observation of tracking length >= MIN_TRACKING_LENGTH
-                    track_info.is_used = 0;
-                } else {
-                    track_info.is_used = 1;
-                }
-                tracks_.emplace_back(track_info);
-            }
-            track_info.track.clear();
-        }
-        track_info.track.emplace_back(tmp_obs);
-        record_pts_id = tmp_obs.pts_id;
-    }
-    tracks_file.close();
-    tracks_.emplace_back(track_info);
-
-    // check tracks and build estimated information [EstInfo]
-    CheckTracks();
-
-    // print time cost information
-    double duration = timer.elapsed();
-    OPENMVG_LOG_INFO << ">> time for loading tracks file: "
-                     << duration
-                     << "s";
 
 }
 
@@ -308,47 +128,6 @@ void LiGTProblem::RecoverViewIds(){
         const geometry::Pose3 tmp_pose(global_rotations_[i], global_translations_[i]);
         poses_.insert({est_info_.est2origin_view_ids[i], tmp_pose});
     }
-}
-
-void LiGTProblem::WriteTranslation() {
-
-    fstream output(output_file_, std::ios::out | ios::trunc);
-    if (!output.is_open()) {
-        OPENMVG_LOG_ERROR << "output file cannot create, please check path";
-        return;
-    }
-
-    IndexT t_size = num_view_;
-    Vector3d* tmp_position = nullptr;
-    Matrix3d* tmp_R = nullptr;
-    unsigned int i = 0;
-
-    output << t_size << endl;
-
-    for (i = 0; i < t_size; ++i) {
-        tmp_position = &global_translations_[i];
-        tmp_R = &global_rotations_[i];
-
-        output << setprecision(16) << endl << (*tmp_R)(0, 0) << " " << (*tmp_R)(1, 0) << " " << (*tmp_R)(2, 0) << " ";
-        output << setprecision(16) << (*tmp_R)(0, 1) << " " << (*tmp_R)(1, 1) << " " << (*tmp_R)(2, 1) << " ";
-        output << setprecision(16) << (*tmp_R)(0, 2) << " " << (*tmp_R)(1, 2) << " " << (*tmp_R)(2, 2) << " ";
-
-        output << setprecision(16) << (*tmp_position)(0) << " " << (*tmp_position)(1) << " " << (*tmp_position)(2);
-    }
-    output.close();
-
-}
-
-void LiGTProblem::WriteTime() {
-
-    fstream output(time_file_, std::ios::out | ios::trunc);
-    if (!output.is_open()) {
-        OPENMVG_LOG_ERROR << "time file cannot create, please check path";
-        return;
-    }
-    output << setprecision(16) << time_use_ << ' ' << 1 << endl;
-    output.close();
-
 }
 
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
@@ -500,7 +279,7 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
 
 }
 
-void LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
+bool LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
                             VectorXd& evectors){
 
     // ========================= Solve Problem by Eigen's SVD =======================
@@ -523,15 +302,19 @@ void LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
     eigs.compute(SortRule::LargestMagn);
 
     if (eigs.info() != CompInfo::Successful)
+    {
         OPENMVG_LOG_ERROR << " SymEigsShiftSolver failure - expect to have invalid output";
+        return false;
+    }
 
     const Eigen::VectorXd evalues = eigs.eigenvalues();
     OPENMVG_LOG_INFO << "Eigenvalues found: " << evalues.transpose();
 
     evectors.bottomRows( 3 * num_view_ - 3) = eigs.eigenvectors();
-
+    return true;
 }
-void LiGTProblem::Solution() {
+
+bool LiGTProblem::Solution() {
 
     PrintCopyright();
 
@@ -540,7 +323,6 @@ void LiGTProblem::Solution() {
 
     // start time clock
     openMVG::system::Timer timer;
-    timer.reset();
 
     // allocate memory for LTL matrix where Lt=0
     Eigen::MatrixXd LTL = Eigen::MatrixXd::Zero(num_view_ * 3-3, num_view_ * 3-3);
@@ -553,13 +335,16 @@ void LiGTProblem::Solution() {
 
     //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
     VectorXd evectors = VectorXd::Zero( 3 * num_view_);
-    SolveLiGT(LTL, evectors);
+    if (!SolveLiGT(LTL, evectors))
+    {
+      return false;
+    }
 
     //[Step.5 in Pose-only Algorithm]: identify the right global translation solution
     IdentifySign(A_lr, evectors);
 
     // algorithm time cost
-    double duration = timer.elapsedMs();
+    const double duration = timer.elapsedMs();
     OPENMVG_LOG_INFO << ">> time for the LiGT algorithm: "
                      << duration
                      << " ms"
@@ -577,6 +362,7 @@ void LiGTProblem::Solution() {
 
     // (optional) translation recovery
     RecoverViewIds();
+    return true;
 }
 
 Tracks LiGTProblem::GetTracks(){
@@ -591,12 +377,12 @@ Poses LiGTProblem::GetPoses(){
 
 }
 
-Attitudes LiGTProblem::GetRotations(){
+Rotations LiGTProblem::GetRotations(){
 
     return global_rotations_;
 }
 
-void LiGTProblem::PrintCopyright(){
+void LiGTProblem::PrintCopyright() const{
 
     OPENMVG_LOG_INFO << "\n===============================================================\n"
                      << "    The LiGT Algorithm (Version 1.1) for global translation\n"

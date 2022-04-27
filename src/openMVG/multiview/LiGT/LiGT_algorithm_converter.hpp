@@ -18,10 +18,6 @@
 #include "openMVG/tracks/tracks.hpp"
 
 using namespace openMVG;
-using namespace openMVG::matching;
-using namespace openMVG::sfm;
-using namespace openMVG::tracks;
-using namespace openMVG::cameras;
 
 namespace LiGT {
 
@@ -45,8 +41,8 @@ class LiGTBuilder : public LiGTProblem{
     // to transform the data type in openMVG into LiGT.
     // In the future, we might directly use openMVG's data type in the LiGT algorithm.
 public:
-    LiGTBuilder(const Features_Provider* features_provider,
-                const PairWiseMatches& pairWise_matches,
+    LiGTBuilder(const sfm::Features_Provider* features_provider,
+                const matching::PairWiseMatches& pairWise_matches,
                 const sfm::SfM_Data& sfm_data,
                 const Hash_Map<IndexT, Mat3>& map_globalR,
                 const int fixed_id = 0);
@@ -54,13 +50,13 @@ public:
     virtual ~LiGTBuilder() = default;
 
     // transform openMVG's tracks info into the LiGT's form
-    void BuildTracks(const Features_Provider* features_provider,
-                     const PairWiseMatches& pairWise_matches,
+    void BuildTracks(const sfm::Features_Provider* features_provider,
+                     const matching::PairWiseMatches& pairWise_matches,
                      const sfm::SfM_Data& sfm_data);
 
 
-    // transform openMVG's map global rotations into the LiGT's attitude form
-    void MapR2Attitudes(const Hash_Map<IndexT, Mat3>& map_globalR);
+    // Initialize Global rotations
+    void MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR);
 };
 }
 

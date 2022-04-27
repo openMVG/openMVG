@@ -6,18 +6,11 @@
 // Creative Commons Attribution Share Alike 4.0 International.
 // Details are available at https://choosealicense.com/licenses/cc-by-sa-4.0/
 
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <Eigen/SVD>
 #include <chrono>
-#include <fstream>
-#include <iomanip>
 #include <map>
 
 #include "LiGT_algorithm_converter.hpp"
@@ -25,8 +18,13 @@
 #include "openMVG/cameras/cameras.hpp"
 
 using namespace Eigen;
-using namespace std;
-using namespace chrono;
+using namespace std::chrono;
+
+using namespace openMVG;
+using namespace openMVG::matching;
+using namespace openMVG::sfm;
+using namespace openMVG::tracks;
+using namespace openMVG::cameras;
 
 namespace LiGT {
 
@@ -39,22 +37,18 @@ LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
     BuildTracks(features_provider, pairWise_matches, sfm_data);
 
     // load global rotations
-    MapR2Attitudes(map_globalR);
+    MapR2Rotations(map_globalR);
 
     time_use_ = 0;
     fixed_id_ = fixed_id;
 
-    output_file_ = "";
-    time_file_ = "";
-
     // check tracks and build estimated information [EstInfo]
     CheckTracks();
-
 }
 
-void LiGTBuilder::MapR2Attitudes(const Hash_Map<IndexT, Mat3>& map_globalR){
+void LiGTBuilder::MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR){
 
-    map<IndexT,Matrix3d> tmp_map_R;
+    std::map<IndexT,Matrix3d> tmp_map_R;
 
     // sort by the key value (ViewId)
     for (auto& R: map_globalR){
@@ -91,15 +85,12 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
     // - views and feature positions that see this landmark
 
     tracks_.reserve(map_tracks.size());
-#ifdef OPENMVG_USE_OPENMP
-    #pragma omp parallel for
-#endif
-    for (IndexT trackId = 0; trackId < map_tracks.size(); ++trackId)
+    IndexT trackId(0);
+    for (const auto& trackIt : map_tracks)
     {
-      openMVG::tracks::STLMAPTracks::const_iterator itTracks = map_tracks.begin();
-      std::advance(itTracks, trackId);
       TrackInfo track_info;
-      const submapTrack& track = itTracks->second;
+      const submapTrack& track = trackIt.second;
+      track_info.track.reserve(track.size());
       for (const auto& it : track)
       {
           const size_t imaIndex = it.first;
@@ -118,6 +109,7 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
           track_info.track.emplace_back(obs_info);
       }
       tracks_.emplace_back(track_info);
+      ++trackId;
     }
 
     map_tracks.clear();

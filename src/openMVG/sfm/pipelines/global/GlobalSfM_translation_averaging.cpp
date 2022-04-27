@@ -72,23 +72,31 @@ bool GlobalSfM_Translation_AveragingSolver::Run
         // [Note]: Since the function Translation_averaging() is not provided features information,
         // we add our LiGT's module in this place.
 
+        OPENMVG_LOG_INFO << "Solving translation using LiGT algorithm";
+
+        openMVG::system::Timer timer;
         LiGT::LiGTBuilder problem(features_provider,
                                   tripletWise_matches,
                                   sfm_data,
                                   map_globalR);
+        const double duration = timer.elapsedMs();
+        OPENMVG_LOG_INFO << ">> time to setup LiGT inputs: "
+          << duration
+          << " ms"
+          << "\n===============================================================";
 
-        problem.Solution();
+        b_translation = problem.Solution();
 
-        const LiGT::Poses poses = problem.GetPoses();
-
-        // A valid solution was found:
-        // - Update the view poses according the found camera translations
-        for ( auto& pose : poses)
+        if (b_translation)
         {
-          sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
-        }
+          const LiGT::Poses poses = problem.GetPoses();
 
-        b_translation = true;
+          // - Update the view poses according the found camera translations
+          for ( auto& pose : poses)
+          {
+            sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
+          }
+        }
 #endif
     }
     else{

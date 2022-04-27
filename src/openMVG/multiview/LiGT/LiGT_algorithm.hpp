@@ -63,32 +63,7 @@ public:
 
     explicit LiGTProblem(LiGTProblem& problem);
 
-    LiGTProblem(Tracks tracks,
-                Attitudes global_R);
-
-    LiGTProblem(const std::string& globalR_file,
-                const std::string& track_file,
-                const std::string& output_file,
-                const std::string& time_file,
-                const int& fixed_id);
-
     virtual ~LiGTProblem() = default;
-
-    // initialize the LiGT problem
-    void Init(const int& fixed_id = 0);
-
-    // set global rotation input
-    void SetupOrientation(const std::string& globalR_file);
-
-    // load tracks from a bal-format track file
-    // [web details in bal format: https://grail.cs.washington.edu/projects/bal/]
-    void LoadTracks(const std::string& track_file);
-
-    // write translation result
-    void WriteTranslation();
-
-    // write time result
-    void WriteTime();
 
     // [Step.2 in Pose-only Algorithm]: select the left/right-base views
     void SelectBaseViews(const Track& track,
@@ -102,7 +77,7 @@ public:
                   Eigen::MatrixXd& A_lr);
 
     //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
-    void SolveLiGT(const Eigen::MatrixXd& LTL,
+    bool SolveLiGT(const Eigen::MatrixXd& LTL,
                    Eigen::VectorXd &evectors);
 
     // [Step.5 in Pose-only Algorithm]: identify the correct sign of the translation solution after using SVD
@@ -110,13 +85,13 @@ public:
                       Eigen::VectorXd& evectors);
 
     // LiGT solution
-    void Solution();
+    bool Solution();
 
     // get tracks pointer (help to set track inputs)
     Tracks GetTracks();
 
     // get rotations (help to set rotation inputs)
-    Attitudes GetRotations();
+    Rotations GetRotations();
 
     // get poses
     Poses GetPoses();
@@ -129,7 +104,7 @@ public:
     void RecoverViewIds();
 
     // print copyright claim
-    void PrintCopyright();
+    void PrintCopyright() const;
 
 protected:
 
@@ -138,10 +113,6 @@ protected:
     unsigned int num_obs_;
     double time_use_;
 
-    // output files
-    std::string output_file_;
-    std::string time_file_;
-
     // tracks
     LiGT::Tracks tracks_;
 
@@ -149,7 +120,7 @@ protected:
     LiGT::EstInfo est_info_;
 
     // [Note]: global rotations are sorted by estimated view ids
-    LiGT::Attitudes global_rotations_;
+    LiGT::Rotations global_rotations_;
 
     // [Note]: global translations are sorted by estimated view ids
     LiGT::Translations global_translations_;
