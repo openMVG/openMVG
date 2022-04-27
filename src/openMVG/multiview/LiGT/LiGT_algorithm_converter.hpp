@@ -39,23 +39,10 @@ public:
 
     virtual ~LiGTBuilder() = default;
 
-    // transform openMVG's [Landmarks] into [Tracks] in LiGT
-    void Landmarks2Tracks(const Landmarks& landmarks);
-
-    // build [Landmarks] in openMVG
-    void BuildLandmarks(const FeatsPerView& feats_per_view,
-                        const STLMAPTracks& map_tracks,
-                        const SfM_Data& sfm_data,
-                        Landmarks& landmarks);
-
-    // build [MapTracks] in openMVG
-    void BuildMapTracks(const PairWiseMatches& pairWise_matches,
-                        STLMAPTracks& map_tracks);
-
     // transform openMVG's tracks info into the LiGT's form
-    void TracksOpenMVG2LiGT(const FeatsPerView& feats_per_view,
-                             const PairWiseMatches& pairWise_matches,
-                             const SfM_Data& sfm_data);
+    void BuildTracks(const FeatsPerView& feats_per_view,
+                     const PairWiseMatches& pairWise_matches,
+                     const SfM_Data& sfm_data);
 
 
     // transform openMVG's map global rotations into the LiGT's attitude form

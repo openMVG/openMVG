@@ -33,23 +33,19 @@ using namespace openMVG::tracks;
 using namespace openMVG::cameras;
 
 using namespace Eigen;
-using namespace std;
+
 namespace LiGT{
 
-using IndexT = uint32_t;
 
-typedef unsigned int ViewId;
-typedef unsigned int PtsId;
-typedef unsigned int ObsId;
-
-typedef unsigned int Size;
+using ViewId = IndexT;
+using PtsId = IndexT;
+using ObsId = IndexT;
 
 // pose storage
-typedef vector<Eigen::Matrix3d> Attitudes;
-typedef vector<Eigen::Vector3d> Translations;
+using Attitudes = std::vector<Eigen::Matrix3d>;
+using Translations = std::vector<Eigen::Vector3d>;
 
-using Pose = openMVG::geometry::Pose3;
-typedef unordered_map<ViewId, Pose> Poses;
+using Poses = std::unordered_map<ViewId, openMVG::geometry::Pose3>;
 
 // image observation information
 struct ObsInfo {
@@ -59,20 +55,20 @@ struct ObsInfo {
 };
 
 // track information
-typedef vector<ObsInfo> Track;
+using Track = std::vector<ObsInfo>;
 
 struct TrackInfo {
     Track track;
     bool is_used = true;
 };
 
-typedef vector<TrackInfo> Tracks;
+using Tracks = std::vector<TrackInfo>;
 
 // estimated information
-typedef vector<ViewId> EstimatedViewIds;
-typedef vector<ViewId> OriginViewIds;
-typedef unordered_map<ViewId, ViewId> Origin2EstViewIds;
-typedef unordered_map<ViewId, ViewId> Est2OriginViewIds;
+using EstimatedViewIds = std::vector<ViewId>;
+using OriginViewIds = std::vector<ViewId>;
+using Origin2EstViewIds = std::unordered_map<ViewId, ViewId>;
+using Est2OriginViewIds = std::unordered_map<ViewId, ViewId>;
 
 struct EstInfo {
     EstimatedViewIds estimated_view_ids;

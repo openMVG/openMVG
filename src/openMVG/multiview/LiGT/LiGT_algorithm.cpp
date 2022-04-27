@@ -27,9 +27,9 @@
 #include "openMVG/system/timer.hpp"
 #include "third_party/spectra/include/Spectra/SymEigsShiftSolver.h"
 
-// set the minimal number of image observations in a track (1000000 for developed version)
+// set the minimal number of image observations in a track
 // recommend value: 2~3
-#define MIN_TRACKING_LENGTH 1000000
+#define MIN_TRACKING_LENGTH 2
 
 
 using namespace std;
@@ -243,11 +243,11 @@ void LiGTProblem::CheckTracks(){
 
     OPENMVG_LOG_INFO << "checking tracks information...";
 
-    Size tmp_num_obs = 0;
+    IndexT tmp_num_obs = 0;
 
     std::set<ViewId> est_view;
     for ( PtsId i = 0; i < tracks_.size(); ++i){
-        Track& track = tracks_[i].track;
+        const Track& track = tracks_[i].track;
         for (ObsId j = 0; j < track.size(); ++j){
             est_view.insert(track[j].view_id);
         }
@@ -303,10 +303,9 @@ void LiGTProblem::RecoverViewIds(){
     OPENMVG_LOG_INFO << "recover the estimated view ids into original view ids";
 
     for (ViewId i = 0; i < num_view_; ++i){
-        Pose tmp_pose(global_rotations_[i],global_translations_[i]);
+        const Pose3 tmp_pose(global_rotations_[i], global_translations_[i]);
         poses_.insert({est_info_.est2origin_view_ids[i], tmp_pose});
     }
-
 }
 
 void LiGTProblem::WriteTranslation() {
@@ -317,7 +316,7 @@ void LiGTProblem::WriteTranslation() {
         return;
     }
 
-    Size t_size = num_view_;
+    IndexT t_size = num_view_;
     Vector3d* tmp_position = nullptr;
     Matrix3d* tmp_R = nullptr;
     unsigned int i = 0;
@@ -367,7 +366,7 @@ void LiGTProblem::SelectBaseViews(const Track& track,
                                   ObsId& id_rbase){
     double best_criterion_value = 0;
 
-    Size track_size = track.size();
+    IndexT track_size = track.size();
 
     // [Step.2 in Pose-only Algorithm]: select the left/right-base views
     for (ObsId i = 0; i < track_size - 1; ++i) {
