@@ -26,6 +26,10 @@ using namespace openMVG::sfm;
 using namespace openMVG::tracks;
 using namespace openMVG::cameras;
 
+// set the minimal number of image observations in a track
+// recommend value: 2~3
+#define MIN_TRACKING_LENGTH 3
+
 namespace LiGT {
 
 LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
@@ -75,7 +79,7 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
       tracks::TracksBuilder tracksBuilder;
 
       tracksBuilder.Build(map_Matches);
-      tracksBuilder.Filter();
+      tracksBuilder.Filter(MIN_TRACKING_LENGTH);
       tracksBuilder.ExportToSTL(map_tracks);
     }
 

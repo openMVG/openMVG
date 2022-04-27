@@ -22,10 +22,6 @@
 #include "openMVG/system/timer.hpp"
 #include "third_party/spectra/include/Spectra/SymEigsShiftSolver.h"
 
-// set the minimal number of image observations in a track
-// recommend value: 2~3
-#define MIN_TRACKING_LENGTH 2
-
 using namespace Eigen;
 using namespace std::chrono;
 using namespace Spectra;
