@@ -72,7 +72,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
         // [Note]: Since the function Translation_averaging() is not provided features information,
         // we add our LiGT's module in this place.
 
-        LiGT::LiGTBuilder problem(features_provider->feats_per_view,
+        LiGT::LiGTBuilder problem(features_provider,
                                   tripletWise_matches,
                                   sfm_data,
                                   map_globalR);

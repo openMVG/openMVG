@@ -1,3 +1,10 @@
+// This file is part of a pose-only algorithm of Linear Global Translation (LiGT)
+
+// Copyright (c) 2022, Qi Cai and Yuanxin Wu
+
+// This Source Code Form is subject to the license terms of
+// Creative Commons Attribution Share Alike 4.0 International.
+// Details are available at https://choosealicense.com/licenses/cc-by-sa-4.0/
 
 #ifndef LIGT_ALGORITHM_CONVERTER
 #define LIGT_ALGORITHM_CONVERTER
@@ -6,10 +13,17 @@
 
 #include "LiGT_algorithm.hpp"
 
-namespace LiGT {
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/tracks/tracks.hpp"
 
-using IndexT = uint32_t;
-typedef Hash_Map<IndexT, features::PointFeatures> FeatsPerView;
+using namespace openMVG;
+using namespace openMVG::matching;
+using namespace openMVG::sfm;
+using namespace openMVG::tracks;
+using namespace openMVG::cameras;
+
+namespace LiGT {
 
 //------------------
 //-- Bibliography --
@@ -31,18 +45,18 @@ class LiGTBuilder : public LiGTProblem{
     // to transform the data type in openMVG into LiGT.
     // In the future, we might directly use openMVG's data type in the LiGT algorithm.
 public:
-    LiGTBuilder(const FeatsPerView& feats_per_view,
+    LiGTBuilder(const Features_Provider* features_provider,
                 const PairWiseMatches& pairWise_matches,
-                const SfM_Data& sfm_data,
+                const sfm::SfM_Data& sfm_data,
                 const Hash_Map<IndexT, Mat3>& map_globalR,
                 const int fixed_id = 0);
 
     virtual ~LiGTBuilder() = default;
 
     // transform openMVG's tracks info into the LiGT's form
-    void BuildTracks(const FeatsPerView& feats_per_view,
+    void BuildTracks(const Features_Provider* features_provider,
                      const PairWiseMatches& pairWise_matches,
-                     const SfM_Data& sfm_data);
+                     const sfm::SfM_Data& sfm_data);
 
 
     // transform openMVG's map global rotations into the LiGT's attitude form

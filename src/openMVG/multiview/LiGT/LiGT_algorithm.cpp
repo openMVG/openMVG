@@ -24,6 +24,8 @@
 #endif
 
 #include "LiGT_algorithm.hpp"
+#include "openMVG/numeric/numeric.h"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 #include "third_party/spectra/include/Spectra/SymEigsShiftSolver.h"
 
@@ -31,7 +33,7 @@
 // recommend value: 2~3
 #define MIN_TRACKING_LENGTH 2
 
-
+using namespace Eigen;
 using namespace std;
 using namespace chrono;
 using namespace Spectra;
@@ -303,7 +305,7 @@ void LiGTProblem::RecoverViewIds(){
     OPENMVG_LOG_INFO << "recover the estimated view ids into original view ids";
 
     for (ViewId i = 0; i < num_view_; ++i){
-        const Pose3 tmp_pose(global_rotations_[i], global_translations_[i]);
+        const geometry::Pose3 tmp_pose(global_rotations_[i], global_translations_[i]);
         poses_.insert({est_info_.est2origin_view_ids[i], tmp_pose});
     }
 }

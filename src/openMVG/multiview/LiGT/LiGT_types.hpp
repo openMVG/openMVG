@@ -10,40 +10,25 @@
 #ifndef LIGT_TYPES
 #define LIGT_TYPES
 
-#include <vector>
-#include <Eigen/Core>
-#include <memory>
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/types.hpp"
+
 #include <set>
 #include <unordered_map>
-
-#include "openMVG/cameras/cameras.hpp"
-#include "openMVG/matching/indMatch.hpp"
-#include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/matching/svg_matches.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/tracks/tracks.hpp"
+#include <vector>
 
 using namespace openMVG;
-using namespace openMVG::matching;
-using namespace openMVG::sfm;
-using namespace openMVG::tracks;
-using namespace openMVG::cameras;
-
-using namespace Eigen;
 
 namespace LiGT{
-
 
 using ViewId = IndexT;
 using PtsId = IndexT;
 using ObsId = IndexT;
 
 // pose storage
-using Attitudes = std::vector<Eigen::Matrix3d>;
-using Translations = std::vector<Eigen::Vector3d>;
+using Attitudes = std::vector<Mat3>;
+using Translations = std::vector<Vec3>;
 
 using Poses = std::unordered_map<ViewId, openMVG::geometry::Pose3>;
 

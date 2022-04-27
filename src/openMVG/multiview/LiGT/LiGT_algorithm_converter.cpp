@@ -1,3 +1,11 @@
+// This file is part of a pose-only algorithm of Linear Global Translation (LiGT)
+
+// Copyright (c) 2022, Qi Cai and Yuanxin Wu
+
+// This Source Code Form is subject to the license terms of
+// Creative Commons Attribution Share Alike 4.0 International.
+// Details are available at https://choosealicense.com/licenses/cc-by-sa-4.0/
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -14,19 +22,21 @@
 
 #include "LiGT_algorithm_converter.hpp"
 
+#include "openMVG/cameras/cameras.hpp"
+
+using namespace Eigen;
 using namespace std;
 using namespace chrono;
-using namespace LiGT;
 
 namespace LiGT {
 
-LiGTBuilder::LiGTBuilder(const FeatsPerView& feats_per_view,
+LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
                          const PairWiseMatches& pairWise_matches,
                          const SfM_Data& sfm_data,
                          const Hash_Map<IndexT, Mat3>& map_globalR,
                          const int fixed_id){
     //normalized coordinate
-    BuildTracks(feats_per_view, pairWise_matches, sfm_data);
+    BuildTracks(features_provider, pairWise_matches, sfm_data);
 
     // load global rotations
     MapR2Attitudes(map_globalR);
@@ -61,7 +71,7 @@ void LiGTBuilder::MapR2Attitudes(const Hash_Map<IndexT, Mat3>& map_globalR){
     tmp_map_R.clear();
 }
 
-void LiGTBuilder::BuildTracks(const FeatsPerView& feats_per_view,
+void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
                          const PairWiseMatches& pairWise_matches,
                          const SfM_Data& sfm_data){
     // Build OpenMVG tracks
@@ -94,7 +104,7 @@ void LiGTBuilder::BuildTracks(const FeatsPerView& feats_per_view,
       {
           const size_t imaIndex = it.first;
           const size_t featIndex = it.second;
-          const auto& pt = feats_per_view.at(imaIndex)[featIndex];
+          const auto& pt = features_provider->feats_per_view.at(imaIndex)[featIndex];
 
           const View* view = sfm_data.views.at(imaIndex).get();
           const IntrinsicBase* cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();

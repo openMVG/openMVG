@@ -54,6 +54,8 @@ namespace LiGT {
 // 2. It does not consider the rank condition in Proposition 6 of the T-PAMI paper.
 //
 
+#include <Eigen/Core>
+
 class LiGTProblem {
 public:
 
@@ -97,15 +99,15 @@ public:
 
     // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
     void BuildLTL(Eigen::MatrixXd& LTL,
-                  MatrixXd& A_lr);
+                  Eigen::MatrixXd& A_lr);
 
     //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
     void SolveLiGT(const Eigen::MatrixXd& LTL,
-                   VectorXd &evectors);
+                   Eigen::VectorXd &evectors);
 
     // [Step.5 in Pose-only Algorithm]: identify the correct sign of the translation solution after using SVD
-    void IdentifySign(const MatrixXd& A_lr,
-                      VectorXd& evectors);
+    void IdentifySign(const Eigen::MatrixXd& A_lr,
+                      Eigen::VectorXd& evectors);
 
     // LiGT solution
     void Solution();
