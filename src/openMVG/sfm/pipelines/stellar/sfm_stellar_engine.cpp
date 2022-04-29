@@ -15,7 +15,6 @@
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
-#include "openMVG/linearProgramming/lInfinityCV/global_translations_fromTij.hpp"
 
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
