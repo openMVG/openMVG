@@ -162,7 +162,7 @@ bool StellarSfMReconstructionEngine::Process()
   const auto largest_cc_nodes_rot = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(selected_pairs);
   assert(largest_cc_nodes_rot.size() == global_rotations.size());
   
-  //b- translation averaging sterp
+  //b- translation averaging step
   if (!Compute_Global_Translations(global_rotations, selected_pairs, stellar_reconstruction_per_pose))
   {
     OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
