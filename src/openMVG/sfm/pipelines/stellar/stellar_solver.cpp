@@ -12,6 +12,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
@@ -130,6 +131,11 @@ bool EstimateTripletRelativeScale
   {
     const tracks::submapTrack & track = tracks.second;
 
+    // Variables for triangulation
+    Mat3 R0 = Mat3::Identity(); 
+    Mat3 R1;
+    Vec3 t0 = Vec3::Zero(); 
+    Vec3 t1, b0, b1;
     for (const Pair & cu_pair : pairs)
     {
       //
@@ -151,36 +157,32 @@ bool EstimateTripletRelativeScale
       }
 
       std::map<IndexT, geometry::Pose3> poses;
-      std::vector<Vec3> bearing;
-      std::vector<Mat34> vec_poses;
-
       for (const auto & track_it : track)
       {
         const IndexT view_idx = track_it.first;
         const View * view = sfm_data.GetViews().find(view_idx)->second.get();
-
         if (view->id_pose == cu_pair.first || view->id_pose == cu_pair.second)
         {
-          const geometry::Pose3 pose = (view->id_pose == cu_pair.first) ?
-            geometry::Pose3(Mat3::Identity(), Vec3::Zero())
-            : relative_poses.at(cu_pair);
-
+          Pose3 pose;
           const auto cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-
-          poses[view->id_pose] = pose;
-
-          vec_poses.emplace_back(pose.asMatrix());
           const size_t feat_idx = track_it.second;
           const Vec2 feat_pos = features_provider->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
-          bearing.emplace_back((*cam)(cam->get_ud_pixel(feat_pos)));
+          if(view->id_pose == cu_pair.first){
+            // R0, t0 are already set at identity and zero translation
+            // The pos is also at identity and zero translation
+            b0 = (*cam)(cam->get_ud_pixel(feat_pos));
+          } else {
+            pose = relative_poses.at(cu_pair);
+            R1 = pose.rotation();
+            t1 = pose.translation();
+            b1 = (*cam)(cam->get_ud_pixel(feat_pos));
+          } 
+          poses[view->id_pose] = pose;
         }
       }
-      const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
-      Vec4 Xhomogeneous;
-      if (TriangulateNViewAlgebraic(bearing_matrix, vec_poses, &Xhomogeneous))
+      Vec3 X;
+      if (TriangulateIDWMidpoint(R0,t0, b0, R1, t1, b1, &X))
       {
-        const Vec3 X = Xhomogeneous.hnormalized();
-
         const geometry::Pose3 pose = poses[node_id];
         const double depth = (X - pose.center()).norm();
         // Store the depth for this 2-uplet of edges
