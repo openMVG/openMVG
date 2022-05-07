@@ -132,9 +132,9 @@ bool EstimateTripletRelativeScale
     const tracks::submapTrack & track = tracks.second;
 
     // Variables for triangulation
-    Mat3 R0 = Mat3::Identity(); 
+    Mat3 R0 = Mat3::Identity();
     Mat3 R1;
-    Vec3 t0 = Vec3::Zero(); 
+    Vec3 t0 = Vec3::Zero();
     Vec3 t1, b0, b1;
     for (const Pair & cu_pair : pairs)
     {
@@ -176,7 +176,7 @@ bool EstimateTripletRelativeScale
             R1 = pose.rotation();
             t1 = pose.translation();
             b1 = (*cam)(cam->get_ud_pixel(feat_pos));
-          } 
+          }
           poses[view->id_pose] = pose;
         }
       }
@@ -360,11 +360,11 @@ bool Stellar_Solver::Solve(Poses & poses)
 
   const std::vector<Pair_Set> edge_two_uplets = ListEdge2Uplets();
 
-  OPENMVG_LOG_INFO
-    << "Stellar pod details:\n"
-    << "#central pose id: " << central_node_id << "\n"
-    << "#pairs: " << stellar_pod_.size() << "\n"
-    << "#2-uplets: " << edge_two_uplets.size();
+  // OPENMVG_LOG_INFO
+  //   << "Stellar pod details:\n"
+  //   << "#central pose id: " << central_node_id << "\n"
+  //   << "#pairs: " << stellar_pod_.size() << "\n"
+  //   << "#2-uplets: " << edge_two_uplets.size();
 
   std::vector<Relative_Scale> relative_scales;
   if (!Solve2UpletsRelativeScales(edge_two_uplets, relative_scales))
@@ -379,12 +379,16 @@ bool Stellar_Solver::Solve(Poses & poses)
     return false;
   poses = sfm_data_stellar_pod.poses;
 
-  /*std::ostringstream os;
-  os << "Stellar_" << central_node_id;
-  Save(sfm_data_stellar_pod,
-       stlplus::create_filespec("./",os.str(),".ply"),
-       ESfM_Data(ALL));
-       */
+  // For debugging purpose you could save each stellar pod reconstruction as follow:
+  const bool export_stellar_pods_reconstruction = false;
+  if (export_stellar_pods_reconstruction)
+  {
+    std::ostringstream os;
+    os << "Stellar_" << central_node_id;
+    Save(sfm_data_stellar_pod,
+      stlplus::create_filespec("./",os.str(),".ply"),
+      ESfM_Data(ALL));
+  }
   return poses.size() >= 2;
 }
 
@@ -476,12 +480,12 @@ bool Stellar_Solver::Optimize
     }
   }
 
-  // Collect the pairs used by this stellar pod
-  const Pair_Set & used_pairs = Relative_Scale::Get_pairs(relative_scales);
-
   // Collect, matches, intrinsics and views data linked to the poses ids
   openMVG::tracks::STLMAPTracks tracks;
   {
+    // Collect the pairs used by this stellar pod
+    const Pair_Set & used_pairs = Relative_Scale::Get_pairs(relative_scales);
+
     matching::PairWiseMatches matches;
     for (const auto & matches_it : matches_provider_->pairWise_matches_)
     {
@@ -552,18 +556,18 @@ bool Stellar_Solver::Optimize
       }
       // Collect the views and features observing this landmark
       landmarks[tracks_it.first].obs = [&]
-      {
-        Observations obs;
-        for (const auto & track_it : track)
         {
-          const IndexT view_idx = track_it.first;
-          const IndexT feat_idx = track_it.second;
-          const Vec2 x = features_provider_->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
+          Observations obs;
+          for (const auto & track_it : track)
+          {
+            const IndexT view_idx = track_it.first;
+            const IndexT feat_idx = track_it.second;
+            const Vec2 x = features_provider_->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
 
-          obs[view_idx] = {x, feat_idx};
-        }
-        return obs;
-      }();
+            obs[view_idx] = {x, feat_idx};
+          }
+          return obs;
+        }();
     }
     // Triangulate
     sfm::SfM_Data_Structure_Computation_Blind structure_estimator(false);

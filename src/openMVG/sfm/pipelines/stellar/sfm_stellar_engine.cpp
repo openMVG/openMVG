@@ -133,7 +133,7 @@ bool StellarSfMReconstructionEngine::Process()
 
   const auto largest_cc_nodes = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(pairs);
   OPENMVG_LOG_INFO << "Largest CC => Keeping " << largest_cc_nodes.size() << " nodes from " << base_nodes.size() << " base nodes";
-  
+
   for (const auto & pod_it : stellar_reconstruction_per_pose)
   {
     for (const auto & rel_it : pod_it.second.relative_motions)
@@ -146,8 +146,8 @@ bool StellarSfMReconstructionEngine::Process()
       }
     }
   }
-  
-  //b- the rotation averaging step 
+
+  //b- the rotation averaging step
   Hash_Map<IndexT, Mat3> global_rotations;
   Pair_Set selected_pairs;
   if (!Compute_Global_Rotations(relatives_R, global_rotations, selected_pairs))
@@ -156,19 +156,21 @@ bool StellarSfMReconstructionEngine::Process()
     return false;
   }
 
-  
+
   // Perform the translation averaging and compute the global positions
   //a- be sure rotation averaging has not disconnected the graph
-  const auto largest_cc_nodes_rot = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(selected_pairs);
-  assert(largest_cc_nodes_rot.size() == global_rotations.size());
-  
-  //b- translation averaging step
-  if (!Compute_Global_Translations(global_rotations, selected_pairs, stellar_reconstruction_per_pose))
   {
-    OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
-    return false;
-  }
+    const auto largest_cc_nodes_rot = graph::KeepLargestCC_Nodes<Pair_Set, IndexT>(selected_pairs);
+    assert(largest_cc_nodes_rot.size() == global_rotations.size());
 
+    //b- translation averaging step
+    if (!Compute_Global_Translations(global_rotations, selected_pairs, stellar_reconstruction_per_pose))
+    {
+      OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";
+      return false;
+    }
+  }
+  // Perform point triangulation and bundle adjust scene
   {
     const int min_covisibility = 2;
     if (!Compute_Initial_Structure(min_covisibility))
@@ -314,14 +316,14 @@ void StellarSfMReconstructionEngine::ComputeRelativeMotions(
       selected_pairs = selectMST(matches_provider_->pairWise_matches_, nb_trees);
   }
   break;
-  
+
   default:
     OPENMVG_LOG_ERROR << "Unknown graph simplification method";
     break;
   }
 
-  OPENMVG_LOG_INFO << "Will use: " << selected_pairs.size() << " relative pose pairs.";
-  OPENMVG_LOG_INFO << "Initial graph got: " << matches_provider_->pairWise_matches_.size() << " view pairs";
+  OPENMVG_LOG_INFO << "Initial graph got: " << matches_provider_->pairWise_matches_.size() << " view pairs \n"
+    << "\t Will use: " << selected_pairs.size() << " relative pose pairs.";
 
   // Compute a relative pose for each edge of the pose pair graph
   relative_poses = [&]
@@ -354,8 +356,6 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
   Hash_Map<IndexT, StellarPodRelativeMotions > & stellar_reconstruction_per_pose
 ) const
 {
-  OPENMVG_LOG_INFO << "::Compute_Stellar_Reconstructions";
-
   // List all stellar configurations
   using StellarPods = Hash_Map<IndexT, Pair_Set>;
   StellarPods stellar_pods;
@@ -366,20 +366,10 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
     stellar_pods[pairIt.second].insert(pairIt);
   }
 
-  // Display some debug information about the stellar pods
-  {
-    OPENMVG_LOG_INFO << "Stellar debug: \n"
-      << "#Poses: " << stellar_pods.size();
+  OPENMVG_LOG_INFO << "::Compute_Stellar_Reconstructions - "
+    << "#" << stellar_pods.size() << " pods." ;
 
-    for (const auto & stellar_pod_it : stellar_pods)
-    {
-      const IndexT node_id = stellar_pod_it.first;
-      const Pair_Set & pairs = stellar_pod_it.second;
-      OPENMVG_LOG_INFO << node_id << " => #pairs: " << pairs.size();
-    }
-  }
-
-  // Compute the local reconstruction of the pods and save its relative pose motions
+  // Compute the local reconstruction of the pods and save their relative pose motions
 
   system::LoggerProgress my_progress_bar( stellar_pods.size(), "- Stellar pod reconstruction -" );
 
@@ -437,7 +427,6 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
       }
     }
   }
-
   return true;
 }
 
@@ -502,7 +491,7 @@ bool StellarSfMReconstructionEngine::Compute_Global_Rotations
 
     // TODO list inliers/outlier with a boolean array
     // Export those pairs to see the problem
-    // Check if a pair if marked many time (since it can be listed many time)
+    // Check if a pair iS marked many time (since it can be listed many time)
 
     // Display some statistics about the relative to global rotation fitting estimation
     if (!vec_rotation_fitting_error.empty())
@@ -584,9 +573,9 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
         const IndexT i = relative_info_it.first.first;
         const IndexT j = relative_info_it.first.second;
 
-        if (global_rotations.count(i)==0 || global_rotations.count(j)==0 || used_pairs.count(relative_info_it.first) == 0) 
+        if (global_rotations.count(i)==0 || global_rotations.count(j)==0 || used_pairs.count(relative_info_it.first) == 0)
           continue;
-        
+
         valid_pairs.insert({i,j});
         poses_ids.insert(i);
         poses_ids.insert(j);
@@ -675,8 +664,6 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
 /// Compute the initial structure of the scene
 bool StellarSfMReconstructionEngine::Compute_Initial_Structure(const int min_covisibility)
 {
-  // TODO => Remove the pairwise matches that does not belong to valid poses IDS!!
-
   // Build tracks
   {
     using namespace openMVG::tracks;

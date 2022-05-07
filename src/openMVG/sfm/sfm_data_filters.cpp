@@ -461,7 +461,6 @@ double DepthCleaning
     }
     landmark_it.second.obs.swap(obs);
   }
-  OPENMVG_LOG_INFO << "#point depth filter: " << cpt << " measurements removed";
 
   // Remove orphans
   eraseUnstablePosesAndObservations(sfm_data, k_min_point_per_pose, k_min_track_length);
