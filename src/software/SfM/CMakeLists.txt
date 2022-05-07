@@ -236,19 +236,8 @@ target_link_libraries(openMVG_main_ChangeLocalOrigin
 )
 
 # Installation rules
-<<<<<<< HEAD
-set_property(TARGET openMVG_main_IncrementalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM DESTINATION bin/)
-set_property(TARGET openMVG_main_IncrementalSfM2 PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_IncrementalSfM2 DESTINATION bin/)
-set_property(TARGET openMVG_main_GlobalSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_GlobalSfM DESTINATION bin/)
-set_property(TARGET openMVG_main_StellarSfM PROPERTY FOLDER OpenMVG/software)
-install(TARGETS openMVG_main_StellarSfM DESTINATION bin/)
-=======
 set_property(TARGET openMVG_main_SfM PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_SfM DESTINATION bin/)
->>>>>>> develop
 set_property(TARGET openMVG_main_ConvertSfM_DataFormat PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_ConvertSfM_DataFormat DESTINATION bin/)
 set_property(TARGET openMVG_main_FrustumFiltering PROPERTY FOLDER OpenMVG/software)
