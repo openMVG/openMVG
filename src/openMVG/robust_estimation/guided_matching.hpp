@@ -40,7 +40,8 @@ void GuidedMatching(
   // Looking for the corresponding points that have
   //  the smallest distance (smaller than the provided Threshold)
 
-  for (size_t i = 0; i < xLeft.cols(); ++i) {
+  #pragma omp parallel for
+  for (int i = 0; i < xLeft.cols(); ++i) {
 
     double min = std::numeric_limits<double>::max();
     matching::IndMatch match;
@@ -57,6 +58,7 @@ void GuidedMatching(
     }
     if (min < errorTh)  {
       // save the best corresponding index
+      #pragma omp critical
       vec_corresponding_index.push_back(match);
     }
   }

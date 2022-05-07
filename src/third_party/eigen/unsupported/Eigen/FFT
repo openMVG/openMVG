@@ -13,7 +13,7 @@
 #include <complex>
 #include <vector>
 #include <map>
-#include <Eigen/Core>
+#include "../../Eigen/Core"
 
 
 /**
@@ -67,6 +67,8 @@
   * transform, only half the spectrum is actually used if the output type is real.
   */
  
+
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 #ifdef EIGEN_FFTW_DEFAULT
 // FFTW: faster, GPL -- incompatible with Eigen in LGPL form, bigger code size
@@ -129,8 +131,6 @@ protected:
   const T_SrcMat & m_src;
   T_FftIfc & m_ifc;
   Index m_nfft;
-private:
-  fft_fwd_proxy& operator=(const fft_fwd_proxy&);
 };
 
 template<typename T_SrcMat,typename T_FftIfc> 
@@ -149,8 +149,6 @@ protected:
   const T_SrcMat & m_src;
   T_FftIfc & m_ifc;
   Index m_nfft;
-private:
-  fft_inv_proxy& operator=(const fft_inv_proxy&);
 };
 
 
@@ -289,6 +287,7 @@ class FFT
     void inv( MatrixBase<OutputDerived> & dst, const MatrixBase<ComplexDerived> & src, Index nfft=-1)
     {
       typedef typename ComplexDerived::Scalar src_type;
+      typedef typename ComplexDerived::RealScalar real_type;
       typedef typename OutputDerived::Scalar dst_type;
       const bool realfft= (NumTraits<dst_type>::IsComplex == 0);
       EIGEN_STATIC_ASSERT_VECTOR_ONLY(OutputDerived)
@@ -329,9 +328,9 @@ class FFT
             tmp.head(nhead) = src.head(nhead);
             tmp.tail(ntail) = src.tail(ntail);
             if (resize_input<0) { //shrinking -- create the Nyquist bin as the average of the two bins that fold into it
-              tmp(nhead) = ( src(nfft/2) + src( src.size() - nfft/2 ) )*src_type(.5);
+              tmp(nhead) = ( src(nfft/2) + src( src.size() - nfft/2 ) )*real_type(.5);
             }else{ // expanding -- split the old Nyquist bin into two halves
-              tmp(nhead) = src(nhead) * src_type(.5);
+              tmp(nhead) = src(nhead) * real_type(.5);
               tmp(tmp.size()-nhead) = tmp(nhead);
             }
           }
@@ -414,5 +413,7 @@ void fft_inv_proxy<T_SrcMat,T_FftIfc>::evalTo(T_DestMat& dst) const
 }
 
 }
+
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
+
 #endif
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

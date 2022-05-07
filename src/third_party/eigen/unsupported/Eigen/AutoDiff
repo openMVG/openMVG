@@ -28,10 +28,16 @@ namespace Eigen {
 //@{
 
 }
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
+
 
 #include "src/AutoDiff/AutoDiffScalar.h"
 // #include "src/AutoDiff/AutoDiffVector.h"
 #include "src/AutoDiff/AutoDiffJacobian.h"
+
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
+
+
 
 namespace Eigen {
 //@}

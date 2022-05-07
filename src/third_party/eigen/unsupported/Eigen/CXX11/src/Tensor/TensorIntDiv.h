@@ -21,7 +21,7 @@ namespace Eigen {
   * \brief Fast integer division by a constant.
   *
   * See the paper from Granlund and Montgomery for explanation.
-  *   (at http://dx.doi.org/10.1145/773473.178249)
+  *   (at https://doi.org/10.1145/773473.178249)
   *
   * \sa Tensor
   */
@@ -35,8 +35,10 @@ namespace {
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
   typename internal::enable_if<sizeof(T)==4,int>::type count_leading_zeros(const T val)
   {
-#ifdef __CUDA_ARCH__
+#ifdef EIGEN_GPU_COMPILE_PHASE
     return __clz(val);
+#elif defined(SYCL_DEVICE_ONLY)
+    return cl::sycl::clz(val);
 #elif EIGEN_COMP_MSVC
     unsigned long index;
     _BitScanReverse(&index, val);
@@ -51,8 +53,10 @@ namespace {
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
   typename internal::enable_if<sizeof(T)==8,int>::type count_leading_zeros(const T val)
   {
-#ifdef __CUDA_ARCH__
+#ifdef EIGEN_GPU_COMPILE_PHASE
     return __clzll(val);
+#elif defined(SYCL_DEVICE_ONLY)
+    return static_cast<int>(cl::sycl::clz(val));
 #elif EIGEN_COMP_MSVC && EIGEN_ARCH_x86_64
     unsigned long index;
     _BitScanReverse64(&index, val);
@@ -86,8 +90,10 @@ namespace {
 
   template <typename T>
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE uint32_t muluh(const uint32_t a, const T b) {
-#if defined(__CUDA_ARCH__)
+#if defined(EIGEN_GPU_COMPILE_PHASE)
     return __umulhi(a, b);
+#elif defined(SYCL_DEVICE_ONLY)
+    return cl::sycl::mul_hi(a, static_cast<uint32_t>(b));
 #else
     return (static_cast<uint64_t>(a) * b) >> 32;
 #endif
@@ -95,9 +101,11 @@ namespace {
 
   template <typename T>
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE uint64_t muluh(const uint64_t a, const T b) {
-#if defined(__CUDA_ARCH__)
+#if defined(EIGEN_GPU_COMPILE_PHASE)
     return __umul64hi(a, b);
-#elif defined(__SIZEOF_INT128__)
+#elif defined(SYCL_DEVICE_ONLY)
+    return cl::sycl::mul_hi(a, static_cast<uint64_t>(b));
+#elif EIGEN_HAS_BUILTIN_INT128
     __uint128_t v = static_cast<__uint128_t>(a) * static_cast<__uint128_t>(b);
     return static_cast<uint64_t>(v >> 64);
 #else
@@ -116,7 +124,7 @@ namespace {
   template <typename T>
   struct DividerHelper<64, T> {
     static EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE uint64_t computeMultiplier(const int log_div, const T divider) {
-#if defined(__SIZEOF_INT128__) && !defined(__CUDA_ARCH__)
+#if EIGEN_HAS_BUILTIN_INT128 && !defined(EIGEN_GPU_COMPILE_PHASE) && !defined(SYCL_DEVICE_ONLY)
       return static_cast<uint64_t>((static_cast<__uint128_t>(1) << (64+log_div)) / static_cast<__uint128_t>(divider) - (static_cast<__uint128_t>(1) << 64) + 1);
 #else
       const uint64_t shift = 1ULL << log_div;
@@ -159,7 +167,7 @@ struct TensorIntDivisor {
     shift2 = log_div > 1 ? log_div-1 : 0;
   }
 
-  // Must have 0 <= numerator. On platforms that dont support the __uint128_t
+  // Must have 0 <= numerator. On platforms that don't support the __uint128_t
   // type numerator should also be less than 2^32-1.
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T divide(const T numerator) const {
     eigen_assert(static_cast<typename UnsignedTraits<T>::type>(numerator) < NumTraits<UnsignedType>::highest()/2);
@@ -195,8 +203,10 @@ class TensorIntDivisor<int32_t, true> {
   }
 
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE int divide(const int32_t n) const {
-#ifdef __CUDA_ARCH__
+#ifdef EIGEN_GPU_COMPILE_PHASE
     return (__umulhi(magic, n) >> shift);
+#elif defined(SYCL_DEVICE_ONLY)
+    return (cl::sycl::mul_hi(magic, static_cast<uint32_t>(n)) >> shift);
 #else
     uint64_t v = static_cast<uint64_t>(magic) * static_cast<uint64_t>(n);
     return (static_cast<uint32_t>(v >> 32) >> shift);

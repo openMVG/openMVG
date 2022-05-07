@@ -229,10 +229,10 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
         std::ostream_iterator<uint32_t>(osTrack, ", "));
       osTrack << "\n------------------" << "\n";
 
-      std::map<uint32_t, uint32_t> map_Occurence_TrackLength;
-      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurence_TrackLength);
+      std::map<uint32_t, uint32_t> map_Occurrence_TrackLength;
+      tracks::TracksUtilsMap::TracksLength(map_tracks_, map_Occurrence_TrackLength);
       osTrack << "TrackLength, Occurrence" << "\n";
-      for (const auto & it : map_Occurence_TrackLength)  {
+      for (const auto & it : map_Occurrence_TrackLength)  {
         osTrack << "\t" << it.first << "\t" << it.second << "\n";
       }
       osTrack << "\n";
@@ -242,7 +242,7 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
 
   // Init the putative landmarks
   {
-    // For every track add the obervations:
+    // For every track add the observations:
     // - views and feature positions that see this landmark
     for ( const auto & iterT : map_tracks_ )
     {

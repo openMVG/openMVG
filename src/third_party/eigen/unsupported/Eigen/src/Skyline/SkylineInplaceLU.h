@@ -41,7 +41,7 @@ public:
 
     /** Sets the relative threshold value used to prune zero coefficients during the decomposition.
      *
-     * Setting a value greater than zero speeds up computation, and yields to an imcomplete
+     * Setting a value greater than zero speeds up computation, and yields to an incomplete
      * factorization with fewer non zero coefficients. Such approximate factors are especially
      * useful to initialize an iterative solver.
      *
@@ -349,4 +349,4 @@ bool SkylineInplaceLU<MatrixType>::solve(const MatrixBase<BDerived> &b, MatrixBa
 
 } // end namespace Eigen
 
-#endif // EIGEN_SKYLINELU_H
+#endif // EIGEN_SKYLINEINPLACELU_H

@@ -42,7 +42,7 @@ class Matcher
   virtual void Match(
     const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
     const Pair_Set & pairs, // list of pair to consider for matching
-    matching::PairWiseMatchesContainer & map_putatives_matches, // the output pairwise photometric corresponding points
+    matching::PairWiseMatchesContainer & map_putative_matches, // the output pairwise photometric corresponding points
     system::ProgressInterface * progress = nullptr
     )const = 0;
 };

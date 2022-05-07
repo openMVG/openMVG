@@ -58,7 +58,7 @@ int main( int argc, char** argv )
 
   //required
   cmd.add( make_option( 'i', sSfM_Data_Filename, "input_file" ) );
-  cmd.add( make_option( 'o', sOutputMatchesFilename, "out_dir" ) );
+  cmd.add( make_option( 'o', sOutputMatchesFilename, "output_file" ) );
   cmd.add( make_option( 'p', sPredefinedPairList, "pair_list" ) );
   // Options
   cmd.add( make_option( 'r', fDistRatio, "ratio" ) );
@@ -81,7 +81,7 @@ int main( int argc, char** argv )
       << "Usage: " << argv[ 0 ] << '\n'
       << "[-i|--input_file]   A SfM_Data file\n"
       << "[-o|--output_file]  Output file where computed matches are stored\n"
-      << "[-p]--pair_list]    Pairs list file\n"
+      << "[-p|--pair_list]    Pairs list file\n"
       << "\n[Optional]\n"
       << "[-f|--force] Force to recompute data]\n"
       << "[-r|--ratio] Distance ratio to discard non meaningful matches\n"
@@ -105,8 +105,7 @@ int main( int argc, char** argv )
       << "  Use a regions cache (only cache_size regions will be stored in memory)\n"
       << "  If not used, all regions will be load in memory."
       << "\n[Pre-emptive matching:]\n"
-      << "[-P|--preemptive_matching] enable pre-emptive matching\n"
-      << "[-p|--preemptive_feature_count] <NUMBER> Number of feature used for pre-emptive matching";
+      << "[-P|--preemptive_feature_count] <NUMBER> Number of feature used for pre-emptive matching";
 
     OPENMVG_LOG_INFO << s;
     return EXIT_FAILURE;
@@ -124,7 +123,7 @@ int main( int argc, char** argv )
             << "--ratio " << fDistRatio << "\n"
             << "--nearest_matching_method " << sNearestMatchingMethod << "\n"
             << "--cache_size " << ((ui_max_cache_size == 0) ? "unlimited" : std::to_string(ui_max_cache_size)) << "\n"
-            << "--preemptive_feature_count " << cmd.used('P');
+            << "--preemptive_feature_used/count " << cmd.used('P') << " / " << ui_preemptive_feature_count;
   if (cmd.used('P'))
   {
     OPENMVG_LOG_INFO << "--preemptive_feature_count " << ui_preemptive_feature_count;
@@ -328,6 +327,7 @@ int main( int argc, char** argv )
           const size_t putative_match_count = pairwisematches_it.second.size();
           const int match_count_threshold =
             preemptive_matching_percentage_threshold * ui_preemptive_feature_count;
+          // TODO: Add an option to keeping X Best pairs
           if (putative_match_count >= match_count_threshold)  {
             // the pair will be kept
             map_filtered_matches.insert(pairwisematches_it);
@@ -364,6 +364,9 @@ int main( int argc, char** argv )
   }
 
   OPENMVG_LOG_INFO << "#Putative pairs: " << map_PutativeMatches.size();
+
+  // -- export Putative View Graph statistics
+  graph::getGraphStatistics(sfm_data.GetViews().size(), getPairs(map_PutativeMatches));
 
   //-- export putative matches Adjacency matrix
   PairWiseMatchingToAdjacencyMatrixSVG( vec_fileNames.size(),

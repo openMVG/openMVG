@@ -25,7 +25,7 @@ The sfm_data file should contains:
 
   .. code-block:: c++
   
-    $ openMVG_main_ComputeSfM_DataColor -i Dataset/out_Reconstruction/sfm_data.json -o Dataset/out_Reconstruction/sfm_data_color.ply
+    $ openMVG_main_ComputeSfM_DataColor -i Dataset/out_Reconstruction/sfm_data.bin -o Dataset/out_Reconstruction/sfm_data_color.ply
 
 Arguments description:
 

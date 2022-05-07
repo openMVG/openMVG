@@ -36,9 +36,13 @@ using namespace openMVG::features;
 
 bool CreateLineCameraFile(  const IndexT camera_id, 
                             std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic,
-                            std::string & camera_linie)
+                            std::string & camera_line,
+                            const int& floating_point_precision_digit)
+
 {
   std::stringstream came_line_ss;
+  came_line_ss.precision(floating_point_precision_digit);
+
   EINTRINSIC current_type = intrinsic->getType();
   switch(current_type) 
   {
@@ -128,12 +132,13 @@ bool CreateLineCameraFile(  const IndexT camera_id,
     default: OPENMVG_LOG_ERROR << "Camera Type " << current_type << " is not supported. Aborting ...";
     return false;
   }
-  camera_linie = came_line_ss.str();
+  camera_line = came_line_ss.str();
   return true;
 }
 
 bool CreateCameraFile( const SfM_Data & sfm_data, 
-                      const std::string & sCamerasFilename)
+                      const std::string & sCamerasFilename,
+                      const int& floating_point_precision_digit)
 {
    /* cameras.txt
       # Camera list with one line of data per camera:
@@ -141,6 +146,8 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
       # Number of cameras: X
   */ 
   std::ofstream camera_file( sCamerasFilename );
+  camera_file.precision(floating_point_precision_digit);
+
   if ( ! camera_file )
   {
     OPENMVG_LOG_ERROR << "Cannot write file" << sCamerasFilename;
@@ -158,7 +165,7 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
     const IndexT camera_id = iter->first;
     std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic = iter->second;
     std::string camera_line;
-    if (CreateLineCameraFile(camera_id, intrinsic, camera_line)) 
+    if (CreateLineCameraFile(camera_id, intrinsic, camera_line, floating_point_precision_digit)) 
     {
       camera_lines.push_back(camera_line);
     } 
@@ -175,7 +182,9 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
 }
 
 bool CreateImageFile( const SfM_Data & sfm_data,
-                      const std::string & sImagesFilename)
+                      const std::string & sImagesFilename,
+                      const int& floating_point_precision_digit)
+
 {
  /* images.txt
       # Image list with two lines of data per image:
@@ -276,7 +285,8 @@ bool CreateImageFile( const SfM_Data & sfm_data,
 }
 
 bool CreatePoint3DFile( const SfM_Data & sfm_data,
-                      const std::string & sPoints3DFilename)
+                      const std::string & sPoints3DFilename,
+                      const int& floating_point_precision_digit)
 {
  /* points3D.txt
       # 3D point list with one line of data per point:
@@ -285,6 +295,7 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
   */
 
   std::ofstream points3D_file( sPoints3DFilename );
+  points3D_file.precision(floating_point_precision_digit);
 
   if ( ! points3D_file )
   {
@@ -346,27 +357,29 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
 * @param sCamerasFilename File name of the camera file
 * @param sImagesFilename File name of the image file
 * @param sPoints3DFilename File name of the point3D file
+* @param floating_point_precision_digit Decimal precision to be used to format floating-point values for output files
 */
 bool CreateColmapFolder( const SfM_Data & sfm_data,
                     const std::string & sOutDirectory,
                     const std::string & sCamerasFilename,
                     const std::string & sImagesFilename, 
-                    const std::string & sPoints3DFilename )
+                    const std::string & sPoints3DFilename,
+                    const int& floating_point_precision_digit)
 {
   /* Colmap Output structure:
       cameras.txt
       images.txt
       points3D.txt
   */
-  if (!CreateCameraFile(sfm_data, sCamerasFilename)) 
+  if (!CreateCameraFile(sfm_data, sCamerasFilename, floating_point_precision_digit)) 
   {
     return false;
   }
-  if (!CreateImageFile(sfm_data, sImagesFilename)) 
+  if (!CreateImageFile(sfm_data, sImagesFilename, floating_point_precision_digit))
   {
     return false;
   }
-  if (! CreatePoint3DFile(sfm_data, sPoints3DFilename)) 
+  if (! CreatePoint3DFile(sfm_data, sPoints3DFilename, floating_point_precision_digit))
   {
     return false;
   }
@@ -378,7 +391,7 @@ bool CreateColmapFolder( const SfM_Data & sfm_data,
 * @param sfm_data Structure from Motion file to export
 * @param sOutDirectory Output directory
 */
-bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirectory  )
+bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirectory , const int& floating_point_precision_digit)
 {
   // Create output directory
   bool bOk = false;
@@ -401,7 +414,7 @@ bool exportToColmap( const SfM_Data & sfm_data , const std::string & sOutDirecto
   const std::string sCamerasFilename = stlplus::create_filespec( sOutDirectory , "cameras.txt" );
   const std::string sImagesFilename = stlplus::create_filespec( sOutDirectory , "images.txt" );
   const std::string sPoints3DFilename = stlplus::create_filespec( sOutDirectory , "points3D.txt" );
-  if ( ! CreateColmapFolder( sfm_data , sOutDirectory , sCamerasFilename, sImagesFilename, sPoints3DFilename) )
+  if ( ! CreateColmapFolder( sfm_data , sOutDirectory , sCamerasFilename, sImagesFilename, sPoints3DFilename, floating_point_precision_digit) )
   {
     OPENMVG_LOG_ERROR << "There was an error exporting project";
     return false;
@@ -416,9 +429,11 @@ int main( int argc , char ** argv )
   CmdLine cmd;
   std::string sSfM_Data_Filename;
   std::string sOutDir = "";
+  int floating_point_precision_digit = 16;
 
   cmd.add( make_option( 'i', sSfM_Data_Filename, "sfmdata" ) );
   cmd.add( make_option( 'o', sOutDir, "outdir" ) );
+  cmd.add(make_option('p', floating_point_precision_digit, "precision"));
 
   OPENMVG_LOG_INFO << "Note: this program writes output in Colmap file format.\n";
 
@@ -435,8 +450,9 @@ int main( int argc , char ** argv )
     OPENMVG_LOG_INFO 
               << "Usage: " << argv[0] << '\n'
               << "[-i|--sfmdata] filename, the SfM_Data file to convert\n"
-              << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved";
-
+              << "[-o|--outdir] path where cameras.txt, images.txt and points3D.txt will be saved"
+              << "\n[Optional]\n"
+              << "[-p|--precision] sets the decimal precision to be used to format floating-point values (default = "<<floating_point_precision_digit<< ")";
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
@@ -455,7 +471,13 @@ int main( int argc , char ** argv )
     return EXIT_FAILURE;
   }
 
-  if ( ! exportToColmap( sfm_data , sOutDir ) )
+  if (floating_point_precision_digit < 6)
+  {
+    OPENMVG_LOG_WARNING << "\nThe precision will be set to 6\n";
+    floating_point_precision_digit = 6;
+  }
+
+  if ( ! exportToColmap( sfm_data , sOutDir , floating_point_precision_digit) )
   {
     OPENMVG_LOG_ERROR << "There was an error during export of the file";
     return EXIT_FAILURE;

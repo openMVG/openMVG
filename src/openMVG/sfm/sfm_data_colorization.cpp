@@ -84,7 +84,7 @@ bool ColorizeTracks(
       std::vector<sort_index_packet_descend<IndexT, IndexT>> packet_vec(vec_cardinal.size());
       sort_index_helper(packet_vec, &vec_cardinal[0], 1);
 
-      // First image index with the most of occurence
+      // First image index with the most of occurrence
       std::map<IndexT, IndexT>::const_iterator iterTT = map_IndexCardinal.begin();
       std::advance(iterTT, packet_vec[0].index);
       const size_t view_index = iterTT->first;

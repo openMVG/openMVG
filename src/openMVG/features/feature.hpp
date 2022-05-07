@@ -190,7 +190,7 @@ void PointsToMat(
   size_t i = 0;
   for (const auto &feat : vec_feats)
   {
-    m.col(i) << feat.x(), feat.y();
+    m.col(i++) << feat.x(), feat.y();
   }
 }
 

@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   ApplySimilarity(sim, sfm_data, b_transform_priors);
 
   // Save changed sfm data
-  //-- Export to disk computed scene (data & visualizable results)
+  //-- Export to disk computed scene (data & viewable results)
   OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";
   if (!Save(sfm_data,
             stlplus::create_filespec(sOutDir, "sfm_data_local", ".bin"),

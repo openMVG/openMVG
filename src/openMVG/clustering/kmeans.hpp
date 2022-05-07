@@ -11,10 +11,12 @@
 
 #include "openMVG/clustering/kmeans_trait.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include <limits>
 #include <random>
 #include <vector>
+#include <iostream>
 
 namespace openMVG
 {
@@ -135,12 +137,18 @@ void KMeans( const std::vector< DataType > & source_data,
              std::vector< DataType > & centers,
              const uint32_t nb_cluster,
              const uint32_t max_nb_iteration = std::numeric_limits<uint32_t>::max(),
-             const KMeansInitType init_type = KMeansInitType::KMEANS_INIT_PP )
+             const KMeansInitType init_type = KMeansInitType::KMEANS_INIT_PP,
+             system::ProgressInterface * my_progress_bar = nullptr)
 {
   if( source_data.size() == 0 )
   {
     return;
   }
+
+  if (!my_progress_bar)
+    my_progress_bar = &system::ProgressInterface::dummy();
+
+  my_progress_bar->Restart(max_nb_iteration, "- KMeans iterations ---");
 
   using trait = KMeansVectorDataTrait<DataType>;
 
@@ -217,6 +225,7 @@ void KMeans( const std::vector< DataType > & source_data,
     centers = ComputeCenterOfMass( source_data, cluster_assignment, nb_cluster );
 
     ++id_iteration;
+    ++(*my_progress_bar);
   }
   while( changed && id_iteration < max_nb_iteration );
 }

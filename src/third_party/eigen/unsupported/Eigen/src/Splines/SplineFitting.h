@@ -17,8 +17,8 @@
 
 #include "SplineFwd.h"
 
-#include <Eigen/LU>
-#include <Eigen/QR>
+#include "../../../../Eigen/LU"
+#include "../../../../Eigen/QR"
 
 namespace Eigen
 {
@@ -181,7 +181,7 @@ namespace Eigen
    * \ingroup Splines_Module
    *
    * \param[in] pts The data points to which a spline should be fit.
-   * \param[out] chord_lengths The resulting chord lenggth vector.
+   * \param[out] chord_lengths The resulting chord length vector.
    *
    * \sa Les Piegl and Wayne Tiller, The NURBS book (2nd ed.), 1997, 9.2.1 Global Curve Interpolation to Point Data
    **/   
@@ -385,7 +385,7 @@ namespace Eigen
     {
       const DenseIndex span = SplineType::Span(parameters[i], degree, knots);
 
-      if (derivativeIndices[derivativeIndex] == i)
+      if (derivativeIndex < derivativeIndices.size() && derivativeIndices[derivativeIndex] == i)
       {
         A.block(row, span - degree, 2, degree + 1)
           = SplineType::BasisFunctionDerivatives(parameters[i], 1, degree, knots);
@@ -395,8 +395,9 @@ namespace Eigen
       }
       else
       {
-        A.row(row++).segment(span - degree, degree + 1)
+        A.row(row).segment(span - degree, degree + 1)
           = SplineType::BasisFunctions(parameters[i], degree, knots);
+        b.col(row++) = points.col(i);
       }
     }
     b.col(0) = points.col(0);

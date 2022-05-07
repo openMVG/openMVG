@@ -50,9 +50,11 @@ ENDIF()
 #  INCLUDE_DIRECTORIES(${SOPLEX_INCLUDE_DIRS})
 #ENDIF()
 
-ADD_LIBRARY(openMVG_lemon ${LEMON_SOURCES})
+ADD_LIBRARY(openMVG_lemon INTERFACE)
 
-target_include_directories(openMVG_lemon PUBLIC
+target_compile_definitions(openMVG_lemon INTERFACE -DLEMON_ONLY_TEMPLATES)
+
+target_include_directories(openMVG_lemon INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include/openMVG/third_party/lemon>
   # Configure include path for lemon/config.h

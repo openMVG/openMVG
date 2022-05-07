@@ -1,6 +1,4 @@
 
-project(features)
-
 file(
   GLOB_RECURSE
   features_files_headers

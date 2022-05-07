@@ -7,7 +7,7 @@ OpenMVG (open Multiple View Geometry)
 
 | **License** | **Documentation** | Continuous Integration (Linux/MacOs/Windows) |Build  | Code Quality | Chat |
 |:-:|:-:|:-:|:-:|:-:|:-:|
-| [![GitHub license](https://img.shields.io/badge/license-MPL2-blue)](https://github.com/openMVG/openMVG/blob/master/LICENSE) |   [![doc](https://img.shields.io/badge/doc-readthedocs-blueviolet)](http://openmvg.readthedocs.org/en/latest) <br> [Wiki](https://github.com/openMVG/openMVG/wiki) | [![Build Status](https://travis-ci.org/openMVG/openMVG.png?branch=develop)](https://travis-ci.org/openMVG/openMVG) <br> [![Build status](https://ci.appveyor.com/api/projects/status/3nv6rt41yxqx5v7i?svg=true)](https://ci.appveyor.com/project/pmoulon/openmvg) | [local/docker build tutorial ](https://github.com/openMVG/openMVG/blob/master/BUILD.md)| [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e067bc979aef48f5a96818714a5b33b9)](https://www.codacy.com/manual/pmoulon/openMVG?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=openMVG/openMVG&amp;utm_campaign=Badge_Grade) <br>  [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/openMVG/openMVG.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/openMVG/openMVG/context:cpp) <br> [![CodeFactor](https://www.codefactor.io/repository/github/openmvg/openmvg/badge)](https://www.codefactor.io/repository/github/openmvg/openmvg) | [![Join the chat](https://img.shields.io/badge/chat-on%20gitter-green)](https://gitter.im/openMVG/Lobby) |
+| [![GitHub license](https://img.shields.io/badge/license-MPL2-blue)](https://github.com/openMVG/openMVG/blob/master/LICENSE) |   [![doc](https://img.shields.io/badge/doc-readthedocs-blueviolet)](http://openmvg.readthedocs.org/en/latest) <br> [Wiki](https://github.com/openMVG/openMVG/wiki) | [![CI](https://github.com/openMVG/openMVG/actions/workflows/compile_and_run_test.yml/badge.svg?branch=develop)](https://github.com/openMVG/openMVG/actions/workflows/compile_and_run_test.yml) | [local/docker build tutorial ](https://github.com/openMVG/openMVG/blob/master/BUILD.md)|  [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/openMVG/openMVG.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/openMVG/openMVG/context:cpp) <br> [![CodeFactor](https://www.codefactor.io/repository/github/openmvg/openmvg/badge)](https://www.codefactor.io/repository/github/openmvg/openmvg) | [![Join the chat](https://img.shields.io/badge/chat-on%20gitter-green)](https://gitter.im/openMVG/Lobby) |
 
 **Our Mission**
 - Extend awareness of the power of 3D reconstruction from images/photogrammetry by developing a C++ framework.
@@ -62,7 +62,7 @@ SfM [1], GlobalSfM [4] or Tracks [2]`:
 
 ```
 @inproceedings{moulon2016openmvg,
-  title={Openmvg: Open multiple view geometry},
+  title={Open{MVG}: Open multiple view geometry},
   author={Moulon, Pierre and Monasse, Pascal and Perrot, Romuald and Marlet, Renaud},
   booktitle={International Workshop on Reproducible Research in Pattern Recognition},
   pages={60--74},

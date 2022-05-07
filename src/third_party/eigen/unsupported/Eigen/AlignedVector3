@@ -10,7 +10,9 @@
 #ifndef EIGEN_ALIGNED_VECTOR3
 #define EIGEN_ALIGNED_VECTOR3
 
-#include <Eigen/Geometry>
+#include "../../Eigen/Geometry"
+
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 namespace Eigen {
 
@@ -76,6 +78,9 @@ template<typename _Scalar> class AlignedVector3
     { return m_coeffs.coeffRef(index);}
 
 
+    inline AlignedVector3()
+    {}
+
     inline AlignedVector3(const Scalar& x, const Scalar& y, const Scalar& z)
       : m_coeffs(x, y, z, Scalar(0))
     {}
@@ -128,6 +133,9 @@ template<typename _Scalar> class AlignedVector3
 
     inline AlignedVector3 operator-(const AlignedVector3& other) const
     { return AlignedVector3(m_coeffs - other.m_coeffs); }
+
+    inline AlignedVector3 operator-() const
+    { return AlignedVector3(-m_coeffs); }
 
     inline AlignedVector3 operator-=(const AlignedVector3& other)
     { m_coeffs -= other.m_coeffs; return *this; }
@@ -220,5 +228,7 @@ struct evaluator<AlignedVector3<Scalar> >
 //@}
 
 }
+
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_ALIGNED_VECTOR3

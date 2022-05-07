@@ -31,12 +31,13 @@ struct traits<TensorStridingOp<Strides, XprType> > : public traits<XprType>
   typedef typename remove_reference<Nested>::type _Nested;
   static const int NumDimensions = XprTraits::NumDimensions;
   static const int Layout = XprTraits::Layout;
+  typedef typename XprTraits::PointerType PointerType;
 };
 
 template<typename Strides, typename XprType>
 struct eval<TensorStridingOp<Strides, XprType>, Eigen::Dense>
 {
-  typedef const TensorStridingOp<Strides, XprType>& type;
+  typedef const TensorStridingOp<Strides, XprType>EIGEN_DEVICE_REF type;
 };
 
 template<typename Strides, typename XprType>
@@ -53,14 +54,15 @@ template<typename Strides, typename XprType>
 class TensorStridingOp : public TensorBase<TensorStridingOp<Strides, XprType> >
 {
   public:
-  typedef typename Eigen::internal::traits<TensorStridingOp>::Scalar Scalar;
-  typedef typename Eigen::NumTraits<Scalar>::Real RealScalar;
-  typedef typename XprType::CoeffReturnType CoeffReturnType;
-  typedef typename Eigen::internal::nested<TensorStridingOp>::type Nested;
-  typedef typename Eigen::internal::traits<TensorStridingOp>::StorageKind StorageKind;
-  typedef typename Eigen::internal::traits<TensorStridingOp>::Index Index;
+    typedef TensorBase<TensorStridingOp<Strides, XprType> > Base;
+    typedef typename Eigen::internal::traits<TensorStridingOp>::Scalar Scalar;
+    typedef typename Eigen::NumTraits<Scalar>::Real RealScalar;
+    typedef typename XprType::CoeffReturnType CoeffReturnType;
+    typedef typename Eigen::internal::nested<TensorStridingOp>::type Nested;
+    typedef typename Eigen::internal::traits<TensorStridingOp>::StorageKind StorageKind;
+    typedef typename Eigen::internal::traits<TensorStridingOp>::Index Index;
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorStridingOp(const XprType& expr, const Strides& dims)
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorStridingOp(const XprType& expr, const Strides& dims)
       : m_xpr(expr), m_dims(dims) {}
 
     EIGEN_DEVICE_FUNC
@@ -70,24 +72,7 @@ class TensorStridingOp : public TensorBase<TensorStridingOp<Strides, XprType> >
     const typename internal::remove_all<typename XprType::Nested>::type&
     expression() const { return m_xpr; }
 
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorStridingOp& operator = (const TensorStridingOp& other)
-    {
-      typedef TensorAssignOp<TensorStridingOp, const TensorStridingOp> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-
-    template<typename OtherDerived>
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorStridingOp& operator = (const OtherDerived& other)
-    {
-      typedef TensorAssignOp<TensorStridingOp, const OtherDerived> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_OPERATORS(TensorStridingOp)
 
   protected:
     typename XprType::Nested m_xpr;
@@ -106,22 +91,30 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
   typedef typename XprType::Scalar Scalar;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
   typedef typename PacketType<CoeffReturnType, Device>::type PacketReturnType;
-  static const int PacketSize = internal::unpacket_traits<PacketReturnType>::size;
+  static const int PacketSize = PacketType<CoeffReturnType, Device>::size;
+  typedef StorageMemory<CoeffReturnType, Device> Storage;
+  typedef typename Storage::Type EvaluatorPointerType;
 
   enum {
     IsAligned = /*TensorEvaluator<ArgType, Device>::IsAligned*/false,
     PacketAccess = TensorEvaluator<ArgType, Device>::PacketAccess,
+    BlockAccess = false,
+    PreferBlockAccess = TensorEvaluator<ArgType, Device>::PreferBlockAccess,
     Layout = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess = false,  // to be implemented
     RawAccess = false
   };
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
+  //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
+  typedef internal::TensorBlockNotImplemented TensorBlock;
+  //===--------------------------------------------------------------------===//
+
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : m_impl(op.expression(), device)
   {
     m_dimensions = m_impl.dimensions();
     for (int i = 0; i < NumDims; ++i) {
-      m_dimensions[i] = ceilf(static_cast<float>(m_dimensions[i]) / op.strides()[i]);
+      m_dimensions[i] =Eigen::numext::ceil(static_cast<float>(m_dimensions[i]) / op.strides()[i]);
     }
 
     const typename TensorEvaluator<ArgType, Device>::Dimensions& input_dims = m_impl.dimensions();
@@ -146,13 +139,14 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
     }
   }
 
+
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(Scalar* /*data*/) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType/*data*/) {
     m_impl.evalSubExprsIfNeeded(NULL);
     return true;
   }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
   }
 
@@ -170,6 +164,7 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
     Index inputIndices[] = {0, 0};
     Index indices[] = {index, index + PacketSize - 1};
     if (static_cast<int>(Layout) == static_cast<int>(ColMajor)) {
+      EIGEN_UNROLL_LOOP
       for (int i = NumDims - 1; i > 0; --i) {
         const Index idx0 = indices[0] / m_outputStrides[i];
         const Index idx1 = indices[1] / m_outputStrides[i];
@@ -181,6 +176,7 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
       inputIndices[0] += indices[0] * m_inputStrides[0];
       inputIndices[1] += indices[1] * m_inputStrides[0];
     } else {  // RowMajor
+      EIGEN_UNROLL_LOOP
       for (int i = 0; i < NumDims - 1; ++i) {
         const Index idx0 = indices[0] / m_outputStrides[i];
         const Index idx1 = indices[1] / m_outputStrides[i];
@@ -200,6 +196,7 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
       EIGEN_ALIGN_MAX typename internal::remove_const<CoeffReturnType>::type values[PacketSize];
       values[0] = m_impl.coeff(inputIndices[0]);
       values[PacketSize-1] = m_impl.coeff(inputIndices[1]);
+      EIGEN_UNROLL_LOOP
       for (int i = 1; i < PacketSize-1; ++i) {
         values[i] = coeff(index+i);
       }
@@ -222,13 +219,20 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
         TensorOpCost(0, 0, compute_cost, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC Scalar* data() const { return NULL; }
+  EIGEN_DEVICE_FUNC typename Storage::Type data() const { return NULL; }
 
+#ifdef EIGEN_USE_SYCL
+  // binding placeholder accessors to a command group handler for SYCL
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void bind(cl::sycl::handler &cgh) const {
+    m_impl.bind(cgh);
+  }
+#endif
  protected:
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index srcCoeff(Index index) const
   {
     Index inputIndex = 0;
     if (static_cast<int>(Layout) == static_cast<int>(ColMajor)) {
+      EIGEN_UNROLL_LOOP
       for (int i = NumDims - 1; i > 0; --i) {
         const Index idx = index / m_outputStrides[i];
         inputIndex += idx * m_inputStrides[i];
@@ -236,6 +240,7 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
       }
       inputIndex += index * m_inputStrides[0];
     } else {  // RowMajor
+      EIGEN_UNROLL_LOOP
       for (int i = 0; i < NumDims - 1; ++i) {
         const Index idx = index / m_outputStrides[i];
         inputIndex += idx * m_inputStrides[i];
@@ -252,7 +257,6 @@ struct TensorEvaluator<const TensorStridingOp<Strides, ArgType>, Device>
   TensorEvaluator<ArgType, Device> m_impl;
 };
 
-
 // Eval as lvalue
 template<typename Strides, typename ArgType, typename Device>
 struct TensorEvaluator<TensorStridingOp<Strides, ArgType>, Device>
@@ -267,19 +271,20 @@ struct TensorEvaluator<TensorStridingOp<Strides, ArgType>, Device>
   enum {
     IsAligned = /*TensorEvaluator<ArgType, Device>::IsAligned*/false,
     PacketAccess = TensorEvaluator<ArgType, Device>::PacketAccess,
+    PreferBlockAccess = false,
     Layout = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess = false,  // to be implemented
     RawAccess = false
   };
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : Base(op, device) { }
 
   typedef typename XprType::Index Index;
   typedef typename XprType::Scalar Scalar;
   typedef typename XprType::CoeffReturnType CoeffReturnType;
   typedef typename PacketType<CoeffReturnType, Device>::type PacketReturnType;
-  static const int PacketSize = internal::unpacket_traits<PacketReturnType>::size;
+  static const int PacketSize = PacketType<CoeffReturnType, Device>::size;
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Scalar& coeffRef(Index index)
   {
@@ -295,6 +300,7 @@ struct TensorEvaluator<TensorStridingOp<Strides, ArgType>, Device>
     Index inputIndices[] = {0, 0};
     Index indices[] = {index, index + PacketSize - 1};
     if (static_cast<int>(Layout) == static_cast<int>(ColMajor)) {
+      EIGEN_UNROLL_LOOP
       for (int i = NumDims - 1; i > 0; --i) {
         const Index idx0 = indices[0] / this->m_outputStrides[i];
         const Index idx1 = indices[1] / this->m_outputStrides[i];
@@ -306,6 +312,7 @@ struct TensorEvaluator<TensorStridingOp<Strides, ArgType>, Device>
       inputIndices[0] += indices[0] * this->m_inputStrides[0];
       inputIndices[1] += indices[1] * this->m_inputStrides[0];
     } else {  // RowMajor
+      EIGEN_UNROLL_LOOP
       for (int i = 0; i < NumDims - 1; ++i) {
         const Index idx0 = indices[0] / this->m_outputStrides[i];
         const Index idx1 = indices[1] / this->m_outputStrides[i];
@@ -325,6 +332,7 @@ struct TensorEvaluator<TensorStridingOp<Strides, ArgType>, Device>
       internal::pstore<Scalar, PacketReturnType>(values, x);
       this->m_impl.coeffRef(inputIndices[0]) = values[0];
       this->m_impl.coeffRef(inputIndices[1]) = values[PacketSize-1];
+      EIGEN_UNROLL_LOOP
       for (int i = 1; i < PacketSize-1; ++i) {
         this->coeffRef(index+i) = values[i];
       }

@@ -206,26 +206,26 @@ public:
             if (col > row) //upper matrix
             {
                 const Index minOuterIndex = inner - m_data.upperProfile(inner);
-                eigen_assert(outer >= minOuterIndex && "you try to acces a coeff that do not exist in the storage");
+                eigen_assert(outer >= minOuterIndex && "You tried to access a coeff that does not exist in the storage");
                 return this->m_data.upper(m_colStartIndex[inner] + outer - (inner - m_data.upperProfile(inner)));
             }
             if (col < row) //lower matrix
             {
                 const Index minInnerIndex = outer - m_data.lowerProfile(outer);
-                eigen_assert(inner >= minInnerIndex && "you try to acces a coeff that do not exist in the storage");
+                eigen_assert(inner >= minInnerIndex && "You tried to access a coeff that does not exist in the storage");
                 return this->m_data.lower(m_rowStartIndex[outer] + inner - (outer - m_data.lowerProfile(outer)));
             }
         } else {
             if (outer > inner) //upper matrix
             {
                 const Index maxOuterIndex = inner + m_data.upperProfile(inner);
-                eigen_assert(outer <= maxOuterIndex && "you try to acces a coeff that do not exist in the storage");
+                eigen_assert(outer <= maxOuterIndex && "You tried to access a coeff that does not exist in the storage");
                 return this->m_data.upper(m_colStartIndex[inner] + (outer - inner));
             }
             if (outer < inner) //lower matrix
             {
                 const Index maxInnerIndex = outer + m_data.lowerProfile(outer);
-                eigen_assert(inner <= maxInnerIndex && "you try to acces a coeff that do not exist in the storage");
+                eigen_assert(inner <= maxInnerIndex && "You tried to access a coeff that does not exist in the storage");
                 return this->m_data.lower(m_rowStartIndex[outer] + (inner - outer));
             }
         }
@@ -300,11 +300,11 @@ public:
 
         if (IsRowMajor) {
             const Index minInnerIndex = outer - m_data.lowerProfile(outer);
-            eigen_assert(inner >= minInnerIndex && "you try to acces a coeff that do not exist in the storage");
+            eigen_assert(inner >= minInnerIndex && "You tried to access a coeff that does not exist in the storage");
             return this->m_data.lower(m_rowStartIndex[outer] + inner - (outer - m_data.lowerProfile(outer)));
         } else {
             const Index maxInnerIndex = outer + m_data.lowerProfile(outer);
-            eigen_assert(inner <= maxInnerIndex && "you try to acces a coeff that do not exist in the storage");
+            eigen_assert(inner <= maxInnerIndex && "You tried to access a coeff that does not exist in the storage");
             return this->m_data.lower(m_rowStartIndex[outer] + (inner - outer));
         }
     }
@@ -336,11 +336,11 @@ public:
 
         if (IsRowMajor) {
             const Index minOuterIndex = inner - m_data.upperProfile(inner);
-            eigen_assert(outer >= minOuterIndex && "you try to acces a coeff that do not exist in the storage");
+            eigen_assert(outer >= minOuterIndex && "You tried to access a coeff that does not exist in the storage");
             return this->m_data.upper(m_colStartIndex[inner] + outer - (inner - m_data.upperProfile(inner)));
         } else {
             const Index maxOuterIndex = inner + m_data.upperProfile(inner);
-            eigen_assert(outer <= maxOuterIndex && "you try to acces a coeff that do not exist in the storage");
+            eigen_assert(outer <= maxOuterIndex && "You tried to access a coeff that does not exist in the storage");
             return this->m_data.upper(m_colStartIndex[inner] + (outer - inner));
         }
     }
@@ -859,4 +859,4 @@ protected:
 
 } // end namespace Eigen
 
-#endif // EIGEN_SkylineMatrix_H
+#endif // EIGEN_SKYLINEMATRIX_H

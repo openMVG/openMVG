@@ -40,7 +40,7 @@ void Match
   const sfm::Regions_Provider & regions_provider,
   const Pair_Set & pairs,
   float fDistRatio,
-  PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativeMatches, // the pairwise photometric corresponding points
   system::ProgressInterface * my_progress_bar
 )
 {
@@ -213,7 +213,7 @@ void Match
       {
         if (!vec_putative_matches.empty())
         {
-          map_PutativesMatches.insert(
+          map_PutativeMatches.insert(
             {
               {I,J},
               std::move(vec_putative_matches)
@@ -230,7 +230,7 @@ void Cascade_Hashing_Matcher_Regions::Match
 (
   const std::shared_ptr<sfm::Regions_Provider> & regions_provider,
   const Pair_Set & pairs,
-  PairWiseMatchesContainer & map_PutativesMatches, // the pairwise photometric corresponding points
+  PairWiseMatchesContainer & map_PutativeMatches, // the pairwise photometric corresponding points
   system::ProgressInterface * my_progress_bar
 )const
 {
@@ -249,7 +249,7 @@ void Cascade_Hashing_Matcher_Regions::Match
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,
-      map_PutativesMatches,
+      map_PutativeMatches,
       my_progress_bar);
   }
   else
@@ -259,7 +259,7 @@ void Cascade_Hashing_Matcher_Regions::Match
       *regions_provider.get(),
       pairs,
       f_dist_ratio_,
-      map_PutativesMatches,
+      map_PutativeMatches,
       my_progress_bar);
   }
   else

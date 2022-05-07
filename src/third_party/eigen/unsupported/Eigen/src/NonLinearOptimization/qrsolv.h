@@ -61,7 +61,7 @@ void qrsolv(
             qtbpj = -givens.s() * wa[k] + givens.c() * qtbpj;
             wa[k] = temp;
 
-            /*           accumulate the tranformation in the row of s. */
+            /*           accumulate the transformation in the row of s. */
             for (i = k+1; i<n; ++i) {
                 temp = givens.c() * s(i,k) + givens.s() * sdiag[i];
                 sdiag[i] = -givens.s() * s(i,k) + givens.c() * sdiag[i];

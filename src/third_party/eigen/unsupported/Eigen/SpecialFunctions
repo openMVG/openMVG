@@ -29,11 +29,28 @@ namespace Eigen {
   * - erfc
   * - lgamma
   * - igamma
+  * - igamma_der_a
+  * - gamma_sample_der_alpha
   * - igammac
   * - digamma
+  * - ndtri
   * - polygamma
   * - zeta
   * - betainc
+  *
+  * Bessel Functions
+  * - bessel_i0
+  * - bessel_i0e
+  * - bessel_i1
+  * - bessel_i1e
+  * - bessel_j0
+  * - bessel_j1
+  * - bessel_k0
+  * - bessel_k0e
+  * - bessel_k1
+  * - bessel_k1e
+  * - bessel_y0
+  * - bessel_y1
   *
   * \code
   * #include <unsupported/Eigen/SpecialFunctions>
@@ -43,14 +60,37 @@ namespace Eigen {
 
 }
 
+#include "src/SpecialFunctions/BesselFunctionsImpl.h"
+#include "src/SpecialFunctions/BesselFunctionsBFloat16.h"
+#include "src/SpecialFunctions/BesselFunctionsHalf.h"
+#include "src/SpecialFunctions/BesselFunctionsPacketMath.h"
+#include "src/SpecialFunctions/BesselFunctionsFunctors.h"
+#include "src/SpecialFunctions/BesselFunctionsArrayAPI.h"
 #include "src/SpecialFunctions/SpecialFunctionsImpl.h"
-#include "src/SpecialFunctions/SpecialFunctionsPacketMath.h"
+#if defined(EIGEN_HIPCC)
+#include "src/SpecialFunctions/HipVectorCompatibility.h"
+#endif
+#include "src/SpecialFunctions/SpecialFunctionsBFloat16.h"
 #include "src/SpecialFunctions/SpecialFunctionsHalf.h"
+#include "src/SpecialFunctions/SpecialFunctionsPacketMath.h"
 #include "src/SpecialFunctions/SpecialFunctionsFunctors.h"
 #include "src/SpecialFunctions/SpecialFunctionsArrayAPI.h"
 
-#if defined EIGEN_VECTORIZE_CUDA
-  #include "src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h"
+#if defined EIGEN_VECTORIZE_AVX512
+  #include "src/SpecialFunctions/arch/AVX/BesselFunctions.h"
+  #include "src/SpecialFunctions/arch/AVX/SpecialFunctions.h"
+  #include "src/SpecialFunctions/arch/AVX512/BesselFunctions.h"
+  #include "src/SpecialFunctions/arch/AVX512/SpecialFunctions.h"
+#elif defined EIGEN_VECTORIZE_AVX
+  #include "src/SpecialFunctions/arch/AVX/BesselFunctions.h"
+  #include "src/SpecialFunctions/arch/AVX/SpecialFunctions.h"
+#elif defined EIGEN_VECTORIZE_NEON
+  #include "src/SpecialFunctions/arch/NEON/BesselFunctions.h"
+  #include "src/SpecialFunctions/arch/NEON/SpecialFunctions.h"
+#endif
+
+#if defined EIGEN_VECTORIZE_GPU
+  #include "src/SpecialFunctions/arch/GPU/SpecialFunctions.h"
 #endif
 
 namespace Eigen {

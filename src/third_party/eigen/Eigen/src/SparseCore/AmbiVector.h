@@ -28,7 +28,7 @@ class AmbiVector
     typedef typename NumTraits<Scalar>::Real RealScalar;
 
     explicit AmbiVector(Index size)
-      : m_buffer(0), m_zero(0), m_size(0), m_allocatedSize(0), m_allocatedElements(0), m_mode(-1)
+      : m_buffer(0), m_zero(0), m_size(0), m_end(0), m_allocatedSize(0), m_allocatedElements(0), m_mode(-1)
     {
       resize(size);
     }
@@ -94,7 +94,7 @@ class AmbiVector
       Index allocSize = m_allocatedElements * sizeof(ListEl);
       allocSize = (allocSize + sizeof(Scalar) - 1)/sizeof(Scalar);
       Scalar* newBuffer = new Scalar[allocSize];
-      memcpy(newBuffer,  m_buffer,  copyElements * sizeof(ListEl));
+      std::memcpy(newBuffer,  m_buffer,  copyElements * sizeof(ListEl));
       delete[] m_buffer;
       m_buffer = newBuffer;
     }
@@ -147,7 +147,8 @@ template<typename _Scalar,typename _StorageIndex>
 void AmbiVector<_Scalar,_StorageIndex>::init(int mode)
 {
   m_mode = mode;
-  if (m_mode==IsSparse)
+  // This is only necessary in sparse mode, but we set these unconditionally to avoid some maybe-uninitialized warnings
+  // if (m_mode==IsSparse)
   {
     m_llSize = 0;
     m_llStart = -1;

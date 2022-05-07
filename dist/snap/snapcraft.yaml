@@ -1,7 +1,7 @@
 # This recipe is known to work under Ubuntu 16.04 (yet, the generated .snap
 # file will work on any Linux distribution having snap installed).
 name: openmvg
-version: '1.6-0'
+version: '2.0-0'
 summary: OpenMVG (open Multiple View Geometry)
 description: |
   OpenMVG (Multiple View Geometry) "open Multiple View Geometry" is a library
@@ -30,6 +30,9 @@ apps:
     plugs: [home]
   ComputeStructureFromKnownPoses:
     command: openMVG_main_ComputeStructureFromKnownPoses
+    plugs: [home]
+  ComputeVLAD:
+    command: openMVG_main_ComputeVLAD
     plugs: [home]
   ConvertList:
     command: openMVG_main_ConvertList
@@ -64,14 +67,11 @@ apps:
   geodesy-registration-to-gps-position:
     command: openMVG_main_geodesy_registration_to_gps_position
     plugs: [home]
-  GlobalSfM:
-    command: openMVG_main_GlobalSfM
+  GeometricFilter:
+    command: openMVG_main_GeometricFilter
     plugs: [home]
-  IncrementalSfM:
-    command: openMVG_main_IncrementalSfM
-    plugs: [home]
-  IncrementalSfM2:
-    command: openMVG_main_IncrementalSfM2
+  SfM:
+    command: openMVG_main_SfM
     plugs: [home]
   ListMatchingPairs:
     command: openMVG_main_ListMatchingPairs
@@ -123,7 +123,7 @@ parts:
   openmvg:
     plugin: cmake
     source: https://github.com/openMVG/openMVG.git
-    source-tag: v1.6
+    source-tag: v2.0
     build-packages:
       - build-essential
       - libpng12-dev

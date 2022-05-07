@@ -6,7 +6,7 @@ Structure from Motion computes an external camera pose per image (the motion) an
 
 - images,
 - some intrinsic camera parameters,
-- corresponding geometric valid features accross images.
+- corresponding geometric valid features across images.
 
 .. figure:: imagesInput.png
    :align: center
@@ -142,7 +142,7 @@ To know more about each tool visit the following link and read the doc below:
    ../MVS/MVS.rst
 
 
-PS: We strongly advise to use a 3 directories based data organisation structure
+PS: We strongly advise to use a 3 directories based data organization structure
 
 * **images**
 
@@ -196,5 +196,5 @@ Here as an example the pipeline to use in order to process equirectangular image
   $ openMVG_main_ComputeMatches -i [matches directory]/sfm_data.json -o [matches directory] -g a
 
   // Compute the reconstruction
-  $ openMVG_main_IncrementalSfM -i [matches directory]/sfm_data.json -m [matches directory] -o [reconstruction directory] -a R0010762.JPG -b R0010764.JPG
+  $ openMVG_main_SfM -i [matches directory]/sfm_data.json -m [matches directory] -o [reconstruction directory] -a R0010762.JPG -b R0010764.JPG
   // /!\ Since the spherical geometry is different than classic pinhole images, the best is to provide the initial pair by hand with the -a -b image basenames (i.e. R0010762.JPG).

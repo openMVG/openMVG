@@ -60,8 +60,8 @@ namespace openMVG
                  | 4 | X | 0 |
                  | 5 | 6 | 7 |
         */
-        static const int MSER_4_CONNECTIVITY;
-        static const int MSER_8_CONNECTIVITY;
+        static const int MSER_4_CONNECTIVITY = 0;
+        static const int MSER_8_CONNECTIVITY = 1;
 
 
         /**

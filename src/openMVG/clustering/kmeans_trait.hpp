@@ -562,6 +562,119 @@ class KMeansVectorDataTrait<Vec>
     }
 };
 
+/**
+* @brief Specialization/Overloading for Vecf
+*/
+template<>
+class KMeansVectorDataTrait<Vecf>
+{
+  public:
+    using scalar_type = Vecf::Scalar;
+    using type        = Vecf;
+
+    /**
+    * @brief number of element in the vector
+    * @param aVector a Vector
+    * @return number of scalar element in the vector
+    */
+    static size_t size( const type & aVector )
+    {
+      return aVector.size();
+    }
+
+    /**
+    * @brief Square euclidean distance between two vectors
+    * @param aVec1 first vector
+    * @param aVec2 second vector
+    * @return square euclidean distance
+    */
+    static scalar_type L2( const type & aVec1, const type & aVec2 )
+    {
+      return ( aVec1 - aVec2 ).squaredNorm();
+    }
+
+    /**
+    * @brief Draw a random vector in a range
+    * @param min minimum bound of the sampling range
+    * @param max maximum bound of the sampling range
+    * @param rng A c++11 random generator
+    * @return a Random vector in the given range
+    */
+    template < typename RngType >
+    static type random( const type & min, const type & max, RngType & rng )
+    {
+      Vecf res( min.size() );
+      for( size_t id_dim = 0; id_dim < res.size(); ++id_dim )
+      {
+        std::uniform_real_distribution<scalar_type> distrib( min[0], max[0] );
+        res[id_dim] = distrib( rng );
+      }
+      return res;
+    }
+
+    /**
+    * @brief Compute minimum and maximum value of a set of points
+    * @params elts list of points
+    * @param[out] min minimum (component-wise) of the points
+    * @param[out] max maximum (component-wise) of the points
+    */
+    static void minMax( const std::vector<type> & elts, type & min, type & max )
+    {
+      if( elts.size() == 0 )
+      {
+        return;
+      }
+
+      // Init
+      min = Vecf( elts[0].size() );
+      min.fill( std::numeric_limits<scalar_type>::max() );
+      max = Vecf( elts[0].size() );
+      max.fill( std::numeric_limits<scalar_type>::lowest() );
+
+      // min/max search
+      for( size_t id_pt = 0; id_pt < elts.size(); ++id_pt )
+      {
+        const type & cur_elt = elts[ id_pt ];
+        min = min.cwiseMin( cur_elt );
+        max = max.cwiseMax( cur_elt );
+      }
+    }
+
+    /**
+    * @brief get a zero valued vector data
+    * @param dummy a dummy vector
+    * @return a null vector
+    */
+    static type null( const type & dummy )
+    {
+      static type res( dummy.size() );
+      res.fill( scalar_type( 0 ) );
+      return res;
+    }
+
+    /**
+    * @brief Accumulate value inside a vector
+    * @param self vector used for accumulation
+    * @param data vector to add to the self vector
+    * @note this perform self += data (component-wise)
+    */
+    static void accumulate( type & self, const type & data )
+    {
+      self += data;
+    }
+
+    /**
+    * @brief Scalar division
+    * @param self Vector to divide
+    * @param val scalar divisor
+    * @note this  perform self /= data (component-wise)
+    */
+    static void divide( type & self, const size_t val )
+    {
+      self /= static_cast<scalar_type>( val );
+    }
+};
+
 } // namespace clustering
 } // namespace openMVG
 

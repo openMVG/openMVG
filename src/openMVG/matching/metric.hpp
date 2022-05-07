@@ -193,6 +193,41 @@ struct L1<uint8_t>
   }
 };
 
+/// Inner product similarity. It's equivalent to the cosine similarity for normalized vector.
+/// The inner product is multiplied by -1 for sorting purpose w.r.t. other metrics.
+template<class T>
+struct LInner
+{
+  using ElementType = T;
+  using ResultType = typename Accumulator<ElementType>::Type;
+
+  template <typename Iterator1, typename Iterator2>
+  inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
+  {
+    ResultType result = ResultType();
+    ResultType prod0, prod1, prod2, prod3;
+    Iterator1 last = a + size;
+    Iterator1 lastgroup = last - 3;
+
+    // Process 4 items for each loop for efficiency.
+    while (a < lastgroup) {
+      prod0 = a[0] * b[0];
+      prod1 = a[1] * b[1];
+      prod2 = a[2] * b[2];
+      prod3 = a[3] * b[3];
+      result += prod0 + prod1 + prod2 + prod3;
+      a += 4;
+      b += 4;
+    }
+    // Process last 0-3 elements.  Not needed for standard vector lengths.
+    while (a < last) {
+      prod0 = *a++ * *b++;
+      result += prod0;
+    }
+    return ElementType(-1) * result; // TODO: inner product is a similarity metric, not a distance
+  }
+};
+
 }  // namespace matching
 }  // namespace openMVG
 
