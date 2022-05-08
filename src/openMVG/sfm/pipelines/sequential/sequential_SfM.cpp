@@ -1198,6 +1198,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Image_Localizer_Match_Data resection_data;
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
+  // TODO(p2pt) tangent
 
   // B. Look if the intrinsic data is known or not
   const View * view_I = sfm_data_.GetViews().at(viewIndex).get();

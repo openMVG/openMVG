@@ -159,6 +159,7 @@ namespace sfm {
         resection_data.error_max = ACRansacOut.first;
       }
       break;
+      // TODO(P2Pt) add a similar case than the following for P2Pt
       case resection::SolverType::P3P_NORDBERG_ECCV18:
       {
         if (!optional_intrinsics)
