@@ -14,6 +14,10 @@
 #include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/multiview/solver_resection_metrics.hpp"
 
+#if defined(_MSC_VER)
+#define __attribute__(x) /* blank - should simply ignore thanks to C preprocessor */
+#endif
+
 namespace openMVG
 {
 namespace euclidean_resection
