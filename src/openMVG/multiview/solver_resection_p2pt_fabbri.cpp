@@ -15,6 +15,10 @@
 #include <array>
 #include <complex>
 
+#if defined(_MSC_VER)
+#define __attribute__(x) /* blank - should simply ignore thanks to C preprocessor */
+#endif
+
 namespace openMVG
 {
 namespace euclidean_resection
