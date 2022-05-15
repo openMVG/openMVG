@@ -366,6 +366,8 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
     stellar_pods[pairIt.second].insert(pairIt);
   }
 
+  system::Timer t;
+
   OPENMVG_LOG_INFO << "::Compute_Stellar_Reconstructions - "
     << "#" << stellar_pods.size() << " pods." ;
 
@@ -427,6 +429,8 @@ bool StellarSfMReconstructionEngine::ComputeStellarReconstructions
       }
     }
   }
+  OPENMVG_LOG_INFO << "Stellar pods Relative motions computation took: "
+    << t.elapsed() << " (s)";
   return true;
 }
 
@@ -743,6 +747,9 @@ bool StellarSfMReconstructionEngine::Adjust()
       options.linear_solver_type_ = ceres::DENSE_SCHUR;
     }
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+    options.max_linear_solver_iterations_ = 100;
+    options.parameter_tolerance_ = 0.0;
+    options.gradient_tolerance_ = 1.0;
     const Optimize_Options ba_refine_options
       ( ReconstructionEngine::intrinsic_refinement_options_,
         Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion

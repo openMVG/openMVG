@@ -178,7 +178,7 @@ Solve_stellar_translation_scales_averaging
       const double maxLogDistance = xCpy.maxCoeff();
       x_scales = (xCpy.array() - maxLogDistance).array().exp();
     }
-      break;
+    break;
 
     case Stellar_Translation_Averaging_Solver_Type::SCALING_SOLVER_L1:
     {
