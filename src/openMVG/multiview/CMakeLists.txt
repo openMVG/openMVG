@@ -1,13 +1,15 @@
 
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_files_header
   *.hpp
+  ./LiGT/*.hpp
 )
 file(
-  GLOB_RECURSE
+  GLOB
   multiview_files_cpp
   *.cpp
+  ./LiGT/*.cpp
 )
 file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
 file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
