@@ -39,25 +39,6 @@ LiGTProblem::LiGTProblem() {
   min_track_length_ = 2;
 }
 
-LiGTProblem::LiGTProblem(LiGTProblem& problem){
-  tracks_ = problem.tracks_;
-
-  time_use_ = problem.time_use_;
-  fixed_id_ = problem.fixed_id_;
-  num_view_ = problem.num_view_;
-  num_pts_ = problem.num_pts_;
-  num_obs_ = problem.num_obs_;
-  est_info_.origin_view_ids = problem.est_info_.origin_view_ids;
-  est_info_.estimated_view_ids = problem.est_info_.estimated_view_ids;
-  est_info_.est2origin_view_ids = problem.est_info_.est2origin_view_ids;
-  est_info_.origin2est_view_ids = problem.est_info_.origin2est_view_ids;
-
-  global_rotations_ = problem.global_rotations_;
-  global_translations_ = problem.global_translations_;
-  poses_ = problem.poses_;
-
-}
-
 void LiGTProblem::CheckTracks(){
 
   OPENMVG_LOG_INFO << "checking tracks information...";

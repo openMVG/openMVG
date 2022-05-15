@@ -61,8 +61,6 @@ public:
 
   LiGTProblem();
 
-  explicit LiGTProblem(LiGTProblem& problem);
-
   virtual ~LiGTProblem() = default;
 
   // [Step.2 in Pose-only Algorithm]: select the left/right-base views
