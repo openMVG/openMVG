@@ -37,27 +37,27 @@ namespace LiGT {
 
 class LiGTBuilder : public LiGTProblem{
 
-    // Readme. For this version, we provide following converter functions
-    // to transform the data type in openMVG into LiGT.
-    // In the future, we might directly use openMVG's data type in the LiGT algorithm.
+  // Readme. For this version, we provide following converter functions
+  // to transform the data type in openMVG into LiGT.
+  // In the future, we might directly use openMVG's data type in the LiGT algorithm.
 public:
-    LiGTBuilder(const sfm::Features_Provider* features_provider,
-                const matching::PairWiseMatches& pairWise_matches,
-                const sfm::SfM_Data& sfm_data,
-                const Hash_Map<IndexT, Mat3>& map_globalR,
-                const int min_track_length = 2,
-                const int fixed_id = 0);
+  LiGTBuilder(const sfm::Features_Provider* features_provider,
+        const matching::PairWiseMatches& pairWise_matches,
+        const sfm::SfM_Data& sfm_data,
+        const Hash_Map<IndexT, Mat3>& map_globalR,
+        const int min_track_length = 2,
+        const int fixed_id = 0);
 
-    virtual ~LiGTBuilder() = default;
+  virtual ~LiGTBuilder() = default;
 
-    // transform openMVG's tracks info into the LiGT's form
-    void BuildTracks(const sfm::Features_Provider* features_provider,
-                     const matching::PairWiseMatches& pairWise_matches,
-                     const sfm::SfM_Data& sfm_data);
+  // transform openMVG's tracks info into the LiGT's form
+  void BuildTracks(const sfm::Features_Provider* features_provider,
+           const matching::PairWiseMatches& pairWise_matches,
+           const sfm::SfM_Data& sfm_data);
 
 
-    // Initialize Global rotations
-    void MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR);
+  // Initialize Global rotations
+  void MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR);
 };
 }
 

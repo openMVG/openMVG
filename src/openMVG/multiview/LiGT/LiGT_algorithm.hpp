@@ -59,80 +59,80 @@ namespace LiGT {
 class LiGTProblem {
 public:
 
-    LiGTProblem();
+  LiGTProblem();
 
-    explicit LiGTProblem(LiGTProblem& problem);
+  explicit LiGTProblem(LiGTProblem& problem);
 
-    virtual ~LiGTProblem() = default;
+  virtual ~LiGTProblem() = default;
 
-    // [Step.2 in Pose-only Algorithm]: select the left/right-base views
-    void SelectBaseViews(const Track& track,
-                         ViewId& lbase_view_id,
-                         ViewId& rbase_view_id,
-                         ObsId& id_lbase,
-                         ObsId& id_rbase);
+  // [Step.2 in Pose-only Algorithm]: select the left/right-base views
+  void SelectBaseViews(const Track& track,
+             ViewId& lbase_view_id,
+             ViewId& rbase_view_id,
+             ObsId& id_lbase,
+             ObsId& id_rbase);
 
-    // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
-    void BuildLTL(Eigen::MatrixXd& LTL,
-                  Eigen::MatrixXd& A_lr);
+  // [Step.3 in Pose-only algorithm]: calculate local L matrix, update LTL and A_lr matrix
+  void BuildLTL(Eigen::MatrixXd& LTL,
+          Eigen::MatrixXd& A_lr);
 
-    //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
-    bool SolveLiGT(const Eigen::MatrixXd& LTL,
-                   Eigen::VectorXd &evectors);
+  //[Step.4 in Pose-only Algorithm]: obtain the translation solution by using SVD
+  bool SolveLiGT(const Eigen::MatrixXd& LTL,
+           Eigen::VectorXd &evectors);
 
-    // [Step.5 in Pose-only Algorithm]: identify the correct sign of the translation solution after using SVD
-    void IdentifySign(const Eigen::MatrixXd& A_lr,
-                      Eigen::VectorXd& evectors);
+  // [Step.5 in Pose-only Algorithm]: identify the correct sign of the translation solution after using SVD
+  void IdentifySign(const Eigen::MatrixXd& A_lr,
+            Eigen::VectorXd& evectors);
 
-    // LiGT solution
-    bool Solution();
+  // LiGT solution
+  bool Solution();
 
-    // get tracks pointer (help to set track inputs)
-    Tracks GetTracks();
+  // get tracks pointer (help to set track inputs)
+  Tracks GetTracks();
 
-    // get rotations (help to set rotation inputs)
-    Rotations GetRotations();
+  // get rotations (help to set rotation inputs)
+  Rotations GetRotations();
 
-    // get poses
-    Poses GetPoses();
+  // get poses
+  Poses GetPoses();
 
-    // check information in tracks (such as num_view/num_pts/num_obs)
-    // and build estimated information EstInfo
-    void CheckTracks();
+  // check information in tracks (such as num_view/num_pts/num_obs)
+  // and build estimated information EstInfo
+  void CheckTracks();
 
-    // recover the view id into original view ids
-    void RecoverViewIds();
+  // recover the view id into original view ids
+  void RecoverViewIds();
 
-    // print copyright claim
-    void PrintCopyright() const;
+  // print copyright claim
+  void PrintCopyright() const;
 
 protected:
 
-    unsigned int num_view_;
-    unsigned int num_pts_;
-    unsigned int num_obs_;
-    // set the minimal number of image observations in a track
-    // recommend value: 2~3 (default -> 2)
-    unsigned int min_track_length_;
-    double time_use_;
+  unsigned int num_view_;
+  unsigned int num_pts_;
+  unsigned int num_obs_;
+  // set the minimal number of image observations in a track
+  // recommend value: 2~3 (default -> 2)
+  unsigned int min_track_length_;
+  double time_use_;
 
-    // tracks
-    LiGT::Tracks tracks_;
+  // tracks
+  LiGT::Tracks tracks_;
 
-    // estimated view information
-    LiGT::EstInfo est_info_;
+  // estimated view information
+  LiGT::EstInfo est_info_;
 
-    // [Note]: global rotations are sorted by estimated view ids
-    LiGT::Rotations global_rotations_;
+  // [Note]: global rotations are sorted by estimated view ids
+  LiGT::Rotations global_rotations_;
 
-    // [Note]: global translations are sorted by estimated view ids
-    LiGT::Translations global_translations_;
+  // [Note]: global translations are sorted by estimated view ids
+  LiGT::Translations global_translations_;
 
-    // [Note]: global poses are sorted by original view ids
-    LiGT::Poses poses_;
+  // [Note]: global poses are sorted by original view ids
+  LiGT::Poses poses_;
 
-    // reference view id
-    ViewId fixed_id_;
+  // reference view id
+  ViewId fixed_id_;
 };
 
 

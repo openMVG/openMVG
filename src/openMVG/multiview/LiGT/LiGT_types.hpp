@@ -34,17 +34,17 @@ using Poses = std::unordered_map<ViewId, openMVG::geometry::Pose3>;
 
 // image observation information
 struct ObsInfo {
-    ViewId view_id;
-    PtsId pts_id;
-    Eigen::Vector3d coord;
+  ViewId view_id;
+  PtsId pts_id;
+  Eigen::Vector3d coord;
 };
 
 // track information
 using Track = std::vector<ObsInfo>;
 
 struct TrackInfo {
-    Track track;
-    bool is_used = true;
+  Track track;
+  bool is_used = true;
 };
 
 using Tracks = std::vector<TrackInfo>;
@@ -56,25 +56,25 @@ using Origin2EstViewIds = std::unordered_map<ViewId, ViewId>;
 using Est2OriginViewIds = std::unordered_map<ViewId, ViewId>;
 
 struct EstInfo {
-    EstimatedViewIds estimated_view_ids;
-    OriginViewIds origin_view_ids;
-    Origin2EstViewIds origin2est_view_ids;
-    Est2OriginViewIds est2origin_view_ids;
+  EstimatedViewIds estimated_view_ids;
+  OriginViewIds origin_view_ids;
+  Origin2EstViewIds origin2est_view_ids;
+  Est2OriginViewIds est2origin_view_ids;
 
-    void BuildMap(){
-        origin2est_view_ids.clear();
-        est2origin_view_ids.clear();
+  void BuildMap(){
+    origin2est_view_ids.clear();
+    est2origin_view_ids.clear();
 
-        if (estimated_view_ids.size() > 0
-                && origin_view_ids.size() > 0
-                && estimated_view_ids.size() == origin_view_ids.size())
-        {
-            for ( ViewId i = 0; i < estimated_view_ids.size(); ++i){
-                origin2est_view_ids.insert({origin_view_ids[i],estimated_view_ids[i]});
-                est2origin_view_ids.insert({estimated_view_ids[i],origin_view_ids[i]});
-            }
-        }
+    if (estimated_view_ids.size() > 0
+        && origin_view_ids.size() > 0
+        && estimated_view_ids.size() == origin_view_ids.size())
+    {
+      for ( ViewId i = 0; i < estimated_view_ids.size(); ++i){
+        origin2est_view_ids.insert({origin_view_ids[i],estimated_view_ids[i]});
+        est2origin_view_ids.insert({estimated_view_ids[i],origin_view_ids[i]});
+      }
     }
+  }
 };
 
 }

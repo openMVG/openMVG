@@ -294,7 +294,7 @@ TEST(GLOBAL_SFM, RotationAveragingL2_Translation_LIGT) {
   EXPECT_EQ( npoints, sfmEngine.Get_SfM_Data().GetLandmarks().size());
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
-#endif USE_PATENTED_LIGT
+#endif // USE_PATENTED_LIGT
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
