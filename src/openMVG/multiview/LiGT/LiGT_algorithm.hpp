@@ -111,6 +111,9 @@ protected:
     unsigned int num_view_;
     unsigned int num_pts_;
     unsigned int num_obs_;
+    // set the minimal number of image observations in a track
+    // recommend value: 2~3 (default -> 2)
+    unsigned int min_track_length_;
     double time_use_;
 
     // tracks

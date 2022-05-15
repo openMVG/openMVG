@@ -26,18 +26,15 @@ using namespace openMVG::sfm;
 using namespace openMVG::tracks;
 using namespace openMVG::cameras;
 
-// set the minimal number of image observations in a track
-// recommend value: 2~3
-#define MIN_TRACKING_LENGTH 2
-
 namespace LiGT {
 
 LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
                          const PairWiseMatches& pairWise_matches,
                          const SfM_Data& sfm_data,
                          const Hash_Map<IndexT, Mat3>& map_globalR,
+                         const int min_track_length,
                          const int fixed_id){
-    //normalized coordinate
+    // build observation and bearing vectors
     BuildTracks(features_provider, pairWise_matches, sfm_data);
 
     // load global rotations
@@ -45,6 +42,7 @@ LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
 
     time_use_ = 0;
     fixed_id_ = fixed_id;
+    min_track_length_ = min_track_length;
 
     // check tracks and build estimated information [EstInfo]
     CheckTracks();
@@ -65,8 +63,6 @@ void LiGTBuilder::MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR){
     for (auto& R: tmp_map_R){
         global_rotations_.emplace_back(R.second);
     }
-
-    tmp_map_R.clear();
 }
 
 void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
@@ -75,11 +71,10 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
     // Build OpenMVG tracks
     tracks::STLMAPTracks map_tracks;
     {
-      const openMVG::matching::PairWiseMatches& map_Matches = pairWise_matches;
       tracks::TracksBuilder tracksBuilder;
 
-      tracksBuilder.Build(map_Matches);
-      tracksBuilder.Filter(MIN_TRACKING_LENGTH);
+      tracksBuilder.Build(pairWise_matches);
+      tracksBuilder.Filter(min_track_length_);
       tracksBuilder.ExportToSTL(map_tracks);
     }
 
@@ -115,8 +110,6 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
       tracks_.emplace_back(track_info);
       ++trackId;
     }
-
-    map_tracks.clear();
 };
 
 }

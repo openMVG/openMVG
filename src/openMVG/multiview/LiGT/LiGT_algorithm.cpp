@@ -36,6 +36,7 @@ LiGTProblem::LiGTProblem() {
     num_obs_ = 0;
     time_use_ = 0;
     fixed_id_ = 0;
+    min_track_length_ = 2;
 }
 
 LiGTProblem::LiGTProblem(LiGTProblem& problem){

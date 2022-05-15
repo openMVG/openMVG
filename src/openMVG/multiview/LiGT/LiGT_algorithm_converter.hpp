@@ -45,6 +45,7 @@ public:
                 const matching::PairWiseMatches& pairWise_matches,
                 const sfm::SfM_Data& sfm_data,
                 const Hash_Map<IndexT, Mat3>& map_globalR,
+                const int min_track_length = 2,
                 const int fixed_id = 0);
 
     virtual ~LiGTBuilder() = default;
