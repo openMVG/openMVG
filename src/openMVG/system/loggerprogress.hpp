@@ -43,9 +43,9 @@ class LoggerProgress : public ProgressInterface {
       const std::string& msg = {},
       const int modulo_percentage = 10) noexcept
       : ProgressInterface(expected_count),
+        msg_(""),
         previously_displayed_percentage_(0),
-        modulo_percentage_(modulo_percentage),
-        msg_("")
+        modulo_percentage_(modulo_percentage)
   {
     if (modulo_percentage < 1 || modulo_percentage >= 100)
       OPENMVG_LOG_ERROR << "modulo_percentage must be within the range ]0;100[.";
