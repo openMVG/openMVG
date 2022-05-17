@@ -244,7 +244,6 @@ TEST(GLOBAL_SFM, RotationAveragingL2_TranslationAveragingSoftL1) {
 
 #ifdef USE_PATENTED_LIGT
 TEST(GLOBAL_SFM, RotationAveragingL2_Translation_LIGT) {
-
   const int nviews = 6;
   const int npoints = 64;
   const nViewDatasetConfigurator config;

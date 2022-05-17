@@ -40,7 +40,6 @@ LiGTProblem::LiGTProblem() {
 }
 
 void LiGTProblem::CheckTracks(){
-
   OPENMVG_LOG_INFO << "checking tracks information...";
 
   IndexT tmp_num_obs = 0;
@@ -99,7 +98,6 @@ void LiGTProblem::CheckTracks(){
 }
 
 void LiGTProblem::RecoverViewIds(){
-
   OPENMVG_LOG_INFO << "recover the estimated view ids into original view ids";
 
   for (ViewId i = 0; i < num_view_; ++i){
@@ -161,7 +159,6 @@ void LiGTProblem::SelectBaseViews(const Track& track,
 
 void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
                MatrixXd& A_lr){
-
   Eigen::MatrixXd tmp_LiGT_vec = Eigen::MatrixXd::Zero(3, num_view_ * 3);
 
 #ifdef OPENMVG_USE_OPENMP
@@ -256,7 +253,6 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
 
 bool LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
               VectorXd& evectors){
-
   // ========================= Solve Problem by Eigen's SVD =======================
   //  JacobiSVD<Eigen::MatrixXd> svd(LTL, ComputeFullU | ComputeFullV);
   //  if (svd.info() != Eigen::Success)
@@ -289,7 +285,6 @@ bool LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
 }
 
 bool LiGTProblem::Solution() {
-
   PrintCopyright();
 
   OPENMVG_LOG_INFO <<"\n************  LiGT Solve Summary  **************\n"

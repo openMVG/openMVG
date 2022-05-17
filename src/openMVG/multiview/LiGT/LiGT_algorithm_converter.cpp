@@ -49,7 +49,6 @@ LiGTBuilder::LiGTBuilder(const Features_Provider* features_provider,
 }
 
 void LiGTBuilder::MapR2Rotations(const Hash_Map<IndexT, Mat3>& map_globalR){
-
   std::map<IndexT,Matrix3d> tmp_map_R;
 
   // sort by the key value (ViewId)

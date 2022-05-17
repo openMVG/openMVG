@@ -36,7 +36,6 @@ namespace LiGT {
 
 
 class LiGTBuilder : public LiGTProblem{
-
   // Readme. For this version, we provide following converter functions
   // to transform the data type in openMVG into LiGT.
   // In the future, we might directly use openMVG's data type in the LiGT algorithm.

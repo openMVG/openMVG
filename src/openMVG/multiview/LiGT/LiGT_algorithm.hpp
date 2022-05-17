@@ -58,7 +58,6 @@ namespace LiGT {
 
 class LiGTProblem {
 public:
-
   LiGTProblem();
 
   virtual ~LiGTProblem() = default;
@@ -105,7 +104,6 @@ public:
   void PrintCopyright() const;
 
 protected:
-
   unsigned int num_view_;
   unsigned int num_pts_;
   unsigned int num_obs_;
@@ -132,7 +130,6 @@ protected:
   // reference view id
   ViewId fixed_id_;
 };
-
 
 }
 #endif
