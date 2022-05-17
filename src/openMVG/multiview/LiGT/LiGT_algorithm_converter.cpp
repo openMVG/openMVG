@@ -104,7 +104,7 @@ void LiGTBuilder::BuildTracks(const Features_Provider* features_provider,
       ObsInfo obs_info;
       obs_info.view_id = imaIndex;
       obs_info.pts_id = trackId;
-      obs_info.coord = (*cam)(x).col(0);
+      obs_info.coord = (*cam)(x);
       track_info.track.emplace_back(obs_info);
     }
     tracks_.emplace_back(track_info);

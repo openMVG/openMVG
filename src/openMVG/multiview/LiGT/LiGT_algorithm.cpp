@@ -110,9 +110,9 @@ void LiGTProblem::RecoverViewIds(){
 
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
                  VectorXd& evectors) {
-  auto judgeValue = A_lr * evectors;
-  int positive_count = (judgeValue.array() > 0.0).cast<int>().sum();
-  int negative_count = judgeValue.rows() - positive_count;
+  const auto judgeValue = A_lr * evectors;
+  const int positive_count = (judgeValue.array() > 0.0).cast<int>().sum();
+  const int negative_count = judgeValue.rows() - positive_count;
   if (positive_count < negative_count) {
     evectors = -evectors;
   }
@@ -189,37 +189,37 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
       ViewId i_view_id = track[i].view_id; // the current view id
 
       if (i_view_id != lbase_view_id) {
-        auto xi_cross = CrossProductMatrix(track[i].coord);
-        auto R_li = global_rotations_[i_view_id] * global_rotations_[lbase_view_id].transpose();
-        auto R_lr = global_rotations_[rbase_view_id] * global_rotations_[lbase_view_id].transpose();
+        Mat3 xi_cross = CrossProductMatrix(track[i].coord);
+        Mat3 R_li = global_rotations_[i_view_id] * global_rotations_[lbase_view_id].transpose();
+        Mat3 R_lr = global_rotations_[rbase_view_id] * global_rotations_[lbase_view_id].transpose();
 
-        auto tmp_a_lr = CrossProductMatrix(R_lr * track[id_lbase].coord)
+        Vec3 tmp_a_lr = CrossProductMatrix(R_lr * track[id_lbase].coord)
             * track[id_rbase].coord;
 
         // a_lr (Row) vector in a_lr * t > 0
-        auto a_lr = tmp_a_lr.transpose() * CrossProductMatrix(track[id_rbase].coord);
+        Eigen::RowVector3d a_lr = tmp_a_lr.transpose() * CrossProductMatrix(track[id_rbase].coord);
 
         // combine all a_lr vectors into a matrix form A, i.e., At > 0
         A_lr.row(track_id).block<1, 3>(0, lbase_view_id * 3) = a_lr * global_rotations_[rbase_view_id];
         A_lr.row(track_id).block<1, 3>(0, rbase_view_id * 3) = -a_lr * global_rotations_[rbase_view_id];
 
         // theta_lr
-        auto theta_lr_vector = CrossProductMatrix(track[id_rbase].coord)
+        Vec3 theta_lr_vector = CrossProductMatrix(track[id_rbase].coord)
             * R_lr
             * track[id_lbase].coord;
 
         double theta_lr = theta_lr_vector.squaredNorm();
 
-        // caculate matrix B [rbase_view_id]
-        auto Coefficient_B =
+        // calculate matrix B [rbase_view_id]
+        Eigen::Matrix3d Coefficient_B =
             xi_cross * R_li * track[id_lbase].coord * a_lr * global_rotations_[rbase_view_id];
 
-        // caculate matrix C [i_view_id]
-        auto Coefficient_C =
+        // calculate matrix C [i_view_id]
+        Eigen::Matrix3d Coefficient_C =
             theta_lr * CrossProductMatrix(track[i].coord) * global_rotations_[i_view_id];
 
-        // caculate matrix D [lbase_view_id]
-        auto Coefficient_D = -(Coefficient_B + Coefficient_C);
+        // calculate matrix D [lbase_view_id]
+        Eigen::Matrix3d Coefficient_D = -(Coefficient_B + Coefficient_C);
 
         // calculate temp matrix L for a single 3D matrix
         tmp_LiGT_vec.setZero();
@@ -230,9 +230,9 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
 
 
         // calculate LtL submodule
-        auto LTL_l_row = Coefficient_D.transpose() * tmp_LiGT_vec;
-        auto LTL_r_row = Coefficient_B.transpose() * tmp_LiGT_vec;
-        auto LTL_i_row = Coefficient_C.transpose() * tmp_LiGT_vec;
+        Eigen::MatrixXd LTL_l_row = Coefficient_D.transpose() * tmp_LiGT_vec;
+        Eigen::MatrixXd LTL_r_row = Coefficient_B.transpose() * tmp_LiGT_vec;
+        Eigen::MatrixXd LTL_i_row = Coefficient_C.transpose() * tmp_LiGT_vec;
 
 
         // assignment for LtL (except for the reference view id)
@@ -249,12 +249,9 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
           if(i_view_id > 0 )
           LTL.middleRows<3>(i_view_id * 3 - 3) += LTL_i_row.rightCols(LTL_i_row.cols() - 3);
         }
-
       }
     }
-
   }
-
 }
 
 bool LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
@@ -265,7 +262,6 @@ bool LiGTProblem::SolveLiGT(const Eigen::MatrixXd& LTL,
   //  if (svd.info() != Eigen::Success)
   //    OPENMVG_LOG_ERROR << "SVD solver failure - expect to have invalid output";
   //  MatrixXd V = svd.matrixV();
-  //  VectorXd evectors = VectorXd::Zero(V.rows() + 3);
   //  evectors.bottomRows(V.rows()) = V.col(V.cols() - 1);
 
 
