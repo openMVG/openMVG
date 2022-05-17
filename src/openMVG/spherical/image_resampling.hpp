@@ -83,7 +83,7 @@ void SphericalToPinholes
   const SamplerT sampler = image::Sampler2d<image::SamplerLinear>()
 )
 {
-  pinhole_images.resize(6);
+  pinhole_images.resize(rotations.size());
   // render each cube faces
   for (int i_rot = 0; i_rot < rotations.size(); ++i_rot)
   {

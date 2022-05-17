@@ -52,7 +52,7 @@ void BuildActionMatrix
                 -y.col(i).x() * x.col(i).homogeneous().transpose();
     ++j;
     L.row(j) << Vec3::Constant(0.0).transpose(),
-                x.col(i).homogeneous().transpose(),                
+                x.col(i).homogeneous().transpose(),
                 -y.col(i).y() * x.col(i).homogeneous().transpose();
   }
 }
