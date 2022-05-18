@@ -57,6 +57,9 @@ target_include_directories(openMVG_multiview
     $<INSTALL_INTERFACE:include>
 )
 set_target_properties(openMVG_multiview PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+if (MSVC)
+  set_target_properties(openMVG_multiview PROPERTIES COMPILE_FLAGS "/bigobj")
+endif (MSVC)
 
 add_library(openMVG_multiview_test_data ${MULTIVIEWTESTDATA})
 target_link_libraries(openMVG_multiview_test_data PRIVATE openMVG_numeric openMVG_multiview)

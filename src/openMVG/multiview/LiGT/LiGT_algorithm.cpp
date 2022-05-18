@@ -108,7 +108,7 @@ void LiGTProblem::RecoverViewIds(){
 
 void LiGTProblem::IdentifySign(const MatrixXd& A_lr,
                  VectorXd& evectors) {
-  const auto judgeValue = A_lr * evectors;
+  const VectorXd judgeValue = A_lr * evectors;
   const int positive_count = (judgeValue.array() > 0.0).cast<int>().sum();
   const int negative_count = judgeValue.rows() - positive_count;
   if (positive_count < negative_count) {
@@ -164,7 +164,7 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for shared(A_lr, LTL)
 #endif
-  for (PtsId track_id = 0; track_id < tracks_.size(); ++track_id) {
+  for (int track_id = 0; track_id < tracks_.size(); ++track_id) {
     const TrackInfo& track_info = tracks_[track_id];
     const Track& track = track_info.track;
 
