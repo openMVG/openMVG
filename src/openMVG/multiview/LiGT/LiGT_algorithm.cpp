@@ -159,12 +159,10 @@ void LiGTProblem::SelectBaseViews(const Track& track,
 
 void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
                MatrixXd& A_lr){
-  Eigen::MatrixXd tmp_LiGT_vec = Eigen::MatrixXd::Zero(3, num_view_ * 3);
-
 #ifdef OPENMVG_USE_OPENMP
   #pragma omp parallel for shared(A_lr, LTL)
 #endif
-  for (int track_id = 0; track_id < tracks_.size(); ++track_id) {
+  for (int track_id = 0; track_id < static_cast<int>(tracks_.size()); ++track_id) {
     const TrackInfo& track_info = tracks_[track_id];
     const Track& track = track_info.track;
 
@@ -180,6 +178,8 @@ void LiGTProblem::BuildLTL(Eigen::MatrixXd& LTL,
             rbase_view_id,
             id_lbase,
             id_rbase);
+
+    Eigen::MatrixXd tmp_LiGT_vec = Eigen::MatrixXd::Zero(3, num_view_ * 3);
 
     // [Step.3 in Pose-only algorithm]: calculate local L matrix,
     for (ObsId i = 0; i < track.size(); i++) {
