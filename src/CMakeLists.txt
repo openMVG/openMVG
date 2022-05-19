@@ -248,6 +248,7 @@ ENDMACRO(UNIT_TEST)
 # ==============================================================================
 # - external by default
 # - internal if cereal not found
+# - as of cereal:1.3.1 target requires component
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
 if (NOT cereal_FOUND)
@@ -259,6 +260,11 @@ if (NOT cereal_FOUND)
   )
   install(TARGETS cereal EXPORT openMVG-targets)
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
+endif()
+if (TARGET cereal::cereal)
+  set(cereal_TARGET "cereal::cereal")
+else()
+  set(cereal_TARGET "cereal")
 endif()
 
 # ==============================================================================

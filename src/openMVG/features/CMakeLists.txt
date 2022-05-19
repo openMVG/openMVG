@@ -31,7 +31,7 @@ target_include_directories(openMVG_features
 )
 target_link_libraries(openMVG_features
   PRIVATE openMVG_fast ${STLPLUS_LIBRARY}
-  PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES} cereal)
+  PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES} ${cereal_TARGET})
 if (MSVC)
   set_target_properties(openMVG_features PROPERTIES COMPILE_FLAGS "/bigobj")
   target_compile_options(openMVG_features PUBLIC "-D_USE_MATH_DEFINES")

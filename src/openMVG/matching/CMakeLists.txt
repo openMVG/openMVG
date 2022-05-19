@@ -35,7 +35,7 @@ target_link_libraries(openMVG_matching
   PUBLIC
     openMVG_features
     Threads::Threads
-    cereal
+    ${cereal_TARGET}
 )
 if (NOT DEFINED OpenMVG_USE_INTERNAL_FLANN)
 target_link_libraries(openMVG_matching
