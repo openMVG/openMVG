@@ -284,11 +284,6 @@ bool L2RotationAveraging_Refine
     solverOptions.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
     solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
-  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-  {
-    solverOptions.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-    solverOptions.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  }
   else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
   {
     solverOptions.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;

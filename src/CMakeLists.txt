@@ -265,6 +265,7 @@ if (NOT Eigen3_FOUND)
 else()
   set(EIGEN_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endif()
+add_definitions(-DEIGEN_MPL2_ONLY)
 
 # ==============================================================================
 # Ceres
