@@ -10,7 +10,7 @@ on:
 jobs:
   build-tests:
     name: ubuntu-latest - external deps
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Jammy
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
