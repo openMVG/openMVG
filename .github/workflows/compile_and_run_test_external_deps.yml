@@ -24,13 +24,12 @@ jobs:
       - name: 3rd Party libs
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y \
-          cmake \
-          coinor-libclp-dev \
-          libceres-dev \
-          libjpeg-dev \
-          libpng-dev \
-          libtiff-dev
+          sudo apt-get install -y cmake
+          sudo apt-get install -y libjpeg-dev
+          sudo apt-get install -y libpng-dev
+          sudo apt-get install -y libtiff-dev
+          sudo apt-get install -y coinor-libclp-dev
+          sudo apt-get install -y libceres-dev
           sudo apt-get autoclean && sudo apt-get clean
 
       - name: Configure CMake
