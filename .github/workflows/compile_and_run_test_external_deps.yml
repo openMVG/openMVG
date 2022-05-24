@@ -24,13 +24,12 @@ jobs:
       - name: 3rd Party libs
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y git
-          
+          sudo apt-get install -y git cmake
+
           cd /tmp
           git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0
           cd /tmp/eigen
-          mkdir -p /tmp/eigen/build
-          make /tmp/eigen
+          cmake .
           make install
 
           sudo apt-get install -y \
