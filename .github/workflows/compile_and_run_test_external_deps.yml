@@ -10,7 +10,7 @@ on:
 jobs:
   build-tests:
     name: ubuntu-latest - external deps
-    runs-on: ubuntu-22.04 # Jammy
+    runs-on: ubuntu-latest
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
@@ -24,13 +24,23 @@ jobs:
       - name: 3rd Party libs
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y libjpeg-dev
-          sudo apt-get install -y libpng-dev
-          sudo apt-get install -y libtiff-dev
-          sudo apt-get install -y libceres-dev
-          sudo apt-get install -y coinor-libclp-dev
-          sudo apt-get autoclean && sudo apt-get clean
+          sudo apt-get install -y git
+          
+          cd /tmp
+          git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0
+          cd /tmp/eigen
+          mkdir -p /tmp/eigen/build
+          make /tmp/eigen
+          make install
 
+          sudo apt-get install -y \
+          cmake \
+          coinor-libclp-dev \
+          libceres-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev libeigen3-dev-
+          sudo apt-get autoclean && sudo apt-get clean
 
       - name: Configure CMake
         working-directory: ./build
