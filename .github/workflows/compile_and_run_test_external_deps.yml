@@ -28,9 +28,9 @@ jobs:
           sudo apt-get install -y libjpeg-dev
           sudo apt-get install -y libpng-dev
           sudo apt-get install -y libtiff-dev
-          sudo apt-get install -y coinor-libclp-dev
           sudo apt-get install -y libceres-dev
           sudo apt-get autoclean && sudo apt-get clean
+          sudo apt-get install -y coinor-libclp-dev
 
       - name: Configure CMake
         working-directory: ./build
