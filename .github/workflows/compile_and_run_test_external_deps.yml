@@ -31,7 +31,7 @@ jobs:
           mkdir eigen_build
           cd eigen_build
           cmake /tmp/eigen .
-          make install
+          sudo make install
           rm -rf /tmp/eigen
           rm -rf /tmp/eigen_build
 
