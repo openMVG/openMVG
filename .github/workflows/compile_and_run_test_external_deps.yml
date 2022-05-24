@@ -28,9 +28,12 @@ jobs:
 
           cd /tmp
           git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0
-          cd /tmp/eigen
-          cmake .
+          mkdir eigen_build
+          cd eigen_build
+          cmake /tmp/eigen .
           make install
+          rm -rf /tmp/eigen
+          rm -rf /tmp/eigen_build
 
           sudo apt-get install -y \
           cmake \
