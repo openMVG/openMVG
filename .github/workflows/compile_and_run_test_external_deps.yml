@@ -35,7 +35,8 @@ jobs:
           rm -rf /tmp/eigen
           rm -rf /tmp/eigen_build
 
-          cd /tmp https://github.com/ceres-solver/ceres-solver.git -b 2.1.0
+          cd /tmp
+          git clone https://github.com/ceres-solver/ceres-solver.git -b 2.1.0
           cd ceres-solver
           mkdir build
           cd build
