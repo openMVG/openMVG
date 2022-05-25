@@ -5,6 +5,8 @@
 //\author Pierre MOULON
 //
 #include "openMVG/multiview/trifocal/three_view_kernel.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
 #include "trifocal_app.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
@@ -14,7 +16,36 @@
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
 
+static void
+invert_intrinsics(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double px_coords[2], 
+    double normalized_coords[2])
+{
+  const double *px = px_coords;
+  double *nrm = normalized_coords;
+  nrm[1] = (px[1] - K[1][2]) /K[1][1];
+  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
+}
 
+static void
+invert_intrinsics_tgt(
+    const double K[/*3 or 2 ignoring last line*/][3], 
+    const double px_tgt_coords[2], 
+    double normalized_tgt_coords[2])
+{
+  const double *tp = px_tgt_coords;
+  double *t = normalized_tgt_coords;
+  t[1] = tp[1]/K[1][1];
+  t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
+}
+inline static double threshold_pixel_to_normalized(double threshold, const double k[2][3]) {
+  return threshold/k[0][0];
+}
+
+inline static double threshold_normalized_to_pixel(double threshold, const double k[2][3]) {
+  return threshold*k[0][0];
+}
 namespace trifocal3pt {
   
 using namespace std;
@@ -23,6 +54,7 @@ using namespace openMVG::image;
 using SIFT_Regions = openMVG::features::SIFT_Regions;
 using namespace openMVG::robust;
 using namespace openMVG::features;
+using namespace openMVG::trifocal;
 
 
 
@@ -34,13 +66,15 @@ ProcessCmdLine(int argc, char **argv)
   cmd.add( make_option('b', image_filenames_[1], "image_b") );
   cmd.add( make_option('c', image_filenames_[2], "image_c") );
   cmd.add( make_option('K', intrinsics_filename_, "K matrix") );
+  //cmd.add( make_option('K', K_, "K matrix") );
   
   try{ 
     if (argc == 1) throw string("Invalid command line parameter.");
     cerr << "Vazio? " << image_filenames_.empty() << endl;
+    
     cerr << "Tamanho: " << image_filenames_.size() << endl;
     cmd.process(argc, argv);
-    cerr << "Image loaded:" << image_filenames_[1] << endl;
+    cerr << "Image loaded:" << image_filenames_[0] << endl;
   } catch (const string& s) {
     cerr << "Usage: " << argv[0] << '\n' << endl;
     cerr << s << endl;
@@ -460,12 +494,15 @@ DisplayNonDesiredIds()
 void TrifocalSampleApp::
 RobustSolve() 
 {
-  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
-                         Trifocal3PointPositionTangentialSolver>;
-  
-  const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2], pxdatum_[0], pxdatum_[1], pxdatum_[2], K_);
+  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver,
+                         NormalizedSquaredPointReprojectionOntoOneViewError>;
 
-  double threshold = threshold_pixel_to_normalized(1, K_); // 5*5 Gabriel's note : changing this for see what happens
+  const TrifocalKernel trifocal_kernel(datum_[0], datum_[1], datum_[2]);
+
+  double threshold =
+    NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(1, K_);
+  threshold *= threshold; // squared error
+  // double threshold = threshold_pixel_to_normalized(1, K_); // 5*5 Gabriel's note : changing this for see what happens
   // Gabriel: Error model based on euclidian distance
   unsigned constexpr max_iteration = 500000000; // testing
   const auto model = MaxConsensus(trifocal_kernel, 
