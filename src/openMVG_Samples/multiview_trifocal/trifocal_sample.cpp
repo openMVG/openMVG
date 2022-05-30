@@ -21,7 +21,7 @@ main(int argc, char **argv)
   T.Display();
   T.DisplayDesiredIds();
   T.RobustSolve();
-  //T.DisplayDesiredInliers();
+  T.DisplayDesiredInliers();
   T.DisplayInliersCamerasAndPoints();
   T.DisplayInliersCamerasAndPointsSIFT();
 
