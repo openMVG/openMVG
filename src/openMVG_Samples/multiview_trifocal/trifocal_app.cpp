@@ -8,6 +8,7 @@
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
 #include "trifocal_app.hpp"
+#include <minus/chicago-default.h>
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -39,13 +40,6 @@ invert_intrinsics_tgt(
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
 }
-inline static double threshold_pixel_to_normalized(double threshold, const double k[2][3]) {
-  return threshold/k[0][0];
-}
-
-inline static double threshold_normalized_to_pixel(double threshold, const double k[2][3]) {
-  return threshold*k[0][0];
-}
 namespace trifocal3pt {
   
 using namespace std;
@@ -55,7 +49,6 @@ using SIFT_Regions = openMVG::features::SIFT_Regions;
 using namespace openMVG::robust;
 using namespace openMVG::features;
 using namespace openMVG::trifocal;
-
 
 
 void TrifocalSampleApp::
@@ -502,11 +495,11 @@ RobustSolve()
   double threshold =
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(1, K_);
   threshold *= threshold; // squared error
-  // double threshold = threshold_pixel_to_normalized(1, K_); // 5*5 Gabriel's note : changing this for see what happens
-  // Gabriel: Error model based on euclidian distance
-  unsigned constexpr max_iteration = 500000000; // testing
-  const auto model = MaxConsensus(trifocal_kernel, 
+  unsigned constexpr max_iteration = 1024; // testing
+  // Vector of inliers for the best fit found
+  const auto model = MaxConsensus(trifocal_kernel,
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers_, max_iteration);
+  cerr << "vec_inliers size: "<< vec_inliers_.size() << "\n";
   // TODO(gabriel) recontruct from inliers and best models to show as PLY
 }
 
@@ -524,7 +517,7 @@ void TrifocalSampleApp::
   svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
   
   constexpr unsigned n_inlier_pp = 3;
-  unsigned desired_inliers[n_inlier_pp] = {13, 23, 63};
+  unsigned desired_inliers[n_inlier_pp] = {13, 23, 43};
   unsigned track_inlier=0;
   for (const auto &track_it: tracks_) {
     bool inlier=false;
@@ -607,14 +600,6 @@ DisplayInliersCamerasAndPoints()
   svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
   svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
   
-
-  vector<uint32_t>desired_inliers_vector; 
-  desired_inliers_vector.resize(vec_inliers_.size()) ;
-  // using this for loop for get desired_inliers_vector output
-  for (unsigned j = 0; j < desired_inliers_vector.size(); j++) {
-      desired_inliers_vector.at(j) = vec_inliers_.at(j);
-    }
- 
   // these are the selected inliers from vec_inliers_. 
   // Its easier select the result got from robustsolve() than select in robustsolve()
   unsigned track_id=0;
@@ -671,8 +656,18 @@ DisplayInliersCamerasAndPoints()
     track_id++;
   }
 
-  unsigned track_inlier = 0;
+  unsigned track_inlier=0;
   for (const auto &track_it: tracks_) {
+    bool inlier=false;
+    for (unsigned i=0; i < vec_inliers_.size(); ++i)
+      if (track_inlier == vec_inliers_.at(i))
+        inlier = true;
+        
+    if (!inlier) {
+      track_inlier++;
+      continue;
+    }
+    
     auto iter = track_it.second.cbegin();
     const uint32_t
       i = iter->second,
@@ -682,47 +677,45 @@ DisplayInliersCamerasAndPoints()
     const auto feature_i = sio_regions_[0]->Features()[i];
     const auto feature_j = sio_regions_[1]->Features()[j];
     const auto feature_k = sio_regions_[2]->Features()[k];
-    for (unsigned i=0; i < desired_inliers_vector.size(); ++i)
-      if (track_inlier == desired_inliers_vector.at(i)) {
-        svg_stream.drawCircle(
-           feature_i.x(), feature_i.y(), feature_i.scale(),
-           svg::svgStyle().stroke("green", 1));
-        svg_stream.drawCircle(
-          feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
-          svg::svgStyle().stroke("green", 1));
-        svg_stream.drawCircle(
-          feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
-          svg::svgStyle().stroke("green", 1));
-        //TODO: Tangent line segments in yellow and if inlier -> in green
-        svg_stream.drawText(
-          feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_inlier));
+    //cout<<"cyka"<<endl; 
+    svg_stream.drawCircle(
+      feature_i.x(), feature_i.y(), feature_i.scale(),
+      svg::svgStyle().stroke("green", 1));
+    svg_stream.drawCircle(
+      feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
+      svg::svgStyle().stroke("green", 1));
+    svg_stream.drawCircle(
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
+      svg::svgStyle().stroke("green", 1));
+    //TODO: Tangent line segments in yellow and if inlier -> in green
+    svg_stream.drawText(
+      feature_i.x()+20, feature_i.y()-20, 6.0f, std::to_string(track_inlier));
    
-        svg_stream.drawLine(
-          feature_i.x(), feature_i.y(),
-          feature_i.x()+20*cos(feature_i.orientation()), feature_i.y() + 20*sin(feature_i.orientation()) ,
-          svg::svgStyle().stroke("yellow", 1)); 
-        svg_stream.drawLine(
-          feature_j.x(), feature_j.y() + images_[0].Height(),
-          feature_j.x()+20*cos(feature_j.orientation()), feature_j.y() + images_[0].Height()+ 20*sin(feature_j.orientation()),
-          svg::svgStyle().stroke("yellow", 1));
-        svg_stream.drawLine(
-          feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
-          feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()),
-          svg::svgStyle().stroke("yellow", 1));
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_i.x()+20*cos(feature_i.orientation()), feature_i.y() + 20*sin(feature_i.orientation()) ,
+      svg::svgStyle().stroke("yellow", 1)); 
+    svg_stream.drawLine(
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      feature_j.x()+20*cos(feature_j.orientation()), feature_j.y() + images_[0].Height()+ 20*sin(feature_j.orientation()),
+      svg::svgStyle().stroke("yellow", 1));
+    svg_stream.drawLine(
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+      feature_k.x()+ 20*sin(feature_k.orientation()), feature_k.y() + images_[0].Height() + images_[1].Height()+ 20*sin(feature_k.orientation()),
+      svg::svgStyle().stroke("yellow", 1));
 
-        svg_stream.drawLine(
-          feature_i.x(), feature_i.y(),
-          feature_j.x(), feature_j.y() + images_[0].Height(),
-          svg::svgStyle().stroke("lightblue", 1));
-        svg_stream.drawLine(
-          feature_i.x(), feature_i.y(),
-          feature_j.x(), feature_j.y() + images_[0].Height(),
-          svg::svgStyle().stroke("lightblue", 1));
-        svg_stream.drawLine(
-          feature_j.x(), feature_j.y() + images_[0].Height(),
-          feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
-          svg::svgStyle().stroke("lightblue", 1));
-      }
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      svg::svgStyle().stroke("lightblue", 1));
+    svg_stream.drawLine(
+      feature_i.x(), feature_i.y(),
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      svg::svgStyle().stroke("lightblue", 1));
+    svg_stream.drawLine(
+      feature_j.x(), feature_j.y() + images_[0].Height(),
+      feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(),
+      svg::svgStyle().stroke("lightblue", 1));
     track_inlier++;
   }
   ofstream svg_file( "trifocal_track.svg" );
