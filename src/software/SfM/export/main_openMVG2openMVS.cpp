@@ -51,6 +51,8 @@ bool exportToOpenMVS(
       return false;
     }
   }
+  const std::string sOutSceneDir = stlplus::folder_part(sOutFile);
+  const std::string sOutImagesDir = stlplus::folder_to_relative_path(sOutSceneDir, sOutDir);
 
   // Export data :
   _INTERFACE_NAMESPACE::Interface scene;
@@ -102,7 +104,7 @@ bool exportToOpenMVS(
       map_view[view.first] = scene.images.size();
 
       _INTERFACE_NAMESPACE::Interface::Image image;
-      image.name = stlplus::create_filespec(sOutDir, view.second->s_Img_path);
+      image.name = stlplus::create_filespec(sOutImagesDir, view.second->s_Img_path);
       image.platformID = map_intrinsic.at(view.second->id_intrinsic);
       _INTERFACE_NAMESPACE::Interface::Platform& platform = scene.platforms[image.platformID];
       image.cameraID = 0;

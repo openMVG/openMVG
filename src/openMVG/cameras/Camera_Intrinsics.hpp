@@ -28,6 +28,7 @@ template<typename T>
 struct Clonable
 {
   virtual T * clone() const = 0;
+  virtual ~Clonable() = default;
 };
 
 /**

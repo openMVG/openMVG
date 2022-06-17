@@ -41,7 +41,7 @@ class ProgressInterface {
   }
 
   /// Destructor
-  ~ProgressInterface() = default;
+  virtual ~ProgressInterface() = default;
 
   /** @brief Initializer of the ProgressInterface class
    * @param[in] expected_count The number of step of the process

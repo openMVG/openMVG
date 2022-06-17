@@ -48,6 +48,17 @@ option(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
 option(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
 
 # ==============================================================================
+# Since the LiGT algorithm has a patent protection.
+# See header files in openMVG/multiview/LiGT for more informations.
+#
+# [Conditions of Use] The LiGT algorithm is distributed under the License of
+# Attribution-Share Alike 4.0 International (https://creativecommons.org/licenses/by-sa/4.0/).
+#
+# Enable this to be able to use LiGT in main_SfM.
+# ==============================================================================
+option(OpenMVG_USE_LIGT "Add or not LiGT in available" ON)
+
+# ==============================================================================
 # OpenMVG version
 # ==============================================================================
 file(STRINGS "openMVG/version.hpp" _OPENMVG_VERSION_HPP_CONTENTS REGEX "#define OPENMVG_VERSION_")
@@ -140,6 +151,7 @@ if (OpenMVG_USE_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)
     register_definitions(-DOPENMVG_USE_OPENMP)
+    include_directories(${OpenMP_C_INCLUDE_DIR})
     if(NOT TARGET OpenMP::OpenMP_CXX)
       find_package(Threads REQUIRED)
       add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
@@ -247,6 +259,7 @@ ENDMACRO(UNIT_TEST)
 # ==============================================================================
 # - external by default
 # - internal if cereal not found
+# - as of cereal:1.3.1 target requires component
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
 if (NOT cereal_FOUND)
@@ -258,6 +271,11 @@ if (NOT cereal_FOUND)
   )
   install(TARGETS cereal EXPORT openMVG-targets)
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
+endif()
+if (TARGET cereal::cereal)
+  set(cereal_TARGET "cereal::cereal")
+else()
+  set(cereal_TARGET "cereal")
 endif()
 
 # ==============================================================================
@@ -403,6 +421,16 @@ endif()
 
 
 # ==============================================================================
+# LiGT
+# ==============================================================================
+# - enabled only if OpenMVG_USE_LIGT is set to ON
+# ==============================================================================
+if (OpenMVG_USE_LIGT)
+    add_definitions(-DUSE_PATENTED_LIGT)
+endif()
+
+
+# ==============================================================================
 # Third-party libraries:
 # ==============================================================================
 add_subdirectory(third_party)
@@ -490,6 +518,7 @@ message("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 message("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+message("** Use LiGT for global translation estimation: " ${OpenMVG_USE_LIGT})
 
 message("\n")
 
