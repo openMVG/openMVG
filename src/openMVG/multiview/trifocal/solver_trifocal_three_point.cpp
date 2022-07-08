@@ -55,9 +55,6 @@ Solve(const Mat &datum_0,
   for (unsigned i = 0; i < max_solve_tries; ++i)
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
-  // if (nsols_final == 0)
-  //    std::cerr << "Solver failed once to compute solutions, perhaps retry\n"; // should never happen
-  // std::cerr << "Number of sols " << nsols_final << std::endl;
 
   std::vector<trifocal_model_t> &tt = *trifocal_tensor;
   tt.resize(nsols_final);
