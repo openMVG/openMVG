@@ -27,7 +27,6 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
-using namespace std;
 
 /**
  ** Normalize a patch to a specified size, given an ellipse
@@ -157,7 +156,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
   const std::string sInputDir =
-    stlplus::folder_up(string(THIS_SOURCE_DIR)) + "/imageData/SceauxCastle/";
+    stlplus::folder_up(std::string(THIS_SOURCE_DIR)) + "/imageData/SceauxCastle/";
   const std::string jpg_filename = sInputDir + "100_7101.jpg";
 
   Image<unsigned char> image;

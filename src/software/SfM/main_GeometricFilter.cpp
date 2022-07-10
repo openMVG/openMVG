@@ -45,7 +45,6 @@ using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
 using namespace openMVG::matching_image_collection;
-using namespace std;
 
 enum EGeometricModel
 {

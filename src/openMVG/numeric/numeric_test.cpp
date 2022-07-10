@@ -36,7 +36,6 @@
 #include <set>
 
 using namespace openMVG;
-using namespace std;
 
 //-- Assert that stream interface is available
 TEST ( TinyMatrix, print )

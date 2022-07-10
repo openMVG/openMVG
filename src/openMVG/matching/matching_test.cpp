@@ -19,7 +19,6 @@
 #include "testing/testing.h"
 
 #include <iostream>
-using namespace std;
 
 using namespace openMVG;
 using namespace matching;
@@ -48,7 +47,7 @@ TEST(Matching, ArrayMatcherBruteForce_NN)
 
   const float query[] = {2};
   IndMatches vec_nIndice;
-  vector<float> vec_fDistance;
+  std::vector<float> vec_fDistance;
   EXPECT_TRUE( matcher.SearchNeighbours(query,1, &vec_nIndice, &vec_fDistance, 5) );
 
   EXPECT_EQ( 5, vec_nIndice.size());
@@ -97,7 +96,7 @@ TEST(Matching, ArrayMatcher_Kdtree_Flann_Simple__NN)
 
   const float query[] = {2};
   IndMatches vec_nIndice;
-  vector<float> vec_fDistance;
+  std::vector<float> vec_fDistance;
   const int NN = 5;
   EXPECT_TRUE( matcher.SearchNeighbours(query, 1, &vec_nIndice, &vec_fDistance, NN) );
 
@@ -129,7 +128,7 @@ TEST(Matching, ArrayMatcher_Hnsw_Simple__NN)
 
   const float query[] = {2};
   IndMatches vec_nIndice;
-  vector<float> vec_fDistance;
+  std::vector<float> vec_fDistance;
   const int NN = 5;
   EXPECT_TRUE( matcher.SearchNeighbours(query, 1, &vec_nIndice, &vec_fDistance, NN) );
 

@@ -37,7 +37,6 @@
 #include <numeric>
 
 using namespace openMVG;
-using namespace std;
 
 // Check that sin(angle(a, b)) < tolerance.
 template<typename A, typename B>
@@ -86,9 +85,9 @@ bool ExpectKernelProperties(const Mat &x1,
                             Mat3 *F_expected = nullptr) {
   bool bOk = true;
   Kernel kernel(x1, x2);
-  vector<uint32_t> samples(x1.cols());
+  std::vector<uint32_t> samples(x1.cols());
   std::iota(samples.begin(), samples.end(), 0);
-  vector<Mat3> Fs;
+  std::vector<Mat3> Fs;
   kernel.Fit(samples, &Fs);
 
   bOk &= (!Fs.empty());
