@@ -22,7 +22,6 @@
 using namespace openMVG;
 using namespace openMVG::geometry;
 using namespace openMVG::geometry::halfPlane;
-using namespace std;
 
 //--
 // Box/Camera frustum intersection unit test

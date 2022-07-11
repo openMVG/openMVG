@@ -29,7 +29,6 @@
 
 namespace control_point_GUI
 {
-  using namespace std;
   using namespace openMVG;
   using namespace openMVG::sfm;
 

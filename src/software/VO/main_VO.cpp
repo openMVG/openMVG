@@ -31,7 +31,6 @@ using namespace openMVG;
 
 int main(int argc, char **argv)
 {
-  using namespace std;
   std::cout << "VISUAL ODOMETRY -- Tracking demo --" << std::endl;
 
   CmdLine cmd;

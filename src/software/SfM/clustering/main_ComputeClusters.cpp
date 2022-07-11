@@ -152,7 +152,6 @@ bool exportData( const SfM_Data &sfm_data,
 
 int main( int argc, char **argv )
 {
-  using namespace std;
   OPENMVG_LOG_INFO << "Dominant Set Clustering";
 
   CmdLine cmd;

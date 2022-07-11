@@ -21,7 +21,6 @@
 
 using namespace openMVG;
 using namespace svg;
-using namespace std;
 
 // Implementation of the problem found here:
 // digilander.libero.it/foxes/optimiz/Optimiz1.htm

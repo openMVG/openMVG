@@ -33,12 +33,11 @@
 
 #include <vector>
 
-using namespace std;
 using namespace openMVG;
 
 TEST(HomographyKernelTest, Fitting_Unnormalized) {
   // Define 3 knows homographies (Use as GT).
-  vector<Mat3> H_gt(3);
+  std::vector<Mat3> H_gt(3);
 
   H_gt[0] = Mat3::Identity();
   H_gt[1] << 1,  0, -4, // Affine homography motion
@@ -60,13 +59,13 @@ TEST(HomographyKernelTest, Fitting_Unnormalized) {
 
     homography::kernel::UnnormalizedKernel kernel(x, y);
 
-    vector<uint32_t> samples = {0,1,2,3,4};
+    std::vector<uint32_t> samples = {0,1,2,3,4};
     for (
       Mat::Index j = 4;
       static_cast<Mat::Index>(samples.size()) < x.cols();
       samples.push_back(j++))
     {
-      vector<Mat3> Hs;
+      std::vector<Mat3> Hs;
       kernel.Fit(samples, &Hs);
       CHECK_EQUAL(1, Hs.size());
       // Check that found matrix is equal to the GT
@@ -77,7 +76,7 @@ TEST(HomographyKernelTest, Fitting_Unnormalized) {
 
 TEST(HomographyKernelTest, Fitting_Normalized) {
   // Define 3 knows homographies (Use as GT).
-  vector<Mat3> H_gt(3);
+  std::vector<Mat3> H_gt(3);
 
   H_gt[0] = Mat3::Identity();
   H_gt[1] << 1,  0, -4, // Affine homography motion
@@ -99,13 +98,13 @@ TEST(HomographyKernelTest, Fitting_Normalized) {
 
     homography::kernel::Kernel kernel(x, y);
 
-    vector<uint32_t> samples = {0,1,2,3,4};
+    std::vector<uint32_t> samples = {0,1,2,3,4};
     for (
       Mat::Index j = 4;
       static_cast<Mat::Index>(samples.size()) < x.cols();
       samples.push_back(j++))
     {
-      vector<Mat3> Hs;
+      std::vector<Mat3> Hs;
       kernel.Fit(samples, &Hs);
       CHECK_EQUAL(1, Hs.size());
       // Check that found matrix is equal to the GT

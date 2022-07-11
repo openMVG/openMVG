@@ -14,7 +14,6 @@
 #include <iostream>
 #include <memory>
 
-using namespace std;
 using namespace openMVG;
 using namespace openMVG::exif;
 

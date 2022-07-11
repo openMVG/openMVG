@@ -15,8 +15,6 @@ namespace openMVG {
 namespace resection {
 namespace kernel {
 
-using namespace std;
-
 void translate
 (
   const Mat3X & X,
@@ -71,7 +69,7 @@ void SixPointResectionSolver::Solve
 (
   const Mat &pt2D,
   const Mat &pt3d,
-  vector<Mat34> *Ps,
+  std::vector<Mat34> *Ps,
   bool bcheck
 )
 {

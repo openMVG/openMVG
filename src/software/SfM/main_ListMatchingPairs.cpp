@@ -83,7 +83,6 @@ void AdjacencyMatrixToSVG
 
 int main(int argc, char **argv)
 {
-  using namespace std;
   OPENMVG_LOG_INFO
     << "\n-----------------------------------------------------------"
     << "\nCompute a view pair list file for main_ComputeMatches:"

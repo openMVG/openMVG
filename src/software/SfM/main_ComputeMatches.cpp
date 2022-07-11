@@ -35,7 +35,6 @@ using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::matching_image_collection;
-using namespace std;
 
 /// Compute corresponding features between a series of views:
 /// - Load view images description (regions: features & descriptors)

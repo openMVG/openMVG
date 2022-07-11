@@ -14,8 +14,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 using namespace openMVG;
 using namespace matching;
 

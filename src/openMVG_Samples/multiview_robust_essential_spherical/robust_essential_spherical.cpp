@@ -41,13 +41,12 @@ using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
-using namespace std;
 
 int main(int argc, char **argv) {
 
   CmdLine cmd;
 
-  string jpg_filenameL, jpg_filenameR;
+  std::string jpg_filenameL, jpg_filenameR;
 
   cmd.add( make_option('a', jpg_filenameL, "input_a") );
   cmd.add( make_option('b', jpg_filenameR, "input_b") );
@@ -108,7 +107,7 @@ int main(int argc, char **argv) {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
