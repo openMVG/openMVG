@@ -11,9 +11,9 @@ file(
   *.cpp
   ./LiGT/*.cpp
 )
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-file(GLOB_RECURSE REMOVEFILESUNITTEST_HEADER *_test.hpp)
-file(GLOB_RECURSE MULTIVIEWTESTDATA *_data_sets*)
+file(GLOB REMOVEFILESUNITTEST *_test.cpp)
+file(GLOB REMOVEFILESUNITTEST_HEADER *_test.hpp)
+file(GLOB MULTIVIEWTESTDATA *_data_sets*)
 
 #Remove the unit test files (not been used by the library)
 list(REMOVE_ITEM multiview_files_cpp ${REMOVEFILESUNITTEST})
@@ -82,3 +82,5 @@ UNIT_TEST(openMVG solver_translation_knownRotation_kernel "openMVG_multiview_tes
 # Averaging routines
 UNIT_TEST(openMVG rotation_averaging "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_multiview")
+
+add_subdirectory(trifocal)
