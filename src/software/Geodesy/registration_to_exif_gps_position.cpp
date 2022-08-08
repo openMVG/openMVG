@@ -32,8 +32,6 @@ using namespace openMVG::exif;
 using namespace openMVG::geodesy;
 using namespace openMVG::sfm;
 
-using namespace std;
-
 int main(int argc, char **argv)
 {
   enum ERegistrationType

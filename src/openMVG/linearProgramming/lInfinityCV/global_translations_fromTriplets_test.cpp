@@ -16,7 +16,6 @@
 using namespace openMVG;
 using namespace openMVG::linearProgramming;
 using namespace lInfinityCV;
-using namespace std;
 
 TEST(translation_averaging, globalTi_from_tijs_Triplets) {
 
