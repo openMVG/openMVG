@@ -25,7 +25,7 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_multiview
-    cereal
+    ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
 

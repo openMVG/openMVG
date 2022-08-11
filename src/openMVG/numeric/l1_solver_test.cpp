@@ -16,7 +16,6 @@
 #include <random>
 
 using namespace openMVG;
-using namespace std;
 
 TEST(L1Solver_ADMM, Decoding)
 {

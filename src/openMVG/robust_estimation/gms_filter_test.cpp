@@ -13,7 +13,6 @@
 
 using namespace openMVG;
 using namespace openMVG::robust;
-using namespace std;
 
 TEST(GMSFilter, borderCases)
 {

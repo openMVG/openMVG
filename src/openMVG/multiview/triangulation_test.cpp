@@ -14,7 +14,6 @@
 #include "testing/testing.h"
 
 using namespace openMVG;
-using namespace std;
 
 TEST(Triangulation, TriangulateDLT) {
 

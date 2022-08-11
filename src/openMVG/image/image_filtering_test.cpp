@@ -15,7 +15,6 @@
 
 using namespace openMVG;
 using namespace openMVG::image;
-using namespace std;
 
 TEST(Image, Convolution)
 {

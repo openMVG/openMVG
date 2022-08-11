@@ -21,9 +21,6 @@
 
 using namespace openMVG;
 using namespace openMVG::features;
-using namespace std;
-
-using std::string;
 
 bool SaveAndLoad
 (
