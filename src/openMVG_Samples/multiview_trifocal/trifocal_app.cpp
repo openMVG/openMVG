@@ -16,6 +16,7 @@
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
 #include "openMVG/robust_estimation/score_evaluator.hpp"
+//#include "software/SfM/SfMPlyHelper.hpp"
 
 static void
 invert_intrinsics(
@@ -495,11 +496,12 @@ RobustSolve()
   double threshold =
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(1, K_);
   threshold *= threshold; // squared error
-  unsigned constexpr max_iteration = 1024; // testing
+  unsigned constexpr max_iteration = 1; // testing
   // Vector of inliers for the best fit found
   const auto model = MaxConsensus(trifocal_kernel,
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers_, max_iteration);
   cerr << "vec_inliers size: "<< vec_inliers_.size() << "\n";
+  cerr << "model: " << model[0] << "\n";
   // TODO(gabriel) recontruct from inliers and best models to show as PLY
 }
 
@@ -539,7 +541,6 @@ void TrifocalSampleApp::
     const auto feature_i = sio_regions_[0]->Features()[i];
     const auto feature_j = sio_regions_[1]->Features()[j];
     const auto feature_k = sio_regions_[2]->Features()[k];
-    //cout<<"cyka"<<endl; 
     svg_stream.drawCircle(
       feature_i.x(), feature_i.y(), feature_i.scale(),
       svg::svgStyle().stroke("green", 1));
@@ -619,7 +620,7 @@ DisplayInliersCamerasAndPoints()
       feature_i.x(), feature_i.y(), feature_i.scale(),
       svg::svgStyle().stroke("yellow", 1));
     svg_stream.drawCircle(
-      feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
+    feature_j.x(), feature_j.y() + images_[0].Height(), feature_j.scale(),
       svg::svgStyle().stroke("yellow", 1));
     svg_stream.drawCircle(
       feature_k.x(), feature_k.y() + images_[0].Height() + images_[1].Height(), feature_k.scale(),
@@ -759,7 +760,6 @@ DisplayInliersCamerasAndPointsSIFT()
       for (unsigned i=0; i < n_ids; ++i)
         if (track_id == desired_ids[i]) { //this part is literaly overwriting the inliers
           found = true;
-      //cout<<"blyat"<<endl;//using sigma instead is a gives an error in build
       svg_stream.drawCircle(
         feature_i.x(), feature_i.y(), 2*feature_i.scale(),
         svg::svgStyle().stroke("yellow", 1));
@@ -871,5 +871,34 @@ DisplayInliersCamerasAndPointsSIFT()
       svg_file << svg_stream.closeSvgFile().str();
     }
 }
+//void TrifocalSampleApp::
+//ExportBaseReconstructiontoPLY(){
+//
+//  std::vector<Mat3X> inlier_coordinates_; 
+//  unsigned track_inlier=0;
+//  for (const auto &track_it: tracks_) {
+//    bool inlier=false;
+//    for (unsigned i=0; i < vec_inliers_.size(); ++i)
+//      if (track_inlier == vec_inliers_.at(i))
+//        inlier = true;
+//        
+//    if (!inlier) {
+//      track_inlier++;
+//      continue;
+//    }
+//    
+//    auto iter = track_it.second.cbegin();
+//    const uint32_t
+//      i = iter->second,
+//      j = (++iter)->second,
+//      k = (++iter)->second;
+//    //
+//    const auto feature_i = sio_regions_[0]->Features()[i];
+//    const auto feature_j = sio_regions_[1]->Features()[j];
+//    const auto feature_k = sio_regions_[2]->Features()[k];
+//    
+//    track_inlier++;
+//  }
+//}
 } // namespace trifocal3pt
 
