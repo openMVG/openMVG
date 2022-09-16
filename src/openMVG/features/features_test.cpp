@@ -18,9 +18,6 @@
 
 using namespace openMVG;
 using namespace openMVG::features;
-using namespace std;
-
-using std::string;
 
 // Define a feature and a container of features
 using Feature_T = SIOPointFeature;

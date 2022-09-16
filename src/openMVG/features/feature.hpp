@@ -36,7 +36,7 @@ public:
 
   float x() const;
   float y() const;
-  const Vec2f & coords() const;
+  inline const Vec2f & coords() const{ return coords_;}
 
   float& x();
   float& y();

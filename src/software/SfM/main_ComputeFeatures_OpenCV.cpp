@@ -32,7 +32,6 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::features;
 using namespace openMVG::sfm;
-using namespace std;
 
 enum eGeometricModel
 {

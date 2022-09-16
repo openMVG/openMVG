@@ -37,7 +37,6 @@ using namespace openMVG::matching;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
-using namespace std;
 
 /// Read intrinsic K matrix from a file (ASCII)
 /// F 0 ppx
@@ -52,11 +51,11 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K);
 ///   way 2: independent cameras motion [R|t], shared focal [f] and structure
 int main() {
 
-  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  const string jpg_filenameL = sInputDir + "100_7101.jpg";
-  const string jpg_filenameR = sInputDir + "100_7102.jpg";
+  const std::string jpg_filenameL = sInputDir + "100_7101.jpg";
+  const std::string jpg_filenameR = sInputDir + "100_7102.jpg";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -82,7 +81,7 @@ int main() {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -278,8 +277,8 @@ int main() {
 bool readIntrinsic(const std::string & fileName, Mat3 & K)
 {
   // Load the K matrix
-  ifstream in;
-  in.open( fileName.c_str(), ifstream::in);
+  std::ifstream in;
+  in.open(fileName.c_str(), std::ifstream::in);
   if (in)  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)

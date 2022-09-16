@@ -49,7 +49,6 @@ std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2
 // ----------------------------------------------------
 int main(int argc, char **argv)
 {
-  using namespace std;
   std::cout << std::endl
     << "-----------------------------------------------------------\n"
     << "  Images localization in an existing SfM reconstruction:\n"
@@ -486,7 +485,7 @@ int main(int argc, char **argv)
 
   GroupSharedIntrinsics(sfm_data);
 
-  std::cout << " Total poses found : " << vec_found_poses.size() << "/" << total_num_images << endl;
+  std::cout << " Total poses found : " << vec_found_poses.size() << "/" << total_num_images << std::endl;
 
   // Export the found camera position in a ply.
   const std::string out_file_name = stlplus::create_filespec(sOutDir, "found_pose_centers", "ply");

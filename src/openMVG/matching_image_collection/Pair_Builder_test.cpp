@@ -13,7 +13,6 @@
 #include <iostream>
 
 using namespace openMVG;
-using namespace std;
 
 // Check pairs follow a weak ordering pair.first < pair.second
 template<typename IterablePairs>

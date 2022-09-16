@@ -21,7 +21,6 @@
 using namespace openMVG;
 using namespace openMVG::exif;
 using namespace openMVG::geodesy;
-using namespace std;
 
 int main(int argc, char **argv)
 {
