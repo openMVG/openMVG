@@ -3,7 +3,7 @@
 //\date Tue Jun  1 09:04:21 -03 2021
 //\author Gabriel ANDRADE Rio de Janeiro State U.
 //\author Pierre MOULON
-#include "trifocal-app.h"
+#include "trifocal_app.hpp"
 
 using namespace trifocal3pt;
 //-------------------------------------------------------------------------------
@@ -21,9 +21,9 @@ main(int argc, char **argv)
   T.Display();
   T.DisplayDesiredIds();
   T.RobustSolve();
-  // T.DisplayInliers();
+  T.DisplayDesiredInliers();
   T.DisplayInliersCamerasAndPoints();
-  // T.DisplayInliersCamerasAndPointsSIFT();
+  T.DisplayInliersCamerasAndPointsSIFT();
 
   return EXIT_SUCCESS;
 }

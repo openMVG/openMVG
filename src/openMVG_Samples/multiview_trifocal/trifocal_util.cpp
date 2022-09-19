@@ -3,7 +3,7 @@
 //\date Tue Jun  1 15:03:36 -03 2021
 //
 // Misc. Utilities used by trifocal solver
-#include "trifocal-util.h"
+#include "trifocal_util.hpp"
 
 namespace trifocal3pt {
 

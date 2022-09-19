@@ -5,6 +5,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
+// -----------------------------------------------------------------------------
+// This is to be in openmvg/src/openMVG/sfm/pipelines
+// mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
+// -----------------------------------------------------------------------------
 
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 

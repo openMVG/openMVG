@@ -37,7 +37,7 @@ struct TrifocalSampleApp {
   void DisplayDesiredIds(); 
   void DisplayNonDesiredIds(); 
   void RobustSolve();
-  void DisplayInliers();
+  void DisplayDesiredInliers();
   void DisplayInliersCamerasAndPoints(); // display inliers and and tracks
   void DisplayInliersCamerasAndPointsSIFT();
   
