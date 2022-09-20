@@ -1,20 +1,20 @@
-original trifocal branch  created by pierre: develop_trifocal
-working branch: trifocal_tmp
+## Main branch
+original trifocal branch  created by pierre: develop_keypoint_orientation_sfm @ official
+working branch: develop_keypoint_orientation_sfm_tmp
   - this working branch merges the develop branch periodically
   - when everything is working, we just make a nice commit from scratch to
     OpenMVG with Gabriel as author, with pierre as coauthors
 
 
-Scrap notes
-
+## Misc. Notes
 
 src/software 
  - Complete software(s) build on openMVG libraries
 
-
 ## Inclusion into OpenMVG
 
 ### Next thing to work on
+
 MakeInitialPair3D
 sequential_SfM.cpp:188
 
@@ -46,7 +46,7 @@ O: pairs.bin                O: matches.putative.bin          O: matches.f.bin
      O: reconstruction_sequential/
 
 GeometricFilter 
-- The toplevel .py shows it uses a fundamental matrix filtercing model
+- The toplevel .py shows it uses a fundamental matrix filtering model
 - Why not essential matrix when intrinsics available?
     - TODO: investigate where intrinsics are provided, if we can fix it, and
       whether intrinsics are actually optimized / estimated
