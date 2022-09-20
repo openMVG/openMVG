@@ -1,6 +1,6 @@
 set(trifocal_app_sources
   trifocal_app.cpp trifocal_app.hpp
-  trifocal-util.cpp trifocal-util.hpp
+  trifocal_util.cpp trifocal_util.hpp
 ) 
 set(trifocal_sample_sources
   trifocal_sample.cpp 
