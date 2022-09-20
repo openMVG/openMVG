@@ -708,8 +708,8 @@ struct ResidualErrorFunctor_Intrinsic_Spherical
     const T coord[] = {lon / (2 * M_PI), - lat / (2 * M_PI)}; // normalization
 
     const T size ( std::max(m_imageSize[0], m_imageSize[1]) );
-    const T projected_x = coord[0] * size - 0.5 + m_imageSize[0] / 2.0;
-    const T projected_y = coord[1] * size - 0.5 + m_imageSize[1] / 2.0;
+    const T projected_x = coord[0] * size + m_imageSize[0] / 2.0;
+    const T projected_y = coord[1] * size + m_imageSize[1] / 2.0;
 
     out_residuals[0] = projected_x - m_pos_2dpoint[0];
     out_residuals[1] = projected_y - m_pos_2dpoint[1];

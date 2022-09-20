@@ -2010,6 +2010,9 @@ GoPro Fusion;6.17
 GoPro Hero 2018;6.17
 GoPro Hero3-Silver Edition;5.37
 GoPro HERO7 Black;6.17
+GoPro HERO8 Black;6.17
+GoPro HERO9 Black;6.17
+GoPro HERO10 Black;6.17
 Gretel A6;2.8
 Gretel A7;4.54
 Gretel A9;4.54
