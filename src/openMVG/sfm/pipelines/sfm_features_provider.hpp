@@ -15,6 +15,7 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/features/feature_container.hpp"
 #include "openMVG/features/regions.hpp"
+#include "openMVG/features/regions_factory.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
@@ -77,8 +78,8 @@ struct Features_Provider
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
 #endif
-
-        auto sift_regions = dynamic_cast<SIFT_Regions *>(regions_type.get());
+        {
+        auto sift_regions = dynamic_cast<features::SIFT_Regions *>(region_type.get());
         if (sift_regions && store_as_sio_features) {
           // save loaded Features as SIOPointFeature for SfM pipeline elements
           // that use feature orientation etc
@@ -87,6 +88,7 @@ struct Features_Provider
           // save loaded Features as PointFeature
           feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
           assert(!store_as_sio_features);
+        }
         }
         ++my_progress_bar;
       }
