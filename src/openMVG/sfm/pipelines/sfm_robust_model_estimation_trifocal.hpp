@@ -10,8 +10,8 @@
 // mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
 // -----------------------------------------------------------------------------
 
-#ifndef OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_HPP
-#define OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_HPP
+#ifndef OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_TRIFOCAL_HPP
+#define OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_TRIFOCAL_HPP
 
 #include <limits>
 #include <utility>
@@ -19,6 +19,9 @@
 
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
+#include "openMVG/multiview/trifocal/three_view_kernel.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 
 
 namespace openMVG { namespace cameras { struct IntrinsicBase; } }
@@ -29,7 +32,7 @@ namespace sfm {
   
 struct RelativePoseTrifocal_Info
 {
-  Trifocal3PointPositionTangentialSolver::trifocal_model_t relativePoseTrifocal;
+  trifocal::trifocal_model_t relativePoseTrifocal;
   std::vector<uint32_t> vec_inliers;
   double initial_residual_tolerance;
   double found_residual_precision;
@@ -55,8 +58,8 @@ struct RelativePoseTrifocal_Info
  */
 bool robustRelativePoseTrifocal
 (
-  const cameras::IntrinsicBase *intrinsics[nviews],
-  std::array<Mat, nviews> pxdatum,
+  const cameras::IntrinsicBase *intrinsics[3],
+  std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   const size_t max_iteration_count = 1024
 )
@@ -69,14 +72,15 @@ bool robustRelativePoseTrifocal
     for (unsigned ip=0; ip < npts; ++ip)
       datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
         
-  using TrifocalKernel = ThreeViewKernel<Trifocal3PointPositionTangentialSolver, 
-                         Trifocal3PointPositionTangentialSolver>;
+  using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
+                         trifocal::Trifocal3PointPositionTangentialSolver>;
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
   // TODO: we are assuming all images have the same intrinsics
-  double constexpr threshold_normalized_squared 
-    = trifocal3pt::threshold_pixel_to_normalized(4.0, (dynamic_cast<const Pinhole_Intrinsic *> (intrinsics[0])).K().data(); // TODO: use ACRANSAC
+  double threshold_normalized_squared 
+    = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
+    threshold_pixel_to_normalized(4.0, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data())); // TODO: use ACRANSAC
   
   threshold_normalized_squared *= threshold_normalized_squared;
   relativePoseTrifocal_info.RelativePoseTrifocal 
@@ -132,7 +136,7 @@ bool robustRelativePoseTrifocal2
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
   // TODO: we are assuming all images have the same intrinsics
-  double constexpr threshold_normalized_squared 
+  double threshold_normalized_squared 
     = trifocal3pt::threshold_pixel_to_normalized(4.0, (dynamic_cast<const Pinhole_Intrinsic *> (intrinsics[0])).K().data(); // TODO: use ACRANSAC
   
   threshold_normalized_squared *= threshold_normalized_squared;
@@ -168,3 +172,5 @@ bool robustRelativePoseTrifocal2
   // check that orientations match either inside ransac or as post filtering of
   // correspondences
 }
+
+#endif // OPENMVG_SFM_SFM_ROBUST_MODEL_ESTIMATION_TRIFOCAL_HPP

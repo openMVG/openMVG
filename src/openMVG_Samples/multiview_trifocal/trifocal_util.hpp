@@ -31,20 +31,4 @@ void invert_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
     const double px_tgt_coords[2], 
     double normalized_tgt_coords[2]);
-
-// Get a reasonable error threshold in normalized coordinates
-//
-// Take a (threshold,0) vector along the x axis and 
-// 
-// transform to normalized coordinates
-// Currently ignores skew
-// 
-// TODO(better guess is possible)
-inline double threshold_pixel_to_normalized(double threshold, const double K[2][3]) {
-  return threshold/K[0][0];
-}
-
-inline double threshold_normalized_to_pixel(double threshold, const double K[2][3]) {
-  return threshold*K[0][0];
-}
 } // namespace trifocal3pt
