@@ -11,6 +11,7 @@
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
@@ -553,11 +554,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     
     uint32_t i = iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
-      if (!features_provider_.has_sio_features()) {
+      if (!features_provider_->has_sio_features()) {
         OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
         return false;
       }
-      SIOPointFeature *feature = features_provider_.sio_feats_per_view[t[v]][i];
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
       // TODO(trifocal future): provide undistortion for tangents for models that need it (get_ud_pixel)
@@ -610,7 +611,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           Observations obs;
           for (unsigned v = 0; v < nviews; ++v) {
             x.col(v) = 
-              features_provider_.sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+              features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
             // TODO(trifocal future) get_ud_pixel
             ifeat=(++iter)->second;
             obs[view[v]->id_view] = Observation(x.col(v), t[v]]);

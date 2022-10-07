@@ -16,13 +16,6 @@
 //------------------------------------------------------------------------------
 
 #include <testing/testing.h>
-#include "minus/chicago-default.h"
-#include "minus/internal-util.h"
-#include <minus/debug-common.h>
-// #include "minus/debug-common.h"
-#include "trifocal.h"
-#include "trifocal-app.h"
-#include "trifocal-util.h"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 
 

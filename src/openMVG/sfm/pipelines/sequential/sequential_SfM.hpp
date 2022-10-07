@@ -56,7 +56,7 @@ public:
   }
 
   bool hasInitialPair() { return initial_pair_ != Pair(0,0); }
-  bool hasInitialTriplet() { return initial_triplet_ != Pair(0,0,0); }
+  bool hasInitialTriplet() { return initial_triplet_ != Triplet(0,0,0); }
 
   /// Initialize tracks
   bool InitLandmarkTracks();
@@ -133,8 +133,8 @@ private:
   cameras::EINTRINSIC cam_type_; // The camera type for the unknown cameras
 
   //-- Data provider
-  Features_Provider  * features_provider_;
-  Matches_Provider  * matches_provider_;
+  Features_Provider  *features_provider_;
+  Matches_Provider  *matches_provider_;
 
   // Temporary data
   openMVG::tracks::STLMAPTracks map_tracks_; // putative landmark tracks (visibility per 3D point)
