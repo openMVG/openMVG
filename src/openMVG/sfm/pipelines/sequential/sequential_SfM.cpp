@@ -12,6 +12,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
@@ -571,7 +572,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
-  if (!robustRelativePoseTrifocal(cam, datum, relativePose_info, 1024))
+  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 1024))
   {
     OPENMVG_LOG_ERROR 
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
@@ -594,10 +595,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         for (unsigned v = 0; v < nviews; ++v) {
           // Init views and intrincics
           tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-          tiny_scene.intrinsics.insert(iterIntrinsic[v]);
+          tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
           
           // Init projection matrices
-          P.push_back(cam[v].K()*(relativePose_info.relativePoseTrifocal[v]));
+          P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
         }
 
         // Init structure
@@ -615,7 +616,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
               features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
             // TODO(trifocal future) get_ud_pixel
             ifeat=(++iter)->second;
-            obs[view[v]->id_view] = Observation(x.col(v), t[v]]);
+            obs[view[v]->id_view] = Observation(x.col(v), t[v]);
           }
           landmarks[track_iterator.first].obs = std::move(obs);
           
@@ -674,11 +675,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           const double angle = AngleBetweenRay(
             *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
           
-          const Vec2 residual_0 = cam[v0]->residual(pose[v0](landmark.X), ob_x[v0]->x);
-          const Vec2 residual_1 = cam[v1]->residual(pose[v1](landmark.X), ob_x[v1]->x);
+          const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
+          const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
           if (angle <= 2.0 ||
-              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), pose[v0],
-                              (*cam[v1])(ob_x_ud[v1]), pose[v1], landmark.X) ||
+              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
+                              (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X) ||
               residual_0.norm() >= relativePose_info.found_residual_precision ||
               residual_1.norm() >= relativePose_info.found_residual_precision)
             include_landmark = false;
@@ -708,11 +709,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         << "-- Threshold: " << relativePose_info.found_residual_precision << "<br>"
         << "-- Resection status: " << "OK" << "<br>"
         << "-- Nb points used for robust Trifocal tensor estimation: "
-        << datum[0].cols() << "<br>"
+        << pxdatum[0].cols() << "<br>"
         << "-- Nb points validated by robust estimation: "
         << sfm_data_.structure.size() << "<br>"
         << "-- % points validated: "
-        << sfm_data_.structure.size()/static_cast<float>(datum[0].cols())
+        << sfm_data_.structure.size()/static_cast<float>(pxdatum[0].cols())
         << "<br>"
         << "-------------------------------" << "<br>";
       html_doc_stream_->pushInfo(os.str());
