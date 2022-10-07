@@ -589,20 +589,20 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   if (bRefine_using_BA)
   {
     SfM_Data tiny_scene;
+    std::vector<Mat34> P(3);
+    for (unsigned v = 0; v < nviews; ++v) {
+      // Init views and intrincics
+      tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
+      tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
+      
+      // Init projection matrices
+      P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
+    }
+
+    // Init structure
+    Landmarks &landmarks = tiny_scene.structure;
     { // badj
       { // initial structure ---------------------------------------------------
-        std::vector<Mat34> P(3);
-        for (unsigned v = 0; v < nviews; ++v) {
-          // Init views and intrincics
-          tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-          tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-          
-          // Init projection matrices
-          P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
-        }
-
-        // Init structure
-        Landmarks &landmarks = tiny_scene.structure;
 
         Mat3X x(3,3);
         for (const auto & track_iterator : map_tracksCommon)
