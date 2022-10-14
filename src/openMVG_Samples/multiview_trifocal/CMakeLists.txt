@@ -21,7 +21,7 @@ target_link_libraries(openMVG_trifocal_app
   openMVG_matching
   ${STLPLUS_LIBRARY})
 
-UNIT_TEST(openMVG trifocal_stub "openMVG_trifocal")
+UNIT_TEST(openMVG trifocal_stub "openMVG_multiview_trifocal")
 UNIT_TEST(openMVG trifocal "openMVG_trifocal_app")
 
 #set_target_properties(openMVG_test_trifocal PROPERTIES COMPILE_FLAGS "-fsanitize=address -fno-omit-frame-pointer")

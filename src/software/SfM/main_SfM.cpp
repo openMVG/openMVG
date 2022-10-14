@@ -134,12 +134,12 @@ bool computeIndexFromImageNames(
 /// From 2 given image filenames, find the 3 corresponding index in the View list
 bool computeIndexFromImageNames(
   const SfM_Data & sfm_data,
-  const std::pair<std::string,std::string,std::string>& initialTripletName,
+  const std::tuple<std::string,std::string,std::string>& initialTripletName,
   Triplet& initialTripletIndex)
 {
-  if (get<0>(initialTripletName) == get<1>(initialTriplet) || 
-      get<0>(initialTripletName) == get<2>(initialTriplet) || 
-      get<1>(initialTripletName) == get<2>(initialTriplet))
+  if (get<0>(initialTripletName) == get<1>(initialTripletName) || 
+      get<0>(initialTripletName) == get<2>(initialTripletName) || 
+      get<1>(initialTripletName) == get<2>(initialTripletName))
       
   {
     OPENMVG_LOG_ERROR << "Cannot use repeated images to initialize a triplet.";
@@ -446,7 +446,7 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (oriented_trifocal && !dynamic_cast<SIFT_Regions>(regions_type.get()))
+  if (oriented_trifocal && !dynamic_cast<SIFT_Regions *>(regions_type.get()))
   {
     OPENMVG_LOG_ERROR << "Trifocal initialization currently requires oriented features.";
     return EXIT_FAILURE;
@@ -529,7 +529,7 @@ int main(int argc, char **argv)
     engine->Set_Use_Motion_Prior(b_use_motion_priors);
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
-1
+
     // Handle Initial pair parameter
     if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())
     {
@@ -555,7 +555,7 @@ int main(int argc, char **argv)
       {
         OPENMVG_LOG_ERROR << "Could not find the initial triplets <" 
           << get<0>(initial_triplet_string) <<  ", " 
-          << get<1>(initial_kriplet_string) <<  ", " 
+          << get<1>(initial_triplet_string) <<  ", " 
           << get<2>(initial_triplet_string) <<  ", " 
           << ">!";
         return EXIT_FAILURE;

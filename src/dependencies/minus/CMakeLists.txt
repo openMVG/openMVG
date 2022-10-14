@@ -36,5 +36,13 @@ set_target_properties(minus PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(minus PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
 set_target_properties(minus PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 find_package(Threads REQUIRED)
-target_include_directories(minus PUBLIC ${MINUS_INCLUDE_DIRS})
+#target_include_directories(minus PUBLIC ${MINUS_INCLUDE_DIRS})
 target_link_libraries(minus PUBLIC Threads::Threads)
+install(TARGETS minus DESTINATION lib EXPORT openMVG-targets)
+target_include_directories(minus
+  PRIVATE
+    ${MINUS_INCLUDE_DIRS}
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+)
+

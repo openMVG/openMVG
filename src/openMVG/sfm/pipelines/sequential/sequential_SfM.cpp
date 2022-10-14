@@ -616,7 +616,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
               features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
             // TODO(trifocal future) get_ud_pixel
             ifeat=(++iter)->second;
-            obs[view[v]->id_view] = Observation(x.col(v), t[v]);
+            obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
           }
           landmarks[track_iterator.first].obs = std::move(obs);
           

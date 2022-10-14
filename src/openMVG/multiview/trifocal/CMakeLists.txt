@@ -18,7 +18,7 @@ add_library(openMVG_multiview_trifocal
   ${multiview_trifocal_files_cpp})
 target_compile_features(openMVG_multiview_trifocal INTERFACE ${CXX11_FEATURES})
 set_property(TARGET openMVG_multiview_trifocal PROPERTY FOLDER OpenMVG/OpenMVG)
-# install(TARGETS openMVG_multiview_trifocal DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_multiview_trifocal DESTINATION lib EXPORT openMVG-targets)
 
 target_link_libraries(openMVG_multiview_trifocal
   PUBLIC
@@ -36,6 +36,8 @@ target_include_directories(openMVG_multiview_trifocal
 )
 
 set_target_properties(openMVG_multiview_trifocal PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
+
+include_directories(${MINUS_INCLUDE_DIRS})
 
 # Solver
 UNIT_TEST(openMVG solver_trifocal_three_point "openMVG_multiview_trifocal;openMVG_multiview;minus")

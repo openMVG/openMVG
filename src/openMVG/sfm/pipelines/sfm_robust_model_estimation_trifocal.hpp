@@ -79,7 +79,7 @@ bool robustRelativePoseTrifocal
       datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
         
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
-                         trifocal::Trifocal3PointPositionTangentialSolver>;
+                         trifocal::NormalizedSquaredPointReprojectionOntoOneViewError>;
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
