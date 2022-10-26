@@ -162,7 +162,7 @@ bool CreateCameraFile( const SfM_Data & sfm_data,
   for (Intrinsics::const_iterator iter = sfm_data.GetIntrinsics().begin();
     iter != sfm_data.GetIntrinsics().end(); ++iter, ++my_progress_bar)
   {
-    const IndexT camera_id = iter->first;
+    const IndexT camera_id = iter->first + 1;
     std::shared_ptr<openMVG::cameras::IntrinsicBase> intrinsic = iter->second;
     std::string camera_line;
     if (CreateLineCameraFile(camera_id, intrinsic, camera_line, floating_point_precision_digit)) 
@@ -218,7 +218,7 @@ bool CreateImageFile( const SfM_Data & sfm_data,
       const Observations & obs = iterLandmarks->second.obs;
       for ( Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs )
       {
-        const IndexT currentViewId = itObs->first;
+        const IndexT currentViewId = itObs->first + 1;
         const Observation & ob = itObs->second;
         viewIdToPoints2D[currentViewId].push_back(std::make_tuple(ob.x( 0 ), ob.x( 1 ), point3d_id));
       }
@@ -251,9 +251,9 @@ bool CreateImageFile( const SfM_Data & sfm_data,
       const double Qz = q.z();
       const double Qw = q.w();
 
-      const IndexT image_id = view->id_view;
+      const IndexT image_id = view->id_view + 1;
       // Colmap's camera_ids correspond to openMVG's intrinsic ids
-      const IndexT camera_id = view->id_intrinsic;                           
+      const IndexT camera_id = view->id_intrinsic + 1;
       const std::string image_name = view->s_Img_path;
 
       // first line per image
@@ -337,7 +337,7 @@ bool CreatePoint3DFile( const SfM_Data & sfm_data,
     const Observations & obs = iterLandmarks->second.obs;
     for ( Observations::const_iterator itObs = obs.begin(); itObs != obs.end(); ++itObs )
     {
-      const IndexT viewId = itObs->first;
+      const IndexT viewId = itObs->first + 1;
       const IndexT featId = itObs->second.id_feat;
 
       points3D_file << " " 
