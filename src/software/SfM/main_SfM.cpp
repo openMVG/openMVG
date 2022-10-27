@@ -40,7 +40,7 @@ using namespace openMVG::cameras;
 using namespace openMVG::sfm;
 
 
-// TODO(trifocal future) incremental v2: update for triplet 
+// TODO(trifocal future) incremental v2: update for triplet
 enum class ESfMSceneInitializer
 {
   INITIALIZE_EXISTING_POSES,
@@ -137,10 +137,11 @@ bool computeIndexFromImageNames(
   const std::tuple<std::string,std::string,std::string>& initialTripletName,
   Triplet& initialTripletIndex)
 {
-  if (get<0>(initialTripletName) == get<1>(initialTripletName) || 
-      get<0>(initialTripletName) == get<2>(initialTripletName) || 
+  using namespace std;
+  if (get<0>(initialTripletName) == get<1>(initialTripletName) ||
+      get<0>(initialTripletName) == get<2>(initialTripletName) ||
       get<1>(initialTripletName) == get<2>(initialTripletName))
-      
+
   {
     OPENMVG_LOG_ERROR << "Cannot use repeated images to initialize a triplet.";
     return false;
@@ -149,7 +150,7 @@ bool computeIndexFromImageNames(
   initialTripletIndex = {UndefinedIndexT, UndefinedIndexT,UndefinedIndexT};
 
   /// List views filenames and find the one that correspond to the user ones:
-  for (Views::const_iterator it =  sfm_data.GetViews().begin(); 
+  for (Views::const_iterator it =  sfm_data.GetViews().begin();
                              it != sfm_data.GetViews().end(); ++it)
   {
     const View *v = it->second.get();
@@ -228,9 +229,9 @@ int main(int argc, char **argv)
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
   // Incremental SfM1 with trifocal initialization
-  cmd.add( make_option('x', get<0>(initial_triplet_string), "initial_triplet_x") );
-  cmd.add( make_option('y', get<1>(initial_triplet_string), "initial_triplet_y") );
-  cmd.add( make_option('z', get<2>(initial_triplet_string), "initial_triplet_z") );
+  cmd.add( make_option('x', std::get<0>(initial_triplet_string), "initial_triplet_x") );
+  cmd.add( make_option('y', std::get<1>(initial_triplet_string), "initial_triplet_y") );
+  cmd.add( make_option('z', std::get<2>(initial_triplet_string), "initial_triplet_z") );
   // Global SfM
   cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
   cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
@@ -338,7 +339,7 @@ int main(int argc, char **argv)
 
   // We always use oriented trifocal for trifocal initialization
   // as it uses only 3 points across 3 views (Fabbri CVPR'20)
-  bool oriented_trifocal = !get<0>(initial_triplet_string).empty();
+  bool oriented_trifocal = !std::get<0>(initial_triplet_string).empty();
 
   b_use_motion_priors = cmd.used('P');
 
@@ -454,7 +455,7 @@ int main(int argc, char **argv)
 
   // Features reading
   // TODO(p2pt) if request p2pt resection, then load orientations
-  // 
+  //
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
   if (!feats_provider->load(sfm_data, directory_match, regions_type, oriented_trifocal)) {
     OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << directory_match << ".";
@@ -478,7 +479,7 @@ int main(int argc, char **argv)
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
   switch(scene_initializer_enum)
   {
-  //TODO(trifocal future) incremental v2: update for triplet 
+  //TODO(trifocal future) incremental v2: update for triplet
   case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
     OPENMVG_LOG_ERROR << "Not yet implemented.";
     return EXIT_FAILURE;
@@ -546,23 +547,23 @@ int main(int argc, char **argv)
     // Handle Initial triplet parameter
     // TODO(trifocal future) Set automatic pair selection for later
     // set initial triplet parameter for now
-    if (!get<0>(initial_triplet_string).empty() && 
-        !get<1>(initial_triplet_string).empty() &&
-        !get<2>(initial_triplet_string).empty())
+    if (!std::get<0>(initial_triplet_string).empty() &&
+        !std::get<1>(initial_triplet_string).empty() &&
+        !std::get<2>(initial_triplet_string).empty())
     {
       Triplet initial_triplet_index;
       if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index))
       {
-        OPENMVG_LOG_ERROR << "Could not find the initial triplets <" 
-          << get<0>(initial_triplet_string) <<  ", " 
-          << get<1>(initial_triplet_string) <<  ", " 
-          << get<2>(initial_triplet_string) <<  ", " 
+        OPENMVG_LOG_ERROR << "Could not find the initial triplets <"
+          << std::get<0>(initial_triplet_string) <<  ", "
+          << std::get<1>(initial_triplet_string) <<  ", "
+          << std::get<2>(initial_triplet_string) <<  ", "
           << ">!";
         return EXIT_FAILURE;
       }
       engine->setInitialTriplet(initial_triplet_index);
     }
-    
+
     sfm_engine.reset(engine);
   }
     break;

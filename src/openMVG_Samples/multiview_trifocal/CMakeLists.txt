@@ -1,13 +1,15 @@
 set(trifocal_app_sources
   trifocal_app.cpp trifocal_app.hpp
   trifocal_util.cpp trifocal_util.hpp
-) 
+)
 set(trifocal_sample_sources
-  trifocal_sample.cpp 
-) 
+  trifocal_sample.cpp
+)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${MINUS_INCLUDE_DIRS})
 
 # ------------------------------------------------------------------------------
 
