@@ -509,7 +509,6 @@ bool SequentialSfMReconstructionEngine2::BundleAdjustment()
   Bundle_Adjustment_Ceres::BA_Ceres_options options;
   if ( sfm_data_.GetPoses().size() > 100 &&
       (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
        ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
       )
   // Enable sparse BA only if a sparse lib is available and if there more than 100 poses

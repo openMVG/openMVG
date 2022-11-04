@@ -136,12 +136,6 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
   }
   else
   {
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-    {
-      sparse_linear_algebra_library_type_ = ceres::CX_SPARSE;
-      linear_solver_type_ = ceres::SPARSE_SCHUR;
-    }
-    else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
     {
       sparse_linear_algebra_library_type_ = ceres::EIGEN_SPARSE;
