@@ -21,7 +21,7 @@ target_compile_features(openMVG_lInftyComputerVision INTERFACE ${CXX11_FEATURES}
 target_link_libraries(openMVG_lInftyComputerVision PUBLIC openMVG_linearProgramming openMVG_multiview)
 set_target_properties(openMVG_lInftyComputerVision PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_lInftyComputerVision PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_lInftyComputerVision DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_lInftyComputerVision DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 set(LOCAL_LIBS
   openMVG_lInftyComputerVision

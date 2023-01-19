@@ -15,6 +15,8 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
   cmake_policy(SET CMP0100 NEW)
 endif()
 
+include(GNUInstallDirs)
+
 # guard against in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
@@ -595,7 +597,7 @@ message("\n")
 # INSTALL RULES
 # ==============================================================================
 
-install(EXPORT openMVG-targets DESTINATION lib)
+install(EXPORT openMVG-targets DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::

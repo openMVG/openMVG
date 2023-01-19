@@ -7,6 +7,6 @@ target_link_libraries(openMVG_geodesy
   INTERFACE
     openMVG_numeric
 )
-install(TARGETS openMVG_geodesy DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_geodesy DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG_geodesy geodesy "openMVG_geodesy")
