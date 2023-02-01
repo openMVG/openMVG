@@ -1,11 +1,12 @@
-# Use Ubuntu 18.04 (will be supported until April 2023)
-FROM ubuntu:bionic
+# Use Ubuntu 20.04 (will be supported until April 2025)
+FROM ubuntu:focal
 
 # Add openMVG binaries to path
 ENV PATH $PATH:/opt/openMVG_Build/install/bin
 
 # Get dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; \
+  apt-get install -y \
   cmake \
   build-essential \
   graphviz \
@@ -13,11 +14,11 @@ RUN apt-get update && apt-get install -y \
   coinor-libclp-dev \
   libceres-dev \
   libflann-dev \
-  liblemon-dev \
   libjpeg-dev \
   libpng-dev \
   libtiff-dev \
-  python-minimal; \
+  git \
+  python3-minimal; \
   apt-get autoclean && apt-get clean
 
 # Clone the openvMVG repo
@@ -31,8 +32,6 @@ RUN mkdir /opt/openMVG_Build; \
     -DCMAKE_INSTALL_PREFIX="/opt/openMVG_Build/install" \
     -DOpenMVG_BUILD_TESTS=ON \
     -DOpenMVG_BUILD_EXAMPLES=OFF \
-    -DFLANN_INCLUDE_DIR_HINTS=/usr/include/flann \
-    -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
     -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
     -DCLP_INCLUDE_DIR_HINTS=/usr/include \
     -DOSI_INCLUDE_DIR_HINTS=/usr/include \
