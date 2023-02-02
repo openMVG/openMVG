@@ -8,7 +8,7 @@
 
 #include <openMVG/matching/svg_matches.hpp>
 #include <openMVG/features/feature.hpp>
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 namespace openMVG {
 namespace matching {
@@ -87,8 +87,8 @@ std::string Matches2SVGString
   svg::svgDrawer svgStream(svg_w, svg_h);
 
   // Draw image side by side
-  svgStream.drawImage(left_image_path, left_image_size.first, left_image_size.second);
-  svgStream.drawImage(right_image_path, right_image_size.first, right_image_size.second,
+  svgStream << svg::drawImage(left_image_path, left_image_size.first, left_image_size.second);
+  svgStream << svg::drawImage(right_image_path, right_image_size.first, right_image_size.second,
     b_vertical_display ? 0 : left_image_size.first,
     b_vertical_display ? left_image_size.second : 0);
 
@@ -109,10 +109,10 @@ std::string Matches2SVGString
       colors.push_back(osCol.str());
     }
     // Draw the line between the corresponding feature positions
-    svgStream.drawLine(
+    svgStream << svg::drawLine(
       L.x(), L.y(),
       R.x() + svg_offset_x, R.y() + svg_offset_y,
-      svg::svgStyle().stroke(colors.back(), stroke_size));
+      svg::svgAttributes().stroke(colors.back(), stroke_size));
   }
   // 2. Then display features circles
   for (size_t i = 0; i < matches.size(); ++i) {
@@ -120,12 +120,12 @@ std::string Matches2SVGString
     const features::PointFeature & L = left_features[matches[i].i_];
     const features::PointFeature & R = right_features[matches[i].j_];
     // Draw the features (circle)
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       L.x(), L.y(), feature_circle_radius,
-      svg::svgStyle().stroke(colors[i], stroke_size));
-    svgStream.drawCircle(
+      svg::svgAttributes().stroke(colors[i], stroke_size));
+    svgStream << svg::drawCircle(
       R.x() + svg_offset_x, R.y() + svg_offset_y, feature_circle_radius,
-      svg::svgStyle().stroke(colors[i], stroke_size));
+      svg::svgAttributes().stroke(colors[i], stroke_size));
   }
   return svgStream.closeSvgFile().str();
 }
@@ -206,8 +206,8 @@ bool InlierMatches2SVG
   svg::svgDrawer svgStream(svg_w, svg_h);
 
   // Draw image side by side
-  svgStream.drawImage(left_image_path, left_image_size.first, left_image_size.second);
-  svgStream.drawImage(right_image_path, right_image_size.first, right_image_size.second,
+  svgStream << svg::drawImage(left_image_path, left_image_size.first, left_image_size.second);
+  svgStream << svg::drawImage(right_image_path, right_image_size.first, right_image_size.second,
     b_vertical_display ? 0 : left_image_size.first,
     b_vertical_display ? left_image_size.second : 0);
 
@@ -228,10 +228,10 @@ bool InlierMatches2SVG
       colors.push_back(osCol.str());
     }
     // Draw the line between the corresponding feature positions
-    svgStream.drawLine(
+    svgStream << svg::drawLine(
       L.x(), L.y(),
       R.x() + svg_offset_x, R.y() + svg_offset_y,
-      svg::svgStyle().stroke(colors.back(), stroke_size));
+      svg::svgAttributes().stroke(colors.back(), stroke_size));
   }
 
   for (size_t i = 0; i < inliers.size(); ++i) {
@@ -239,12 +239,12 @@ bool InlierMatches2SVG
     const features::PointFeature & L = left_features[matches[inliers[i]].i_];
     const features::PointFeature & R = right_features[matches[inliers[i]].j_];
     // Draw the features (circle)
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       L.x(), L.y(), feature_circle_radius,
-      svg::svgStyle().stroke(colors[i], stroke_size));
-    svgStream.drawCircle(
+      svg::svgAttributes().stroke(colors[i], stroke_size));
+    svgStream << svg::drawCircle(
       R.x() + svg_offset_x, R.y() + svg_offset_y, feature_circle_radius,
-      svg::svgStyle().stroke(colors[i], stroke_size));
+      svg::svgAttributes().stroke(colors[i], stroke_size));
   }
 
   // Save the SVG file
