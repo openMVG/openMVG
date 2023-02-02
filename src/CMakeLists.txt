@@ -104,12 +104,6 @@ else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
-# For both regular Clang and AppleClang
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  message("clang detected: using std::unordered_map for Hash_Map")
-  register_definitions(-DOPENMVG_STD_UNORDERED_MAP)
-endif()
-
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -172,7 +166,7 @@ if (OpenMVG_USE_OPENMP)
       if( APPLE AND EXISTS "/opt/local/lib/libomp" AND EXISTS "/opt/local/include/libomp" )
         set_property( TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_INCLUDE_DIRECTORIES "/opt/local/include/libomp" )
         include_directories( "/opt/local/include/libomp")
-      endif()  
+      endif()
     endif()
     list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   endif (OPENMP_FOUND)
