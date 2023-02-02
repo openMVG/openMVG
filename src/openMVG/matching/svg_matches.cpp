@@ -8,7 +8,7 @@
 
 #include <openMVG/matching/svg_matches.hpp>
 #include <openMVG/features/feature.hpp>
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 namespace openMVG {
 namespace matching {

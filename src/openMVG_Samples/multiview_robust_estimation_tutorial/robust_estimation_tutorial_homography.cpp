@@ -33,7 +33,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <string>
 #include <iostream>

@@ -19,7 +19,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>

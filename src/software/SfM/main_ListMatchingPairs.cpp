@@ -11,12 +11,11 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
 #include "openMVG/system/loggerprogress.hpp"
-
 #include "openMVG/system/timer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <string>

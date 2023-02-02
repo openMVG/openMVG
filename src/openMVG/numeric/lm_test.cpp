@@ -8,9 +8,9 @@
 
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/lm.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>

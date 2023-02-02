@@ -10,7 +10,7 @@
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/system/timer.hpp"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
 

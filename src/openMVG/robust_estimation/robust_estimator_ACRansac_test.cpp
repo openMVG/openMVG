@@ -10,9 +10,9 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <iterator>
 #include <random>

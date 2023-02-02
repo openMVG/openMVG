@@ -20,9 +20,9 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
-#include  "openMVG/vector_graphics/svgDrawer.hpp"
 
 int modifiedMod
 (
