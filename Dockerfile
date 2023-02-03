@@ -1,5 +1,5 @@
-# Use Ubuntu 20.04 (will be supported until April 2025)
-FROM ubuntu:focal
+# Use Ubuntu 22.04 (will be supported until April 2027)
+FROM ubuntu:jammy
 
 # Add openMVG binaries to path
 ENV PATH $PATH:/opt/openMVG_Build/install/bin
