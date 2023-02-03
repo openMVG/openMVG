@@ -68,9 +68,7 @@ add_subdirectory(vectorGraphics)
 
 # Add ceres-solver (A Nonlinear Least Squares Minimizer)
 if (DEFINED OpenMVG_USE_INTERNAL_CERES)
-  add_subdirectory(cxsparse)
   add_subdirectory(ceres-solver)
-  set_property(TARGET openMVG_cxsparse PROPERTY FOLDER OpenMVG/3rdParty/ceres)
   set_property(TARGET openMVG_ceres PROPERTY FOLDER OpenMVG/3rdParty/ceres)
 endif()
 

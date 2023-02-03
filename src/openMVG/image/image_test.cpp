@@ -14,7 +14,6 @@
 
 #include <iostream>
 
-using namespace std;
 using namespace openMVG;
 using namespace openMVG::image;
 
@@ -26,12 +25,12 @@ TEST(Image, Basis)
   imaGray(2,2) = 2;
   imaGray(5,0) = 2;
 
-  cout << imaGray << endl << endl;
+  std::cout << imaGray << std::endl << std::endl;
   //-- Get raw ptr to image data :
   const unsigned char * ptr = imaGray.data();
   ((unsigned char*)ptr)[0] = 2;
-  fill(((unsigned char*)ptr+9*10),((unsigned char*)ptr+10*10),2);
-  cout << "After" << endl << imaGray;
+  std::fill(((unsigned char*)ptr+9*10),((unsigned char*)ptr+10*10),2);
+  std::cout << "After" << std::endl << imaGray;
 
   // Construction by re-copy
   Image<unsigned char> imageGray2(imaGray);

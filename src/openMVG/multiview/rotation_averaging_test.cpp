@@ -61,8 +61,6 @@ TEST ( rotation_averaging, ClosestSVDRotationMatrixNoisy )
 //     1
 TEST ( rotation_averaging, RotationLeastSquare_3_Camera)
 {
-  using namespace std;
-
   //--
   // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation
@@ -162,8 +160,6 @@ TEST ( rotation_averaging, RefineRotationsL2_CompleteGraph)
 
 TEST ( rotation_averaging, RefineRotationsAvgL1IRLS_SimpleTriplet)
 {
-  using namespace std;
-
   //--
   // Setup 3 camera that have a relative orientation of 120 degree
   // Set Z axis as UP Vector for the rotation

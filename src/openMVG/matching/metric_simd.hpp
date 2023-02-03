@@ -17,7 +17,9 @@
 #include <numeric>
 
 #include <cstdint>
+#if defined(OPENMVG_USE_AVX2) || defined(OPENMVG_USE_AVX)
 #include <immintrin.h>
+#endif
 
 namespace openMVG {
 namespace matching {

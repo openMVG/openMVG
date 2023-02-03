@@ -39,14 +39,13 @@ using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::retrieval;
 
-using namespace std;
 using namespace svg;
 
 // TODO: these two output function could be factored and put somewhere else
 // Display the image retrieval matrix
 template <typename Order>
 void saveRetrievalMatrix(
-    const string &filename, const SfM_Data &sfm_data,
+    const std::string &filename, const SfM_Data &sfm_data,
     const IndexedPairwiseSimilarity<Order> &result_ordered_by_similarity) {
   const size_t num_neighbors =
       result_ordered_by_similarity.begin()->second.size();
@@ -82,7 +81,7 @@ void saveRetrievalMatrix(
     ++y_offset;
   }
 
-  ofstream svg_file(filename.c_str());
+  std::ofstream svg_file(filename.c_str());
   svg_file << svg_stream.closeSvgFile().str();
   svg_file.close();
 }
@@ -333,7 +332,7 @@ int main(int argc, char **argv) {
           << std::endl;
 
   VLADBase::DescriptorVector codebook;
-  codebook = vlad_builder->BuildCodebook(descriptor_array);
+  codebook = vlad_builder->BuildCodebook(descriptor_array, codebook_size);
 
   // Freeing some memory
   descriptor_array.clear();

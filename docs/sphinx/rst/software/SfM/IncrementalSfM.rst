@@ -1,7 +1,5 @@
-
-*************************************
-openMVG_main_IncrementalSfM
-*************************************
+openMVG_main_SfM --sfm_engine "INCREMENTAL"
+*******************************************
 
 The [ACSfM]_ SfM is an evolution of the implementation used for the paper "Adaptive Structure from Motion with a contrario model estimation"  published at ACCV 2012.
 

@@ -36,52 +36,52 @@ static void gauss_newton_refineL(Vec3 &L,
   // TODO(RJ:) I have hardcoded the number of iterations here, it's a template parameter in the original implementation
   for (int i = 0; i < 5; ++i)
   {
-    double l1 = L(0);
-    double l2 = L(1);
-    double l3 = L(2);
-    double r1 = l1 * l1 + l2 * l2 + b12 * l1 * l2 - a12;
-    double r2 = l1 * l1 + l3 * l3 + b13 * l1 * l3 - a13;
-    double r3 = l2 * l2 + l3 * l3 + b23 * l2 * l3 - a23;
+    const double l1 = L(0);
+    const double l2 = L(1);
+    const double l3 = L(2);
+    const double r1 = l1 * l1 + l2 * l2 + b12 * l1 * l2 - a12;
+    const double r2 = l1 * l1 + l3 * l3 + b13 * l1 * l3 - a13;
+    const double r3 = l2 * l2 + l3 * l3 + b23 * l2 * l3 - a23;
 
     if (std::abs(r1) + std::abs(r2) + std::abs(r3) < 1e-10)
       break;
 
-    double dr1dl1 = 2.0 * l1 + b12 * l2;
-    double dr1dl2 = 2.0 * l2 + b12 * l1;
+    const double dr1dl1 = 2.0 * l1 + b12 * l2;
+    const double dr1dl2 = 2.0 * l2 + b12 * l1;
 
-    double dr2dl1 = 2.0 * l1 + b13 * l3;
-    double dr2dl3 = 2.0 * l3 + b13 * l1;
+    const double dr2dl1 = 2.0 * l1 + b13 * l3;
+    const double dr2dl3 = 2.0 * l3 + b13 * l1;
 
-    double dr3dl2 = 2.0 * l2 + b23 * l3;
-    double dr3dl3 = 2.0 * l3 + b23 * l2;
+    const double dr3dl2 = 2.0 * l2 + b23 * l3;
+    const double dr3dl3 = 2.0 * l3 + b23 * l2;
 
-    Vec3 r(r1, r2, r3);
+    const Vec3 r(r1, r2, r3);
 
     // or skip the inverse and make it explicit...
     {
-      double v0 = dr1dl1;
-      double v1 = dr1dl2;
-      double v3 = dr2dl1;
-      double v5 = dr2dl3;
-      double v7 = dr3dl2;
-      double v8 = dr3dl3;
-      double det = 1.0 / (-v0 * v5 * v7 - v1 * v3 * v8);
+      const double v0 = dr1dl1;
+      const double v1 = dr1dl2;
+      const double v3 = dr2dl1;
+      const double v5 = dr2dl3;
+      const double v7 = dr3dl2;
+      const double v8 = dr3dl3;
+      const double det = 1.0 / (-v0 * v5 * v7 - v1 * v3 * v8);
 
       Mat3 Ji;
       Ji << -v5 * v7, -v1 * v8, v1 * v5,
             -v3 * v8, v0 * v8, -v0 * v5,
              v3 * v7, -v0 * v7, -v1 * v3;
-      Vec3 L1 = Vec3(L) - det * (Ji * r);
+      const Vec3 L1 = Vec3(L) - det * (Ji * r);
       //%l=l - g*H\G;%inv(H)*G
       //L=L - g*J\r;
       //% works because the size is ok!
       {
-        double l1 = L1(0);
-        double l2 = L1(1);
-        double l3 = L1(2);
-        double r11 = l1 * l1 + l2 * l2 + b12 * l1 * l2 - a12;
-        double r12 = l1 * l1 + l3 * l3 + b13 * l1 * l3 - a13;
-        double r13 = l2 * l2 + l3 * l3 + b23 * l2 * l3 - a23;
+        const double l1 = L1(0);
+        const double l2 = L1(1);
+        const double l3 = L1(2);
+        const double r11 = l1 * l1 + l2 * l2 + b12 * l1 * l2 - a12;
+        const double r12 = l1 * l1 + l3 * l3 + b13 * l1 * l3 - a13;
+        const double r13 = l2 * l2 + l3 * l3 + b23 * l2 * l3 - a23;
         if (std::abs(r11) + std::abs(r12) + std::abs(r13) > std::abs(r1) + std::abs(r2) + std::abs(r3))
         {
           break;
@@ -93,14 +93,14 @@ static void gauss_newton_refineL(Vec3 &L,
   }
 };
 
-static inline bool root2real(const double & b, const double & c, double & r1, double & r2)
+static inline bool root2real(const double b, const double c, double & r1, double & r2)
 {
-  double v = b * b -4.0 * c;
-  if (v < 0.0) {
-      r1 = r2 = 0.5 * b;
-      return false;
+  const double v = b * b -4.0 * c;
+  if (v <= 0.0) {
+      r1 = r2 = -0.5 * b;
+      return v >= 0.0;
   }
-  double y = std::sqrt(v);
+  const double y = std::sqrt(v);
   if (b < 0.0) {
       r1 = 0.5 * (-b + y);
       r2 = 0.5 * (-b - y);
@@ -146,8 +146,8 @@ static double cubick(const double &b, const double &c, const double &d)
   {
     // h has two stationary points, compute them
     // double t1 = t - std::sqrt(diff);
-    double v = std::sqrt(b * b - 3.0 * c);
-    double t1 = (-b - v) / (3.0);
+    const double v = std::sqrt(b * b - 3.0 * c);
+    const double t1 = (-b - v) / (3.0);
 
     // Check if h(t1) > 0, in this case make a 2-order approx of h around t1
     double k = ((t1 + b) * t1 + c) * t1 + d;
@@ -161,7 +161,7 @@ static double cubick(const double &b, const double &c, const double &d)
     }
     else
     {
-      double t2 = (-b + v) / 3.0;
+      const double t2 = (-b + v) / 3.0;
       k = ((t2 + b) * t2 + c) * t2 + d;
       // Find rightmost root of 0.5 * (r0 - t2)^2 * (6 * t2 +2 * b) + k1 = 0
       r0 = t2 + std::sqrt(-k / (3.0 * t2 + b));
@@ -182,15 +182,16 @@ static double cubick(const double &b, const double &c, const double &d)
   // Do ITER Newton-Raphson iterations
   // Break if position of root changes less than 1e-13
   // double starterr=std::abs(r0*(r0*(r0 + b) + c) + d);
-  // TODO(RJ:) I have hardcoded the number of iteration here, it's a hardcoded in a define in the orginal implementation
+  
+  // TODO(RJ:) I have hardcoded the number of iteration here, it's hardcoded in a macro definition in the orginal implementation
   // according to the author, increasing it could lead to a better solution (more robust)
   for (unsigned int cnt = 0; cnt < 50; ++cnt)
   {
-    double fx = (((r0 + b) * r0 + c) * r0 + d);
+    const double fx = (((r0 + b) * r0 + c) * r0 + d);
 
     if ((cnt < 7 || std::abs(fx) > 1e-13))
     {
-      double fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
+      const double fpx = ((3.0 * r0 + 2.0 * b) * r0 + c);
       r0 -= fx / fpx;
     }
     else
@@ -259,8 +260,8 @@ static void eigwithknown0(const Mat3 &x, Mat3 &E, Vec3 &L)
   // v2=(v2-v2.dot(v3)*v3);v2.normalize();
   // v2=(v2-v1.dot(v2)*v2);v2.normalize();
   E << v1(0), v2(0), v3(0),
-      v1(1), v2(1), v3(1),
-      v1(2), v2(2), v3(2);
+       v1(1), v2(1), v3(1),
+       v1(2), v2(2), v3(2);
 };
 
 /**
@@ -282,42 +283,38 @@ bool computePosesNordberg(
     std::vector<std::tuple<Mat3, Vec3>> &rotation_translation_solutions)
 {
   // Extraction of 3D points vectors
-  Vec3 P1 = X.col(0);
-  Vec3 P2 = X.col(1);
-  Vec3 P3 = X.col(2);
+  const Vec3 & P1 = X.col(0);
+  const Vec3 & P2 = X.col(1);
+  const Vec3 & P3 = X.col(2);
 
   // Extraction of feature vectors
-  Vec3 f1 = bearing_vectors.col(0);
-  Vec3 f2 = bearing_vectors.col(1);
-  Vec3 f3 = bearing_vectors.col(2);
+  const Vec3 & f1 = bearing_vectors.col(0);
+  const Vec3 & f2 = bearing_vectors.col(1);
+  const Vec3 & f3 = bearing_vectors.col(2);
 
-  f1.normalize();
-  f2.normalize();
-  f3.normalize();
-
-  double b12 = -2.0 * (f1.dot(f2));
-  double b13 = -2.0 * (f1.dot(f3));
-  double b23 = -2.0 * (f2.dot(f3));
+  const double b12 = -2.0 * (f1.dot(f2));
+  const double b13 = -2.0 * (f1.dot(f3));
+  const double b23 = -2.0 * (f2.dot(f3));
 
   // implicit creation of Vec3, can be removed
-  Vec3 d12 = P1 - P2;
-  Vec3 d13 = P1 - P3;
-  Vec3 d23 = P2 - P3;
-  Vec3 d12xd13(d12.cross(d13));
+  const Vec3 d12 = P1 - P2;
+  const Vec3 d13 = P1 - P3;
+  const Vec3 d23 = P2 - P3;
+  const Vec3 d12xd13(d12.cross(d13));
 
-  double a12 = d12.squaredNorm();
-  double a13 = d13.squaredNorm();
-  double a23 = d23.squaredNorm();
+  const double a12 = d12.squaredNorm();
+  const double a13 = d13.squaredNorm();
+  const double a23 = d23.squaredNorm();
 
   //a*g^3 + b*g^2 + c*g + d = 0
-  double c31 = -0.5 * b13;
-  double c23 = -0.5 * b23;
-  double c12 = -0.5 * b12;
-  double blob = (c12 * c23 * c31 - 1.0);
+  const double c31 = -0.5 * b13;
+  const double c23 = -0.5 * b23;
+  const double c12 = -0.5 * b12;
+  const double blob = (c12 * c23 * c31 - 1.0);
 
-  double s31_squared = 1.0 - c31 * c31;
-  double s23_squared = 1.0 - c23 * c23;
-  double s12_squared = 1.0 - c12 * c12;
+  const double s31_squared = 1.0 - c31 * c31;
+  const double s23_squared = 1.0 - c23 * c23;
+  const double s12_squared = 1.0 - c12 * c12;
 
   double p3 = a13 * (a23 * s31_squared - a13 * s23_squared);
   double p2 = 2.0 * blob * a23 * a13 + a13 * (2.0 * a12 + a13) * s23_squared + a23 * (a23 - a12) * s31_squared;
@@ -327,22 +324,15 @@ bool computePosesNordberg(
   // double g = 0.0;
 
   //p3 is det(D2) so its definietly >0 or its a degenerate case
-  //if (std::abs(p3) >= std::abs(p0) || true)
-  //{
   p3 = 1.0 / p3;
   p2 *= p3;
   p1 *= p3;
   p0 *= p3;
 
   // get sharpest real root of above...
-  double g = cubick(p2, p1, p0);
-  //}
-  // else
-  //{
+  const double g = cubick(p2, p1, p0);
 
-    // lower numerical performance
-    //g = 1.0 / (cubick(p1 / p0, p2 / p0, p3 / p0));
-  //}
+
 
   // we can swap D1,D2 and the coeffs!
   // oki, Ds are:
@@ -354,12 +344,12 @@ bool computePosesNordberg(
   //[ -(a23*b13*g)/2, (a13*b23*g)/2 - (a12*b23)/2,         g*(a13 - a23) - a12]
 
   // gain 13 ns...
-  double A00 = a23 * (1.0 - g);
-  double A01 = (a23 * b12) * 0.5;
-  double A02 = (a23 * b13 * g) * (-0.5);
-  double A11 = a23 - a12 + a13 * g;
-  double A12 = b23 * (a13 * g - a12) * 0.5;
-  double A22 = g * (a13 - a23) - a12;
+  const double A00 = a23 * (1.0 - g);
+  const double A01 = (a23 * b12) * 0.5;
+  const double A02 = (a23 * b13 * g) * (-0.5);
+  const double A11 = a23 - a12 + a13 * g;
+  const double A12 = b23 * (a13 * g - a12) * 0.5;
+  const double A22 = g * (a13 - a23) - a12;
 
   Mat3 A;
   A << A00, A01, A02,
@@ -378,104 +368,68 @@ bool computePosesNordberg(
   std::array<Vec3, 4> Ls;
 
   // use the t=Vl with t2,st2,t3 and solve for t3 in t2
-  { //+v
-    double s = v;
-
-    double w2 = 1.0 / (s * V(0,1) - V(0,0));
-    double w0 = (V(1,0) - s * V(1,1)) * w2;
-    double w1 = (V(2,0) - s * V(2,1)) * w2;
-
-    double a = 1.0 / ((a13 - a12) * w1 * w1 - a12 * b13 * w1 - a12);
-    double b = (a13 * b12 * w1 - a12 * b13 * w0 - 2.0 * w0 * w1 * (a12 - a13)) * a;
-    double c = ((a13 - a12) * w0 * w0 + a13 * b12 * w0 + a13) * a;
-
-    if (b * b - 4.0 * c >= 0.0)
+    std::array<double, 2> ss = {v,-v};
+    for(const double s : ss)
     {
-      double tau1, tau2;
-      root2real(b, c, tau1, tau2);
-      if (tau1 > 0.0)
-      {
-        double tau = tau1;
-        double d = a23 / (tau * (b23 + tau) + 1.0);
-        if(d > 0.0) {
-          double l2 = std::sqrt(d);
-          double l3 = tau * l2;
+        // u = V(:, 1) - sV(:,2)
+        const Vec3 U = V.col(0) - s * V.col(1);
+        const double u1 = U(0);
+        const double u2 = U(1);
+        const double u3 = U(2);
 
-          double l1 = w0 * l2 + w1 * l3;
-          if (l1 >= 0.0)
+        // we are computing lambda using a linear relation
+        // u1*l1 + u2*l2 + u3*l3=0
+        // li>0, implies all three ui=0 is degenerate...
+        // if two are zero the third must be
+        // hence at most one can be zero.
+        // divide by the largest for best numerics,
+        // simple version, use the bigger of u1, u2, one will always be non-zero
+        if(std::abs(u1)<std::abs(u2))
+        {// solve for l2
+          const double a = (a23 - a12) * u3*u3 - a12 * u2*u2 + a12 * b23 *u2 * u3;
+          const double b = (2.* a23 * u1 * u3 - 2. * a12 * u1*u3 + a12 * b23 * u1 * u2 - a23 * b12 * u2 *u3)/a;
+          const double c = (a23 * u1*u1 - a12 * u1*u1 + a23 * u2*u2 - a23 * b12 *u1 *u2)/a;
+
+          std::array<double, 2> taus;
+          if (!root2real(b, c, taus[0], taus[1])) continue;
+          for (const double tau : taus)
           {
-            Ls[valid] = Vec3(l1, l2, l3);
+            if (tau<=0) continue;
+            //(tau^2 + b13*tau + 1)*l1^2 = a13
+            //positive only
+            const double l1 = std::sqrt(a13 / (tau *(tau + b13) + 1.));
+            const double l3 = tau * l1;
+            const double l2 = -(u1 * l1 + u3 * l3)/u2;
+            if (l2 <= 0.) continue;
+            Ls[valid] = {l1,l2,l3}; // Vec3 list init
             ++valid;
           }
         }
-      }
-      if (tau2 > 0.0)
-      {
-        double tau = tau2;
-        double d = a23 / (tau * (b23 + tau) + 1.0);
-        if(d > 0.0) {
-          double l2 = std::sqrt(d);
-          double l3 = tau * l2;
-          double l1 = w0 * l2 + w1 * l3;
-          if (l1 >= 0.0)
+        else
+        { // solve for l1
+          const double w2 = 1./( -u1);
+          const double w0 = u2*w2;
+          const double w1 = u3*w2;
+
+          const double a = 1.0 / ( (a13 - a12) *w1*w1 - a12 * b13 *w1 - a12);
+          const double b = (a13 * b12 * w1 - a12 * b13 * w0 - 2. * w0 * w1 * (a12 - a13)) * a;
+          const double c = ((a13 - a12) * w0 * w0 + a13 * b12 * w0 + a13) * a;
+
+          std::array<double, 2> taus;
+          if (!root2real(b, c, taus[0], taus[1])) continue;
+          for (const double tau : taus)
           {
-            Ls[valid] = Vec3(l1, l2, l3);
-            ++valid;
+              if(tau<=0.) continue;
+              const double d = a23 / (tau * (b23 + tau) + 1.0);
+              const double l2 = std::sqrt(d);
+              const double l3 = tau * l2;
+              const double l1 = w0 * l2 + w1 * l3;
+              if (l1 <= 0.) continue;
+              Ls[valid] = {l1,l2,l3}; // Vec3 list init
+              ++valid;
           }
         }
-      }
     }
-  }
-
-  { //-v
-    double s = -v;
-    double w2 = 1.0 / (s * V(0, 1) - V(0, 0));
-    double w0 = (V(1, 0) - s * V(1, 1)) * w2;
-    double w1 = (V(2, 0) - s * V(2, 1)) * w2;
-
-    double a = 1.0 / ((a13 - a12) * w1 * w1 - a12 * b13 * w1 - a12);
-    double b = (a13 * b12 * w1 - a12 * b13 * w0 - 2.0 * w0 * w1 * (a12 - a13)) * a;
-    double c = ((a13 - a12) * w0 * w0 + a13 * b12 * w0 + a13) * a;
-
-    if (b * b - 4.0 * c >= 0)
-    {
-      double tau1, tau2;
-
-      root2real(b, c, tau1, tau2);
-      if (tau1 > 0)
-      {
-        double tau = tau1;
-        double d = a23 / (tau * (b23 + tau) + 1.0);
-        if(d > 0.0) {
-          double l2 = std::sqrt(d);
-          double l3 = tau * l2;
-
-          double l1 = w0 * l2 + w1 * l3;
-          if (l1 >= 0)
-          {
-            Ls[valid] = Vec3(l1, l2, l3);
-            ++valid;
-          }
-        }
-      }
-      if (tau2 > 0)
-      {
-        double tau = tau2;
-        double d = a23 / (tau * (b23 + tau) + 1.0);
-        if(d > 0.0) {
-          double l2 = std::sqrt(d);
-          double l3 = tau * l2;
-
-          double l1 = w0 * l2 + w1 * l3;
-          if (l1 >= 0)
-          {
-            Ls[valid] = Vec3(l1, l2, l3);
-            ++valid;
-          }
-        }
-      }
-    }
-  }
 
   // if constexpr (refinement_iterations>0)
   for (int i = 0; i < valid; ++i)
@@ -510,7 +464,7 @@ bool computePosesNordberg(
             yd1(1), yd2(1), yd1xd2(1),
             yd1(2), yd2(2), yd1xd2(2);
 
-    Mat3 Rs = Ymat * Xmat;
+    const Mat3 Rs = Ymat * Xmat;
     rotation_translation_solutions.emplace_back(Rs, ry1 - Rs * P1);
   }
 

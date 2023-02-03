@@ -44,7 +44,6 @@ using namespace openMVG::features;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace svg;
-using namespace std;
 
 //- Helper function
 // Display a visual report of the inliers
@@ -65,9 +64,9 @@ void display_info
 int main() {
 
   Image<RGBColor> image;
-  const string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string jpg_filenameL = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  const string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string jpg_filenameR = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
@@ -94,7 +93,7 @@ int main() {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -335,7 +334,7 @@ void display_info
 
   //Show homography validated point and compute residuals
   std::vector<double> vec_residuals(vec_inliers.size(), 0.0);
-  svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
+  svgDrawer svgStream( imageL.Width() + imageR.Width(), std::max(imageL.Height(), imageR.Height()));
   svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
   svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
   for ( size_t i = 0; i < vec_inliers.size(); ++i)  {
@@ -353,7 +352,7 @@ void display_info
   }
   std::ostringstream os;
   os << sMethod << "_robust_fitting.svg";
-  ofstream svgFile( os.str().c_str() );
+  std::ofstream svgFile( os.str().c_str() );
   svgFile << svgStream.closeSvgFile().str();
   svgFile.close();
 

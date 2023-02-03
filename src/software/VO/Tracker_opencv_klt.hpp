@@ -80,7 +80,7 @@ struct Tracker_opencv_KLT : public Abstract_Tracker
     std::vector<cv::KeyPoint> m_nextKeypoints;
 
     cv::Ptr<cv::FeatureDetector> m_detector = cv::GFTTDetector::create(count);
-    if (m_detector == NULL)
+    if (!m_detector)
       return false;
 
     m_detector->detect(current_img, m_nextKeypoints);

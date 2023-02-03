@@ -82,6 +82,19 @@ endif (NOT EXISTS ${CURRENT_ROOT_INSTALL_DIR}/include/openMVG/version.hpp)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# Record state of build time dependencies
+set(OpenMVG_USE_INTERNAL_CEREAL "@OpenMVG_USE_INTERNAL_CEREAL@")
+set(OpenMVG_USE_OPENMP "@OpenMVG_USE_OPENMP@")
+
+# Find transitive dependencies if required
+include(CMakeFindDependencyMacro)
+if (OpenMVG_USE_OPENMP)
+  find_dependency(OpenMP REQUIRED)
+endif()
+if (NOT OpenMVG_USE_INTERNAL_CEREAL)
+  find_dependency(cereal REQUIRED)
+endif()
+
 # Import exported OpenMVG targets
 include(${CURRENT_CONFIG_INSTALL_DIR}/OpenMVGTargets.cmake)
 

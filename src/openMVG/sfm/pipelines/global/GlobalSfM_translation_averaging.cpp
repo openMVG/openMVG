@@ -32,6 +32,10 @@
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 
+#ifdef USE_PATENTED_LIGT
+#include "openMVG/multiview/LiGT/LiGT_algorithm_converter.hpp"
+#endif
+
 #include <vector>
 
 namespace openMVG{
@@ -60,10 +64,49 @@ bool GlobalSfM_Translation_AveragingSolver::Run
     map_globalR,
     tripletWise_matches);
 
-  const bool b_translation = Translation_averaging(
-    eTranslationAveragingMethod,
-    sfm_data,
-    map_globalR);
+  bool b_translation = false;
+
+  if (eTranslationAveragingMethod == TRANSLATION_LIGT){
+  #ifdef USE_PATENTED_LIGT
+    // ====================  Add LiGT's module ===================
+    // [Note]: Since the function Translation_averaging() is not provided features information,
+    // we add our LiGT's module in this place.
+
+    OPENMVG_LOG_INFO << "Solving translation using LiGT algorithm";
+
+    openMVG::system::Timer timer;
+    LiGT::LiGTBuilder problem(features_provider,
+                              tripletWise_matches,
+                              sfm_data,
+                              map_globalR);
+    const double duration = timer.elapsedMs();
+    OPENMVG_LOG_INFO << ">> time to setup LiGT inputs: "
+      << duration
+      << " ms"
+      << "\n===============================================================";
+
+    b_translation = problem.Solution();
+
+    if (b_translation)
+    {
+      const LiGT::Poses poses = problem.GetPoses();
+
+      // - Update the view poses according the found camera translations
+      for ( auto& pose : poses)
+      {
+        sfm_data.poses[pose.first] = {pose.second.rotation(),pose.second.center()};
+      }
+    }
+  #endif
+  }
+  else{
+    b_translation = Translation_averaging(
+                eTranslationAveragingMethod,
+                sfm_data,
+                map_globalR);
+  }
+
+  // =======================================================
 
   // Filter matches to keep only them link to view that have valid poses
   // (necessary since multiple components exists before translation averaging)
@@ -71,7 +114,7 @@ bool GlobalSfM_Translation_AveragingSolver::Run
   for (const auto & view : sfm_data.GetViews())
   {
     if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
-      valid_view_ids.insert(view.first);
+        valid_view_ids.insert(view.first);
   }
   KeepOnlyReferencedElement(valid_view_ids, tripletWise_matches);
 

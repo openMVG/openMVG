@@ -320,7 +320,7 @@ protected:
       {
         Keypoint kp = key;
         kp.theta = principal_orientations[n];
-        kps.emplace_back(kp);
+        kps.push_back(std::move(kp));
       }
     }
     keypoints = std::move(kps);

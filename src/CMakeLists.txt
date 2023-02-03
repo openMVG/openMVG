@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 
 project(openMVG C CXX)
 
@@ -15,10 +15,14 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
   cmake_policy(SET CMP0100 NEW)
 endif()
 
+include(GNUInstallDirs)
+
 # guard against in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
+
+set(CMAKE_FIND_FRAMEWORK LAST)
 
 # ==============================================================================
 # OpenMVG build options
@@ -44,6 +48,17 @@ option(OpenMVG_USE_OPENCV "Build or not opencv+openMVG samples programs" OFF)
 # Enable this to be able to use OpenCV SIFT in main_ComputeFeatures_OpenCV.
 # ==============================================================================
 option(OpenMVG_USE_OCVSIFT "Add or not OpenCV SIFT in available features" OFF)
+
+# ==============================================================================
+# Since the LiGT algorithm has a patent protection.
+# See header files in openMVG/multiview/LiGT for more informations.
+#
+# [Conditions of Use] The LiGT algorithm is distributed under the License of
+# Attribution-Share Alike 4.0 International (https://creativecommons.org/licenses/by-sa/4.0/).
+#
+# Enable this to be able to use LiGT in main_SfM.
+# ==============================================================================
+option(OpenMVG_USE_LIGT "Add or not LiGT in available" ON)
 
 # ==============================================================================
 # OpenMVG version
@@ -89,12 +104,6 @@ else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
-# For both regular Clang and AppleClang
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  message("clang detected: using std::unordered_map for Hash_Map")
-  register_definitions(-DOPENMVG_STD_UNORDERED_MAP)
-endif()
-
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -137,17 +146,29 @@ endif (CXX11_COMPILER)
 if (OpenMVG_USE_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" ON)
     register_definitions(-DOPENMVG_USE_OPENMP)
-    if (NOT MSVC)
-      if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # for those using the clang with OpenMP support
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES omp)
-      else()
-        list(APPEND OPENMVG_LIBRARY_DEPENDENCIES gomp)
+    include_directories(${OpenMP_C_INCLUDE_DIR})
+    if(NOT TARGET OpenMP::OpenMP_CXX)
+      find_package(Threads REQUIRED)
+      add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+      # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+      set_property(TARGET OpenMP::OpenMP_CXX
+                   PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+    endif()
+    if( ${OpenMP_CXX_INCLUDE_DIRS} )
+      include_directories( ${OpenMP_CXX_INCLUDE_DIRS} )
+    else()
+      # Macports fix
+      #   find_package(OpenMP) is able to find the openMP dylib but fails to find the include dir,
+      #   we force it by hand.
+      if( APPLE AND EXISTS "/opt/local/lib/libomp" AND EXISTS "/opt/local/include/libomp" )
+        set_property( TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_INCLUDE_DIRECTORIES "/opt/local/include/libomp" )
+        include_directories( "/opt/local/include/libomp")
       endif()
-    endif (NOT MSVC)
+    endif()
+    list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   endif (OPENMP_FOUND)
 else (OpenMVG_USE_OPENMP)
     option(OpenMVG_USE_OPENMP "Use OpenMP for parallelization" OFF)
@@ -234,9 +255,10 @@ ENDMACRO(UNIT_TEST)
 # ==============================================================================
 # - external by default
 # - internal if cereal not found
+# - as of cereal:1.3.1 target requires component
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
-if (NOT TARGET cereal)
+if (NOT cereal_FOUND)
   add_library(cereal INTERFACE)
   target_include_directories(cereal
     INTERFACE
@@ -244,8 +266,12 @@ if (NOT TARGET cereal)
       $<INSTALL_INTERFACE:include/openMVG_dependencies/cereal/include>
   )
   install(TARGETS cereal EXPORT openMVG-targets)
-
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
+endif()
+if (TARGET cereal::cereal)
+  set(cereal_TARGET "cereal::cereal")
+else()
+  set(cereal_TARGET "cereal")
 endif()
 
 # ==============================================================================
@@ -263,6 +289,7 @@ if (NOT Eigen3_FOUND)
 else()
   set(EIGEN_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endif()
+add_definitions(-DEIGEN_MPL2_ONLY)
 
 # ==============================================================================
 # Ceres
@@ -291,8 +318,15 @@ endif()
 if (NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
   set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
   set(OpenMVG_USE_INTERNAL_FLANN ON)
+  find_package(Flann QUIET)
+else()
+  find_package(Flann QUIET CONFIG)
+  if (TARGET flann::flann)
+    set(FLANN_LIBRARIES "flann::flann;flann::flann_cpp")
+  else()
+    find_package(Flann QUIET)
+  endif()
 endif()
-find_package(Flann QUIET)
 if (NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
   set(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
 endif()
@@ -391,6 +425,16 @@ endif()
 
 
 # ==============================================================================
+# LiGT
+# ==============================================================================
+# - enabled only if OpenMVG_USE_LIGT is set to ON
+# ==============================================================================
+if (OpenMVG_USE_LIGT)
+    add_definitions(-DUSE_PATENTED_LIGT)
+endif()
+
+
+# ==============================================================================
 # Third-party libraries:
 # ==============================================================================
 add_subdirectory(third_party)
@@ -478,6 +522,7 @@ message("** Enable code coverage generation: " ${OpenMVG_BUILD_COVERAGE})
 message("** Enable OpenMP parallelization: " ${OpenMVG_USE_OPENMP})
 message("** Build OpenCV+OpenMVG samples programs: " ${OpenMVG_USE_OPENCV})
 message("** Use OpenCV SIFT features: " ${OpenMVG_USE_OCVSIFT})
+message("** Use LiGT for global translation estimation: " ${OpenMVG_USE_LIGT})
 
 message("\n")
 
@@ -553,11 +598,10 @@ message("\n")
 # INSTALL RULES
 # ==============================================================================
 
-install(EXPORT openMVG-targets DESTINATION lib)
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::
-  DESTINATION share/openMVG/cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/openMVG/cmake
 )
 
 
@@ -574,7 +618,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
-        DESTINATION share/openMVG/cmake)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/openMVG/cmake)
 
 # ==============================================================================
 # UNINSTALL RULES

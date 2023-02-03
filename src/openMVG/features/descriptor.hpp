@@ -152,7 +152,7 @@ inline bool loadDescsFromFile(
 
   typename DescriptorsT::value_type value;
   while (fileIn >> value) {
-    vec_desc.emplace_back(value);
+    vec_desc.push_back(std::move(value));
   }
 
   const bool bOk = !fileIn.bad();

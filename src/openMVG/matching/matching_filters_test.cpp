@@ -14,18 +14,17 @@
 
 using namespace openMVG;
 using namespace openMVG::matching;
-using namespace std;
 
 /// Sorted vector intersection (increasing order)
 TEST( matching, setIntersection)
 {
   const int tab0[] = {0, 1, 2, 3, 4, 5, 6, 7};
   const int tab1[] = {0, 1, 8, 3, 4, 9, 6, 7};
-  const set<int> vec_0(tab0, tab0+8);
-  const set<int> vec_1(tab1, tab1+8);
+  const std::set<int> vec_0(tab0, tab0+8);
+  const std::set<int> vec_1(tab1, tab1+8);
   /// Array must be sorted
 
-  vector<int> vec_intersect;
+  std::vector<int> vec_intersect;
   IntersectMatches(vec_0.begin(), vec_0.end(),
     vec_1.begin(), vec_1.end(),
     vec_intersect);

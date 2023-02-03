@@ -19,7 +19,6 @@ PointFeature::PointFeature(float x, float y): coords_(x, y) {}
 
 float PointFeature::x() const { return coords_(0); }
 float PointFeature::y() const { return coords_(1); }
-const Vec2f & PointFeature::coords() const { return coords_;}
 
 float& PointFeature::x() { return coords_(0); }
 float& PointFeature::y() { return coords_(1); }

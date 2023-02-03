@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 using namespace svg;
 
 // Convert spherical panorama to rectilinear images

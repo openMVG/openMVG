@@ -1347,6 +1347,7 @@ DJI X5R;17.3
 DJI Zenmuse X4S;13.2
 DJI Zenmuse X5S;17.3
 DJI Zenmuse X7;23.5
+DJI FC3582;9.7
 DMC-FZ72;6.17
 DMC-TZ3;6.08
 Doogee BL12000 Pro;4.74
@@ -2009,6 +2010,9 @@ GoPro Fusion;6.17
 GoPro Hero 2018;6.17
 GoPro Hero3-Silver Edition;5.37
 GoPro HERO7 Black;6.17
+GoPro HERO8 Black;6.17
+GoPro HERO9 Black;6.17
+GoPro HERO10 Black;6.17
 Gretel A6;2.8
 Gretel A7;4.54
 Gretel A9;4.54

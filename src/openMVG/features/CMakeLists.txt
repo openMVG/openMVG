@@ -31,13 +31,13 @@ target_include_directories(openMVG_features
 )
 target_link_libraries(openMVG_features
   PRIVATE openMVG_fast ${STLPLUS_LIBRARY}
-  PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES} cereal)
+  PUBLIC ${OPENMVG_LIBRARY_DEPENDENCIES} ${cereal_TARGET})
 if (MSVC)
   set_target_properties(openMVG_features PROPERTIES COMPILE_FLAGS "/bigobj")
   target_compile_options(openMVG_features PUBLIC "-D_USE_MATH_DEFINES")
 endif (MSVC)
 set_target_properties(openMVG_features PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
-install(TARGETS openMVG_features DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_features DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 set_property(TARGET openMVG_features PROPERTY FOLDER OpenMVG/OpenMVG)
 
 UNIT_TEST(openMVG features "openMVG_features")

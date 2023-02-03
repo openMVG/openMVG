@@ -35,7 +35,6 @@ using namespace openMVG;
 using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::matching_image_collection;
-using namespace std;
 
 /// Compute corresponding features between a series of views:
 /// - Load view images description (regions: features & descriptors)
@@ -58,7 +57,7 @@ int main( int argc, char** argv )
 
   //required
   cmd.add( make_option( 'i', sSfM_Data_Filename, "input_file" ) );
-  cmd.add( make_option( 'o', sOutputMatchesFilename, "out_dir" ) );
+  cmd.add( make_option( 'o', sOutputMatchesFilename, "output_file" ) );
   cmd.add( make_option( 'p', sPredefinedPairList, "pair_list" ) );
   // Options
   cmd.add( make_option( 'r', fDistRatio, "ratio" ) );

@@ -60,7 +60,6 @@ Pair_Set BuildPairsFromFrustumsIntersections(
 
 int main(int argc, char **argv)
 {
-  using namespace std;
   OPENMVG_LOG_INFO
     << "\n-----------------------------------------------------------"
     << "\nFrustum filtering:"
