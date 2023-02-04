@@ -1,12 +1,14 @@
-project(Eigen3)
+# cmake_minimum_require must be the first command of the file
+cmake_minimum_required(VERSION 3.5.0)
 
-cmake_minimum_required(VERSION 2.8.5)
+project(Eigen3)
 
 # guard against in-source builds
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt. ")
 endif()
+
 
 # Alias Eigen_*_DIR to Eigen3_*_DIR:
 
@@ -17,13 +19,6 @@ set(Eigen_BINARY_DIR ${Eigen3_BINARY_DIR})
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif()
-
-string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-if(    NOT cmake_build_type_tolower STREQUAL "debug"
-   AND NOT cmake_build_type_tolower STREQUAL "release"
-   AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo")
-  message(FATAL_ERROR "Unknown build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release, RelWithDebInfo (case-insensitive).")
 endif()
 
 
@@ -86,7 +81,6 @@ set(PKGCONFIG_INSTALL_DIR
     )
 
 add_subdirectory(Eigen)
-
 add_subdirectory(unsupported)
 
 message(STATUS "")
