@@ -19,10 +19,10 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/types.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -229,19 +229,18 @@ int main() {
       {
         const std::vector<IndMatch> & vec_corresponding_index = vec_corresponding_indexes[idx];
         //Show homography validated correspondences
-        svgDrawer svgStream(imageL.Width() + imageR.Width(),
-                            std::max(imageL.Height(), imageR.Height()));
-        svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-        svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+        svgDrawer svgStream( imageL.Width() + imageR.Width(), std::max(imageL.Height(), imageR.Height()));
+        svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+        svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
         for ( size_t i = 0; i < vec_corresponding_index.size(); ++i)  {
 
           const SIOPointFeature & LL = regionsL->Features()[vec_corresponding_index[i].i_];
           const SIOPointFeature & RR = regionsR->Features()[vec_corresponding_index[i].j_];
           const Vec2f L = LL.coords();
           const Vec2f R = RR.coords();
-          svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-          svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
-          svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
+          svgStream << svg::drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgAttributes().stroke("green", 2.0));
+          svgStream << svg::drawCircle(L.x(), L.y(), LL.scale(), svgAttributes().stroke("yellow", 2.0));
+          svgStream << svg::drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgAttributes().stroke("yellow", 2.0));
         }
         const std::string out_filename =
           (idx == 0) ? "04_ACRansacHomography_guided_geom.svg"

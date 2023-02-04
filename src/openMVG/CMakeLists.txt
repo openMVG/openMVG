@@ -19,6 +19,7 @@ add_subdirectory(spherical)
 add_subdirectory(system)
 add_subdirectory(sfm)
 add_subdirectory(stl)
+add_subdirectory(vector_graphics)
 
 #INSTALL RULES
 install(

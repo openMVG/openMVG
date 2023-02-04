@@ -19,7 +19,6 @@
 #include "openMVG/graph/graph.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 //-- Selection Methods
 #include "openMVG/color_harmonization/selection_fullFrame.hpp"
