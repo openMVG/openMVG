@@ -15,6 +15,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   libceres-dev \
   libflann-dev \
   libjpeg-dev \
+  liblemon-dev \
   libpng-dev \
   libtiff-dev \
   git \
@@ -33,6 +34,7 @@ RUN mkdir /opt/openMVG_Build; \
     -DOpenMVG_BUILD_TESTS=ON \
     -DOpenMVG_BUILD_EXAMPLES=OFF \
     -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
+    -DLEMON_INCLUDE_DIR_HINTS=/usr/include/lemon \
     -DCLP_INCLUDE_DIR_HINTS=/usr/include \
     -DOSI_INCLUDE_DIR_HINTS=/usr/include \
     ../openMVG/src; \
