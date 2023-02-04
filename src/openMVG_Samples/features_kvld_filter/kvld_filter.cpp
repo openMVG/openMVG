@@ -17,7 +17,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -27,14 +27,13 @@ using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace svg;
-using namespace std;
 
 int main(int argc, char **argv) {
   CmdLine cmd;
 
-  std::string sImg1 = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  std::string sImg1 = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  std::string sImg2 = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  std::string sImg2 = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
   std::string sOutDir = "./kvldOut";
   std::cout << sImg1 << std::endl << sImg2 << std::endl;
@@ -83,8 +82,8 @@ int main(int argc, char **argv) {
   if (!stlplus::folder_exists(sOutDir))
     stlplus::folder_create( sOutDir );
 
-  const string jpg_filenameL = sImg1;
-  const string jpg_filenameR = sImg2;
+  const std::string jpg_filenameL = sImg1;
+  const std::string jpg_filenameR = sImg2;
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -111,7 +110,7 @@ int main(int argc, char **argv) {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "00_images.jpg";
+    std::string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -194,11 +193,12 @@ int main(int argc, char **argv) {
 
   //Print K-VLD consistent matches
   {
-    svgDrawer svgStream(imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
+    svgDrawer svgStream(imageL.Width() + imageR.Width(),
+                        std::max(imageL.Height(), imageR.Height()));
 
     // ".svg"
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
 
     for (size_t it1=0; it1<matchesPair.size()-1;it1++){
@@ -216,25 +216,26 @@ int main(int argc, char **argv) {
           float width = std::max(1.f, L / (dimension+1.f));
 
           // ".svg"
-          svgStream.drawLine(l1.x(), l1.y(), l2.x(), l2.y(), svgStyle().stroke("yellow", width));
-          svgStream.drawLine(r1.x() + imageL.Width(), r1.y(), r2.x() + imageL.Width(), r2.y(), svgStyle().stroke("yellow", width));
+          svgStream << svg::drawLine(l1.x(), l1.y(), l2.x(), l2.y(), svgAttributes().stroke("yellow", width));
+          svgStream << svg::drawLine(r1.x() + imageL.Width(), r1.y(), r2.x() + imageL.Width(), r2.y(), svgAttributes().stroke("yellow", width));
 
         }
       }
     }
-    const string out_filename = stlplus::create_filespec(sOutDir, "03_KVLD_Matches.svg");
-    ofstream svgFile( out_filename.c_str() );
+    const std::string out_filename = stlplus::create_filespec(sOutDir, "03_KVLD_Matches.svg");
+    std::ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
 
   {
     //Print keypoints kept by K-VLD
-    svgDrawer svgStream(imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
+    svgDrawer svgStream(imageL.Width() + imageR.Width(),
+                        std::max(imageL.Height(), imageR.Height()));
 
     // ".svg"
-    svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-    svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+    svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+    svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
 
     for (size_t it=0; it<matchesPair.size();it++){
        if (valid[it]){
@@ -243,12 +244,12 @@ int main(int argc, char **argv) {
         const PointFeature & r = featsR[matchesPair[it].second];
 
         // ".svg"
-        svgStream.drawCircle(l.x(), l.y(), 10, svgStyle().stroke("yellow", 2.0));
-        svgStream.drawCircle(r.x() + imageL.Width(), r.y(), 10, svgStyle().stroke("yellow", 2.0));
+        svgStream << svg::drawCircle(l.x(), l.y(), 10, svgAttributes().stroke("yellow", 2.0));
+        svgStream << svg::drawCircle(r.x() + imageL.Width(), r.y(), 10, svgAttributes().stroke("yellow", 2.0));
       }
     }
-    const string out_filename = stlplus::create_filespec(sOutDir, "04_KVLD_Keypoints.svg");
-    ofstream svgFile( out_filename.c_str() );
+    const std::string out_filename = stlplus::create_filespec(sOutDir, "04_KVLD_Keypoints.svg");
+    std::ofstream svgFile( out_filename.c_str() );
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
   }
@@ -264,11 +265,11 @@ int main(int argc, char **argv) {
     E);
 
   {
-    const string out_filename = stlplus::create_filespec(sOutDir, "05_Left-K-VLD-MASK.jpg");
+    const std::string out_filename = stlplus::create_filespec(sOutDir, "05_Left-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutL);
   }
   {
-    const string out_filename = stlplus::create_filespec(sOutDir, "06_Right-K-VLD-MASK.jpg");
+    const std::string out_filename = stlplus::create_filespec(sOutDir, "06_Right-K-VLD-MASK.jpg");
     WriteImage(out_filename.c_str(), imageOutR);
   }
 

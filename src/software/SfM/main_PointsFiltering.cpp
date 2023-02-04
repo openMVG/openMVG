@@ -24,7 +24,6 @@ using namespace openMVG::sfm;
 
 int main(int argc, char **argv)
 {
-  using namespace std;
   OPENMVG_LOG_INFO
     << "\n-----------------------------------------------------------"
     << "\nFilter Structure based on statistics computed per view    :"

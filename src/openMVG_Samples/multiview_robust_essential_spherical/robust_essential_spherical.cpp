@@ -20,7 +20,8 @@
 #include "openMVG/multiview/motion_from_essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
-#include "openMVG/multiview/solver_essential_five_point.hpp"
+#include "openMVG/multiview/solver_essential_kernel.hpp"
+#include "openMVG/multiview/solver_essential_three_point.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
@@ -41,31 +42,38 @@ using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace openMVG::sfm;
-using namespace std;
+
+void getRelativePoseAndInliers
+(
+  const Mat & xL_spherical_bearings,
+  const Mat & xR_spherical_bearings,
+  std::vector<uint32_t> & vec_inliers,
+  Mat3 & E,
+  const std::string solver_name = "8points"
+);
 
 int main(int argc, char **argv) {
 
   CmdLine cmd;
 
-  string jpg_filenameL, jpg_filenameR;
+  std::string jpg_filenameL, jpg_filenameR, solver_name = "8points";
 
   cmd.add( make_option('a', jpg_filenameL, "input_a") );
   cmd.add( make_option('b', jpg_filenameR, "input_b") );
+  cmd.add( make_option('s', solver_name, "solver"));
 
   std::cout << "Compute the relative pose between two spherical image."
-   << "\nUse an Acontrario robust estimation based on angular errors." << std::endl;
+   << "\nUse an Acontrario robust estimation based on angular errors."
+   << "\n- solver can be either: 8points, 5points or 3points (upright)" <<std::endl;
 
   try
   {
-    if (argc == 1)
+    cmd.process(argc, argv);
+    if (jpg_filenameL.size() == 0 || jpg_filenameR.size() == 0)
     {
       const std::string sInputDir = std::string(THIS_SOURCE_DIR);
       jpg_filenameL = sInputDir + "/SponzaLion000.jpg";
       jpg_filenameR = sInputDir + "/SponzaLion001.jpg";
-    }
-    else
-    {
-      cmd.process(argc, argv);
     }
   } catch (const std::string& s)
   {
@@ -76,6 +84,8 @@ int main(int argc, char **argv) {
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
   ReadImage(jpg_filenameR.c_str(), &imageR);
+
+  std::cout << jpg_filenameL << "\n" << jpg_filenameR  << "\n" <<  solver_name << std::endl;
 
   // Setup 2 camera intrinsics
   cameras::Intrinsic_Spherical
@@ -108,7 +118,7 @@ int main(int argc, char **argv) {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -176,26 +186,9 @@ int main(int argc, char **argv) {
     //-- Essential matrix robust estimation from spherical bearing vectors
     {
       std::vector<uint32_t> vec_inliers;
-
-      // Define the AContrario angular error adaptor
-      using KernelType =
-        openMVG::robust::ACKernelAdaptor_AngularRadianError<
-          openMVG::EightPointRelativePoseSolver, // Use the 8 point solver in order to estimate E
-          //openMVG::essential::kernel::FivePointSolver, // Use the 5 point solver in order to estimate E
-          openMVG::AngularError,
-          Mat3>;
-
-      KernelType kernel(xL_spherical, xR_spherical);
-
-      // Robust estimation of the Essential matrix and its precision
       Mat3 E;
-      const double precision = std::numeric_limits<double>::infinity();
-      const std::pair<double,double> ACRansacOut =
-        ACRANSAC(kernel, vec_inliers, 1024, &E, precision, true);
-      const double & threshold = ACRansacOut.first;
-
-      std::cout << "\n Angular threshold found: " << R2D(threshold) << "(Degree)"<<std::endl;
-      std::cout << "\n #Putatives/#inliers : " << xL_spherical.cols() << "/" << vec_inliers.size() << "\n" << std::endl;
+      getRelativePoseAndInliers
+        (xL_spherical, xR_spherical, vec_inliers, E, solver_name);
 
       const bool bVertical = true;
       InlierMatches2SVG
@@ -288,4 +281,62 @@ int main(int argc, char **argv) {
     }
   }
   return EXIT_SUCCESS;
+}
+
+template <typename PoseSolverT>
+void getRelativePoseAndInliers
+(
+  const Mat & xL_spherical_bearings,
+  const Mat & xR_spherical_bearings,
+  std::vector<uint32_t> & vec_inliers,
+  Mat3& E
+)
+{
+  // Define the AContrario angular error adaptor
+  using KernelType =
+    openMVG::robust::ACKernelAdaptor_AngularRadianError<
+      PoseSolverT,
+      openMVG::AngularError,
+      Mat3>;
+
+  KernelType kernel(xL_spherical_bearings, xR_spherical_bearings);
+
+  // Robust estimation of the Essential matrix and its precision
+  const double precision = std::numeric_limits<double>::infinity();
+  const std::pair<double,double> ACRansacOut =
+    ACRANSAC(kernel, vec_inliers, 1024, &E, precision, true);
+  const double & threshold = ACRansacOut.first;
+
+  std::cout << "\n Angular threshold found: " << R2D(threshold) << " (Degree)"<< std::endl;
+  std::cout << "\n #Putatives/#inliers : "
+    << xL_spherical_bearings.cols() << "/" << vec_inliers.size() << "\n" << std::endl;
+}
+
+void getRelativePoseAndInliers
+(
+  const Mat & xL_spherical_bearings,
+  const Mat & xR_spherical_bearings,
+  std::vector<uint32_t> & vec_inliers,
+  Mat3& E,
+  const std::string solver_name
+)
+{
+  if (solver_name == "8points") {
+    // Use the 8 point solver in order to estimate E
+    getRelativePoseAndInliers<openMVG::EightPointRelativePoseSolver>
+      (xL_spherical_bearings, xR_spherical_bearings, vec_inliers, E);
+  }
+  else if (solver_name == "5points") {
+    // Use the 5 point solver in order to estimate E
+    getRelativePoseAndInliers<openMVG::essential::kernel::FivePointSolver>
+      (xL_spherical_bearings, xR_spherical_bearings, vec_inliers, E);
+  }
+  else if (solver_name == "3points") {
+    // Use the 3 point solver in order to estimate E
+    getRelativePoseAndInliers<openMVG::essential::kernel::ThreePointUprightRelativePoseSolver>
+      (xL_spherical_bearings, xR_spherical_bearings, vec_inliers, E);
+  }
+  else {
+    std::cerr << "Solvers name can be: 8points, 5points or 3points" << std::endl;
+  }
 }

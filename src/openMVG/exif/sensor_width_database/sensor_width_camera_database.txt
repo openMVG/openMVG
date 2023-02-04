@@ -1347,6 +1347,7 @@ DJI X5R;17.3
 DJI Zenmuse X4S;13.2
 DJI Zenmuse X5S;17.3
 DJI Zenmuse X7;23.5
+DJI FC3582;9.7
 DMC-FZ72;6.17
 DMC-TZ3;6.08
 Doogee BL12000 Pro;4.74
@@ -2009,6 +2010,9 @@ GoPro Fusion;6.17
 GoPro Hero 2018;6.17
 GoPro Hero3-Silver Edition;5.37
 GoPro HERO7 Black;6.17
+GoPro HERO8 Black;6.17
+GoPro HERO9 Black;6.17
+GoPro HERO10 Black;6.17
 Gretel A6;2.8
 Gretel A7;4.54
 Gretel A9;4.54
@@ -5440,6 +5444,8 @@ Samsung SM-G930F;5.76
 Samsung SM-G935F;3.2
 Samsung SM-G950F;5.76
 Samsung SM-G955F;5.76
+Samsung SM-G970U1;5.6
+Samsung SM-G9910;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
@@ -6630,6 +6636,7 @@ Vivitar ViviCam 8625;7.11
 Vivitar ViviCam V8025;7.11
 Vivitar ViviCam X30;7.11
 Vivitar ViviCam X60;7.11
+Vivo V1921A;6.4
 Vivo V7;4.74
 Vivo V7Plus;4.74
 Vivo X5;4.69

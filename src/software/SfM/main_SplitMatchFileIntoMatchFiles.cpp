@@ -23,8 +23,6 @@ using namespace openMVG::sfm;
 
 int main(int argc, char **argv)
 {
-  using namespace std;
-
   CmdLine cmd;
 
   std::string sfm_data_filename;

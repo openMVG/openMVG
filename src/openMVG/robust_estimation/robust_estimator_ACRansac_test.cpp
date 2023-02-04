@@ -10,9 +10,9 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_lineKernel_test.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <iterator>
 #include <random>
@@ -20,7 +20,6 @@
 
 using namespace openMVG;
 using namespace openMVG::robust;
-using namespace std;
 using namespace svg;
 
 /// ACRansac Kernel for line estimation
@@ -182,7 +181,7 @@ TEST(RansacLineFitter, RealisticCase) {
 
   //-- Simulate outliers (for the asked percentage amount of the datum)
   constexpr auto nbPtToNoise = static_cast<uint32_t>(NbPoints*inlierRatio);
-  vector<uint32_t> vec_samples; // Fit with unique random index
+  std::vector<uint32_t> vec_samples; // Fit with unique random index
   UniformSample(nbPtToNoise, NbPoints, random_generator, &vec_samples);
   for (size_t i = 0; i <vec_samples.size(); ++i)
   {
@@ -313,12 +312,12 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     svgDrawer svgTest(W,H);
     for (size_t i = 0; i < nbPoints; ++i) {
       float x = points.col(i)[0], y = points.col(i)[1];
-      svgTest.drawCircle(x,y, 1, svgStyle().fill("red").noStroke());
+      svgTest << svg::drawCircle(x,y, 1, svgAttributes().fill("red").noStroke());
     }
 
-    ostringstream osSvg;
+    std::ostringstream osSvg;
     osSvg << gaussianNoiseLevel << "_line_.svg";
-    ofstream svgFile( osSvg.str() );
+    std::ofstream svgFile( osSvg.str() );
     svgFile << svgTest.closeSvgFile().str();
 
     // robust line estimation
@@ -332,33 +331,33 @@ TEST(RansacLineFitter, ACRANSACSimu) {
     std::vector<uint32_t> vec_inliers;
     const std::pair<double,double> ret = ACRANSAC(lineKernel, vec_inliers, 1000, &line);
     const double errorMax = ret.first;
-    EXPECT_TRUE(sqrt(errorMax) < noise*2+.5);
+    EXPECT_TRUE(std::sqrt(errorMax) < noise*2+.5);
 
-    ostringstream os;
-    os << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".png";
+    std::ostringstream os;
+    os << gaussianNoiseLevel << "_line_" << std::sqrt(errorMax) << ".png";
 
     // Svg drawing
     {
       svgDrawer svgTest(W,H);
       for (size_t i = 0; i < nbPoints; ++i) {
-        string sCol = "red";
+        std::string sCol = "red";
         const float x = points.col(i)[0];
         const float y = points.col(i)[1];
         if (find(vec_inliers.begin(), vec_inliers.end(), i) != vec_inliers.end())
         {
           sCol = "green";
         }
-        svgTest.drawCircle(x,y, 1, svgStyle().fill(sCol).noStroke());
+        svgTest << svg::drawCircle(x,y, 1, svgAttributes().fill(sCol).noStroke());
       }
       //draw the found line
       const float xa = 0, xb = W;
       const float ya = line[1] * xa + line[0];
       const float yb = line[1] * xb + line[0];
-      svgTest.drawLine(xa, ya, xb, yb, svgStyle().stroke("blue", 0.5));
+      svgTest << svg::drawLine(xa, ya, xb, yb, svgAttributes().stroke("blue", 0.5));
 
-      ostringstream osSvg;
-      osSvg << gaussianNoiseLevel << "_line_" << sqrt(errorMax) << ".svg";
-      ofstream svgFile( osSvg.str() );
+      std::ostringstream osSvg;
+      osSvg << gaussianNoiseLevel << "_line_" << std::sqrt(errorMax) << ".svg";
+      std::ofstream svgFile( osSvg.str() );
       svgFile << svgTest.closeSvgFile().str();
     }
   }

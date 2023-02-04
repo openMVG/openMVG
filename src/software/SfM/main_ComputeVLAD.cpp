@@ -21,10 +21,11 @@
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+
 
 #include <cstdlib>
 #include <iostream>
@@ -39,14 +40,13 @@ using namespace openMVG::matching;
 using namespace openMVG::sfm;
 using namespace openMVG::retrieval;
 
-using namespace std;
 using namespace svg;
 
 // TODO: these two output function could be factored and put somewhere else
 // Display the image retrieval matrix
 template <typename Order>
 void saveRetrievalMatrix(
-    const string &filename, const SfM_Data &sfm_data,
+    const std::string &filename, const SfM_Data &sfm_data,
     const IndexedPairwiseSimilarity<Order> &result_ordered_by_similarity) {
   const size_t num_neighbors =
       result_ordered_by_similarity.begin()->second.size();
@@ -63,7 +63,7 @@ void saveRetrievalMatrix(
     const std::string ref_view_filename =
         stlplus::create_filespec(sfm_data.s_root_path, ref_view->s_Img_path);
 
-    svg_stream.drawImage(ref_view_filename, size, size, x_offset * size,
+    svg_stream << svg::drawImage(ref_view_filename, size, size, x_offset * size,
                          y_offset * size);
 
     const auto &retrieval_list = result_it.second;
@@ -75,14 +75,14 @@ void saveRetrievalMatrix(
       const std::string found_view_filename = stlplus::create_filespec(
           sfm_data.s_root_path, found_view->s_Img_path);
 
-      svg_stream.drawImage(found_view_filename, size, size, x_offset * size,
+      svg_stream << svg::drawImage(found_view_filename, size, size, x_offset * size,
                            y_offset * size);
     }
     x_offset = 0;
     ++y_offset;
   }
 
-  ofstream svg_file(filename.c_str());
+  std::ofstream svg_file(filename.c_str());
   svg_file << svg_stream.closeSvgFile().str();
   svg_file.close();
 }

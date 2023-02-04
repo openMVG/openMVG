@@ -21,7 +21,7 @@ set_property(TARGET openMVG_geometry PROPERTY FOLDER OpenMVG/OpenMVG)
 target_link_libraries(openMVG_geometry
   PUBLIC
     openMVG_numeric
-    cereal
+    ${cereal_TARGET}
   PRIVATE
     openMVG_linearProgramming
 )
@@ -30,7 +30,7 @@ target_include_directories(openMVG_geometry
     $<INSTALL_INTERFACE:include>
 )
 
-install(TARGETS openMVG_geometry DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_geometry DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG convex_hull "openMVG_geometry")
 UNIT_TEST(openMVG rigid_transformation3D_srt "openMVG_geometry")

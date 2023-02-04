@@ -25,7 +25,7 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_multiview
-    cereal
+    ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
 
@@ -49,7 +49,7 @@ if (MSVC)
 endif (MSVC)
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_sfm PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_sfm DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io "openMVG_sfm;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;${STLPLUS_LIBRARY}")

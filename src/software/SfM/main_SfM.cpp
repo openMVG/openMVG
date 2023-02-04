@@ -154,7 +154,6 @@ bool computeIndexFromImageNames(
 
 int main(int argc, char **argv)
 {
-  using namespace std;
   OPENMVG_LOG_INFO
       << "\n-----------------------------------------------------------"
       << "\n Structure from Motion:"

@@ -203,7 +203,7 @@ protected:
             key.y = delta * id_row;
             key.sigma = m_Dogs.sigmas[s];
             key.val = pix_val;
-            keypoints.emplace_back(key);
+            keypoints.push_back(std::move(key));
           }
         }
       }
@@ -392,7 +392,7 @@ protected:
             // Border check
             if (Border_Check(kp, w, h))
             {
-              kps.emplace_back(kp);
+              kps.push_back(std::move(kp));
             }
           }
         }

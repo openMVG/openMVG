@@ -25,7 +25,6 @@ using namespace openMVG::sfm;
 /// Export camera frustrums as a triangle PLY file
 int main(int argc, char **argv)
 {
-  using namespace std;
   OPENMVG_LOG_INFO << "Export camera frustums";
 
   CmdLine cmd;

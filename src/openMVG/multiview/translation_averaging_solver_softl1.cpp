@@ -195,11 +195,6 @@ bool solve_translations_problem_softl1
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
-  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-  {
-    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  }
   else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
   {
     options.sparse_linear_algebra_library_type = ceres::EIGEN_SPARSE;

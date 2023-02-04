@@ -706,6 +706,9 @@ bool Read_PNG_ImageHeader(const char * filename, ImageHeader * imgheader)
     bStatus = true;
   }
 
+  png_destroy_info_struct(png_ptr, &info_ptr);
+  png_destroy_read_struct(&png_ptr, nullptr, nullptr);
+
   fclose(file);
   return bStatus;
 }

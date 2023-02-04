@@ -15,6 +15,8 @@ if (${CMAKE_VERSION} VERSION_GREATER "3.17" OR
   cmake_policy(SET CMP0100 NEW)
 endif()
 
+include(GNUInstallDirs)
+
 # guard against in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
@@ -102,12 +104,6 @@ else (OpenMVG_BUILD_SHARED)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
-# For both regular Clang and AppleClang
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  message("clang detected: using std::unordered_map for Hash_Map")
-  register_definitions(-DOPENMVG_STD_UNORDERED_MAP)
-endif()
-
 # ==============================================================================
 # Check that submodule have been initialized and updated
 # ==============================================================================
@@ -160,6 +156,17 @@ if (OpenMVG_USE_OPENMP)
       # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
       set_property(TARGET OpenMP::OpenMP_CXX
                    PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+    endif()
+    if( ${OpenMP_CXX_INCLUDE_DIRS} )
+      include_directories( ${OpenMP_CXX_INCLUDE_DIRS} )
+    else()
+      # Macports fix
+      #   find_package(OpenMP) is able to find the openMP dylib but fails to find the include dir,
+      #   we force it by hand.
+      if( APPLE AND EXISTS "/opt/local/lib/libomp" AND EXISTS "/opt/local/include/libomp" )
+        set_property( TARGET OpenMP::OpenMP_CXX PROPERTY INTERFACE_INCLUDE_DIRECTORIES "/opt/local/include/libomp" )
+        include_directories( "/opt/local/include/libomp")
+      endif()
     endif()
     list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   endif (OPENMP_FOUND)
@@ -248,6 +255,7 @@ ENDMACRO(UNIT_TEST)
 # ==============================================================================
 # - external by default
 # - internal if cereal not found
+# - as of cereal:1.3.1 target requires component
 # ==============================================================================
 find_package(cereal QUIET CONFIG)
 if (NOT cereal_FOUND)
@@ -259,6 +267,11 @@ if (NOT cereal_FOUND)
   )
   install(TARGETS cereal EXPORT openMVG-targets)
   set(OpenMVG_USE_INTERNAL_CEREAL ON)
+endif()
+if (TARGET cereal::cereal)
+  set(cereal_TARGET "cereal::cereal")
+else()
+  set(cereal_TARGET "cereal")
 endif()
 
 # ==============================================================================
@@ -276,6 +289,7 @@ if (NOT Eigen3_FOUND)
 else()
   set(EIGEN_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
 endif()
+add_definitions(-DEIGEN_MPL2_ONLY)
 
 # ==============================================================================
 # Ceres
@@ -304,8 +318,15 @@ endif()
 if (NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
   set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
   set(OpenMVG_USE_INTERNAL_FLANN ON)
+  find_package(Flann QUIET)
+else()
+  find_package(Flann QUIET CONFIG)
+  if (TARGET flann::flann)
+    set(FLANN_LIBRARIES "flann::flann;flann::flann_cpp")
+  else()
+    find_package(Flann QUIET)
+  endif()
 endif()
-find_package(Flann QUIET)
 if (NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
   set(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
 endif()
@@ -577,11 +598,10 @@ message("\n")
 # INSTALL RULES
 # ==============================================================================
 
-install(EXPORT openMVG-targets DESTINATION lib)
 install(EXPORT openMVG-targets
   FILE OpenMVGTargets.cmake
   NAMESPACE OpenMVG::
-  DESTINATION share/openMVG/cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/openMVG/cmake
 )
 
 
@@ -598,7 +618,7 @@ configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
-        DESTINATION share/openMVG/cmake)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/openMVG/cmake)
 
 # ==============================================================================
 # UNINSTALL RULES

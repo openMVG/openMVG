@@ -30,8 +30,6 @@ using namespace openMVG::cameras;
 
 int main(int argc, char **argv)
 {
-  using namespace std;
-
   CmdLine cmd;
 
   std::string
@@ -175,9 +173,9 @@ int main(int argc, char **argv)
 
   // Visual output of the camera location
   plyHelper::exportToPly(camera_pos_gt,
-    string(stlplus::folder_append_separator(sOutDir) + "camGT.ply").c_str());
+    (stlplus::folder_append_separator(sOutDir) + "camGT.ply").c_str());
   plyHelper::exportToPly(camera_pos_to_compare,
-    string(stlplus::folder_append_separator(sOutDir) + "camComputed.ply").c_str());
+    (stlplus::folder_append_separator(sOutDir) + "camComputed.ply").c_str());
 
   // Evaluation
   htmlDocument::htmlDocumentStream _htmlDocStream("openMVG Quality evaluation.");
@@ -186,7 +184,7 @@ int main(int argc, char **argv)
     camera_rot_gt, camera_rot_to_compare,
     sOutDir, &_htmlDocStream, vec_distance_residuals, vec_rotation_angular_residuals);
 
-  ofstream htmlFileStream( string(stlplus::folder_append_separator(sOutDir) +
+  std::ofstream htmlFileStream((stlplus::folder_append_separator(sOutDir) +
     "ExternalCalib_Report.html").c_str());
   htmlFileStream << _htmlDocStream.getDoc();
 

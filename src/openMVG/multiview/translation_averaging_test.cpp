@@ -18,7 +18,6 @@
 #include <vector>
 
 using namespace openMVG;
-using namespace std;
 
 TEST(translation_averaging, globalTi_from_tijs_Triplets_softL1_Ceres) {
 
