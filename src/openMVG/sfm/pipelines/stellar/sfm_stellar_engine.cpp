@@ -775,6 +775,11 @@ bool StellarSfMReconstructionEngine::Adjust()
 
       b_BA_Status = bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
 
+      if (b_BA_Status) {
+        // Remove unstable depth points
+        DepthCleaning(sfm_data_);
+      }
+
       Save(sfm_data_,
         stlplus::create_filespec(stlplus::folder_part(logging_file_), "structure_ba_outlier_removed", "ply"),
         ESfM_Data(EXTRINSICS | STRUCTURE));
