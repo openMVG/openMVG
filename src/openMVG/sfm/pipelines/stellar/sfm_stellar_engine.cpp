@@ -633,7 +633,6 @@ bool StellarSfMReconstructionEngine::Compute_Global_Translations
 
   //-- Export statistics:
   {
-
     std::ostringstream os;
     os << "Translation averaging statistics.";
     os.str("");

@@ -37,7 +37,6 @@ enum class EGraphSimplification : uint8_t {
 class StellarSfMReconstructionEngine : public ReconstructionEngine
 {
 public:
-
   StellarSfMReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & out_directory_logging,
@@ -52,7 +51,6 @@ public:
   bool Process() override;
 
 protected:
-
   /// Compute relative rotations & translations
   void ComputeRelativeMotions
   (
@@ -98,7 +96,6 @@ protected:
   bool Adjust();
 
 private:
-
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
   std::string logging_file_;
