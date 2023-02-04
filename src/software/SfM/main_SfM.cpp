@@ -19,13 +19,14 @@
 #include "openMVG/types.hpp"
 
 // SfM Engines
+#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
+#include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+#include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerMaxPair.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerStellar.hpp"
-#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
-#include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
-#include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
+#include "openMVG/sfm/pipelines/stellar/sfm_stellar_engine.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -52,7 +53,8 @@ enum class ESfMEngine
 {
   INCREMENTAL,
   INCREMENTALV2,
-  GLOBAL
+  GLOBAL,
+  STELLAR
 };
 
 bool StringToEnum
@@ -66,6 +68,7 @@ bool StringToEnum
     {"INCREMENTAL", ESfMEngine::INCREMENTAL},
     {"INCREMENTALV2", ESfMEngine::INCREMENTALV2},
     {"GLOBAL", ESfMEngine::GLOBAL},
+    {"STELLAR", ESfMEngine::STELLAR},
   };
   const auto it  = string_to_enum_mapping.find(str);
   if (it == string_to_enum_mapping.end())
@@ -91,6 +94,25 @@ bool StringToEnum
   if (it == string_to_enum_mapping.end())
     return false;
   scene_initializer = it->second;
+  return true;
+}
+
+bool StringToEnum_EGraphSimplification
+(
+  const std::string & str,
+  EGraphSimplification & graph_simplification
+)
+{
+  const std::map<std::string, EGraphSimplification> string_to_enum_mapping =
+  {
+    {"NONE", EGraphSimplification::NONE},
+    {"MST_X", EGraphSimplification::MST_X},
+    {"STAR_X", EGraphSimplification::STAR_X},
+  };
+  auto it = string_to_enum_mapping.find(str);
+  if (it == string_to_enum_mapping.end())
+    return false;
+  graph_simplification = it->second;
   return true;
 }
 
@@ -191,6 +213,11 @@ int main(int argc, char **argv)
   // Global SfM
   cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
   cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
+  // Stellar SfM
+  std::string graph_simplification = "MST_X";
+  int graph_simplification_value = 5;
+  cmd.add( make_option('G', graph_simplification, "graph_simplification") );
+  cmd.add( make_option('g', graph_simplification_value, "graph_simplification_value") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -205,7 +232,8 @@ int main(int argc, char **argv)
       << "[-s|--sfm_engine] Type of SfM Engine to use for the reconstruction\n"
       << "\t INCREMENTAL   : add image sequentially to a 2 view seed\n"
       << "\t INCREMENTALV2 : add image sequentially to a 2 or N view seed (experimental)\n"
-      << "\t GLOBAL    : initialize globally rotation and translations\n"
+      << "\t GLOBAL        : initialize globally rotation and translations\n"
+      << "\t STELLAR       : n-uplets local motion refinements + global SfM\n"
       << "\n\n"
       << "[Optional parameters]\n"
       << "\n\n"
@@ -284,7 +312,15 @@ int main(int argc, char **argv)
       << "\t\t 1 -> L1 minimization\n"
       << "\t\t 2 -> L2 minimization of sum of squared Chordal distances\n"
       << "\t\t 3 -> SoftL1 minimization (default)\n"
-      << "\t\t 4 -> LiGT: Linear Global Translation constraints from rotation and matches\n";
+      << "\t\t 4 -> LiGT: Linear Global Translation constraints from rotation and matches\n"
+      << "[STELLAR]\n"
+      << "\t[-G|--graph_simplification]\n"
+      << "\t\t -> NONE\n"
+      << "\t\t -> MST_X\n"
+      << "\t\t -> STAR_X\n"
+      << "\t[-g|--graph_simplification_value]\n"
+      << "\t\t -> Number (default: " << graph_simplification_value << ")";
+
 
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
@@ -348,6 +384,18 @@ int main(int argc, char **argv)
   if (translation_averaging_method < TRANSLATION_AVERAGING_L1 ||
       translation_averaging_method > TRANSLATION_LIGT )  {
     OPENMVG_LOG_ERROR << "Translation averaging method is invalid";
+    return EXIT_FAILURE;
+  }
+
+  EGraphSimplification graph_simplification_method;
+  if (!StringToEnum_EGraphSimplification(graph_simplification, graph_simplification_method))
+  {
+    OPENMVG_LOG_ERROR << "Cannot recognize graph simplification method";
+    return EXIT_FAILURE;
+  }
+  if (graph_simplification_value <= 1)
+  {
+    OPENMVG_LOG_ERROR << "graph simplification value must be > 1";
     return EXIT_FAILURE;
   }
 
@@ -467,7 +515,6 @@ int main(int argc, char **argv)
 
     // Configure reconstruction parameters
     engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
-    engine->Set_Use_Motion_Prior(b_use_motion_priors);
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
 
@@ -501,10 +548,8 @@ int main(int argc, char **argv)
     engine->SetMatchesProvider(matches_provider.get());
 
     // Configure reconstruction parameters
-    engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
-    engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
-    engine->Set_Use_Motion_Prior(b_use_motion_priors);
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
+    engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
 
     sfm_engine.reset(engine);
@@ -522,19 +567,33 @@ int main(int argc, char **argv)
     engine->SetFeaturesProvider(feats_provider.get());
     engine->SetMatchesProvider(matches_provider.get());
 
-    // Configure reconstruction parameters
-    engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
-    engine->Set_Use_Motion_Prior(b_use_motion_priors);
-
     // Configure motion averaging method
     engine->SetRotationAveragingMethod(ERotationAveragingMethod(rotation_averaging_method));
     engine->SetTranslationAveragingMethod(ETranslationAveragingMethod(translation_averaging_method));
 
     sfm_engine.reset(engine);
   }
-    break;
+  break;
+  case ESfMEngine::STELLAR:
+  {
+    StellarSfMReconstructionEngine * engine =
+      new StellarSfMReconstructionEngine(
+        sfm_data,
+        directory_output,
+        stlplus::create_filespec(directory_output, "Reconstruction_Report.html"));
+
+    // Configure the features_provider & the matches_provider
+    engine->SetFeaturesProvider(feats_provider.get());
+    engine->SetMatchesProvider(matches_provider.get());
+
+    // Configure reconstruction parameters
+    engine->SetGraphSimplification(graph_simplification_method, graph_simplification_value);
+
+    sfm_engine.reset(engine);
+  }
+  break;
   default:
-    break;
+  break;
   }
   if (!sfm_engine)
   {
@@ -544,6 +603,7 @@ int main(int argc, char **argv)
 
   sfm_engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfm_engine->Set_Extrinsics_Refinement_Type(extrinsic_refinement_options);
+  sfm_engine->Set_Use_Motion_Prior(b_use_motion_priors);
 
   //---------------------------------------
   // Sequential reconstruction process

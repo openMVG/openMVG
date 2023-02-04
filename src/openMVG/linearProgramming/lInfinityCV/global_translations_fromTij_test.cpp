@@ -27,7 +27,7 @@ TEST(translation_averaging, globalTi_from_tijs) {
 
   const bool bCardiod = true;
   const bool bRelative_Translation_PerTriplet = true;
-  std::vector<openMVG::RelativeInfo_Vec > vec_relative_estimates;
+  std::vector<openMVG::RelativeInfo_Vec> vec_relative_estimates;
 
   const NViewDataSet d =
     Setup_RelativeTranslations_AndNviewDataset
@@ -104,4 +104,3 @@ TEST(translation_averaging, globalTi_from_tijs) {
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
-
