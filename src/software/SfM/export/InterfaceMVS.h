@@ -9,7 +9,7 @@
 // D E F I N E S ///////////////////////////////////////////////////
 
 #define MVSI_PROJECT_ID "MVSI" // identifies the project stream
-#define MVSI_PROJECT_VER ((uint32_t)2) // identifies the version of a project stream
+#define MVSI_PROJECT_VER ((uint32_t)5) // identifies the version of a project stream
 
 // set a default namespace name is none given
 #ifndef _INTERFACE_NAMESPACE
@@ -308,6 +308,7 @@ struct Interface
 		// structure describing a camera mounted on a platform
 		struct Camera {
 			std::string name; // camera's name
+			std::string bandName; // camera's band name, ex: RGB, BLUE, GREEN, RED, NIR, THERMAL, etc (optional)
 			uint32_t width, height; // image resolution in pixels for all images sharing this camera (optional)
 			Mat33d K; // camera's intrinsics matrix (normalized if image resolution not specified)
 			Mat33d R; // camera's rotation matrix relative to the platform
@@ -320,6 +321,9 @@ struct Interface
 			template <class Archive>
 			void serialize(Archive& ar, const unsigned int version) {
 				ar & name;
+				if (version > 3) {
+					ar& bandName;
+				}
 				if (version > 0) {
 					ar & width;
 					ar & height;
@@ -361,16 +365,24 @@ struct Interface
 	// structure describing an image
 	struct Image {
 		std::string name; // image file name
+		std::string maskName; // segmentation file name (optional)
 		uint32_t platformID; // ID of the associated platform
 		uint32_t cameraID; // ID of the associated camera on the associated platform
 		uint32_t poseID; // ID of the pose of the associated platform
+		uint32_t ID; // ID of this image in the global space (optional)
 
 		template <class Archive>
-		void serialize(Archive& ar, const unsigned int /*version*/) {
+		void serialize(Archive& ar, const unsigned int version) {
 			ar & name;
+			if (version > 4) {
+				ar& maskName;
+			}
 			ar & platformID;
 			ar & cameraID;
 			ar & poseID;
+			if (version > 2) {
+				ar& ID;
+			}
 		}
 	};
 	typedef std::vector<Image> ImageArr;
