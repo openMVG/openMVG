@@ -30,6 +30,7 @@
 #include <string>
 #include <utility>
 
+#include "io_readGTMultiface.hpp"
 #include "io_readGTBlendedMVS.hpp"
 #include "io_readGTDTUMVS.hpp"
 #include "io_readGTETH3D.hpp"
@@ -79,6 +80,7 @@ int main(int argc, char **argv)
         << "\t 4: ETH 3D Dataset\n"
         << "\t 5: Kitti Odometry Dataset\n"
         << "\t 6: BlendedMVS Dataset\n"
+        << "\t 7: Multiface Dataset\n"
         << "[-o|--outputDirectory]\n";
 
       OPENMVG_LOG_ERROR << s;
@@ -143,6 +145,9 @@ int main(int argc, char **argv)
       break;
     case 6:
       sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_BlendedMVS>();
+      break;
+    case 7:
+      sfm_data_gt = std::make_shared<SfM_Data_GT_Loader_Multiface>();
       break;
     default:
       OPENMVG_LOG_ERROR << "Error: Not Support Dataset";
