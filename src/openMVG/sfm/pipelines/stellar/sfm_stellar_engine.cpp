@@ -731,20 +731,31 @@ bool StellarSfMReconstructionEngine::Adjust()
   if (ReconstructionEngine::intrinsic_refinement_options_ != cameras::Intrinsic_Parameter_Type::NONE)
   {
     Bundle_Adjustment_Ceres::BA_Ceres_options options;
-    if ( sfm_data_.GetPoses().size() > 100 &&
-        (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
-         ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
-         ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
-        )
-    // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+    if ( sfm_data_.GetPoses().size() > 100 )
+    // Try enable sparse BA only if a sparse lib is available and if there more than 100 poses
     {
-      options.preconditioner_type_ = ceres::JACOBI;
-      options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+      // Descending priority order by efficiency (SUITE_SPARSE > EIGEN_SPARSE)
+      if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
+      {
+        options.sparse_linear_algebra_library_type_ = ceres::SUITE_SPARSE;
+        options.preconditioner_type_ = ceres::JACOBI;
+        options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+      }
+      else
+      {
+        if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+        {
+          options.sparse_linear_algebra_library_type_ = ceres::EIGEN_SPARSE;
+          options.preconditioner_type_ = ceres::JACOBI;
+          options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+        }
+      }
     }
     else
     {
       options.linear_solver_type_ = ceres::DENSE_SCHUR;
     }
+
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     options.max_linear_solver_iterations_ = 100;
     options.parameter_tolerance_ = 0.0;
