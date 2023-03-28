@@ -3184,6 +3184,7 @@ Motorola 4;6.06
 Motorola Droid Maxx 2;5.99
 Motorola Droid Turbo 2;5.99
 Motorola Moto G;4.69
+Motorola Moto G Power (2021);6.4
 Motorola Moto G4 Plus;6.06
 Motorola Moto G4;3.67
 Motorola Moto G5 Plus;3.67
@@ -5438,6 +5439,7 @@ Samsung SL630;6.08
 Samsung SL720;6.08
 Samsung SL820;6.08
 Samsung SM-A320FL;24
+Samsung SM-A526U1;4.8
 Samsung SM-C200;6.16
 Samsung SM-G9198;5.95
 Samsung SM-G930F;5.76
@@ -5446,6 +5448,7 @@ Samsung SM-G950F;5.76
 Samsung SM-G955F;5.76
 Samsung SM-G970U1;5.6
 Samsung SM-G9910;5.6
+Samsung SM-S901U;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
