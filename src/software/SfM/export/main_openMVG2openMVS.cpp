@@ -116,7 +116,7 @@ bool exportToOpenMVS(
       image.cameraID = 0;
       if (stlplus::file_exists(mask_filename_local))
         image.maskName = maskName;
-      else if (stlplus::file_exists(mask_filename_global))
+      else if (stlplus::file_exists(mask_filename_global)|| intrinsic->have_disto())
         image.maskName = globalMaskName;
 
       _INTERFACE_NAMESPACE::Interface::Platform::Pose pose;
@@ -246,6 +246,7 @@ bool exportToOpenMVS(
         if (!ReadImage(mask_filename_global.c_str(), &imageMask)||
             !(imageMask.Width() == cam->w() && imageMask.Height() == cam->h()))
         {
+          imageMask.fill(0);
           OPENMVG_LOG_ERROR
             << "Invalid global mask: " << mask_filename_global << ';';
           bOk = bOk & false;
@@ -259,6 +260,23 @@ bool exportToOpenMVS(
         stlplus::file_copy(mask_filename_global, maskName);
       }
     }
+  }
+  else 
+  {
+      for (int i = 0; i < static_cast<int>(sfm_data.GetIntrinsics().size()); i++)
+      {
+          const openMVG::cameras::IntrinsicBase* cam = sfm_data.GetIntrinsics().at(i).get();
+          const std::string maskName = stlplus::create_filespec(sOutDir, "global_mask_" + std::to_string(i), ".png");
+          Image<uint8_t> imageMask(cam->w(),cam->h());
+          Image<uint8_t> image_gray, image_gray_ud;
+          if (cam->have_disto())
+          {
+              imageMask.fill(255);
+              UndistortImage(imageMask, cam, image_gray_ud, BLACK);
+              const bool bRes = WriteImage(maskName.c_str(), image_gray_ud);
+              bOk = bOk & bRes;
+          }
+      }
   }
 
   if (!bOk)
