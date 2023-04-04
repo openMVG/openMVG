@@ -246,7 +246,7 @@ bool exportToOpenMVS(
         if (!ReadImage(mask_filename_global.c_str(), &imageMask)||
             !(imageMask.Width() == cam->w() && imageMask.Height() == cam->h()))
         {
-          imageMask.fill(0);
+          imageMask.fill(255);
           OPENMVG_LOG_ERROR
             << "Invalid global mask: " << mask_filename_global << ';';
           bOk = bOk & false;
