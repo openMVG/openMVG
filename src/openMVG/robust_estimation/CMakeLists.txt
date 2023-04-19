@@ -9,6 +9,10 @@ UNIT_TEST(openMVG robust_estimator_ACRansac "openMVG_testing")
 add_library(openMVG_robust_estimation
   gms_filter.hpp gms_filter.cpp
 )
+if (MSVC)
+  set_target_properties(openMVG_robust_estimation PROPERTIES COMPILE_FLAGS "/bigobj")
+endif()
+
 target_compile_features(openMVG_robust_estimation INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_robust_estimation
   PUBLIC

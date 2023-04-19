@@ -44,6 +44,11 @@ target_link_libraries(openMVG_multiview
     openMVG_numeric
     openMVG_system
 )
+
+if (MSVC)
+  set_target_properties(openMVG_multiview PROPERTIES COMPILE_FLAGS "/bigobj")
+endif()
+
 target_link_libraries(openMVG_multiview
   LINK_PRIVATE
     openMVG_graph

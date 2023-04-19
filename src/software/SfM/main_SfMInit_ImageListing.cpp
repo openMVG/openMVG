@@ -28,6 +28,10 @@
 #include <string>
 #include <utility>
 
+#ifdef _MSC_VER
+#define strcasecmp(x, y) _stricmp(x, y)
+#endif
+
 using namespace openMVG;
 using namespace openMVG::cameras;
 using namespace openMVG::exif;
@@ -127,6 +131,176 @@ std::pair<bool, Vec3> checkPriorWeightsString
   }
   return val;
 }
+
+// Split string in to fields
+std::vector<std::string> parseDelimitedString(const std::string& str, const std::string& delim)
+{
+	std::vector<std::string> tokens;
+	size_t prev = 0, pos = 0;
+	do
+	{
+		pos = str.find(delim, prev);
+		if (pos == std::string::npos) pos = str.length();
+		std::string token = str.substr(prev, pos - prev);
+		if (!token.empty()) tokens.push_back(token);
+		prev = pos + delim.length();
+	} while (pos < str.length() && prev < str.length());
+	return tokens;
+}
+
+/// Read in landmarks.txt file
+bool readLandmarksTextFile
+(
+	const std::string& sFilename,
+	SfM_Data&          sfm_data
+)
+{
+	// Open file
+	std::ifstream theFile;
+	try
+	{
+		theFile.open(sFilename.c_str());
+	}
+	catch ( ... )
+	{
+		std::cerr << "Unable to open landmark file for reading: " << sFilename << std::endl;
+		return (false);
+	}
+
+    // If there are already control points, clear them
+    if(!sfm_data.control_points.empty())
+    {
+        std::cout << "Removing " << sfm_data.control_points.size() << " existing landmarks." << std::endl;
+    }
+
+	// Read in each landmark
+	std::string sLine;
+	std::string landmark_name;
+	double x, y, z;
+	int num_control_points;
+	while (std::getline( theFile, sLine))
+	{
+		// Skip empty
+		if (sLine.empty())
+		{
+			continue;
+		}
+
+		// Parse string of form: landmark_name,x,y,z,#control_points_to_follow
+		auto tokens = parseDelimitedString(sLine, ",");
+		if (tokens.size() < 5)
+		{
+			std::cerr << "Unrecognized format in landmarks file for line: " << sLine << std::endl;
+			continue;
+		}
+		landmark_name = tokens[0];
+		x = ::atof(tokens[1].c_str());
+		y = ::atof(tokens[2].c_str());
+		z = ::atof(tokens[3].c_str());
+		num_control_points = ::atoi(tokens[4].c_str());
+		if ((num_control_points < 0) || (num_control_points > sfm_data.GetViews().size()))
+		{
+			std::cerr << "Unexpected control point count of " << num_control_points << " for landmark " << landmark_name << std::endl;
+			continue;
+		}
+
+		// Start landmark
+		Landmark landmark;
+		landmark.X = Vec3(x,y,z);
+
+		// Read in each control point
+		for (int i = 0; i < num_control_points; ++i)
+		{
+			// Read in the line string
+			if (!std::getline(theFile, sLine))
+			{
+				std::cerr << "Unexpected end of file reading control points for landmark " << landmark_name << std::endl;
+				break;
+			}
+			// Read in the pixel coordinates and image name
+			auto tokens = parseDelimitedString(sLine, ",");
+			if ( tokens.size() < 3)
+			{
+				std::cerr << "Unrecognized format in control point " << i << " for landmark " << landmark_name << std::endl;
+				break;
+			}
+			std::string image_name = tokens[0];
+			double pix_x = ::atof(tokens[1].c_str());
+			double pix_y = ::atof(tokens[2].c_str());
+
+			// Determine view ID from image filename. Should be only point on this view for the landmark.
+			IndexT view_id = 0;
+			bool view_id_valid = false;
+			for (const auto& view : sfm_data.GetViews())
+			{
+				// Extract filename part of entire path
+				const auto& view_full_filename = view.second->s_Img_path;
+				auto last_slash_pos = view_full_filename.find_last_of("\\/");
+				std::string view_base_filename;
+				if (view_full_filename.npos == last_slash_pos)
+				{
+					view_base_filename = view_full_filename;
+				}
+				else
+				{
+					view_base_filename = view_full_filename.substr(last_slash_pos + 1);
+				}
+				
+				// Remove extension
+				auto last_period_pos = view_base_filename.find_last_of('.');
+				if (view_base_filename.npos != last_period_pos)
+				{
+					view_base_filename = view_base_filename.substr(0, last_period_pos);
+				}
+
+				// Compare the strings
+				if (0 == strcasecmp(view_base_filename.c_str(), image_name.c_str()))
+				{
+					view_id = view.first;
+					view_id_valid = true;
+					break;
+				}
+			}
+			if (!view_id_valid)
+			{
+				std::cerr << "No view found associated with image filename " << image_name << " for control point " << i
+					<< " for landmark " << landmark_name << ", ignoring." << std::endl;
+				continue;
+			}
+
+			// Make sure we don't already have a control point from this image
+			if (landmark.obs.end() != landmark.obs.find(view_id))
+			{
+				std::cerr << "Duplicate control point entries for view " << view_id << " (" << image_name << "), ignoring: " << sLine << std::endl;
+				continue;
+			}
+
+			// Add control point to landmark
+			Observation obs;
+			obs.x = Vec2(pix_x, pix_y);
+			obs.id_feat = view_id;
+			landmark.obs[view_id] = obs;
+		}		
+
+		// Add landmark
+		if (!landmark.obs.empty())
+		{
+			IndexT landmark_unique_id = (IndexT)sfm_data.control_points.size(); // unique ID just from current landmark count
+			sfm_data.control_points[ landmark_unique_id ] = landmark;
+
+			// Log what we added
+			std::cout << "Added landmark " << landmark_unique_id << " at location (" << landmark.X.x() << ", "
+				<< landmark.X.y() << ", " << landmark.X.z() << ") with the following " << landmark.obs.size() << " control points:" << std::endl;
+			for (const auto& obs : landmark.obs) {
+				std::cout << "--View " << obs.second.id_feat << "@ pixel coordinates (" << obs.second.x.x() << ", " << obs.second.x.y() << ")" << std::endl;
+			}
+		}
+
+	}
+
+	return (true);
+}
+
 //
 // Create the description of an input image dataset for OpenMVG toolsuite
 // - Export a SfM_Data file with View & Intrinsic data
@@ -149,7 +323,11 @@ int main(int argc, char **argv)
 
   int i_GPS_XYZ_method = 0;
 
+  bool b_EXIF_Extended_Lookup = false;
+
   double focal_pixels = -1.0;
+
+  std::string sLandmarksFilename, sProjectFilename;
 
   cmd.add( make_option('i', sImageDir, "imageDirectory") );
   cmd.add( make_option('d', sfileDatabase, "sensorWidthDatabase") );
@@ -161,6 +339,9 @@ int main(int argc, char **argv)
   cmd.add( make_switch('P', "use_pose_prior") );
   cmd.add( make_option('W', sPriorWeights, "prior_weights"));
   cmd.add( make_option('m', i_GPS_XYZ_method, "gps_to_xyz_method") );
+  cmd.add( make_option('x', b_EXIF_Extended_Lookup, "exif_extended_lookup") );
+  cmd.add( make_option('l', sLandmarksFilename, "landmarksFilename") );
+  cmd.add( make_option('p', sProjectFilename, "projectFilename") );
 
   try {
     if (argc == 1) throw std::string("Invalid command line parameter.");
@@ -185,9 +366,12 @@ int main(int argc, char **argv)
       << "\n"
       << "[-P|--use_pose_prior] Use pose prior if GPS EXIF pose is available"
       << "[-W|--prior_weights] \"x;y;z;\" of weights for each dimension of the prior (default: 1.0)\n"
-      << "[-m|--gps_to_xyz_method] XZY Coordinate system:\n"
+      << "[-m|--gps_to_xyz_method] XYZ Coordinate system:\n"
       << "\t 0: ECEF (default)\n"
-      << "\t 1: UTM";
+      << "\t 1: UTM\n"
+      << "[-x|--exif_extended_lookup] Allow partial map on camera model name in EXIF information\n"
+	  << "[-l|--landmarksFilename] Landmarks Filename\n"
+      << "[-p|--projectFilename] Project Filename to use if adding landmarks\n";
 
       OPENMVG_LOG_ERROR << s;
       return EXIT_FAILURE;
@@ -204,7 +388,44 @@ int main(int argc, char **argv)
     << "\n--group_camera_model " << b_Group_camera_model
     << "\n--use_pose_prior " << b_Use_pose_prior
     << "\n--prior_weights " << sPriorWeights
-    << "\n--gps_to_xyz_method " << i_GPS_XYZ_method;
+    << "\n--gps_to_xyz_method " << i_GPS_XYZ_method
+    << "\n--exif_extended_lookup " << b_EXIF_Extended_Lookup
+	<< "\n--landmarksFilename " << sLandmarksFilename
+    << "\n--projectFilename " << sProjectFilename;
+  
+  // If we just have a landmarks file, read it in
+  if (!sLandmarksFilename.empty() && sImageDir.empty())
+  {
+    // Confirm project filename was provided
+    if (sProjectFilename.empty())
+    {
+      std::cerr << "\nMissing --projectFilename to add landmarks to." << std::endl;
+      return EXIT_FAILURE;
+    }
+
+    // Read in the current project file
+    SfM_Data sfm_data;
+    if (!Load(sfm_data, sProjectFilename, ESfM_Data(ALL)))
+    {
+      std::cerr << "\nThe input SfM_Data file \"" << sProjectFilename << "\" cannot be read." << std::endl;
+      return EXIT_FAILURE;
+    }
+
+    // Read the landmarks
+	if (!readLandmarksTextFile(sLandmarksFilename, sfm_data))
+	{
+	  std::cerr << "\nError reading landmarks from file: " << sLandmarksFilename << std::endl;
+      return EXIT_FAILURE;
+	}
+
+    // Save the file back out
+    if (!Save(sfm_data, sProjectFilename.c_str(), ESfM_Data(ALL)))
+    {
+      return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+  }
 
   // Expected properties for each image
   double width = -1, height = -1, focal = -1, ppx = -1,  ppy = -1;
@@ -274,6 +495,7 @@ int main(int argc, char **argv)
 
   system::LoggerProgress my_progress_bar(vec_image.size(), "- Listing images -" );
   std::ostringstream error_report_stream;
+  double last_computed_focal = -1.0;
   for ( std::vector<std::string>::const_iterator iter_image = vec_image.begin();
     iter_image != vec_image.end();
     ++iter_image, ++my_progress_bar )
@@ -346,11 +568,20 @@ int main(int argc, char **argv)
           const std::string sCamModel = exifReader->getBrand() + " " + exifReader->getModel();
 
           Datasheet datasheet;
-          if ( getInfo( sCamModel, vec_database, datasheet ))
+          if ( getInfo( sCamModel, vec_database, datasheet, b_EXIF_Extended_Lookup))
           {
             // The camera model was found in the database so we can compute it's approximated focal length
             const double ccdw = datasheet.sensorSize_;
             focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+
+  		    // Log what we computed if different than last
+		    if (focal != last_computed_focal)
+		    {
+			  OPENMVG_LOG_INFO << "Computed new focal length pixels = " << focal << " for image <" << sImageFilename
+				  << "> of size " << width << "x" << height << ", focal = " << exifReader->getFocal() << "mm, ccdw ="
+				  << ccdw << "mm" << std::endl;
+			  last_computed_focal = focal;
+            }
           }
           else
           {
@@ -470,7 +701,7 @@ int main(int argc, char **argv)
   if (!Save(
     sfm_data,
     stlplus::create_filespec( sOutputDir, "sfm_data.json" ).c_str(),
-    ESfM_Data(VIEWS|INTRINSICS)))
+    ESfM_Data(VIEWS|INTRINSICS|CONTROL_POINTS)))
   {
     return EXIT_FAILURE;
   }
