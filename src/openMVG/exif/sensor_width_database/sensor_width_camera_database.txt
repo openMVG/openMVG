@@ -5455,6 +5455,8 @@ Samsung SM-G930F;5.76
 Samsung SM-G935F;3.2
 Samsung SM-G950F;5.76
 Samsung SM-G955F;5.76
+Samsung SM-G970U1;5.6
+Samsung SM-G9910;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
@@ -6647,6 +6649,7 @@ Vivitar ViviCam 8625;7.11
 Vivitar ViviCam V8025;7.11
 Vivitar ViviCam X30;7.11
 Vivitar ViviCam X60;7.11
+Vivo V1921A;6.4
 Vivo V7;4.74
 Vivo V7Plus;4.74
 Vivo X5;4.69

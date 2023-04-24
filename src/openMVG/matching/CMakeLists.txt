@@ -61,7 +61,7 @@ if (USE_AVX)
   endif (UNIX)
 endif (USE_AVX)
 
-install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_matching DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG matching "openMVG_matching")
 UNIT_TEST(openMVG matching_filters "openMVG_matching")

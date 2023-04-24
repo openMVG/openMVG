@@ -12,6 +12,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/multiview/triangulation.hpp"
 
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
@@ -130,58 +131,50 @@ bool EstimateTripletRelativeScale
   {
     const tracks::submapTrack & track = tracks.second;
 
+    // Variables for triangulation
+    Mat3 R0 = Mat3::Identity();
+    Mat3 R1;
+    Vec3 t0 = Vec3::Zero();
+    Vec3 t1, b0, b1;
     for (const Pair & cu_pair : pairs)
     {
+      depths[cu_pair].reserve(track.size());
       //
       // Triangulate the observed tracks
       // and store the depth per pair to compute the scale ratio between the pair
       //
-
-      // Check the track is supported at least by 3 poses
-      {
-        std::set<IndexT> poses_id;
-        for (const auto & track_it : track)
-        {
-          const IndexT view_idx = track_it.first;
-          const View * view = sfm_data.GetViews().find(view_idx)->second.get();
-          poses_id.insert(view->id_pose);
-        }
-        if (poses_id.size() < 3)
-          continue;
-      }
-
       std::map<IndexT, geometry::Pose3> poses;
-      std::vector<Vec3> bearing;
-      std::vector<Mat34> vec_poses;
-
       for (const auto & track_it : track)
       {
+        // Assume tracks are supported by at least by 3 poses
+        if (track.size() < 3)
+          continue;
+
         const IndexT view_idx = track_it.first;
         const View * view = sfm_data.GetViews().find(view_idx)->second.get();
-
         if (view->id_pose == cu_pair.first || view->id_pose == cu_pair.second)
         {
-          const geometry::Pose3 pose = (view->id_pose == cu_pair.first) ?
-            geometry::Pose3(Mat3::Identity(), Vec3::Zero())
-            : relative_poses.at(cu_pair);
-
+          Pose3 pose;
           const auto cam = sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
-
-          poses[view->id_pose] = pose;
-
-          vec_poses.emplace_back(pose.asMatrix());
           const size_t feat_idx = track_it.second;
           const Vec2 feat_pos = features_provider->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
-          bearing.emplace_back((*cam)(cam->get_ud_pixel(feat_pos)));
+          if(view->id_pose == cu_pair.first){
+            // R0, t0 are already set at identity and zero translation
+            // The pos is also at identity and zero translation
+            b0 = (*cam)(cam->get_ud_pixel(feat_pos));
+          } else {
+            pose = relative_poses.at(cu_pair);
+            R1 = pose.rotation();
+            t1 = pose.translation();
+            b1 = (*cam)(cam->get_ud_pixel(feat_pos));
+          }
+          poses[view->id_pose] = pose;
         }
       }
-      const Eigen::Map<const Mat3X> bearing_matrix(bearing[0].data(), 3, bearing.size());
-      Vec4 Xhomogeneous;
-      if (TriangulateNViewAlgebraic(bearing_matrix, vec_poses, &Xhomogeneous))
+      Vec3 X;
+      if (TriangulateIDWMidpoint(R0,t0, b0, R1, t1, b1, &X))
       {
-        const Vec3 X = Xhomogeneous.hnormalized();
-
-        const geometry::Pose3 pose = poses[node_id];
+        const geometry::Pose3 & pose = poses[node_id];
         const double depth = (X - pose.center()).norm();
         // Store the depth for this 2-uplet of edges
         depths[cu_pair].push_back(depth);
@@ -216,91 +209,6 @@ bool EstimateTripletRelativeScale
 
   // Return the computed triplet depth ratio:
   relative_scale = {*pairs.cbegin(), *std::next(pairs.cbegin(), 1), depth_ratio};
-
-  const bool b_refine_triplet = false;
-  if (b_refine_triplet)
-  {
-    // Build a triplet that contained the computed depth ratio:
-    const Pair pair01 = relative_scale.pairs[0];
-    const Pair pair12 = relative_scale.pairs[1];
-
-    Hash_Map<IndexT, geometry::Pose3> triplet_pose;
-
-    triplet_pose[node_id] = geometry::Pose3(); // Identity
-    if (pair01.first == node_id)
-    {
-      geometry::Pose3 relative_pose = relative_poses.at(pair01);
-      relative_pose.center() /= depth_ratio;
-      triplet_pose[pair01.second] = relative_pose;
-    }
-    else
-    {
-      geometry::Pose3 relative_pose = relative_poses.at(pair01).inverse();
-      relative_pose.center() /= depth_ratio;
-      triplet_pose[pair01.first] = relative_pose;
-    }
-
-    if (pair12.first == node_id)
-    {
-      geometry::Pose3 relative_pose = relative_poses.at(pair12);
-      triplet_pose[pair12.second] = relative_pose;
-    }
-    else
-    {
-      geometry::Pose3 relative_pose = relative_poses.at(pair12).inverse();
-      triplet_pose[pair12.first] = relative_pose;
-    }
-
-    // Create a scene containing the triplet and save it to disk:
-    SfM_Data tiny_scene;
-    for (const auto &  triplet_pose_it : triplet_pose)
-    {
-      const IndexT pose_id = triplet_pose_it.first;
-      // Add view
-      // Add intrinsic
-      // Add poses
-      const View * view = sfm_data.GetViews().at(pose_id).get();
-      tiny_scene.views.insert(*sfm_data.GetViews().find(pose_id));
-      tiny_scene.intrinsics.insert(*sfm_data.GetIntrinsics().find(view->id_intrinsic));
-      tiny_scene.poses[pose_id] = triplet_pose[pose_id];
-    }
-
-    // Add tracks
-    Landmarks & landmarks = tiny_scene.structure;
-    for (const auto & tracks : map_tracksCommon)
-    {
-      const tracks::submapTrack & track = tracks.second;
-      Observations obs;
-      for (const auto & track_it : track)
-      {
-        const IndexT I = track_it.first;
-        const size_t featIndexI = track_it.second;
-        const Vec2 x = features_provider->feats_per_view.at(I)[featIndexI].coords().cast<double>();
-
-        obs[I] = std::move(Observation(x, featIndexI));
-      }
-      landmarks[tracks.first].obs = std::move(obs);
-    }
-
-    // Triangulation
-    sfm::SfM_Data_Structure_Computation_Blind structure_estimator(false);
-    structure_estimator.triangulate(tiny_scene);
-
-    // - refine only Structure and Rotations & translations (keep intrinsic constant)
-    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, false);
-    options.linear_solver_type_ = ceres::DENSE_SCHUR;
-    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-    const Optimize_Options ba_refine_paramerer_options
-    (
-      cameras::Intrinsic_Parameter_Type::NONE,
-      Extrinsic_Parameter_Type::ADJUST_ALL,
-      Structure_Parameter_Type::ADJUST_ALL
-    );
-    if (!bundle_adjustment_obj.Adjust(tiny_scene, ba_refine_paramerer_options))
-    {
-      return false;
-    }
-  } // end -- b_refine_triplet
 
   return true;
 }
@@ -358,11 +266,11 @@ bool Stellar_Solver::Solve(Poses & poses)
 
   const std::vector<Pair_Set> edge_two_uplets = ListEdge2Uplets();
 
-  OPENMVG_LOG_INFO
-    << "Stellar pod details:\n"
-    << "#central pose id: " << central_node_id << "\n"
-    << "#pairs: " << stellar_pod_.size() << "\n"
-    << "#2-uplets: " << edge_two_uplets.size();
+  // OPENMVG_LOG_INFO
+  //   << "Stellar pod details:\n"
+  //   << "#central pose id: " << central_node_id << "\n"
+  //   << "#pairs: " << stellar_pod_.size() << "\n"
+  //   << "#2-uplets: " << edge_two_uplets.size();
 
   std::vector<Relative_Scale> relative_scales;
   if (!Solve2UpletsRelativeScales(edge_two_uplets, relative_scales))
@@ -377,12 +285,16 @@ bool Stellar_Solver::Solve(Poses & poses)
     return false;
   poses = sfm_data_stellar_pod.poses;
 
-  /*std::ostringstream os;
-  os << "Stellar_" << central_node_id;
-  Save(sfm_data_stellar_pod,
-       stlplus::create_filespec("./",os.str(),".ply"),
-       ESfM_Data(ALL));
-       */
+  // For debugging purpose you could save each stellar pod reconstruction as follow:
+  const bool export_stellar_pods_reconstruction = false;
+  if (export_stellar_pods_reconstruction)
+  {
+    std::ostringstream os;
+    os << "Stellar_" << central_node_id;
+    Save(sfm_data_stellar_pod,
+      stlplus::create_filespec("./",os.str(),".ply"),
+      ESfM_Data(ALL));
+  }
   return poses.size() >= 2;
 }
 
@@ -438,7 +350,7 @@ bool Stellar_Solver::SolveStellarPoses
     relative_scales,
     relative_poses_,
     triplet_poses,
-    Stellar_Translation_Averaging_Solver_Type::SCALING_SOLVER_L2_FULL))
+    Stellar_Translation_Averaging_Solver_Type::SCALING_SOLVER_L1))
   {
     return false;
   }
@@ -474,12 +386,12 @@ bool Stellar_Solver::Optimize
     }
   }
 
-  // Collect the pairs used by this stellar pod
-  const Pair_Set & used_pairs = Relative_Scale::Get_pairs(relative_scales);
-
   // Collect, matches, intrinsics and views data linked to the poses ids
   openMVG::tracks::STLMAPTracks tracks;
   {
+    // Collect the pairs used by this stellar pod
+    const Pair_Set & used_pairs = Relative_Scale::Get_pairs(relative_scales);
+
     matching::PairWiseMatches matches;
     for (const auto & matches_it : matches_provider_->pairWise_matches_)
     {
@@ -522,7 +434,7 @@ bool Stellar_Solver::Optimize
     {
       openMVG::tracks::TracksBuilder tracksBuilder;
       tracksBuilder.Build(matches);
-      tracksBuilder.Filter(2); // [2-n] view based matches
+      tracksBuilder.Filter(3); // [3-n] view based matches
       tracksBuilder.ExportToSTL(tracks);
     }
   }
@@ -535,33 +447,20 @@ bool Stellar_Solver::Optimize
     {
       const tracks::submapTrack & track = tracks_it.second;
 
-      // Check if the track is observed by more than 2 differnt pose ids
-      {
-        std::set<IndexT> poses_id;
-        for (const auto & track_it : track)
-        {
-          const IndexT view_idx = track_it.first;
-          const View * view = sfm_data_.GetViews().find(view_idx)->second.get();
-          poses_id.insert(view->id_pose);
-          if (poses_id.size() > 2) break; // early exit
-        }
-        if (poses_id.size() < 2)
-          continue;
-      }
       // Collect the views and features observing this landmark
       landmarks[tracks_it.first].obs = [&]
-      {
-        Observations obs;
-        for (const auto & track_it : track)
         {
-          const IndexT view_idx = track_it.first;
-          const IndexT feat_idx = track_it.second;
-          const Vec2 x = features_provider_->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
+          Observations obs;
+          for (const auto & track_it : track)
+          {
+            const IndexT view_idx = track_it.first;
+            const IndexT feat_idx = track_it.second;
+            const Vec2 x = features_provider_->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
 
-          obs[view_idx] = {x, feat_idx};
-        }
-        return obs;
-      }();
+            obs[view_idx] = {x, feat_idx};
+          }
+          return obs;
+        }();
     }
     // Triangulate
     sfm::SfM_Data_Structure_Computation_Blind structure_estimator(false);
@@ -571,6 +470,9 @@ bool Stellar_Solver::Optimize
   // - refine only Structure and Rotations & translations (keep intrinsic constant)
   Bundle_Adjustment_Ceres::BA_Ceres_options options(false, use_threading_);
   options.linear_solver_type_ = ceres::DENSE_SCHUR;
+  options.max_linear_solver_iterations_ = 100;
+  options.parameter_tolerance_ = 0.0;
+  options.gradient_tolerance_ = 1.0;
   Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
   const Optimize_Options ba_refine_parameter_options
   (

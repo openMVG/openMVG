@@ -2,7 +2,7 @@
 Vector drawing
 *******************
 
-openMVG considers that visualizing data is important. OpenMVG provides a class that help to perform vector graphics (SVG) drawing in order to have the best possible visualization of his algorithm output. Vector graphics allows keeping details when you zoom what is not done when you use raster graphics. (SVG files are supported by web navigator and the Inkscape software). 
+openMVG considers that visualizing data is important. OpenMVG provides a class that help to perform vector graphics (SVG) drawing in order to have the best possible visualization of his algorithm output. Vector graphics allows keeping details when you zoom what is not done when you use raster graphics. (SVG files are supported by web navigator and the Inkscape software).
 
 .. code-block:: c++
 
@@ -20,22 +20,21 @@ openMVG considers that visualizing data is important. OpenMVG provides a class t
 		}
 		// Create a svg surface and add the cardiod polyline
 		svgDrawer svgSurface (6 *S, 6 *S); //Create a svg object
-		svgSurface.drawPolyline (
-			vec_x.begin( ) , vec_x.end( ),
-			vec_y.begin( ) , vec_y.end( ),
-			svgStyle( ).stroke( "blue", 2));
+		svgSurface << drawPolyline (
+			vec_x.cbegin() , vec_x.cend(),
+			vec_y.cbegin() , vec_y.cend(),
+			svgAttributes().stroke( "blue", 2));
 
 		//Export the SVG stream to a file
 		std::string sFileName = "ThirdExample.svg";
-		std::ofstream svgFile ( sFileName.c_str( ));
-		svgFile << svgSurface.closeSvgFile( ).str( );
-		svgFile.close( );
+		std::ofstream svgFile ( sFileName.c_str() );
+		svgFile << svgSurface.closeSvgFile().str();
+		svgFile.close();
 	}
-	
+
 Here the result exported vector graphic:
 
 .. figure:: vectorGraphic.png
 	:align: center
 	:alt: alternate text
 	:figclass: align-center
-
