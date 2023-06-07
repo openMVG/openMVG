@@ -3050,7 +3050,7 @@ Meizu U10;4.73
 Meizu U20;4.82
 Meizu X;4.96
 Mi A1;5.11
-Mi CC 9;9.6
+Xiaomi MI CC 9;9.6
 Micromax Canvas 5 E481;4.69
 Micromax Canvas Evok E483;4.69
 Micromax Canvas Gold A300;5.95
