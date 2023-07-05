@@ -23,16 +23,23 @@ OPENMVG_SFM_BIN = "@OPENMVG_SOFTWARE_SFM_BUILD_DIR@"
 # Indicate the openMVG camera sensor width directory
 CAMERA_SENSOR_WIDTH_DIRECTORY = "@OPENMVG_SOFTWARE_SFM_SRC_DIR@" + "/../../openMVG/exif/sensor_width_database"
 
+import argparse
 import os
 import subprocess
-import sys
 
-if len(sys.argv) < 3:
-    print ("Usage %s image_dir output_dir" % sys.argv[0])
-    sys.exit(1)
+parser = argparse.ArgumentParser(description="Runs the SfM global pipeline E2E.",
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-input_dir = sys.argv[1]
-output_dir = sys.argv[2]
+parser.add_argument("-fm", "--describerMethod", type=str, default="SIFT", help="Feature describer method.")
+parser.add_argument("-fp", "--describerPreset", type=str, default="NORMAL", help="Feature describer preset.")
+parser.add_argument("-mr", "--ratio", type=float, default=0.8, help="Matching ratio threshold.")
+parser.add_argument("input_dir", help="Input directory containing the images.")
+parser.add_argument("output_dir", help="Output directory where the project files will be saved.")
+
+args = parser.parse_args()
+
+input_dir = args.input_dir
+output_dir = args.output_dir
 matches_dir = os.path.join(output_dir, "matches")
 reconstruction_dir = os.path.join(output_dir, "reconstruction_global")
 camera_file_params = os.path.join(CAMERA_SENSOR_WIDTH_DIRECTORY, "sensor_width_camera_database.txt")
@@ -51,7 +58,7 @@ pIntrisics = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_SfMI
 pIntrisics.wait()
 
 print ("2. Compute features")
-pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-m", "SIFT"] )
+pFeatures = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeFeatures"),  "-i", matches_dir+"/sfm_data.json", "-o", matches_dir, "-m", args.describerMethod, "-p", args.describerPreset] )
 pFeatures.wait()
 
 print ("3. Compute matching pairs")
@@ -59,7 +66,7 @@ pPairs = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_PairGene
 pPairs.wait()
 
 print ("4. Compute matches")
-pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-p", matches_dir+ "/pairs.bin", "-o", matches_dir + "/matches.putative.bin" ] )
+pMatches = subprocess.Popen( [os.path.join(OPENMVG_SFM_BIN, "openMVG_main_ComputeMatches"),  "-i", matches_dir+"/sfm_data.json", "-p", matches_dir+ "/pairs.bin", "-o", matches_dir + "/matches.putative.bin", "-r", args.ratio ] )
 pMatches.wait()
 
 print ("5. Filter matches" )
