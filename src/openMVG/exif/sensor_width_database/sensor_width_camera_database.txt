@@ -2231,6 +2231,7 @@ Huawei P9 Lite Premium;4.69
 Huawei P9 Lite;4.69
 Huawei P9 Premium Edition;4.54
 Huawei P9;4.54
+Huawei TAS-AL00;8.2
 Huawei TEL-AN00a;3.7
 I-mobile IQ X Pro 2;6.17
 Iberry Prime P8000;4.69
