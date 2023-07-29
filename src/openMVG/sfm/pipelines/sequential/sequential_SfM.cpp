@@ -192,7 +192,7 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
     }
   } else { // has pair
-    if (!MakeInitialPair3D(initial_pair_) {
+    if (!MakeInitialPair3D(initial_pair_)) {
       OPENMVG_LOG_INFO << "Tried 2-view initialization from the provided one, fail.";
       if (!hasInitialTriplet())
         return false;
