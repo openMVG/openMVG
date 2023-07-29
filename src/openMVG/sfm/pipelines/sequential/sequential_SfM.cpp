@@ -155,6 +155,9 @@ bool SequentialSfMReconstructionEngine::Process() {
   if (!InitLandmarkTracks())
     return false;
 
+  // Initial pair Essential Matrix and [R|t] estimation.
+  // or initial triplet relative pose
+  //
   // Initial images choice
   // 
   // TODO(trifocal future) Refine this: If both initial triplet and initial pair are specified,
@@ -170,30 +173,27 @@ bool SequentialSfMReconstructionEngine::Process() {
         //    testing only X pairs with most matches.
         const auto sorted_pairwise_matches_iterators =
           GetPairWithMostMatches(sfm_data_, matches_provider_->pairWise_matches_, 20);
-        for (const auto & it : sorted_pairwise_matches_iterators) {
+        for (const auto & it : sorted_pairwise_matches_iterators)
           if (MakeInitialPair3D({it->first.first, it->first.second})) {
             initial_pair_ = {it->first.first, it->first.second};
             break;
           }
-        }
         if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0)) {
           OPENMVG_LOG_INFO << "Cannot find a valid initial pair - stop reconstruction.";
           return false;
         }
-      }
-    } else { // have initialTriplet here but not initialPair
-      OPENMVG_LOG_INFO << "3-view initialization from given views, without any 2-view initialization provided.";
+      } else
+          MakeInitialPair3D(initial_pair_);
+    } else { // triplet but no pair
       OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
       if (!MakeInitialTriplet3D(initial_triplet_)) {
-        OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
-        return false;
+          OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
+          return false;
       }
     }
-  } else {
-    // Else a starting pair was already initialized before 
-    // Initial pair Essential Matrix and [R|t] estimation.
-    if (!MakeInitialPair3D(initial_pair_)) {
-      OPENMVG_LOG_INFO << "Tried 2-view initialization from the provided ones, fail.";
+  } else { // has pair
+    if (!MakeInitialPair3D(initial_pair_) {
+      OPENMVG_LOG_INFO << "Tried 2-view initialization from the provided one, fail.";
       if (!hasInitialTriplet())
         return false;
       OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
@@ -203,6 +203,8 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
     }
   }
+
+
 
   // ---------------------------------------------------------------------------
   
