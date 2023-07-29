@@ -278,9 +278,10 @@ int main(int argc, char **argv)
       << "[INCREMENTAL]\n"
       << "\t[-a|--initial_pair_a] filename of the first image (without path)\n"
       << "\t[-b|--initial_pair_b] filename of the second image (without path)\n"
-      << "\t[-x|--initial_pair_x] filename of the first image (without path)\n"
-      << "\t[-y|--initial_pair_y] filename of the second image (without path)\n"
-      << "\t[-z|--initial_pair_z] filename of the thirds image (without path)\n" // XXX
+      << "\t[-x|--initial_triplet_x] filename of the first image (without path)\n"
+      << "\t[-y|--initial_triplet_y] filename of the second image (without path)\n"
+      << "\t[-z|--initial_triplet_z] filename of the third image (without path)\n"
+      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails.
       << "\t[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t\t 1: Pinhole \n"
       << "\t\t 2: Pinhole radial 1\n"
@@ -298,6 +299,7 @@ int main(int argc, char **argv)
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
       << "\t\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
+      // TODO: insert P2PT
       << "\n\n"
       << "[INCREMENTALV2]\n"
       << "\t[-S|--sfm_initializer] Choose the SfM initializer method:\n"
