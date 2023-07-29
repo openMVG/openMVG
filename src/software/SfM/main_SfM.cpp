@@ -281,7 +281,7 @@ int main(int argc, char **argv)
       << "\t[-x|--initial_triplet_x] filename of the first image (without path)\n"
       << "\t[-y|--initial_triplet_y] filename of the second image (without path)\n"
       << "\t[-z|--initial_triplet_z] filename of the third image (without path)\n"
-      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails.
+      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails."
       << "\t[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t\t 1: Pinhole \n"
       << "\t\t 2: Pinhole radial 1\n"
