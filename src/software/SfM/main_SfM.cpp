@@ -131,7 +131,7 @@ bool computeIndexFromImageNames(
       initialPairIndex.second != UndefinedIndexT);
 }
 
-/// From 2 given image filenames, find the 3 corresponding index in the View list
+/// From 3 given image filenames, find the 3 corresponding index in the View list
 bool computeIndexFromImageNames(
   const SfM_Data & sfm_data,
   const std::tuple<std::string,std::string,std::string>& initialTripletName,
@@ -147,7 +147,7 @@ bool computeIndexFromImageNames(
     return false;
   }
 
-  initialTripletIndex = {UndefinedIndexT, UndefinedIndexT,UndefinedIndexT};
+  initialTripletIndex = {UndefinedIndexT, UndefinedIndexT, UndefinedIndexT};
 
   /// List views filenames and find the one that correspond to the user ones:
   for (Views::const_iterator it =  sfm_data.GetViews().begin();
