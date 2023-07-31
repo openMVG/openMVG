@@ -558,8 +558,7 @@ int main(int argc, char **argv)
         OPENMVG_LOG_ERROR << "Could not find the initial triplets <"
           << std::get<0>(initial_triplet_string) <<  ", "
           << std::get<1>(initial_triplet_string) <<  ", "
-          << std::get<2>(initial_triplet_string) <<  ", "
-          << ">!";
+          << std::get<2>(initial_triplet_string) <<  ">!";
         return EXIT_FAILURE;
       }
       engine->setInitialTriplet(initial_triplet_index);
