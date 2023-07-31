@@ -536,13 +536,16 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << t[v] << " ";
-  OPENMVG_LOG_INFO << "\nview basename:";
+  OPENMVG_LOG_INFO << std::endl;
+  OPENMVG_LOG_INFO << "view basename:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << stlplus::basename_part(view[v]->s_Img_path) << " ";
+  OPENMVG_LOG_INFO << std::endl;
 
   // ---------------------------------------------------------------------------
   // b. Get common features between the three views
   // use the track to have a more dense match correspondence set
+  OPENMVG_LOG_INFO << "Geting common features between the three views\n";
   if (!features_provider_->has_sio_features()) {
     OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
     return false;
@@ -569,9 +572,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     ++cptIndex;
   }
+  OPENMVG_LOG_INFO << "DONE: Geting common features between the three views\n";
   
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
+  OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
   if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 1024))
   {
