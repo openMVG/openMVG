@@ -543,6 +543,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // ---------------------------------------------------------------------------
   // b. Get common features between the three views
   // use the track to have a more dense match correspondence set
+  if (!features_provider_->has_sio_features()) {
+    OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
+    return false;
+  }
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
 
@@ -555,13 +559,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   uint32_t cptIndex = 0;
   for (const auto &track_iter : map_tracksCommon) {
     auto iter = track_iter.second.cbegin();
-    
     uint32_t i = iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
-      if (!features_provider_->has_sio_features()) {
-        OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
-        return false;
-      }
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());

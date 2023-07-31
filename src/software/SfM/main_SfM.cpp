@@ -240,7 +240,6 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-
     OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[Required]\n"
       << "[-i|--input_file] path to a SfM_Data scene\n"
