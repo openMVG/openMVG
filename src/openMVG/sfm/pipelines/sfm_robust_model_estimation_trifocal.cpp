@@ -11,19 +11,19 @@
 // mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
 // -----------------------------------------------------------------------------
 
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/pipelines/sfm_robust_model_estimation_trifocal.hpp"
 
-#include <array>
-
+#include <utility>
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/cameras/Camera_Pinhole.hpp"
-#include "openMVG/multiview/motion_from_essential.hpp"
-#include "openMVG/multiview/solver_essential_eight_point.hpp"
-#include "openMVG/multiview/solver_essential_kernel.hpp"
-#include "openMVG/multiview/solver_fundamental_kernel.hpp"
-#include "openMVG/numeric/numeric.h"
-#include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
-#include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
+#include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
+#include "openMVG/robust_estimation/score_evaluator.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
+#include "openMVG/multiview/trifocal/three_view_kernel.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+
 
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
@@ -31,98 +31,133 @@ using namespace openMVG::geometry;
 namespace openMVG {
 namespace sfm {
 
-bool robustRelativePose
+bool robustRelativePoseTrifocal
 (
-  const IntrinsicBase * intrinsics1,
-  const IntrinsicBase * intrinsics2,
-  const Mat & x1,
-  const Mat & x2,
-  RelativePose_Info & relativePose_info,
-  const std::pair<size_t, size_t> & size_ima1,
-  const std::pair<size_t, size_t> & size_ima2,
+  const cameras::IntrinsicBase *intrinsics[3],
+  std::array<Mat, 3> pxdatum,
+  RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   const size_t max_iteration_count
 )
 {
-  if (!intrinsics1 || !intrinsics2)
+  constexpr unsigned nviews = 3, npts = 3;
+
+  if (!intrinsics[0] || !intrinsics[1] || !intrinsics[2])
     return false;
 
-  // Compute the bearing vectors
-  const Mat3X
-    bearing1 = (*intrinsics1)(x1),
-    bearing2 = (*intrinsics2)(x2);
+  std::array<Mat, nviews> datum;
 
-  if (isPinhole(intrinsics1->getType())
-      && isPinhole(intrinsics2->getType()))
+  for (unsigned v=0; v < nviews; ++v)
+    for (unsigned ip=0; ip < npts; ++ip)
+      datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
+        
+  using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
+                         trifocal::NormalizedSquaredPointReprojectionOntoOneViewError>;
+  
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
+
+  // TODO: we are assuming all images have the same intrinsics
+  double threshold_normalized_squared 
+    = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
+    threshold_pixel_to_normalized(4.0, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data())); // TODO: use ACRANSAC
+  
+  threshold_normalized_squared *= threshold_normalized_squared;
+  relativePoseTrifocal_info.relativePoseTrifocal 
+    = MaxConsensus(trifocal_kernel, 
+      robust::ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
+      &relativePoseTrifocal_info.vec_inliers, max_iteration_count);
+
+  if (relativePoseTrifocal_info.vec_inliers.size() <
+      1.5 * TrifocalKernel::Solver::MINIMUM_SAMPLES )
   {
-    // Define the AContrario adaptor to use the 5 point essential matrix solver.
-    using KernelType = robust::ACKernelAdaptorEssential<
-      openMVG::essential::kernel::FivePointSolver,
-      openMVG::fundamental::kernel::EpipolarDistanceError,
-      Mat3>;
-    KernelType kernel(x1, bearing1, size_ima1.first, size_ima1.second,
-                      x2, bearing2, size_ima2.first, size_ima2.second,
-                      dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics1)->K(),
-                      dynamic_cast<const cameras::Pinhole_Intrinsic*>(intrinsics2)->K());
-
-    // Robustly estimation of the Model and its precision
-    const auto ac_ransac_output = robust::ACRANSAC(
-      kernel, relativePose_info.vec_inliers,
-      max_iteration_count, &relativePose_info.essential_matrix,
-      relativePose_info.initial_residual_tolerance, false);
-
-    relativePose_info.found_residual_precision = ac_ransac_output.first;
-
-    if (relativePose_info.vec_inliers.size() <
-        2.5 * KernelType::Solver::MINIMUM_SAMPLES )
-    {
-      return false; // no sufficient coverage (the model does not support enough samples)
-    }
-  }
-  else
-  {
-    // Define the AContrario adaptor to use the 8 point essential matrix solver.
-    typedef openMVG::robust::ACKernelAdaptor_AngularRadianError<
-        openMVG::EightPointRelativePoseSolver,
-        // openMVG::essential::kernel::FivePointSolver,
-        openMVG::AngularError,
-        Mat3>
-        KernelType;
-
-    KernelType kernel(bearing1, bearing2);
-
-    // Robustly estimate the Essential matrix with A Contrario ransac
-    const double upper_bound_precision =
-      (relativePose_info.initial_residual_tolerance == std::numeric_limits<double>::infinity()) ?
-        std::numeric_limits<double>::infinity()
-        : D2R(relativePose_info.initial_residual_tolerance);
-    const auto ac_ransac_output =
-      ACRANSAC(kernel, relativePose_info.vec_inliers,
-        max_iteration_count, &relativePose_info.essential_matrix,
-        upper_bound_precision, false);
-
-    const double & threshold = ac_ransac_output.first;
-    relativePose_info.found_residual_precision = R2D(threshold); // Degree
-
-    if (relativePose_info.vec_inliers.size() <
-        2.5 * KernelType::Solver::MINIMUM_SAMPLES )
-    {
-      return false; // no sufficient coverage (the model does not support enough samples)
-    }
+    return false; // no sufficient coverage (the model does not support enough samples)
   }
 
-  // estimation of the relative poses based on the cheirality test
-  Pose3 relative_pose;
-  if (!RelativePoseFromEssential(
-    bearing1,
-    bearing2,
-    relativePose_info.essential_matrix,
-    relativePose_info.vec_inliers, &relative_pose))
-  {
-    return false;
-  }
-  relativePose_info.relativePose = relative_pose;
+  // TODO might have to re compute residual tolerance or agument the
+  // MaxConsensus parameters to return that number, not just inliers.
+  // Perhaps move to ACRansac since its interface already provides that.
+
+  // chirality test is done inside the solve TODO
+
+  // TODO important: reconstruct and reproject all inliers with orientations and
+  // check that orientations match either inside ransac or as post filtering of
+  // correspondences
   return true;
 }
+
+#if 0
+TODO ACRANSAC work in progress
+/**
+ * @brief Estimate the Relative pose between two view from point matches and K matrices
+ *  by using a robust essential matrix estimation.
+ *
+ *  Uses ACRansac
+ *
+ * @param[in] intrinsics1 camera 1 intrinsics
+ * @param[in] intrinsics2 camera 2 intrinsics
+ * @param[in] x1 image points in image 1
+ * @param[in] x2 image points in image 2
+ * @param[out] relativePose_info relative pose information
+ * @param[in] size_ima1 width, height of image 1
+ * @param[in] size_ima2 width, height of image 2
+ * @param[in] max iteration count
+ */
+bool robustRelativePoseTrifocal2
+(
+  const cameras::IntrinsicBase *intrinsics[3],
+  std::array<Mat, 3> pxdatum,
+  RelativePoseTrifocal_Info & relativePoseTrifocal_info,
+  const size_t max_iteration_count = 1024
+)
+{
+  constexpr unsigned nviews = 3, npts = 3;
+  if (!intrinsics[0] || !intrinsics[1] || !intrinsics[2])
+    return false;
+
+  std::array<Mat, nviews> datum;
+
+  for (unsigned v=0; v < nviews; ++v)
+    for (unsigned ip=0; ip < npts; ++ip)
+      datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
+        
+  using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
+                         trifocal::Trifocal3PointPositionTangentialSolver>;
+  
+  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
+
+  // TODO: we are assuming all images have the same intrinsics
+  double threshold_normalized_squared 
+    = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
+    threshold_pixel_to_normalized(4.0, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data()));
+  
+  threshold_normalized_squared *= threshold_normalized_squared;
+    
+  // Robustly estimation of the Model and its precision
+  const auto ac_ransac_output = robust::ACRANSAC(
+    trifocal_kernel, relativePoseTrifocal_info.vec_inliers,
+    max_iteration_count, &relativePoseTrifocal_info.RelativePoseTrifocal,
+    relativePoseTrifocal_info.initial_residual_tolerance, false);
+
+  relativePose_info.found_residual_precision = ac_ransac_output.first;
+
+  if (relativePose_info.vec_inliers.size() <
+      1.5 * KernelType::Solver::MINIMUM_SAMPLES )
+  {
+    return false; // no sufficient coverage (the model does not support enough samples)
+  }
+    
+
+  // TODO might have to re compute residual tolerance or agument the
+  // MaxConsensus parameters to return that number, not just inliers.
+  // Perhaps move to ACRansac since its interface already provides that.
+
+  // chirality test is done inside the solve TODO
+
+  // TODO important: reconstruct and reproject all inliers with orientations and
+  // check that orientations match either inside ransac or as post filtering of
+  // correspondences
+  return true;
+}
+#endif
 
 } // namespace sfm
 } // namespace openMVG
