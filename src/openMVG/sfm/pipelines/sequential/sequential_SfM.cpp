@@ -563,7 +563,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   for (const auto &track_iter : map_tracksCommon) {
     auto iter = track_iter.second.cbegin();
     uint32_t i = iter->second;
-    for (unsigned v = 0; v < nviews; ++v) {
+    for (unsigned v = 0; v < nviews; v++) {
+      if (features_provider_->sio_feats_per_view[t[v]].size() == 0) {
+        OPENMVG_LOG_INFO << "SIOFeatures empty!\n";
+        return false;
+      }
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
