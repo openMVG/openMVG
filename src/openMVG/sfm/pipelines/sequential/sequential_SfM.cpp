@@ -552,7 +552,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   }
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
-
+  std::cout << features_provider_->sio_feats_per_view[0].size() << "\n";
   const size_t n = map_tracksCommon.size();
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                                    // datum[view](coord,point)
@@ -702,7 +702,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
       << "\n=========================\n"
-      << " MSE Residual InitialPair Inlier:\n";
+      << " MSE Residual InitialTriplet Inlier:\n";
     ComputeResidualsHistogram(&histoResiduals);
 
     if (!sLogging_file_.empty())
