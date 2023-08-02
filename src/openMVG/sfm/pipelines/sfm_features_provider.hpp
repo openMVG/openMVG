@@ -79,10 +79,14 @@ struct Features_Provider
       #pragma omp critical
 #endif
         {
-        auto sift_regions = dynamic_cast<features::SIFT_Regions *>(region_type.get());
+        auto sift_regions = dynamic_cast<features::SIFT_Regions *>(regions.get());
         if (sift_regions && store_as_sio_features) {
           // save loaded Features as SIOPointFeature for SfM pipeline elements
           // that use feature orientation etc
+          if (sift_regions->Features().size() == 0) {
+            OPENMVG_LOG_ERROR << "SIFT features not found!";
+            bContinue = false;
+          }
           sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
         } else {
           // save loaded Features as PointFeature
