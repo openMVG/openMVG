@@ -568,12 +568,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     auto iter = track_iter.second.cbegin(); // the submapTrack
     uint32_t i = iter->second; // FeatureId in view t[0]
     for (unsigned v = 0; v < nviews; ++v) {
-      std::cerr << "XXX size of feats in view " << t[v]<< features_provider_->sio_feats_per_view[t[v]].size()
-      << " index trying to give it: " << i << std::endl;
-      std::cerr << "XXX non-sio size: " <<  features_provider_->feats_per_view[t[v]].size() << std::endl;
-      std::cerr << "XXX non-sio hsize: " <<  features_provider_->sio_feats_per_view.size() << std::endl;
-      std::cerr << "XXX sio hsize: " <<  features_provider_->sio_feats_per_view.size() << std::endl;
-
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
