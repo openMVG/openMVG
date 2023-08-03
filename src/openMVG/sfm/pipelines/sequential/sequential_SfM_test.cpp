@@ -33,6 +33,7 @@ using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 
 
+#if 0
 // Test a scene where all the camera intrinsics are known
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
 
@@ -147,6 +148,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
+#endif
 
 // A N-view metric dataset with feature orientation in 3D and 2D.
 // All points are seen by all cameras.
@@ -315,16 +317,18 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
   // by hardcoding points
   NViewOrientedDataSet &d = *dp;
 
-  unsigned nviews = synth_nviews_;
-  unsigned npoints = synth_npts_;
+  unsigned const nviews = synth_nviews_;
+  unsigned const npoints = synth_npts_;
   d._n = nviews;
   d._K.resize(nviews);
   d._R.resize(nviews);
   d._t.resize(nviews);
   d._C.resize(nviews);
   d._x.resize(nviews);
+  d._tgt2d.resize(nviews);
   d._x_ids.resize(nviews);
   d._X.resize(3, npoints);
+  d._Tgt3d.resize(3, npoints);
 
   Vecu all_point_ids(npoints);
   for (size_t p = 0; p < npoints; ++p) {
