@@ -550,10 +550,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
     return false;
   }
+  OPENMVG_LOG_INFO << "Has oriented features.\n";
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
 
+  OPENMVG_LOG_INFO << "Track helper done.\n";
+
   const size_t n = map_tracksCommon.size();
+  OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n << "\n";
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                                    // datum[view](coord,point)
   for (unsigned v = 0; v < nviews; ++v)
@@ -561,9 +565,15 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   
   uint32_t cptIndex = 0;
   for (const auto &track_iter : map_tracksCommon) {
-    auto iter = track_iter.second.cbegin();
-    uint32_t i = iter->second;
+    auto iter = track_iter.second.cbegin(); // the submapTrack
+    uint32_t i = iter->second; // FeatureId in view t[0]
     for (unsigned v = 0; v < nviews; ++v) {
+      std::cerr << "XXX size of feats in view " << t[v]<< features_provider_->sio_feats_per_view[t[v]].size()
+      << " index trying to give it: " << i << std::endl;
+      std::cerr << "XXX non-sio size: " <<  features_provider_->feats_per_view[t[v]].size() << std::endl;
+      std::cerr << "XXX non-sio hsize: " <<  features_provider_->sio_feats_per_view.size() << std::endl;
+      std::cerr << "XXX sio hsize: " <<  features_provider_->sio_feats_per_view.size() << std::endl;
+
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
@@ -698,7 +708,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
       << "\n=========================\n"
-      << " MSE Residual InitialPair Inlier:\n";
+      << " MSE Residual InitialTriplet Inlier:\n";
     ComputeResidualsHistogram(&histoResiduals);
 
     if (!sLogging_file_.empty())
