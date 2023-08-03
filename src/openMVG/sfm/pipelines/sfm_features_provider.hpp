@@ -83,7 +83,14 @@ struct Features_Provider
         if (sift_regions && store_as_sio_features) {
           // save loaded Features as SIOPointFeature for SfM pipeline elements
           // that use feature orientation etc
+<<<<<<< HEAD
           assert(sift_regions->Features().size());
+=======
+          if (sift_regions->Features().size() == 0) {
+            OPENMVG_LOG_ERROR << "SIFT features not found!";
+            bContinue = false;
+          }
+>>>>>>> refs/remotes/origin/develop_keypoint_orientation_sfm
           sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
         } else {
           // save loaded Features as PointFeature

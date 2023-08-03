@@ -45,16 +45,14 @@ bool robustRelativePoseTrifocal
     return false;
 
   std::array<Mat, nviews> datum;
-  std::cout << "cam[0]head\n" << (*intrinsics[0]).get_ud_pixel(pxdatum[0].col(0).head(2)) << "\n";
-  std::cout << "cam[0]tail\n" << (*intrinsics[0]).get_ud_pixel(pxdatum[0].col(0).tail<2>()) << "\n";
   for (unsigned v=0; v < nviews; ++v) {
     datum[v].resize(4,3);
     for (unsigned ip=0; ip < npts; ++ip) { // workaround for inverting intrisics based on given structure
                                            // Get 3D cam coords from pxdatum ->
                                            // get eigen matrix 3x1
                                            // then convert into eigen vector and normalize it
-      datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head(2)).col(0).hnormalized();
-      datum[v].col(ip).tail<2>() = (*intrinsics[v])(pxdatum[v].col(ip).tail<2>()).col(0).hnormalized();
+      datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head(2)).col(0).normalized();
+      datum[v].col(ip).tail<2>() = (*intrinsics[v])(pxdatum[v].col(ip).tail<2>()).col(0).normalized();
     }
   }
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
