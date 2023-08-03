@@ -598,6 +598,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   {
     SfM_Data tiny_scene;
     std::vector<Mat34> P;
+    P.reserve(nviews);
     for (unsigned v = 0; v < nviews; ++v) {
       // Init views and intrincics
       tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
