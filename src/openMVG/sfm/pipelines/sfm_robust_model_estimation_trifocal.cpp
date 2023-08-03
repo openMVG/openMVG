@@ -64,10 +64,14 @@ bool robustRelativePoseTrifocal
                                            // Get 3D cam coords from pxdatum ->
                                            // get eigen matrix 3x1
                                            // then convert into eigen vector and normalize it
+      OPENMVG_LOG_INFO << "datum point in px:" << datum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in px:" << datum[v].col(ip).tail(2);
       datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head<2>()).colwise().hnormalized();
       const cameras::Pinhole_Intrinsic *Kin = dynamic_cast<const cameras::Pinhole_Intrinsic *>(intrinsics[v]);
       assert(Kin);
       invert_intrinsics_tgt(Kin->K(), datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      OPENMVG_LOG_INFO << "datum point in world units:" << datum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in world units:" << datum[v].col(ip).tail(2);
     }
   }
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
@@ -75,6 +79,7 @@ bool robustRelativePoseTrifocal
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
+  OPENMVG_LOG_INFO << "Initialized kernel. Calling relativePoseTrifocal";
   // TODO: we are assuming all images have the same intrinsics
   double threshold_normalized_squared 
     = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::

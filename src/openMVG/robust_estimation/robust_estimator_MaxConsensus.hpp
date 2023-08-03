@@ -14,6 +14,7 @@
 #include <random>
 #include <vector>
 
+#include "openMVG/system/logger.hpp"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
 
 namespace openMVG {
@@ -76,6 +77,8 @@ typename Kernel::Model MaxConsensus
       for (const auto& model_it : models) {
         std::vector<uint32_t> inliers;
         scorer.Score(kernel, model_it, all_samples, &inliers);
+
+        OPENMVG_LOG_INFO << "Number of inliers:" << inliers.size();
 
         if (best_num_inliers < inliers.size()) {
           best_num_inliers = inliers.size();
