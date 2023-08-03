@@ -66,6 +66,7 @@ typename Kernel::Model MaxConsensus
   // Random number generator configuration
   std::mt19937 random_generator(std::mt19937::default_seed);
 
+  OPENMVG_LOG_INFO << "Number of all samples: " << all_samples.size() << " = " << total_samples;
   std::vector<uint32_t> sample;
   for (uint32_t iteration = 0;  iteration < max_iteration; ++iteration) {
     UniformSample(min_samples, random_generator, &all_samples, &sample);
