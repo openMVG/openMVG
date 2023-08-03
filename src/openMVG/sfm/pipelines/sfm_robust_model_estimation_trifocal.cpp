@@ -64,8 +64,8 @@ bool robustRelativePoseTrifocal
                                            // Get 3D cam coords from pxdatum ->
                                            // get eigen matrix 3x1
                                            // then convert into eigen vector and normalize it
-      OPENMVG_LOG_INFO << "datum point in px:" << datum[v].col(ip).head(2);
-      OPENMVG_LOG_INFO << "datum tangent in px:" << datum[v].col(ip).tail(2);
+      OPENMVG_LOG_INFO << "datum point in pixels:" << datum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in pixels:" << datum[v].col(ip).tail(2);
       datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head<2>()).colwise().hnormalized();
       const cameras::Pinhole_Intrinsic *Kin = dynamic_cast<const cameras::Pinhole_Intrinsic *>(intrinsics[v]);
       assert(Kin);
@@ -91,6 +91,7 @@ bool robustRelativePoseTrifocal
       robust::ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
       &relativePoseTrifocal_info.vec_inliers, max_iteration_count);
 
+  OPENMVG_LOG_INFO << "Number of inliers " << vec_inliers.size();
   if (relativePoseTrifocal_info.vec_inliers.size() <
       1.5 * TrifocalKernel::Solver::MINIMUM_SAMPLES )
   {

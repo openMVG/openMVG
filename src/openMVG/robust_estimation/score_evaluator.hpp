@@ -26,7 +26,7 @@ public:
     std::vector<T> *inliers) const
   {
     double cost = 0.0;
-    OPENMVG_LOG_INFO << "samples.size()" << samples.size();
+    OPENMVG_LOG_INFO << "samples.size = " << samples.size();
     for (size_t j = 0; j < samples.size(); ++j) {
       const double error = kernel.Error(samples[j], model);
       if (error < threshold_) {
@@ -35,7 +35,7 @@ public:
       } else {
         cost += threshold_;
       }
-      OPENMVG_LOG_INFO << "error = " << error << " sample id" << j;
+      OPENMVG_LOG_INFO << "image error = " << error << " sample id " << j;
     }
     return cost;
   }
