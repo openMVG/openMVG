@@ -636,7 +636,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         }
         Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
       } // !initial structure
-
+      std::cout << "mounted Triplet\n";
+      std::cout << "before BA\n";
       // -----------------------------------------------------------------------
       // - refine only Structure and Rotations & translations (keep intrinsic constant)
       Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
@@ -653,7 +654,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         return false;
       }
     } // !badj
-
+    std::cout << "passed BA\n";
     // Save computed data
     Pose3 *pose[nviews];
     for (unsigned v = 0; v < nviews; ++v)  {
@@ -664,6 +665,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
 
     // List inliers and save them
+    std::cout << "before saving\n";
     for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
       const IndexT trackId = landmark_entry.first;
       const Landmark &landmark = landmark_entry.second;
@@ -677,7 +679,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         ob_x[v] = &iterObs_x[v]->second;
         ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
       }
-
+      std::cout << "1st phase OK!\nStarting 2nd phase!";
       bool include_landmark = true;
       for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
         for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
@@ -696,7 +698,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       if (include_landmark)
         sfm_data_.structure[trackId] = landmarks[trackId];
     }
-
+    std::cout << "2nd phase Ok!\n3rd phase\n";
     // Save outlier residual information
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
