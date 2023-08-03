@@ -52,7 +52,7 @@ bool robustRelativePoseTrifocal
   const size_t max_iteration_count
 )
 {
-  std::cout << "npts = " << pxdatum[0].cols() << "\n";
+  OPENMVG_LOG_INFO << "npts = " << pxdatum[0].cols();
   constexpr unsigned nviews = 3;
   long int npts = pxdatum[0].cols();
 
