@@ -157,6 +157,25 @@ struct NViewOrientedDataSet : public NViewDataSet {
   std::vector<Mat2X> _tgt2d;  // Projected tangents as unit 2D vector
 };
 
+// Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
+//  - for each view store the observations point as PointFeatures
+struct Synthetic_Oriented_Features_Provider : public Features_Provider
+{
+  template <typename NoiseGenerator>
+  bool load( const NViewOrientedDataSet & synthetic_data) {
+    // For each view
+    for (size_t v = 0; v < synthetic_data._n; ++v) {
+      // For each new point visibility
+      for (Mat2X::Index i = 0; i < synthetic_data._x[v].cols(); ++i) {
+        const Vec2 pt = synthetic_data._x[v].col(i);
+        // TODO: fill sio_feats_per_view XXX
+        feats_per_view[v].emplace_back(pt(0), pt(1));
+      }
+    }
+    return true;
+  }
+};
+
 
 const double K_[2][3] = {
   {2584.9325098195013197, 0, 249.77137587221417903},
@@ -382,7 +401,6 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
     "./",
     stlplus::create_filespec("./", "Reconstruction_Report.html"));
 
-  /*
   // Configure the features_provider & the matches_provider from the synthetic dataset
   std::shared_ptr<Features_Provider> feats_provider =
     std::make_shared<Synthetic_Features_Provider>();
@@ -413,7 +431,6 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
-  */
 }
 
 
