@@ -45,9 +45,9 @@ bool robustRelativePoseTrifocal
     return false;
 
   std::array<Mat, nviews> datum;
-  for (unsigned v=0; v < nviews; ++v) {
+  for (unsigned v = 0; v < nviews; ++v) {
     datum[v].resize(4,3);
-    for (unsigned ip=0; ip < npts; ++ip) { // workaround for inverting intrisics based on given structure
+    for (unsigned ip = 0; ip < npts; ++ip) { // workaround for inverting intrisics based on given structure
                                            // Get 3D cam coords from pxdatum ->
                                            // get eigen matrix 3x1
                                            // then convert into eigen vector and normalize it
