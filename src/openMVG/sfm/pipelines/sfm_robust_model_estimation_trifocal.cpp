@@ -51,8 +51,8 @@ bool robustRelativePoseTrifocal
                                            // Get 3D cam coords from pxdatum ->
                                            // get eigen matrix 3x1
                                            // then convert into eigen vector and normalize it
-      datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head(2)).col(0).normalized();
-      datum[v].col(ip).tail<2>() = (*intrinsics[v])(pxdatum[v].col(ip).tail<2>()).col(0).normalized();
+      datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head(2)).col(0).hnormalized();
+      datum[v].col(ip).tail<2>() = (*intrinsics[v])(pxdatum[v].col(ip).tail<2>()).col(0).hnormalized();
     }
   }
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
