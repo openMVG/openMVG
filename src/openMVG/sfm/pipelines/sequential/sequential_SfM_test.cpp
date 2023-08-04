@@ -157,6 +157,24 @@ struct NViewOrientedDataSet : public NViewDataSet {
   std::vector<Mat2X> _tgt2d;  // Projected tangents as unit 2D vector
 };
 
+// Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
+//  - for each view store the observations point as PointFeatures
+struct Synthetic_Oriented_Features_Provider : public Features_Provider
+{
+  bool load( const NViewOrientedDataSet & synthetic_data) {
+    // For each view
+    for (size_t v = 0; v < synthetic_data._n; ++v) {
+      // For each new point visibility
+      for (Mat2X::Index i = 0; i < synthetic_data._x[v].cols(); ++i) {
+        const Vec2 pt = synthetic_data._x[v].col(i);
+        const Vec2 tgt = synthetic_data._tgt2d[v].col(i);
+        sio_feats_per_view[v].emplace_back(pt(0), pt(1), 1.0, atan2(tgt(1),tgt(0)));
+      }
+    }
+    return true;
+  }
+};
+
 
 const double K_[2][3] = {
   {2584.9325098195013197, 0, 249.77137587221417903},
@@ -382,13 +400,11 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
     "./",
     stlplus::create_filespec("./", "Reconstruction_Report.html"));
 
-  /*
   // Configure the features_provider & the matches_provider from the synthetic dataset
   std::shared_ptr<Features_Provider> feats_provider =
-    std::make_shared<Synthetic_Features_Provider>();
+    std::make_shared<Synthetic_Oriented_Features_Provider>();
   // Add a tiny noise in 2D observations to make data more realistic
-  std::normal_distribution<double> distribution(0.0,0.5);
-  dynamic_cast<Synthetic_Features_Provider*>(feats_provider.get())->load(d,distribution);
+  dynamic_cast<Synthetic_Oriented_Features_Provider*>(feats_provider.get())->load(d);
 
   std::shared_ptr<Matches_Provider> matches_provider =
     std::make_shared<Synthetic_Matches_Provider>();
@@ -401,9 +417,11 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Will use view ids (0,1) as the initial pair
-  sfmEngine.setInitialPair({sfm_data_2.GetViews().at(0)->id_view,
-                            sfm_data_2.GetViews().at(1)->id_view});
+  // Will use view ids (1,2,3) as the initial triplet
+  assert(nviews > 3); // assuming 4 views
+  sfmEngine.setInitialTriplet({sfm_data_2.GetViews().at(1)->id_view,
+                            sfm_data_2.GetViews().at(2)->id_view,
+                            sfm_data_2.GetViews().at(3)->id_view});
 
   EXPECT_TRUE (sfmEngine.Process());
 
@@ -413,7 +431,6 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
-  */
 }
 
 
