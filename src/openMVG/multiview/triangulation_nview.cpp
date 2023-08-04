@@ -11,6 +11,7 @@
 #include "openMVG/numeric/nullspace.hpp"
 
 #include <limits>
+#include <iostream>
 
 namespace openMVG {
 
@@ -22,8 +23,10 @@ void TriangulateNView
 )
 {
   assert(X != nullptr);
-  const Mat2X::Index nviews = x.cols();
-  assert(static_cast<size_t>(nviews) == poses.size());
+  // const Mat2X::Index nviews = x.cols();
+  long int nviews = x.cols();
+  std::cout << "poses size = " << poses.size() << "\n";
+  assert(nviews == poses.size());
 
   Mat A = Mat::Zero(3 * nviews, 4 + nviews);
   for (Mat::Index i = 0; i < nviews; ++i)

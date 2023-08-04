@@ -31,6 +31,19 @@ using namespace openMVG::geometry;
 namespace openMVG {
 namespace sfm {
 
+
+static void
+invert_intrinsics_tgt(
+    const Mat3 &K,
+    const double px_tgt_coords[2],
+    double normalized_tgt_coords[2])
+{
+  const double *tp = px_tgt_coords;
+  double *t = normalized_tgt_coords;
+  t[1] = tp[1]/K(1,1);
+  t[0] = (tp[0] - K(0,1)*t[1])/K(0,0);
+}
+
 bool robustRelativePoseTrifocal
 (
   const cameras::IntrinsicBase *intrinsics[3],
@@ -39,22 +52,36 @@ bool robustRelativePoseTrifocal
   const size_t max_iteration_count
 )
 {
-  constexpr unsigned nviews = 3, npts = 3;
+  OPENMVG_LOG_INFO << "npts = " << pxdatum[0].cols();
+  constexpr unsigned nviews = 3;
+  long int npts = pxdatum[0].cols();
 
   if (!intrinsics[0] || !intrinsics[1] || !intrinsics[2])
     return false;
 
   std::array<Mat, nviews> datum;
-
-  for (unsigned v=0; v < nviews; ++v)
-    for (unsigned ip=0; ip < npts; ++ip)
-      datum[v].col(ip) = (*intrinsics[v])(pxdatum[v].col(ip));
-        
+  for (unsigned v = 0; v < nviews; ++v) {
+    datum[v].resize(4,npts);
+    for (unsigned ip = 0; ip < npts; ++ip) { // workaround for inverting intrisics based on given structure
+                                           // Get 3D cam coords from pxdatum ->
+                                           // get eigen matrix 3x1
+                                           // then convert into eigen vector and normalize it
+      OPENMVG_LOG_INFO << "datum point in pixels:" << pxdatum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in pixels:" << pxdatum[v].col(ip).tail(2);
+      datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head<2>()).colwise().hnormalized();
+      const cameras::Pinhole_Intrinsic *Kin = dynamic_cast<const cameras::Pinhole_Intrinsic *>(intrinsics[v]);
+      assert(Kin);
+      invert_intrinsics_tgt(Kin->K(), pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      OPENMVG_LOG_INFO << "datum point in world units:" << datum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in world units:" << datum[v].col(ip).tail(2);
+    }
+  }
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 
                          trifocal::NormalizedSquaredPointReprojectionOntoOneViewError>;
   
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
+  OPENMVG_LOG_INFO << "Initialized kernel. Calling relativePoseTrifocal";
   // TODO: we are assuming all images have the same intrinsics
   double threshold_normalized_squared 
     = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
@@ -66,6 +93,7 @@ bool robustRelativePoseTrifocal
       robust::ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
       &relativePoseTrifocal_info.vec_inliers, max_iteration_count);
 
+  OPENMVG_LOG_INFO << "Number of inliers " << relativePoseTrifocal_info.vec_inliers.size();
   if (relativePoseTrifocal_info.vec_inliers.size() <
       1.5 * TrifocalKernel::Solver::MINIMUM_SAMPLES )
   {

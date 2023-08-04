@@ -553,9 +553,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "Has oriented features.\n";
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
-
-  OPENMVG_LOG_INFO << "Track helper done.\n";
-
   const size_t n = map_tracksCommon.size();
   OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n << "\n";
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
@@ -565,9 +562,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   
   uint32_t cptIndex = 0;
   for (const auto &track_iter : map_tracksCommon) {
-    auto iter = track_iter.second.cbegin(); // the submapTrack
-    uint32_t i = iter->second; // FeatureId in view t[0]
+    auto iter = track_iter.second.cbegin();
+    uint32_t i = iter->second;
     for (unsigned v = 0; v < nviews; ++v) {
+      assert(features_provider_->sio_feats_per_view[t[v]].size());
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
@@ -599,7 +597,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   if (bRefine_using_BA)
   {
     SfM_Data tiny_scene;
-    std::vector<Mat34> P(3);
+    std::vector<Mat34> P;
+    P.reserve(nviews);
     for (unsigned v = 0; v < nviews; ++v) {
       // Init views and intrincics
       tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
