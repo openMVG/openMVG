@@ -39,6 +39,7 @@ using Observations = Hash_Map<IndexT, Observation>;
 struct Landmark
 {
   Vec3 X;
+  Vec3 T;
   Observations obs;
 
   // Serialization
@@ -47,6 +48,20 @@ struct Landmark
 
   template <class Archive>
   void load( Archive & ar);
+};
+
+struct OrientedLandmark : public Landmark
+{
+  Vec3 T;
+
+  // Serialization
+  /*
+  template <class Archive>
+  void save( Archive & ar) const;
+
+  template <class Archive>
+  void load( Archive & ar);
+  */
 };
 
 /// Define a collection of landmarks are indexed by their TrackId

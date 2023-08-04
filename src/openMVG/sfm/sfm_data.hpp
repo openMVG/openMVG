@@ -45,6 +45,8 @@ struct SfM_Data
   /// Controls points (stored as Landmarks (id_feat has no meaning here))
   Landmarks control_points;
 
+  Additional3DStructure additional_data;
+
   /// Root Views path
   std::string s_root_path;
 
