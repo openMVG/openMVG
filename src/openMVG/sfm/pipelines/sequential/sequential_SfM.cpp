@@ -599,11 +599,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     SfM_Data tiny_scene;
     std::vector<Mat34> P;
     P.reserve(nviews);
+    // tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
     for (unsigned v = 0; v < nviews; ++v) {
       // Init views and intrincics
       tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
       tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-      
+      tiny_scene.poses[view[v]->id_pose] = relativePose_info.relativePoseTrifocal[v];
       // Init projection matrices
       P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
     }
