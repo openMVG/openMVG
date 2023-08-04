@@ -69,11 +69,16 @@ typename Kernel::Model MaxConsensus
   OPENMVG_LOG_INFO << "Number of all samples: " << all_samples.size() << " = " << total_samples;
   std::vector<uint32_t> sample;
   for (uint32_t iteration = 0;  iteration < max_iteration; ++iteration) {
-    UniformSample(min_samples, random_generator, &all_samples, &sample);
+      UniformSample(min_samples, random_generator, &all_samples, &sample);
+      OPENMVG_LOG_INFO << "Sample ids to fit, size: " << sample.size();
+
+      for (unsigned k=0; k < sample.size(); ++k)
+        OPENMVG_LOG_INFO << sample[k];
 
       std::vector<typename Kernel::Model> models;
       kernel.Fit(sample, &models);
 
+      OPENMVG_LOG_INFO << "Number of models returned: " << models.size();
       // Compute costs for each fit.
       for (const auto& model_it : models) {
         std::vector<uint32_t> inliers;
@@ -82,6 +87,7 @@ typename Kernel::Model MaxConsensus
         OPENMVG_LOG_INFO << "Number of inliers:" << inliers.size();
 
         if (best_num_inliers < inliers.size()) {
+          OPENMVG_LOG_INFO << "Best number of inliers so far: " << inliers.size();
           best_num_inliers = inliers.size();
           best_model = model_it;
           if (best_inliers) {

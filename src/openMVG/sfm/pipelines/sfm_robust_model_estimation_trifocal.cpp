@@ -86,17 +86,19 @@ bool robustRelativePoseTrifocal
   double threshold_normalized_squared 
     = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
     threshold_pixel_to_normalized(4.0, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data())); // TODO: use ACRANSAC
-  
   threshold_normalized_squared *= threshold_normalized_squared;
+  OPENMVG_LOG_INFO << "RANSAC threshold is " << threshold_normalized_squared;
+
   relativePoseTrifocal_info.relativePoseTrifocal 
     = MaxConsensus(trifocal_kernel, 
       robust::ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
       &relativePoseTrifocal_info.vec_inliers, max_iteration_count);
 
   OPENMVG_LOG_INFO << "Number of inliers " << relativePoseTrifocal_info.vec_inliers.size();
-  if (relativePoseTrifocal_info.vec_inliers.size() <
-      1.5 * TrifocalKernel::Solver::MINIMUM_SAMPLES )
+  if (relativePoseTrifocal_info.vec_inliers.size() <=
+      TrifocalKernel::Solver::MINIMUM_SAMPLES)
   {
+    OPENMVG_LOG_INFO << "No sufficient coverage";
     return false; // no sufficient coverage (the model does not support enough samples)
   }
 

@@ -96,6 +96,11 @@ public:
     resection_method_ = method;
   }
 
+  void SetMaximumTrifocalRansacIterations(unsigned n)
+  {
+    maximum_trifocal_ransac_iterations_ = n;
+  }
+
 protected:
 
 
@@ -149,6 +154,8 @@ private:
   ETriangulationMethod triangulation_method_ = ETriangulationMethod::DEFAULT;
 
   resection::SolverType resection_method_ = resection::SolverType::DEFAULT;
+
+  unsigned maximum_trifocal_ransac_iterations_ = 1024;
 };
 
 } // namespace sfm

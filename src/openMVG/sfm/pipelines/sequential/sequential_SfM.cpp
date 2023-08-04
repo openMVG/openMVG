@@ -580,7 +580,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // c. Robust estimation of the relative pose
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
-  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 1024))
+  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, maximum_trifocal_ransac_iterations_))
   {
     OPENMVG_LOG_ERROR 
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
