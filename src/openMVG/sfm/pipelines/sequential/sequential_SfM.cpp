@@ -146,7 +146,8 @@ GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches,
   return sorted_pairwise_matches_iterators;
 }
 
-bool SequentialSfMReconstructionEngine::Process() {
+bool SequentialSfMReconstructionEngine::Process() 
+{
 
   //-------------------
   //-- Incremental reconstruction
@@ -294,7 +295,7 @@ bool SequentialSfMReconstructionEngine::Process() {
   return true;
 }
 
-bool SequentialSfMReconstructionEngine::InitLandmarkTracks()
+bool SequentialSfMReconstructionEngine::InitLandmarkTracks() 
 {
   // Compute tracks from matches
   tracks::TracksBuilder tracksBuilder;
