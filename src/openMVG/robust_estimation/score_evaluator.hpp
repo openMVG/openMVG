@@ -9,6 +9,8 @@
 #define OPENMVG_ROBUST_SCORE_EVALUATOR_HPP
 
 #include <vector>
+#include "openMVG/system/logger.hpp"
+
 
 namespace openMVG {
 namespace robust{
