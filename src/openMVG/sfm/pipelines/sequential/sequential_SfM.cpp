@@ -711,7 +711,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     if (!sLogging_file_.empty())
     {
       using namespace htmlDocument;
-      html_doc_stream_->pushInfo(htmlMarkup("h1","Essential Matrix."));
+      html_doc_stream_->pushInfo(htmlMarkup("h1","Trifocal tensor."));
       std::ostringstream os;
       os
         << "-------------------------------" << "<br>"
