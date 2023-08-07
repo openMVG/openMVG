@@ -680,7 +680,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         ob_x[v] = &iterObs_x[v]->second;
         ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
       }
-      std::cout << "1st phase OK!\nStarting 2nd phase!";
+      std::cout << "1st phase OK!\nStarting 2nd phase!\n";
       bool include_landmark = true;
       for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
         for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
@@ -959,7 +959,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       << "\n=========================\n"
       << " MSE Residual InitialPair Inlier:\n";
     ComputeResidualsHistogram(&histoResiduals);
-
+    std::cout << "passed Histogram\n";
     if (!sLogging_file_.empty())
     {
       using namespace htmlDocument;
@@ -1227,18 +1227,32 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Mat2X pt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
-  for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
+  if(features_provider_->has_sio_features())
   {
-    resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-    resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-      features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-    // Handle image distortion if intrinsic is known (to ease the resection)
-    if (optional_intrinsic && optional_intrinsic->have_disto())
+    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
     {
-      resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+        features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+      // Handle image distortion if intrinsic is known (to ease the resection)
+      if (optional_intrinsic && optional_intrinsic->have_disto())
+      {
+        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      }
+    }
+  } else {
+    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
+    {
+      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+        features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+      // Handle image distortion if intrinsic is known (to ease the resection)
+      if (optional_intrinsic && optional_intrinsic->have_disto())
+      {
+        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      }
     }
   }
-
   // C. Do the resectioning: compute the camera pose
   // TODO(p2pt)
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
