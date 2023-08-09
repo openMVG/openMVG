@@ -84,7 +84,7 @@ typename Kernel::Model MaxConsensus
         std::vector<uint32_t> inliers;
         scorer.Score(kernel, model_it, all_samples, &inliers);
 
-        OPENMVG_LOG_INFO << "Number of inliers:" << inliers.size();
+        OPENMVG_LOG_INFO << "Number of inliers: " << inliers.size();
 
         if (best_num_inliers < inliers.size()) {
           OPENMVG_LOG_INFO << "Best number of inliers so far: " << inliers.size();

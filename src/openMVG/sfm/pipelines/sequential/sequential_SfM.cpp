@@ -581,7 +581,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // c. Robust estimation of the relative pose
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
-  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, maximum_trifocal_ransac_iterations_))
+  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_))
   {
     OPENMVG_LOG_ERROR 
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
@@ -688,12 +688,22 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           
           const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
           const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
-          if (angle <= 2.0 ||
-              !CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
-                              (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X) ||
-              residual_0.norm() >= relativePose_info.found_residual_precision ||
-              residual_1.norm() >= relativePose_info.found_residual_precision)
+
+          OPENMVG_LOG_INFO << "v0, v1 = " << v0 << ", " << v1;
+          OPENMVG_LOG_INFO << "residual_0 norm " << residual_0.norm();
+          OPENMVG_LOG_INFO << "residual_1 norm " << residual_1.norm();
+          if (angle <= 2.0) {
+            OPENMVG_LOG_INFO << "FAIL angle test with angle " << angle;
             include_landmark = false;
+          } else if (!CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
+                              (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X)) {
+            OPENMVG_LOG_INFO << "FAIL Cheirality test" << angle;
+            include_landmark = false;
+          } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
+              residual_1.norm() >= relativePose_info.found_residual_precision) {
+              OPENMVG_LOG_INFO << "FAIL residual test" << angle;
+            include_landmark = false;
+          }
         }
       if (include_landmark)
         sfm_data_.structure[trackId] = landmarks[trackId];

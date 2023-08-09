@@ -49,6 +49,7 @@ bool robustRelativePoseTrifocal
   const cameras::IntrinsicBase *intrinsics[3],
   std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
+  double threshold_px,
   const size_t max_iteration_count
 )
 {
@@ -85,7 +86,7 @@ bool robustRelativePoseTrifocal
   // TODO: we are assuming all images have the same intrinsics
   double threshold_normalized_squared 
     = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
-    threshold_pixel_to_normalized(4.0, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data())); // TODO: use ACRANSAC
+    threshold_pixel_to_normalized(threshold_px, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data()));
   threshold_normalized_squared *= threshold_normalized_squared;
   OPENMVG_LOG_INFO << "RANSAC threshold is " << threshold_normalized_squared;
 

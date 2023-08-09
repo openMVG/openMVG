@@ -58,6 +58,7 @@ bool robustRelativePoseTrifocal
   const cameras::IntrinsicBase *intrinsics[3],
   std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
+  double threshold_px,
   const size_t max_iteration_count = 1024
 );
 
