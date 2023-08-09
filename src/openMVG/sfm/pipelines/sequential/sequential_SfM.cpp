@@ -664,12 +664,16 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     set_remaining_view_id_.erase(view[v]->id_view);
   }
 
-  // List inliers and save them
+  // Recompute inliers and save them
+  // TODO: this is currently too strict,
+  // every 2-view must pass
   std::cout << "before saving\n";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
     const IndexT trackId = landmark_entry.first;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs = landmark.obs;
+
+    OPENMVG_LOG_INFO << "Track id " << trackId;
 
     Observations::const_iterator iterObs_x[nviews];
     const Observation *ob_x[nviews];
@@ -678,6 +682,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       iterObs_x[v] = obs.find(view[v]->id_view);
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
+
+      OPENMVG_LOG_INFO << "\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v] << " = " << ob_x_ud[v] << std::endl;
     }
     bool include_landmark = true;
     for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
