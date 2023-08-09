@@ -44,6 +44,9 @@ struct SfM_Data
   Landmarks structure;
   /// Controls points (stored as Landmarks (id_feat has no meaning here))
   Landmarks control_points;
+  // Additional structure associated to each 3D point/track
+  // map is in tandem with structure (same index)
+  LandmarksInfo info;
 
   Additional3DStructure additional_data;
 

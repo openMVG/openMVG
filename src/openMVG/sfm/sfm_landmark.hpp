@@ -50,12 +50,15 @@ struct Landmark
   void load( Archive & ar);
 };
 
-struct OrientedLandmark : public Landmark
+// In the future, we can make a generic
+// landmarksInfo, and make this a special case.
+// But.. keep it simple, keep it maintainable..
+struct LandmarkOrientedInfo
 {
-  Vec3 T;
+  Vec3 T; // 3D orientation corresponding to 2D feature/SIFT orientations
 
-  // Serialization
   /*
+  // Serialization
   template <class Archive>
   void save( Archive & ar) const;
 
@@ -66,6 +69,9 @@ struct OrientedLandmark : public Landmark
 
 /// Define a collection of landmarks are indexed by their TrackId
 using Landmarks = Hash_Map<IndexT, Landmark>;
+// Additional info that may be desired, parallel to Landmarks,
+// that is, every addition to Landmark has to go in tandem with this one
+using LandmarksInfo = Hash_Map<IndexT, LandmarkOrientedInfo>;
 
 } // namespace sfm
 } // namespace openMVG
