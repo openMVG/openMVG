@@ -1509,21 +1509,42 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           !new_track_observations_valid_views.empty())
       {
         Landmark & landmark = sfm_data_.structure[trackId];
-        // Check if view feature point observations of the track are valid (residual, depth) or not
-        for (const IndexT & J: new_track_observations_valid_views)
+        if (features_provider_->has_sio_features()) 
         {
-          const View * view_J = sfm_data_.GetViews().at(J).get();
-          const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-          const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-          const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-          const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-
-          const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
-          if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-              && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
-             )
+          // Check if view feature point observations of the track are valid (residual, depth) or not
+          for (const IndexT & J: new_track_observations_valid_views)
           {
-            landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+            const View * view_J = sfm_data_.GetViews().at(J).get();
+            const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+            const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+            const Vec2 xJ = features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+
+            const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
+            if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
+               )
+            {
+              landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+            }
+          }
+        } else {
+          // Check if view feature point observations of the track are valid (residual, depth) or not
+          for (const IndexT & J: new_track_observations_valid_views)
+          {
+            const View * view_J = sfm_data_.GetViews().at(J).get();
+            const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+            const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+            const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+
+            const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
+            if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
+               )
+            {
+              landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+            }
           }
         }
       }
