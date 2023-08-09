@@ -639,7 +639,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
       } // !initial structure
       std::cout << "mounted Triplet\n";
-      std::cout << "before BA\n";
       // -----------------------------------------------------------------------
       // - refine only Structure and Rotations & translations (keep intrinsic constant)
       Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
@@ -681,7 +680,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         ob_x[v] = &iterObs_x[v]->second;
         ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
       }
-      std::cout << "1st phase OK!\nStarting 2nd phase!";
       bool include_landmark = true;
       for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
         for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
@@ -700,14 +698,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       if (include_landmark)
         sfm_data_.structure[trackId] = landmarks[trackId];
     }
-    std::cout << "2nd phase Ok!\n3rd phase\n";
+    std::cout << "residual phase\n";
     // Save outlier residual information
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
       << "\n=========================\n"
       << " MSE Residual InitialTriplet Inlier:\n";
     ComputeResidualsHistogram(&histoResiduals);
-
+    std::cout << "computed Histogram\n";
     if (!sLogging_file_.empty())
     {
       using namespace htmlDocument;
@@ -753,7 +751,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       html_doc_stream_->pushInfo("<hr>");
 
       std::ofstream htmlFileStream( std::string(stlplus::folder_append_separator(sOut_directory_) +
-        "Reconstruction_Report.html"));
+        "Reconstruction_Report_Trifocal.html"));
       htmlFileStream << html_doc_stream_->getDoc();
     }
   } // !list inliers and save them
@@ -960,7 +958,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       << "\n=========================\n"
       << " MSE Residual InitialPair Inlier:\n";
     ComputeResidualsHistogram(&histoResiduals);
-
+    std::cout << "passed Histogram\n";
     if (!sLogging_file_.empty())
     {
       using namespace htmlDocument;
@@ -1017,6 +1015,7 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
   vec_residuals.reserve(sfm_data_.structure.size());
+  std::cout << "1st\n";
   for (const auto & landmark_entry : sfm_data_.GetLandmarks())
   {
     const Observations & obs = landmark_entry.second.obs;
@@ -1030,13 +1029,16 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }
   }
+  std::cout << "2nd\n";
   // Display statistics
   if (vec_residuals.size() > 1)
   {
+    std::cout << "entered 1st if\n";
     float dMin, dMax, dMean, dMedian;
     minMaxMeanMedian<float>(vec_residuals.cbegin(), vec_residuals.cend(),
                             dMin, dMax, dMean, dMedian);
     if (histo)  {
+      std::cout << "entered 2nd if\n";
       *histo = Histogram<double>(dMin, dMax, 10);
       histo->Add(vec_residuals.cbegin(), vec_residuals.cend());
     }
@@ -1228,18 +1230,32 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Mat2X pt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
-  for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
+  if(features_provider_->has_sio_features())
   {
-    resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-    resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-      features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-    // Handle image distortion if intrinsic is known (to ease the resection)
-    if (optional_intrinsic && optional_intrinsic->have_disto())
+    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
     {
-      resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+        features_provider_->sio_feats_per_view[viewIndex][*iterfeatId].coords().cast<double>();
+      // Handle image distortion if intrinsic is known (to ease the resection)
+      if (optional_intrinsic && optional_intrinsic->have_disto())
+      {
+        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      }
+    }
+  } else {
+    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
+    {
+      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+        features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+      // Handle image distortion if intrinsic is known (to ease the resection)
+      if (optional_intrinsic && optional_intrinsic->have_disto())
+      {
+        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      }
     }
   }
-
   // C. Do the resectioning: compute the camera pose
   // TODO(p2pt)
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
@@ -1417,10 +1433,16 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
               const View * view_J = sfm_data_.GetViews().at(J).get();
               const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
               const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+              if (features_provider_->has_sio_features())
+              {
+              const Vec2 xJ = features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+              // Position of the point in view I
+              const Vec2 xI = features_provider_->sio_feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+              } else {
               const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-
               // Position of the point in view I
               const Vec2 xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+              }
 
               // Try to triangulate a 3D point from J view
               // A new 3D point must be added
