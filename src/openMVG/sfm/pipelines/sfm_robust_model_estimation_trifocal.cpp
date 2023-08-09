@@ -89,6 +89,7 @@ bool robustRelativePoseTrifocal
     threshold_pixel_to_normalized(threshold_px, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data()));
   threshold_normalized_squared *= threshold_normalized_squared;
   OPENMVG_LOG_INFO << "RANSAC threshold is " << threshold_normalized_squared;
+  relativePoseTrifocal_info.found_residual_precision = threshold_px; // XXX TODO: // improve
 
   relativePoseTrifocal_info.relativePoseTrifocal 
     = MaxConsensus(trifocal_kernel, 

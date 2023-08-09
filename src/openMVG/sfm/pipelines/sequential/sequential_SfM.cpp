@@ -594,177 +594,176 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
-  constexpr bool bRefine_using_BA = true;
-  if (bRefine_using_BA)
-  {
-    SfM_Data tiny_scene;
-    std::vector<Mat34> P;
-    P.reserve(nviews);
-    // tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
-    for (unsigned v = 0; v < nviews; ++v) {
-      // Init views and intrincics
-      tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
-      tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0),relativePose_info.relativePoseTrifocal[v].block<3,1>(0,2));
-      // Init projection matrices
-      P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
-    }
+  SfM_Data tiny_scene;
+  std::vector<Mat34> P;
+  P.reserve(nviews);
+  // tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+  for (unsigned v = 0; v < nviews; ++v) {
+    // Init views and intrincics
+    tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
+    tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
+    tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0),relativePose_info.relativePoseTrifocal[v].block<3,1>(0,2));
+    // Init projection matrices
+    P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
+  }
 
-    // Init structure
-    Landmarks &landmarks = tiny_scene.structure;
-    { // badj
-      { // initial structure ---------------------------------------------------
+  // Init structure
+  Landmarks &landmarks = tiny_scene.structure;
+  { // initial structure ---------------------------------------------------
 
-        Mat3X x(3,3);
-        for (const auto & track_iterator : map_tracksCommon)
-        {
-          // Get corresponding points
-          auto iter = track_iterator.second.cbegin();
-          uint32_t ifeat = iter->second;
-          Observations obs;
-          for (unsigned v = 0; v < nviews; ++v) {
-            x.col(v) = 
-              features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
-            // TODO(trifocal future) get_ud_pixel
-            ifeat=(++iter)->second;
-            obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
-          }
-          landmarks[track_iterator.first].obs = std::move(obs);
-          
-          // triangulate 3 views
-          Vec4 X;
-          TriangulateNView(x, P, &X);
-          landmarks[track_iterator.first].X = X.hnormalized();
-        }
-        Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
-      } // !initial structure
-      std::cout << "mounted Triplet\n";
-      // -----------------------------------------------------------------------
-      // - refine only Structure and Rotations & translations (keep intrinsic constant)
-      Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
-      options.linear_solver_type_ = ceres::DENSE_SCHUR;
-      Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
-      if (!bundle_adjustment_obj.Adjust(tiny_scene, Optimize_Options
-          (
-            Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
-            Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-            Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
-          )
-        )
-      {
-        return false;
-      }
-    } // !badj
-    std::cout << "passed BA\n";
-    // Save computed data
-    Pose3 *pose[nviews];
-    for (unsigned v = 0; v < nviews; ++v)  {
-      sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
-      pose[v] = &sfm_data_.poses[view[v]->id_pose];
-      map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
-      set_remaining_view_id_.erase(view[v]->id_view);
-    }
-
-    // List inliers and save them
-    std::cout << "before saving\n";
-    for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
-      const IndexT trackId = landmark_entry.first;
-      const Landmark &landmark = landmark_entry.second;
-      const Observations &obs = landmark.obs;
-
-      Observations::const_iterator iterObs_x[nviews];
-      const Observation *ob_x[nviews];
-      Vec2 ob_x_ud[nviews];
-      for (unsigned v = 0; v < nviews; ++v) {
-        iterObs_x[v] = obs.find(view[v]->id_view);
-        ob_x[v] = &iterObs_x[v]->second;
-        ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
-      }
-      bool include_landmark = true;
-      for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
-        for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
-          const double angle = AngleBetweenRay(
-            *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
-          
-          const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
-          const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
-
-          OPENMVG_LOG_INFO << "v0, v1 = " << v0 << ", " << v1;
-          OPENMVG_LOG_INFO << "residual_0 norm " << residual_0.norm();
-          OPENMVG_LOG_INFO << "residual_1 norm " << residual_1.norm();
-          if (angle <= 2.0) {
-            OPENMVG_LOG_INFO << "FAIL angle test with angle " << angle;
-            include_landmark = false;
-          } else if (!CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
-                              (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X)) {
-            OPENMVG_LOG_INFO << "FAIL Cheirality test" << angle;
-            include_landmark = false;
-          } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
-              residual_1.norm() >= relativePose_info.found_residual_precision) {
-              OPENMVG_LOG_INFO << "FAIL residual test" << angle;
-            include_landmark = false;
-          }
-        }
-      if (include_landmark)
-        sfm_data_.structure[trackId] = landmarks[trackId];
-    }
-    std::cout << "residual phase\n";
-    // Save outlier residual information
-    Histogram<double> histoResiduals;
-    OPENMVG_LOG_INFO
-      << "\n=========================\n"
-      << " MSE Residual InitialTriplet Inlier:\n";
-    ComputeResidualsHistogram(&histoResiduals);
-    std::cout << "computed Histogram\n";
-    if (!sLogging_file_.empty())
+    Mat3X x(3,3);
+    for (const auto & track_iterator : map_tracksCommon)
     {
-      using namespace htmlDocument;
-      html_doc_stream_->pushInfo(htmlMarkup("h1","Trifocal tensor."));
-      std::ostringstream os;
-      os
-        << "-------------------------------" << "<br>"
-        << "-- Robust calibrated Trifocal tensor: <"  << t[0] << "," << t[1] << "," << t[2] << "> images: "
-        << view[0]->s_Img_path << ","
-        << view[1]->s_Img_path << ","
-        << view[2]->s_Img_path << "<br>"
-        << "-- Threshold: " << relativePose_info.found_residual_precision << "<br>"
-        << "-- Resection status: " << "OK" << "<br>"
-        << "-- Nb points used for robust Trifocal tensor estimation: "
-        << pxdatum[0].cols() << "<br>"
-        << "-- Nb points validated by robust estimation: "
-        << sfm_data_.structure.size() << "<br>"
-        << "-- % points validated: "
-        << sfm_data_.structure.size()/static_cast<float>(pxdatum[0].cols())
-        << "<br>"
-        << "-------------------------------" << "<br>";
-      html_doc_stream_->pushInfo(os.str());
-
-      html_doc_stream_->pushInfo(htmlMarkup("h2",
-        "Residual of the robust estimation (Initial triangulation). Thresholded at: "
-        + toString(relativePose_info.found_residual_precision)));
-
-      html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of residuals"));
-
-      const std::vector<double> xBin = histoResiduals.GetXbinsValue();
-      const auto range = autoJSXGraphViewport<double>(xBin, histoResiduals.GetHist());
-
-      htmlDocument::JSXGraphWrapper jsxGraph;
-      jsxGraph.init("InitialPairTriangulationKeptInfo",600,300);
-      jsxGraph.addXYChart(xBin, histoResiduals.GetHist(), "line,point");
-      jsxGraph.addLine(relativePose_info.found_residual_precision, 0,
-        relativePose_info.found_residual_precision, histoResiduals.GetHist().front());
-      jsxGraph.UnsuspendUpdate();
-      jsxGraph.setViewport(range);
-      jsxGraph.close();
-      html_doc_stream_->pushInfo(jsxGraph.toStr());
-
-      html_doc_stream_->pushInfo("<hr>");
-
-      std::ofstream htmlFileStream( std::string(stlplus::folder_append_separator(sOut_directory_) +
-        "Reconstruction_Report_Trifocal.html"));
-      htmlFileStream << html_doc_stream_->getDoc();
+      // Get corresponding points
+      auto iter = track_iterator.second.cbegin();
+      uint32_t ifeat = iter->second;
+      Observations obs;
+      for (unsigned v = 0; v < nviews; ++v) {
+        x.col(v) = 
+          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+        // TODO(trifocal future) get_ud_pixel
+        ifeat=(++iter)->second;
+        obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
+      }
+      landmarks[track_iterator.first].obs = std::move(obs);
+      
+      // triangulate 3 views
+      Vec4 X;
+      TriangulateNView(x, P, &X);
+      landmarks[track_iterator.first].X = X.hnormalized();
     }
-  } // !list inliers and save them
+    Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
+  } // !initial structure
+  std::cout << "mounted initial Triplet\n";
+
+  constexpr bool bRefine_using_BA = true;
+  if (bRefine_using_BA) { // badj
+    // -----------------------------------------------------------------------
+    // - refine only Structure and Rotations & translations (keep intrinsic constant)
+    Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
+    options.linear_solver_type_ = ceres::DENSE_SCHUR;
+    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+    if (!bundle_adjustment_obj.Adjust(tiny_scene, Optimize_Options
+        (
+          Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
+        )
+      )
+    {
+      return false;
+    }
+    std::cout << "passed BA\n";
+  } // !badj
+  // Save computed data
+  Pose3 *pose[nviews];
+  for (unsigned v = 0; v < nviews; ++v)  {
+    sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
+    pose[v] = &sfm_data_.poses[view[v]->id_pose];
+    map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
+    set_remaining_view_id_.erase(view[v]->id_view);
+  }
+
+  // List inliers and save them
+  std::cout << "before saving\n";
+  for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
+    const IndexT trackId = landmark_entry.first;
+    const Landmark &landmark = landmark_entry.second;
+    const Observations &obs = landmark.obs;
+
+    Observations::const_iterator iterObs_x[nviews];
+    const Observation *ob_x[nviews];
+    Vec2 ob_x_ud[nviews];
+    for (unsigned v = 0; v < nviews; ++v) {
+      iterObs_x[v] = obs.find(view[v]->id_view);
+      ob_x[v] = &iterObs_x[v]->second;
+      ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
+    }
+    bool include_landmark = true;
+    for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
+      for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
+        const double angle = AngleBetweenRay(
+          *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
+        
+        const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
+        const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
+
+        OPENMVG_LOG_INFO << "v0, v1 = " << v0 << ", " << v1;
+        OPENMVG_LOG_INFO << "residual_0 norm " << residual_0.norm();
+        OPENMVG_LOG_INFO << "residual_1 norm " << residual_1.norm();
+        if (angle <= 2.0) {
+          OPENMVG_LOG_INFO << "FAIL angle test with angle " << angle;
+          include_landmark = false;
+        } else if (!CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
+                            (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X)) {
+          OPENMVG_LOG_INFO << "FAIL Cheirality test ";
+          include_landmark = false;
+        } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
+            residual_1.norm() >= relativePose_info.found_residual_precision) {
+            OPENMVG_LOG_INFO << "FAIL residual test: " << residual_0.norm() << " " 
+              << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
+          include_landmark = false;
+        }
+      }
+    if (include_landmark)
+      sfm_data_.structure[trackId] = landmarks[trackId];
+  }
+  std::cout << "residual phase\n";
+  // Save outlier residual information
+  Histogram<double> histoResiduals;
+  OPENMVG_LOG_INFO
+    << "\n=========================\n"
+    << " MSE Residual InitialTriplet Inlier:\n";
+  ComputeResidualsHistogram(&histoResiduals);
+  std::cout << "computed Histogram\n";
+  if (!sLogging_file_.empty())
+  {
+    using namespace htmlDocument;
+    html_doc_stream_->pushInfo(htmlMarkup("h1","Trifocal tensor."));
+    std::ostringstream os;
+    os
+      << "-------------------------------" << "<br>"
+      << "-- Robust calibrated Trifocal tensor: <"  << t[0] << "," << t[1] << "," << t[2] << "> images: "
+      << view[0]->s_Img_path << ","
+      << view[1]->s_Img_path << ","
+      << view[2]->s_Img_path << "<br>"
+      << "-- Threshold: " << relativePose_info.found_residual_precision << "<br>"
+      << "-- Resection status: " << "OK" << "<br>"
+      << "-- Nb points used for robust Trifocal tensor estimation: "
+      << pxdatum[0].cols() << "<br>"
+      << "-- Nb points validated by robust estimation: "
+      << sfm_data_.structure.size() << "<br>"
+      << "-- % points validated: "
+      << sfm_data_.structure.size()/static_cast<float>(pxdatum[0].cols())
+      << "<br>"
+      << "-------------------------------" << "<br>";
+    html_doc_stream_->pushInfo(os.str());
+
+    html_doc_stream_->pushInfo(htmlMarkup("h2",
+      "Residual of the robust estimation (Initial triangulation). Thresholded at: "
+      + toString(relativePose_info.found_residual_precision)));
+
+    html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of residuals"));
+
+    const std::vector<double> xBin = histoResiduals.GetXbinsValue();
+    const auto range = autoJSXGraphViewport<double>(xBin, histoResiduals.GetHist());
+
+    htmlDocument::JSXGraphWrapper jsxGraph;
+    jsxGraph.init("InitialPairTriangulationKeptInfo",600,300);
+    jsxGraph.addXYChart(xBin, histoResiduals.GetHist(), "line,point");
+    jsxGraph.addLine(relativePose_info.found_residual_precision, 0,
+      relativePose_info.found_residual_precision, histoResiduals.GetHist().front());
+    jsxGraph.UnsuspendUpdate();
+    jsxGraph.setViewport(range);
+    jsxGraph.close();
+    html_doc_stream_->pushInfo(jsxGraph.toStr());
+
+    html_doc_stream_->pushInfo("<hr>");
+
+    std::ofstream htmlFileStream( std::string(stlplus::folder_append_separator(sOut_directory_) +
+      "Reconstruction_Report_Trifocal.html"));
+    htmlFileStream << html_doc_stream_->getDoc();
+  }
   return !sfm_data_.structure.empty();
 }
 
