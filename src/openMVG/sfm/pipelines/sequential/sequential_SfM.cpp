@@ -532,9 +532,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_ERROR << "Trifocal initialization only works for pinhole intrinsics K matrix.";
       return false;
     }
-
-    if (dynamic_cast<
-    OPENMVG_LOG_INFO << "K for v " << v << std::endl << cam[v]->K() << std::endl;
   }
   
   OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";

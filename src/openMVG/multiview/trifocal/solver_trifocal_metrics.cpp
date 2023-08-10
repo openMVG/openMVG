@@ -14,6 +14,24 @@
 
 namespace openMVG {
 namespace trifocal {
+
+//: clump arg from minus 1 to 1; also assert abs(arg) not much bigger than 1
+inline double clump_to_acos(double x)
+{ 
+  if (x > 1.0 || x < -1.0) {
+    assert(std::fabs(std::fabs(x)-1) < 1e-5);
+    if (x > 1.0)
+      return 1.0;
+    if (x < -1.0)
+      return -1.0;
+  }
+  return x;
+}
+
+
+  
+
+
   
 double NormalizedSquaredPointReprojectionOntoOneViewError::
 Error(
@@ -55,6 +73,72 @@ Error(
   Vec2 p_reprojected = (tt[third_view]*triangulated_homg).hnormalized();
   return (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
 }
+
+
+bool NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheiralityAndOrientation::
+Error(
+  const trifocal_model_t &tt,
+  const Vec &bearing_0, // x,y,tangentialx,tangentialy
+  const Vec &bearing_1,
+  const Vec &bearing_2) 
+{
+  // Ideal algorithm:
+  // 1) reconstruct the 3D points and orientations
+  // 2) compute depths of the 3D points on all views
+  // 3) make sure depths are > 1
+  // 4) make sure tangent at 3rd point match
+  
+  Mat3 bearing;
+  bearing << bearing_0.head(2).homogeneous(),
+             bearing_1.head(2).homogeneous(), 
+             bearing_2.head(2).homogeneous();
+
+  Mat3 t;
+  t       << bearing_0.tail(2).homogeneous(),
+             bearing_1.tail(2).homogeneous(), 
+             bearing_2.tail(2).homogeneous();
+
+  t(2,0) = t(2,1) = t(2,2) = 0;
+  
+  Vec4 triangulated_homg;
+  Vec3 Trec;
+  unsigned third_view = 0;
+  // pick the wider baseline. TODO: measure all pairwise translation distances
+  if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
+    // TODO(trifocal future) compare to triangulation from the three views at once
+    TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
+    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(1).cross(bearing.col(1)));
+    third_view = 2;
+  } else {
+    TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
+    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(2).cross(bearing.col(2)));
+    third_view = 1;
+  }
+
+  // Computing the projection of triangulated points using projection.hpp
+  // For prototyping and speed, for now we will only project to the third view
+  // and report only one error
+  // TODO: it is a good idea to filter the inliers after a robust estimation
+  // using a more complete (and heavier) error metric.
+  Vec3 p_third_view = tt[third_view]*triangulated_homg;
+  Vec2 p_reprojected = p_third_view.hnormalized();
+  assert((p_reprojected - bearing.col(third_view).head(2)).squaredNorm() < 1e-4);
+  Vec3 p_second_view = tt[(third_view == 1)?2:1]*triangulated_homg;
+
+  if (triangulated_homg.hnormalized()(2) < 1. && p_third_view(2) < 1. && p_second_view < 1.)
+    return false
+     
+  
+  tproj = (Trec - Trec.dot(tt[third_view].(2,seq(0,2))/* z axis of third camera relative to 1st, last line of R*/)*bearing.col(third_view));
+
+  // compute angle between tproj t.col(3)
+  double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(3))));
+
+  // 20 degrees tolerance
+  if (angular_error > 0.3)
+    return false;
+}
+
 
 } // namespace trifocal
 } // namespace OpenMVG

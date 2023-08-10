@@ -32,6 +32,8 @@ Solve(const Mat &datum_0,
   double tgt[io::pp::nviews][io::pp::npoints][io::ncoords2d];
 
   // pack into solver's efficient representation
+  // only first 2 tangents are actually used
+  // 3rd is for confirmation
   for (unsigned ip=0; ip < io::pp::npoints; ++ip) {
       p[0][ip][0] = datum_0(0,ip);
       p[0][ip][1] = datum_0(1,ip);
@@ -72,6 +74,9 @@ Solve(const Mat &datum_0,
   // TODO: filter the solutions by:
   // - positive depth and
   // - using tangent at 3rd point
+  NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
+
+  NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheralityAndTangent
 }
 
 } // namespace trifocal
