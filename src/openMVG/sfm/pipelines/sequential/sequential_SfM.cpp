@@ -532,6 +532,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_ERROR << "Trifocal initialization only works for pinhole intrinsics K matrix.";
       return false;
     }
+
+    if (dynamic_cast<
+    OPENMVG_LOG_INFO << "K for v " << v << std::endl << cam[v]->K() << std::endl;
   }
   
   OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
@@ -683,7 +686,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
 
-      OPENMVG_LOG_INFO << "\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v] << " = " << ob_x_ud[v] << std::endl;
+      OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v] << std::endl;
     }
     bool include_landmark = true;
     for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
