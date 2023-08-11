@@ -127,15 +127,14 @@ Error(
 
   if (triangulated_homg.hnormalized()(2) < 1. && p_third_view(2) < 1. && p_second_view < 1.)
     return false
-     
   
   tproj = (Trec - Trec.dot(tt[third_view].(2,seq(0,2))/* z axis of third camera relative to 1st, last line of R*/)*bearing.col(third_view));
 
   // compute angle between tproj t.col(3)
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(3))));
 
-  // 20 degrees tolerance
-  if (angular_error > 0.3)
+  // about 30 degrees tolerance
+  if (angular_error > 0.52)
     return false;
 }
 

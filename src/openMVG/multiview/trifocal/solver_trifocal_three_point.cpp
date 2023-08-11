@@ -74,9 +74,9 @@ Solve(const Mat &datum_0,
   // TODO: filter the solutions by:
   // - positive depth and
   // - using tangent at 3rd point
-  NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
+  //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
 
-  NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheralityAndTangent
+  // XXX NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheralityAndTangent
 }
 
 } // namespace trifocal
