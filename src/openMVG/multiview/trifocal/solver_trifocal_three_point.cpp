@@ -12,7 +12,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 
+#include <iostream>
 #include <minus/minus.h>
 #include <minus/chicago-default.h>
 
@@ -58,7 +60,7 @@ Solve(const Mat &datum_0,
     if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_final))
       break;
 
-  std::vector<trifocal_model_t> &tt = *trifocal_tensor;
+  std::vector<trifocal_model_t> tt;
   tt.resize(nsols_final);
   for (unsigned s = 0; s < nsols_final; ++s) {
     tt[s][0] = Mat34::Identity();
@@ -75,6 +77,15 @@ Solve(const Mat &datum_0,
   // - positive depth and
   // - using tangent at 3rd point
   //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
+  std::cerr << "3SOLVER: number of solutions " << nsols_final << std::endl;
+
+  std::vector<trifocal_model_t> &ttf = *trifocal_tensor;
+  ttf.reserve(10); // on average should not return more than this
+  for (unsigned s = 0; s < nsols_final; ++s)
+    if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2)))
+      ttf.push_back(tt[s]);
+
+  std::cerr << "3SOLVER: number of final solutions " << ttf.size() << std::endl;
 
   // XXX NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheralityAndTangent
 }
