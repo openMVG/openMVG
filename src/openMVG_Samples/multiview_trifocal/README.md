@@ -1,3 +1,8 @@
+## Working document
+
+https://docs.google.com/document/d/1Ozvt64zAWNRYE16nICrJobDnV_ByWbcVx5lGjPHqSiQ/edit
+
+
 ## Main branch
 original trifocal branch  created by pierre: develop_keypoint_orientation_sfm @ official
 working branch: develop_keypoint_orientation_sfm_tmp
