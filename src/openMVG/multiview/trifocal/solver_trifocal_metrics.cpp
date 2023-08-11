@@ -120,7 +120,12 @@ Check(
   Vec3 p_third_view = tt[third_view]*triangulated_homg;
   Vec2 p_reprojected = p_third_view.hnormalized();
 
-  assert((p_reprojected - bearing.col(third_view).head(2)).squaredNorm() < 1e-3);
+  OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
+  OPENMVG_LOG_INFO << "P third " <<bearing.col(third_view).head(2);
+  double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
+  OPENMVG_LOG_INFO <<  "Solver 3rd point sq reprojection error: " << err << std::endl;
+  if (err > 1e-3)
+    return false;
 
   Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg;
 
