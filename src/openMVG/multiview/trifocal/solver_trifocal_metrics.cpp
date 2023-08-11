@@ -124,8 +124,9 @@ Check(
 
   Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg;
 
-  if (triangulated_homg.hnormalized()(2) < 1. || p_third_view(2) < 1. || p_second_view(2) < 1.) {
+  if (triangulated_homg.hnormalized()(2) <= 0. || p_third_view(2) <= 0. || p_second_view(2) <= 0.) {
     OPENMVG_LOG_INFO << "Internal Cheirality check FAIL" << std::endl;
+    OPENMVG_LOG_INFO <<  triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
     return false;
   }
   OPENMVG_LOG_INFO << "Internal Cheirality check PASS" << std::endl;
