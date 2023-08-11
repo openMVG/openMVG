@@ -95,6 +95,8 @@ TEST(TrifocalSampleApp, error_simple)
   std::cerr << "Error (pixel, not squared): " << 
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";
   CHECK(err < 1e-6);
+
+  CHECK(NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt_gt_, datum[0].col(0), datum[1].col(0), datum[2].col(0)));
   }
   
   // Testing error model with 2 perfect points and 1 perturbed point

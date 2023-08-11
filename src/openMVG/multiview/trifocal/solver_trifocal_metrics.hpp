@@ -13,6 +13,7 @@
 #ifndef OPENMVG_MULTIVIEW_TRIFOCAL_METRICS_HPP
 #define OPENMVG_MULTIVIEW_TRIFOCAL_METRICS_HPP
 
+#include "openMVG/system/logger.hpp"
 #include "openMVG/multiview/trifocal/trifocal_model.hpp"
 
 namespace openMVG {
@@ -20,6 +21,13 @@ namespace trifocal {
   
 struct NormalizedSquaredPointReprojectionOntoOneViewError {
   static double Error(
+    const trifocal_model_t &tt,
+    const Vec &bearing_0, // x,y,tangentialx,tangentialy
+    const Vec &bearing_1,
+    const Vec &bearing_2);
+
+  // Meant to be run by the 3 points given to trifocal solver
+  static bool  Check(
     const trifocal_model_t &tt,
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
