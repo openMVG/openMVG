@@ -87,7 +87,6 @@ Solve(const Mat &datum_0,
 
   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
 
-  // XXX NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheralityAndTangent
 }
 
 } // namespace trifocal

@@ -104,11 +104,11 @@ Check(
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
     // TODO(trifocal future) compare to triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
-//    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(1).cross(bearing.col(1)));
+    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(1).cross(bearing.col(1)));
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
-//    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(2).cross(bearing.col(2)));
+    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(2).cross(bearing.col(2)));
     third_view = 1;
   }
 
@@ -136,12 +136,12 @@ Check(
   }
   OPENMVG_LOG_INFO << "Internal Cheirality check PASS" << std::endl;
   
-#if 0 // code below is working, just have to check
-  tproj = (Trec - Trec.dot(tt[third_view].(2,seq(0,2))/* z axis of third camera relative to 1st, last line of R*/)*bearing.col(third_view));
+  Vec3 tproj = Trec - Trec.dot(tt[third_view](2,Eigen::seq(0,2)))/* z axis of third camera relative to 1st, last line of R*/*bearing.col(third_view);
 
-  // compute angle between tproj t.col(3)
-  double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(3))));
+  // compute angle between tproj t.col(2)
+  double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(2))));
 
+  OPENMVG_LOG_INFO << "Angular error: " << angular_error;
   // about 30 degrees tolerance
   if (angular_error > 0.52) {
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
@@ -149,7 +149,6 @@ Check(
   } else {
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass" << std::endl;
   }
-#endif
   return true;
 }
 
