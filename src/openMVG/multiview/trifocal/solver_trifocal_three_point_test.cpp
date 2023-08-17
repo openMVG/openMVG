@@ -46,6 +46,10 @@ invert_intrinsics_tgt(
   double *t = normalized_tgt_coords;
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
+  // normalize -- works as a cache for angle computations / dot products
+  // TODO: check inside minus if we are normalizing
+  double n = hypot(t[0],t[1]);
+  t[0] /= n; t[1] /= n;
 }
 
 // Converts a trifocal_model to quaternion-translation format

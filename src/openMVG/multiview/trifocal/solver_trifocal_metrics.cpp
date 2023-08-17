@@ -124,7 +124,7 @@ Check(
       OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
                        << "tt[0]" << tt[0];
     }
-    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(1).cross(bearing.col(1)));
+    Trec = t.col(0).cross(bearing.col(0)).cross(tt[1].block<3,3>(0,0).transpose()*(t.col(1).cross(bearing.col(1))));
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
@@ -138,7 +138,7 @@ Check(
       OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
                        << "tt[0]" << tt[0];
     }
-    Trec = t.col(0).cross(bearing.col(0)).cross(t.col(2).cross(bearing.col(2)));
+    Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
 
@@ -151,7 +151,7 @@ Check(
 
   std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(1) << std::endl;
   std::cout << "Triang homg"  << triangulated_homg << std::endl;
-  std::cout << "Preproj non hnormalized "  << p_third_view << std::endl;
+  std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
   std::cout << "tt "  << tt[third_view] << std::endl;
   Vec2 p_reprojected = p_third_view.hnormalized();
 
@@ -164,19 +164,26 @@ Check(
 
   Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg;
 
+  
+  Trec = tt[third_view].block<3,3>(0,0) * Trec;
+  Vec3 &tproj  = Trec;
+  tproj = Trec - Trec(2)*bearing.col(third_view);
+  tproj.head(2).normalize();
+
+  // compute angle between tproj t.col(2)
+  double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
+  OPENMVG_LOG_INFO << "Angular error: " << angular_error;
+  OPENMVG_LOG_INFO << "tproj: " << tproj;
+  OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
+
+  // TODO: put this before any angle computation
   if (triangulated_homg.hnormalized()(2) <= 0. || p_third_view(2) <= 0. || p_second_view(2) <= 0.) {
     OPENMVG_LOG_INFO << "Internal Cheirality check FAIL" << std::endl;
     OPENMVG_LOG_INFO <<  triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
     return false;
   }
   OPENMVG_LOG_INFO << "Internal Cheirality check PASS" << std::endl;
-  
-  Vec3 tproj = Trec - Trec.dot(tt[third_view](2,Eigen::seq(0,2)))/* z axis of third camera relative to 1st, last line of R*/*bearing.col(third_view);
 
-  // compute angle between tproj t.col(2)
-  double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(2))));
-
-  OPENMVG_LOG_INFO << "Angular error: " << angular_error;
   // about 30 degrees tolerance
   if (angular_error > 0.52) {
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
