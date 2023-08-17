@@ -176,6 +176,7 @@ Check(
   OPENMVG_LOG_INFO << "tproj: " << tproj;
   OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
 
+  /*
   // TODO: put this before any angle computation
   if (triangulated_homg.hnormalized()(2) <= 0. || p_third_view(2) <= 0. || p_second_view(2) <= 0.) {
     OPENMVG_LOG_INFO << "Internal Cheirality check FAIL" << std::endl;
@@ -183,9 +184,11 @@ Check(
     return false;
   }
   OPENMVG_LOG_INFO << "Internal Cheirality check PASS" << std::endl;
+  */
 
   // about 30 degrees tolerance
-  if (angular_error > 0.52) {
+  double angle_tol = 0.52;
+  if (angular_error > angle_tol  || angular_error + angle_tol > M_PI) {
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
     return false;
   } else {
