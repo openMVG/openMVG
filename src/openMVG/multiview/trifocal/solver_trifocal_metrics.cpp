@@ -188,11 +188,11 @@ Check(
 
   // about 30 degrees tolerance
   double angle_tol = 0.52;
-  if (angular_error > angle_tol  || angular_error + angle_tol > M_PI) {
+  if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) {
+    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass XXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
+  } else {
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
     return false;
-  } else {
-    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass XXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
   }
   return true;
 }

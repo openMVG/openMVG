@@ -82,7 +82,7 @@ Solve(const Mat &datum_0,
   std::vector<trifocal_model_t> &ttf = *trifocal_tensor;
   ttf.reserve(10); // on average should not return more than this
   for (unsigned s = 0; s < nsols_raw; ++s)
-    if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(1), datum_1.col(1), datum_2.col(1)))
+    if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(0), datum_1.col(0), datum_2.col(0)))
       ttf.push_back(tt[s]);
 
   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
