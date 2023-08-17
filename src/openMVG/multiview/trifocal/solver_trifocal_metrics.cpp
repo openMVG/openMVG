@@ -79,6 +79,13 @@ Check(
   const Vec &bearing_1,
   const Vec &bearing_2) 
 {
+  if (
+      (tt[0].array().isNaN()).any() ||
+      (tt[1].array().isNaN()).any() ||
+      (tt[2].array().isNaN()).any()
+     )  /* TODO: fix this inside MINUS */
+    return false;
+
   // Ideal algorithm:
   // 1) reconstruct the 3D points and orientations
   // 2) compute depths of the 3D points on all views
@@ -100,14 +107,37 @@ Check(
   Vec4 triangulated_homg;
   Vec3 Trec;
   unsigned third_view = 0;
+
+
+
   // pick the wider baseline. TODO: measure all pairwise translation distances
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
     // TODO(trifocal future) compare to triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
+    if (
+        std::isnan(triangulated_homg(0)) ||
+        std::isnan(triangulated_homg(1)) ||
+        std::isnan(triangulated_homg(2)) ||
+        std::isnan(triangulated_homg(3))
+       ) {
+      OPENMVG_LOG_INFO << "Triang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+      OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+                       << "tt[0]" << tt[0];
+    }
     Trec = t.col(0).cross(bearing.col(0)).cross(t.col(1).cross(bearing.col(1)));
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
+    if (
+        std::isnan(triangulated_homg(0)) ||
+        std::isnan(triangulated_homg(1)) ||
+        std::isnan(triangulated_homg(2)) ||
+        std::isnan(triangulated_homg(3))
+        ) {
+      OPENMVG_LOG_INFO << "Triang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+      OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+                       << "tt[0]" << tt[0];
+    }
     Trec = t.col(0).cross(bearing.col(0)).cross(t.col(2).cross(bearing.col(2)));
     third_view = 1;
   }
@@ -118,6 +148,11 @@ Check(
   // TODO: it is a good idea to filter the inliers after a robust estimation
   // using a more complete (and heavier) error metric.
   Vec3 p_third_view = tt[third_view]*triangulated_homg;
+
+  std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(1) << std::endl;
+  std::cout << "Triang homg"  << triangulated_homg << std::endl;
+  std::cout << "Preproj non hnormalized "  << p_third_view << std::endl;
+  std::cout << "tt "  << tt[third_view] << std::endl;
   Vec2 p_reprojected = p_third_view.hnormalized();
 
   OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
@@ -147,7 +182,7 @@ Check(
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
     return false;
   } else {
-    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass" << std::endl;
+    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass XXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
   }
   return true;
 }

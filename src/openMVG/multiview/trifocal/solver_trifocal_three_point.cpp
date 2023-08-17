@@ -86,7 +86,6 @@ Solve(const Mat &datum_0,
       ttf.push_back(tt[s]);
 
   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
-
 }
 
 } // namespace trifocal
