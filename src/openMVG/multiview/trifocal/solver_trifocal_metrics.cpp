@@ -147,8 +147,9 @@ Check(
   // and report only one error
   // TODO: it is a good idea to filter the inliers after a robust estimation
   // using a more complete (and heavier) error metric.
-  Vec3 p_third_view = tt[third_view]*triangulated_homg;
+  Vec3 p_third_view = tt[third_view]*triangulated_homg.hnormalized().homogeneous();
 
+  std::cout << "bearing 0"  << bearing.col(0) << std::endl;
   std::cout << "bearing 0"  << bearing.col(0) << std::endl;
   std::cout << "Triang homg"  << triangulated_homg << std::endl;
   std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
@@ -162,7 +163,7 @@ Check(
   if (err > 1e-3)
     return false;
 
-  Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg;
+  Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg.hnormalized().homogeneous();
 
   
   Trec = tt[third_view].block<3,3>(0,0) * Trec;
