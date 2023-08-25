@@ -149,7 +149,9 @@ Check(
   // using a more complete (and heavier) error metric.
   Vec3 p_third_view = tt[third_view]*triangulated_homg;
 
-  std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(1) << std::endl;
+  unsigned const second_view = (third_view == 1)?2:1;
+
+  std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(second_view) << std::endl;
   std::cout << "Triang homg"  << triangulated_homg << std::endl;
   std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
   std::cout << "tt "  << tt[third_view] << std::endl;
@@ -162,7 +164,7 @@ Check(
   if (err > 1e-3)
     return false;
 
-  Vec3 p_second_view = tt[(third_view == 1)?2:1] * triangulated_homg;
+  Vec3 p_second_view = tt[second_view] * triangulated_homg;
 
   
   Trec = tt[third_view].block<3,3>(0,0) * Trec;
