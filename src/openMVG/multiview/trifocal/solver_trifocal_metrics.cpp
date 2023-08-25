@@ -147,7 +147,7 @@ Check(
   // and report only one error
   // TODO: it is a good idea to filter the inliers after a robust estimation
   // using a more complete (and heavier) error metric.
-  Vec3 p_third_view = tt[third_view]*triangulated_homg;
+  Vec3 p_third_view = tt[third_view] * triangulated_homg/triangulated_homg(3);
 
   unsigned const second_view = (third_view == 1)?2:1;
 
@@ -164,7 +164,7 @@ Check(
   if (err > 1e-3)
     return false;
 
-  Vec3 p_second_view = tt[second_view] * triangulated_homg;
+  Vec3 p_second_view = tt[second_view] * triangulated_homg/triangulated_homg(3);
 
   
   Trec = tt[third_view].block<3,3>(0,0) * Trec;
