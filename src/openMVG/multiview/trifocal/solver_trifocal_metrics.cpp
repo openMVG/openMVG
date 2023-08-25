@@ -98,9 +98,9 @@ Check(
              bearing_2.head(2).homogeneous();
 
   Mat3 t;
-  t       << bearing_0.tail(2).homogeneous(),
-             bearing_1.tail(2).homogeneous(), 
-             bearing_2.tail(2).homogeneous();
+  t       << bearing_0.tail(2).normalized().homogeneous(),
+             bearing_1.tail(2).normalized().homogeneous(), 
+             bearing_2.tail(2).normalized().homogeneous();
 
   t(2,0) = t(2,1) = t(2,2) = 0;
   
@@ -176,6 +176,9 @@ Check(
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
   OPENMVG_LOG_INFO << "Angular error: " << angular_error;
   OPENMVG_LOG_INFO << "tproj: " << tproj;
+  OPENMVG_LOG_INFO << "t 0 view norm: " << t.col(0).squaredNorm();
+  OPENMVG_LOG_INFO << "t 1 view norm: " << t.col(1).squaredNorm();
+  OPENMVG_LOG_INFO << "t 2 view norm: " << t.col(2).squaredNorm();
   OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
 
   // TODO: put this before any angle computation
