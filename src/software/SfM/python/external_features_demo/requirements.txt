@@ -1,0 +1,5 @@
+kornia
+numpy
+pyvips
+torch
+torchvision
