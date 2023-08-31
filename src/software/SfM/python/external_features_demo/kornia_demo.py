@@ -11,12 +11,14 @@ import torchvision.transforms as transforms
 
 # // U T I L S ///////////////////////////////////////////////////////
 def loadJSON():
-  views = {}
-  with open(args.sfm_data) as file:
+  view_ids = {}
+  image_paths = []
+  with open(args.input) as file:
     sfm_data = json.load(file)
   for view in sfm_data['views']:
-    views[view['key']] = view['value']['ptr_wrapper']['data']['filename']
-  return views
+    view_ids[view['key']] = view['value']['ptr_wrapper']['data']['filename']
+    image_paths.append(os.path.join(sfm_data['root_path'], view['value']['ptr_wrapper']['data']['filename']))
+  return view_ids, image_paths
 
 def saveFeatures(keypoints, descriptors, scores, basename):
   torch.save(keypoints, os.path.join(args.matches, f"{basename}.keyp.pt"))
@@ -45,7 +47,7 @@ def saveMatches(matches):
 # // F E A T U R E ///////////////////////////////////////////////////
 def featureExtraction():
   print('Extracting DISK features...')
-  for image_path in image_list:
+  for image_path in image_paths:
     img = Image.new_from_file(image_path, access='sequential')
     basename = os.path.splitext(os.path.basename(image_path))[0]
     
@@ -82,11 +84,10 @@ def featureExtraction():
 # // M A T C H I N G /////////////////////////////////////////////////
 def featureMatching():
   print('Matching DISK features with LightGlue...')
-  views = loadJSON()
   putative_matches = []
-  for image1_index, image2_index in (np.loadtxt(args.pair_list, dtype=np.int32) if args.pair_list != None else np.asarray([*combinations(views, 2)], dtype=np.int32)):
-    keyp1, desc1, scor1 = loadFeatures(views[image1_index])
-    keyp2, desc2, scor2 = loadFeatures(views[image2_index])
+  for image1_index, image2_index in (np.loadtxt(args.pair_list, dtype=np.int32) if args.pair_list != None else np.asarray([*combinations(view_ids, 2)], dtype=np.int32)):
+    keyp1, desc1, scor1 = loadFeatures(view_ids[image1_index])
+    keyp2, desc2, scor2 = loadFeatures(view_ids[image2_index])
     
     lafs1 = K.feature.laf_from_center_scale_ori(keyp1[None], 96 * torch.ones(1, len(keyp1), 1, 1, device=device))
     lafs2 = K.feature.laf_from_center_scale_ori(keyp2[None], 96 * torch.ones(1, len(keyp2), 1, 1, device=device))
@@ -101,11 +102,10 @@ def featureMatching():
 if __name__ == '__main__':
 
   parser = ArgumentParser()
-  parser.add_argument('--images', type=str, required=True, help='Path to the image directory')
+  parser.add_argument('--input', type=str, required=True, help='Path to the sfm_data file')
   parser.add_argument('--max_resolution', type=int, default=1024, help='Max image resolution')
   parser.add_argument('--max_features', type=int, default=2048, help='Max number of features to extract')
   parser.add_argument('--matches', type=str, required=True, help='Path to the matches directory')
-  parser.add_argument('--sfm_data', type=str, required=True, help='Path to the sfm_data file')
   parser.add_argument('--pair_list', type=str, help='Path to the pair file')
   parser.add_argument('--output', type=str, required=True, help='Path to the output matches file')
   parser.add_argument('--force_cpu', action='store_true', help='Force device to CPU')
@@ -119,8 +119,7 @@ if __name__ == '__main__':
   parser.add_argument('--filter_threshold', type=float, default=0.2, help='LightGlue match threshold')
   args = parser.parse_args()
   
-  image_list = []
-  {image_list.extend(glob(os.path.join(args.images, f'*.{file_extension}'))) for file_extension in ['jpg', 'jpeg', 'png']}
+  view_ids, image_paths = loadJSON()
   
   device = torch.device('cpu') if args.force_cpu else K.utils.get_cuda_device_if_available()
   
