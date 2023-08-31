@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from glob import glob
 from itertools import combinations
 import json
 import kornia as K
