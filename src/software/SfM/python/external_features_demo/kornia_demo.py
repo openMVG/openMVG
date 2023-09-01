@@ -105,19 +105,19 @@ if __name__ == '__main__':
   parser = ArgumentParser()
   parser.add_argument('--input', type=str, required=True, help='Path to the sfm_data file')
   parser.add_argument('--max_resolution', type=int, default=1024, help='Max image resolution')
-  parser.add_argument('--max_features', type=int, default=2048, help='Max number of features to extract')
+  parser.add_argument('--max_features', type=int, default=4096, help='Max number of features to extract')
   parser.add_argument('--matches', type=str, required=True, help='Path to the matches directory')
   parser.add_argument('--pair_list', type=str, help='Path to the pair file')
   parser.add_argument('--output', type=str, required=True, help='Path to the output matches file')
   parser.add_argument('--force_cpu', action='store_true', help='Force device to CPU')
   # DISK
   parser.add_argument('--window_size', type=int, default=5, help='DISK Non Maximum Suppression (NMS) radius (Must be odd)')
-  parser.add_argument('--score_threshold', type=float, default=0.0, help='DISK keypoint detector confidence threshold')
+  parser.add_argument('--score_threshold', type=float, default=0.01, help='DISK keypoint detector confidence threshold')
   # LightGlue
   parser.add_argument('--n_layers', type=int, default=9, help='LightGlue layers')
   parser.add_argument('--depth_confidence', type=float, default=0.95, help='LightGlue early stopping (-1 - disable)')
   parser.add_argument('--width_confidence', type=float, default=0.99, help='LightGlue point pruning (-1 - disable)')
-  parser.add_argument('--filter_threshold', type=float, default=0.2, help='LightGlue match threshold')
+  parser.add_argument('--filter_threshold', type=float, default=0.9, help='LightGlue match threshold')
   args = parser.parse_args()
   
   view_ids, image_paths = loadJSON()
