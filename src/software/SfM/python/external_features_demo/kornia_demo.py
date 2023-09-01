@@ -10,30 +10,37 @@ import torchvision.transforms as transforms
 
 # // U T I L S ///////////////////////////////////////////////////////
 def loadJSON():
-  view_ids = {}
-  image_paths = []
   with open(args.input) as file:
     sfm_data = json.load(file)
-  for view in sfm_data['views']:
-    view_ids[view['key']] = view['value']['ptr_wrapper']['data']['filename']
-    image_paths.append(os.path.join(sfm_data['root_path'], view['value']['ptr_wrapper']['data']['filename']))
+  view_ids = {view['key']:view['value']['ptr_wrapper']['data']['filename'] for view in sfm_data['views']}
+  image_paths = [os.path.join(sfm_data['root_path'], view['value']['ptr_wrapper']['data']['filename']) for view in sfm_data['views']]
   return view_ids, image_paths
 
 def saveFeatures(keypoints, descriptors, scores, basename):
-  torch.save(keypoints, os.path.join(args.matches, f"{basename}.keyp.pt"))
-  torch.save(descriptors, os.path.join(args.matches, f"{basename}.desc.pt"))
-  torch.save(scores, os.path.join(args.matches, f"{basename}.scor.pt"))
+  torch.save(keypoints, os.path.join(args.matches, f'{basename}.keyp.pt'))
+  torch.save(descriptors, os.path.join(args.matches, f'{basename}.desc.pt'))
+  torch.save(scores, os.path.join(args.matches, f'{basename}.scor.pt'))
 
 def loadFeatures(filename):
-  keyp_filename = os.path.join(args.matches, f"{os.path.splitext(filename)[0]}.keyp.pt")
-  desc_filename = os.path.join(args.matches, f"{os.path.splitext(filename)[0]}.desc.pt")
-  scor_filename = os.path.join(args.matches, f"{os.path.splitext(filename)[0]}.scor.pt")
+  keyp_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.keyp.pt')
+  desc_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.desc.pt')
+  scor_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.scor.pt')
   keypoints = torch.load(os.path.join(args.matches, keyp_filename)).to(device)
   descriptors = torch.load(os.path.join(args.matches, desc_filename)).to(device)
   scores = torch.load(os.path.join(args.matches, scor_filename)).to(device)
   return keypoints, descriptors, scores
 
-def saveMatches(matches):
+def saveFeaturesOpenMVG(basename, keypoints):
+  with open(os.path.join(args.matches, f'{basename}.feat'), 'w') as feat:
+    for x, y in keypoints.numpy():
+      feat.write(f'{x} {y} 1.0 0.0\n')
+
+def saveDescriptorsOpenMVG(basename, descriptors):
+  with open(os.path.join(args.matches, f'{basename}.desc'), 'wb') as desc:
+    desc.write(len(descriptors).to_bytes(8, byteorder='little'))
+    desc.write(((descriptors.numpy() + 1) * 0.5 * 255).round(0).astype(np.ubyte).tobytes())
+
+def saveMatchesOpenMVG(matches):
   with open(args.output, 'wb') as bin:
     bin.write((1).to_bytes(1, byteorder='little'))
     bin.write(len(matches).to_bytes(8, byteorder='little'))
@@ -72,13 +79,8 @@ def featureExtraction():
     
     saveFeatures(keypoints, features.descriptors, features.detection_scores, basename)
     
-    with open(os.path.join(args.matches, f"{basename}.feat"), 'w') as feat:
-      for x, y in keypoints.numpy():
-        feat.write(f"{x} {y} 1.0 0.0\n")
-    
-    with open(os.path.join(args.matches, f"{basename}.desc"), 'wb') as desc:
-      desc.write(len(keypoints).to_bytes(8, byteorder='little'))
-      desc.write(((features.descriptors.numpy() + 1) * 0.5 * 255).round(0).astype(np.ubyte).tobytes())
+    saveFeaturesOpenMVG(basename, keypoints)
+    saveDescriptorsOpenMVG(basename, features.descriptors)
 
 # // M A T C H I N G /////////////////////////////////////////////////
 def featureMatching():
@@ -96,7 +98,7 @@ def featureMatching():
     putative_matches.append([image1_index, image2_index, idxs.cpu().numpy().astype(np.int32)])
   
   print('Saving putative matches...')
-  saveMatches(putative_matches)
+  saveMatchesOpenMVG(putative_matches)
 
 if __name__ == '__main__':
 
