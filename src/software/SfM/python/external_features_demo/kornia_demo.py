@@ -103,12 +103,13 @@ def featureMatching():
 if __name__ == '__main__':
 
   parser = ArgumentParser()
-  parser.add_argument('--input', type=str, required=True, help='Path to the sfm_data file')
+  parser.add_argument('-i', '--input', type=str, required=True, help='Path to the sfm_data file')
   parser.add_argument('--max_resolution', type=int, default=1024, help='Max image resolution')
   parser.add_argument('--max_features', type=int, default=4096, help='Max number of features to extract')
-  parser.add_argument('--matches', type=str, required=True, help='Path to the matches directory')
-  parser.add_argument('--pair_list', type=str, help='Path to the pair file')
-  parser.add_argument('--output', type=str, required=True, help='Path to the output matches file')
+  parser.add_argument('-m', '--matches', type=str, required=True, help='Path to the matches directory')
+  parser.add_argument('-p', '--pair_list', type=str, help='Path to the pair file')
+  parser.add_argument('-o', '--output', type=str, help='Path to the output matches file')
+  parser.add_argument('--preset', choices=['BOTH','EXTRACT','MATCH'], default='BOTH', help='Preset to run')
   parser.add_argument('--force_cpu', action='store_true', help='Force device to CPU')
   # DISK
   parser.add_argument('--window_size', type=int, default=5, help='DISK Non Maximum Suppression (NMS) radius (Must be odd)')
@@ -121,6 +122,8 @@ if __name__ == '__main__':
   args = parser.parse_args()
   
   view_ids, image_paths = loadJSON()
+  if args.output == None:
+    args.output = os.path.join(args.matches, 'matches.putative.bin')
   
   device = torch.device('cpu') if args.force_cpu else K.utils.get_cuda_device_if_available()
   
@@ -138,5 +141,7 @@ if __name__ == '__main__':
   lightglue = K.feature.LightGlueMatcher(params=config['lightglue']).to(device)
   
   with torch.inference_mode():
-    featureExtraction()
-    featureMatching()
+    if args.preset == 'EXTRACT' or args.preset == 'BOTH':
+      featureExtraction()
+    if args.preset == 'MATCH' or args.preset == 'BOTH':
+      featureMatching()
