@@ -118,7 +118,7 @@ if __name__ == '__main__':
   parser.add_argument('--n_layers', type=int, default=9, help='LightGlue layers')
   parser.add_argument('--depth_confidence', type=float, default=0.95, help='LightGlue early stopping (-1 - disable)')
   parser.add_argument('--width_confidence', type=float, default=0.99, help='LightGlue point pruning (-1 - disable)')
-  parser.add_argument('--filter_threshold', type=float, default=0.9, help='LightGlue match threshold')
+  parser.add_argument('--filter_threshold', type=float, default=0.99, help='LightGlue match threshold')
   args = parser.parse_args()
   
   view_ids, image_paths = loadJSON()
