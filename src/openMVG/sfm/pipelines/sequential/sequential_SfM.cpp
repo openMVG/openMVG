@@ -559,6 +559,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n << "\n";
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                                    // datum[view](coord,point)
+  Mat scdatum;
+  scdatum.resize(3,n);
   for (unsigned v = 0; v < nviews; ++v)
     pxdatum[v].resize(4,n);
   
@@ -571,13 +573,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
       pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
                                  cos(feature->orientation()), sin(feature->orientation());
+      scdatum(v,cptIndex) = double(feature->scale());
       // TODO(trifocal future): provide undistortion for tangents for models that need it (get_ud_pixel)
       i=(++iter)->second;
     }
     ++cptIndex;
   }
   OPENMVG_LOG_INFO << "DONE: Geting common features between the three views\n";
-  
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
@@ -608,6 +610,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
 
+  OPENMVG_LOG_INFO << "scale[0]" << scdatum(0) << std::endl; 
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
   { // initial structure ---------------------------------------------------
@@ -620,8 +623,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       uint32_t ifeat = iter->second;
       Observations obs;
       for (unsigned v = 0; v < nviews; ++v) {
-        x.col(v) = 
-          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+        //x.col(v) =
+        //  features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+        x.col(v) =
+          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().normalized().homogeneous().cast<double>();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
         obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);

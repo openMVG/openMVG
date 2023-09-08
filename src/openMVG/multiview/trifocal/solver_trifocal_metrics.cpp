@@ -98,10 +98,11 @@ Check(
              bearing_2.head(2).homogeneous();
 
   Mat3 t;
-  t       << bearing_0.tail(2).normalized().homogeneous(),
-             bearing_1.tail(2).normalized().homogeneous(), 
-             bearing_2.tail(2).normalized().homogeneous();
+  t       << bearing_0.tail(2).homogeneous(),
+             bearing_1.tail(2).homogeneous(), 
+             bearing_2.tail(2).homogeneous();
 
+  OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
   t(2,0) = t(2,1) = t(2,2) = 0;
   
   Vec4 triangulated_homg;
