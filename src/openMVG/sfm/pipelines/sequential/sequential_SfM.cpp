@@ -605,12 +605,16 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // Init views and intrincics
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-    tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0),relativePose_info.relativePoseTrifocal[v].block<3,1>(0,2));
+    if (v==0) 
+      tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
+    else
+      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0), -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()*relativePose_info.relativePoseTrifocal[v].block<3,1>(0,2));
     // Init projection matrices
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
 
-  OPENMVG_LOG_INFO << "scale[0]" << scdatum(0) << std::endl; 
+  OPENMVG_LOG_INFO << "scale[0]" << scdatum(0) << std::endl;
+
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
   { // initial structure ---------------------------------------------------
@@ -626,7 +630,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         //x.col(v) =
         //  features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         x.col(v) =
-          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().normalized().homogeneous().cast<double>();
+          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
         obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
@@ -665,9 +669,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   Pose3 *pose[nviews];
   for (unsigned v = 0; v < nviews; ++v)  {
     sfm_data_.poses[view[v]->id_pose] = tiny_scene.poses[view[v]->id_pose];
-    pose[v] = &sfm_data_.poses[view[v]->id_pose];
+    pose[v] = &tiny_scene.poses[view[v]->id_pose];
     map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
     set_remaining_view_id_.erase(view[v]->id_view);
+    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() <<  pose[v]->center()<< std::endl;
   }
 
   // Recompute inliers and save them

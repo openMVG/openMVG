@@ -25,7 +25,6 @@ void TriangulateNView
   assert(X != nullptr);
   // const Mat2X::Index nviews = x.cols();
   long int nviews = x.cols();
-  std::cout << "poses size = " << poses.size() << "\n";
   assert(nviews == poses.size());
 
   Mat A = Mat::Zero(3 * nviews, 4 + nviews);
