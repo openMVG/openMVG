@@ -477,6 +477,145 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
   return false;
 }
 
+// Sketching automatic triplet generation!
+// TODO XXX: MAKE IT WORK AND INTEGRATE INTO MAIN!!!
+//
+//bool SequentialSfMReconstructionEngine::AutomaticInitialTripletChoice(Triplet & initial_triplet) const
+//{
+//  // select a triplet that have the largest baseline (mean angle between its bearing vectors).
+//  // if two of the views are close enough, discard it
+//
+//  const unsigned iMin_inliers_count = 100;
+//  const float fRequired_min_angle = 3.0f;
+//  const float fLimit_max_angle = 60.0f; // More than 60 degree, we cannot rely on matches for initial pair seeding
+//
+//  // List Views that support valid intrinsic (view that could be used for Essential matrix computation)
+//  std::set<IndexT> valid_views;
+//  for (Views::const_iterator it = sfm_data_.GetViews().begin();
+//    it != sfm_data_.GetViews().end(); ++it)
+//  {
+//    const View * v = it->second.get();
+//    if (sfm_data_.GetIntrinsics().count(v->id_intrinsic))
+//      valid_views.insert(v->id_view);
+//  }
+//
+//  if (valid_views.size() < 3)
+//  {
+//    return false; // There is not view that support valid intrinsic data
+//  }
+//
+//  std::vector<std::pair<double, Pair>> scoring_per_pair;
+//
+//  // Compute the relative pose & the 'baseline score'
+//  system::LoggerProgress my_progress_bar( matches_provider_->pairWise_matches_.size(),
+//    "Selection of an initial pair");
+//#ifdef OPENMVG_USE_OPENMP
+//  #pragma omp parallel
+//#endif
+//  for (const std::pair<Pair, IndMatches> & match_pair : matches_provider_->pairWise_matches_)
+//  {
+//#ifdef OPENMVG_USE_OPENMP
+//  #pragma omp single nowait
+//#endif
+//    {
+//      ++my_progress_bar;
+//
+//      const Pair current_pair = match_pair.first;
+//
+//      const uint32_t I = std::min(current_pair.first, current_pair.second);
+//      const uint32_t J = std::max(current_pair.first, current_pair.second);
+//      if (valid_views.count(I) && valid_views.count(J))
+//      {
+//        const View
+//          * view_I = sfm_data_.GetViews().at(I).get(),
+//          * view_J = sfm_data_.GetViews().at(J).get();
+//        const Intrinsics::const_iterator
+//          iterIntrinsic_I = sfm_data_.GetIntrinsics().find(view_I->id_intrinsic),
+//          iterIntrinsic_J = sfm_data_.GetIntrinsics().find(view_J->id_intrinsic);
+//
+//        const auto
+//          cam_I = iterIntrinsic_I->second.get(),
+//          cam_J = iterIntrinsic_J->second.get();
+//        if (cam_I && cam_J)
+//        {
+//          openMVG::tracks::STLMAPTracks map_tracksCommon;
+//          shared_track_visibility_helper_->GetTracksInImages({I, J}, map_tracksCommon);
+//
+//          // Copy points correspondences to arrays for relative pose estimation
+//          const size_t n = map_tracksCommon.size();
+//          Mat xI(2,n), xJ(2,n);
+//          size_t cptIndex = 0;
+//          for (const auto & track_iter : map_tracksCommon)
+//          {
+//            auto iter = track_iter.second.cbegin();
+//            const uint32_t i = iter->second;
+//            const uint32_t j = (++iter)->second;
+//
+//            Vec2 feat = features_provider_->feats_per_view[I][i].coords().cast<double>();
+//            xI.col(cptIndex) = cam_I->get_ud_pixel(feat);
+//            feat = features_provider_->feats_per_view[J][j].coords().cast<double>();
+//            xJ.col(cptIndex) = cam_J->get_ud_pixel(feat);
+//            ++cptIndex;
+//          }
+//
+//          // Robust estimation of the relative pose
+//          RelativePose_Info relativePose_info;
+//          relativePose_info.initial_residual_tolerance = Square(4.0);
+//
+//          if (robustRelativePose(
+//                cam_I, cam_J,
+//                xI, xJ, relativePose_info,
+//                {cam_I->w(), cam_I->h()}, {cam_J->w(), cam_J->h()},
+//                256)
+//              && relativePose_info.vec_inliers.size() > iMin_inliers_count)
+//          {
+//            // Triangulate inliers & compute angle between bearing vectors
+//            std::vector<float> vec_angles;
+//            vec_angles.reserve(relativePose_info.vec_inliers.size());
+//            const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
+//            const Pose3 pose_J = relativePose_info.relativePose;
+//            for (const uint32_t & inlier_idx : relativePose_info.vec_inliers)
+//            {
+//              openMVG::tracks::STLMAPTracks::const_iterator iterT = map_tracksCommon.begin();
+//              std::advance(iterT, inlier_idx);
+//              tracks::submapTrack::const_iterator iter = iterT->second.begin();
+//              const Vec2 featI = features_provider_->feats_per_view[I][iter->second].coords().cast<double>();
+//              const Vec2 featJ = features_provider_->feats_per_view[J][(++iter)->second].coords().cast<double>();
+//              vec_angles.push_back(AngleBetweenRay(pose_I, cam_I, pose_J, cam_J,
+//                cam_I->get_ud_pixel(featI), cam_J->get_ud_pixel(featJ)));
+//            }
+//            // Compute the median triangulation angle
+//            const unsigned median_index = vec_angles.size() / 2;
+//            std::nth_element(
+//              vec_angles.begin(),
+//              vec_angles.begin() + median_index,
+//              vec_angles.end());
+//            const float scoring_angle = vec_angles[median_index];
+//            // Store the pair iff the pair is in the asked angle range [fRequired_min_angle;fLimit_max_angle]
+//            if (scoring_angle > fRequired_min_angle &&
+//                scoring_angle < fLimit_max_angle)
+//            {
+//  #ifdef OPENMVG_USE_OPENMP
+//              #pragma omp critical
+//  #endif
+//              scoring_per_pair.emplace_back(scoring_angle, current_pair);
+//            }
+//          }
+//        }
+//      }
+//    } // omp section
+//  }
+//  std::sort(scoring_per_pair.begin(), scoring_per_pair.end());
+//  // Since scoring is ordered in increasing order, reverse the order
+//  std::reverse(scoring_per_pair.begin(), scoring_per_pair.end());
+//  if (!scoring_per_pair.empty())
+//  {
+//    initial_pair = scoring_per_pair.begin()->second;
+//    return true;
+//  }
+//  return false;
+//}
+
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
 // Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
 // tensor / relative pose for ImageId [t[0],t[1],t[2]]
