@@ -155,7 +155,7 @@ private:
 
   resection::SolverType resection_method_ = resection::SolverType::DEFAULT;
 
-  unsigned maximum_trifocal_ransac_iterations_ = 1024;
+  unsigned maximum_trifocal_ransac_iterations_ = 100;
 };
 
 } // namespace sfm

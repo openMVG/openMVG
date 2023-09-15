@@ -73,8 +73,9 @@ bool robustRelativePoseTrifocal
       const cameras::Pinhole_Intrinsic *Kin = dynamic_cast<const cameras::Pinhole_Intrinsic *>(intrinsics[v]);
       assert(Kin);
       invert_intrinsics_tgt(Kin->K(), pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
-      OPENMVG_LOG_INFO << "datum point in world units:" << datum[v].col(ip).head(2);
-      OPENMVG_LOG_INFO << "datum tangent in world units:" << datum[v].col(ip).tail(2);
+      datum[v].col(ip).tail(2) = datum[v].col(ip).tail(2).normalized();
+      OPENMVG_LOG_INFO << "datum point in units:" << datum[v].col(ip).head(2);
+      OPENMVG_LOG_INFO << "datum tangent in units:" << datum[v].col(ip).tail(2);
     }
   }
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver, 

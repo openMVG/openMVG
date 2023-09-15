@@ -298,8 +298,8 @@ DisplayDesiredIds()
   svg_stream.drawImage(image_filenames_[1], images_[1].Width(), images_[1].Height(), 0, images_[0].Height());
   svg_stream.drawImage(image_filenames_[2], images_[2].Width(), images_[2].Height(), 0, images_[0].Height() + images_[1].Height());
 
-  constexpr unsigned n_ids = 5;
-  unsigned desired_ids[n_ids] = {13, 23, 33, 63, 53};
+  constexpr unsigned n_ids = 10;
+  unsigned desired_ids[n_ids] = {190, 191, 192, 193, 194, 195, 196, 197, 198, 199};
   unsigned track_id = 0;
   for (const auto &track_it: tracks_)
   {
@@ -473,7 +473,7 @@ RobustSolve()
   double threshold =
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(1, K_);
   threshold *= threshold; // squared error
-  unsigned constexpr max_iteration = 1; // XXX testing
+  unsigned constexpr max_iteration = 1024; // XXX testing
   // Vector of inliers for the best fit found
   const auto model = MaxConsensus(trifocal_kernel,
       ScorerEvaluator<TrifocalKernel>(threshold), &vec_inliers_, max_iteration);
