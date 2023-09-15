@@ -102,6 +102,7 @@ Check(
              bearing_1.tail(2).homogeneous(), 
              bearing_2.tail(2).homogeneous();
 
+  // XXX assert t's: is_normalized
   t(2,0) = t(2,1) = t(2,2) = 0;
   
   Vec4 triangulated_homg;
