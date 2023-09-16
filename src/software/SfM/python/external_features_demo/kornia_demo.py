@@ -7,6 +7,8 @@ import os
 from pyvips import Image
 import torch
 import torchvision.transforms as transforms
+import threading
+from tqdm import tqdm
 
 # // U T I L S ///////////////////////////////////////////////////////
 def loadJSON():
@@ -53,16 +55,16 @@ def saveMatchesOpenMVG(matches):
 # // F E A T U R E ///////////////////////////////////////////////////
 def featureExtraction():
   print('Extracting DISK features...')
-  for image_path in image_paths:
+  for image_path in tqdm(image_paths):
     img = Image.new_from_file(image_path, access='sequential')
     basename = os.path.splitext(os.path.basename(image_path))[0]
-    
+
     if img.width % 2 != 0 or img.height % 2 != 0:
       img = img.crop(0, 0, img.width if img.width % 2 == 0 else img.width - 1, img.height if img.height % 2 == 0 else img.height - 1)
-    
+
     max_res = args.max_resolution
     img_max, img_ratio = max(img.width, img.height), img.width / img.height
-    
+
     ratio = 0
     while not ratio:
       scale = max_res / img_max
@@ -71,32 +73,32 @@ def featureExtraction():
         ratio = 1
       else:
         max_res -= 1
-    
+
     img = transforms.ToTensor()(img.resize(scale, kernel='linear').numpy())[None, ...].to(device)
-    
+
     features = disk(img, n=args.max_features, window_size=args.window_size, score_threshold=args.score_threshold, pad_if_not_divisible=True)[0].to('cpu')
     keypoints = torch.div(features.keypoints, scale)
-    
-    saveFeatures(keypoints, features.descriptors, features.detection_scores, basename)
-    
-    saveFeaturesOpenMVG(basename, keypoints)
-    saveDescriptorsOpenMVG(basename, features.descriptors)
+
+    threading.Thread(target=lambda: saveFeatures(keypoints, features.descriptors, features.detection_scores, basename)).start()
+
+    threading.Thread(target=lambda: saveFeaturesOpenMVG(basename, keypoints)).start()
+    threading.Thread(target=lambda: saveDescriptorsOpenMVG(basename, features.descriptors)).start()
 
 # // M A T C H I N G /////////////////////////////////////////////////
 def featureMatching():
   print('Matching DISK features with LightGlue...')
   putative_matches = []
-  for image1_index, image2_index in (np.loadtxt(args.pair_list, dtype=np.int32) if args.pair_list != None else np.asarray([*combinations(view_ids, 2)], dtype=np.int32)):
+  for image1_index, image2_index in tqdm((np.loadtxt(args.pair_list, dtype=np.int32) if args.pair_list != None else np.asarray([*combinations(view_ids, 2)], dtype=np.int32))):
     keyp1, desc1, scor1 = loadFeatures(view_ids[image1_index])
     keyp2, desc2, scor2 = loadFeatures(view_ids[image2_index])
-    
+
     lafs1 = K.feature.laf_from_center_scale_ori(keyp1[None], 96 * torch.ones(1, len(keyp1), 1, 1, device=device))
     lafs2 = K.feature.laf_from_center_scale_ori(keyp2[None], 96 * torch.ones(1, len(keyp2), 1, 1, device=device))
-    
+
     dists, idxs = lightglue(desc1, desc2, lafs1, lafs2)
-    
+
     putative_matches.append([image1_index, image2_index, idxs.cpu().numpy().astype(np.int32)])
-  
+
   print('Saving putative matches...')
   saveMatchesOpenMVG(putative_matches)
 
@@ -120,13 +122,13 @@ if __name__ == '__main__':
   parser.add_argument('--width_confidence', type=float, default=0.99, help='LightGlue point pruning (-1 - disable)')
   parser.add_argument('--filter_threshold', type=float, default=0.99, help='LightGlue match threshold')
   args = parser.parse_args()
-  
+
   view_ids, image_paths = loadJSON()
   if args.output == None:
     args.output = os.path.join(args.matches, 'matches.putative.bin')
-  
+
   device = torch.device('cpu') if args.force_cpu else K.utils.get_cuda_device_if_available()
-  
+
   config = {
     'lightglue': {
       'n_layers': args.n_layers,
@@ -135,11 +137,11 @@ if __name__ == '__main__':
       'filter_threshold': args.filter_threshold
     }
   }
-  
+
   disk = K.feature.DISK().from_pretrained('depth').to(device)
   print('Loaded DISK model')
   lightglue = K.feature.LightGlueMatcher(params=config['lightglue']).to(device)
-  
+
   with torch.inference_mode():
     if args.preset == 'EXTRACT' or args.preset == 'BOTH':
       featureExtraction()
