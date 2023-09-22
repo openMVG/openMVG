@@ -150,6 +150,21 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 }
 #endif
 
+//- Oriented tests ------------------------------------------------------------
+
+//-----------------
+// Test summary:
+//-----------------
+// - Create oriented features points and matching from the synthcurves synthetic dataset
+//    - 5 features x 5 true point correspondences x 4 views
+// - Init a SfM_Data scene View and Intrinsic from a synthetic dataset
+// - Perform Sequential SfM on the data
+// - Assert that:
+//   - mean residual error is below the gaussian noise added to observation
+//   - the desired number of tracks are found,
+//   - the desired number of poses are found.
+//-----------------
+
 // A N-view metric dataset with feature orientation in 3D and 2D.
 // All points are seen by all cameras.
 struct NViewOrientedDataSet : public NViewDataSet {
@@ -393,8 +408,8 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
 
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
-TEST(SEQUENTIAL_SFM, OrientedSfM) {
-
+TEST(SEQUENTIAL_SFM, OrientedSfM) 
+{
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
   const nViewDatasetConfigurator config;
@@ -431,11 +446,11 @@ TEST(SEQUENTIAL_SFM, OrientedSfM) {
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
-  // Will use view ids (1,2,3) as the initial triplet
+  // Will use view ids (1,2,3) as the initial triplet, not (0,1,2)
   assert(nviews > 3); // assuming 4 views
   sfmEngine.setInitialTriplet({sfm_data_2.GetViews().at(1)->id_view,
-                            sfm_data_2.GetViews().at(2)->id_view,
-                            sfm_data_2.GetViews().at(3)->id_view});
+                               sfm_data_2.GetViews().at(2)->id_view,
+                               sfm_data_2.GetViews().at(3)->id_view});
   sfmEngine.SetMaximumTrifocalRansacIterations(5);
   EXPECT_TRUE (sfmEngine.Process());
 
