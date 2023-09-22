@@ -149,6 +149,7 @@ bool eraseMissingPoses
   // If usage count is smaller than the threshold, remove the Pose
   for (const auto & it : map_PoseId_Count)
   {
+    std::cout << "XXX Testing pose " << it.first << "num points " << it.second << "\n";
     if (it.second < min_points_per_pose)
     {
       sfm_data.poses.erase(it.first);

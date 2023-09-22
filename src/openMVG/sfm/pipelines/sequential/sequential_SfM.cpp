@@ -236,15 +236,21 @@ bool SequentialSfMReconstructionEngine::Process()
         BundleAdjustment();
       }
       while (badTrackRejector(4.0, 50));
-      eraseUnstablePosesAndObservations(sfm_data_);
+      eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
+                                                       // points per pose as we
+                                                       // are working with more
+                                                       // radical pipeline
+                                                       // situations
     }
     ++resectionGroupIndex;
   }
   // Ensure there is no remaining outliers
-  if (badTrackRejector(4.0, 0))
-  {
-    eraseUnstablePosesAndObservations(sfm_data_);
-  }
+//   if (badTrackRejector(4.0, 0))
+//     eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
+                                                     // points per pose as we
+                                                     // are working with more
+                                                     // radical pipeline
+                                                     // situations
 
   //-- Reconstruction done.
   //-- Display some statistics
@@ -1379,6 +1385,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Localize the image inside the SfM reconstruction
   Image_Localizer_Match_Data resection_data;
+  resection_data.min_consensus_ratio = 1; // TODO make this a parameter
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
   // TODO(p2pt) tangent

@@ -34,6 +34,9 @@ struct Image_Localizer_Match_Data
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
   uint32_t max_iteration = 4096;
+  double min_consensus_ratio = 2.5; // minimum number of inliers to proceed
+                                    // with is 2.5 the minimum number of points
+                                    // to get a model
 };
 
 class SfM_Localizer

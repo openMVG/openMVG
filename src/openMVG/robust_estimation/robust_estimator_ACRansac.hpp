@@ -330,7 +330,8 @@ std::pair<double, double> ACRANSAC
   const unsigned int num_max_iteration = 1024,
   typename Kernel::Model * model = nullptr,
   double precision = std::numeric_limits<double>::infinity(),
-  bool bVerbose = false
+  bool bVerbose = false,
+  double bMinConsensusRatio = 2.5
 )
 {
   vec_inliers.clear();
@@ -408,8 +409,8 @@ std::pair<double, double> ACRANSAC
           if (nfa_interface.residuals()[i] <= maxThreshold)
             ++nInlier;
         }
-        if (nInlier > 2.5 * sizeSample) // does the model is meaningful
-          bACRansacMode = true;
+        if (nInlier > bMinConsensusRatio * sizeSample) // does the model is meaningful
+            bACRansacMode = true;
       }
 
       if (bACRansacMode)

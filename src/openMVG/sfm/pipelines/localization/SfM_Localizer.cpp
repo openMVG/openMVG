@@ -185,7 +185,7 @@ namespace sfm {
                                     resection_data.max_iteration,
                                     &P,
                                     dPrecision,
-                                    true);
+                                    true, resection_data.min_consensus_ratio);
         // Update the upper bound precision of the model found by AC-RANSAC
         resection_data.error_max = ACRansacOut.first;
       }
@@ -290,7 +290,7 @@ namespace sfm {
     }
 
     // Test if the mode support some points (more than those required for estimation)
-    const bool bResection = (resection_data.vec_inliers.size() > 2.5 * MINIMUM_SAMPLES);
+    const bool bResection = (resection_data.vec_inliers.size() >  resection_data.min_consensus_ratio * MINIMUM_SAMPLES);
 
     if (bResection)
     {
