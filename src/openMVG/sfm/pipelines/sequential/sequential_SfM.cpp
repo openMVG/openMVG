@@ -205,8 +205,6 @@ bool SequentialSfMReconstructionEngine::Process()
     }
   }
 
-
-
   // ---------------------------------------------------------------------------
   
   // Compute robust Resection of remaining images
@@ -1654,7 +1652,9 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                   landmark.X = X;
                   new_track_observations_valid_views.insert(I);
                   new_track_observations_valid_views.insert(J);
-                } // 3D point is valid
+                } else { // 3D point is valid
+                  std::cerr << "XXX " << "not adding track in views " << I << ", " << J << std::endl;
+                }
               }
               else
               {
