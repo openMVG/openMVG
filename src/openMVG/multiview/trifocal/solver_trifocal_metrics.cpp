@@ -105,7 +105,7 @@ Check(
   // XXX assert t's: is_normalized
   OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
   t(2,0) = t(2,1) = t(2,2) = 0;
-  
+  assert(t.col(0).squaredNorm() == 1 && t.col(1).squaredNorm() == 1 && t.col(2).squaredNorm() == 1); 
   Vec4 triangulated_homg;
   Vec3 Trec;
   unsigned third_view = 0;
@@ -153,10 +153,10 @@ Check(
 
   unsigned const second_view = (third_view == 1)?2:1;
 
-  std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(second_view) << std::endl;
-  std::cout << "Triang homg"  << triangulated_homg << std::endl;
-  std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
-  std::cout << "tt "  << tt[third_view] << std::endl;
+  //std::cout << "bearing 0, 1"  << bearing.col(0) <<  " || \n" << bearing.col(second_view) << std::endl;
+  //std::cout << "Triang homg"  << triangulated_homg << std::endl;
+  //std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
+  //std::cout << "tt "  << tt[third_view] << std::endl;
   Vec2 p_reprojected = p_third_view.hnormalized();
 
   OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
@@ -178,9 +178,6 @@ Check(
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
   OPENMVG_LOG_INFO << "Angular error: " << angular_error;
   OPENMVG_LOG_INFO << "tproj: " << tproj;
-  OPENMVG_LOG_INFO << "t 0 view norm: " << t.col(0).squaredNorm();
-  OPENMVG_LOG_INFO << "t 1 view norm: " << t.col(1).squaredNorm();
-  OPENMVG_LOG_INFO << "t 2 view norm: " << t.col(2).squaredNorm();
   OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
 
   // TODO: put this before any angle computation
