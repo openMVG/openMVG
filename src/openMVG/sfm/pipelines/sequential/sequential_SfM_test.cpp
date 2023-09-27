@@ -429,7 +429,7 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
   }
 }
 
-TEST(CHECK_SFM, GT_Check_test)
+TEST(SEQUENTIAL_SFM, Check_test)
 {
 
   const int nviews = synth_nviews_;
@@ -485,59 +485,58 @@ TEST(CHECK_SFM, GT_Check_test)
 }
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
-//TEST(SEQUENTIAL_SFM, OrientedSfM) 
-//{
-//  const int nviews = synth_nviews_;
-//  const int npoints = synth_npts_;
-//  const nViewDatasetConfigurator config;
-//  NViewOrientedDataSet d;
-//  NOrientedPointsCamerasSphere(&d);
-//
-//  // Translate the input dataset to a SfM_Data scene
-//  const SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA);
-//
-//  // Remove poses and structure
-//  SfM_Data sfm_data_2 = sfm_data;
-//  sfm_data_2.poses.clear();
-//  sfm_data_2.structure.clear();
-//
-//  SequentialSfMReconstructionEngine sfmEngine(
-//    sfm_data_2,
-//    "./",
-//    stlplus::create_filespec("./", "Reconstruction_Report.html"));
-//
-//  // Configure the features_provider & the matches_provider from the synthetic dataset
-//  std::shared_ptr<Features_Provider> feats_provider =
-//    std::make_shared<Synthetic_Oriented_Features_Provider>();
-//  // Add a tiny noise in 2D observations to make data more realistic
-//  dynamic_cast<Synthetic_Oriented_Features_Provider*>(feats_provider.get())->load(d);
-//
-//  std::shared_ptr<Matches_Provider> matches_provider =
-//    std::make_shared<Synthetic_Matches_Provider>();
-//  dynamic_cast<Synthetic_Matches_Provider*>(matches_provider.get())->load(d);
-//
-//  // Configure data provider (Features and Matches)
-//  sfmEngine.SetFeaturesProvider(feats_provider.get());
-//  sfmEngine.SetMatchesProvider(matches_provider.get());
-//
-//  // Configure reconstruction parameters (intrinsic parameters are held constant)
-//  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
-//
-//  // Will use view ids (1,2,3) as the initial triplet, not (0,1,2)
-//  assert(nviews > 3); // assuming 4 views
-//  sfmEngine.setInitialTriplet({sfm_data_2.GetViews().at(1)->id_view,
-//                               sfm_data_2.GetViews().at(2)->id_view,
-//                               sfm_data_2.GetViews().at(3)->id_view});
-//  sfmEngine.SetMaximumTrifocalRansacIterations(5);
-//  EXPECT_TRUE (sfmEngine.Process());
-//
-//  const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
-//  std::cout << "RMSE residual: " << dResidual << std::endl;
-//  EXPECT_TRUE( dResidual < 0.5);
-//  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-//  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
-//  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
-//}
+TEST(SEQUENTIAL_SFM, OrientedSfM) 
+{
+  const int nviews = synth_nviews_;
+  const int npoints = synth_npts_;
+  const nViewDatasetConfigurator config;
+  NViewOrientedDataSet d;
+  NOrientedPointsCamerasSphere(&d);
+
+  // Translate the input dataset to a SfM_Data scene
+  const SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA);
+
+  // Remove poses and structure
+  SfM_Data sfm_data_2 = sfm_data;
+  sfm_data_2.poses.clear();
+  sfm_data_2.structure.clear();
+
+  SequentialSfMReconstructionEngine sfmEngine(
+    sfm_data_2,
+   "./",
+    stlplus::create_filespec("./", "Reconstruction_Report.html"));
+
+  // Configure the features_provider & the matches_provider from the synthetic dataset
+  std::shared_ptr<Features_Provider> feats_provider =
+    std::make_shared<Synthetic_Oriented_Features_Provider>();
+  // Add a tiny noise in 2D observations to make data more realistic
+  dynamic_cast<Synthetic_Oriented_Features_Provider*>(feats_provider.get())->load(d);
+
+  std::shared_ptr<Matches_Provider> matches_provider =
+    std::make_shared<Synthetic_Matches_Provider>();
+  dynamic_cast<Synthetic_Matches_Provider*>(matches_provider.get())->load(d);
+  // Configure data provider (Features and Matches)
+  sfmEngine.SetFeaturesProvider(feats_provider.get());
+  sfmEngine.SetMatchesProvider(matches_provider.get());
+  sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_CVPR12)));
+  // Configure reconstruction parameters (intrinsic parameters are held constant)
+  sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
+
+  // Will use view ids (1,2,3) as the initial triplet, not (0,1,2)
+  assert(nviews > 3); // assuming 4 views
+  sfmEngine.setInitialTriplet({sfm_data_2.GetViews().at(1)->id_view,
+                               sfm_data_2.GetViews().at(2)->id_view,
+                               sfm_data_2.GetViews().at(3)->id_view});
+  sfmEngine.SetMaximumTrifocalRansacIterations(5);
+  EXPECT_TRUE (sfmEngine.Process());
+
+  const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
+  std::cout << "RMSE residual: " << dResidual << std::endl;
+  //EXPECT_TRUE( dResidual < 0.5);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
+  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
+}
 
 
 /* ************************************************************************* */
