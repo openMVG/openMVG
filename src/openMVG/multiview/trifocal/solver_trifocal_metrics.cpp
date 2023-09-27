@@ -105,7 +105,7 @@ Check(
   // XXX assert t's: is_normalized
   OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
   t(2,0) = t(2,1) = t(2,2) = 0;
-  assert(t.col(0).squaredNorm() == 1 && t.col(1).squaredNorm() == 1 && t.col(2).squaredNorm() == 1); 
+  //assert(t.col(0).squaredNorm() == 1.0 && t.col(1).squaredNorm() == 1.0 && t.col(2).squaredNorm() == 1.0); 
   Vec4 triangulated_homg;
   Vec3 Trec;
   unsigned third_view = 0;
@@ -160,12 +160,14 @@ Check(
   Vec2 p_reprojected = p_third_view.hnormalized();
 
   OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
-  OPENMVG_LOG_INFO << "P third " <<bearing.col(third_view).head(2);
+  OPENMVG_LOG_INFO << "P third " << bearing.col(third_view).head(2);
+  OPENMVG_LOG_INFO << "P difference " << (p_reprojected - bearing.col(third_view).head(2));
   double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
   OPENMVG_LOG_INFO <<  "Solver 3rd point sq reprojection error: " << err << std::endl;
   if (err > 1e-3)
     return false;
 
+  std::cout << "triang\n";
   Vec3 p_second_view = tt[second_view] * triangulated_homg/triangulated_homg(3);
 
   

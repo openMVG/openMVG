@@ -748,6 +748,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // Init views and intrincics
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
+    OPENMVG_LOG_INFO << relativePose_info.relativePoseTrifocal[v]; 
     if (v==0) 
       tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     else
@@ -1184,7 +1185,6 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
   vec_residuals.reserve(sfm_data_.structure.size());
-  std::cout << "1st\n";
   for (const auto & landmark_entry : sfm_data_.GetLandmarks())
   {
     const Observations & obs = landmark_entry.second.obs;
@@ -1198,16 +1198,13 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }
   }
-  std::cout << "2nd\n";
   // Display statistics
   if (vec_residuals.size() > 1)
   {
-    std::cout << "entered 1st if\n";
     float dMin, dMax, dMean, dMedian;
     minMaxMeanMedian<float>(vec_residuals.cbegin(), vec_residuals.cend(),
                             dMin, dMax, dMean, dMedian);
     if (histo)  {
-      std::cout << "entered 2nd if\n";
       *histo = Histogram<double>(dMin, dMax, 10);
       histo->Add(vec_residuals.cbegin(), vec_residuals.cend());
     }
