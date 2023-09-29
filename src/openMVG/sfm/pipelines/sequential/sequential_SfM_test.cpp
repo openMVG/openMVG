@@ -431,7 +431,6 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
 
 TEST(SEQUENTIAL_SFM, Check_test)
 {
-
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
   openMVG::trifocal::trifocal_model_t GT_cam;
@@ -454,20 +453,12 @@ TEST(SEQUENTIAL_SFM, Check_test)
         K(r,c) = K_[r][c]; 
     }
   }
-  K(2,1) = K(2,0) = 0;
-  K(2,2) = 1;
- for(unsigned r = 0; r < 3; ++r)
- {
-   GT_cam[0](r,3) = -(cameras_gt_[0][r][0]*cameras_gt_[0][3][0]+cameras_gt_[0][r][1]*cameras_gt_[0][3][1]+cameras_gt_[0][r][2]*cameras_gt_[0][3][2]);
-   GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
-   GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
- }
-  for (unsigned v = 0; v < 3; v++)
-    OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
-  for(unsigned v = 0; v < npoints; ++v)
-  {
-    for(unsigned i = 0; i < 2; ++i) // Separate pt from tgt
-    {
+  for(unsigned r = 0; r < 3; ++r) {
+    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
+    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
+  }
+  for(unsigned v = 0; v < npoints; ++v) {
+    for(unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
       datum0[v](i) = p_gt_[0][v][i];
       datum0[v](i+2) = t_gt_[0][v][i]; 
       datum1[v](i) = p_gt_[1][v][i];
@@ -500,8 +491,8 @@ TEST(SEQUENTIAL_SFM, Check_test)
       break;
   }
   EXPECT_TRUE(result);
-  
 }
+
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
