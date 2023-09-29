@@ -537,7 +537,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   // Configure data provider (Features and Matches)
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
-  // sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_CVPR12)));
+  sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_ECCV12)));
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 

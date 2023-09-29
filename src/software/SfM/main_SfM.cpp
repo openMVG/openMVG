@@ -298,7 +298,7 @@ int main(int argc, char **argv)
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
       << "\t\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
-      << "\t\t" << static_cast<int>(resection::SolverType::P2Pt_FABBRI_CVPR12)  << ": P2Pt_FABBRI_CVPR12 | 2Points with tangent| upright camera\n"
+      << "\t\t" << static_cast<int>(resection::SolverType::P2Pt_FABBRI_ECCV12)  << ": P2Pt_FABBRI_ECCV12 | 2Points with tangent| upright camera\n"
       // TODO: insert P2PT
       << "\n\n"
       << "[INCREMENTALV2]\n"
