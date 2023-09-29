@@ -431,7 +431,6 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
 
 TEST(SEQUENTIAL_SFM, Check_test)
 {
-
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
   openMVG::trifocal::trifocal_model_t GT_cam;
@@ -441,24 +440,19 @@ TEST(SEQUENTIAL_SFM, Check_test)
   bool result = true;
   // Fill data
   GT_cam[0] = Mat34::Identity();
-  for(unsigned r = 0; r < 3; ++r)
-  {
-    for(unsigned c = 0; c < 3; ++c)
-    {
+  for(unsigned r = 0; r < 3; ++r) {
+    for(unsigned c = 0; c < 3; ++c) {
       GT_cam[1](r,c) = cameras_gt_[1][r][c];
       GT_cam[2](r,c) = cameras_gt_[2][r][c];
     }
   }
 
- for(unsigned r = 0; r < 3; ++r)
- {
-   GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
-   GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
- }
-  for(unsigned v = 0; v < npoints; ++v)
-  {
-    for(unsigned i = 0; i < 2; ++i) // Separate pt from tgt
-    {
+  for(unsigned r = 0; r < 3; ++r) {
+    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
+    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
+  }
+  for(unsigned v = 0; v < npoints; ++v) {
+    for(unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
       datum0[v](i) = p_gt_[0][v][i];
       datum0[v](i+2) = t_gt_[0][v][i]; 
       datum1[v](i) = p_gt_[1][v][i];
@@ -477,12 +471,9 @@ TEST(SEQUENTIAL_SFM, Check_test)
     datum2[v].tail(2) = datum2[v].tail(2).normalized();
   }
   for(unsigned v = 0; v < npoints; ++v)
-  {
-    result = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[v], datum1[v], datum2[v]);
-  }
-  EXPECT_TRUE(result);
-  
+    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[v], datum1[v], datum2[v]));
 }
+
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
