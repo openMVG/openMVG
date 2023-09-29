@@ -434,44 +434,42 @@ TEST(SEQUENTIAL_SFM, Check_test)
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
   openMVG::trifocal::trifocal_model_t GT_cam;
-  std::array<Vec4,npoints> datum0;
-  std::array<Vec4,npoints> datum1;
-  std::array<Vec4,npoints> datum2;
-  bool result = true;
+  std::array<Vec4,npoints> datum0, datum1, datum2;
+
   // Fill data
   GT_cam[0] = Mat34::Identity();
-  for(unsigned r = 0; r < 3; ++r) {
+  for(unsigned r = 0; r < 3; ++r)
     for(unsigned c = 0; c < 3; ++c) {
       GT_cam[1](r,c) = cameras_gt_[1][r][c];
       GT_cam[2](r,c) = cameras_gt_[2][r][c];
     }
-  }
 
   for(unsigned r = 0; r < 3; ++r) {
     GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
     GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
   }
-  for(unsigned v = 0; v < npoints; ++v) {
+
+  for(unsigned p = 0; p < npoints; ++p) {
     for(unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
-      datum0[v](i) = p_gt_[0][v][i];
-      datum0[v](i+2) = t_gt_[0][v][i]; 
-      datum1[v](i) = p_gt_[1][v][i];
-      datum1[v](i+2) = t_gt_[1][v][i]; 
-      datum2[v](i) = p_gt_[2][v][i];
-      datum2[v](i+2) = t_gt_[2][v][i];
+      datum0[p](i)   = p_gt_[0][p][i];
+      datum0[p](i+2) = t_gt_[0][p][i]; 
+      datum1[p](i)   = p_gt_[1][p][i];
+      datum1[p](i+2) = t_gt_[1][p][i]; 
+      datum2[p](i)   = p_gt_[2][p][i];
+      datum2[p](i+2) = t_gt_[2][p][i];
     }
-    invert_intrinsics(K_, datum0[v].data(), datum0[v].data()); 
-    invert_intrinsics_tgt(K_, datum0[v].data()+2, datum0[v].data()+2); 
-    invert_intrinsics(K_, datum1[v].data(), datum1[v].data()); 
-    invert_intrinsics_tgt(K_, datum1[v].data()+2, datum1[v].data()+2); 
-    invert_intrinsics(K_, datum2[v].data(), datum2[v].data()); 
-    invert_intrinsics_tgt(K_, datum2[v].data()+2, datum2[v].data()+2);
-    datum0[v].tail(2) = datum0[v].tail(2).normalized();
-    datum1[v].tail(2) = datum1[v].tail(2).normalized();
-    datum2[v].tail(2) = datum2[v].tail(2).normalized();
+    invert_intrinsics(K_, datum0[p].data(), datum0[p].data()); 
+    invert_intrinsics_tgt(K_, datum0[p].data()+2, datum0[p].data()+2); 
+    invert_intrinsics(K_, datum1[p].data(), datum1[p].data()); 
+    invert_intrinsics_tgt(K_, datum1[p].data()+2, datum1[p].data()+2); 
+    invert_intrinsics(K_, datum2[p].data(), datum2[p].data()); 
+    invert_intrinsics_tgt(K_, datum2[p].data()+2, datum2[p].data()+2);
+    datum0[p].tail(2) = datum0[p].tail(2).normalized();
+    datum1[p].tail(2) = datum1[p].tail(2).normalized();
+    datum2[p].tail(2) = datum2[p].tail(2).normalized();
   }
-  for(unsigned v = 0; v < npoints; ++v)
-    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[v], datum1[v], datum2[v]));
+  for(unsigned p = 0; p < npoints; ++p)
+    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[p], datum1[p], datum2[p]));
 }
 
 // Test a scene where all the camera intrinsics are known
@@ -519,14 +517,14 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
                                sfm_data_2.GetViews().at(2)->id_view,
                                sfm_data_2.GetViews().at(3)->id_view});
   sfmEngine.SetMaximumTrifocalRansacIterations(5);
-  EXPECT_TRUE (sfmEngine.Process());
+  EXPECT_TRUE(sfmEngine.Process());
 
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
   //EXPECT_TRUE( dResidual < 0.5);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
-  EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
-  EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
+  EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
+  EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
+  EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
 
