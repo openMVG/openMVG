@@ -109,8 +109,6 @@ Check(
   Vec3 Trec;
   unsigned third_view = 0;
 
-
-
   // pick the wider baseline. TODO: measure all pairwise translation distances
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
     // TODO(trifocal future) compare to triangulation from the three views at once
@@ -175,7 +173,6 @@ Check(
   std::cout << "triang\n";
   Vec3 p_second_view = tt[second_view] * triangulated_homg/triangulated_homg(3);
 
-  
   Trec = tt[third_view].block<3,3>(0,0) * Trec;
   Vec3 &tproj  = Trec;
   tproj = Trec - Trec(2)*bearing.col(third_view);
@@ -205,7 +202,6 @@ Check(
   }
   return true;
 }
-
 
 } // namespace trifocal
 } // namespace OpenMVG
