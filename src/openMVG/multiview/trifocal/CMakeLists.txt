@@ -22,6 +22,7 @@ install(TARGETS openMVG_multiview_trifocal DESTINATION lib EXPORT openMVG-target
 target_link_libraries(openMVG_multiview_trifocal
   PUBLIC
     openMVG_multiview
+    openMVG_features
 )
 target_link_libraries(openMVG_multiview_trifocal
   LINK_PRIVATE
