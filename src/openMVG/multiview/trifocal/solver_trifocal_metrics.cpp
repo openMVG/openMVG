@@ -180,7 +180,7 @@ Check(
 
   // compute angle between tproj t.col(2)
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
-  OPENMVG_LOG_INFO << "Angular error: " << angular_error;
+  OPENMVG_LOG_INFO << "Angular error rad (deg): " << angular_error << "(" << angular_error*180./M_PI << ")";
   OPENMVG_LOG_INFO << "tproj: " << tproj;
   OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
 

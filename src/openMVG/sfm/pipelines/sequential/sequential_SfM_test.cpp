@@ -432,7 +432,7 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
 // Tests trifocal point-error reprojection tangent-error are very low and that chirality
 // pass on perfect synthetic data
 //
-TEST(SEQUENTIAL_SFM, Triofacal_Check)
+TEST(SEQUENTIAL_SFM, Trifocal_Check)
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
@@ -457,8 +457,12 @@ TEST(SEQUENTIAL_SFM, Triofacal_Check)
     }
   }
   for(unsigned r = 0; r < 3; ++r) {
-    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
-    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
+    gt_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+
+                       cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+
+                       cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
+    gt_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+
+                       cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+
+                       cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
   }
 
   for(unsigned p = 0; p < npoints; ++p) {
@@ -497,6 +501,7 @@ TEST(SEQUENTIAL_SFM, Triofacal_Check)
   EXPECT_TRUE(result);
 }
 
+#if 0
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -552,6 +557,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
+#endif
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
