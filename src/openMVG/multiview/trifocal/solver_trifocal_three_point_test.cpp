@@ -108,7 +108,7 @@ initialize_gt()
 
 // Directly runs the solver and test
 // - define synthetic data
-// - directly passo to solver
+// - directly pass to solver
 //    - use Trifocal3PointPositionTangentialSolver::Solve
 // - check if the solver returns any known root
 // - might fail 5% of the time

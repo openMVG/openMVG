@@ -429,7 +429,10 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
   }
 }
 
-TEST(SEQUENTIAL_SFM, Check_test)
+// Tests trifocal point-error reprojection tangent-error are very low and that chirality
+// pass on perfect synthetic data
+//
+TEST(SEQUENTIAL_SFM, Triofacal_Check)
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
@@ -543,7 +546,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
 
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
-  //EXPECT_TRUE( dResidual < 0.5);
+  EXPECT_TRUE( dResidual < 0.5);
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
