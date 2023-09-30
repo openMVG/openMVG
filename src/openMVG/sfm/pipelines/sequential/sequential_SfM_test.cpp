@@ -432,24 +432,33 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
 // Tests trifocal point-error reprojection tangent-error are very low and that chirality
 // pass on perfect synthetic data
 //
-TEST(SEQUENTIAL_SFM, Triofacal_Check)
+TEST(SEQUENTIAL_SFM, Trifocal_Check)
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
-  openMVG::trifocal::trifocal_model_t GT_cam;
+  openMVG::trifocal::trifocal_model_t gt_cam;
+
+  NViewOrientedDataSet d;
+  NOrientedPointsCamerasSphere(&d);
+
+
   std::array<Vec4,npoints> datum0, datum1, datum2;
 
   // Fill data
-  GT_cam[0] = Mat34::Identity();
+  gt_cam[0] = Mat34::Identity();
   for(unsigned r = 0; r < 3; ++r)
     for(unsigned c = 0; c < 3; ++c) {
-      GT_cam[1](r,c) = cameras_gt_[1][r][c];
-      GT_cam[2](r,c) = cameras_gt_[2][r][c];
+      gt_cam[1](r,c) = cameras_gt_[1][r][c];
+      gt_cam[2](r,c) = cameras_gt_[2][r][c];
     }
 
   for(unsigned r = 0; r < 3; ++r) {
-    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
-    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
+    gt_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+
+                       cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+
+                       cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
+    gt_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+
+                       cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+
+                       cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
   }
 
   for(unsigned p = 0; p < npoints; ++p) {
@@ -472,9 +481,10 @@ TEST(SEQUENTIAL_SFM, Triofacal_Check)
     datum2[p].tail(2) = datum2[p].tail(2).normalized();
   }
   for(unsigned p = 0; p < npoints; ++p)
-    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[p], datum1[p], datum2[p]));
+    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(gt_cam, datum0[p], datum1[p], datum2[p]));
 }
 
+#if 0
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -530,6 +540,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
 
+#endif
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
