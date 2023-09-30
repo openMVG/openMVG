@@ -102,10 +102,9 @@ Check(
              bearing_1.tail(2).homogeneous(), 
              bearing_2.tail(2).homogeneous();
 
-  // XXX assert t's: is_normalized
   OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
   t(2,0) = t(2,1) = t(2,2) = 0;
-  //assert(t.col(0).squaredNorm() == 1.0 && t.col(1).squaredNorm() == 1.0 && t.col(2).squaredNorm() == 1.0); 
+  assert(fabs(t.col(0).squaredNorm() -  1.0) < 1e-6 && fabs(t.col(1).squaredNorm() -  1.0) < 1e-6  &&  fabs(t.col(2).squaredNorm() -  1.0) < 1e-6);
   Vec4 triangulated_homg;
   Vec3 Trec;
   unsigned third_view = 0;
@@ -143,6 +142,8 @@ Check(
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
+
+  OPENMVG_LOG_INFO << "Check: third view = "<< third_view;
 
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view

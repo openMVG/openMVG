@@ -1,4 +1,3 @@
-
 file(
   GLOB
   multiview_trifocal_files_header
