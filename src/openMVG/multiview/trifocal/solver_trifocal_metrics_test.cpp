@@ -76,10 +76,10 @@ TEST(TrifocalSampleApp, error_simple)
   array<Mat, 3> datum; // x,y,orientation across 3 views
   array<Mat, 3> pxdatum; // for debug
   
-  unsigned ip = 0;
   for (unsigned v=0; v < 3; ++v) {
     datum[v].resize(4, 1);
     pxdatum[v].resize(4, 1);
+    constexpr unsigned ip = 0;
     pxdatum[v](0,ip) = data::p_[v][ip][0];
     pxdatum[v](1,ip) = data::p_[v][ip][1];
     pxdatum[v](2,ip) = data::tgt_[v][ip][0];
@@ -96,7 +96,7 @@ TEST(TrifocalSampleApp, error_simple)
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_normalized_to_pixel(sqrt(err),data::K_) << "\n";
   CHECK(err < 1e-6);
   
-  for (unsigned i = 0; i < ip; i++)
+  for (unsigned i = 0; i < 3; i++)
     CHECK(NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt_gt_, datum[0].col(i), datum[1].col(i), datum[2].col(i))); 
   }
   
