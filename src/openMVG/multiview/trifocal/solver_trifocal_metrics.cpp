@@ -165,8 +165,10 @@ Check(
   OPENMVG_LOG_INFO << "P difference " << (p_reprojected - bearing.col(third_view).head(2));
   double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
   OPENMVG_LOG_INFO <<  "Solver 3rd point sq reprojection error: " << err << std::endl;
-  if (err > 1e-3)
+  if (err > 1e-3) { // This funciton is meant to run only on the 3 points given to the solver
+    OPENMVG_LOG_INFO << "Internal reprojection check FAIL" << std::endl;
     return false;
+  }
 
   std::cout << "triang\n";
   Vec3 p_second_view = tt[second_view] * triangulated_homg/triangulated_homg(3);
