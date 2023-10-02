@@ -438,23 +438,32 @@ TEST(SEQUENTIAL_SFM, Check_test)
   std::array<Vec4,npoints> datum0;
   std::array<Vec4,npoints> datum1;
   std::array<Vec4,npoints> datum2;
+  std::array<Vec3,npoints> ptw;
+  std::array<Vec3,npoints> tgtw;
+  Mat3 K;
   bool result = true;
   // Fill data
-  GT_cam[0] = Mat34::Identity();
   for(unsigned r = 0; r < 3; ++r)
   {
     for(unsigned c = 0; c < 3; ++c)
     {
+      GT_cam[0](r,c) = cameras_gt_[0][r][c];
       GT_cam[1](r,c) = cameras_gt_[1][r][c];
       GT_cam[2](r,c) = cameras_gt_[2][r][c];
+      if (r != 3)
+        K(r,c) = K_[r][c]; 
     }
   }
-
+  K(2,1) = K(2,0) = 0;
+  K(2,2) = 1;
  for(unsigned r = 0; r < 3; ++r)
  {
+   GT_cam[0](r,3) = -(cameras_gt_[0][r][0]*cameras_gt_[0][3][0]+cameras_gt_[0][r][1]*cameras_gt_[0][3][1]+cameras_gt_[0][r][2]*cameras_gt_[0][3][2]);
    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
  }
+  //for (unsigned v = 0; v < 3; v++)
+  //  OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
   for(unsigned v = 0; v < npoints; ++v)
   {
     for(unsigned i = 0; i < 2; ++i) // Separate pt from tgt
@@ -476,9 +485,19 @@ TEST(SEQUENTIAL_SFM, Check_test)
     datum1[v].tail(2) = datum1[v].tail(2).normalized();
     datum2[v].tail(2) = datum2[v].tail(2).normalized();
   }
+  GT_cam[1].block<3,3>(0,0) *= GT_cam[1].block<3,3>(0,0).inverse();
+  GT_cam[1].block<3,1>(0,3) -= GT_cam[1].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
+  GT_cam[2].block<3,3>(0,0) *= GT_cam[2].block<3,3>(0,0).inverse();
+  GT_cam[2].block<3,1>(0,3) -= GT_cam[2].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
+  GT_cam[0] = Mat34::Identity();
+  for (unsigned v = 0; v < 3; v++)
+    OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
   for(unsigned v = 0; v < npoints; ++v)
   {
+    OPENMVG_LOG_INFO << "tgt0 norm, tgt1 norm, tgt2 norm: [" << datum0[v].tail(2).norm() << ", " << datum1[v].tail(2).norm() << ", " << datum2[v].tail(2).norm() << "]";
     result = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[v], datum1[v], datum2[v]);
+    if(!result)
+      break;
   }
   EXPECT_TRUE(result);
   
@@ -518,7 +537,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   // Configure data provider (Features and Matches)
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
-  sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_CVPR12)));
+  // sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_CVPR12)));
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
