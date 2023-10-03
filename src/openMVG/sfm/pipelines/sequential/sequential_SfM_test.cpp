@@ -436,22 +436,19 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
-  openMVG::trifocal::trifocal_model_t GT_cam;
+  openMVG::trifocal::trifocal_model_t gt_cam;
   std::array<Vec4,npoints> datum0;
   std::array<Vec4,npoints> datum1;
   std::array<Vec4,npoints> datum2;
   std::array<Vec3,npoints> ptw;
   std::array<Vec3,npoints> tgtw;
   Mat3 K;
-  bool result = true;
   // Fill data
   for(unsigned r = 0; r < 3; ++r)
-  {
-    for(unsigned c = 0; c < 3; ++c)
-    {
-      GT_cam[0](r,c) = cameras_gt_[0][r][c];
-      GT_cam[1](r,c) = cameras_gt_[1][r][c];
-      GT_cam[2](r,c) = cameras_gt_[2][r][c];
+    for(unsigned c = 0; c < 3; ++c) {
+      gt_cam[0](r,c) = cameras_gt_[0][r][c];
+      gt_cam[1](r,c) = cameras_gt_[1][r][c];
+      gt_cam[2](r,c) = cameras_gt_[2][r][c];
       if (r != 3)
         K(r,c) = K_[r][c]; 
     }
@@ -484,24 +481,20 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
     datum1[p].tail(2) = datum1[p].tail(2).normalized();
     datum2[p].tail(2) = datum2[p].tail(2).normalized();
   }
-  GT_cam[1].block<3,3>(0,0) *= GT_cam[0].block<3,3>(0,0).inverse();
-  GT_cam[1].block<3,1>(0,3) -= GT_cam[1].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
-  GT_cam[2].block<3,3>(0,0) *= GT_cam[0].block<3,3>(0,0).inverse();
-  GT_cam[2].block<3,1>(0,3) -= GT_cam[2].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
-  GT_cam[0] = Mat34::Identity();
+  gt_cam[1].block<3,3>(0,0) *= gt_cam[0].block<3,3>(0,0).inverse();
+  gt_cam[1].block<3,1>(0,3) -= gt_cam[1].block<3,3>(0,0) * gt_cam[0].block<3,1>(0,3);
+  gt_cam[2].block<3,3>(0,0) *= gt_cam[0].block<3,3>(0,0).inverse();
+  gt_cam[2].block<3,1>(0,3) -= gt_cam[2].block<3,3>(0,0) * gt_cam[0].block<3,1>(0,3);
+  gt_cam[0] = Mat34::Identity();
   for (unsigned v = 0; v < 3; v++)
-    OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
-  for(unsigned v = 0; v < npoints; ++v)
-  {
-    OPENMVG_LOG_INFO << "tgt0 norm, tgt1 norm, tgt2 norm: [" << datum0[v].tail(2).norm() << ", " << datum1[v].tail(2).norm() << ", " << datum2[v].tail(2).norm() << "]";
-    result = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(GT_cam, datum0[v], datum1[v], datum2[v]);
-    if(!result)
-      break;
+    OPENMVG_LOG_INFO << "\n "<< gt_cam[v];
+
+  for(unsigned p = 0; p < npoints; ++p) {
+    OPENMVG_LOG_INFO << "tgt0 norm, tgt1 norm, tgt2 norm: [" << datum0[p].tail(2).norm() << ", " << datum1[p].tail(2).norm() << ", " << datum2[p].tail(2).norm() << "]";
+    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(gt_cam, datum0[p], datum1[p], datum2[p]));
   }
-  EXPECT_TRUE(result);
 }
 
-#if 0
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -551,13 +544,11 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
 
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
   std::cout << "RMSE residual: " << dResidual << std::endl;
-  EXPECT_TRUE( dResidual < 0.5);
+  EXPECT_TRUE(dResidual < 0.5);
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetPoses().size() == nviews);
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
-
-#endif
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
