@@ -462,8 +462,8 @@ TEST(SEQUENTIAL_SFM, Check_test)
    GT_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
    GT_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
  }
-  //for (unsigned v = 0; v < 3; v++)
-  //  OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
+  for (unsigned v = 0; v < 3; v++)
+    OPENMVG_LOG_INFO << "\n "<< GT_cam[v];
   for(unsigned v = 0; v < npoints; ++v)
   {
     for(unsigned i = 0; i < 2; ++i) // Separate pt from tgt
@@ -485,9 +485,9 @@ TEST(SEQUENTIAL_SFM, Check_test)
     datum1[v].tail(2) = datum1[v].tail(2).normalized();
     datum2[v].tail(2) = datum2[v].tail(2).normalized();
   }
-  GT_cam[1].block<3,3>(0,0) *= GT_cam[1].block<3,3>(0,0).inverse();
+  GT_cam[1].block<3,3>(0,0) *= GT_cam[0].block<3,3>(0,0).inverse();
   GT_cam[1].block<3,1>(0,3) -= GT_cam[1].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
-  GT_cam[2].block<3,3>(0,0) *= GT_cam[2].block<3,3>(0,0).inverse();
+  GT_cam[2].block<3,3>(0,0) *= GT_cam[0].block<3,3>(0,0).inverse();
   GT_cam[2].block<3,1>(0,3) -= GT_cam[2].block<3,3>(0,0) * GT_cam[0].block<3,1>(0,3);
   GT_cam[0] = Mat34::Identity();
   for (unsigned v = 0; v < 3; v++)
