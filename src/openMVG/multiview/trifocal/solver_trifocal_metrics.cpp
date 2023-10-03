@@ -149,7 +149,8 @@ Check(
   // and report only one error
   // TODO: it is a good idea to filter the inliers after a robust estimation
   // using a more complete (and heavier) error metric.
-  Vec3 p_third_view = tt[third_view] * triangulated_homg/triangulated_homg(3);
+  // Vec3 p_third_view = tt[third_view] * triangulated_homg/triangulated_homg(3);
+  Vec3 p_third_view = tt[third_view] * triangulated_homg;
 
   unsigned const second_view = (third_view == 1)?2:1;
 
@@ -157,12 +158,13 @@ Check(
   //std::cout << "Triang homg"  << triangulated_homg << std::endl;
   //std::cout << "Preproj no hnormalized "  << p_third_view << std::endl;
   //std::cout << "tt "  << tt[third_view] << std::endl;
-  Vec2 p_reprojected = p_third_view.hnormalized();
+  //Vec2 p_reprojected = p_third_view.hnormalized();
 
-  OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
-  OPENMVG_LOG_INFO << "P third " << bearing.col(third_view).head(2);
-  OPENMVG_LOG_INFO << "P difference " << (p_reprojected - bearing.col(third_view).head(2));
-  double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
+  //OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
+  //OPENMVG_LOG_INFO << "P third " << bearing.col(third_view).head(2);
+  //OPENMVG_LOG_INFO << "P difference " << (p_reprojected - bearing.col(third_view).head(2));
+  //double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
+  double err = NormalizedSquaredPointReprojectionOntoOneViewError::Error(tt, bearing_0, bearing_1, bearing_2);
   OPENMVG_LOG_INFO <<  "Solver 3rd point sq reprojection error: " << err << std::endl;
   if (err > 1e-3)
     return false;
