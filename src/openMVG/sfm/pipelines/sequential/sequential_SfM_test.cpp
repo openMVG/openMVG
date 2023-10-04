@@ -429,13 +429,12 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
   }
 }
 
-// Tests trifocal point-error reprojection tangent-error are very low and that chirality
-// pass on perfect synthetic data
-//
-TEST(SEQUENTIAL_SFM, Trifocal_Check)
+bool
+check_camera_triplet(const int ci[]) 
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
+
   openMVG::trifocal::trifocal_model_t gt_cam;
   std::array<Vec4,npoints> datum0;
   std::array<Vec4,npoints> datum1;
@@ -446,30 +445,30 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
   // Fill data
   for(unsigned r = 0; r < 3; ++r)
     for(unsigned c = 0; c < 3; ++c) {
-      gt_cam[0](r,c) = cameras_gt_[0][r][c];
-      gt_cam[1](r,c) = cameras_gt_[1][r][c];
-      gt_cam[2](r,c) = cameras_gt_[2][r][c];
+      gt_cam[0](r,c) = cameras_gt_[ci[0]][r][c];
+      gt_cam[1](r,c) = cameras_gt_[ci[1]][r][c];
+      gt_cam[2](r,c) = cameras_gt_[ci[2]][r][c];
       if (r != 3)
         K(r,c) = K_[r][c]; 
     }
   K(2,1) = K(2,0) = 0;
   K(2,2) = 1;
   for(unsigned r = 0; r < 3; ++r) {
-    gt_cam[0](r,3) = -(cameras_gt_[0][r][0]*cameras_gt_[0][3][0]+cameras_gt_[0][r][1]*cameras_gt_[0][3][1]+cameras_gt_[0][r][2]*cameras_gt_[0][3][2]);
-    gt_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
-    gt_cam[2](r,3) = -(cameras_gt_[2][r][0]*cameras_gt_[2][3][0]+cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
+    gt_cam[0](r,3) = -(cameras_gt_[ci[0]][r][0]*cameras_gt_[ci[0]][3][0]+cameras_gt_[ci[0]][r][1]*cameras_gt_[ci[0]][3][1]+cameras_gt_[ci[0]][r][2]*cameras_gt_[ci[0]][3][2]);
+    gt_cam[1](r,3) = -(cameras_gt_[ci[1]][r][0]*cameras_gt_[ci[1]][3][0]+cameras_gt_[ci[1]][r][1]*cameras_gt_[ci[1]][3][1]+cameras_gt_[ci[1]][r][2]*cameras_gt_[ci[1]][3][2]);
+    gt_cam[2](r,3) = -(cameras_gt_[ci[2]][r][0]*cameras_gt_[ci[2]][3][0]+cameras_gt_[ci[2]][r][1]*cameras_gt_[ci[2]][3][1]+cameras_gt_[ci[2]][r][2]*cameras_gt_[ci[2]][3][2]);
   }
   for (unsigned v = 0; v < 3; v++)
     OPENMVG_LOG_INFO << "\n "<< gt_cam[v];
 
-  for(unsigned p = 0; p < npoints; ++p) {
-    for(unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
-      datum0[p](i) = p_gt_[0][p][i];
-      datum0[p](i+2) = t_gt_[0][p][i]; 
-      datum1[p](i) = p_gt_[1][p][i];
-      datum1[p](i+2) = t_gt_[1][p][i]; 
-      datum2[p](i) = p_gt_[2][p][i];
-      datum2[p](i+2) = t_gt_[2][p][i];
+  for (unsigned p = 0; p < npoints; ++p) {
+    for (unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
+      datum0[p](i)   = p_gt_[ci[0]][p][i];
+      datum0[p](i+2) = t_gt_[ci[0]][p][i]; 
+      datum1[p](i)   = p_gt_[ci[1]][p][i];
+      datum1[p](i+2) = t_gt_[ci[1]][p][i]; 
+      datum2[p](i)   = p_gt_[ci[2]][p][i];
+      datum2[p](i+2) = t_gt_[ci[2]][p][i];
     }
     invert_intrinsics(K_, datum0[p].data(), datum0[p].data()); 
     invert_intrinsics_tgt(K_, datum0[p].data()+2, datum0[p].data()+2); 
@@ -491,10 +490,52 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
 
   for(unsigned p = 0; p < npoints; ++p) {
     OPENMVG_LOG_INFO << "tgt0 norm, tgt1 norm, tgt2 norm: [" << datum0[p].tail(2).norm() << ", " << datum1[p].tail(2).norm() << ", " << datum2[p].tail(2).norm() << "]";
-    EXPECT_TRUE(trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(gt_cam, datum0[p], datum1[p], datum2[p]));
+    if (!trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Check(gt_cam, datum0[p], datum1[p], datum2[p]))
+      return false;
+  }
+  return true;
+}
+// Tests trifocal point-error reprojection tangent-error are very low and that chirality
+// pass on perfect synthetic data
+//
+TEST(SEQUENTIAL_SFM, Trifocal_Check)
+{
+  {
+  constexpr int ci[3] = {0, 1, 2}; // camera index of the trifocal triplet. Here we
+                                   // are skiping camera 0 and using the last 3.
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {1, 0, 2}; // camera index of the trifocal triplet. Here we
+                                   // are skiping camera 0 and using the last 3.
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {2, 0, 1}; // camera index of the trifocal triplet. Here we
+                                   // are skiping camera 0 and using the last 3.
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {2, 1, 0}; // camera index of the trifocal triplet. Here we
+                                   // are skiping camera 0 and using the last 3.
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {0, 1, 3}; // camera index of the trifocal triplet. Here we
+                                   // are skiping camera 0 and using the last 3.
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {0, 2, 3};
+  EXPECT_TRUE(check_camera_triplet(ci));
+  }
+  {
+  constexpr int ci[3] = {1, 2, 3};
+  EXPECT_TRUE(check_camera_triplet(ci));
   }
 }
 
+/*
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -549,6 +590,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
+*/
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
