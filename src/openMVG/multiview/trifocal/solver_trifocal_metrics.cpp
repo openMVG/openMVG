@@ -102,8 +102,13 @@ Check(
              bearing_1.tail(2).homogeneous(), 
              bearing_2.tail(2).homogeneous();
 
-  OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
+  
+  //OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
+
   t(2,0) = t(2,1) = t(2,2) = 0;
+  OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << t.col(0) << ",\n " << t.col(1) << ", \n" << t.col(1) << std::endl;
+  OPENMVG_LOG_INFO << "tangent0 norm, tangent1 norm, tangent 2 norm = " << t.col(0).squaredNorm() << ",\n " << t.col(1).squaredNorm() << ", \n" << t.col(1).squaredNorm() << std::endl;
+  // XXX TODO:  FIND OUT WHY IT IS NOT ONE!
   assert(fabs(t.col(0).squaredNorm() -  1.0) < 1e-6 && fabs(t.col(1).squaredNorm() -  1.0) < 1e-6  &&  fabs(t.col(2).squaredNorm() -  1.0) < 1e-6);
   Vec4 triangulated_homg;
   Vec3 Trec;
@@ -200,6 +205,7 @@ Check(
     OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
     return false;
   }
+  OPENMVG_LOG_INFO << "FINISHED ONE POINT!";
   return true;
 }
 
