@@ -56,6 +56,8 @@ invert_intrinsics_tgt(
   double *t = normalized_tgt_coords;
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
+  double n = hypot(t[0], t[1]);
+  t[0] /= n; t[1] /= n;
 }
 #if 0
 // Test a scene where all the camera intrinsics are known
@@ -535,7 +537,6 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
   }
 }
 
-/*
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -590,7 +591,6 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
-*/
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
