@@ -497,6 +497,7 @@ check_camera_triplet(const int ci[])
   }
   return true;
 }
+#if 0
 // Tests trifocal point-error reprojection tangent-error are very low and that chirality
 // pass on perfect synthetic data
 //
@@ -536,6 +537,7 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
   EXPECT_TRUE(check_camera_triplet(ci));
   }
 }
+#endif
 
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM

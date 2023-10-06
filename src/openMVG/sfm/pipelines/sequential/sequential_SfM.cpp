@@ -725,6 +725,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "DONE: Geting common features between the three views\n";
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
+  OPENMVG_LOG_INFO << "---------------------------------------------------------\n";
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
   if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_))
@@ -739,6 +740,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
+
+  OPENMVG_LOG_INFO << "---------------------------------------------------------\n";
+  OPENMVG_LOG_INFO << "Starting Bundle Adjustment for initial triplet\n";
 
   SfM_Data tiny_scene;
   std::vector<Mat34> P;

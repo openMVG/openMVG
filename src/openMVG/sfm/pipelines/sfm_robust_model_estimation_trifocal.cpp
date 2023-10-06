@@ -100,6 +100,19 @@ bool robustRelativePoseTrifocal
       &relativePoseTrifocal_info.vec_inliers, max_iteration_count);
 
   OPENMVG_LOG_INFO << "Number of inliers " << relativePoseTrifocal_info.vec_inliers.size();
+
+  // for Debug
+  OPENMVG_LOG_INFO << "Best inlier residual: " << std::endl;
+  for (unsigned i=0; i < relativePoseTrifocal_info.vec_inliers.size(); ++i) {
+    OPENMVG_LOG_INFO << "Inlier " << i <<  " " << 
+      trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error( 
+        relativePoseTrifocal_info.relativePoseTrifocal, 
+        datum[0].col(relativePoseTrifocal_info.vec_inliers[i]), 
+        datum[1].col(relativePoseTrifocal_info.vec_inliers[i]), 
+        datum[2].col(relativePoseTrifocal_info.vec_inliers[i]))
+      << std::endl;
+  }
+
   if (relativePoseTrifocal_info.vec_inliers.size() <=
       TrifocalKernel::Solver::MINIMUM_SAMPLES)
   {
