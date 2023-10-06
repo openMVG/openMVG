@@ -452,6 +452,9 @@ check_camera_triplet(const int ci[])
         K(r,c) = K_[r][c]; 
     }
   for(unsigned r = 0; r < 3; ++r) {
+    gt_cam[0](r,3) = -(cameras_gt_[0][r][0]*cameras_gt_[0][3][0]+
+                       cameras_gt_[0][r][1]*cameras_gt_[0][3][1]+
+                       cameras_gt_[0][r][2]*cameras_gt_[0][3][2]);
     gt_cam[1](r,3) = -(cameras_gt_[1][r][0]*cameras_gt_[1][3][0]+
                        cameras_gt_[1][r][1]*cameras_gt_[1][3][1]+
                        cameras_gt_[1][r][2]*cameras_gt_[1][3][2]);
@@ -459,7 +462,8 @@ check_camera_triplet(const int ci[])
                        cameras_gt_[2][r][1]*cameras_gt_[2][3][1]+
                        cameras_gt_[2][r][2]*cameras_gt_[2][3][2]);
   }
-
+  for (unsigned v = 0; v < 3; v++)
+    OPENMVG_LOG_INFO << "\n "<< gt_cam[v];
   for(unsigned p = 0; p < npoints; ++p) {
     for(unsigned i = 0; i < 2; ++i) { // Separate pt from tgt
       datum0[p](i)   = p_gt_[0][p][i];
@@ -593,4 +597,4 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
-/* ************************************************************************* */
+
