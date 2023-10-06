@@ -21,7 +21,9 @@
 namespace openMVG {
 namespace trifocal {
 
-static unsigned constexpr max_solve_tries = 5;
+static unsigned constexpr max_solve_tries = 5; // this is so we can use
+                                               // aggressive time optimizations
+                                               // inside the solver 
 using namespace MiNuS;
 
 void Trifocal3PointPositionTangentialSolver::
@@ -53,39 +55,43 @@ Solve(const Mat &datum_0,
     tgt[2][ip][1] = datum_2(3,ip);
   }
 
-  unsigned nsols_raw = 0;
-  unsigned id_sols[M::nsols];
-  double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
-  for (unsigned i = 0; i < max_solve_tries; ++i)
-    if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw))
-      break;
-
-  std::vector<trifocal_model_t> tt;
-  tt.resize(nsols_raw);
-  for (unsigned s = 0; s < nsols_raw; ++s) {
-    tt[s][0] = Mat34::Identity();
-    for (unsigned v=1; v < io::pp::nviews; ++v) {
-        // eigen is col-major but minus is row-major, so memcpy cannot be used.
-        for (unsigned ir = 0; ir < 3; ++ir)
-          for (unsigned ic = 0; ic < 3; ++ic)
-            tt[s][v](ir, ic) = cameras[id_sols[s]][v-1][ir][ic];
-        for (unsigned r=0; r < 3; ++r)
-          tt[s][v](r,3) = cameras[id_sols[s]][v-1][3][r];
-    }
-  }
-  // TODO: filter the solutions by:
-  // - positive depth and
-  // - using tangent at 3rd point
-  //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
-  std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
-
   std::vector<trifocal_model_t> &ttf = *trifocal_tensor;
-  ttf.reserve(10); // on average should not return more than this
-  for (unsigned s = 0; s < nsols_raw; ++s)
-    if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2)))
-      ttf.push_back(tt[s]);
+  unsigned num_tries = 0;
+  do {
+    ttf.clear();
+    unsigned nsols_raw = 0;
+    unsigned id_sols[M::nsols];
+    double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
+    for (; num_tries < max_solve_tries; ++num_tries)
+      if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw))
+        break;
 
-  std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
+    std::vector<trifocal_model_t> tt;
+    tt.resize(nsols_raw);
+    for (unsigned s = 0; s < nsols_raw; ++s) {
+      tt[s][0] = Mat34::Identity();
+      for (unsigned v=1; v < io::pp::nviews; ++v) {
+          // eigen is col-major but minus is row-major, so memcpy cannot be used.
+          for (unsigned ir = 0; ir < 3; ++ir)
+            for (unsigned ic = 0; ic < 3; ++ic)
+              tt[s][v](ir, ic) = cameras[id_sols[s]][v-1][ir][ic];
+          for (unsigned r=0; r < 3; ++r)
+            tt[s][v](r,3) = cameras[id_sols[s]][v-1][3][r];
+      }
+    }
+    // TODO: filter the solutions by:
+    // - positive depth and
+    // - using tangent at 3rd point
+    //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
+    std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
+
+    ttf.reserve(10); // on average should not return more than this
+    for (unsigned s = 0; s < nsols_raw; ++s)
+      if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2)))
+        ttf.push_back(tt[s]);
+  } while (ttf.empty() && num_tries < max_solve_tries);
+
+   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
 }
 
 } // namespace trifocal
