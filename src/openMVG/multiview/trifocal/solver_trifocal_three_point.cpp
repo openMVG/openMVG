@@ -63,8 +63,10 @@ Solve(const Mat &datum_0,
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     for (; num_tries < max_solve_tries; ++num_tries)
-      if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw))
+      if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw)) {
+        ++num_tries;
         break;
+      }
 
     std::vector<trifocal_model_t> tt;
     tt.resize(nsols_raw);
@@ -84,6 +86,7 @@ Solve(const Mat &datum_0,
     // - using tangent at 3rd point
     //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
     std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
+    std::cerr << "Num tries "<< num_tries << std::endl;
 
     ttf.reserve(10); // on average should not return more than this
     for (unsigned s = 0; s < nsols_raw; ++s)
