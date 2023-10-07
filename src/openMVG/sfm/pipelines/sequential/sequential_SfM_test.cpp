@@ -383,7 +383,7 @@ const double t3d_gt_[synth_npts_][3] = {
 
 // number of points is hardcoded and number of views is hardcoded
 void 
-NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
+NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp, nViewDatasetConfigurator *conf)
 {
   //-- Setup a camera rig
   // based on github.com/rfabbri/synthcurves-multiview-3d-dataset
@@ -429,6 +429,10 @@ NOrientedPointsCamerasSphere(NViewOrientedDataSet *dp)
     }
     d._x_ids[v] = all_point_ids;
   }
+  assert (fabs(K_[0][0] - K_[1][1]) < 1e-6);
+
+  conf->_fx = K_[0][0]; conf->_fy = K_[1][1]; conf->_cx = K_[0][2]; conf->_cy = K_[1][2];
+  conf->_dist = conf->_jitter_amount = 0; // not used
 }
 
 bool
@@ -545,15 +549,19 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
 {
   const int nviews = synth_nviews_;
   const int npoints = synth_npts_;
-  const nViewDatasetConfigurator config;
+  nViewDatasetConfigurator config;
   NViewOrientedDataSet d;
-  NOrientedPointsCamerasSphere(&d);
+  NOrientedPointsCamerasSphere(&d, &config); // need to use config since K_ is
+                                              // ignored by getInputScene below
+                                              // (this comes from code
+                                              // initializing K not from a
+                                              // matrix)
 
   // Translate the input dataset to a SfM_Data scene
   const SfM_Data sfm_data = getInputScene(d, config, PINHOLE_CAMERA);
 
   // Remove poses and structure
-  SfM_Data sfm_data_2 = sfm_data;
+  SfM_Data sfm_data_2 (sfm_data);
   sfm_data_2.poses.clear();
   sfm_data_2.structure.clear();
 
