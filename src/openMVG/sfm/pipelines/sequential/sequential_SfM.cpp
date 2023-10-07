@@ -148,7 +148,6 @@ GetPairWithMostMatches(const SfM_Data& sfm_data, const PairWiseMatches& matches,
 
 bool SequentialSfMReconstructionEngine::Process() 
 {
-
   //-------------------
   //-- Incremental reconstruction
   //-------------------
@@ -652,13 +651,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     sfm_data_.GetIntrinsics().find(view[2]->id_intrinsic)
   };
 
-  for (unsigned v=0; v < nviews; ++v) {
-    if (iterIntrinsic[v] == sfm_data_.GetIntrinsics().end())
-    {
+  for (unsigned v=0; v < nviews; ++v)
+    if (iterIntrinsic[v] == sfm_data_.GetIntrinsics().end()) {
       OPENMVG_LOG_ERROR << "Views with valid intrinsic data are required but this failed for view " << v;
       return false;
     }
-  }
   
   const cameras::IntrinsicBase *cam[nviews] = {
     iterIntrinsic[0]->second.get(),
@@ -675,31 +672,30 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_ERROR << "Trifocal initialization only works for pinhole intrinsics K matrix.";
       return false;
     }
-    OPENMVG_LOG_INFO << "K for v " << v << std::endl << dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K() << std::endl;
+    OPENMVG_LOG_INFO << "K for v " << v << std::endl << dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K();
   }
   
-  OPENMVG_LOG_INFO << "Putative starting triplet info:\nindex:";
+  OPENMVG_LOG_INFO << "Putative starting triplet info:\n\tindex:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << t[v] << " ";
   OPENMVG_LOG_INFO << std::endl;
-  OPENMVG_LOG_INFO << "view basename:";
+  OPENMVG_LOG_INFO << "\tview basename:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << stlplus::basename_part(view[v]->s_Img_path) << " ";
-  OPENMVG_LOG_INFO << std::endl;
 
   // ---------------------------------------------------------------------------
   // b. Get common features between the three views
   // use the track to have a more dense match correspondence set
-  OPENMVG_LOG_INFO << "Geting common features between the three views\n";
+  OPENMVG_LOG_INFO << "Geting common features between the three views";
   if (!features_provider_->has_sio_features()) {
     OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
     return false;
   }
-  OPENMVG_LOG_INFO << "Has oriented features.\n";
+  OPENMVG_LOG_INFO << "Has oriented features.";
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
   const size_t n = map_tracksCommon.size();
-  OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n << "\n";
+  OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n ;
   std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
                                    // datum[view](coord,point)
   Mat scdatum;
@@ -722,11 +718,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     ++cptIndex;
   }
-  OPENMVG_LOG_INFO << "DONE: Geting common features between the three views\n";
+  OPENMVG_LOG_INFO << "DONE: Geting common features between the three views";
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
-  OPENMVG_LOG_INFO << "---------------------------------------------------------\n";
-  OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose\n";
+  OPENMVG_LOG_INFO << "---------------------------------------------------------";
+  OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose";
+  OPENMVG_LOG_INFO << "---------------------------------------------------------";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
   if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_))
   {
@@ -741,8 +738,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
-  OPENMVG_LOG_INFO << "---------------------------------------------------------\n";
-  OPENMVG_LOG_INFO << "Starting Bundle Adjustment for initial triplet\n";
+  OPENMVG_LOG_INFO << "---------------------------------------------------------";
+  OPENMVG_LOG_INFO << "Starting Bundle Adjustment for initial triplet";
+  OPENMVG_LOG_INFO << "---------------------------------------------------------";
 
   SfM_Data tiny_scene;
   std::vector<Mat34> P;
@@ -761,7 +759,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
 
-  OPENMVG_LOG_INFO << "scale[0]" << scdatum(0) << std::endl;
+  OPENMVG_LOG_INFO << "\tscale[0]" << scdatum(0);
 
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
@@ -820,7 +818,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     pose[v] = &tiny_scene.poses[view[v]->id_pose];
     map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
     set_remaining_view_id_.erase(view[v]->id_view);
-    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() <<  pose[v]->center()<< std::endl;
+    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() <<  pose[v]->center();
   }
 
   // Recompute inliers and save them
@@ -842,7 +840,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
 
-      OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v] << std::endl;
+      OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
     }
     bool include_landmark = true;
     for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
@@ -873,7 +871,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     if (include_landmark)
       sfm_data_.structure[trackId] = landmarks[trackId];
   }
-  std::cout << "residual phase\n";
   // Save outlier residual information
   Histogram<double> histoResiduals;
   OPENMVG_LOG_INFO

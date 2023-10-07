@@ -5,6 +5,8 @@
 // Misc. Utilities used by trifocal solver
 #include "trifocal_util.hpp"
 
+#include <cmath>
+
 namespace trifocal3pt {
 
 //------------------------------------------------------------------------------

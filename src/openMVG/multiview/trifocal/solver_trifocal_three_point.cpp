@@ -86,7 +86,6 @@ Solve(const Mat &datum_0,
     // - using tangent at 3rd point
     //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
     std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
-    std::cerr << "Num tries "<< num_tries << std::endl;
 
     ttf.reserve(10); // on average should not return more than this
     for (unsigned s = 0; s < nsols_raw; ++s)
@@ -94,7 +93,7 @@ Solve(const Mat &datum_0,
         ttf.push_back(tt[s]);
   } while (ttf.empty() && num_tries < max_solve_tries);
 
-   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
+  std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
 }
 
 } // namespace trifocal

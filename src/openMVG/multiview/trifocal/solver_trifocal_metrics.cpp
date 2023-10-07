@@ -102,7 +102,7 @@ Check(
              bearing_1.tail(2).homogeneous(), 
              bearing_2.tail(2).homogeneous();
 
-  OPENMVG_LOG_INFO << "tangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2) << std::endl;
+  OPENMVG_LOG_INFO << "\ttangent0, tangent1, tangent 2 = " << bearing_0.tail(2) << ",\n " << bearing_1.tail(2) << ", \n" << bearing_2.tail(2);
   t(2,0) = t(2,1) = t(2,2) = 0;
   assert(fabs(t.col(0).squaredNorm() -  1.0) < 1e-6 && fabs(t.col(1).squaredNorm() -  1.0) < 1e-6  &&  fabs(t.col(2).squaredNorm() -  1.0) < 1e-6);
   Vec4 triangulated_homg;
@@ -119,8 +119,8 @@ Check(
         std::isnan(triangulated_homg(2)) ||
         std::isnan(triangulated_homg(3))
        ) {
-      OPENMVG_LOG_INFO << "Triang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
-      OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+      OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+      OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
                        << "tt[0]" << tt[0];
     }
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[1].block<3,3>(0,0).transpose()*(t.col(1).cross(bearing.col(1))));
@@ -133,15 +133,15 @@ Check(
         std::isnan(triangulated_homg(2)) ||
         std::isnan(triangulated_homg(3))
         ) {
-      OPENMVG_LOG_INFO << "Triang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
-      OPENMVG_LOG_INFO << "bearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+      OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+      OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
                        << "tt[0]" << tt[0];
     }
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
 
-  OPENMVG_LOG_INFO << "Check: third view = "<< third_view;
+  OPENMVG_LOG_INFO << "\tCheck: third view = "<< third_view;
 
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
@@ -158,17 +158,16 @@ Check(
   //std::cout << "tt "  << tt[third_view] << std::endl;
   Vec2 p_reprojected = p_third_view.hnormalized();
 
-  OPENMVG_LOG_INFO << "P reproj " << p_reprojected;
-  OPENMVG_LOG_INFO << "P third " << bearing.col(third_view).head(2);
-  OPENMVG_LOG_INFO << "P difference " << (p_reprojected - bearing.col(third_view).head(2));
+  OPENMVG_LOG_INFO << "\tP reproj " << p_reprojected;
+  OPENMVG_LOG_INFO << "\tP third " << bearing.col(third_view).head(2);
+  OPENMVG_LOG_INFO << "\tP difference " << (p_reprojected - bearing.col(third_view).head(2));
   double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
-  OPENMVG_LOG_INFO <<  "Solver 3rd point sq reprojection error: " << err << std::endl;
+  OPENMVG_LOG_INFO <<  "\tSolver 3rd point sq reprojection error: " << err;
   if (err > 1e-3) { // This funciton is meant to run only on the 3 points given to the solver
-    OPENMVG_LOG_INFO << "Internal reprojection check FAIL" << std::endl;
+    OPENMVG_LOG_INFO << "\tInternal reprojection check FAIL";
     return false;
   }
 
-  std::cout << "triang\n";
   Vec3 p_second_view = tt[second_view] * triangulated_homg/triangulated_homg(3);
 
   Trec = tt[third_view].block<3,3>(0,0) * Trec;
@@ -178,24 +177,24 @@ Check(
 
   // compute angle between tproj t.col(2)
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
-  OPENMVG_LOG_INFO << "Angular error rad (deg): " << angular_error << "(" << angular_error*180./M_PI << ")";
-  OPENMVG_LOG_INFO << "tproj: " << tproj;
-  OPENMVG_LOG_INFO << "t third view: " << t.col(third_view);
+  OPENMVG_LOG_INFO << "\tAngular error rad (deg): " << angular_error << "(" << angular_error*180./M_PI << ")";
+  OPENMVG_LOG_INFO << "\t\ttproj: " << tproj;
+  OPENMVG_LOG_INFO << "\t\tt third view: " << t.col(third_view);
 
   // TODO: put this before any angle computation
   if (triangulated_homg.hnormalized()(2) <= 0. || p_third_view(2) <= 0. || p_second_view(2) <= 0.) {
-    OPENMVG_LOG_INFO << "Internal Cheirality check FAIL" << std::endl;
-    OPENMVG_LOG_INFO <<  triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
+    OPENMVG_LOG_INFO << "\tInternal Cheirality check FAIL";
+    OPENMVG_LOG_INFO <<  "\t" << triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
     return false;
   }
-  OPENMVG_LOG_INFO << "Internal Cheirality check PASS" << std::endl;
+  OPENMVG_LOG_INFO << "\tInternal Cheirality check PASS";
 
   // about 30 degrees tolerance
   double angle_tol = 0.52;
   if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) {
-    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check pass XXXXXXXXXXXXXXXXXXXXXXXXXXXX" << std::endl;
+    OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check PASS PASS PASS PASS PASS PASS";
   } else {
-    OPENMVG_LOG_INFO << "Internal 3rd view reprojection angle check FAIL" << std::endl;
+    OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check FAIL";
     return false;
   }
   return true;
