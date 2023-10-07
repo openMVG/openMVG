@@ -131,7 +131,7 @@ TEST(TrifocalSampleApp, solver)
   }
   
   initialize_gt();
-  unsigned constexpr max_solve_tries = 5;
+  unsigned constexpr max_solve_tries = 1;
   bool found = false;
 
   for (unsigned i = 0; i < max_solve_tries; ++i) {
