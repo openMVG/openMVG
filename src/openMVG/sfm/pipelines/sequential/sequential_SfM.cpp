@@ -675,10 +675,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_INFO << "K for v " << v << std::endl << dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K();
   }
   
-  OPENMVG_LOG_INFO << "Putative starting triplet info:\n\tindex:";
+  OPENMVG_LOG_INFO << "Putative starting triplet info\n\tindex:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << t[v] << " ";
-  OPENMVG_LOG_INFO << std::endl;
   OPENMVG_LOG_INFO << "\tview basename:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << stlplus::basename_part(view[v]->s_Img_path) << " ";
@@ -732,9 +731,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
     return false;
   }
-  OPENMVG_LOG_INFO 
-    << "Trifocal Relative Pose residual from all inliers is: "
-    << relativePose_info.found_residual_precision;
+//  OPENMVG_LOG_INFO 
+//    << "Trifocal Relative Pose residual from all inliers is: "
+//    << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
@@ -759,7 +758,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
 
-  OPENMVG_LOG_INFO << "\tscale[0]" << scdatum(0);
+  // OPENMVG_LOG_INFO << "\tscale[0]" << scdatum(0);
 
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
@@ -790,7 +789,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
-  std::cout << "mounted initial Triplet\n";
 
   constexpr bool bRefine_using_BA = true;
   if (bRefine_using_BA) { // badj

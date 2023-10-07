@@ -119,7 +119,7 @@ SfM_Data getInputScene
   {
     const IndexT id_view = i, id_pose = i, id_intrinsic = 0; //(shared intrinsics)
     sfm_data.views[i] = std::make_shared<View>
-      ("", id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
+      (std::string("/fake/path/to/synthetic/image-file-")+std::to_string(i), id_view, id_intrinsic, id_pose, config._cx *2, config._cy *2);
   }
 
   // 2. Poses
