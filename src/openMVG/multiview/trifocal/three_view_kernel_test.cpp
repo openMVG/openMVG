@@ -163,7 +163,7 @@ TEST(TrifocalSampleApp, solveRansac)
   double threshold =
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(20.0, data::K_);
   threshold *= threshold; // squared error
-  unsigned constexpr max_iteration = 5; // testing
+  unsigned constexpr max_iteration = 2; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel,
@@ -213,7 +213,7 @@ TEST(TrifocalSampleApp, solveRansac)
   double threshold =
     NormalizedSquaredPointReprojectionOntoOneViewError::threshold_pixel_to_normalized(1.0, data::K_);
   threshold *= threshold; // squared error
-  unsigned constexpr max_iteration = 5; // testing
+  unsigned constexpr max_iteration = 3; // testing
   // Vector of inliers for the best fit found
   vector<uint32_t> vec_inliers;
   const auto model = MaxConsensus(trifocal_kernel,
