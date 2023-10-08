@@ -90,7 +90,6 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   return true;
 }
 
-
 bool SequentialSfMReconstructionEngine::Process() 
 {
   //-------------------
@@ -221,9 +220,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
     return false;
   }
-//  OPENMVG_LOG_INFO 
-//    << "Trifocal Relative Pose residual from all inliers is: "
-//    << relativePose_info.found_residual_precision;
+  //  OPENMVG_LOG_INFO 
+  //    << "Trifocal Relative Pose residual from all inliers is: "
+  //    << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
@@ -284,15 +283,15 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       std::array<Mat, nviews> datum;
       for (unsigned v = 0; v < nviews; ++v) {
         datum[v].resize(4,1);
-//        datum[v].col(0).head(2) = (*cam[v])(pxdatum[v].col(0).head<2>()).colwise().hnormalized(); // OK
+        // datum[v].col(0).head(2) = (*cam[v])(pxdatum[v].col(0).head<2>()).colwise().hnormalized(); // OK
         // datum[v].col(0).head(2) = (*cam[v])(x.col(v).hnormalized()).colwise().hnormalized();       // OK
-        datum[v].col(0).head(2) = (*cam[v])(landmarks[track_iterator.first].obs[view[v]->id_view].x).colwise().hnormalized(); // OK
+        datum[v].col(0).head(2) = 
+          (*cam[v])(landmarks[track_iterator.first].obs[view[v]->id_view].x).colwise().hnormalized(); // OK
       }
 
-      OPENMVG_LOG_INFO << trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error(relativePose_info.relativePoseTrifocal,
-        datum[0].col(0), 
-        datum[1].col(0), 
-        datum[2].col(0));
+      OPENMVG_LOG_INFO << trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error(
+        relativePose_info.relativePoseTrifocal,
+        datum[0].col(0), datum[1].col(0), datum[2].col(0));
       }
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
@@ -342,7 +341,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
 
-      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
+      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v 
+      // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
     }
     bool include_landmark = true;
     for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
