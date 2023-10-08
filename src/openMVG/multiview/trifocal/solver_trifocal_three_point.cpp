@@ -66,7 +66,8 @@ Solve(const Mat &datum_0,
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     for (; num_tries < max_solve_tries; ++num_tries)
-      if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw)) {
+      // num threads in divisors of 312: 1, 2, 3, 4, 6, 8, 12, 13, 24, 26, 39, 52, 78, 104, 156, 312
+      if (MiNuS::minus<chicago>::solve(p, tgt, cameras, id_sols, &nsols_raw, 26/*num_threads*/)) {
         ++num_tries;
         break;
       }
