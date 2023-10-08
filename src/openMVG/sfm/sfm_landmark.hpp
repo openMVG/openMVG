@@ -32,6 +32,11 @@ struct Observation
   void load( Archive & ar);
 };
 
+struct ObservationInfo {
+  Vec2 t; // featue orientation / 2D unit tangent / optical flow / etc
+}
+
+
 /// Observations are indexed by their View_id
 using Observations = Hash_Map<IndexT, Observation>;
 

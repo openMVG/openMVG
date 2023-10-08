@@ -75,9 +75,32 @@ bool SequentialSfMReconstructionEngine::Process()
 //  (all reconstructed features visible in all views)
 //  - 3D tangents will be computed only for those points that have already been
 //  reconstructed
+//  - 2D point observations assumed not to have orientation/tangent yet
+//  (ObservationsInfo is not filled yet)
+//
+// Output:
+// - 3D tangents
+// - 2D tangents from feature provider stored in ObservationInfo
 void ReconstructAllTangents()
 {
+  for (const auto & landmark_entry : sfm_data_.GetLandmarks()) {
+    const Landmark &landmark = landmark_entry.second;
+    const Observations &obs = landmark.obs;
 
+    unsigned nviews = obs.
+
+    Observations::const_iterator iterObs_x[nviews];
+    const Observation *ob_x[nviews];
+    Vec2 ob_x_ud[nviews];
+    for (unsigned v = 0; v < nviews; ++v) {
+      iterObs_x[v] = obs.find(view[v]->id_view);
+      ob_x[v] = &iterObs_x[v]->second;
+      ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
+
+      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v 
+      // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
+    }
+  }
 }
 
 // Compute robust Resection of remaining images
@@ -200,8 +223,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
   const size_t n = map_tracksCommon.size();
   OPENMVG_LOG_INFO << "number of tracks showing up in the three views = " << n ;
-  std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views 
-                                   // datum[view](coord,point)
+  std::array<Mat, nviews> pxdatum; // x,y,orientation across 3 views datum[view](coord,point)
   Mat scdatum;
   scdatum.resize(3,n);
   for (unsigned v = 0; v < nviews; ++v)
@@ -275,11 +297,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       auto iter = track_iterator.second.cbegin();
       uint32_t ifeat = iter->second;
       for (unsigned v = 0; v < nviews; ++v) {
+        const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][ifeat]);
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
         landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
+        landmarks[track_iterator.first].obs_info[view[v]->id_view] = ObservationInfo(, t[v]);
       }
       
       // triangulate 3 views
@@ -312,7 +336,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
 
-  constexpr bool bRefine_using_BA = true;
+  constexpr bool bRefine_using_BA = false;
   if (bRefine_using_BA) { // badj
     // -----------------------------------------------------------------------
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
@@ -345,7 +369,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     const IndexT trackId = landmark_entry.first;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs = landmark.obs;
-
     OPENMVG_LOG_INFO << "\tTrack id " << trackId;
 
     Observations::const_iterator iterObs_x[nviews];
