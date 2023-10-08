@@ -84,10 +84,10 @@ void ReconstructAllTangents()
 // - group of images will be selected and resection + scene completion will be tried
 bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 {
-  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
-    ReconstructAllTangents();
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
   OPENMVG_LOG_INFO << "Robust resection";
+  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+    ReconstructAllTangents();
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -97,16 +97,14 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
       bImageAdded |= Resection(iter);  // TODO(p2pt)
       set_remaining_view_id_.erase(iter);
     }
-
     if (bImageAdded) {
       // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
-      
-      do // Perform BA until all point are under the given precision
-        BundleAdjustment();
-      while (badTrackRejector(4.0, 50));
+
+      // Perform BA until all point are under the given precision
+      do BundleAdjustment(); while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
                                                        // points per pose as we
                                                        // are working with more
