@@ -850,3 +850,125 @@ void SequentialSfMReconstructionEngine::FinalStatistics()
     html_doc_stream_->pushInfo(jsxGraph.toStr());
   }
 }
+
+/**
+ * @brief Estimate images on which we can compute the resectioning safely.
+ *
+ * @param[out] vec_possible_indexes: list of indexes we can use for resectioning.
+ * @return False if there is no possible resection.
+ *
+ * Sort the images by the number of features id shared with the reconstruction.
+ * Select the image I that share the most of correspondences.
+ * Then keep all the images that have at least:
+ *  0.75 * #correspondences(I) common correspondences to the reconstruction.
+ */
+bool SequentialSfMReconstructionEngine::FindImagesWithPossibleResection(
+  std::vector<uint32_t> & vec_possible_indexes)
+{
+  // Threshold used to select the best images
+  static const float dThresholdGroup = 0.75f;
+
+  vec_possible_indexes.clear();
+
+  if (set_remaining_view_id_.empty() || sfm_data_.GetLandmarks().empty())
+    return false;
+
+  // Collect tracksIds
+  std::set<uint32_t> reconstructed_trackId;
+  std::transform(sfm_data_.GetLandmarks().cbegin(), sfm_data_.GetLandmarks().cend(),
+    std::inserter(reconstructed_trackId, reconstructed_trackId.begin()),
+    stl::RetrieveKey());
+
+  Pair_Vec vec_putative; // ImageId, NbPutativeCommonPoint
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp parallel
+#endif
+  for (std::set<uint32_t>::const_iterator iter = set_remaining_view_id_.begin();
+        iter != set_remaining_view_id_.end(); ++iter)
+  {
+#ifdef OPENMVG_USE_OPENMP
+  #pragma omp single nowait
+#endif
+    {
+      const uint32_t viewId = *iter;
+
+      // Compute 2D - 3D possible content
+      openMVG::tracks::STLMAPTracks map_tracksCommon;
+      shared_track_visibility_helper_->GetTracksInImages({viewId}, map_tracksCommon);
+
+      if (!map_tracksCommon.empty())
+      {
+        std::set<uint32_t> set_tracksIds;
+        tracks::TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
+
+        // Count the common possible putative point
+        //  with the already 3D reconstructed trackId
+        std::vector<uint32_t> vec_trackIdForResection;
+        std::set_intersection(set_tracksIds.cbegin(), set_tracksIds.cend(),
+          reconstructed_trackId.cbegin(), reconstructed_trackId.cend(),
+          std::back_inserter(vec_trackIdForResection));
+
+#ifdef OPENMVG_USE_OPENMP
+        #pragma omp critical
+#endif
+        {
+          vec_putative.emplace_back(viewId, vec_trackIdForResection.size());
+        }
+      }
+    }
+  }
+
+  // Sort by the number of matches to the 3D scene.
+  std::sort(vec_putative.begin(), vec_putative.end(), sort_pair_second<uint32_t, uint32_t, std::greater<uint32_t>>());
+
+  // If the list is empty or if the list contains images with no correspdences
+  // -> (no resection will be possible)
+  if (vec_putative.empty() || vec_putative[0].second == 0)
+  {
+    // All remaining images cannot be used for pose estimation
+    set_remaining_view_id_.clear();
+    return false;
+  }
+
+  // Add the image view index that share the most of 2D-3D correspondences
+  vec_possible_indexes.push_back(vec_putative[0].first);
+
+  // Then, add all the image view indexes that have at least N% of the number of the matches of the best image.
+  const IndexT M = vec_putative[0].second; // Number of 2D-3D correspondences
+  const size_t threshold = static_cast<uint32_t>(dThresholdGroup * M);
+  for (size_t i = 1; i < vec_putative.size() &&
+    vec_putative[i].second > threshold; ++i)
+  {
+    vec_possible_indexes.push_back(vec_putative[i].first);
+  }
+  return true;
+}
+
+/// Bundle adjustment to refine Structure; Motion and Intrinsics
+bool SequentialSfMReconstructionEngine::BundleAdjustment()
+{
+  Bundle_Adjustment_Ceres::BA_Ceres_options options;
+  if ( sfm_data_.GetPoses().size() > 100 &&
+      (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE) ||
+       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+      )
+  // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+  {
+    options.preconditioner_type_ = ceres::JACOBI;
+    options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+  }
+  else
+  {
+    options.linear_solver_type_ = ceres::DENSE_SCHUR;
+  }
+  Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+  const Optimize_Options ba_refine_options
+    ( ReconstructionEngine::intrinsic_refinement_options_,
+      Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
+      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
+      Control_Point_Parameter(),
+      this->b_use_motion_prior_
+    );
+  return bundle_adjustment_obj.Adjust(sfm_data_, ba_refine_options);
+}
