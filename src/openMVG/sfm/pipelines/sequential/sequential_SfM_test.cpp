@@ -543,6 +543,8 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
 }
 #endif
 
+
+#if 1
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
@@ -601,6 +603,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   EXPECT_TRUE(sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE(IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
+#endif
 
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
