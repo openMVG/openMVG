@@ -50,58 +50,6 @@ using namespace openMVG::matching;
 #include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
                                    // that don't matter for dev go here
 
-bool SequentialSfMReconstructionEngine::MakeInitialAnchorReconstruction()
-{
-  // Initial pair Essential Matrix and [R|t] estimation.
-  // or initial triplet relative pose
-  //
-  // Initial images choice
-  // 
-  // TODO(trifocal future) Refine this: If both initial triplet and initial pair are specified,
-  // then first try intial pair then try initial triplet if that fails
-  // OR try initial triplet first and initial pair if fails, which might be more
-  // reliable anyways
-  if (!hasInitialPair()) {
-    if (!hasInitialTriplet()) {
-      if (!AutomaticInitialPairChoice(initial_pair_)) {
-        // Cannot find a valid initial pair with the defined settings:
-        // TODO(trifocal) Trifocal - try to set it automatically
-        // - try to initialize a pair with less strict constraint
-        //    testing only X pairs with most matches.
-        const auto sorted_pairwise_matches_iterators =
-          GetPairWithMostMatches(sfm_data_, matches_provider_->pairWise_matches_, 20);
-        for (const auto & it : sorted_pairwise_matches_iterators)
-          if (MakeInitialPair3D({it->first.first, it->first.second})) {
-            initial_pair_ = {it->first.first, it->first.second};
-            break;
-          }
-        if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0)) {
-          OPENMVG_LOG_INFO << "Cannot find a valid initial pair - stop reconstruction.";
-          return false;
-        }
-      } else
-          MakeInitialPair3D(initial_pair_);
-    } else { // triplet but no pair
-      OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
-      if (!MakeInitialTriplet3D(initial_triplet_)) {
-          OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
-          return false;
-      }
-    }
-  } else { // has pair
-    if (!MakeInitialPair3D(initial_pair_)) {
-      OPENMVG_LOG_INFO << "Tried 2-view initialization from the provided one, fail.";
-      if (!hasInitialTriplet())
-        return false;
-      OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
-      if (!MakeInitialTriplet3D(initial_triplet_)) {
-        OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
-        return false;
-      }
-    }
-  }
-  return true;
-}
 
 bool SequentialSfMReconstructionEngine::Process() 
 {
