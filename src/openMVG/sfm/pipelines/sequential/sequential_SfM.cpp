@@ -122,6 +122,11 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
 // Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
 // tensor / relative pose for ImageId [t[0],t[1],t[2]]
+//
+// Output
+//  - sfm_data_
+//  - map_ACThreshold_: if ACRansac used
+//  - set_remaining_view_id_: remaining views to reconstruct
 bool SequentialSfMReconstructionEngine::
 MakeInitialTriplet3D(const Triplet &current_triplet)
 {
@@ -307,7 +312,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
 
-  constexpr bool bRefine_using_BA = false;
+  constexpr bool bRefine_using_BA = true;
   if (bRefine_using_BA) { // badj
     // -----------------------------------------------------------------------
     // - refine only Structure and Rotations & translations (keep intrinsic constant)

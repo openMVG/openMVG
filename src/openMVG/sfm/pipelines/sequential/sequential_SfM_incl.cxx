@@ -423,6 +423,11 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
 //}
 
 /// Compute the initial 3D seed (First camera t=0; R=Id, second estimated by 5 point algorithm)
+//
+// Output
+//  - sfm_data_
+//  - map_ACThreshold_: if ACRansac used
+//  - set_remaining_view_id_: remaining views to reconstruct
 bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_pair)
 {
   // Compute robust Essential matrix for ImageId [I,J]
