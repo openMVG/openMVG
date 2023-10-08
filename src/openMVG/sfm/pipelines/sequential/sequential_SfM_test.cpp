@@ -112,7 +112,9 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   EXPECT_TRUE( sfmEngine.Get_SfM_Data().GetLandmarks().size() == npoints);
   EXPECT_TRUE( IsTracksOneCC(sfmEngine.Get_SfM_Data()));
 }
+#endif
 
+#if 0
 // Test a scene where only the two first camera have known intrinsics
 TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 
@@ -176,6 +178,7 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 }
 #endif
 
+#if 1
 //- Oriented tests ------------------------------------------------------------
 
 //-----------------
@@ -501,6 +504,7 @@ check_camera_triplet(const int ci[])
   }
   return true;
 }
+#endif
 #if 0
 // Tests trifocal point-error reprojection tangent-error are very low and that chirality
 // pass on perfect synthetic data
