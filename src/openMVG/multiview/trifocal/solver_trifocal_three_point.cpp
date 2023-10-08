@@ -24,6 +24,8 @@ namespace trifocal {
 static unsigned constexpr max_solve_tries = 5; // this is so we can use
                                                // aggressive time optimizations
                                                // inside the solver 
+static unsigned constexpr max_solve_tries_with_candidates = 5; 
+                                                            
 using namespace MiNuS;
 
 void Trifocal3PointPositionTangentialSolver::
@@ -56,9 +58,9 @@ Solve(const Mat &datum_0,
   }
 
   std::vector<trifocal_model_t> &ttf = *trifocal_tensor;
-  unsigned num_tries = 0;
+  ttf.reserve(10); // on average should not return more than this
+  unsigned num_tries = 0, num_tries_with_candidates = 0;
   do {
-    ttf.clear();
     unsigned nsols_raw = 0;
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
@@ -68,8 +70,7 @@ Solve(const Mat &datum_0,
         break;
       }
 
-    std::vector<trifocal_model_t> tt;
-    tt.resize(nsols_raw);
+    std::vector<trifocal_model_t> tt(nsols_raw);
     for (unsigned s = 0; s < nsols_raw; ++s) {
       tt[s][0] = Mat34::Identity();
       for (unsigned v=1; v < io::pp::nviews; ++v) {
@@ -87,11 +88,15 @@ Solve(const Mat &datum_0,
     //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
     std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
 
-    ttf.reserve(10); // on average should not return more than this
+    bool found = false;
     for (unsigned s = 0; s < nsols_raw; ++s)
-      if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2)))
+      if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2))) {
         ttf.push_back(tt[s]);
-  } while (ttf.empty() && num_tries < max_solve_tries);
+        found = true;
+      }
+    if (found)
+      num_tries_with_candidates++;
+  } while (num_tries < max_solve_tries && num_tries_with_candidates < max_solve_tries_with_candidates);
 
   std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
 }
