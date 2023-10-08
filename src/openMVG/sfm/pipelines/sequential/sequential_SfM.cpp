@@ -51,22 +51,12 @@ using namespace openMVG::matching;
                                    // that don't matter for dev go here
 
 
-bool SequentialSfMReconstructionEngine::Process() 
+// Compute robust Resection of remaining images
+// - group of images will be selected and resection + scene completion will be tried
+bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 {
-  //-------------------
-  //-- Incremental reconstruction
-  //-------------------
-
-  if (!InitLandmarkTracks())
-    return false;
-
-  if (!MakeInitialAnchorReconstruction())
-    return false;
-
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
   OPENMVG_LOG_INFO << "Robust resection";
-  // Compute robust Resection of remaining images
-  // - group of images will be selected and resection + scene completion will be tried
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -82,11 +72,9 @@ bool SequentialSfMReconstructionEngine::Process()
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
-
-      // Perform BA until all point are under the given precision
-      do {
+      
+      do // Perform BA until all point are under the given precision
         BundleAdjustment();
-      }
       while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
                                                        // points per pose as we
@@ -97,12 +85,26 @@ bool SequentialSfMReconstructionEngine::Process()
     ++resectionGroupIndex;
   }
   // Ensure there is no remaining outliers
-//   if (badTrackRejector(4.0, 0))
-//     eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
-                                                     // points per pose as we
-                                                     // are working with more
-                                                     // radical pipeline
-                                                     // situations
+  //   if (badTrackRejector(4.0, 0))
+  //     eraseUnstablePosesAndObservations(sfm_data_, 4);
+  return true;
+}
+
+
+bool SequentialSfMReconstructionEngine::Process() 
+{
+  //-------------------
+  //-- Incremental reconstruction
+  //-------------------
+
+  if (!InitLandmarkTracks())
+    return false;
+
+  if (!MakeInitialAnchorReconstruction())
+    return false;
+
+  if (!ResectOneByOneTilDone())
+    return false;
 
   FinalStatistics();
   return true;
