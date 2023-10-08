@@ -14,12 +14,13 @@
 
 #include <minus/chicago-default.h>
 #include <minus/internal-util.h>
+#include "openMVG/multiview/trifocal/trifocal_model.hpp"
 
 namespace openMVG {
 namespace trifocal {
 
 
-void
+inline void
 invert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
     const double px_coords[2], 
@@ -31,7 +32,7 @@ invert_intrinsics(
   nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
 }
 
-void
+inline void
 invert_intrinsics_tgt(
     const double K[/*3 or 2 ignoring last line*/][3], 
     const double px_tgt_coords[2], 
@@ -49,7 +50,7 @@ invert_intrinsics_tgt(
 
 // Converts a trifocal_model to quaternion-translation format
 // Assumes tt[0] is identity
-void
+inline void
 tt2qt(const trifocal_model_t &tt, double tt_qt[M::nve])
 {
   typedef MiNuS::minus_util<double> util;
@@ -66,21 +67,7 @@ bool
 probe_solutions(
     const std::vector<trifocal_model_t> &solutions, 
     trifocal_model_t &gt, 
-    unsigned *solution_index)
-{
-  double cameras_quat[M::nsols][M::nve];
-
-  // translate trifocal_model from RC to QT (quaternion-translation)
-  // - for each solution
-  // -   translate to internal matrix form
-  // -   call RC to QT
-
-  tt2qt(gt, data::cameras_gt_quat_);
-  for (unsigned s=0; s < solutions.size(); ++s)
-    tt2qt(solutions[s], cameras_quat[s]);
-  
-  return io14::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solutions.size(), solution_index);
-}
+    unsigned *solution_index);
 
 } // namespace trifocal
 } // namespace OpenMVG
