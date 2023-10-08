@@ -62,10 +62,30 @@ bool SequentialSfMReconstructionEngine::Process()
   return true;
 }
 
+// Go through sfm_data and reconstructs all tangents
+// At this stage, for robustness we use no TriangulateDLT for tangents.
+// For each pair of views in the reconstruction
+//    - reconstruct 3D tangents
+//
+// Input:
+//  - Points and cameras already reconstructed
+//    - Possibly, some points have not yet been reconstructed 
+//    (not inliers / other filters removed them)
+//  - Assume tracks connect all images 
+//  (all reconstructed features visible in all views)
+//  - 3D tangents will be computed only for those points that have already been
+//  reconstructed
+void ReconstructAllTangents()
+{
+
+}
+
 // Compute robust Resection of remaining images
 // - group of images will be selected and resection + scene completion will be tried
 bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 {
+  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+    ReconstructAllTangents();
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
   OPENMVG_LOG_INFO << "Robust resection";
   size_t resectionGroupIndex = 0;
@@ -100,7 +120,6 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   //     eraseUnstablePosesAndObservations(sfm_data_, 4);
   return true;
 }
-
 
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
 // Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
@@ -418,6 +437,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       "Reconstruction_Report_Trifocal.html"));
     htmlFileStream << html_doc_stream_->getDoc();
   }
+
   return !sfm_data_.structure.empty();
 }
 
