@@ -163,7 +163,7 @@ Check(
   // OPENMVG_LOG_INFO << "\tP difference " << (p_reprojected - bearing.col(third_view).head(2));
   double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
   OPENMVG_LOG_INFO <<  "\tSolver 3rd point sq reprojection error: " << err;
-  if (err > 1e-3) { // This funciton is meant to run only on the 3 points given to the solver
+  if (err > 1e-5) { // This funciton is meant to run only on the 3 points given to the solver
     OPENMVG_LOG_INFO << "\tInternal reprojection check FAIL";
     return false;
   }
