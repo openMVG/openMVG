@@ -25,7 +25,7 @@ namespace trifocal {
 static unsigned constexpr max_solve_tries = 6; // this is so we can use
                                                // aggressive time optimizations
                                                // inside the solver 
-static unsigned constexpr max_solve_tries_with_candidates = 6;
+static unsigned constexpr max_solve_tries_with_candidates = 5;
                                                             
 using namespace MiNuS;
 
