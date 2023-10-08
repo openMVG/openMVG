@@ -50,15 +50,8 @@ using namespace openMVG::matching;
 #include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
                                    // that don't matter for dev go here
 
-bool SequentialSfMReconstructionEngine::Process() 
+bool SequentialSfMReconstructionEngine::MakeInitialAnchorReconstruction()
 {
-  //-------------------
-  //-- Incremental reconstruction
-  //-------------------
-
-  if (!InitLandmarkTracks())
-    return false;
-
   // Initial pair Essential Matrix and [R|t] estimation.
   // or initial triplet relative pose
   //
@@ -107,6 +100,20 @@ bool SequentialSfMReconstructionEngine::Process()
       }
     }
   }
+  return true;
+}
+
+bool SequentialSfMReconstructionEngine::Process() 
+{
+  //-------------------
+  //-- Incremental reconstruction
+  //-------------------
+
+  if (!InitLandmarkTracks())
+    return false;
+
+  if (!MakeInitialAnchorReconstruction())
+    return false;
 
   // ---------------------------------------------------------------------------
   
