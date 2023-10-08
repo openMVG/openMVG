@@ -866,6 +866,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     if (include_landmark)
       sfm_data_.structure[trackId] = landmarks[trackId];
   }
+
   // Save outlier residual information
   Histogram<double> histoResiduals;
   ComputeResidualsHistogram(&histoResiduals);
