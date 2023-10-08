@@ -56,7 +56,7 @@ using namespace openMVG::matching;
 bool SequentialSfMReconstructionEngine::Process() 
 {
   if (!InitLandmarkTracks()) return false;
-  if (!MakeInitialAnchorReconstruction()) return false;
+  if (!MakeInitialSeedReconstruction()) return false;
   if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;

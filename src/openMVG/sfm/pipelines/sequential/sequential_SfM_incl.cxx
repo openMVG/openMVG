@@ -748,7 +748,7 @@ bool SequentialSfMReconstructionEngine::badTrackRejector(double dPrecision, size
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
-bool SequentialSfMReconstructionEngine::MakeInitialAnchorReconstruction()
+bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
 {
   // Initial pair Essential Matrix and [R|t] estimation.
   // or initial triplet relative pose

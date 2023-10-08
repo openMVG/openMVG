@@ -62,7 +62,7 @@ public:
   bool InitLandmarkTracks();
 
   /// Make initial 2- or 3-view reconstruction seed (robust plus BA and initial filters)
-  bool MakeInitialAnchorReconstruction();
+  bool MakeInitialSeedReconstruction();
 
   /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
   bool MakeInitialPair3D(const Pair & initialPair);
