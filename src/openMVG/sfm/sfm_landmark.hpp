@@ -39,7 +39,6 @@ using Observations = Hash_Map<IndexT, Observation>;
 struct Landmark
 {
   Vec3 X;
-  Vec3 T;
   Observations obs;
 
   // Serialization
@@ -53,10 +52,11 @@ struct Landmark
 // In the future, we can make a generic
 // landmarksInfo, and make this a special case.
 // But.. keep it simple, keep it maintainable..
-struct LandmarkOrientedInfo
+struct LandmarkInfo
 {
   Vec3 T; // 3D orientation corresponding to 2D feature/SIFT orientations
 
+  double scale; // 3D scale
   /*
   // Serialization
   template <class Archive>
@@ -71,7 +71,7 @@ struct LandmarkOrientedInfo
 using Landmarks = Hash_Map<IndexT, Landmark>;
 // Additional info that may be desired, parallel to Landmarks,
 // that is, every addition to Landmark has to go in tandem with this one
-using LandmarksInfo = Hash_Map<IndexT, LandmarkOrientedInfo>;
+using LandmarksInfo = Hash_Map<IndexT, LandmarkInfo>;
 
 } // namespace sfm
 } // namespace openMVG

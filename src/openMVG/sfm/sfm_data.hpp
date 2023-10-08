@@ -48,8 +48,6 @@ struct SfM_Data
   // map is in tandem with structure (same index)
   LandmarksInfo info;
 
-  Additional3DStructure additional_data;
-
   /// Root Views path
   std::string s_root_path;
 
