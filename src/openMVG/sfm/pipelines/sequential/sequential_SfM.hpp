@@ -104,6 +104,8 @@ public:
     maximum_trifocal_ransac_iterations_ = n;
   }
 
+  void FinalStatistics();
+
 protected:
 
 

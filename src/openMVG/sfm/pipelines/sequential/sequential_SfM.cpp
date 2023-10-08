@@ -104,52 +104,7 @@ bool SequentialSfMReconstructionEngine::Process()
                                                      // radical pipeline
                                                      // situations
 
-  //-- Reconstruction done.
-  //-- Display some statistics
-  std::ostringstream os_sfm_stats;
-  os_sfm_stats << "\n-------------------------------\n"
-    << "-- Structure from Motion (statistics):\n"
-    << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
-    << " from " << sfm_data_.GetViews().size() << " input images.\n"
-    << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "\n"
-    << "-------------------------------\n";
-
-  Histogram<double> h;
-  ComputeResidualsHistogram(&h);
-  os_sfm_stats << "\nHistogram of residuals:\n" << h.ToString();
-
-  OPENMVG_LOG_INFO << os_sfm_stats.str();
-
-  if (!sLogging_file_.empty())
-  {
-    using namespace htmlDocument;
-    std::ostringstream os;
-    os << "Structure from Motion process finished.";
-    html_doc_stream_->pushInfo("<hr>");
-    html_doc_stream_->pushInfo(htmlMarkup("h1",os.str()));
-
-    os.str("");
-    os << "-------------------------------" << "<br>"
-      << "-- Structure from Motion (statistics):<br>"
-      << "-- #Camera calibrated: " << sfm_data_.GetPoses().size()
-      << " from " <<sfm_data_.GetViews().size() << " input images.<br>"
-      << "-- #Tracks, #3D points: " << sfm_data_.GetLandmarks().size() << "<br>"
-      << "-------------------------------" << "<br>";
-    html_doc_stream_->pushInfo(os.str());
-
-    html_doc_stream_->pushInfo(htmlMarkup("h2","Histogram of reprojection-residuals"));
-
-    const std::vector<double> xBin = h.GetXbinsValue();
-    const auto range = autoJSXGraphViewport<double>(xBin, h.GetHist());
-
-    htmlDocument::JSXGraphWrapper jsxGraph;
-    jsxGraph.init("3DtoImageResiduals",600,300);
-    jsxGraph.addXYChart(xBin, h.GetHist(), "line,point");
-    jsxGraph.UnsuspendUpdate();
-    jsxGraph.setViewport(range);
-    jsxGraph.close();
-    html_doc_stream_->pushInfo(jsxGraph.toStr());
-  }
+  FinalStatistics();
   return true;
 }
 
