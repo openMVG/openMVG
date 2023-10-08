@@ -79,6 +79,7 @@ Check(
   const Vec &bearing_1,
   const Vec &bearing_2) 
 {
+  openMVG::system::logger::logger_severity = openMVG::system::logger::ELogMode::VERBOSITY_WARNING;
   OPENMVG_LOG_INFO << "Check ---------------------------------------------------";
   if (
       (tt[0].array().isNaN()).any() ||

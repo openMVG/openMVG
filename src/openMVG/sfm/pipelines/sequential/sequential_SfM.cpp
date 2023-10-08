@@ -206,30 +206,28 @@ bool SequentialSfMReconstructionEngine::Process()
 
   // ---------------------------------------------------------------------------
   
+  OPENMVG_LOG_INFO << "-------------------------------------------------------";
+  OPENMVG_LOG_INFO << "Robust resection";
   // Compute robust Resection of remaining images
   // - group of images will be selected and resection + scene completion will be tried
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
-  while (FindImagesWithPossibleResection(vec_possible_resection_indexes))
-  {
+  while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
     bool bImageAdded = false;
     // Add images to the 3D reconstruction
-    for (const auto & iter : vec_possible_resection_indexes)
-    {
+    for (const auto & iter : vec_possible_resection_indexes) {
       bImageAdded |= Resection(iter);  // TODO(p2pt)
       set_remaining_view_id_.erase(iter);
     }
 
-    if (bImageAdded)
-    {
+    if (bImageAdded) {
       // Scene logging as ply for visual debug
       std::ostringstream os;
       os << std::setw(8) << std::setfill('0') << resectionGroupIndex << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
 
       // Perform BA until all point are under the given precision
-      do
-      {
+      do {
         BundleAdjustment();
       }
       while (badTrackRejector(4.0, 50));
@@ -819,16 +817,16 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() <<  pose[v]->center();
   }
 
+  OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
   // Recompute inliers and save them
   // TODO: this is currently too strict,
   // every 2-view must pass
-  std::cout << "before saving\n";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
     const IndexT trackId = landmark_entry.first;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs = landmark.obs;
 
-    OPENMVG_LOG_INFO << "Track id " << trackId;
+    OPENMVG_LOG_INFO << "\tTrack id " << trackId;
 
     Observations::const_iterator iterObs_x[nviews];
     const Observation *ob_x[nviews];
@@ -838,7 +836,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
 
-      OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
+      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
     }
     bool include_landmark = true;
     for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
@@ -849,19 +847,18 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
         const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
 
-        OPENMVG_LOG_INFO << "v0, v1 = " << v0 << ", " << v1;
-        OPENMVG_LOG_INFO << "residual_0 norm " << residual_0.norm();
-        OPENMVG_LOG_INFO << "residual_1 norm " << residual_1.norm();
+        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1;
+        OPENMVG_LOG_INFO << "\t\tresiduals norm " << residual_0.norm() << " " << residual_1.norm();
         if (angle <= 2.0) {
-          OPENMVG_LOG_INFO << "FAIL angle test with angle " << angle;
+          OPENMVG_LOG_INFO << "\t\tFAIL angle test with angle " << angle;
           include_landmark = false;
         } else if (!CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
                             (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X)) {
-          OPENMVG_LOG_INFO << "FAIL Cheirality test ";
+          OPENMVG_LOG_INFO << "\t\tFAIL Cheirality test ";
           include_landmark = false;
         } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
-            residual_1.norm() >= relativePose_info.found_residual_precision) {
-            OPENMVG_LOG_INFO << "FAIL residual test: " << residual_0.norm() << " " 
+                   residual_1.norm() >= relativePose_info.found_residual_precision) {
+            OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " " 
               << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
           include_landmark = false;
         }
@@ -871,11 +868,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   }
   // Save outlier residual information
   Histogram<double> histoResiduals;
-  OPENMVG_LOG_INFO
-    << "\n=========================\n"
-    << " MSE Residual InitialTriplet Inlier:\n";
   ComputeResidualsHistogram(&histoResiduals);
-  std::cout << "computed Histogram\n";
   if (!sLogging_file_.empty())
   {
     using namespace htmlDocument;
