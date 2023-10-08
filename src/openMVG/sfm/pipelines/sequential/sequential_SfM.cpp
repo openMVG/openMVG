@@ -13,6 +13,7 @@
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
@@ -722,8 +723,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose";
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
-  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_))
-  {
+  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_)) {
     OPENMVG_LOG_ERROR 
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
       << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
@@ -747,11 +747,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // Init views and intrincics
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-    OPENMVG_LOG_INFO << relativePose_info.relativePoseTrifocal[v]; 
+    OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v] << std::endl; 
     if (v==0) 
       tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     else
-      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0), -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()*relativePose_info.relativePoseTrifocal[v].block<3,1>(0,3));
+      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0), 
+                                                -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()*relativePose_info.relativePoseTrifocal[v].block<3,1>(0,3));
+
     // Init projection matrices
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
@@ -761,34 +763,50 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
   { // initial structure ---------------------------------------------------
-
     Mat3X x(3,3);
-    for (const auto & track_iterator : map_tracksCommon)
-    {
+    for (const auto &track_iterator : map_tracksCommon) {
       // Get corresponding points
       auto iter = track_iterator.second.cbegin();
       uint32_t ifeat = iter->second;
-      Observations obs;
       for (unsigned v = 0; v < nviews; ++v) {
-        //x.col(v) =
-        //  features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
-        obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
+        landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
       }
-      landmarks[track_iterator.first].obs = std::move(obs);
       
       // triangulate 3 views
       Vec4 X;
       TriangulateNView(x, P, &X);
       landmarks[track_iterator.first].X = X.hnormalized();
+
+      Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
+          landmarks[track_iterator.first].obs[view[0]->id_view].x );
+      OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation\n" << residual;
+
+
+      OPENMVG_LOG_INFO << "Residual from error()";
+      { // For debug
+
+      std::array<Mat, nviews> datum;
+      for (unsigned v = 0; v < nviews; ++v) {
+        datum[v].resize(4,1);
+//        datum[v].col(0).head(2) = (*cam[v])(pxdatum[v].col(0).head<2>()).colwise().hnormalized(); // OK
+        // datum[v].col(0).head(2) = (*cam[v])(x.col(v).hnormalized()).colwise().hnormalized();       // OK
+        datum[v].col(0).head(2) = (*cam[v])(landmarks[track_iterator.first].obs[view[v]->id_view].x).colwise().hnormalized(); // OK
+      }
+
+      OPENMVG_LOG_INFO << trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error(relativePose_info.relativePoseTrifocal,
+        datum[0].col(0), 
+        datum[1].col(0), 
+        datum[2].col(0));
+      }
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
 
-  constexpr bool bRefine_using_BA = true;
+  constexpr bool bRefine_using_BA = false;
   if (bRefine_using_BA) { // badj
     // -----------------------------------------------------------------------
     // - refine only Structure and Rotations & translations (keep intrinsic constant)
@@ -796,13 +814,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
     if (!bundle_adjustment_obj.Adjust(tiny_scene, Optimize_Options
-        (
-          Intrinsic_Parameter_Type::NONE, // Keep intrinsic constant
-          Extrinsic_Parameter_Type::ADJUST_ALL, // Adjust camera motion
-          Structure_Parameter_Type::ADJUST_ALL) // Adjust structure
-        )
-      )
-    {
+        ( Intrinsic_Parameter_Type::NONE,           // Keep intrinsic constant
+          Extrinsic_Parameter_Type::ADJUST_ALL,     // Adjust camera motion
+          Structure_Parameter_Type::ADJUST_ALL))) { // Adjust structure
       return false;
     }
     std::cout << "passed BA\n";
@@ -814,7 +828,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     pose[v] = &tiny_scene.poses[view[v]->id_pose];
     map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
     set_remaining_view_id_.erase(view[v]->id_view);
-    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() <<  pose[v]->center();
+    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() << "\n" <<  pose[v]->center();
   }
 
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
@@ -867,6 +881,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       sfm_data_.structure[trackId] = landmarks[trackId];
   }
 
+  OPENMVG_LOG_INFO << "Final initial triplet residual histogram ---------------";
   // Save outlier residual information
   Histogram<double> histoResiduals;
   ComputeResidualsHistogram(&histoResiduals);
@@ -1180,13 +1195,17 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
   vec_residuals.reserve(sfm_data_.structure.size());
   for (const auto & landmark_entry : sfm_data_.GetLandmarks())
   {
+   OPENMVG_LOG_INFO << "3D point " << landmark_entry.second.X << std::endl;
     const Observations & obs = landmark_entry.second.obs;
     for (const auto & observation : obs)
     {
       const View * view = sfm_data_.GetViews().find(observation.first)->second.get();
       const Pose3 pose = sfm_data_.GetPoseOrDie(view);
+      OPENMVG_LOG_INFO << "Pose rotation" << pose.rotation() << std::endl;
+      OPENMVG_LOG_INFO << "Pose center " << pose.center() << std::endl;
       const auto intrinsic = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose(landmark_entry.second.X), observation.second.x);
+      OPENMVG_LOG_INFO << "Raw residual " << residual;
       vec_residuals.emplace_back( std::abs(residual(0)) );
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }

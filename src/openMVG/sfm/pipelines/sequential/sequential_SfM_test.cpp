@@ -597,7 +597,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   sfmEngine.setInitialTriplet({sfm_data_2.GetViews().at(1)->id_view,
                                sfm_data_2.GetViews().at(2)->id_view,
                                sfm_data_2.GetViews().at(3)->id_view});
-  sfmEngine.SetMaximumTrifocalRansacIterations(2);
+  sfmEngine.SetMaximumTrifocalRansacIterations(1);
   EXPECT_TRUE(sfmEngine.Process());
 
   const double dResidual = RMSE(sfmEngine.Get_SfM_Data());
