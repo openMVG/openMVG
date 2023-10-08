@@ -1418,8 +1418,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).T(); // use T() as function to optionally have T
 
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-        features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-      //                    XXX sio
+        features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
       // Handle image distortion if intrinsic is known (to ease the resection)
       if (optional_intrinsic && optional_intrinsic->have_disto())
       {
