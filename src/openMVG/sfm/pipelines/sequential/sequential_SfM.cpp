@@ -115,8 +115,6 @@ bool SequentialSfMReconstructionEngine::Process()
   if (!MakeInitialAnchorReconstruction())
     return false;
 
-  // ---------------------------------------------------------------------------
-  
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
   OPENMVG_LOG_INFO << "Robust resection";
   // Compute robust Resection of remaining images
