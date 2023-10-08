@@ -50,6 +50,17 @@ using namespace openMVG::matching;
 #include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
                                    // that don't matter for dev go here
 
+//-------------------
+//-- Incremental reconstruction
+//-------------------
+bool SequentialSfMReconstructionEngine::Process() 
+{
+  if (!InitLandmarkTracks()) return false;
+  if (!MakeInitialAnchorReconstruction()) return false;
+  if (!ResectOneByOneTilDone()) return false;
+  FinalStatistics();
+  return true;
+}
 
 // Compute robust Resection of remaining images
 // - group of images will be selected and resection + scene completion will be tried
@@ -90,24 +101,6 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   return true;
 }
 
-bool SequentialSfMReconstructionEngine::Process() 
-{
-  //-------------------
-  //-- Incremental reconstruction
-  //-------------------
-
-  if (!InitLandmarkTracks())
-    return false;
-
-  if (!MakeInitialAnchorReconstruction())
-    return false;
-
-  if (!ResectOneByOneTilDone())
-    return false;
-
-  FinalStatistics();
-  return true;
-}
 
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
 // Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
@@ -505,7 +498,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
       assert(sfm_data_.is_oriented()); // xxx
       
-      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).T(); // use T() as function to optionally have T
+      // use T() as function to optionally have T:
+      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).T();
 
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
