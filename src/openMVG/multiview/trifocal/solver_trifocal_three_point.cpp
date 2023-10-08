@@ -13,6 +13,7 @@
 
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_util.hpp"
 
 #include <iostream>
 #include <minus/minus.h>
@@ -91,7 +92,9 @@ Solve(const Mat &datum_0,
     bool found = false;
     for (unsigned s = 0; s < nsols_raw; ++s)
       if (NormalizedSquaredPointReprojectionOntoOneViewError::Check(tt[s], datum_0.col(2), datum_1.col(2), datum_2.col(2))) {
-        ttf.push_back(tt[s]);
+        unsigned repeat_sol_id = -1;
+        if (!probe_solutions(ttf, tt[s], &repeat_sol_id))
+          ttf.push_back(tt[s]);
         found = true;
       }
     if (found)

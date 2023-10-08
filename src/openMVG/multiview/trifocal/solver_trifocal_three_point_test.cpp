@@ -12,6 +12,7 @@
 #include <array>
 #include <testing/testing.h>
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_util.hpp"
 
 #include <minus/chicago-default.h>
 #include <minus/internal-util.h>
@@ -24,6 +25,7 @@ typedef MiNuS::minus_util<double> util;
 
 trifocal_model_t tt_gt_; // corresp. to minus' cameras_gt_
 
+#if 0
 void
 invert_intrinsics(
     const double K[/*3 or 2 ignoring last line*/][3], 
@@ -85,6 +87,7 @@ probe_solutions(
   
   return io14::probe_all_solutions_quat(cameras_quat, data::cameras_gt_quat_, solutions.size(), solution_index);
 }
+#endif
 
 static void
 initialize_gt()
