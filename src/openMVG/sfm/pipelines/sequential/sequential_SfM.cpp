@@ -46,6 +46,19 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
 
+//-------------------
+//-- Incremental reconstruction
+//-------------------
+bool SequentialSfMReconstructionEngine::Process() 
+{
+  if (!InitLandmarkTracks()) return false;
+  if (!MakeInitialSeedReconstruction()) return false;
+  ConsistencyCheck();
+  //if (!ResectOneByOneTilDone()) return false;
+  FinalStatistics();
+  return true;
+}
+
 #include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
                                    // that don't matter for dev go here
 
