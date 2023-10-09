@@ -116,7 +116,7 @@ private:
   bool ResectOneByOneTilDone();
 
   /// Lowerlevel methods -------------------------------------------------------
-  bool ReconstructAllTangents();
+  void ReconstructAllTangents();
 
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo);
@@ -137,7 +137,7 @@ private:
   /// Test assumptions about the code, eg links in observation feature id,
   /// and actual features
   /// To be run after a major rec
-  bool ConsistencyCheck(bool check_info);
+  bool ConsistencyCheck(bool check_info) const;
 
   //----
   //-- Data

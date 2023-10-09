@@ -102,7 +102,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 
 // checks sfm_data_ internal consistency and consistency with external sources
 // such as provider
-bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info)
+bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
 {
   // For all landmarks
   //    - check X !=0
@@ -110,7 +110,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info)
   //  for each observation
   //  Check the view of the observation hash matches any view id in the vieset
   //  Check id_feat points to a real feature with same .x
-  unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
+  unsigned const nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
   for (const auto &lit : sfm_data_.GetStructure()) {
     const Landmark       &l = lit.second;
     const Observations &obs = l.obs;
@@ -120,11 +120,11 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info)
 
     const Observation *ob[nviews];
     for (const auto &o : obs) {
-      unsigned vi = o->first;
-      Observation *ob = &o->second;
+      unsigned vi = o.first;
+      const Observation *ob = &o.second;
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
-      vec2 xf = feature->coords().cast<double>();
-      assert((xf - ob->x).twonorm() < 1e-9);
+      Vec2 xf = feature->coords().cast<double>();
+      assert((xf - ob->x).norm() < 1e-9);
     }
   }
 
@@ -133,6 +133,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info)
 //  for (const auto &lit : sfm_data_.GetStructure()) {
 //    const LandmarkInfo li = &sfm_data_.info[lit.first]; // create info
 //  }
+  return true;
 }
 
 // Compute robust Resection of remaining images
@@ -330,7 +331,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       uint32_t ifeat = iter->second;
       for (unsigned v = 0; v < nviews; ++v) {
         x.col(v) =
-          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
+          features_provider_->sio_feats_per_view[t[v]][ifeat].coords().cast<double>().homogeneous();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
         landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
@@ -339,12 +340,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       // triangulate 3 views
       Vec4 X;
       TriangulateNView(x, P, &X);
-      {
-      Observations obs;
-      for (unsigned v = 0; v < nviews; ++v)
-        obs[t[v]] = Observation(x1, i);
-      landmarks[track_iterator.first].obs = std::move(obs);
-      }
       landmarks[track_iterator.first].X = X.hnormalized();
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
@@ -572,14 +567,15 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Mat2X pt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
-  if(features_provider_->has_sio_features())
+  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
   {
+    assert(features_provider_->has_sio_features());
+    assert(sfm_data_.is_oriented());
     for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-      assert(sfm_data_.is_oriented()); // xxx
       
       // use T() as function to optionally have T:
-      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).T();
+      resection_data.pt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
 
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();

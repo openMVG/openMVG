@@ -59,11 +59,13 @@ struct SfM_Data
   const Intrinsics & GetIntrinsics() const {return intrinsics;}
   const Landmarks & GetLandmarks() const {return structure;}
   const Landmarks & GetStructure() const {return structure;}
+  const LandmarksInfo & GetInfo() const {return info;}
   const Landmarks & GetControl_Points() const {return control_points;}
 
   // Shortcuts/aliases allowing better documentation
   unsigned num_reconstructed_points() const { return  structure.size(); }
   unsigned num_views() const { return views.size(); }
+  bool is_oriented() const { return info.empty(); }
 
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const
