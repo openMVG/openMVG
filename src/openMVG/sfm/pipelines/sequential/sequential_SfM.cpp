@@ -72,8 +72,9 @@ using namespace openMVG::matching;
 // See also
 // bool track_triangulation in sfm_data_triangulation.cpp
 // 
-void ReconstructAllTangents()
+void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
+#if 0
   assert(sfm_data_.is_oriented()); // xxx
   unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
   assert(nviews_assumed == 2 || nviews_assumed == 3);
@@ -96,24 +97,42 @@ void ReconstructAllTangents()
       v++;
     }
   }
+#endif
 }
 
-bool CheckConsistency(bool check_info)
+// checks sfm_data_ internal consistency and consistency with external sources
+// such as provider
+bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info)
 {
-
-
   // For all landmarks
   //    - check X !=0
 
-//  Observations.obs
+  //  for each observation
+  //  Check the view of the observation hash matches any view id in the vieset
+  //  Check id_feat points to a real feature with same .x
+  unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
+  for (const auto &lit : sfm_data_.GetStructure()) {
+    const Landmark       &l = lit.second;
+    const Observations &obs = l.obs;
+    unsigned nviews = obs.size(); 
+    assert(nviews == nviews_assumed);
+    assert(l.X[0]);
 
-//  for each observation
-//  Check the view of the observation hash matches any view id in the vieset
-//  Check id_feat points to a real feature with same .x
+    const Observation *ob[nviews];
+    for (const auto &o : obs) {
+      unsigned vi = o->first;
+      Observation *ob = &o->second;
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
+      vec2 xf = feature->coords().cast<double>();
+      assert((xf - ob->x).twonorm() < 1e-9);
+    }
+  }
 
-  if (check_info)
-
-  
+//  if (check_info) {
+//  assert(sfm_data_.is_oriented());
+//  for (const auto &lit : sfm_data_.GetStructure()) {
+//    const LandmarkInfo li = &sfm_data_.info[lit.first]; // create info
+//  }
 }
 
 // Compute robust Resection of remaining images

@@ -60,18 +60,6 @@ public:
 
   /// Initialize tracks
   bool InitLandmarkTracks();
-
-  /// Make initial 2- or 3-view reconstruction seed (robust plus BA and initial filters)
-  bool MakeInitialSeedReconstruction();
-
-  /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
-  bool MakeInitialPair3D(const Pair & initialPair);
-  /// Compute the initial 3D seed (First camera: {R=Id|t=0}, 
-  /// 2nd and 3rd estimated {R|t} by 3-point trifocal FABBRI CVPR20)
-  bool MakeInitialTriplet3D(const Triplet & current_triplet);
-
-  /// Automatic initial pair selection (based on a 'baseline' computation score)
-  bool AutomaticInitialPairChoice(Pair & initialPair) const;
   
   /// TODO(trifocal future) Automatic initial triplet selection (based on a 'baseline' computation score)
   // bool AutomaticInitialTripletChoice(Triple & initialTriplet) const;
@@ -111,6 +99,25 @@ protected:
 
 private:
 
+  /// Highlevel methods -------------------------------------------------------
+  /// Make initial 2- or 3-view reconstruction seed (robust plus BA and initial filters)
+  bool MakeInitialSeedReconstruction();
+
+  /// Compute the initial 3D seed (First camera: {R=Id|t=0}, second estimated {R|t} by 5 point algorithm)
+  bool MakeInitialPair3D(const Pair & initialPair);
+  /// Compute the initial 3D seed (First camera: {R=Id|t=0}, 
+  /// 2nd and 3rd estimated {R|t} by 3-point trifocal FABBRI CVPR20)
+  bool MakeInitialTriplet3D(const Triplet & current_triplet);
+
+  /// Automatic initial pair selection (based on a 'baseline' computation score)
+  bool AutomaticInitialPairChoice(Pair & initialPair) const;
+
+  /// Incremental rec once a seed rec is established
+  bool ResectOneByOneTilDone();
+
+  /// Lowerlevel methods -------------------------------------------------------
+  bool ReconstructAllTangents();
+
   /// Return MSE (Mean Square Error) and a histogram of residual values.
   double ComputeResidualsHistogram(Histogram<double> * histo);
 
@@ -130,7 +137,7 @@ private:
   /// Test assumptions about the code, eg links in observation feature id,
   /// and actual features
   /// To be run after a major rec
-  bool ConsistencyCheck()
+  bool ConsistencyCheck(bool check_info);
 
   //----
   //-- Data

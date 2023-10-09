@@ -36,13 +36,17 @@ struct Observation
 };
 
 struct ObservationInfo {
-  Observation() {  }
+  ObservationInfo() {  }
   ObservationInfo(const Vec2 & tgt): t(tgt) { }
   Vec2 t; // featue orientation / 2D unit tangent / optical flow / etc
-}
+};
 
 /// Observations are indexed by their View_id
 using Observations = Hash_Map<IndexT, Observation>;
+
+/// ObservationsInfo are indexed by their View_id
+/// they go parallel to Observations
+using ObservationsInfo = Hash_Map<IndexT, ObservationInfo>;
 
 /// Define a landmark (a 3D point, with its 2d observations)
 struct Landmark
