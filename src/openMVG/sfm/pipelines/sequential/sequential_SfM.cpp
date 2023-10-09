@@ -308,7 +308,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // Init views and intrincics
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
-    OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v] << std::endl; 
+    OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v];
     if (v==0) 
       tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     else
@@ -344,7 +344,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
-      OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation\n" << residual;
+      OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation\n" << residual.transpose();
       OPENMVG_LOG_INFO << "Residual from error()";
       { // For debug
 
@@ -387,7 +387,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     pose[v] = &tiny_scene.poses[view[v]->id_pose];
     map_ACThreshold_.insert({t[v], relativePose_info.found_residual_precision});
     set_remaining_view_id_.erase(view[v]->id_view);
-    OPENMVG_LOG_INFO << "pose[v] = \n" << pose[v]->rotation() << "\n" <<  pose[v]->center();
+    OPENMVG_LOG_INFO << "pose rc\n" << pose[v]->rotation() << "\n" <<  pose[v]->center().transpose();
   }
 
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
@@ -420,8 +420,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
         const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
 
-        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1;
-        OPENMVG_LOG_INFO << "\t\tresiduals norm " << residual_0.norm() << " " << residual_1.norm();
+        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1 
+          <<  "t\tresiduals norm " << residual_0.norm() << " " << residual_1.norm();
         if (angle <= 2.0) {
           OPENMVG_LOG_INFO << "\t\tFAIL angle test with angle " << angle;
           include_landmark = false;

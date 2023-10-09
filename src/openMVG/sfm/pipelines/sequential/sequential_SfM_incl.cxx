@@ -698,17 +698,16 @@ double SequentialSfMReconstructionEngine::ComputeResidualsHistogram(Histogram<do
   vec_residuals.reserve(sfm_data_.structure.size());
   for (const auto & landmark_entry : sfm_data_.GetLandmarks())
   {
-   OPENMVG_LOG_INFO << "3D point " << landmark_entry.second.X << std::endl;
+   OPENMVG_LOG_INFO << "3D point " << landmark_entry.second.X.transpose();
     const Observations & obs = landmark_entry.second.obs;
     for (const auto & observation : obs)
     {
       const View * view = sfm_data_.GetViews().find(observation.first)->second.get();
       const Pose3 pose = sfm_data_.GetPoseOrDie(view);
-      OPENMVG_LOG_INFO << "Pose rotation" << pose.rotation() << std::endl;
-      OPENMVG_LOG_INFO << "Pose center " << pose.center() << std::endl;
+      OPENMVG_LOG_INFO << "Pose rc " << pose.rotation() << "\n" << pose.center().transpose();
       const auto intrinsic = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose(landmark_entry.second.X), observation.second.x);
-      OPENMVG_LOG_INFO << "Raw residual " << residual;
+      OPENMVG_LOG_INFO << "Raw residual " << residual.transpose();
       vec_residuals.emplace_back( std::abs(residual(0)) );
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }
