@@ -567,33 +567,27 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Mat2X pt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
-  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+  if (features_provider_->has_sio_features())
   {
-    assert(features_provider_->has_sio_features());
-    assert(sfm_data_.is_oriented());
+    if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+      assert(sfm_data_.is_oriented());
+      OPENMVG_LOG_ERROR << "Oriented P2Pt: Work in progress";
+    }
     for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
       
       // use T() as function to optionally have T:
-      resection_data.pt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
+      //      if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+      //        resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
+
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
       // Handle image distortion if intrinsic is known (to ease the resection)
       if (optional_intrinsic && optional_intrinsic->have_disto())
-      {
-        resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-        resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-          features_provider_->sio_feats_per_view[viewIndex][*iterfeatId].coords().cast<double>();
-        // Handle image distortion if intrinsic is known (to ease the resection)
-        if (optional_intrinsic && optional_intrinsic->have_disto())
-        {
-          resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-        }
-      }
+        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
     }
   } else {
-    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId)
-    {
+    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
