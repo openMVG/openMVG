@@ -53,7 +53,10 @@ bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
-  ConsistencyCheck();
+  if (!ConsistencyCheck(true)) {
+    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
+    return false;
+  }
   //if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
@@ -117,6 +120,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 // such as provider
 bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
 {
+  OPENMVG_LOG_INFO << "Running consitency check";
   // For all landmarks
   //    - check X !=0
 
@@ -137,6 +141,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
       const Observation *ob = &o.second;
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
       Vec2 xf = feature->coords().cast<double>();
+      OPENMVG_LOG_INFO << xf.transpose() << " ob: " << ob->x.transpose();
       assert((xf - ob->x).norm() < 1e-9);
     }
   }
@@ -347,7 +352,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().cast<double>().homogeneous();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
-        landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
+        landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), ifeat);
       }
       
       // triangulate 3 views

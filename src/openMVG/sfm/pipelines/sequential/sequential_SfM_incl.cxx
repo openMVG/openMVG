@@ -519,8 +519,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
   const bool bRefine_using_BA = true;
-  if (bRefine_using_BA)
-  {
+  if (bRefine_using_BA) {
     // Refine the defined scene
     SfM_Data tiny_scene;
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view_I->id_view));
@@ -534,7 +533,6 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
 
     // Init structure
     Landmarks & landmarks = tiny_scene.structure;
-
     for (const auto & track_iterator : map_tracksCommon)
     {
       // Get corresponding points
