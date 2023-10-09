@@ -344,7 +344,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
-      OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation\n" << residual.transpose();
+      OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation " << residual.transpose();
       OPENMVG_LOG_INFO << "Residual from error()";
       { // For debug
 
