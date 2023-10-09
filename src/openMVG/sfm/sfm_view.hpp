@@ -16,7 +16,7 @@
 namespace openMVG {
 namespace sfm {
 
-/// A view define an image by a string and unique indexes for the view, the camera intrinsic & the pose
+/// A view defines an image by a string and unique indexes for the view, the camera intrinsic & the pose
 struct View
 {
   // image path on disk

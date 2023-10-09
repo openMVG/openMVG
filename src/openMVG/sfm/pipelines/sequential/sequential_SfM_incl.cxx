@@ -1,5 +1,17 @@
 // file included in sequential_SfM, for dev
 
+//-------------------
+//-- Incremental reconstruction
+//-------------------
+bool SequentialSfMReconstructionEngine::Process() 
+{
+  if (!InitLandmarkTracks()) return false;
+  if (!MakeInitialSeedReconstruction()) return false;
+  if (!ResectOneByOneTilDone()) return false;
+  FinalStatistics();
+  return true;
+}
+
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,
   const std::string & soutDirectory,

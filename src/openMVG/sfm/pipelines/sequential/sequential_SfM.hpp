@@ -126,6 +126,12 @@ private:
   /// Discard track with too large residual error
   bool badTrackRejector(double dPrecision, size_t count = 0);
 
+  /// See if all observations are adequately filled-in
+  /// Test assumptions about the code, eg links in observation feature id,
+  /// and actual features
+  /// To be run after a major rec
+  bool ConsistencyCheck()
+
   //----
   //-- Data
   //----

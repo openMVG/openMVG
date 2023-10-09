@@ -56,5 +56,6 @@ void GroupSharedIntrinsics(SfM_Data & sfm_data)
   }
 }
 
+
 } // namespace sfm
 } // namespace openMVG

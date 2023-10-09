@@ -11,7 +11,6 @@
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
@@ -50,18 +49,6 @@ using namespace openMVG::matching;
 #include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
                                    // that don't matter for dev go here
 
-//-------------------
-//-- Incremental reconstruction
-//-------------------
-bool SequentialSfMReconstructionEngine::Process() 
-{
-  if (!InitLandmarkTracks()) return false;
-  if (!MakeInitialSeedReconstruction()) return false;
-  if (!ResectOneByOneTilDone()) return false;
-  FinalStatistics();
-  return true;
-}
-
 // Go through sfm_data and reconstructs all tangents
 // At this stage, for robustness we use no TriangulateDLT for tangents.
 // For each pair of views in the reconstruction
@@ -81,26 +68,52 @@ bool SequentialSfMReconstructionEngine::Process()
 // Output:
 // - 3D tangents
 // - 2D tangents from feature provider stored in ObservationInfo
+//
+// See also
+// bool track_triangulation in sfm_data_triangulation.cpp
+// 
 void ReconstructAllTangents()
 {
-  for (const auto & landmark_entry : sfm_data_.GetLandmarks()) {
-    const Landmark &landmark = landmark_entry.second;
-    const Observations &obs = landmark.obs;
+  assert(sfm_data_.is_oriented()); // xxx
+  unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
+  assert(nviews_assumed == 2 || nviews_assumed == 3);
 
-    unsigned nviews = obs.
+  for (const auto &lit : sfm_data_.GetStructure()) {
+    const Landmark &l = lit.second;
+    const LandmarkInfo li = &sfm_data_.info[lit.first]; // create info
+    const Observations &obs = l.obs;
+    unsigned nviews = obs.size(); assert(nviews == nviews_assumed);
 
-    Observations::const_iterator iterObs_x[nviews];
-    const Observation *ob_x[nviews];
-    Vec2 ob_x_ud[nviews];
-    for (unsigned v = 0; v < nviews; ++v) {
-      iterObs_x[v] = obs.find(view[v]->id_view);
-      ob_x[v] = &iterObs_x[v]->second;
-      ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
-
-      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v 
-      // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
+    //Observations::const_iterator iterObs[nviews];
+    const Observation *ob[nviews];
+    unsigned v = 0;
+    for (const auto &o : obs) {
+      unsigned vi = o->first;
+      ob[v]  = &o->second;
+      obi[v] = &li.obs_info[vi];
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob[v].]);
+      obi[v].t = 
+      v++;
     }
   }
+}
+
+bool CheckConsistency(bool check_info)
+{
+
+
+  // For all landmarks
+  //    - check X !=0
+
+//  Observations.obs
+
+//  for each observation
+//  Check the view of the observation hash matches any view id in the vieset
+//  Check id_feat points to a real feature with same .x
+
+  if (check_info)
+
+  
 }
 
 // Compute robust Resection of remaining images
@@ -297,25 +310,27 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       auto iter = track_iterator.second.cbegin();
       uint32_t ifeat = iter->second;
       for (unsigned v = 0; v < nviews; ++v) {
-        const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][ifeat]);
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().homogeneous().cast<double>();
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
         landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), t[v]);
-        landmarks[track_iterator.first].obs_info[view[v]->id_view] = ObservationInfo(, t[v]);
       }
       
       // triangulate 3 views
       Vec4 X;
       TriangulateNView(x, P, &X);
+      {
+      Observations obs;
+      for (unsigned v = 0; v < nviews; ++v)
+        obs[t[v]] = Observation(x1, i);
+      landmarks[track_iterator.first].obs = std::move(obs);
+      }
       landmarks[track_iterator.first].X = X.hnormalized();
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
       OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation\n" << residual;
-
-
       OPENMVG_LOG_INFO << "Residual from error()";
       { // For debug
 
@@ -862,7 +877,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     }// All the tracks in the view
   }
   return true;
-}
+} 
 
 } // namespace sfm
 } // namespace openMVG
