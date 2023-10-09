@@ -46,6 +46,9 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
 
+#include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
+                                   // that don't matter for dev go here
+
 //-------------------
 //-- Incremental reconstruction
 //-------------------
@@ -61,9 +64,6 @@ bool SequentialSfMReconstructionEngine::Process()
   FinalStatistics();
   return true;
 }
-
-#include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
-                                   // that don't matter for dev go here
 
 // Go through sfm_data and reconstructs all tangents
 // At this stage, for robustness we use no TriangulateDLT for tangents.

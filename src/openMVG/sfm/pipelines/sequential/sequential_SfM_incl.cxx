@@ -1,4 +1,4 @@
-// file included in sequential_SfM, for dev
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 SequentialSfMReconstructionEngine::SequentialSfMReconstructionEngine(
   const SfM_Data & sfm_data,

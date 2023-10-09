@@ -45,14 +45,10 @@ public:
 
   virtual bool Process() override;
 
-  void setInitialPair(const Pair & initialPair) {
-    initial_pair_ = initialPair;
-  }
-  
-  void setInitialTriplet(const Triplet & initialTriplet) {
-    initial_triplet_ = initialTriplet;
-  }
-
+  void setInitialPair(const Pair & initialPair) 
+  { initial_pair_ = initialPair; }
+  void setInitialTriplet(const Triplet & initialTriplet) 
+  { initial_triplet_ = initialTriplet; }
   bool hasInitialPair() { return initial_pair_ != Pair(0,0); }
   bool hasInitialTriplet() { return initial_triplet_ != Triplet(0,0,0); }
 
@@ -68,23 +64,19 @@ public:
    *
    * It can be declared unknown if the type cannot be deduced from the metadata.
    */
-  void SetUnknownCameraType(const cameras::EINTRINSIC camType) {
-    cam_type_ = camType;
-  }
+  void SetUnknownCameraType(const cameras::EINTRINSIC camType) 
+  { cam_type_ = camType; }
 
   /// Configure the 2view triangulation method used by the SfM engine
-  void SetTriangulationMethod(const ETriangulationMethod method) {
-    triangulation_method_ = method;
-  }
+  void SetTriangulationMethod(const ETriangulationMethod method) 
+  { triangulation_method_ = method; }
 
   /// Configure the resetcion method method used by the Localization engine
-  void SetResectionMethod(const resection::SolverType method) {
-    resection_method_ = method;
-  }
+  void SetResectionMethod(const resection::SolverType method) 
+  { resection_method_ = method; }
 
-  void SetMaximumTrifocalRansacIterations(unsigned n) {
-    maximum_trifocal_ransac_iterations_ = n;
-  }
+  void SetMaximumTrifocalRansacIterations(unsigned n) 
+  { maximum_trifocal_ransac_iterations_ = n; }
 
   void FinalStatistics();
 
@@ -133,6 +125,8 @@ private:
   /// To be run after a major rec
   bool ConsistencyCheck(bool check_info) const;
 
+  bool using_initial_triple() { return std::get<2>(initial_triplet_) != 0; }
+
   //----
   //-- Data
   //----
@@ -141,7 +135,6 @@ private:
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
   std::string sLogging_file_;
 
-  bool using_initial_triple() { return std::get<2>(initial_triplet_) != 0; }
   
   // Parameter
   Triplet initial_triplet_;
