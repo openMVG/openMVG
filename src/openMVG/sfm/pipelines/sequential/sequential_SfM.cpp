@@ -150,7 +150,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
     bool bImageAdded = false;
     // Add images to the 3D reconstruction
     for (const auto & iter : vec_possible_resection_indexes) {
-      bImageAdded |= Resection(iter);  // TODO(p2pt)
+      bImageAdded |= Resection(iter); // <<------------------------------------
       set_remaining_view_id_.erase(iter);
     }
     if (bImageAdded) {
@@ -576,7 +576,6 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       
       // use T() as function to optionally have T:
       resection_data.pt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
-
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
       // Handle image distortion if intrinsic is known (to ease the resection)
