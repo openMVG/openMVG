@@ -29,7 +29,7 @@
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
-#include "third_party/histogram/histogram.hpp"
+#include "third_party/histogram/histogram_raw.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include <ceres/types.h>
@@ -46,6 +46,7 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
+using namespace histogramming;
 
 //-------------------
 //-- Incremental reconstruction
