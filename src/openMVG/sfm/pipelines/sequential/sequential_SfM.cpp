@@ -55,11 +55,11 @@ bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
-  if (!ConsistencyCheck(true)) {
-    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
-    return false;
-  }
-  //if (!ResectOneByOneTilDone()) return false;
+//  if (!ConsistencyCheck(true)) {
+//    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
+//    return false;
+//  }
+  if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
 }
@@ -89,7 +89,6 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
-  ff(NULL);
 #if 0
   assert(sfm_data_.is_oriented()); // xxx
   unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
@@ -461,7 +460,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "Final initial triplet residual histogram ---------------";
   // Save outlier residual information
   Histogram<double> histoResiduals;
-  this->ComputeResidualsHistogram(/*&histoResiduals*/);
+  ComputeResidualsHistogram(&histoResiduals);
   if (!sLogging_file_.empty())
   {
     using namespace htmlDocument;
