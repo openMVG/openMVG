@@ -1,5 +1,5 @@
-#ifndef HISTOGRAMMING_RAW_H
-#define HISTOGRAMMING_RAW_H
+#ifndef HISTOGRAM_H
+#define HISTOGRAM_H
 
 #include <iomanip>
 #include <numeric>
@@ -9,6 +9,8 @@
 
 // Same as histogrma.hpp, but without the anynymous namespace
 
+namespace histogramming {
 #include "histogram_core.hpp"
+}
 
-#endif HISTOGRAMMING_RAW_H
+#endif // HISTOGRAMMING_H
