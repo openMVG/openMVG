@@ -55,10 +55,10 @@ bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
-//  if (!ConsistencyCheck(true)) {
-//    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
-//    return false;
-//  }
+  if (!ConsistencyCheck(true)) {
+    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
+    return false;
+  }
   if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
@@ -349,9 +349,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       for (unsigned v = 0; v < nviews; ++v) {
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().cast<double>().homogeneous();
+        landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), ifeat);
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
-        landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), ifeat);
       }
       
       // triangulate 3 views
@@ -856,15 +856,11 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       }// If new point
 
       // If successfully triangulated, add the valid view observations
-      if (sfm_data_.structure.count(trackId) != 0 &&
-          !new_track_observations_valid_views.empty())
-      {
+      if (sfm_data_.structure.count(trackId) != 0 && !new_track_observations_valid_views.empty()) {
         Landmark & landmark = sfm_data_.structure[trackId];
-        if (features_provider_->has_sio_features()) 
-        {
+        if (features_provider_->has_sio_features()) {
           // Check if view feature point observations of the track are valid (residual, depth) or not
-          for (const IndexT & J: new_track_observations_valid_views)
-          {
+          for (const IndexT & J: new_track_observations_valid_views) {
             const View * view_J = sfm_data_.GetViews().at(J).get();
             const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
             const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
@@ -873,16 +869,13 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
             const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
             if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
-               )
-            {
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
               landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
             }
           }
         } else {
           // Check if view feature point observations of the track are valid (residual, depth) or not
-          for (const IndexT & J: new_track_observations_valid_views)
-          {
+          for (const IndexT & J: new_track_observations_valid_views) {
             const View * view_J = sfm_data_.GetViews().at(J).get();
             const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
             const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
@@ -891,9 +884,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
             const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
             if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
-               )
-            {
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
               landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
             }
           }
@@ -902,7 +893,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     }// All the tracks in the view
   }
   return true;
-} 
+}
 
 bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
 {
