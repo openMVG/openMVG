@@ -18,10 +18,8 @@
 #include "openMVG/multiview/solver_resection.hpp"
 #include "openMVG/multiview/triangulation_method.hpp"
 #include "openMVG/tracks/tracks.hpp"
-#include "third_party/histogram/histogram.hpp"
 
 namespace htmlDocument { class htmlDocumentStream; }
-//namespace { template <typename T> class Histogram; }
 
 namespace openMVG {
 namespace sfm {

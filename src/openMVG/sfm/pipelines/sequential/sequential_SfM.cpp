@@ -88,6 +88,7 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
+  ff(NULL);
 #if 0
   assert(sfm_data_.is_oriented()); // xxx
   unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();

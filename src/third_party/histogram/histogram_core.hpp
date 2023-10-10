@@ -1,11 +1,4 @@
-#ifndef HISTOGRAMMING_H
-#define HISTOGRAMMING_H
-
-#include <iomanip>
-#include <numeric>
-#include <sstream>
-#include <string>
-#include <vector>
+// This class is internal, and to be included in histogram_raw.hpp or histogram_core.hpp
 
 /**
  * @file histogram.h
@@ -23,7 +16,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-namespace {
 // A histogram class.
 // The Histogram object can keep a tally of values
 // within a range, the range is arranged into some
@@ -138,7 +130,3 @@ private:
   std::vector<size_t> freq; // histogram
   size_t overflow, underflow; //count under/over flow
 };
-
-} // namespace
-
-#endif // HISTOGRAMMING_H
