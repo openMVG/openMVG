@@ -1,14 +1,16 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (c) 2015 Pierre MOULON.
+// Copyright (c) 2015 Pierre MOULON, Ricardo Fabbri and Gabriel Andrade
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <array>
+#include <functional>
+#include <iostream>
+#include <utility>
 
-#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
@@ -31,9 +33,8 @@
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
 #include <ceres/types.h>
-#include <functional>
-#include <iostream>
-#include <utility>
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM_util.hpp"
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -45,9 +46,6 @@ namespace sfm {
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
-
-#include "sequential_SfM_incl.cxx" // modularizaiton, for dev. All functions
-                                   // that don't matter for dev go here
 
 //-------------------
 //-- Incremental reconstruction
@@ -461,7 +459,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   OPENMVG_LOG_INFO << "Final initial triplet residual histogram ---------------";
   // Save outlier residual information
   Histogram<double> histoResiduals;
-  ComputeResidualsHistogram(&histoResiduals);
+  this->ComputeResidualsHistogram(/*&histoResiduals*/);
   if (!sLogging_file_.empty())
   {
     using namespace htmlDocument;
@@ -904,6 +902,60 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   }
   return true;
 } 
+
+bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
+{
+  // Initial pair Essential Matrix and [R|t] estimation.
+  // or initial triplet relative pose
+  //
+  // Initial images choice
+  // 
+  // TODO(trifocal future) Refine this: If both initial triplet and initial pair are specified,
+  // then first try intial pair then try initial triplet if that fails
+  // OR try initial triplet first and initial pair if fails, which might be more
+  // reliable anyways
+  if (!hasInitialPair()) {
+    if (!hasInitialTriplet()) {
+      if (!AutomaticInitialPairChoice(initial_pair_)) {
+        // Cannot find a valid initial pair with the defined settings:
+        // TODO(trifocal) Trifocal - try to set it automatically
+        // - try to initialize a pair with less strict constraint
+        //    testing only X pairs with most matches.
+        const auto sorted_pairwise_matches_iterators =
+          GetPairWithMostMatches(sfm_data_, matches_provider_->pairWise_matches_, 20);
+        for (const auto & it : sorted_pairwise_matches_iterators)
+          if (MakeInitialPair3D({it->first.first, it->first.second})) {
+            initial_pair_ = {it->first.first, it->first.second};
+            break;
+          }
+        if (sorted_pairwise_matches_iterators.empty() || initial_pair_ == Pair(0,0)) {
+          OPENMVG_LOG_INFO << "Cannot find a valid initial pair - stop reconstruction.";
+          return false;
+        }
+      } else
+          MakeInitialPair3D(initial_pair_);
+    } else { // triplet but no pair
+      OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
+      if (!MakeInitialTriplet3D(initial_triplet_)) {
+          OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
+          return false;
+      }
+    }
+  } else { // has pair
+    if (!MakeInitialPair3D(initial_pair_)) {
+      OPENMVG_LOG_INFO << "Tried 2-view initialization from the provided one, fail.";
+      if (!hasInitialTriplet())
+        return false;
+      OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
+      if (!MakeInitialTriplet3D(initial_triplet_)) {
+        OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 
 } // namespace sfm
 } // namespace openMVG
