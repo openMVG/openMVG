@@ -34,7 +34,6 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/numeric/numeric.h"
 
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 
 #include "testing/testing.h"
@@ -43,7 +42,6 @@
 #include <random>
 
 using namespace openMVG;
-using namespace openMVG::sfm;
 
 struct TestData {
   //-- Dataset that encapsulate :
