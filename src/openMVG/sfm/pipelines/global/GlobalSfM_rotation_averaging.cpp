@@ -10,7 +10,7 @@
 
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/multiview/rotation_averaging.hpp"
-#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/base/sfm_filters.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/stl/stlMap.hpp"
 #include "openMVG/system/logger.hpp"

@@ -17,8 +17,8 @@
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/robust_estimation/guided_matching.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_triangulation.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/tracks/tracks.hpp"
 

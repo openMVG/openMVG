@@ -28,7 +28,6 @@ target_link_libraries(openMVG_sequential_sfm
     openMVG_matching
     openMVG_multiview
     openMVG_multiview_trifocal
-    openMVG_sfm_localization
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
@@ -40,6 +39,11 @@ target_include_directories(openMVG_sequential_sfm
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )
+
+
+if (MSVC)
+  set_target_properties(openMVG_sequential_sfm PROPERTIES COMPILE_FLAGS "/bigobj")
+endif (MSVC)
 
 set_target_properties(openMVG_sequential_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_sequential_sfm PROPERTY FOLDER OpenMVG/OpenMVG)

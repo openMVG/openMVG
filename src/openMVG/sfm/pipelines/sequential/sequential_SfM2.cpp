@@ -6,27 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/sequential/SfmSceneInitializer.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/system/logger.hpp"
-
-#include "third_party/histogram/histogram.hpp"
-#include "third_party/htmlDoc/htmlDoc.hpp"
-
 #include <array>
 #include <ceres/types.h>
 #include <functional>
 #include <iostream>
+
+#include "third_party/histogram/histogram.hpp"
+#include "third_party/htmlDoc/htmlDoc.hpp"
+
+#include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/sfm/base/SfM_Localizer.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_filters.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/pipelines/sequential/SfmSceneInitializer.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 
 namespace openMVG {
 namespace sfm {

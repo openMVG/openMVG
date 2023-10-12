@@ -14,26 +14,25 @@
 
 
 #include "third_party/histogram/histogram_raw.hpp"
-#include "openMVG/sfm/pipelines/sequential/sequential_SfM_base.hpp"
+#include "third_party/htmlDoc/htmlDoc.hpp"
+#include "openMVG/stl/stl.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_filters.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/SfM_Localizer.hpp"
 #include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/pipelines/sfm_robust_model_estimation_trifocal.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/stl/stl.hpp"
+#include "openMVG/sfm/pipelines/sequential/sequential_SfM_base.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
-
-#include "third_party/htmlDoc/htmlDoc.hpp"
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data

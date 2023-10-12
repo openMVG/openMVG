@@ -1,5 +1,5 @@
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM_util.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 
 namespace openMVG {

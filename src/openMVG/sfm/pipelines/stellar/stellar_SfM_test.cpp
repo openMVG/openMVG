@@ -20,7 +20,7 @@
 #include "openMVG/sfm/pipelines/pipelines_test.hpp"
 #include "openMVG/sfm/pipelines/relative_pose_engine.hpp"
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
-#include "openMVG/sfm/sfm.hpp"
+#include "openMVG/sfm/base/sfm.hpp"
 
 #include "testing/testing.h"
 

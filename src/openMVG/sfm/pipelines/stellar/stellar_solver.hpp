@@ -10,7 +10,7 @@
 #define OPENMVG_SFM_STELLAR_STELLAR_SOLVER_HPP
 
 #include "openMVG/sfm/pipelines/stellar/relative_scale.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 
 namespace openMVG {
 namespace sfm {

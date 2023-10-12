@@ -12,7 +12,7 @@
 #include "openMVG/sfm/pipelines/relative_pose_engine.hpp"
 #include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/stl/stlMap.hpp"
 #include "openMVG/system/logger.hpp"
 
