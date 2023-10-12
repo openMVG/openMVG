@@ -1,19 +1,96 @@
-
 file(
-  GLOB_RECURSE
+  # GLOB_RECURSE IST EVILN
+  #   GLOB_RECURSE
   sfm_files_header
-  *.hpp
+  sfm_landmark.hpp
+  sfm_report.hpp
+  sfm_data_io_baf.hpp
+  sfm_data_BA_ceres.hpp
+  sfm_data_utils.hpp
+  sfm_view_priors_io.hpp
+  sfm_data_BA.hpp
+  sfm_data_io_ply.hpp
+  sfm_view.hpp
+  sfm_data_graph_utils.hpp
+  sfm_data.hpp
+  pipelines/sfm_features_provider.hpp
+  pipelines/stellar/stellar_definitions.hpp
+  pipelines/stellar/relative_scale.hpp
+  pipelines/stellar/stellar_solver.hpp
+# including all but sequential into single lib
+#   pipelines/sequential/SfmSceneInitializerStellar.hpp
+#   pipelines/sequential/sequential_SfM_util.hpp
+#   pipelines/sequential/sequential_SfM_base.hpp
+#   pipelines/sequential/SfmSceneInitializerMaxPair.hpp
+#   pipelines/sequential/SfmSceneInitializer.hpp
+#   pipelines/sequential/sequential_SfM.hpp
+#   pipelines/sequential/sequential_SfM2.hpp
+  pipelines/sfm_preemptive_regions_provider.hpp
+  pipelines/sfm_regions_provider.hpp
+  pipelines/relative_pose_engine.hpp
+  pipelines/sfm_robust_model_estimation_trifocal.hpp
+  pipelines/sfm_matches_provider.hpp
+  pipelines/sfm_robust_model_estimation.hpp
+  pipelines/sfm_regions_provider_cache.hpp
+  pipelines/sfm_engine.hpp
+  pipelines/global/mutexSet.hpp
+  pipelines/global/GlobalSfM_rotation_averaging.hpp
+  pipelines/global/sfm_global_engine_relative_motions.hpp
+  pipelines/global/GlobalSfM_translation_averaging.hpp
+  pipelines/global/triplet_t_ACRansac_kernelAdaptator.hpp
+  pipelines/global/sfm_global_reindex.hpp
+  pipelines/structure_from_known_poses/structure_estimator.hpp
+  pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp
+  pipelines/localization/SfM_Localizer.hpp
+  sfm.hpp
+  sfm_data_transform.hpp
+  sfm_data_filters.hpp
+  sfm_view_priors.hpp
+  sfm_landmark_io.hpp
+  sfm_data_io.hpp
+  sfm_data_filters_frustum.hpp
+  sfm_data_BA_ceres_camera_functor.hpp
+  sfm_data_triangulation.hpp
+  sfm_data_colorization.hpp
+  sfm_filters.hpp
+  sfm_data_io_cereal.hpp
+  sfm_view_io.hpp
+  
 )
 file(
-  GLOB_RECURSE
+  # GLOB_RECURSE IST EVILN
+  #  GLOB_RECURSE 
   sfm_files_cpp
-  *.cpp
+  sfm_data_io.cpp
+  sfm_data_filters_frustum.cpp
+  sfm_data_colorization.cpp
+  sfm_data_io_cereal.cpp
+  sfm_data_triangulation.cpp
+  sfm_data_transform.cpp
+  sfm_data_filters.cpp
+  pipelines/stellar/stellar_solver.cpp
+# including all but sequential into single lib
+#   pipelines/sequential/sequential_SfM.cpp
+#   pipelines/sequential/sequential_SfM2.cpp
+#   pipelines/sequential/sequential_SfM_base.cpp
+#   pipelines/sequential/SfmSceneInitializerMaxPair.cpp
+#   pipelines/sequential/SfmSceneInitializerStellar.cpp
+#   pipelines/sequential/sequential_SfM_util.cpp
+  pipelines/sfm_robust_model_estimation.cpp
+  pipelines/relative_pose_engine.cpp
+  pipelines/sfm_robust_model_estimation_trifocal.cpp
+  pipelines/global/GlobalSfM_translation_averaging.cpp
+  pipelines/global/sfm_global_engine_relative_motions.cpp
+  pipelines/global/GlobalSfM_rotation_averaging.cpp
+  pipelines/structure_from_known_poses/structure_estimator.cpp
+  pipelines/localization/SfM_Localizer.cpp
+  pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.cpp
+  sfm_data_graph_utils.cpp
+  sfm_report.cpp
+  sfm_data_BA_ceres.cpp
+  sfm_data_utils.cpp
 )
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.cpp)
-#Remove the future main files
 list(REMOVE_ITEM sfm_files_cpp ${REMOVEFILESUNITTEST})
-#Remove the test header main files
-file(GLOB_RECURSE REMOVEFILESUNITTEST *_test.hpp)
 list(REMOVE_ITEM sfm_files_header ${REMOVEFILESUNITTEST})
 
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
@@ -25,7 +102,7 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_multiview
-    openMVG_multiview_trifocal
+    openMVG_sequential_sfm
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
