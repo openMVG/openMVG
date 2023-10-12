@@ -71,7 +71,7 @@ private:
   /// Test assumptions about the code, eg links in observation feature id,
   /// and actual features
   /// To be run after a major rec
-  bool ConsistencyCheck(bool check_info) const;
+  bool ConsistencyCheck() const;
 
   // consistency checks for oriented datastructures that run parallel to
   // the usual landmarks/observations 

@@ -65,7 +65,7 @@ struct SfM_Data
   // Shortcuts/aliases allowing better documentation
   unsigned num_reconstructed_points() const { return  structure.size(); }
   unsigned num_views() const { return views.size(); }
-  bool is_oriented() const { return info.empty(); }
+  bool is_oriented() const { return !info.empty(); }
 
   /// Check if the View have defined intrinsic and pose
   bool IsPoseAndIntrinsicDefined(const View * view) const

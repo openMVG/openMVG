@@ -55,13 +55,13 @@ bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
-  if (!ConsistencyCheck(true)) {
+  if (!ConsistencyCheck()) {
     OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
     return false;
   }
 
   if (!ResectOneByOneTilDone()) return false;
-  FinalStatistics();
+//  FinalStatistics();
   return true;
 }
 
@@ -90,7 +90,6 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
-  assert(sfm_data_.is_oriented());
   unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
   assert(nviews == 2 || nviews == 3);
   const Observation *ob[3]; // use only nviews of this;
@@ -120,7 +119,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 
 // checks sfm_data_ internal consistency and consistency with external sources
 // such as provider
-bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
+bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
 {
   OPENMVG_LOG_INFO << "Running consistency check";
   // For all landmarks
@@ -151,15 +150,13 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
     assert(vit.first == vit.second->id_view);
   }
 
-  if (check_info) {
-    assert(sfm_data_.is_oriented());
-  }
-
   return true;
 }
 
 bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
 {
+  ConsistencyCheck();
+
   OPENMVG_LOG_INFO << "Running oriented consitency check";
   assert(sfm_data_.is_oriented());
   for (const auto &lit : sfm_data_.GetStructure()) {
@@ -196,8 +193,11 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   OPENMVG_LOG_INFO << "Robust resection";
   if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
-    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented())
+    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
       return false;
+    } else {
+      OPENMVG_LOG_INFO << "Resection: Pass Oriented Test after 3d rec";
+    }
   }
   /*
   size_t resectionGroupIndex = 0;
