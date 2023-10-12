@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/base/sfm_data_filters_frustum.hpp"
 
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/image/pixel_types.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 

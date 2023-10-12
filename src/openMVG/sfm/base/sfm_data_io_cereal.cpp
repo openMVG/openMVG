@@ -12,14 +12,14 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
 
-#include "openMVG/sfm/sfm_data_io_cereal.hpp"
+#include "openMVG/sfm/base/sfm_data_io_cereal.hpp"
 
 #include "openMVG/cameras/cameras_io.hpp"
 #include "openMVG/geometry/pose3_io.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_landmark_io.hpp"
-#include "openMVG/sfm/sfm_view_io.hpp"
-#include "openMVG/sfm/sfm_view_priors_io.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_landmark_io.hpp"
+#include "openMVG/sfm/base/sfm_view_io.hpp"
+#include "openMVG/sfm/base/sfm_view_priors_io.hpp"
 #include "openMVG/types.hpp"
 #include "openMVG/system/logger.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

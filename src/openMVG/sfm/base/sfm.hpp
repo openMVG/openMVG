@@ -15,22 +15,22 @@
 //-----------------
 // SfM data
 //-----------------
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
-#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_transform.hpp"
-#include "openMVG/sfm/sfm_data_utils.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_filters.hpp"
+#include "openMVG/sfm/base/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_transform.hpp"
+#include "openMVG/sfm/base/sfm_data_utils.hpp"
+#include "openMVG/sfm/base/sfm_data_triangulation.hpp"
 
-#include "openMVG/sfm/sfm_filters.hpp"
+#include "openMVG/sfm/base/sfm_filters.hpp"
 
 //-----------------
 // SfM pipelines
 //-----------------
-#include "openMVG/sfm/sfm_report.hpp"
+#include "openMVG/sfm/base/sfm_report.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_engine_relative_motions.hpp"
 #include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"

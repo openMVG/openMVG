@@ -13,7 +13,7 @@
 
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/multiview/triangulation_method.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG { namespace sfm { struct SfM_Data; } }

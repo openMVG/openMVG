@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_VIEW_IO_HPP
 #define OPENMVG_SFM_SFM_VIEW_IO_HPP
 
-#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/base/sfm_view.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <cereal/types/polymorphic.hpp>

@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 
 namespace openMVG { namespace sfm { struct SfM_Data; } }
 

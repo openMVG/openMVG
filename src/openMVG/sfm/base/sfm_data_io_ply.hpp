@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_DATA_IO_PLY_HPP
 #define OPENMVG_SFM_SFM_DATA_IO_PLY_HPP
 
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 
 #include <fstream>
 #include <iomanip>

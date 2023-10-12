@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
 #include "openMVG/stl/split.hpp"
 #include "openMVG/system/logger.hpp"
 

@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-#include "openMVG/sfm/sfm_data_colorization.hpp"
+#include "openMVG/sfm/base/sfm_data_colorization.hpp"
 
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/image/pixel_types.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 

@@ -1,6 +1,6 @@
 add_subdirectory(base)
 
-set(
+set( # TODO: each pipelines/subfolder its own library/build module
   sfm_files_header
   pipelines/sfm_features_provider.hpp
   pipelines/stellar/stellar_definitions.hpp
@@ -63,8 +63,8 @@ target_link_libraries(openMVG_sfm
     openMVG_features
     openMVG_graph
     openMVG_matching
-    openMVG_multiview
-    openMVG_sequential_sfm
+    openMVG_sfm_base
+    openMVG_sfm_sequential
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
@@ -90,12 +90,5 @@ endif (MSVC)
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_sfm PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
-
-UNIT_TEST(openMVG sfm_data_io "openMVG_sfm;${STLPLUS_LIBRARY}")
-UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;${STLPLUS_LIBRARY}")
-UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm;${STLPLUS_LIBRARY}")
-UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm")
-UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm")
-UNIT_TEST(openMVG sfm_data_triangulation "openMVG_sfm;openMVG_multiview_test_data;${STLPLUS_LIBRARY}")
 
 add_subdirectory(pipelines)

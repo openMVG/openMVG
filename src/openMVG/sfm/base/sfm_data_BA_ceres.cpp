@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
@@ -20,9 +20,9 @@
 #include "openMVG/geometry/Similarity3_Kernel.hpp"
 //- Robust estimation - LMeds (since no threshold can be defined)
 #include "openMVG/robust_estimation/robust_estimator_LMeds.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres_camera_functor.hpp"
-#include "openMVG/sfm/sfm_data_transform.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres_camera_functor.hpp"
+#include "openMVG/sfm/base/sfm_data_transform.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 

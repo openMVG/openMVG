@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_VIEW_PRIORS_IO_HPP
 #define OPENMVG_SFM_SFM_VIEW_PRIORS_IO_HPP
 
-#include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/sfm/base/sfm_view_priors.hpp"
 
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>

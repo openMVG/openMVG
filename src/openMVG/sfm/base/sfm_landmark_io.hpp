@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_LANDMARK_IO_HPP
 #define OPENMVG_SFM_SFM_LANDMARK_IO_HPP
 
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 
 #include <cereal/cereal.hpp> // Serialization
 

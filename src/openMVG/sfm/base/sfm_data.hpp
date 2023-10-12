@@ -13,9 +13,9 @@
 
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
-#include "openMVG/sfm/sfm_view.hpp"
-#include "openMVG/sfm/sfm_view_priors.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_view.hpp"
+#include "openMVG/sfm/base/sfm_view_priors.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG {

@@ -11,11 +11,11 @@
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/portable_binary.hpp>
 
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_io_baf.hpp"
-#include "openMVG/sfm/sfm_data_io_cereal.hpp"
-#include "openMVG/sfm/sfm_data_io_ply.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_io_baf.hpp"
+#include "openMVG/sfm/base/sfm_data_io_cereal.hpp"
+#include "openMVG/sfm/base/sfm_data_io_ply.hpp"
 #include "openMVG/stl/stlMap.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"

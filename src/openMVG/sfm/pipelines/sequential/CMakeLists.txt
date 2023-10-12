@@ -41,11 +41,6 @@ target_include_directories(openMVG_sequential_sfm
     $<INSTALL_INTERFACE:include/openMVG>
 )
 
-
-if (MSVC)
-  set_target_properties(openMVG_sequential_sfm PROPERTIES COMPILE_FLAGS "/bigobj")
-endif (MSVC)
-
 set_target_properties(openMVG_sequential_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_sequential_sfm PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_sequential_sfm DESTINATION lib EXPORT openMVG-targets)
