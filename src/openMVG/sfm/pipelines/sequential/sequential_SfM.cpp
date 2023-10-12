@@ -59,6 +59,7 @@ bool SequentialSfMReconstructionEngine::Process()
     OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
     return false;
   }
+
   if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
@@ -89,37 +90,39 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
-#if 0
-  assert(sfm_data_.is_oriented()); // xxx
-  unsigned constexpr nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
-  assert(nviews_assumed == 2 || nviews_assumed == 3);
+  assert(sfm_data_.is_oriented());
+  unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
+  assert(nviews == 2 || nviews == 3);
+  const Observation *ob[3]; // use only nviews of this;
+  ObservationInfo *obi[3];
 
-  for (const auto &lit : sfm_data_.GetStructure()) {
-    const Landmark &l = lit.second;
-    const LandmarkInfo li = &sfm_data_.info[lit.first]; // create info
-    const Observations &obs = l.obs;
-    unsigned nviews = obs.size(); assert(nviews == nviews_assumed);
+  for (auto &lit : sfm_data_.GetStructure()) {
+    const Landmark &l = lit.second;  LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
+    const Observations &obs = l.obs; ObservationsInfo &iobs = li.obs_info;
 
     //Observations::const_iterator iterObs[nviews];
-    const Observation *ob[nviews];
     unsigned v = 0;
-    for (const auto &o : obs) {
-      unsigned vi = o->first;
-      ob[v]  = &o->second;
-      obi[v] = &li.obs_info[vi];
-      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob[v].]);
-      obi[v].t = 
+    for (auto &o : obs) {
+      unsigned vi = o.first;
+      ob[v]  = &o.second;
+      obi[v] = &li.obs_info[vi];  // creates obs
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob[v]->id_feat]);
+      double theta = feature->orientation();
+      obi[v]->t = Vec2(std::cos(theta), std::sin(theta));
       v++;
     }
+
+    // Reconstruct T
+    // li.T = ..
+    li.T(0) = 1;
   }
-#endif
 }
 
 // checks sfm_data_ internal consistency and consistency with external sources
 // such as provider
 bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
 {
-  OPENMVG_LOG_INFO << "Running consitency check";
+  OPENMVG_LOG_INFO << "Running consistency check";
   // For all landmarks
   //    - check X !=0
 
@@ -134,7 +137,6 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
     assert(nviews == nviews_assumed);
     assert(l.X[0]);
 
-    const Observation *ob[nviews];
     for (const auto &o : obs) {
       unsigned vi = o.first;
       const Observation &ob = o.second;
@@ -151,29 +153,38 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
 
   if (check_info) {
     assert(sfm_data_.is_oriented());
-    for (const auto &lit : sfm_data_.GetStructure()) {
-      const Landmark       &l = lit.second;
-
-      assert(sfm_data_.info.count(lit.first));
-      const LandmarkInfo &li = sfm_data_.GetInfo().at(lit.first); // [lit.first] but const
-      const Observations &obs = l.obs;
-      const ObservationsInfo &iobs = li.obs_info;
-      unsigned nviews = obs.size(); 
-
-      const Observation *ob[nviews];
-      for (const auto &o : obs) {
-        unsigned vi = o.first;
-        const Observation *ob = &o.second;
-        const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
-        double theta = feature->orientation();
-        assert(theta);
-        Vec2 orient(std::cos(theta),std::sin(theta));
-        assert(iobs.count(vi));
-        assert((orient - iobs.at(vi).t).norm() < 1e-9);
-      }
-    }
   }
 
+  return true;
+}
+
+bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
+{
+  OPENMVG_LOG_INFO << "Running oriented consitency check";
+  assert(sfm_data_.is_oriented());
+  for (const auto &lit : sfm_data_.GetStructure()) {
+    const Landmark       &l = lit.second;
+
+    assert(sfm_data_.info.count(lit.first));
+    const LandmarkInfo &li = sfm_data_.GetInfo().at(lit.first); // [lit.first] but const
+    const Observations &obs = l.obs;
+    const ObservationsInfo &iobs = li.obs_info;
+    unsigned nviews = obs.size(); 
+    unsigned inviews = iobs.size();
+    assert(inviews == nviews);
+    assert(l.X.norm());
+
+    for (const auto &o : obs) {
+      unsigned vi = o.first;
+      const Observation *ob = &o.second;
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
+      double theta = feature->orientation();
+      assert(theta);
+      Vec2 orient(std::cos(theta),std::sin(theta));
+      assert(iobs.count(vi));
+      assert((orient - iobs.at(vi).t).norm() < 1e-9);
+    }
+  }
   return true;
 }
 
@@ -183,8 +194,12 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 {
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
   OPENMVG_LOG_INFO << "Robust resection";
-  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
+    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented())
+      return false;
+  }
+  /*
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -210,6 +225,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
     }
     ++resectionGroupIndex;
   }
+  */
   // Ensure there is no remaining outliers
   //   if (badTrackRejector(4.0, 0))
   //     eraseUnstablePosesAndObservations(sfm_data_, 4);

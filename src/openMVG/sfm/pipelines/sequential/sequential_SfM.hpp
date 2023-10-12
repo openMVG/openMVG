@@ -72,6 +72,10 @@ private:
   /// and actual features
   /// To be run after a major rec
   bool ConsistencyCheck(bool check_info) const;
+
+  // consistency checks for oriented datastructures that run parallel to
+  // the usual landmarks/observations 
+  bool ConsistencyCheckOriented() const;
 };
 
 } // namespace sfm
