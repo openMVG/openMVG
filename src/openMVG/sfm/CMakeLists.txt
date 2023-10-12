@@ -62,6 +62,7 @@ target_link_libraries(openMVG_sfm
     openMVG_graph
     openMVG_matching
     openMVG_sfm_base
+    openMVG_sfm_stellar
     openMVG_sfm_sequential
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
