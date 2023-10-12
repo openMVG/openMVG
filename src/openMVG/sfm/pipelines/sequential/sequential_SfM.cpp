@@ -125,7 +125,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
 
   //  for each observation
   //  Check the view of the observation hash matches any view id in the vieset
-  //  Check id_feat points to a real feature with same .x
+  //  Check id_feat points to a real feature with same .x OK
   unsigned const nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
   for (const auto &lit : sfm_data_.GetStructure()) {
     const Landmark       &l = lit.second;
@@ -137,19 +137,43 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck(bool check_info) const
     const Observation *ob[nviews];
     for (const auto &o : obs) {
       unsigned vi = o.first;
-      const Observation *ob = &o.second;
-      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
+      const Observation &ob = o.second;
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob.id_feat]);
       Vec2 xf = feature->coords().cast<double>();
-      OPENMVG_LOG_INFO << xf.transpose() << " ob: " << ob->x.transpose();
-      assert((xf - ob->x).norm() < 1e-9);
+      // OPENMVG_LOG_INFO << xf.transpose() << " ob: " << ob->x.transpose();
+      assert((xf - ob.x).norm() < 1e-9);
     }
   }
 
-//  if (check_info) {
-//  assert(sfm_data_.is_oriented());
-//  for (const auto &lit : sfm_data_.GetStructure()) {
-//    const LandmarkInfo li = &sfm_data_.info[lit.first]; // create info
-//  }
+  for (const auto &vit : sfm_data_.GetViews()) {
+    assert(vit.first == vit.second->id_view);
+  }
+
+  if (check_info) {
+    assert(sfm_data_.is_oriented());
+    for (const auto &lit : sfm_data_.GetStructure()) {
+      const Landmark       &l = lit.second;
+
+      assert(sfm_data_.info.count(lit.first));
+      const LandmarkInfo &li = sfm_data_.GetInfo().at(lit.first); // [lit.first] but const
+      const Observations &obs = l.obs;
+      const ObservationsInfo &iobs = li.obs_info;
+      unsigned nviews = obs.size(); 
+
+      const Observation *ob[nviews];
+      for (const auto &o : obs) {
+        unsigned vi = o.first;
+        const Observation *ob = &o.second;
+        const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
+        double theta = feature->orientation();
+        assert(theta);
+        Vec2 orient(std::cos(theta),std::sin(theta));
+        assert(iobs.count(vi));
+        assert((orient - iobs.at(vi).t).norm() < 1e-9);
+      }
+    }
+  }
+
   return true;
 }
 
