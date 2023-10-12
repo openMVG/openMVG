@@ -13,7 +13,7 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/matching/indMatch_utils.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/types.hpp"
 

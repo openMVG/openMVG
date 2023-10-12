@@ -16,7 +16,7 @@
 #include "openMVG/features/feature_container.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/features/regions_factory.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
