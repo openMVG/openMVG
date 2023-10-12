@@ -20,7 +20,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/system/logger.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/base/SfM_Localizer.hpp"
 
 #include <memory>
 #include <utility>

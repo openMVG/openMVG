@@ -15,7 +15,7 @@
 
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/progressinterface.hpp"
 #include "openMVG/types.hpp"

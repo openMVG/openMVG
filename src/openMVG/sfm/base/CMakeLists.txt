@@ -23,6 +23,8 @@ set(
   sfm_filters.hpp
   sfm_data_io_cereal.hpp
   sfm_view_io.hpp
+  SfM_Localizer.hpp
+  SfM_Localizer_Single_3DTrackObservation_Database.hpp
 )
 
 set(
@@ -38,6 +40,8 @@ set(
   sfm_report.cpp
   sfm_data_BA_ceres.cpp
   sfm_data_utils.cpp
+  SfM_Localizer.cpp
+  SfM_Localizer_Single_3DTrackObservation_Database.cpp
 )
 
 add_library(openMVG_sfm_base ${sfm_base_files_header} ${sfm_base_files_cpp})
@@ -46,9 +50,9 @@ target_link_libraries(openMVG_sfm_base
   PUBLIC
     openMVG_geometry
     openMVG_multiview
-#     openMVG_features
+    openMVG_features     # only necessary for SfM_localizer --> make it into separate lib
 #     openMVG_graph
-#     openMVG_matching
+    openMVG_matching
 #     ${cereal_TARGET}
 #     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )

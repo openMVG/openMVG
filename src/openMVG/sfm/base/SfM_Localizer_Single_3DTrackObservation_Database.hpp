@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "openMVG/matching/regions_matcher.hpp"
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
+#include "openMVG/sfm/base/SfM_Localizer.hpp"
 #include "openMVG/types.hpp"
 
 namespace openMVG { namespace cameras { struct IntrinsicBase; } }
