@@ -1,3 +1,4 @@
+add_subdirectory(pipelines)
 add_subdirectory(base)
 
 set( # TODO: each pipelines/subfolder its own library/build module
@@ -30,8 +31,6 @@ set( # TODO: each pipelines/subfolder its own library/build module
   pipelines/global/triplet_t_ACRansac_kernelAdaptator.hpp
   pipelines/global/sfm_global_reindex.hpp
   pipelines/structure_from_known_poses/structure_estimator.hpp
-  pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp
-  pipelines/localization/SfM_Localizer.hpp
 )
 
 set(
@@ -52,8 +51,6 @@ set(
   pipelines/global/sfm_global_engine_relative_motions.cpp
   pipelines/global/GlobalSfM_rotation_averaging.cpp
   pipelines/structure_from_known_poses/structure_estimator.cpp
-  pipelines/localization/SfM_Localizer.cpp
-  pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.cpp
 )
 
 add_library(openMVG_sfm ${sfm_files_header} ${sfm_files_cpp})
@@ -92,5 +89,3 @@ set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} 
 set_property(TARGET openMVG_sfm PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
 
-
-add_subdirectory(pipelines)

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
@@ -14,13 +13,14 @@
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/solver_resection_up2p_kukelova.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/system/logger.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer.hpp"
 
 #include <memory>
 #include <utility>

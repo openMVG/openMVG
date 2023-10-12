@@ -13,17 +13,15 @@ target_compile_features(openMVG_sfm_localization INTERFACE ${CXX11_FEATURES})
 
 target_link_libraries(openMVG_sfm_localization
   PUBLIC
-    openMVG_geometry
-    openMVG_multiview
-    openmvg_sfm_basic
+#     openMVG_geometry
+#     openMVG_multiview
+    openmvg_sfm_base
 #     openMVG_graph
 #     openMVG_matching
-    ${cereal_TARGET}
+#     ${cereal_TARGET}
 )
 
 target_include_directories(openMVG_sfm_localization
-#   PRIVATE
-#    ${CERES_INCLUDE_DIRS}
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>

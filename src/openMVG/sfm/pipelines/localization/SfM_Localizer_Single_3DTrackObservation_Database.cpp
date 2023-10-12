@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 
-#include "openMVG/cameras/Camera_Intrinsics.hpp"
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
+#include "openMVG/sfm/pipelines/localization/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
+#include "openMVG/cameras/Camera_Intrinsics.hpp"
 
 using namespace openMVG::matching;
 
