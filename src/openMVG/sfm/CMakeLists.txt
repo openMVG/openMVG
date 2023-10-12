@@ -1,4 +1,4 @@
-file(
+set(
   # GLOB_RECURSE IST EVILN
   #   GLOB_RECURSE
   sfm_files_header
@@ -55,9 +55,9 @@ file(
   sfm_filters.hpp
   sfm_data_io_cereal.hpp
   sfm_view_io.hpp
-  
 )
-file(
+
+set(
   # GLOB_RECURSE IST EVILN
   #  GLOB_RECURSE 
   sfm_files_cpp

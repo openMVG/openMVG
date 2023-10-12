@@ -1,24 +1,23 @@
-file(
-  sequential_sfm_files_header
-  pipelines/sequential/SfmSceneInitializerStellar.hpp
-  pipelines/sequential/sequential_SfM_util.hpp
-  pipelines/sequential/sequential_SfM_base.hpp
-  pipelines/sequential/SfmSceneInitializerMaxPair.hpp
-  pipelines/sequential/SfmSceneInitializer.hpp
-  pipelines/sequential/sequential_SfM.hpp
-  pipelines/sequential/sequential_SfM2.hpp
-)
-file(
-  sequential_sfm_cpp
-  pipelines/sequential/sequential_SfM.cpp
-  pipelines/sequential/sequential_SfM2.cpp
-  pipelines/sequential/sequential_SfM_base.cpp
-  pipelines/sequential/SfmSceneInitializerMaxPair.cpp
-  pipelines/sequential/SfmSceneInitializerStellar.cpp
-  pipelines/sequential/sequential_SfM_util.cpp
+set(sequential_sfm_files_header
+  SfmSceneInitializerStellar.hpp
+  sequential_SfM_util.hpp
+  sequential_SfM_base.hpp
+  SfmSceneInitializerMaxPair.hpp
+  SfmSceneInitializer.hpp
+  sequential_SfM.hpp
+  sequential_SfM2.hpp
 )
 
-add_library(openMVG_sequential_sfm ${sfm_files_header} ${sfm_files_cpp})
+set(sequential_sfm_files_cpp
+  sequential_SfM.cpp
+  sequential_SfM2.cpp
+  sequential_SfM_base.cpp
+  SfmSceneInitializerMaxPair.cpp
+  SfmSceneInitializerStellar.cpp
+  sequential_SfM_util.cpp
+)
+
+add_library(openMVG_sequential_sfm ${sequential_sfm_files_header} ${sequential_sfm_files_cpp})
 target_compile_features(openMVG_sequential_sfm INTERFACE ${CXX11_FEATURES})
 
 target_link_libraries(openMVG_sequential_sfm
