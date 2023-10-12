@@ -28,6 +28,7 @@ target_link_libraries(openMVG_sequential_sfm
     openMVG_matching
     openMVG_multiview
     openMVG_multiview_trifocal
+    openMVG_sfm_localization
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
