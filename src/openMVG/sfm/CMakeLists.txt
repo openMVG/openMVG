@@ -2,6 +2,7 @@ add_subdirectory(base)
 
 set( # TODO: each pipelines/subfolder its own library/build module
   sfm_files_header
+  sfm.hpp
   pipelines/sfm_features_provider.hpp
   pipelines/stellar/stellar_definitions.hpp
   pipelines/stellar/relative_scale.hpp
@@ -90,5 +91,6 @@ endif (MSVC)
 set_target_properties(openMVG_sfm PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_sfm PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_sfm DESTINATION lib EXPORT openMVG-targets)
+
 
 add_subdirectory(pipelines)

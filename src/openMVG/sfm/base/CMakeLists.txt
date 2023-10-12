@@ -11,7 +11,6 @@ set(
   sfm_view.hpp
   sfm_data_graph_utils.hpp
   sfm_data.hpp
-  sfm.hpp
   sfm_data_transform.hpp
   sfm_data_filters.hpp
   sfm_view_priors.hpp
@@ -56,15 +55,16 @@ target_link_libraries(openMVG_sfm_base
 
 target_link_libraries(openMVG_sfm_base
   LINK_PRIVATE
-#     openMVG_image
+    openMVG_image
 #     openMVG_lInftyComputerVision
 #     openMVG_system
     ${CERES_LIBRARIES}
-#     ${STLPLUS_LIBRARY}
+    ${STLPLUS_LIBRARY}
 )
 target_include_directories(openMVG_sfm_base
   PRIVATE
     ${CERES_INCLUDE_DIRS}
+    ${LEMON_INCLUDE_DIRS}
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
@@ -77,8 +77,5 @@ set_property(TARGET openMVG_sfm_base PROPERTY FOLDER OpenMVG/OpenMVG)
 install(TARGETS openMVG_sfm_base DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG sfm_data_io "openMVG_sfm_base;${STLPLUS_LIBRARY}")
-UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm_base;${STLPLUS_LIBRARY}")
-UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm_base;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm_base")
 UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm_base")
-UNIT_TEST(openMVG sfm_data_triangulation "openMVG_sfm_base;openMVG_multiview_test_data;${STLPLUS_LIBRARY}")

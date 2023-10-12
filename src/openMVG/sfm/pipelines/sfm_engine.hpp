@@ -12,8 +12,8 @@
 #include <string>
 
 #include "openMVG/cameras/Camera_Common.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
 
 namespace openMVG {
 namespace sfm {

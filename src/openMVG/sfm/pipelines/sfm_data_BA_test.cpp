@@ -18,7 +18,7 @@
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
-#include "openMVG/sfm/base/sfm.hpp"
+#include "openMVG/sfm/sfm.hpp"
 
 #include "testing/testing.h"
 
