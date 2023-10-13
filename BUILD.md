@@ -264,6 +264,6 @@ OpenMVG::openMVG_system
 
 If OpenMVG has been installed by using the CMake OpenMVG_DIR variable you can specify where the install have been done manually by using:
 
-  `-DOpenMVG_DIR:STRING="YourInstallPath"/share/openMVG/cmake`
+  `-DOpenMVG_DIR:STRING="YourInstallPath"/lib/openMVG/cmake`
 
 A message will be displayed if OpenMVG is found or not at the CMake configure step.

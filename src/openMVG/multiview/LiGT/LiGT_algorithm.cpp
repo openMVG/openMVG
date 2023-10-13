@@ -128,7 +128,6 @@ void LiGTProblem::SelectBaseViews(const Track& track,
   // [Step.2 in Pose-only Algorithm]: select the left/right-base views
   for (ObsId i = 0; i < track_size - 1; ++i) {
     for (ObsId j = i + 1; j < track_size; ++j) {
-
       const ViewId& i_view_id = track[i].view_id;
       const ViewId& j_view_id = track[j].view_id;
 
@@ -144,7 +143,6 @@ void LiGTProblem::SelectBaseViews(const Track& track,
       double criterion_value = theta_ij.norm();
 
       if (criterion_value > best_criterion_value) {
-
         best_criterion_value = criterion_value;
 
         lbase_view_id = track[i].view_id;
@@ -335,24 +333,18 @@ bool LiGTProblem::Solution() {
 }
 
 Tracks LiGTProblem::GetTracks(){
-
   return tracks_;
-
 }
 
 Poses LiGTProblem::GetPoses(){
-
   return poses_;
-
 }
 
 Rotations LiGTProblem::GetRotations(){
-
   return global_rotations_;
 }
 
 void LiGTProblem::PrintCopyright() const{
-
   OPENMVG_LOG_INFO << "\n===============================================================\n"
            << "  The LiGT Algorithm (Version 1.1) for global translation\n"
            << "[Conditions of Use] The LiGT algorithm is distributed under the License\n"

@@ -35,6 +35,8 @@
 namespace openMVG {
 namespace sfm {
 
+#define OPENMVG_CERES_HAS_MANIFOLD ((CERES_VERSION_MAJOR * 100 + CERES_VERSION_MINOR) >= 201)
+
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
@@ -112,9 +114,11 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
 )
 : bVerbose_(bVerbose),
   nb_threads_(1),
-  parameter_tolerance_(1e-8), //~= numeric_limits<float>::epsilon()
+  parameter_tolerance_(1e-8),
+  gradient_tolerance_(1e-10),
   bUse_loss_function_(true),
-  max_num_iterations_(500)
+  max_num_iterations_(50),
+  max_linear_solver_iterations_(500)
 {
   #ifdef OPENMVG_USE_OPENMP
     nb_threads_ = omp_get_max_threads();
@@ -136,12 +140,6 @@ Bundle_Adjustment_Ceres::BA_Ceres_options::BA_Ceres_options
   }
   else
   {
-    if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-    {
-      sparse_linear_algebra_library_type_ = ceres::CX_SPARSE;
-      linear_solver_type_ = ceres::SPARSE_SCHUR;
-    }
-    else
     if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
     {
       sparse_linear_algebra_library_type_ = ceres::EIGEN_SPARSE;
@@ -241,7 +239,18 @@ bool Bundle_Adjustment_Ceres::Adjust
     }
   }
 
-  ceres::Problem problem;
+  ceres::Problem::Options problem_options;
+
+  // Set a LossFunction to be less penalized by false measurements
+  //  - set it to nullptr if you don't want use a lossFunction.
+  std::unique_ptr<ceres::LossFunction> p_LossFunction;
+  if (ceres_options_.bUse_loss_function_)
+  {
+    p_LossFunction.reset(new ceres::HuberLoss(Square(4.0)));
+    problem_options.loss_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
+  }
+
+  ceres::Problem problem(problem_options);
 
   // Data wrapper for refinement:
   Hash_Map<IndexT, std::vector<double>> map_intrinsics;
@@ -285,9 +294,14 @@ bool Bundle_Adjustment_Ceres::Adjust
       }
       if (!vec_constant_extrinsic.empty())
       {
-        ceres::SubsetParameterization *subset_parameterization =
+#if OPENMVG_CERES_HAS_MANIFOLD
+        auto* subset_manifold = new ceres::SubsetManifold(6, vec_constant_extrinsic);
+        problem.SetManifold(parameter_block, subset_manifold);
+#else
+        auto *subset_parameterization =
           new ceres::SubsetParameterization(6, vec_constant_extrinsic);
         problem.SetParameterization(parameter_block, subset_parameterization);
+#endif
       }
     }
   }
@@ -315,10 +329,17 @@ bool Bundle_Adjustment_Ceres::Adjust
             intrinsic_it.second->subsetParameterization(options.intrinsics_opt);
           if (!vec_constant_intrinsic.empty())
           {
-            ceres::SubsetParameterization *subset_parameterization =
+#if OPENMVG_CERES_HAS_MANIFOLD
+            auto* subset_manifold =
+              new ceres::SubsetManifold(
+                map_intrinsics.at(indexCam).size(), vec_constant_intrinsic);
+            problem.SetManifold(parameter_block, subset_manifold);
+#else
+            auto *subset_parameterization =
               new ceres::SubsetParameterization(
                 map_intrinsics.at(indexCam).size(), vec_constant_intrinsic);
             problem.SetParameterization(parameter_block, subset_parameterization);
+#endif
           }
         }
       }
@@ -328,13 +349,6 @@ bool Bundle_Adjustment_Ceres::Adjust
       OPENMVG_LOG_ERROR << "Unsupported camera type.";
     }
   }
-
-  // Set a LossFunction to be less penalized by false measurements
-  //  - set it to nullptr if you don't want use a lossFunction.
-  ceres::LossFunction * p_LossFunction =
-    ceres_options_.bUse_loss_function_ ?
-      new ceres::HuberLoss(Square(4.0))
-      : nullptr;
 
   // For all visibility add reprojections errors:
   for (auto & structure_landmark_it : sfm_data.structure)
@@ -358,7 +372,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         if (!map_intrinsics.at(view->id_intrinsic).empty())
         {
           problem.AddResidualBlock(cost_function,
-            p_LossFunction,
+            p_LossFunction.get(),
             &map_intrinsics.at(view->id_intrinsic)[0],
             &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
@@ -366,7 +380,7 @@ bool Bundle_Adjustment_Ceres::Adjust
         else
         {
           problem.AddResidualBlock(cost_function,
-            p_LossFunction,
+            p_LossFunction.get(),
             &map_poses.at(view->id_pose)[0],
             structure_landmark_it.second.X.data());
         }
@@ -462,6 +476,7 @@ bool Bundle_Adjustment_Ceres::Adjust
   //  Make Ceres automatically detect the bundle structure.
   ceres::Solver::Options ceres_config_options;
   ceres_config_options.max_num_iterations = ceres_options_.max_num_iterations_;
+  ceres_config_options.max_linear_solver_iterations = ceres_options_.max_linear_solver_iterations_;
   ceres_config_options.preconditioner_type =
     static_cast<ceres::PreconditionerType>(ceres_options_.preconditioner_type_);
   ceres_config_options.linear_solver_type =
@@ -475,6 +490,8 @@ bool Bundle_Adjustment_Ceres::Adjust
   ceres_config_options.num_linear_solver_threads = ceres_options_.nb_threads_;
 #endif
   ceres_config_options.parameter_tolerance = ceres_options_.parameter_tolerance_;
+  ceres_config_options.gradient_tolerance = ceres_options_.gradient_tolerance_;
+
 
   // Solve BA
   ceres::Solver::Summary summary;

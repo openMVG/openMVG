@@ -13,7 +13,7 @@
 
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/graphics/color_gradient.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 namespace openMVG  {
 namespace matching {
@@ -45,36 +45,35 @@ void PairWiseMatchingToAdjacencyMatrixSVG
         auto iterSearch = map_Matches.find({I,J});
         if (iterSearch != map_Matches.end() && !iterSearch->second.empty())
         {
-          // Display as a tooltip: "(IndexI, IndexJ NbMatches)"
-          std::ostringstream os_tooltip;
-          os_tooltip << "(" << J << "," << I << " " << iterSearch->second.size() <<")";
-
+          // Display as a tooltip: (IndexI, IndexJ NbMatches)
+          std::ostringstream os;
+          os << "(" << J << "," << I << " " << iterSearch->second.size() <<")";
           float r,g,b;
           heatMapGradient.getColor(iterSearch->second.size() / max_match_count, r, g, b);
           std::ostringstream os_color;
           os_color << "rgb(" << int(r * 255) << "," << int(g  * 255) << "," << int(b * 255) << ")";
 
-          svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
-            svg::svgStyle().fill(os_color.str()).noStroke().tooltip(os_tooltip.str()));
-        }
+          svgStream << svg::drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
+            svg::svgAttributes().fill(os_color.str()).noStroke());
+        } // HINT : THINK ABOUT OPACITY [0.4 -> 1.0] TO EXPRESS MATCH COUNT
       }
     }
     // Display axes with 0 -> NbImages annotation : _|
     std::ostringstream osNbImages;
     osNbImages << NbImages;
-    svgStream.drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages+1)*scaleFactor,
+    svgStream << svg::drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
+    svgStream << svg::drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
       (NbImages+1)*scaleFactor, (NbImages)*scaleFactor - 2*scaleFactor,
-      svg::svgStyle().stroke("black", 1.0));
+      svg::svgAttributes().stroke("black", 1.0));
 
-    svgStream.drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages)*scaleFactor - scaleFactor,
+    svgStream << svg::drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages)*scaleFactor - scaleFactor,
       (NbImages+1)*scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
+    svgStream << svg::drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
-      svg::svgStyle().stroke("black", 1.0));
+      svg::svgAttributes().stroke("black", 1.0));
 
     std::ofstream svgFileStream( sOutName);
     svgFileStream << svgStream.closeSvgFile().str();

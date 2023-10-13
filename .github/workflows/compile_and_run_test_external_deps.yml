@@ -24,10 +24,29 @@ jobs:
       - name: 3rd Party libs
         run: |
           sudo apt-get update -y
+          sudo apt-get install -y git cmake
+
+          cd /tmp
+          git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0
+          mkdir eigen_build
+          cd eigen_build
+          cmake -DCMAKE_BUILD_TYPE=RELEASE /tmp/eigen .
+          sudo make install
+          rm -rf /tmp/eigen
+          rm -rf /tmp/eigen_build
+
+          cd /tmp
+          git clone https://github.com/ceres-solver/ceres-solver.git -b 2.1.0
+          cd ceres-solver
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=RELEASE -DMINIGLOG=ON .. .
+          sudo make install
+          rm -rf /tmp/ceres-solver
+
           sudo apt-get install -y \
           cmake \
           coinor-libclp-dev \
-          libceres-dev \
           libjpeg-dev \
           libpng-dev \
           libtiff-dev

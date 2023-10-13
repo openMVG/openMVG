@@ -21,10 +21,11 @@
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+
 
 #include <cstdlib>
 #include <iostream>
@@ -62,7 +63,7 @@ void saveRetrievalMatrix(
     const std::string ref_view_filename =
         stlplus::create_filespec(sfm_data.s_root_path, ref_view->s_Img_path);
 
-    svg_stream.drawImage(ref_view_filename, size, size, x_offset * size,
+    svg_stream << svg::drawImage(ref_view_filename, size, size, x_offset * size,
                          y_offset * size);
 
     const auto &retrieval_list = result_it.second;
@@ -74,7 +75,7 @@ void saveRetrievalMatrix(
       const std::string found_view_filename = stlplus::create_filespec(
           sfm_data.s_root_path, found_view->s_Img_path);
 
-      svg_stream.drawImage(found_view_filename, size, size, x_offset * size,
+      svg_stream << svg::drawImage(found_view_filename, size, size, x_offset * size,
                            y_offset * size);
     }
     x_offset = 0;

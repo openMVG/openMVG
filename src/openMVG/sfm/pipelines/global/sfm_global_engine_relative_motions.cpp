@@ -135,7 +135,7 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Process() {
     return false;
   }
 
-  matching::PairWiseMatches  tripletWise_matches;
+  matching::PairWiseMatches tripletWise_matches;
   if (!Compute_Global_Translations(global_rotations, tripletWise_matches))
   {
     OPENMVG_LOG_ERROR << "GlobalSfM:: Translation Averaging failure!";

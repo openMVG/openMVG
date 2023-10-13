@@ -19,7 +19,6 @@
 #include "openMVG/graph/graph.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 //-- Selection Methods
 #include "openMVG/color_harmonization/selection_fullFrame.hpp"
@@ -399,7 +398,7 @@ bool ColorHarmonizationEngineGlobal::Process()
   {
     const size_t imaNum = *iterSet;
     using Vec256 = Eigen::Matrix<double, 256, 1>;
-    std::vector< Vec256 > vec_map_lut(3);
+    std::vector< Vec256,Eigen::aligned_allocator<Vec256> > vec_map_lut(3);
 
     const size_t nodeIndex = std::distance(set_indeximage.begin(), iterSet);
 

@@ -221,7 +221,7 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
       }
     }
   }
-  OPENMVG_LOG_INFO << "Relative motion computation took: " << t.elapsedMs() << "(ms)";
+  OPENMVG_LOG_INFO << "Relative motion computation took: " << t.elapsed() << " (s)";
   return !relative_poses_.empty();
 }
 

@@ -2004,6 +2004,7 @@ Gome K1;4.74
 Gome U7;4.73
 Google Pixel 2;5.5
 Google Pixel 3;5.76
+Google Pixel 3a;5.76
 Google Pixel XL;6.25
 Google Pixel;6.25
 GoPro Fusion;6.17
@@ -3050,6 +3051,7 @@ Meizu U10;4.73
 Meizu U20;4.82
 Meizu X;4.96
 Mi A1;5.11
+Xiaomi MI CC 9;6.4
 Micromax Canvas 5 E481;4.69
 Micromax Canvas Evok E483;4.69
 Micromax Canvas Gold A300;5.95
@@ -3184,6 +3186,7 @@ Motorola 4;6.06
 Motorola Droid Maxx 2;5.99
 Motorola Droid Turbo 2;5.99
 Motorola Moto G;4.69
+Motorola Moto G Power (2021);6.4
 Motorola Moto G4 Plus;6.06
 Motorola Moto G4;3.67
 Motorola Moto G5 Plus;3.67
@@ -5438,12 +5441,16 @@ Samsung SL630;6.08
 Samsung SL720;6.08
 Samsung SL820;6.08
 Samsung SM-A320FL;24
+Samsung SM-A526U1;4.8
 Samsung SM-C200;6.16
 Samsung SM-G9198;5.95
 Samsung SM-G930F;5.76
 Samsung SM-G935F;3.2
 Samsung SM-G950F;5.76
 Samsung SM-G955F;5.76
+Samsung SM-G970U1;4.6
+Samsung SM-G9910;5.6
+Samsung SM-S901U;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
@@ -6634,6 +6641,7 @@ Vivitar ViviCam 8625;7.11
 Vivitar ViviCam V8025;7.11
 Vivitar ViviCam X30;7.11
 Vivitar ViviCam X60;7.11
+Vivo V1921A;6.4
 Vivo V7;4.74
 Vivo V7Plus;4.74
 Vivo X5;4.69

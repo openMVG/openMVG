@@ -89,7 +89,7 @@ struct SmallScaleError
 
 bool solve_translations_problem_softl1
 (
-  const std::vector<openMVG::RelativeInfo_Vec > & vec_relative_group_estimates,
+  const std::vector<openMVG::RelativeInfo_Vec> & vec_relative_group_estimates,
   std::vector<Eigen::Vector3d> & translations,
   const double d_l1_loss_threshold
 )
@@ -193,11 +193,6 @@ bool solve_translations_problem_softl1
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  }
-  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-  {
-    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))

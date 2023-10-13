@@ -8,7 +8,7 @@ add_library(openMVG_linearProgramming
 target_compile_features(openMVG_linearProgramming INTERFACE ${CXX11_FEATURES})
 
 set_property(TARGET openMVG_linearProgramming PROPERTY FOLDER OpenMVG/OpenMVG)
-install(TARGETS openMVG_linearProgramming DESTINATION lib EXPORT openMVG-targets)
+install(TARGETS openMVG_linearProgramming DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 set_target_properties(openMVG_linearProgramming PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
 target_link_libraries(openMVG_linearProgramming

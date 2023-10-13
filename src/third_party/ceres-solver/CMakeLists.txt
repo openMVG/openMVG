@@ -67,7 +67,7 @@ enable_testing()
 option(MINIGLOG "Use a stripped down version of glog." ON)
 option(GFLAGS "Enable Google Flags." OFF)
 option(SUITESPARSE "Enable SuiteSparse." OFF)
-option(CXSPARSE "Enable CXSparse." ON)
+option(CXSPARSE "Enable CXSparse." OFF)
 option(LAPACK "Enable use of LAPACK." ON)
 # Template specializations for the Schur complement based solvers. If
 # compile time, binary size or compiler performance is an issue, you
@@ -78,15 +78,8 @@ option(CUSTOM_BLAS
        ON)
 # Multithreading using OpenMP
 option(OPENMP "Enable threaded solving in Ceres (requires OpenMP)" ON)
-# Enable the use of Eigen as a sparse linear algebra library for
-# solving the nonlinear least squares problems. Enabling this
-# option will result in an LGPL licensed version of Ceres Solver
-# as the Simplicial Cholesky factorization in Eigen is licensed under the LGPL.
-# This does not affect the covariance estimation algorithm, as it
-# depends on the sparse QR factorization algorithm, which is licensed
-# under the MPL.
 OPTION(EIGENSPARSE
-  "Enable Eigen as a sparse linear algebra library, WARNING: results in an LGPL licensed Ceres." OFF)
+  "Enable Eigen as a sparse linear algebra library." ON)
 if (NOT MSVC)
   # Ceres does not use C++11 internally, however it does use shared_ptr
   # (required) and unordered_map (if available), both of which were present in
@@ -161,7 +154,7 @@ if (IOS)
   message(STATUS "Building for iOS: Forcing use of miniglog instead of glog.")
 
   update_cache_variable(SUITESPARSE OFF)
-  update_cache_variable(CXSPARSE ON)
+  update_cache_variable(CXSPARSE OFF)
   update_cache_variable(GFLAGS OFF)
   update_cache_variable(OPENMP OFF)
   # Apple claims that the BLAS call dsyrk_ is a private API, and will not allow
