@@ -18,7 +18,7 @@
 //   - the desired number of poses are found.
 //-----------------
 
-#include "openMVG/sfm/pipelines/pipelines_test.hpp"
+#include "openMVG/sfm/base/pipelines_test.hpp"
 #include "openMVG/sfm/sfm.hpp"
 
 #include "testing/testing.h"

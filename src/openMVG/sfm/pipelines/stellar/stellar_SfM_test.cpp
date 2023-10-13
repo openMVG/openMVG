@@ -17,8 +17,8 @@
 //-----------------
 
 #include "openMVG/multiview/essential.hpp"
-#include "openMVG/sfm/pipelines/pipelines_test.hpp"
-#include "openMVG/sfm/pipelines/relative_pose_engine.hpp"
+#include "openMVG/sfm/base/pipelines_test.hpp"
+#include "openMVG/sfm/base/relative_pose_engine.hpp"
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
 #include "openMVG/sfm/sfm.hpp"
 
