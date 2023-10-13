@@ -140,6 +140,10 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
       for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
         const double angle = AngleBetweenRay(
           *pose[v0], intrinsics[v0].get(), *pose[v1], intrinsics[v1].get(), ob[v0]->x, ob[v1]->x);
+        // We are chosing the biggest angle.
+        // TODO choose the closest to 90 degrees
+        // we could also require the tangent backprojection planes be as
+        // orthogonal as possible
         if (angle > best_angle) {
           best_angle = angle;
           best_v0 = v0;
@@ -150,7 +154,6 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    // reconstruct T from best_v0 and best_v1
 
    //- bearing: invert intrinsic
-    
    
    Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
@@ -158,7 +161,6 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    Vec3 tangent0, tangent1;
    invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
    invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
-
 
    TriangulateTangent2View (
      pose[best_v0]->rotation(),
@@ -665,6 +667,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   resection_data.min_consensus_ratio = 1; // TODO make this a parameter
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
+  resection_data.tgt2D.resize(2, set_trackIdForResection.size());
+  resection_data.tgt3D.resize(3, set_trackIdForResection.size());
 
   // B. Look if the intrinsic data is known or not
   const View *view_I = sfm_data_.GetViews().at(viewIndex).get();
@@ -676,35 +680,32 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   Mat2X pt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
-  if (features_provider_->has_sio_features())
-  {
+
+
+  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+    assert(sfm_data_.is_oriented());
+
+  for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
+    resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
+    if (features_provider_->has_sio_features()) {
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId]);
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) = feature->coords().cast<double>();
+      double theta = feature->orientation();
+      resection_data.tgt2D.col(cpt) = tgt2D_original.col(cpt) = Vec2(std::cos(theta), std::sin(theta));
+    } else
+      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+          features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+
+    // Handle image distortion if intrinsic is known (to ease the resection)
+    if (optional_intrinsic && optional_intrinsic->have_disto()) {
+      resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
+      if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+        OPENMVG_LOG_ERROR << "Not yet supported";
+    }
+
     if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
-      assert(sfm_data_.is_oriented());
+      resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
 
-    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
-      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-      
-      // use T() as function to optionally have T:
-      //      if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
-      //        resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
-
-      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-        features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-      // Handle image distortion if intrinsic is known (to ease the resection)
-      if (optional_intrinsic && optional_intrinsic->have_disto())
-        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-    }
-  } else {
-    for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
-      resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-        features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
-      // Handle image distortion if intrinsic is known (to ease the resection)
-      if (optional_intrinsic && optional_intrinsic->have_disto())
-      {
-        resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-      }
-    }
   }
   // C. Do the resectioning: compute the camera pose
   // TODO(p2pt)
