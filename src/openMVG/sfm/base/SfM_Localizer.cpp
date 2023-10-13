@@ -189,6 +189,7 @@ namespace sfm {
         resection_data.error_max = ACRansacOut.first;
       }
       break;
+      // ------Pose from 2 points (with SIFT orientation) ------------------------
       case resection::SolverType::P2Pt_FABBRI_ECCV12:
       {
         if (!optional_intrinsics)
@@ -201,7 +202,10 @@ namespace sfm {
         using SolverType = openMVG::euclidean_resection::P2Pt_FABBRI_ECCV12;
         MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-        // 
+        OPENMVG_LOG_INFO << "WiP in P2Pt";
+        exit(1)
+
+        /*
         using KernelType =
           ACKernelAdaptorResection_Intrinsics<
             SolverType,
@@ -218,8 +222,10 @@ namespace sfm {
                                     true, resection_data.min_consensus_ratio);
         // Update the upper bound precision of the model found by AC-RANSAC
         resection_data.error_max = ACRansacOut.first;
+        */
       }
       break;
+      // -----------------------------------------------------------------------
       case resection::SolverType::P3P_KE_CVPR17:
       {
         if (!optional_intrinsics)
