@@ -62,7 +62,7 @@ bool SequentialSfMReconstructionEngine::Process()
   }
 
   if (!ResectOneByOneTilDone()) return false;
-//  FinalStatistics();
+  FinalStatistics();
   return true;
 }
 
@@ -106,12 +106,11 @@ inline static void TriangulateTangent2View
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
   unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
-  assert(nviews == 2 || nviews == 3);
-  const Observation *ob[3]; // use only nviews of this;
-  ObservationInfo *obi[3];
-  IndexT vi[3];
-  const Pose3 *pose[3];
-  std::shared_ptr<cameras::Pinhole_Intrinsic> intrinsics[3];
+  std::vector<const Observation *> ob(nviews); // use only nviews of this;
+  std::vector<ObservationInfo *>obi(nviews);
+  std::vector<IndexT> vi(nviews);
+  std::vector<const Pose3 *> pose(nviews);
+  std::vector<std::shared_ptr<cameras::Pinhole_Intrinsic> > intrinsics(nviews);
 
   for (auto &lit : sfm_data_.GetStructure()) {
     const Landmark &l = lit.second;  LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
@@ -253,12 +252,12 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
     if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
+      OPENMVG_LOG_INFO << "Resection: Fail Oriented Test after 3d rec";
       return false;
     } else {
       OPENMVG_LOG_INFO << "Resection: Pass Oriented Test after 3d rec";
     }
   }
-  return true;
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -646,8 +645,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     reconstructed_trackId.cbegin(), reconstructed_trackId.cend(),
     std::inserter(set_trackIdForResection, set_trackIdForResection.begin()));
 
-  if (set_trackIdForResection.empty())
-  {
+  if (set_trackIdForResection.empty()) {
     // No match. The image has no connection with already reconstructed points.
     OPENMVG_LOG_WARNING << "-- Failed to find the pose of the camera index: " << viewIndex
     << " ( the view have no connection with the already reconstructed 3d points)";
@@ -667,15 +665,12 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   resection_data.min_consensus_ratio = 1; // TODO make this a parameter
   resection_data.pt2D.resize(2, set_trackIdForResection.size());
   resection_data.pt3D.resize(3, set_trackIdForResection.size());
-  // TODO(p2pt) tangent
 
   // B. Look if the intrinsic data is known or not
-  const View * view_I = sfm_data_.GetViews().at(viewIndex).get();
+  const View *view_I = sfm_data_.GetViews().at(viewIndex).get();
   std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic;
   if (sfm_data_.GetIntrinsics().count(view_I->id_intrinsic))
-  {
     optional_intrinsic = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic);
-  }
 
   // Setup the track 2d observation for this new view
   Mat2X pt2D_original(2, set_trackIdForResection.size());
@@ -683,10 +678,9 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
   if (features_provider_->has_sio_features())
   {
-    if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+    if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
       assert(sfm_data_.is_oriented());
-      OPENMVG_LOG_ERROR << "Oriented P2Pt: Work in progress";
-    }
+
     for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
       resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
       
