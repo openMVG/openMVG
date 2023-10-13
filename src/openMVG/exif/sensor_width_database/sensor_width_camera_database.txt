@@ -6881,4 +6881,5 @@ Zuk Z1;4.69
 Zuk Z2 Pro;4.61
 Zuk Z2 Rio Edition;4.54
 Zuk Z2;4.61
-MAR LX3A;1.8
+HUAWEI MAR-LX3A;7.11
+samsung Galaxy A54 5G;8.19
