@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/stellar/sfm_stellar_engine.hpp"
+#include "openMVG/sfm/pipelines/stellar/engine/sfm_stellar_engine.hpp"
 
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/features/feature.hpp"
@@ -17,17 +17,17 @@
 #include "openMVG/multiview/translation_averaging_solver.hpp"
 
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/base/sfm_data_filters.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
-#include "openMVG/sfm/pipelines/relative_pose_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/base/relative_pose_engine.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/pipelines/stellar/stellar_definitions.hpp"
 #include "openMVG/sfm/pipelines/stellar/stellar_solver.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_triangulation.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_triangulation.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
 

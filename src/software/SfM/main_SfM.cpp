@@ -26,7 +26,7 @@
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerMaxPair.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerStellar.hpp"
-#include "openMVG/sfm/pipelines/stellar/sfm_stellar_engine.hpp"
+#include "openMVG/sfm/pipelines/stellar/engine/sfm_stellar_engine.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"

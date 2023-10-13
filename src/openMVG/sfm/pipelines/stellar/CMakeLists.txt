@@ -1,4 +1,3 @@
-
 set( # TODO: each pipelines/subfolder its own library/build module
   sfm_stellar_files_header
   stellar_definitions.hpp
@@ -28,6 +27,7 @@ target_link_libraries(openMVG_sfm_stellar
 target_include_directories(openMVG_sfm_stellar
   PRIVATE
     ${CERES_INCLUDE_DIRS}
+    ${LEMON_INCLUDE_DIRS}
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
@@ -39,3 +39,6 @@ install(TARGETS openMVG_sfm_stellar DESTINATION lib EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG stellar_SfM
   "openMVG_multiview_test_data;openMVG_sfm_stellar;${STLPLUS_LIBRARY}")
+
+add_subdirectory(engine)
+
