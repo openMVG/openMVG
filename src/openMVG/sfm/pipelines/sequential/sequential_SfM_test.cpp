@@ -19,7 +19,7 @@
 //-----------------
 
 #include "openMVG/sfm/base/pipelines_test.hpp"
-#include "openMVG/sfm/base/sfm.hpp"
+#include "openMVG/sfm/sfm.hpp"
 
 #include "openMVG/multiview/trifocal/trifocal_model.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"

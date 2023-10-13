@@ -1,6 +1,3 @@
 add_subdirectory(sequential)
 add_subdirectory(global)
 add_subdirectory(stellar)
-# UNIT_TEST(openMVG sfm_data_triangulation "openMVG_sfm_base;openMVG_multiview_test_data;${STLPLUS_LIBRARY}")
-# UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm_base;${STLPLUS_LIBRARY}")
-# UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm_base;${STLPLUS_LIBRARY}")

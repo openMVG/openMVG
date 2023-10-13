@@ -11,7 +11,6 @@
 // mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
 // -----------------------------------------------------------------------------
 
-#include "openMVG/sfm/base/sfm_robust_model_estimation_trifocal.hpp"
 
 #include <utility>
 #include "openMVG/geometry/pose3.hpp"
@@ -23,6 +22,7 @@
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
 #include "openMVG/multiview/trifocal/three_view_kernel.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/sfm/pipelines/sequential/sfm_robust_model_estimation_trifocal.hpp"
 
 
 using namespace openMVG::cameras;

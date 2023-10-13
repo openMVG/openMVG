@@ -19,7 +19,6 @@
 #include "openMVG/sfm/base/sfm_matches_provider.hpp"
 #include "openMVG/sfm/base/SfM_Localizer.hpp"
 #include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
-#include "openMVG/sfm/base/sfm_robust_model_estimation_trifocal.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/sfm/base/sfm_data_BA.hpp"
 #include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
@@ -35,6 +34,7 @@
 #include <ceres/types.h>
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM_util.hpp"
+#include "openMVG/sfm/pipelines/sequential/sfm_robust_model_estimation_trifocal.hpp"
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data

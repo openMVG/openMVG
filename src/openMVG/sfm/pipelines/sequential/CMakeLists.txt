@@ -6,6 +6,7 @@ set(sfm_sequential_files_header
   SfmSceneInitializer.hpp
   sequential_SfM.hpp
   sequential_SfM2.hpp
+  sfm_robust_model_estimation_trifocal.hpp
 )
 
 set(sfm_sequential_files_cpp
@@ -15,6 +16,8 @@ set(sfm_sequential_files_cpp
   SfmSceneInitializerMaxPair.cpp
   SfmSceneInitializerStellar.cpp
   sequential_SfM_util.cpp
+  # if stable, move to base or base_extras:
+  sfm_robust_model_estimation_trifocal.cpp
 )
 
 add_library(openMVG_sfm_sequential ${sfm_sequential_files_header} ${sfm_sequential_files_cpp})
@@ -29,8 +32,10 @@ target_link_libraries(openMVG_sfm_sequential
     openMVG_multiview
     openMVG_multiview_trifocal
     openMVG_sfm_base
+    openMVG_sfm_stellar
     ${cereal_TARGET}
     ${OPENMVG_LIBRARY_DEPENDENCIES}
+    ${STLPLUS_LIBRARY}
 )
 
 target_include_directories(openMVG_sfm_sequential
