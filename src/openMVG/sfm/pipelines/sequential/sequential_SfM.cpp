@@ -65,6 +65,24 @@ bool SequentialSfMReconstructionEngine::Process()
   return true;
 }
 
+void TriangulateTangent2View
+(
+  const Mat3 &R0,
+  const Vec3 &t0,
+  const Vec3 &bearing0,
+  const Vec3 &tangent0,
+  const Mat3 &R1,
+  const Vec3 &t1,
+  const Vec3 &bearing1,
+  const Vec3 &tangent1,
+  Vec3 &Tangent,
+)
+{
+
+  Tangent = (R0.transpose()*t.cross(bearing0)).cross(R1.transpose()*t.cross(bearing1));
+
+}
+
 // Go through sfm_data and reconstructs all tangents
 // At this stage, for robustness we use no TriangulateDLT for tangents.
 // For each pair of views in the reconstruction
@@ -90,7 +108,6 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
-  /*
   unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
   assert(nviews == 2 || nviews == 3);
   const Observation *ob[3]; // use only nviews of this;
@@ -113,15 +130,28 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
       v++;
     }
 
-    for (unsigned v=0; v < nviews; ++v) {
-      ob[v].
-    }
+    // determine the best two views to triangulate
+    best_angle = 0;
+    best_v0 = 0;
+    best_v1 = 0;
+    for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
+      for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
+        const double angle = AngleBetweenRay(
+          *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
+        if (angle > best_angle) {
+          best_angle = angle;
+          best_v0 = v0;
+          best_v1 = v1;
+        }
+      }
 
-    // Reconstruct T
-    // li.T = ..
-    li.T(0) = 1;
+    // reconstruct T from best_v0 and best_v1
+
+    obi[best_v0]->t
+    obi[best_v1]->t
+
+    li.T = reconstruct;
   }
-  */
 }
 
 // checks sfm_data_ internal consistency and consistency with external sources
@@ -206,7 +236,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
       OPENMVG_LOG_INFO << "Resection: Pass Oriented Test after 3d rec";
     }
   }
-  /*
+  return true;
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -232,7 +262,6 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
     }
     ++resectionGroupIndex;
   }
-  */
   // Ensure there is no remaining outliers
   //   if (badTrackRejector(4.0, 0))
   //     eraseUnstablePosesAndObservations(sfm_data_, 4);
@@ -429,10 +458,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
 
+  // -----------------------------------------------------------------------
+  // - refine only Structure and Rotations & translations (keep intrinsic constant)
   constexpr bool bRefine_using_BA = false;
   if (bRefine_using_BA) { // badj
-    // -----------------------------------------------------------------------
-    // - refine only Structure and Rotations & translations (keep intrinsic constant)
     Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
     Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
@@ -508,8 +537,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Save outlier residual information
   Histogram<double> histoResiduals;
   ComputeResidualsHistogram(&histoResiduals);
-  if (!sLogging_file_.empty())
-  {
+  if (!sLogging_file_.empty()) {
     using namespace htmlDocument;
     html_doc_stream_->pushInfo(htmlMarkup("h1","Trifocal tensor."));
     std::ostringstream os;
@@ -803,8 +831,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     const std::set<IndexT> valid_views = Get_Valid_Views(sfm_data_);
 
     // Go through each track and look if we must add new view observations or new 3D points
-    for (const std::pair<uint32_t, tracks::submapTrack>& trackIt : map_tracksCommon)
-    {
+    for (const std::pair<uint32_t, tracks::submapTrack>& trackIt : map_tracksCommon) {
       const uint32_t trackId = trackIt.first;
       const tracks::submapTrack & track = trackIt.second;
 
@@ -815,33 +842,24 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       std::set<IndexT> new_track_observations_valid_views;
 
       // If the track was already reconstructed
-      if (sfm_data_.structure.count(trackId) != 0)
-      {
+      if (sfm_data_.structure.count(trackId) != 0) {
         // Since the 3D point was triangulated before we add the new the Inth view observation
         new_track_observations_valid_views.insert(I);
-      }
-      else
-      {
+      } else {
         // Go through the views that observe this track & look if a successful triangulation can be done
-        for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track)
-        {
+        for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track) {
           const IndexT & J = trackViewIt.first;
           // If view is valid try triangulation
-          if (J != I && valid_views.count(J) != 0)
-          {
+          if (J != I && valid_views.count(J) != 0) {
             // If successfully triangulated add the observation from J view
-            if (sfm_data_.structure.count(trackId) != 0)
-            {
+            if (sfm_data_.structure.count(trackId) != 0) {
               new_track_observations_valid_views.insert(J);
-            }
-            else
-            {
+            } else {
               const View * view_J = sfm_data_.GetViews().at(J).get();
               const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
               const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
               Vec2 xI, xJ;
-              if (features_provider_->has_sio_features())
-              {
+              if (features_provider_->has_sio_features()) {
                 xJ = features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
                 // Position of the point in view I
                 xI = features_provider_->sio_feats_per_view.at(I)[track.at(I)].coords().cast<double>();
@@ -867,8 +885,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                     pose_J.translation(),
                     (*cam_J)(xJ_ud),
                     X,
-                    triangulation_method_))
-              {
+                    triangulation_method_)) {
                 // Check triangulation result
                 const double angle = AngleBetweenRay(
                   pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
@@ -881,8 +898,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                     residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
                     residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
                     // Cheirality as been tested already in Triangulate2View
-                   )
-                {
+                   ) {
                   // Add a new track
                   Landmark & landmark = sfm_data_.structure[trackId];
                   landmark.X = X;
@@ -891,9 +907,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
                 } else { // 3D point is valid
                   std::cerr << "XXX " << "not adding track in views " << I << ", " << J << std::endl;
                 }
-              }
-              else
-              {
+              } else {
                 // We mark the view to add the observations once the point is triangulated
                 new_track_observations_valid_views.insert(J);
               } // 3D point is invalid
@@ -916,9 +930,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
             const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
             if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) 
               landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-            }
           }
         } else {
           // Check if view feature point observations of the track are valid (residual, depth) or not
@@ -931,9 +944,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
             const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
             if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
+                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
               landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-            }
           }
         }
       }
