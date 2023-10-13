@@ -24,8 +24,8 @@
 #include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/base/sfm_data_filters.hpp"
 #include "openMVG/sfm/base/sfm_data_io.hpp"
-#include "openMVG/stl/stl.hpp"
-#include "openMVG/system/logger.hpp"
+#include "openMVG/stl/stl.hpp" 
+#include "openMVG/system/logger.hpp" 
 #include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/histogram/histogram_raw.hpp"
@@ -678,6 +678,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Setup the track 2d observation for this new view
   Mat2X pt2D_original(2, set_trackIdForResection.size());
+  Mat2X tgt2D_original(2, set_trackIdForResection.size());
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
 

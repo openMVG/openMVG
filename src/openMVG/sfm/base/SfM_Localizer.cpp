@@ -12,6 +12,7 @@
 #include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
+#include "openMVG/multiview/solver_resection_p2pt_fabbri.hpp"
 #include "openMVG/multiview/solver_resection_up2p_kukelova.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/sfm/base/sfm_data_BA.hpp"
@@ -199,11 +200,11 @@ namespace sfm {
         }
         //--
         // Since the intrinsic data is known, compute only the pose
-        using SolverType = openMVG::euclidean_resection::P2Pt_FABBRI_ECCV12;
+        using SolverType = openMVG::euclidean_resection::P2PtSolver_Fabbri;
         MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
         OPENMVG_LOG_INFO << "WiP in P2Pt";
-        exit(1)
+        exit(1);
 
         /*
         using KernelType =
