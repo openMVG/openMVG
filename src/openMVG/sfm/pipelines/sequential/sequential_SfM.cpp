@@ -76,7 +76,7 @@ inline static void TriangulateTangent2View
   Vec3 &Tangent
 )
 {
-  Tangent = (R0.transpose()*t.cross(bearing0)).cross(R1.transpose()*t.cross(bearing1));
+  Tangent = (R0.transpose()*tangent0.cross(bearing0)).cross(R1.transpose()*tangent1.cross(bearing1));
 }
 
 // Go through sfm_data and reconstructs all tangents
@@ -110,7 +110,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
   ObservationInfo *obi[3];
   IndexT vi[3];
   const Pose3 *pose[3];
-  const cameras::Pinhole_Intrinsic intrinsics[3];
+  std::shared_ptr<cameras::Pinhole_Intrinsic> intrinsics[3];
 
   for (auto &lit : sfm_data_.GetStructure()) {
     const Landmark &l = lit.second;  LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
@@ -121,25 +121,25 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
     for (auto &o : obs) {
       vi[v] = o.first;
       ob[v]  = &o.second;
-      obi[v] = &li.obs_info[vi];  // creates obs
-      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob[v]->id_feat]);
+      obi[v] = &li.obs_info[vi[v]];  // creates obs
+      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]);
       double theta = feature->orientation();
       obi[v]->t = Vec2(std::cos(theta), std::sin(theta));
-      pose[v] = sfm_data_.poses.at(vi[v]->id_pose);
+      pose[v] = &sfm_data_.poses.at(sfm_data_.GetViews().at(vi[v])->id_pose);
 
-      std::shared_ptr<cameras::IntrinsicBase> intrinsics_ptr = sfm_data_.GetIntrinsics().at(sfm_data.GetViews().at(vi[v])->id_intrinsic);
-      intrinsics[v] = std::dynamic_pointer_cast<const cameras::Pinhole_Intrinsic>(intrinsics_ptr);
+      intrinsics[v] = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(
+         sfm_data_.GetIntrinsics().at(sfm_data_.GetViews().at(vi[v])->id_intrinsic));
       v++;
     }
 
     // determine the best two views to triangulate
-    best_angle = 0;
-    best_v0 = 0;
-    best_v1 = 0;
-    for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
-      for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
+    double best_angle = 0;
+    IndexT best_v0 = 0;
+    IndexT best_v1 = 0;
+    for (IndexT v0= 0; v0 + 1 < nviews; ++v0)
+      for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
         const double angle = AngleBetweenRay(
-          *pose[v0], intrinsics[v0], *pose[v1], intrinsics[v1], ob_x_ud[v0], ob_x_ud[v1]);
+          *pose[v0], intrinsics[v0].get(), *pose[v1], intrinsics[v1].get(), ob[v0]->x, ob[v1]->x);
         if (angle > best_angle) {
           best_angle = angle;
           best_v0 = v0;
@@ -151,9 +151,10 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 
    //- bearing: invert intrinsic
     
+   
+    /*
    Vec3 bearing0 = (*intrinsics[best_v0])(obi[best_v0]->x).hnormalized();
    Vec3 bearing1 = (*intrinsics[best_v0])(obi[best_v1]->x).hnormalized();
-
 
    Vec3 tangent0, tangent1;
    invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t, tangent0.data());
@@ -169,6 +170,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      tangent1,
      li.T
    )
+   */
   } // end for each landmark
 }
 
