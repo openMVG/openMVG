@@ -18,7 +18,7 @@
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 
 #include "software/VO/Abstract_Tracker.hpp"
 

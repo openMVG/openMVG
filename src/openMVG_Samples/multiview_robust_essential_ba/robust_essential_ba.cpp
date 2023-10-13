@@ -19,11 +19,11 @@
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_BA.hpp"
-#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_BA.hpp"
+#include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 

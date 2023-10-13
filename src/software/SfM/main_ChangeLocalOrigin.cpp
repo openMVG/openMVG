@@ -7,7 +7,7 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/geometry/Similarity3.hpp"
 #include "openMVG/sfm/sfm.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/stl/split.hpp"
 #include "openMVG/system/logger.hpp"
@@ -16,7 +16,7 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include "openMVG/geometry/pose3.hpp"
-#include "openMVG/sfm/sfm_landmark.hpp"
+#include "openMVG/sfm/base/sfm_landmark.hpp"
 
 #include <iomanip>
 #include <string>

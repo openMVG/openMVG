@@ -8,10 +8,10 @@
 
 #include "openMVG/features/svg_features.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_view.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"

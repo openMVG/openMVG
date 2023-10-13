@@ -10,9 +10,9 @@
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/image/image_io.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_data_colorization.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data_colorization.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 

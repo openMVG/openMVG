@@ -13,8 +13,8 @@
 #include "openMVG/matching/svg_matches.hpp"
 #include "openMVG/sfm/base/sfm_features_provider.hpp"
 #include "openMVG/sfm/base/sfm_matches_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 #include "software/SfM/SfMIOHelper.hpp"

@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/geometry/frustum.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_filters_frustum.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_filters_frustum.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/timer.hpp"
 

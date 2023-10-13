@@ -11,10 +11,10 @@
 
 #include "openMVG/sfm/base/sfm_features_provider.hpp"
 #include "openMVG/sfm/base/sfm_matches_provider.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
-#include "openMVG/sfm/sfm_report.hpp"
-#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_report.hpp"
+#include "openMVG/sfm/base/sfm_view.hpp"
 #include "openMVG/system/timer.hpp"
 #include "openMVG/types.hpp"
 

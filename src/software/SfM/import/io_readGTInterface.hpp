@@ -9,7 +9,7 @@
 #ifndef IO_READ_GT_INTERFACE_HPP
 #define IO_READ_GT_INTERFACE_HPP
 
-#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
