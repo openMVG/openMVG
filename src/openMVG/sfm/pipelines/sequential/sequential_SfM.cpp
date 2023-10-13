@@ -11,7 +11,7 @@
 #include <iostream>
 #include <utility>
 
-#include "openMVG/geometry/pose3.hpp"
+//#include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
@@ -35,6 +35,7 @@
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM_util.hpp"
 #include "openMVG/sfm/pipelines/sequential/sfm_robust_model_estimation_trifocal.hpp"
+
 
 #ifdef _MSC_VER
 #pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
@@ -152,16 +153,15 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    //- bearing: invert intrinsic
     
    
-    /*
-   Vec3 bearing0 = (*intrinsics[best_v0])(obi[best_v0]->x).hnormalized();
-   Vec3 bearing1 = (*intrinsics[best_v0])(obi[best_v1]->x).hnormalized();
+   Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
+   Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
    Vec3 tangent0, tangent1;
-   invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t, tangent0.data());
-   invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t, tangent1.data());
+   invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
+   invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
 
-   TriangulateTangent2View
-   (
+
+   TriangulateTangent2View (
      pose[best_v0]->rotation(),
      bearing0,
      tangent0,
@@ -169,8 +169,8 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      bearing1,
      tangent1,
      li.T
-   )
-   */
+   );
+   li.T.normalize();
   } // end for each landmark
 }
 
