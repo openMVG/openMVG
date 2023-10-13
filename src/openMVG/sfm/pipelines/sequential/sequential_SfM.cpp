@@ -90,10 +90,12 @@ bool SequentialSfMReconstructionEngine::Process()
 // 
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
+  /*
   unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
   assert(nviews == 2 || nviews == 3);
   const Observation *ob[3]; // use only nviews of this;
   ObservationInfo *obi[3];
+  const View *vi[3];
 
   for (auto &lit : sfm_data_.GetStructure()) {
     const Landmark &l = lit.second;  LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
@@ -102,7 +104,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
     //Observations::const_iterator iterObs[nviews];
     unsigned v = 0;
     for (auto &o : obs) {
-      unsigned vi = o.first;
+      vi = o.first;
       ob[v]  = &o.second;
       obi[v] = &li.obs_info[vi];  // creates obs
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob[v]->id_feat]);
@@ -111,10 +113,15 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
       v++;
     }
 
+    for (unsigned v=0; v < nviews; ++v) {
+      ob[v].
+    }
+
     // Reconstruct T
     // li.T = ..
     li.T(0) = 1;
   }
+  */
 }
 
 // checks sfm_data_ internal consistency and consistency with external sources

@@ -6,7 +6,7 @@
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 #include <minus/chicago-default.h>
 
 #include "openMVG/robust_estimation/robust_estimator_MaxConsensus.hpp"
