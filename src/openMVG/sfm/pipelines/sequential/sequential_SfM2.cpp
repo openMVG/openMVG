@@ -23,8 +23,8 @@
 #include "openMVG/sfm/base/sfm_data_filters.hpp"
 #include "openMVG/sfm/base/sfm_data_io.hpp"
 #include "openMVG/sfm/base/sfm_data_triangulation.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializer.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 

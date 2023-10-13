@@ -36,12 +36,12 @@
 #include "openMVG/sfm/base/SfM_Localizer.hpp"
 #include "openMVG/sfm/base/SfM_Localizer_Single_3DTrackObservation_Database.hpp"
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM.hpp"
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/base/sfm_engine.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider_cache.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
 
 #endif // OPENMVG_SFM_SFM_HPP

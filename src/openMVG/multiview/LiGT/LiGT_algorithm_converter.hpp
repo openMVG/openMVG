@@ -13,8 +13,8 @@
 
 #include "LiGT_algorithm.hpp"
 
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
 #include "openMVG/tracks/tracks.hpp"
 
 using namespace openMVG;

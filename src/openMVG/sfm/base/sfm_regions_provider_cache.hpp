@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_REGIONS_PROVIDER_CACHE_HPP
 #define OPENMVG_SFM_SFM_REGIONS_PROVIDER_CACHE_HPP
 
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 
 #include <atomic>
 #include <chrono>

@@ -17,7 +17,7 @@
 // development-build cycle
 // -----------------------------------------------------------------------------
 
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
 
 namespace openMVG {
 namespace sfm {

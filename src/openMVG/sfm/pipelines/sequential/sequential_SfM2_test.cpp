@@ -18,7 +18,7 @@
 //   - the desired number of poses are found.
 //-----------------
 
-#include "openMVG/sfm/pipelines/pipelines_test.hpp"
+#include "openMVG/sfm/base/pipelines_test.hpp"
 
 #include "openMVG/sfm/pipelines/sequential/sequential_SfM2.hpp"
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerMaxPair.hpp"

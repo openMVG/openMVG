@@ -9,7 +9,7 @@
 #ifndef OPENMVG_SFM_SFM_PREEMPTIVE_REGIONS_PROVIDER_HPP
 #define OPENMVG_SFM_SFM_PREEMPTIVE_REGIONS_PROVIDER_HPP
 
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 
 namespace openMVG {
 namespace sfm {

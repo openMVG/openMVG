@@ -25,6 +25,16 @@ set(
   sfm_view_io.hpp
   SfM_Localizer.hpp
   SfM_Localizer_Single_3DTrackObservation_Database.hpp
+  # this could be pipeline_base:
+  pipelines_test.hpp
+  relative_pose_engine.hpp
+  sfm_engine.hpp
+  sfm_features_provider.hpp
+  sfm_matches_provider.hpp
+  sfm_preemptive_regions_provider.hpp
+  sfm_regions_provider.hpp
+  sfm_regions_provider_cache.hpp
+  sfm_robust_model_estimation.hpp
 )
 
 set(
@@ -42,6 +52,9 @@ set(
   sfm_data_utils.cpp
   SfM_Localizer.cpp
   SfM_Localizer_Single_3DTrackObservation_Database.cpp
+  # this could be pipeline_base:
+  relative_pose_engine.cpp
+  sfm_robust_model_estimation.cpp
 )
 
 add_library(openMVG_sfm_base ${sfm_base_files_header} ${sfm_base_files_cpp})
@@ -54,7 +67,7 @@ target_link_libraries(openMVG_sfm_base
 #     openMVG_graph
     openMVG_matching
 #     ${cereal_TARGET}
-#     ${OPENMVG_LIBRARY_DEPENDENCIES}
+    ${OPENMVG_LIBRARY_DEPENDENCIES}
 )
 
 target_link_libraries(openMVG_sfm_base
@@ -81,3 +94,7 @@ install(TARGETS openMVG_sfm_base DESTINATION lib EXPORT openMVG-targets)
 UNIT_TEST(openMVG sfm_data_io "openMVG_sfm_base;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm_base")
 UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm_base")
+#
+UNIT_TEST(openMVG sfm_data_triangulation "openMVG_sfm_base;openMVG_multiview_test_data;${STLPLUS_LIBRARY}")
+UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm_base;${STLPLUS_LIBRARY}")
+UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm_base;${STLPLUS_LIBRARY}")

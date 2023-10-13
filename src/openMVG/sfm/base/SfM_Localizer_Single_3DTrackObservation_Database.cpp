@@ -8,7 +8,7 @@
 
 
 #include "openMVG/matching/indMatch.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/sfm/base/SfM_Localizer_Single_3DTrackObservation_Database.hpp"

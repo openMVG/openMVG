@@ -14,7 +14,7 @@
 
 #include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
 #include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
+#include "openMVG/sfm/base/sfm_engine.hpp"
 
 namespace htmlDocument { class htmlDocumentStream; }
 namespace openMVG { namespace matching { struct PairWiseMatches; } }

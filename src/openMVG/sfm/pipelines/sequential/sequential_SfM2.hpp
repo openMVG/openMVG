@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "openMVG/sfm/pipelines/sfm_engine.hpp"
+#include "openMVG/sfm/base/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
 #include "openMVG/multiview/solver_resection.hpp"
 #include "openMVG/multiview/triangulation_method.hpp"

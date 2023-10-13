@@ -1,13 +1,9 @@
-add_subdirectory(pipelines)
 add_subdirectory(base)
+add_subdirectory(pipelines)
 
 set( # TODO: each pipelines/subfolder its own library/build module
   sfm_files_header
   sfm.hpp
-  pipelines/sfm_features_provider.hpp
-  pipelines/stellar/stellar_definitions.hpp
-  pipelines/stellar/relative_scale.hpp
-  pipelines/stellar/stellar_solver.hpp
   # sequential is built into its own lib
   #   pipelines/sequential/SfmSceneInitializerStellar.hpp
   #   pipelines/sequential/sequential_SfM_util.hpp
@@ -16,14 +12,6 @@ set( # TODO: each pipelines/subfolder its own library/build module
   #   pipelines/sequential/SfmSceneInitializer.hpp
   #   pipelines/sequential/sequential_SfM.hpp
   #   pipelines/sequential/sequential_SfM2.hpp
-  pipelines/sfm_preemptive_regions_provider.hpp
-  pipelines/sfm_regions_provider.hpp
-  pipelines/relative_pose_engine.hpp
-  pipelines/sfm_robust_model_estimation_trifocal.hpp
-  pipelines/sfm_matches_provider.hpp
-  pipelines/sfm_robust_model_estimation.hpp
-  pipelines/sfm_regions_provider_cache.hpp
-  pipelines/sfm_engine.hpp
   pipelines/global/mutexSet.hpp
   pipelines/global/GlobalSfM_rotation_averaging.hpp
   pipelines/global/sfm_global_engine_relative_motions.hpp
@@ -37,7 +25,6 @@ set(
   sfm_files_cpp
   # GLOB_RECURSE IST EVILN
   #  GLOB_RECURSE 
-  pipelines/stellar/stellar_solver.cpp
   # sequential is built into its own lib
   #   pipelines/sequential/sequential_SfM.cpp
   #   pipelines/sequential/sequential_SfM2.cpp
@@ -45,8 +32,6 @@ set(
   #   pipelines/sequential/SfmSceneInitializerMaxPair.cpp
   #   pipelines/sequential/SfmSceneInitializerStellar.cpp
   #   pipelines/sequential/sequential_SfM_util.cpp
-  pipelines/sfm_robust_model_estimation.cpp pipelines/relative_pose_engine.cpp
-  pipelines/sfm_robust_model_estimation_trifocal.cpp
   pipelines/global/GlobalSfM_translation_averaging.cpp
   pipelines/global/sfm_global_engine_relative_motions.cpp
   pipelines/global/GlobalSfM_rotation_averaging.cpp

@@ -10,9 +10,9 @@
 #include "openMVG/sfm/pipelines/sequential/SfmSceneInitializerMaxPair.hpp"
 
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/logger.hpp"

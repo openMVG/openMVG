@@ -11,7 +11,7 @@
 // mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
 // -----------------------------------------------------------------------------
 
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation_trifocal.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation_trifocal.hpp"
 
 #include <utility>
 #include "openMVG/geometry/pose3.hpp"

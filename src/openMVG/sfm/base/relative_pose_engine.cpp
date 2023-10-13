@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/sfm/pipelines/relative_pose_engine.hpp"
+#include "openMVG/sfm/base/relative_pose_engine.hpp"
 
 #include "openMVG/multiview/essential.hpp"
 #include "openMVG/multiview/triangulation.hpp"
-#include "openMVG/sfm/pipelines/sfm_robust_model_estimation.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/base/sfm_robust_model_estimation.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_matches_provider.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/base/sfm_data_io.hpp"
