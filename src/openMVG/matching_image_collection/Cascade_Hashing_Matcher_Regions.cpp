@@ -12,7 +12,7 @@
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/matching_filters.hpp"
 #include "openMVG/matching/indMatchDecoratorXY.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/progressinterface.hpp"
 #include "openMVG/types.hpp"

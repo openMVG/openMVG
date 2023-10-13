@@ -14,7 +14,7 @@
 #include "openMVG/matching/indMatch_utils.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/sfm/pipelines/structure_from_known_poses/structure_estimator.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider_cache.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider_cache.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"

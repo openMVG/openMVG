@@ -9,7 +9,7 @@
 #ifndef OPENMVG_MATCHING_IMAGE_COLLECTION_VLADBASE_HPP
 #define OPENMVG_MATCHING_IMAGE_COLLECTION_VLADBASE_HPP
 
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 
 namespace openMVG {
 

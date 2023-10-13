@@ -8,8 +8,8 @@
 
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
-#include "openMVG/sfm/sfm_data.hpp"
-#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/base/sfm_data.hpp"
+#include "openMVG/sfm/base/sfm_data_io.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
 #include "openMVG/system/timer.hpp"

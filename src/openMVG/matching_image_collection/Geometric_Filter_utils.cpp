@@ -13,8 +13,8 @@
 #include "openMVG/matching/indMatch.hpp"
 #include "openMVG/sfm/base/sfm_data.hpp"
 #include "openMVG/sfm/base/sfm_view.hpp"
-#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_features_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 
 namespace openMVG {
 namespace matching_image_collection {

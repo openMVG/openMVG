@@ -9,7 +9,7 @@
 #include "openMVG/matching_image_collection/Matcher_Regions.hpp"
 #include "openMVG/matching_image_collection/Matcher.hpp"
 #include "openMVG/matching/regions_matcher.hpp"
-#include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
+#include "openMVG/sfm/base/sfm_regions_provider.hpp"
 #include "openMVG/system/progressinterface.hpp"
 #include "openMVG/system/logger.hpp"
 
