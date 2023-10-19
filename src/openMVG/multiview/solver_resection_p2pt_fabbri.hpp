@@ -42,6 +42,13 @@ struct P2PtSolver_Fabbri
       std::vector<Mat34> *models);
 };
 
+//-- Usable solver for robust estimation framework
+using PoseResectionKernel_P2Pt_Fabbri =
+    two_view::kernel::Kernel<
+       P2PtSolver_Fabbri, // Model estimator
+        resection::AngularReprojectionError, // Error metric
+        Mat34>;
+
 } // namespace euclidean_resection
 } // namespace openMVG
 
