@@ -82,6 +82,17 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
                                        const nViewDatasetConfigurator &
                                         config = nViewDatasetConfigurator());
 
+
+// A N-view metric dataset with feature orientation in 3D and 2D.
+// All points are seen by all cameras.
+struct NViewOrientedDataSet : public NViewDataSet {
+  Mat3X _Tgt3d;          // 3D tangent orientation as unit 3D vector.
+  std::vector<Mat2X> _tgt2d;  // Projected tangents as unit 2D vector
+};
+
+void 
+NOrientedPointsCamerasSphere(size_t nviews, size_t npoints, NViewOrientedDataSet *dp, nViewDatasetConfigurator *conf);
+
 } // namespace openMVG
 
 #endif  // OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP
