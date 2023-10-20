@@ -379,6 +379,8 @@ NOrientedPointsCamerasSphere(size_t nviews, size_t npoints, NViewOrientedDataSet
     d._X.col(p) << pts3d_gt_[p][0], pts3d_gt_[p][1], pts3d_gt_[p][2];
     d._Tgt3d.col(p) << t3d_gt_[p][0], t3d_gt_[p][1], t3d_gt_[p][2];
   }
+  d._K_raw = K_;
+  d._cameras_gt_raw = cameras_gt_;
 
   for (size_t v = 0; v < nviews; ++v) {
     d._C[v] << cameras_gt_[v][3][0] , cameras_gt_[v][3][1] , cameras_gt_[v][3][2];

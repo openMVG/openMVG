@@ -50,6 +50,11 @@ struct NViewDataSet {
 
   size_t _n;  // Actual number of cameras.
 
+
+  size_t nviews() const { return _n; }
+  size_t npts() const { return _X.cols(); }
+
+
   //-- Return P=K*[R|t] for the Inth camera
   Mat34 P(size_t i) const;
 
@@ -88,6 +93,9 @@ NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,
 struct NViewOrientedDataSet : public NViewDataSet {
   Mat3X _Tgt3d;          // 3D tangent orientation as unit 3D vector.
   std::vector<Mat2X> _tgt2d;  // Projected tangents as unit 2D vector
+  // accessors as vectors
+  const double (*_K_raw)[3];
+  const double (*_cameras_gt_raw)[4][3];
 };
 
 void 
