@@ -28,8 +28,7 @@ namespace cameras
 * Intrinsic camera matrix is \f$ K = \begin{pmatrix} f & 0 & u_0 \\ 0 & f & v_0 \\ 0 & 0 & 1 \end{pmatrix} \f$
 *
 * @note This is an ideal Pinhole camera because it doesn't handle skew and distortion
-* @note The camera does only handle one focal length (ie: \f$ f_x = f_y = f \f$ )
-*/
+* @note The camera does only handle one focal length (ie: \f$ f_x = f_y = f \f$ ) */
 class Pinhole_Intrinsic : public IntrinsicBase
 {
   using class_type = Pinhole_Intrinsic;
@@ -303,6 +302,56 @@ class Pinhole_Intrinsic : public IntrinsicBase
     {
       return new class_type( *this );
     }
+
+    /**
+     * @brief converts pixel vector from pixel to world units
+     */
+    static void
+    invert_intrinsics(
+        const double K[/*3 or 2 ignoring last line*/][3],
+        const double px_coords[2],
+        double normalized_coords[2])
+    {
+      const double *px = px_coords;
+      double *nrm = normalized_coords;
+      nrm[1] = (px[1] - K[1][2]) /K[1][1];
+      nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
+    }
+
+    /**
+     * @brief converts unit tangent vector from pixel to world units
+     * TODO: make into proper function of Pinhole_Intrinsic
+     */
+    static void
+    invert_intrinsics_tgt(
+        const double K[/*3 or 2 ignoring last line*/][3], 
+        const double px_tgt_coords[2], 
+        double normalized_tgt_coords[2])
+    {
+      const double *tp = px_tgt_coords;
+      double *t = normalized_tgt_coords;
+      t[1] = tp[1]/K[1][1];
+      t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
+      const double n = hypot(t[0], t[1]);
+      t[0] /= n; t[1] /= n;
+    }
+    /**
+     * @ brief overload variant for Mat3
+     */
+    static void
+    invert_intrinsics_tgt(
+        const Mat3 &K,
+        const double px_tgt_coords[2],
+        double normalized_tgt_coords[2])
+    {
+      const double *tp = px_tgt_coords;
+      double *t = normalized_tgt_coords;
+      t[1] = tp[1]/K(1,1);
+      t[0] = (tp[0] - K(0,1)*t[1])/K(0,0);
+      double n = hypot(t[0], t[1]);
+      t[0] /= n; t[1] /= n;
+    }
+        
 };
 
 } // namespace cameras

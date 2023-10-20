@@ -32,20 +32,6 @@ namespace openMVG {
 namespace sfm {
 
 
-static void
-invert_intrinsics_tgt(
-    const Mat3 &K,
-    const double px_tgt_coords[2],
-    double normalized_tgt_coords[2])
-{
-  const double *tp = px_tgt_coords;
-  double *t = normalized_tgt_coords;
-  t[1] = tp[1]/K(1,1);
-  t[0] = (tp[0] - K(0,1)*t[1])/K(0,0);
-  double n = hypot(t[0], t[1]);
-  t[0] /= n; t[1] /= n;
-}
-
 bool robustRelativePoseTrifocal
 (
   const cameras::IntrinsicBase *intrinsics[3],
@@ -74,7 +60,7 @@ bool robustRelativePoseTrifocal
       datum[v].col(ip).head(2) = (*intrinsics[v])(pxdatum[v].col(ip).head<2>()).colwise().hnormalized();
       const cameras::Pinhole_Intrinsic *Kin = dynamic_cast<const cameras::Pinhole_Intrinsic *>(intrinsics[v]);
       assert(Kin);
-      invert_intrinsics_tgt(Kin->K(), pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      Pinhole_Intrinsic::invert_intrinsics_tgt(Kin->K(), pxdatum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
       datum[v].col(ip).tail(2) = datum[v].col(ip).tail(2).normalized();
       //OPENMVG_LOG_INFO << "datum point in units:" << datum[v].col(ip).head(2);
       //OPENMVG_LOG_INFO << "datum tangent in units:" << datum[v].col(ip).tail(2);

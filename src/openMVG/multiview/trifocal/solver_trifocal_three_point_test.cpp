@@ -13,6 +13,7 @@
 #include <testing/testing.h>
 #include "openMVG/multiview/trifocal/solver_trifocal_three_point.hpp"
 #include "openMVG/multiview/trifocal/solver_trifocal_util.hpp"
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 
 #include <minus/chicago-default.h>
 #include <minus/internal-util.h>
@@ -21,6 +22,7 @@
 using namespace std;
 using namespace openMVG;
 using namespace openMVG::trifocal;
+using namespace openMVG::cameras;
 typedef MiNuS::minus_util<double> util;
 
 trifocal_model_t tt_gt_; // corresp. to minus' cameras_gt_
@@ -64,8 +66,8 @@ TEST(TrifocalSampleApp, solver)
       datum[v](1,ip) = data::p_[v][ip][1];
       datum[v](2,ip) = data::tgt_[v][ip][0];
       datum[v](3,ip) = data::tgt_[v][ip][1];
-      invert_intrinsics(data::K_, datum[v].col(ip).data(), datum[v].col(ip).data()); 
-      invert_intrinsics_tgt(data::K_, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
+      Pinhole_Intrinsic::invert_intrinsics(data::K_, datum[v].col(ip).data(), datum[v].col(ip).data()); 
+      Pinhole_Intrinsic::invert_intrinsics_tgt(data::K_, datum[v].col(ip).data()+2, datum[v].col(ip).data()+2);
     }
   }
   

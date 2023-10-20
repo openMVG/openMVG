@@ -45,6 +45,25 @@ struct Synthetic_Features_Provider : public Features_Provider
 };
 
 // Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
+//  - for each view store the observations point as PointFeatures
+struct Synthetic_Oriented_Features_Provider : public Features_Provider
+{
+  bool load( const NViewOrientedDataSet & synthetic_data) {
+    // For each view
+    for (size_t v = 0; v < synthetic_data._n; ++v) {
+      // For each new point visibility
+      for (Mat2X::Index i = 0; i < synthetic_data._x[v].cols(); ++i) {
+        const Vec2 pt = synthetic_data._x[v].col(i);
+        const Vec2 tgt = synthetic_data._tgt2d[v].col(i);
+        sio_feats_per_view[v].emplace_back(pt(0), pt(1), 1.0, atan2(tgt(1),tgt(0)));
+      }
+    }
+    return true;
+  }
+};
+
+
+// Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
 //  - for contiguous triplets store the corresponding observations indexes
 struct Synthetic_Matches_Provider : public Matches_Provider
 {

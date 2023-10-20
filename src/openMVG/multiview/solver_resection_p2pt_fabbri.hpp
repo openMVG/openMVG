@@ -13,6 +13,7 @@
 
 #include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/multiview/solver_resection_metrics.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG
 {
@@ -40,13 +41,17 @@ struct P2PtSolver_Fabbri
       const Mat &info_3d, // 3D points and tangents
       std::vector<Mat34> *models)
   {
+    OPENMVG_LOG_INFO  << " inner OK220";
     constexpr double eps = 1e-8;
     assert(info_2d.cols() == info_3d.cols());
     assert(info_2d.cols() == 2);
     assert(info_2d.rows() == 6); 
     assert(info_3d.rows() == 6);
-    assert(fabs(info_2d(5,1)) < eps  && fabs(info_2d(5,2)) < eps);
-    assert(fabs(info_2d(2,1) - 1) < eps && fabs(info_2d(2,2) - 1) < eps);
+    OPENMVG_LOG_INFO  << " inner OK221";
+    assert(fabs(info_2d(5,0)) < eps  && fabs(info_2d(5,1)) < eps);
+    assert(fabs(info_2d(2,0) - 1) < eps && fabs(info_2d(2,1) - 1) < eps);
+
+    OPENMVG_LOG_INFO  << " inner OK22";
 
     // TODO h-normalize vectors to comput3 angular error
 

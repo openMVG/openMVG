@@ -20,34 +20,6 @@ namespace openMVG {
 namespace trifocal {
 
 
-inline void
-invert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double px_coords[2], 
-    double normalized_coords[2])
-{
-  const double *px = px_coords;
-  double *nrm = normalized_coords;
-  nrm[1] = (px[1] - K[1][2]) /K[1][1];
-  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
-}
-
-inline void
-invert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double px_tgt_coords[2], 
-    double normalized_tgt_coords[2])
-{
-  const double *tp = px_tgt_coords;
-  double *t = normalized_tgt_coords;
-  t[1] = tp[1]/K[1][1];
-  t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
-  // normalize -- works as a cache for angle computations / dot products
-  // TODO: check inside minus if we are normalizing
-  double n = hypot(t[0],t[1]);
-  t[0] /= n; t[1] /= n;
-}
-
 // Converts a trifocal_model to quaternion-translation format
 // Assumes tt[0] is identity
 inline void

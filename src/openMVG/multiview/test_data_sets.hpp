@@ -101,21 +101,6 @@ struct NViewOrientedDataSet : public NViewDataSet {
 void 
 NOrientedPointsCamerasSphere(size_t nviews, size_t npoints, NViewOrientedDataSet *dp, nViewDatasetConfigurator *conf);
 
-void
-invert_intrinsics_tgt(
-    const double K[/*3 or 2 ignoring last line*/][3], 
-    const double px_tgt_coords[2], 
-    double normalized_tgt_coords[2])
-{
-  const double *tp = px_tgt_coords;
-  double *t = normalized_tgt_coords;
-  t[1] = tp[1]/K[1][1];
-  t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
-  const double n = hypot(t[0], t[1]);
-  t[0] /= n; t[1] /= n;
-}
-
-
 } // namespace openMVG
 
 #endif  // OPENMVG_MULTIVIEW_TEST_DATA_SETS_HP

@@ -2716,6 +2716,7 @@ void P2PtSolver_Fabbri::Solve(
   assert(3 == X.rows());
   assert(bearing_vectors.cols() == X.cols());
   assert(bearing_vectors.cols() == 2);
+  OPENMVG_LOG_INFO  << " inner OK27";
 
   unsigned nsols;
   double degen;
@@ -2729,6 +2730,7 @@ void P2PtSolver_Fabbri::Solve(
     &rotation_translation_solutions, &nsols, &degen
   );
 
+  OPENMVG_LOG_INFO  << " inner OK28";
 	for (unsigned i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned j = 0 ; j < 3; ++j)

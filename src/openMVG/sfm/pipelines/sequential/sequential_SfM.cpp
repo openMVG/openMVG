@@ -159,8 +159,8 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
    Vec3 tangent0, tangent1;
-   invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
-   invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
+   Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
+   Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
 
    TriangulateTangent2View (
      pose[best_v0]->rotation(),

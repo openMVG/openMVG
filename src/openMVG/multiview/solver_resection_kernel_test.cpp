@@ -6,15 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/cameras/Camera_Pinhole.hpp"
 #include "openMVG/multiview/solver_resection_kernel.hpp"
 #include "openMVG/multiview/solver_resection_p3p.hpp"
 #include "openMVG/multiview/solver_resection_p2pt_fabbri.hpp"
 #include "openMVG/multiview/solver_resection_up2p_kukelova.hpp"
 #include "openMVG/multiview/test_data_sets.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "testing/testing.h"
 
 using namespace openMVG;
+using namespace openMVG::cameras;
 
 TEST(Resection_Kernel_DLT, Multiview) {
 
@@ -171,65 +174,6 @@ TEST(P3P_Nordberg_ECCV18, Multiview) {
   }
 }
 
-TEST(P2Pt_Fabbri_ECCV12, Multiview) 
-{
-
-  constexpr unsigned nViews = 1;
-  constexpr unsigned nbPoints = 2;
-  NViewOrientedDataSet d;
-  nViewDatasetConfigurator config;
-  NOrientedPointsCamerasSphere(nViews, nbPoints, &d, &config); // need to use config since K_ is
-                                                               // ignored by getInputScene below
-                                                               // (this comes from code
-                                                               // initializing K not from a
-                                                               // matrix)
-  
-  // Solve the problem and check that fitted value are good enough
-  for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
-    const Mat &x = d._x[nResectionCameraIndex];
-    const Mat bearing_vectors = (d._K[0].inverse() * x.colwise().homogeneous()).colwise().hnormalized();
-    const Mat &tgt = d._tgt2d[nResectionCameraIndex];
-
-    Mat point_tangents_2d;
-    point_tangents_2d.resize(6, nbPoints);
-    for (unsigned ip=0; ip < nbPoints; ++ip) {
-      point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
-      invert_intrinsics_tgt((double (*)[3]) ((double *)d._K[0].data()), tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
-      point_tangents_2d.col(ip)(5) = 0;
-    }
-
-    const Mat &X = d._X;
-    const Mat &T = d._Tgt3d;
-    Mat point_tangents_3d;
-    point_tangents_3d.resize(6, nbPoints);
-    for (unsigned ip=0; ip < nbPoints; ++ip) {
-      point_tangents_3d.col(ip).head(3) = X.col(ip);
-      point_tangents_3d.col(ip).tail(3) = T.col(ip);
-    }
-
-    openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
-
-    std::vector<Mat34> Ps;
-    kernel.Fit({0,1}, &Ps); // 2 points sample are required, lets take the first two
-
-    bool bFound = false;
-    size_t index = -1;
-    for (size_t i = 0; i < Ps.size(); ++i)  {
-      Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array() / d.P(nResectionCameraIndex).norm();
-      Mat34 COMPUTED_ProjectionMatrix = Ps[i].array() / Ps[i].norm();
-      if ( NormLInfinity(GT_ProjectionMatrix - COMPUTED_ProjectionMatrix) < 1e-8 ) {
-        bFound = true;
-        index = i;
-      }
-    }
-    EXPECT_TRUE(bFound);
-
-    // Check that for the found matrix the residual is small
-    for (Mat::Index i = 0; i < x.cols(); ++i)
-      EXPECT_NEAR(0.0, kernel.Error(i, Ps[index]), 1e-8);
-  }
-}
-
 TEST(UP2PSolver_Kukelova, Multiview) {
 
   const int nViews = 6;
@@ -269,6 +213,77 @@ TEST(UP2PSolver_Kukelova, Multiview) {
     for (Mat::Index i = 0; i < x.cols(); ++i) {
       EXPECT_NEAR(0.0, kernel.Error(i, Ps[index]), 1e-8);
     }
+  }
+}
+
+TEST(P2Pt_Fabbri_ECCV12, Multiview) 
+{
+
+  constexpr unsigned nViews = 1;
+  constexpr unsigned nbPoints = 2;
+  NViewOrientedDataSet d;
+  nViewDatasetConfigurator config;
+  NOrientedPointsCamerasSphere(nViews, nbPoints, &d, &config); // need to use config since K_ is
+                                                               // ignored by getInputScene below
+                                                               // (this comes from code
+                                                               // initializing K not from a
+                                                               // matrix)
+  Mat point_tangents_2d, point_tangents_3d;
+  point_tangents_2d.resize(6, nbPoints);  // x y 1 tx ty 0
+  point_tangents_3d.resize(6, nbPoints);  // X Y Z TX TY TZ
+
+  // Solve the problem and check that fitted value are good enough
+  for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
+    const Mat &x = d._x[nResectionCameraIndex];
+    Mat bearing_vectors = (d._K[0].inverse() * x.colwise().homogeneous()).colwise().hnormalized();
+    const Mat &tgt = d._tgt2d[nResectionCameraIndex];
+
+    assert (bearing_vectors.cols() == nbPoints);
+    bearing_vectors.conservativeResize(3, nbPoints);
+    bearing_vectors.row(2).setOnes();
+
+    OPENMVG_LOG_INFO << "XXX OK01 ";
+    for (unsigned ip=0; ip < nbPoints; ++ip) {
+    OPENMVG_LOG_INFO << "XXX OK09 ";
+      point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
+    OPENMVG_LOG_INFO << "XXX OK02 ";
+      Pinhole_Intrinsic::invert_intrinsics_tgt((double (*)[3]) ((double *)d._K[0].data()), tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
+    OPENMVG_LOG_INFO << "XXX OK03 ";
+      point_tangents_2d.col(ip)(5) = 0;
+    OPENMVG_LOG_INFO << "XXX OK04 ";
+    }
+
+    const Mat &X = d._X;
+    const Mat &T = d._Tgt3d;
+    for (unsigned ip=0; ip < nbPoints; ++ip) {
+      point_tangents_3d.col(ip).head(3) = X.col(ip);
+      point_tangents_3d.col(ip).tail(3) = T.col(ip);
+    }
+
+    OPENMVG_LOG_INFO << "XXX OK1 ";
+    openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
+    OPENMVG_LOG_INFO << "XXX OK2 ";
+
+    std::vector<Mat34> Ps;
+    OPENMVG_LOG_INFO << "XXX OK12 ";
+    kernel.Fit({0,1}, &Ps); // 2 points sample are required, lets take the first two
+    OPENMVG_LOG_INFO << "XXX OK13 ";
+
+    bool bFound = false;
+    size_t index = -1;
+    for (size_t i = 0; i < Ps.size(); ++i)  {
+      Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array() / d.P(nResectionCameraIndex).norm();
+      Mat34 COMPUTED_ProjectionMatrix = Ps[i].array() / Ps[i].norm();
+      if ( NormLInfinity(GT_ProjectionMatrix - COMPUTED_ProjectionMatrix) < 1e-8 ) {
+        bFound = true;
+        index = i;
+      }
+    }
+    EXPECT_TRUE(bFound);
+
+    // Check that for the found matrix the residual is small
+    for (Mat::Index i = 0; i < x.cols(); ++i)
+      EXPECT_NEAR(0.0, kernel.Error(i, Ps[index]), 1e-8);
   }
 }
 

@@ -34,31 +34,6 @@ using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
 
-static void
-invert_intrinsics(
-    const double K[/*3 or 2 ignoring last line*/][3],
-    const double px_coords[2],
-    double normalized_coords[2])
-{
-  const double *px = px_coords;
-  double *nrm = normalized_coords;
-  nrm[1] = (px[1] - K[1][2]) /K[1][1];
-  nrm[0] = (px[0] - K[0][1]*nrm[1] - K[0][2])/K[0][0];
-}
-
-//static void
-//invert_intrinsics_tgt(
-//    const double K[/*3 or 2 ignoring last line*/][3],
-//    const double px_tgt_coords[2],
-//    double normalized_tgt_coords[2])
-//{
-//  const double *tp = px_tgt_coords;
-//  double *t = normalized_tgt_coords;
-//  t[1] = tp[1]/K[1][1];
-//  t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
-//  double n = hypot(t[0], t[1]);
-//  t[0] /= n; t[1] /= n;
-//}
 #if 0
 // Test a scene where all the camera intrinsics are known
 TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
@@ -194,24 +169,6 @@ TEST(SEQUENTIAL_SFM, Partially_Known_Intrinsics) {
 //   - the desired number of poses are found.
 //-----------------
 
-// Create from a synthetic scene (NViewDataSet) some SfM pipelines data provider:
-//  - for each view store the observations point as PointFeatures
-struct Synthetic_Oriented_Features_Provider : public Features_Provider
-{
-  bool load( const NViewOrientedDataSet & synthetic_data) {
-    // For each view
-    for (size_t v = 0; v < synthetic_data._n; ++v) {
-      // For each new point visibility
-      for (Mat2X::Index i = 0; i < synthetic_data._x[v].cols(); ++i) {
-        const Vec2 pt = synthetic_data._x[v].col(i);
-        const Vec2 tgt = synthetic_data._tgt2d[v].col(i);
-        sio_feats_per_view[v].emplace_back(pt(0), pt(1), 1.0, atan2(tgt(1),tgt(0)));
-      }
-    }
-    return true;
-  }
-};
-
 
 bool
 check_camera_triplet(const NViewOrientedDataSet &d, const int ci[]) 
@@ -252,12 +209,12 @@ check_camera_triplet(const NViewOrientedDataSet &d, const int ci[])
       datum2[p](i)   = d._x[ci[2]].col(p)(i);
       datum2[p](i+2) = d._tgt2d[ci[2]].col(p)(i);
     }
-    invert_intrinsics(d._K_raw, datum0[p].data(), datum0[p].data()); 
-    invert_intrinsics_tgt(d._K_raw, datum0[p].data()+2, datum0[p].data()+2); 
-    invert_intrinsics(d._K_raw, datum1[p].data(), datum1[p].data()); 
-    invert_intrinsics_tgt(d._K_raw, datum1[p].data()+2, datum1[p].data()+2); 
-    invert_intrinsics(d._K_raw, datum2[p].data(), datum2[p].data()); 
-    invert_intrinsics_tgt(d._K_raw, datum2[p].data()+2, datum2[p].data()+2);
+    Pinhole_Intrinsic::invert_intrinsics(d._K_raw, datum0[p].data(), datum0[p].data()); 
+    Pinhole_Intrinsic::invert_intrinsics_tgt(d._K_raw, datum0[p].data()+2, datum0[p].data()+2); 
+    Pinhole_Intrinsic::invert_intrinsics(d._K_raw, datum1[p].data(), datum1[p].data()); 
+    Pinhole_Intrinsic::invert_intrinsics_tgt(d._K_raw, datum1[p].data()+2, datum1[p].data()+2); 
+    Pinhole_Intrinsic::invert_intrinsics(d._K_raw, datum2[p].data(), datum2[p].data()); 
+    Pinhole_Intrinsic::invert_intrinsics_tgt(d._K_raw, datum2[p].data()+2, datum2[p].data()+2);
     datum0[p].tail(2) = datum0[p].tail(2).normalized();
     datum1[p].tail(2) = datum1[p].tail(2).normalized();
     datum2[p].tail(2) = datum2[p].tail(2).normalized();
@@ -327,13 +284,13 @@ TEST(SEQUENTIAL_SFM, Trifocal_Check)
 #endif
 
 
-#if 0
+#if 1
 // Test a scene where all the camera intrinsics are known
 // and oriented features are used for SfM
 TEST(SEQUENTIAL_SFM, OrientedSfM) 
 {
-  const int nviews = synth_nviews_;
-  const int npoints = synth_npts_;
+  const int nviews = 4;
+  const int npoints = 5;
   nViewDatasetConfigurator config;
   NViewOrientedDataSet d;
   NOrientedPointsCamerasSphere(nviews, npoints, &d, &config); // need to use config since K_ is
