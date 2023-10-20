@@ -31,7 +31,7 @@ static constexpr unsigned RT_MAX_LEN = (TS_MAX_LEN * TS_MAX_LEN);
 template <typename T=double>
 class p2pt { // fully static, not to be instantiated - just used for templating
 	public:
-  static void pose_from_point_tangents(
+  static bool pose_from_point_tangents(
     const T gama1[3], const T tgt1[3],
     const T gama2[3], const T tgt2[3],
     const T Gama1[3], const T Tgt1[3],
@@ -149,28 +149,26 @@ struct pose_poly {
   
 // This is the main routine ----------------------------------------------------
 template <typename T>
-void p2pt<T>::
+bool p2pt<T>::
 pose_from_point_tangents(
 	const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 	const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3],
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
 )
 {
-
   OPENMVG_LOG_INFO << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
   OPENMVG_LOG_INFO << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
   OPENMVG_LOG_INFO << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
   OPENMVG_LOG_INFO << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
   OPENMVG_LOG_INFO << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
   OPENMVG_LOG_INFO << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
-  OPENMVG_LOG_INFO << "Gama2: " << Gama2[0] << " " << Gama2[2] << " " << Gama2[2];
-  OPENMVG_LOG_INFO << "Tgt2: " << Tgt2[0] << " " << Tgt2[2] << " " << Tgt2[2];
+  OPENMVG_LOG_INFO << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
+  OPENMVG_LOG_INFO << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
 
+  { // test for geometric degeneracy -------------------------------
 	T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
-  { // % test for geometric degeneracy -------------------------------
   const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
-	// Matrix for degeneracy calculation
-	const T d[3][3] = {
+	const T d[3][3] = { // Matrix for degeneracy calculation
 		DGama[0]/norm, Tgt1[0], Tgt2[0],
 		DGama[1]/norm, Tgt1[1], Tgt2[1],
 		DGama[2]/norm, Tgt1[2], Tgt2[2]
@@ -179,20 +177,21 @@ pose_from_point_tangents(
 	degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
 		     -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-	if (std::abs(degen) < 1.0e-3) {
+	if (std::fabs(degen) < 1.0e-3) {
+    OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
 		*output_RT_len = 0;
-		return;
+		return false;
 	}
   }
 
-	// % compute roots -------------------------------
+	// compute roots -------------------------------
 	pose_poly<T> p;
 	p.pose_from_point_tangents_2( gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2);
 
 	T root_ids[pose_poly<T>::ROOT_IDS_LEN] __attribute__((aligned (16)));
 	p.find_bounded_root_intervals(&root_ids);
 
-	// % compute rhos, r, t --------------------------
+	// compute rhos, r, t --------------------------
 	T rhos[3][pose_poly<T>::ROOT_IDS_LEN];
 	unsigned ts_len;
 	p.rhos_from_root_ids(root_ids, &rhos, &ts_len);
@@ -214,6 +213,7 @@ pose_from_point_tangents(
 	p.get_r_t_from_rhos( ts_len, sigmas1, sigmas1_len, sigmas2,
 		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2, 
     &RT, &RT_len);
+  return true;
 }
 
 template<typename T>
@@ -255,7 +255,7 @@ pose_from_point_tangents_2(
 	beta  = sqrt(-2.*a1 / (den1 - den2)); // sqrt(t25)
 	alpha = sqrt(2.*a1 / (den1 + den2));  // sqrt(t24)
 
-	//% Coefficient code adapted from Maple ::: can be further cleaned up but works
+	// Coefficient code adapted from Maple ::: can be further cleaned up but works
 	A0 = a4*a4*g12_2
 	+a4*a4*g11_2
 	+a4*a4
@@ -2732,13 +2732,14 @@ void P2PtSolver_Fabbri::Solve(
   double degen;
 	double rotation_translation_solutions[RT_MAX_LEN][4][3];
 
-  p2pt<double>::pose_from_point_tangents(
+  if (!p2pt<double>::pose_from_point_tangents(
     bearing_vectors.col(0).data(), tangent_vectors.col(0).data(),
     bearing_vectors.col(1).data(), tangent_vectors.col(1).data(),
     X.col(0).data(), T.col(0).data(),
     X.col(1).data(), T.col(1).data(),
     &rotation_translation_solutions, &nsols, &degen
-  );
+  ))
+    OPENMVG_LOG_ERROR << "degeneracy"; 
 
   OPENMVG_LOG_INFO  << " inner OK28";
 	for (unsigned i = 0; i < nsols; ++i) {
