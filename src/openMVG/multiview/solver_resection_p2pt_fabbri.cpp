@@ -177,8 +177,9 @@ pose_from_point_tangents(
 	degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
 		     -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
+  OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
 	if (std::fabs(degen) < 1.0e-3) {
-    OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
+    // OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
 		*output_RT_len = 0;
 		return false;
 	}
@@ -2726,7 +2727,6 @@ void P2PtSolver_Fabbri::Solve(
   assert(3 == X.rows());
   assert(bearing_vectors.cols() == X.cols());
   assert(bearing_vectors.cols() == 2);
-  OPENMVG_LOG_INFO  << " inner OK27";
 
   unsigned nsols;
   double degen;
@@ -2741,7 +2741,6 @@ void P2PtSolver_Fabbri::Solve(
   ))
     OPENMVG_LOG_ERROR << "degeneracy"; 
 
-  OPENMVG_LOG_INFO  << " inner OK28";
 	for (unsigned i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned j = 0 ; j < 3; ++j)

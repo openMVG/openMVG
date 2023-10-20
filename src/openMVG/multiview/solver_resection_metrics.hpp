@@ -40,6 +40,7 @@ struct SquaredPixelReprojectionError {
 
 struct AngularReprojectionError {
   // Compute the angular residual of the projection and the bearing vector
+  // bearing_vector must be normalized to unit norm
   static inline double Error
   (
     const Mat34 & P,
@@ -48,7 +49,21 @@ struct AngularReprojectionError {
   )
   {
     const auto new_bearing = (P * X.homogeneous()).normalized();
-    return 1.0 - (bearing_vector.dot(new_bearing));
+    return 1.0 - bearing_vector.dot(new_bearing);
+  }
+};
+
+struct AngularReprojectionErrorNormalize {
+  // Compute the angular residual of the projection and the bearing vector
+  // bearing_vector will be normalized to unit norm.
+  static inline double Error
+  (
+    const Mat34 & P,
+    const Vec3 & bearing_vector,
+    const Vec3 & X
+  )
+  {
+    return 1.0 - bearing_vector.normalized().dot((P * X.homogeneous()).normalized());
   }
 };
 

@@ -236,8 +236,11 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
   point_tangents_3d.resize(6, nbPoints);  // X Y Z TX TY TZ
 
   // Solve the problem and check that fitted value are good enough
-  //for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
-  unsigned nResectionCameraIndex = 0;
+  for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
+    if (nResectionCameraIndex != 1)
+      continue;
+    OPENMVG_LOG_INFO << "View " << nResectionCameraIndex << "------------------------------------------------------";
+  // unsigned nResectionCameraIndex = 0;
     const Mat &x = d._x[nResectionCameraIndex];
     Mat bearing_vectors = (d._K[0].inverse() * x.colwise().homogeneous()).colwise().hnormalized();
     const Mat &tgt = d._tgt2d[nResectionCameraIndex];
@@ -247,15 +250,10 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     bearing_vectors.row(2).setOnes();
 
 
-    OPENMVG_LOG_INFO << "XXX OK01 ";
     for (unsigned ip=0; ip < nbPoints; ++ip) {
-    OPENMVG_LOG_INFO << "XXX OK09 ";
       point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
-    OPENMVG_LOG_INFO << "XXX OK02 ";
       Pinhole_Intrinsic::invert_intrinsics_tgt((double (*)[3]) ((double *)d._K[0].data()), tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
-    OPENMVG_LOG_INFO << "XXX OK03 ";
       point_tangents_2d.col(ip)(5) = 0;
-    OPENMVG_LOG_INFO << "XXX OK04 ";
     }
 
     const Mat &X = d._X;
@@ -265,12 +263,9 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
       point_tangents_3d.col(ip).tail(3) = T.col(ip);
     }
 
-    OPENMVG_LOG_INFO << "XXX OK1 ";
     openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
-    OPENMVG_LOG_INFO << "XXX OK2 ";
 
     std::vector<Mat34> Ps;
-    OPENMVG_LOG_INFO << "XXX OK12 ";
     kernel.Fit({2,3}, &Ps); // 2 points sample are required, lets take the first two
     OPENMVG_LOG_INFO << "Number of returned models: " << Ps.size();
 
@@ -278,8 +273,10 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     bool bFound = false;
     size_t index = -1;
     for (size_t i = 0; i < Ps.size(); ++i)  {
-      Mat34 GT_ProjectionMatrix = d.P(nResectionCameraIndex).array() / d.P(nResectionCameraIndex).norm();
-      Mat34 COMPUTED_ProjectionMatrix = Ps[i].array() / Ps[i].norm();
+      Mat34 GT_ProjectionMatrix = d.Rt(nResectionCameraIndex);
+      Mat34 COMPUTED_ProjectionMatrix = Ps[i].array();
+       OPENMVG_LOG_INFO << "gt:\n" << GT_ProjectionMatrix <<  "\ncomputed:\n" << COMPUTED_ProjectionMatrix;
+       OPENMVG_LOG_INFO << "NormLinf:" << NormLInfinity(GT_ProjectionMatrix - COMPUTED_ProjectionMatrix);
       if ( NormLInfinity(GT_ProjectionMatrix - COMPUTED_ProjectionMatrix) < 1e-4 ) {
         bFound = true;
         index = i;
@@ -290,7 +287,7 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     // Check that for the found matrix the residual is small
     for (Mat::Index i = 0; i < x.cols(); ++i)
       EXPECT_NEAR(0.0, kernel.Error(i, Ps[index]), 1e-8);
-  //}
+   }
 }
 
 /* ************************************************************************* */
