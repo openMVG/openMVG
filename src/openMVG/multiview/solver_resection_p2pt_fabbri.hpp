@@ -55,8 +55,8 @@ struct P2PtSolver_Fabbri
 
     // TODO h-normalize vectors to comput3 angular error
 
-    Solve(info_2d.block<0,0>(2,2), info_2d.block<3,0>(2,2),
-          info_3d.block<0,0>(3,2), info_3d.block<3,0>(3,2), models);
+    Solve(info_2d.block<3,2>(0,0), info_2d.block<3,2>(3,0),
+          info_3d.block<3,2>(0,0), info_3d.block<3,2>(3,0), models);
   }
 };
 

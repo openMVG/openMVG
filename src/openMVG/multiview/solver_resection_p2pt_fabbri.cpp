@@ -156,6 +156,16 @@ pose_from_point_tangents(
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
 )
 {
+
+  OPENMVG_LOG_INFO << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
+  OPENMVG_LOG_INFO << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
+  OPENMVG_LOG_INFO << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
+  OPENMVG_LOG_INFO << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
+  OPENMVG_LOG_INFO << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
+  OPENMVG_LOG_INFO << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
+  OPENMVG_LOG_INFO << "Gama2: " << Gama2[0] << " " << Gama2[2] << " " << Gama2[2];
+  OPENMVG_LOG_INFO << "Tgt2: " << Tgt2[0] << " " << Tgt2[2] << " " << Tgt2[2];
+
 	T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
   { // % test for geometric degeneracy -------------------------------
   const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
@@ -2703,7 +2713,6 @@ get_r_t_from_rhos(
 		}
 	}
 }
-  
 
 void P2PtSolver_Fabbri::Solve(
     const Mat &bearing_vectors,
@@ -2712,6 +2721,7 @@ void P2PtSolver_Fabbri::Solve(
     const Mat &T, // 3D tangents
     std::vector<Mat34> *models)
 {
+  OPENMVG_LOG_INFO << bearing_vectors.rows() << std::endl;
   assert(3 == bearing_vectors.rows());
   assert(3 == X.rows());
   assert(bearing_vectors.cols() == X.cols());
