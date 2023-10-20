@@ -40,7 +40,7 @@ struct P2PtSolver_Fabbri
       const Mat &info_3d, // 3D points and tangents
       std::vector<Mat34> *models)
   {
-    constexpr eps = 1e-8;
+    constexpr double eps = 1e-8;
     assert(info_2d.cols() == info_3d.cols());
     assert(info_2d.cols() == 2);
     assert(info_2d.rows() == 6); 

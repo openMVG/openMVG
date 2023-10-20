@@ -173,9 +173,9 @@ class OrientedKernel {
   const Mat & x1_, & x2_; // Left/Right corresponding point
 };
 
+*/
 }  // namespace kernel
 }  // namespace two_view
 }  // namespace openMVG
-*/
 
 #endif  // OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP

@@ -41,7 +41,7 @@ invert_intrinsics_tgt(
   double *t = normalized_tgt_coords;
   t[1] = tp[1]/K[1][1];
   t[0] = (tp[0] - K[0][1]*t[1])/K[0][0];
-  double n = hypot(t[0], t[1]);
+  const double n = hypot(t[0], t[1]);
   t[0] /= n; t[1] /= n;
 }
 
