@@ -58,18 +58,66 @@ struct pose_poly {
 		H0, H1, H2, H3, H4, J0, J1, J2, J3, K0, K1, K2, K3,
 		L0, L1, L2, alpha, beta, theta, sth, cth;
 
-  static constexpr unsigned T_LEN = 1900, ROOT_IDS_LEN = T_LEN - 1;
-  static constexpr double T_LEN_2 = 2./T_LEN;
+  void print() const {
+    OPENMVG_LOG_INFO << std::setprecision(20) << 
+    "A0: "<< A0 << std::endl << 
+    "A1: "<< A1 << std::endl << 
+    "A2: "<< A2 << std::endl << 
+    "B0: "<< B0 << std::endl << 
+    "B1: "<< B1 << std::endl << 
+    "B2: "<< B2 << std::endl << 
+    "B3: "<< B3 << std::endl << 
+    "C0: "<< C0 << std::endl << 
+    "C1: "<< C1 << std::endl << 
+    "C2: "<< C2 << std::endl << 
+    "C3: "<< C3 << std::endl << 
+    "C4: "<< C4 << std::endl << 
+    "E0: "<< E0 << std::endl << 
+    "E1: "<< E1 << std::endl << 
+    "E2: "<< E2 << std::endl << 
+    "F0: "<< F0 << std::endl << 
+    "F1: "<< F1 << std::endl << 
+    "F2: "<< F2 << std::endl << 
+    "F3: "<< F3 << std::endl << 
+    "G0: "<< G0 << std::endl << 
+    "G1: "<< G1 << std::endl << 
+    "G2: "<< G2 << std::endl << 
+    "G3: "<< G3 << std::endl << 
+    "G4: "<< G4 << std::endl << 
+    "H0: "<< H0 << std::endl << 
+    "H1: "<< H1 << std::endl << 
+    "H2: "<< H2 << std::endl << 
+    "H3: "<< H3 << std::endl << 
+    "H4: "<< H4 << std::endl << 
+    "J0: "<< J0 << std::endl << 
+    "J1: "<< J1 << std::endl << 
+    "J2: "<< J2 << std::endl << 
+    "J3: "<< J3 << std::endl << 
+    "K0: "<< K0 << std::endl << 
+    "K1: "<< K1 << std::endl << 
+    "K2: "<< K2 << std::endl << 
+    "K3: "<< K3 << std::endl << 
+    "L0: "<< L0 << std::endl << 
+    "L1: "<< L1 << std::endl << 
+    "L2: "<< L2;
+  }
+
+  static constexpr unsigned T_LEN = 2001, ROOT_IDS_LEN = T_LEN - 1;
+  static constexpr double T_LEN_2 = 2./(T_LEN-1);
   inline T t_vec(unsigned i) { return T_LEN_2*i -1.; }
 
 	void pose_from_point_tangents_2(
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
-	inline void find_bounded_root_intervals(T (*root_ids_out)[ROOT_IDS_LEN]) {
+	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
+    //OPENMVG_LOG_INFO << std::setprecision(20) << "t_vec " << t_vec(0);
     T curr_val = fn_t(t_vec(0)), next_val;
+    // OPENMVG_LOG_INFO << std::setprecision(20) << "val " << curr_val;
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
+      // OPENMVG_LOG_INFO << std::setprecision(20) << " t_vec i+1=" << i+1 <<  " tvec =" << t_vec(i+1) ;
       next_val = fn_t(t_vec(i+1));
+      //OPENMVG_LOG_INFO << std::setprecision(20) << "nextval " << next_val;
       (*root_ids_out)[i] = (curr_val * next_val) < 0;
       curr_val = next_val;
     }
@@ -94,6 +142,18 @@ struct pose_poly {
     K = (K0+K1*t+K2*t2+K3*t3-K2*t4+K1*t5-K0*t6)/t2p13;
     L = (L0+L1*t+L2*t2-L1*t3+L0*t4)/t2p12;
 
+//    OPENMVG_LOG_INFO << std::setprecision(20) <<  "t: " << t << std::endl <<
+//    "A: "<< A << std::endl << 
+//    "B: "<< B << std::endl << 
+//    "C: "<< C << std::endl << 
+//    "E: "<< E << std::endl << 
+//    "F: "<< F << std::endl << 
+//    "G: "<< G << std::endl << 
+//    "H: "<< H << std::endl << 
+//    "J: "<< J << std::endl << 
+//    "K: "<< K << std::endl << 
+//    "L: "<< L << std::endl;
+
     const T A2=A*A, B2=B*B, C2=C*C, E2=E*E, F2=F*F, G2=G*G, H2=H*H, 
             H3=H2*H, H4=H3*H, J2=J*J, J3=J2*J, K2=K*K, K3=K2*K, L2=L*L, L3=L2*L;
     
@@ -116,7 +176,7 @@ struct pose_poly {
 	inline T operator()(T t) { return fn_t(t); }
   
 	inline void rhos_from_root_ids(
-      const T (&root_ids)[ROOT_IDS_LEN], T (*out)[3][ROOT_IDS_LEN], unsigned *out_ts_len) { 
+      const bool (&root_ids)[ROOT_IDS_LEN], T (*out)[3][ROOT_IDS_LEN], unsigned *out_ts_len) { 
     T (&ts)[ROOT_IDS_LEN] = (*out)[0];
     unsigned &ts_end = *out_ts_len; ts_end = 0;
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
@@ -165,14 +225,14 @@ pose_from_point_tangents(
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
 )
 {
-  OPENMVG_LOG_INFO << std::setprecision(20) << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
-  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
+//  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
                       
   { // test for geometric degeneracy -------------------------------
 	T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
@@ -186,7 +246,7 @@ pose_from_point_tangents(
 	degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
 		     -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-  OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
+//  OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
 	if (std::fabs(degen) < 1.0e-3) {
     // OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
 		*output_RT_len = 0;
@@ -196,9 +256,9 @@ pose_from_point_tangents(
 
 	// compute roots -------------------------------
 	pose_poly<T> p;
-	p.pose_from_point_tangents_2( gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2);
+	p.pose_from_point_tangents_2(gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2);
 
-	T root_ids[pose_poly<T>::ROOT_IDS_LEN] __attribute__((aligned (16)));
+	bool root_ids[pose_poly<T>::ROOT_IDS_LEN];// __attribute__((aligned (16)));
 	p.find_bounded_root_intervals(&root_ids);
 
 	// compute rhos, r, t --------------------------
@@ -281,7 +341,7 @@ pose_from_point_tangents_2(
 	-2.0*a2*g11_2*beta*beta*s2
 	-2.0*a2*g12_2*beta*beta*s2
 	+2.0*a2*beta*beta*sth*cth
-	-2.0*a2*g21*g11*g22*g12*beta*beta*c2
+-2.0*a2*g21*g11*g22*g12*beta*beta*c2
 	-a2*beta*beta*s2
 	+2.0*a2*g21*g11*beta*beta*sth*cth
 	-a2*g22_2*g12_2*beta*beta*c2
@@ -2729,7 +2789,7 @@ void P2PtSolver_Fabbri::Solve(
     const Mat &T, // 3D tangents
     std::vector<Mat34> *models)
 {
-  OPENMVG_LOG_INFO << bearing_vectors.rows() << std::endl;
+//  OPENMVG_LOG_INFO << bearing_vectors.rows() << std::endl;
   assert(3 == bearing_vectors.rows());
   assert(3 == X.rows());
   assert(bearing_vectors.cols() == X.cols());
