@@ -258,7 +258,7 @@ pose_from_point_tangents(
 	pose_poly<T> p;
 	p.pose_from_point_tangents_2(gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2);
 
-	bool root_ids[pose_poly<T>::ROOT_IDS_LEN];// __attribute__((aligned (16)));
+	bool root_ids[pose_poly<T>::ROOT_IDS_LEN];
 	p.find_bounded_root_intervals(&root_ids);
 
 	// compute rhos, r, t --------------------------
