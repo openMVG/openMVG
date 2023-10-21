@@ -9,11 +9,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <array>
+#include <complex>
+#include <cmath>
+#include <iomanip>
+
 #include "openMVG/multiview/solver_resection_p2pt_fabbri.hpp"
 #include "openMVG/multiview/projection.hpp"
 
-#include <array>
-#include <complex>
+
+// Visual studio bug work-around
+#ifndef M_PI_2
+    #define M_PI_2 1.57079632679489661923
+#endif
+
 
 #if defined(_MSC_VER)
 #define __attribute__(x) /* blank - should simply ignore thanks to C preprocessor */
@@ -156,15 +165,15 @@ pose_from_point_tangents(
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
 )
 {
-  OPENMVG_LOG_INFO << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
-  OPENMVG_LOG_INFO << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
-  OPENMVG_LOG_INFO << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
-  OPENMVG_LOG_INFO << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
-  OPENMVG_LOG_INFO << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
-  OPENMVG_LOG_INFO << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
-  OPENMVG_LOG_INFO << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
-  OPENMVG_LOG_INFO << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
-
+  OPENMVG_LOG_INFO << std::setprecision(20) << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
+  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
+                      
   { // test for geometric degeneracy -------------------------------
 	T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
   const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
@@ -226,8 +235,6 @@ pose_from_point_tangents_2(
 	const T Gama2[3], const T Tgt2[3]
 )
 {
-	static constexpr T PI_OVER_2 = 3.141592653589793*0.5;
-
 	const T g11 = gama1[0], g12 = gama1[1], g21 = gama2[0], g22 = gama2[1],
           g11_2 = g11*g11, g11_3 = g11_2*g11, g11_4 = g11_3*g11,
           g12_2 = g12*g12, g12_3 = g12_2*g12, g12_4 = g12_3*g12,
@@ -247,7 +254,7 @@ pose_from_point_tangents_2(
   a6 = V[0]*Tgt2[0]+V[1]*Tgt2[1]+V[2]*Tgt2[2];
 
 	theta = 0.5 * atan( 2.*(1.+g11*g21+g12*g22)/(g11_2+g12_2-g21_2-g22_2) );
-	if (theta < 0) theta += PI_OVER_2;
+	if (theta < 0) theta += M_PI_2;
 	sth = sin(theta); const T s2 = sth*sth; cth = cos(theta);
   const T c2 = cth*cth, c2th = 2.*c2-1., s2th = 2.*sth*cth;
   
