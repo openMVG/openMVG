@@ -218,12 +218,12 @@ struct pose_poly {
   }
   
 	void get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN], 
-      T (*out)[2][TS_MAX_LEN][TS_MAX_LEN], unsigned out_len[TS_MAX_LEN]);
+      T (*out)[2][ROOT_IDS_LEN][4], char out_len[ROOT_IDS_LEN]);
   
 	void get_r_t_from_rhos(
 		const unsigned ts_len,
-		const T sigmas1[TS_MAX_LEN][TS_MAX_LEN], const unsigned sigmas1_len[TS_MAX_LEN],
-		const T sigmas2[TS_MAX_LEN][TS_MAX_LEN],
+		const T sigmas1[ROOT_IDS_LEN][4], const char sigmas_len[ROOT_IDS_LEN],
+		const T sigmas2[ROOT_IDS_LEN][4],
 		const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3],
@@ -290,7 +290,7 @@ pose_from_point_tangents(
 	const T (&ts)[pose_poly<T>::ROOT_IDS_LEN]    = rhos[0]; 
   const T (&rhos1)[pose_poly<T>::ROOT_IDS_LEN] = rhos[1]; 
   const T (&rhos2)[pose_poly<T>::ROOT_IDS_LEN] = rhos[2];
-	T sigmas[2][TS_MAX_LEN][TS_MAX_LEN]; unsigned sigmas_len[TS_MAX_LEN];
+	T sigmas[2][pose_poly<T>::ROOT_IDS_LEN][4]; char sigmas_len[TS_MAX_LEN];
 
 //  std::cerr << "ts_len " << ts_len << std::endl;
 //  std::cerr << "ts:" << ts_len << std::endl;
@@ -320,11 +320,11 @@ pose_from_point_tangents(
   }
   std::cerr << std::endl;
 
-	T (&sigmas1)[TS_MAX_LEN][TS_MAX_LEN] = sigmas[0];
-	T (&sigmas2)[TS_MAX_LEN][TS_MAX_LEN] = sigmas[1];
+	const T (&sigmas1)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[0];
+	const T (&sigmas2)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[1];
 
 	T (&RT)[RT_MAX_LEN][4][3] = *output_RT;
-	unsigned &RT_len               = *output_RT_len;
+	unsigned &RT_len          = *output_RT_len;
 
 	p.get_r_t_from_rhos( ts_len, sigmas1, sigmas_len, sigmas2,
 		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2, 
@@ -369,6 +369,8 @@ pose_from_point_tangents_2(
 	beta  = sqrt(-2.*a1 / (den1 - den2)); // sqrt(t25)
 	alpha = sqrt(2.*a1 / (den1 + den2));  // sqrt(t24)
 
+  // TODO: remove parenthesis. Further reduce to known gates
+  // Perhaps use gate optimization.
 	// Coefficient code adapted from Maple ::: can be further cleaned up but works
 	A0 = a4*a4*g12_2
 	+a4*a4*g11_2
@@ -2635,10 +2637,10 @@ pose_from_point_tangents_2(
 template<typename T>
 void pose_poly<T>::
 get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
-	T (*sigmas)[2][TS_MAX_LEN][TS_MAX_LEN], unsigned sigmas_len[TS_MAX_LEN])
+	T (*sigmas)[2][ROOT_IDS_LEN][4], char sigmas_len[ROOT_IDS_LEN])
 {
-	T   (&sigmas1)[TS_MAX_LEN][TS_MAX_LEN] = (*sigmas)[0];
-	T   (&sigmas2)[TS_MAX_LEN][TS_MAX_LEN] = (*sigmas)[1];
+	T   (&sigmas1)[ROOT_IDS_LEN][4] = (*sigmas)[0];
+	T   (&sigmas2)[ROOT_IDS_LEN][4] = (*sigmas)[1];
 	T pose[10];
 	for (unsigned i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
@@ -2749,8 +2751,8 @@ template<typename T>
 void pose_poly<T>::
 get_r_t_from_rhos(
 	const unsigned ts_len,
-	const T sigmas1[TS_MAX_LEN][TS_MAX_LEN], const unsigned sigmas_len[TS_MAX_LEN],
-	const T sigmas2[TS_MAX_LEN][TS_MAX_LEN],
+	const T sigmas1[ROOT_IDS_LEN][4], const char sigmas_len[ROOT_IDS_LEN],
+	const T sigmas2[ROOT_IDS_LEN][4],
 	const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
 	const T gama1[3], const T tgt1[3],
 	const T gama2[3], const T tgt2[3],
@@ -2770,14 +2772,14 @@ get_r_t_from_rhos(
 		for (unsigned j = 0; j < sigmas_len[i]; j++) {
 			lambdas1[i][j] = 
         (DGama[0]*Tgt1[0]+DGama[1]*Tgt1[1] + DGama[2]*Tgt1[2]) / 
-        (dgamas_rhos[0]*(rhos1[i]*tgt1[0] + sigmas1[i][j]*gama1[0]) + 
-        dgamas_rhos[1]*(rhos1[i]*tgt1[1] + sigmas1[i][j]*gama1[1]) +
-        dgamas_rhos[2]*(rhos1[i]*tgt1[2] + sigmas1[i][j]*gama1[2]));
+        (dgamas_rhos[0]*(rhos1[i]*tgt1[0]  + sigmas1[i][j]*gama1[0]) + 
+        dgamas_rhos[1]*(rhos1[i]*tgt1[1]   + sigmas1[i][j]*gama1[1]) +
+        dgamas_rhos[2]*(rhos1[i]*tgt1[2]   + sigmas1[i][j]*gama1[2]));
 			lambdas2[i][j] = 
         (DGama[0]*Tgt2[0]+DGama[1]*Tgt2[1] + DGama[2]*Tgt2[2]) /
-        (dgamas_rhos[0]*(rhos2[i]*tgt2[0] + sigmas2[i][j]*gama2[0]) + 
-        dgamas_rhos[1]*(rhos2[i]*tgt2[1] + sigmas2[i][j]*gama2[1]) +
-        dgamas_rhos[2]*(rhos2[i]*tgt2[2] + sigmas2[i][j]*gama2[2]));
+        (dgamas_rhos[0]*(rhos2[i]*tgt2[0]  + sigmas2[i][j]*gama2[0]) + 
+        dgamas_rhos[1]*(rhos2[i]*tgt2[1]   + sigmas2[i][j]*gama2[1]) +
+        dgamas_rhos[2]*(rhos2[i]*tgt2[2]   + sigmas2[i][j]*gama2[2]));
 		}
 	}
 
