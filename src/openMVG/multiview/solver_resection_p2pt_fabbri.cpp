@@ -193,9 +193,9 @@ pose_from_point_tangents(
     degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-    if (std::fabs(degen) < 1.0e-3) {
+    if (std::fabs(degen) < 1e-5) {
       *output_RT_len = 0;
-      return false;
+      return false;  // can still solve this in many cases, but lets not fool around
     }
   }
 
