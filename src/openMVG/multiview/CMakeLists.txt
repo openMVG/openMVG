@@ -84,8 +84,9 @@ UNIT_TEST(openMVG rotation_averaging "openMVG_multiview_test_data;openMVG_multiv
 UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_multiview")
 
 # For testing
-set_target_properties(openMVG_multiview PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
-set_target_properties(openMVG_multiview PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
+# TODO: consider --ffast-math default for multiview lib Release
+#set_target_properties(openMVG_multiview PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
+#set_target_properties(openMVG_multiview PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 
 
 add_subdirectory(trifocal)
