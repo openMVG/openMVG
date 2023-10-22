@@ -10,6 +10,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 //
 //
+// This works OK with --ffast_math
+//
 // TODO(optimization)
 //  - variabele alignment and order
 //    - specially for fn_t and pose_from_point_tangents_2
@@ -121,9 +123,10 @@ struct pose_poly {
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
-    T curr_val = fn_t(t_vec(0)), next_val;
+    T p[10]; 
+    T curr_val = fn_t(t_vec(0),p), next_val;
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
-      next_val = fn_t(t_vec(i+1));
+      next_val = fn_t(t_vec(i+1),p);
        (*root_ids_out)[i] = curr_val * next_val < 0;
       curr_val = next_val;
     }
@@ -187,13 +190,14 @@ struct pose_poly {
     
     T (&ts)[ROOT_IDS_LEN] = (*out)[0];
     unsigned &ts_end = *out_ts_len; ts_end = 0;
+    T p[10]; 
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
       if (!root_ids[i]) continue;
       T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
-      T f0 = fn_t(t_vec(i)), f1 = fn_t(t_vec(i+1));
+      T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
       for (unsigned k = 0; k < 4; ++k) {
         t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
-        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2);
+        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2, p);
       }
     }
     //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
