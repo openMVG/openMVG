@@ -2647,30 +2647,30 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
 		fn_t(ts[i], pose);
 
 		//T &fvalue = pose[0]; // double-checked: not used in matlab
-		const T &A = pose[0], &B = pose[1], &C = pose[2], 
-            &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
-            &J = pose[7], &K = pose[8], &L = pose[9];
+		T &A = pose[0], &B = pose[1], &C = pose[2], 
+      &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
+      &J = pose[7], &K = pose[8], &L = pose[9];
+    A += A; E += E;
 
-		std::complex<T> delta = sqrt(std::complex<T>(B*B - 4*A*C));
-		std::complex<T> sigma1_m = (-B - delta)/(2*A);
-		std::complex<T> sigma1_p = (-B + delta)/(2*A);
-
-		delta = sqrt(std::complex<T>(F*F - 4*E*G));
-		std::complex<T> sigma2_m = (-F - delta)/(2*E);
-		std::complex<T> sigma2_p = (-F + delta)/(2*E);
-
-		//% handle case of negative delta
-		if (std::abs(std::imag(sigma1_m)) < 1e-4) {
-			sigma1_m = std::real(sigma1_m);
-			sigma1_p = std::real(sigma1_p);
-		} // else
+    T delta = B*B - 2*A*C;
+    if (delta < -1e-4) {
 			// std::cerr << "Ignoring t = " << ts[i] << std::endl;
+      continue;
+    }
+    delta = (delta < 0)? 0 : sqrt(delta);
+    B = -B;
+		T sigma1_m = (B - delta)/A;
+		T sigma1_p = (B + delta)/A;
 
-		if (std::abs(std::imag(sigma2_m)) < 1e-4) {
-			sigma2_m = std::real(sigma2_m);
-			sigma2_p = std::real(sigma2_p);
-		} // else
+		delta = F*F - 2*E*G;
+    if (delta < -1e-4) {
 			// std::cerr << "Ignoring t = " << ts[i] << std::endl;
+      continue;
+    }
+    delta = (delta < 0)? 0 : sqrt(delta);
+    F = -F;
+		T sigma2_m = (F - delta)/E;
+		T sigma2_p = (F + delta)/E;
 
 		//% Now check to see which pair pass. Only a single pair should pass, in theory.
 		//% If not, issue a warning.
@@ -2678,26 +2678,26 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
 
     // TODO: optimize
 		if (std::abs(H + J*sigma1_m + K*sigma2_m + L*sigma1_m*sigma2_m) < my_eps) {
-			sigmas1[i][sigmas_len[i]] = sigma1_m.real();
-			sigmas2[i][sigmas_len[i]++] = sigma2_m.real();
+			sigmas1[i][sigmas_len[i]] = sigma1_m;
+			sigmas2[i][sigmas_len[i]++] = sigma2_m;
 		}
 		if (std::abs(H + J*sigma1_p + K*sigma2_m + L*sigma1_p*sigma2_m) < my_eps) {
 			// if (sigmas_len[i] != 0) // !isempty(sigmas1[i])
 		  //		std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_p.real();
-			sigmas2[i][sigmas_len[i]++] = sigma2_m.real();
+			sigmas1[i][sigmas_len[i]] = sigma1_p;
+			sigmas2[i][sigmas_len[i]++] = sigma2_m;
 		}
 		if (std::abs(H + J*sigma1_p + K*sigma2_p + L*sigma1_p*sigma2_p) < my_eps) {
 			// if (sigmas_len[i] != 0)
       //	std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_p.real();
-			sigmas2[i][sigmas_len[i]++] = sigma2_p.real();
+			sigmas1[i][sigmas_len[i]] = sigma1_p;
+			sigmas2[i][sigmas_len[i]++] = sigma2_p;
 		}
 		if (std::abs(H + J*sigma1_m + K*sigma2_p + L*sigma1_m*sigma2_p) < my_eps) {
 			// if (sigmas_len[i] != 0)
 			// std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_m.real();
-			sigmas2[i][sigmas_len[i]++] = sigma2_p.real();
+			sigmas1[i][sigmas_len[i]] = sigma1_m;
+			sigmas2[i][sigmas_len[i]++] = sigma2_p;
 		}
 		// if (sigmas_len[i] == 0) // isempty(sigmas1[i])
 		// std::cerr << "no sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
