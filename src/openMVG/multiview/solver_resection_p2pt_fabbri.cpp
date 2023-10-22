@@ -67,10 +67,14 @@ class p2pt { // fully static, not to be instantiated - just used for templating
 // solution is pose(t)
 template<typename T>
 struct pose_poly {
+  // t-independent terms
 	T A0, A1, A2, B0, B1, B2, B3, C0, C1, C2, C3, C4,
 		E0, E1, E2, F0, F1, F2, F3, G0, G1, G2, G3, G4,
 		H0, H1, H2, H3, H4, J0, J1, J2, J3, K0, K1, K2, K3,
 		L0, L1, L2, alpha, beta, theta, sth, cth;
+
+  // cached computation for t-dependent part:
+  T cE2B2H2J2;
 
   //void print() const {
   //  OPENMVG_LOG_INFO << std::setprecision(20) << 
@@ -125,7 +129,7 @@ struct pose_poly {
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
-    T p[10];
+	  T p[10];
     T curr_val = fn_t(t_vec(0), p), next_val;
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
@@ -164,23 +168,22 @@ struct pose_poly {
     //    "K: "<< K << std::endl << 
     //    "L: "<< L << std::endl;
 
-    const T A2=A*A, B2=B*B, C2=C*C, E2=E*E, F2=F*F, G2=G*G, H2=H*H, 
-            H3=H2*H, H4=H3*H, J2=J*J, J3=J2*J, K2=K*K, K3=K2*K, L2=L*L, L3=L2*L;
+    const T AA=A*A, BB=B*B, CC=C*C, EE=E*E, FF=F*F, GG=G*G, HH=H*H, 
+            H3=HH*H, H4=H3*H, JJ=J*J, J3=JJ*J, KK=K*K, K3=KK*K, LL=L*L, L3=LL*L;
     
-    // XXX terms that have a number can be precomputed, independ of t
-    return E2*B2*H2*J2 +G2*C2*L*L*L*L +G2*A2*K3*K +E2*A2*H4 +E2*C2*J3*J
-    -2.*E*A*H2*G*C*L2 +2.*E2*A*H2*C*J2 -2.*E2*C*J3*B*H +2.*E*C2*J2*G*L2
-    +2.*E*A2*H2*G*K2 -2.*E2*A*H3*B*J -2.*E*A*H2*G*B*K*L -2.*E*C*J2*G*B*K*L
-    -2.*E*C*J2*G*A*K2 -2.*E*B*H*J*G*C*L2 -2.*E*B*H*J*G*A*K2 +G2*B2*K2*L2
-    -2.*G2*B*K*L3*C -2.*G2*B*K3*L*A +2.*G2*C*L2*A*K2 -2.*F*E*A2*H3*K
-    -2.*F*E*A*H*K*C*J2 +3.*F*E*A*H2*K*B*J +3.*F*A*H*K2*G*B*L
-    -2.*F*A*H*K*G*C*L2 -2.*F*A2*H*K3*G +F*E*B*H3*L*A +3.*F*E*B*H*L*C*J2
-    -F*E*B2*H2*L*J -F*B2*H*L2*G*K +F*B*H*L3*G*C +F*E*B*K*J3*C
-    -F*E*B2*K*J2*H -F*B2*K2*J*G*L +3.*F*B*K*J*G*C*L2 +F*B*K3*J*G*A
-    -2.*F*E*C*J*L*A*H2 -2.*F*E*C2*J3*L -2.*F*C2*J*L3*G -2.*F*C*J*L*G*A*K2
-    +F2*A2*K2*H2 +F2*A*K2*C*J2 -F2*A*K2*B*H*J -F2*B*K*L*A*H2
-    -F2*B*K*L*C*J2 +F2*B2*K*L*H*J +F2*C*L2*A*H2 +F2*C2*L2*J2
-    -F2*C*L2*B*H*J +G*E*B2*H2*L2 +G*E*B2*K2*J2 +8.*G*E*A*H*K*C*J*L;
+    return EE*BB*HH*JJ +GG*CC*L3*L +GG*AA*K3*K +EE*AA*H4 +EE*CC*J3*J
+    -2.*E*A*HH*G*C*LL +2.*EE*A*HH*C*JJ -2.*EE*C*J3*B*H +2.*E*CC*JJ*G*LL
+    +2.*E*AA*HH*G*KK -2.*EE*A*H3*B*J -2.*E*A*HH*G*B*K*L -2.*E*C*JJ*G*B*K*L
+    -2.*E*C*JJ*G*A*KK -2.*E*B*H*J*G*C*LL -2.*E*B*H*J*G*A*KK +GG*BB*KK*LL
+    -2.*GG*B*K*L3*C -2.*GG*B*K3*L*A +2.*GG*C*LL*A*KK -2.*F*E*AA*H3*K
+    -2.*F*E*A*H*K*C*JJ +3.*F*E*A*HH*K*B*J +3.*F*A*H*KK*G*B*L
+    -2.*F*A*H*K*G*C*LL -2.*F*AA*H*K3*G +F*E*B*H3*L*A +3.*F*E*B*H*L*C*JJ
+    -F*E*BB*HH*L*J -F*BB*H*LL*G*K +F*B*H*L3*G*C +F*E*B*K*J3*C
+    -F*E*BB*K*JJ*H -F*BB*KK*J*G*L +3.*F*B*K*J*G*C*LL +F*B*K3*J*G*A
+    -2.*F*E*C*J*L*A*HH -2.*F*E*CC*J3*L -2.*F*CC*J*L3*G -2.*F*C*J*L*G*A*KK
+    +FF*AA*KK*HH +FF*A*KK*C*JJ -FF*A*KK*B*H*J -FF*B*K*L*A*HH
+    -FF*B*K*L*C*JJ +FF*BB*K*L*H*J +FF*C*LL*A*HH +FF*CC*LL*JJ
+    -FF*C*LL*B*H*J +G*E*BB*HH*LL +G*E*BB*KK*JJ +8.*G*E*A*H*K*C*J*L;
   }
   
 	// inline T operator()(T t) { return fn_t(t); }
@@ -2651,15 +2654,15 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
 {
 	T   (&sigmas1)[ROOT_IDS_LEN][4] = (*sigmas)[0];
 	T   (&sigmas2)[ROOT_IDS_LEN][4] = (*sigmas)[1];
-	T pose[10];
+	T p[10];
 	for (unsigned i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
 
-		fn_t(ts[i], pose); // TODO: perhaps normalize H J K L
+		fn_t(ts[i], p); // TODO: perhaps normalize H J K L
 
-		T &A = pose[0], &B = pose[1], &C = pose[2], 
-      &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
-      &J = pose[7], &K = pose[8], &L = pose[9];
+		T &A = p[0], &B = p[1], &C = p[2], 
+      &E = p[3], &F = p[4], &G = p[5], &H = p[6],
+      &J = p[7], &K = p[8], &L = p[9];
     A += A; E += E;
 
     T delta = B*B - 2*A*C;
