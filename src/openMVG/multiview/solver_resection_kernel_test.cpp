@@ -237,8 +237,6 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
 
   // Solve the problem and check that fitted value are good enough
   for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
-    if (nResectionCameraIndex == 1)
-      continue;
     OPENMVG_LOG_INFO << "View " << nResectionCameraIndex << "------------------------------------------------------";
   // unsigned nResectionCameraIndex = 0;
     const Mat &x = d._x[nResectionCameraIndex];
@@ -266,7 +264,7 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
 
     std::vector<Mat34> Ps;
-    // for (unsigned nr=0; nr < 10000; ++nr)
+    for (unsigned nr=0; nr < 10000; ++nr)
     kernel.Fit({2,3}, &Ps); // 2 points sample are required, lets take the first two
     OPENMVG_LOG_INFO << "Number of returned models: " << Ps.size();
 

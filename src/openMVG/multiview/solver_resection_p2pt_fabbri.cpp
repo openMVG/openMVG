@@ -68,49 +68,49 @@ struct pose_poly {
 		H0, H1, H2, H3, H4, J0, J1, J2, J3, K0, K1, K2, K3,
 		L0, L1, L2, alpha, beta, theta, sth, cth;
 
-  void print() const {
-    OPENMVG_LOG_INFO << std::setprecision(20) << 
-    "A0: "<< A0 << std::endl << 
-    "A1: "<< A1 << std::endl << 
-    "A2: "<< A2 << std::endl << 
-    "B0: "<< B0 << std::endl << 
-    "B1: "<< B1 << std::endl << 
-    "B2: "<< B2 << std::endl << 
-    "B3: "<< B3 << std::endl << 
-    "C0: "<< C0 << std::endl << 
-    "C1: "<< C1 << std::endl << 
-    "C2: "<< C2 << std::endl << 
-    "C3: "<< C3 << std::endl << 
-    "C4: "<< C4 << std::endl << 
-    "E0: "<< E0 << std::endl << 
-    "E1: "<< E1 << std::endl << 
-    "E2: "<< E2 << std::endl << 
-    "F0: "<< F0 << std::endl << 
-    "F1: "<< F1 << std::endl << 
-    "F2: "<< F2 << std::endl << 
-    "F3: "<< F3 << std::endl << 
-    "G0: "<< G0 << std::endl << 
-    "G1: "<< G1 << std::endl << 
-    "G2: "<< G2 << std::endl << 
-    "G3: "<< G3 << std::endl << 
-    "G4: "<< G4 << std::endl << 
-    "H0: "<< H0 << std::endl << 
-    "H1: "<< H1 << std::endl << 
-    "H2: "<< H2 << std::endl << 
-    "H3: "<< H3 << std::endl << 
-    "H4: "<< H4 << std::endl << 
-    "J0: "<< J0 << std::endl << 
-    "J1: "<< J1 << std::endl << 
-    "J2: "<< J2 << std::endl << 
-    "J3: "<< J3 << std::endl << 
-    "K0: "<< K0 << std::endl << 
-    "K1: "<< K1 << std::endl << 
-    "K2: "<< K2 << std::endl << 
-    "K3: "<< K3 << std::endl << 
-    "L0: "<< L0 << std::endl << 
-    "L1: "<< L1 << std::endl << 
-    "L2: "<< L2;
-  }
+  //void print() const {
+  //  OPENMVG_LOG_INFO << std::setprecision(20) << 
+  //  "A0: "<< A0 << std::endl << 
+  //  "A1: "<< A1 << std::endl << 
+  //  "A2: "<< A2 << std::endl << 
+  //  "B0: "<< B0 << std::endl << 
+  //  "B1: "<< B1 << std::endl << 
+  //  "B2: "<< B2 << std::endl << 
+  //  "B3: "<< B3 << std::endl << 
+  //  "C0: "<< C0 << std::endl << 
+  //  "C1: "<< C1 << std::endl << 
+  //  "C2: "<< C2 << std::endl << 
+  //  "C3: "<< C3 << std::endl << 
+  //  "C4: "<< C4 << std::endl << 
+  //  "E0: "<< E0 << std::endl << 
+  //  "E1: "<< E1 << std::endl << 
+  //  "E2: "<< E2 << std::endl << 
+  //  "F0: "<< F0 << std::endl << 
+  //  "F1: "<< F1 << std::endl << 
+  //  "F2: "<< F2 << std::endl << 
+  //  "F3: "<< F3 << std::endl << 
+  //  "G0: "<< G0 << std::endl << 
+  //  "G1: "<< G1 << std::endl << 
+  //  "G2: "<< G2 << std::endl << 
+  //  "G3: "<< G3 << std::endl << 
+  //  "G4: "<< G4 << std::endl << 
+  //  "H0: "<< H0 << std::endl << 
+  //  "H1: "<< H1 << std::endl << 
+  //  "H2: "<< H2 << std::endl << 
+  //  "H3: "<< H3 << std::endl << 
+  //  "H4: "<< H4 << std::endl << 
+  //  "J0: "<< J0 << std::endl << 
+  //  "J1: "<< J1 << std::endl << 
+  //  "J2: "<< J2 << std::endl << 
+  //  "J3: "<< J3 << std::endl << 
+  //  "K0: "<< K0 << std::endl << 
+  //  "K1: "<< K1 << std::endl << 
+  //  "K2: "<< K2 << std::endl << 
+  //  "K3: "<< K3 << std::endl << 
+  //  "L0: "<< L0 << std::endl << 
+  //  "L1: "<< L1 << std::endl << 
+  //  "L2: "<< L2;
+  //}
 
   static constexpr unsigned T_LEN = 2001, ROOT_IDS_LEN = T_LEN - 1;
   static constexpr double T_LEN_2 = 2./(T_LEN-1);
@@ -121,15 +121,10 @@ struct pose_poly {
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
-    //OPENMVG_LOG_INFO << std::setprecision(20) << "t_vec " << t_vec(0);
     T curr_val = fn_t(t_vec(0)), next_val;
-    // OPENMVG_LOG_INFO << std::setprecision(20) << "val " << curr_val;
     for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
-      // OPENMVG_LOG_INFO << std::setprecision(20) << " t_vec i+1=" << i+1 <<  " tvec =" << t_vec(i+1) ;
       next_val = fn_t(t_vec(i+1));
-      //OPENMVG_LOG_INFO << std::setprecision(20) << "nextval " << next_val;
        (*root_ids_out)[i] = curr_val * next_val < 0;
-       // SAFER: TODO: update       (*root_ids_out)[i] = std::signbit(curr_val) != std::signbit(next_val);
       curr_val = next_val;
     }
   }
@@ -150,8 +145,8 @@ struct pose_poly {
     G = (G0+G1*t+G2*t2+G3*t3+G4*t4-G3*t5+G2*t6-G1*t7+G0*t8)/t2p14;
     H = (H0+H1*t+H2*t2+H3*t3+H4*t4-H3*t5+H2*t6-H1*t7+H0*t8)/t2p14;
     J = (J0+J1*t+J2*t2+J3*t3-J2*t4+J1*t5-J0*t6)/t2p13;
-    K = (K0+K1*t+K2*t2+K3*t3-K2*t4+K1*t5-K0*t6)/t2p13;
-    L = (L0+L1*t+L2*t2-L1*t3+L0*t4)/t2p12;
+    K = (K0+K1*t+K2*t2+K3*t3-K2*t4+K1*t5-K0*t6)/t2p13; // <<<<<<<<<<
+    L = (L0+L1*t+L2*t2-L1*t3+L0*t4)/t2p12; // OK
 
 //    OPENMVG_LOG_INFO << std::setprecision(20) <<  "t: " << t << std::endl <<
 //    "A: "<< A << std::endl << 
@@ -168,29 +163,27 @@ struct pose_poly {
     const T A2=A*A, B2=B*B, C2=C*C, E2=E*E, F2=F*F, G2=G*G, H2=H*H, 
             H3=H2*H, H4=H3*H, J2=J*J, J3=J2*J, K2=K*K, K3=K2*K, L2=L*L, L3=L2*L;
     
-    // TODO: cleanup -1.* = - and intenger times
     return E2*B2*H2*J2 +G2*C2*L*L*L*L +G2*A2*K3*K +E2*A2*H4 +E2*C2*J3*J
-    +-2.*E*A*H2*G*C*L2 +2.*E2*A*H2*C*J2 +-2.*E2*C*J3*B*H +2.*E*C2*J2*G*L2
-    +2.*E*A2*H2*G*K2 +-2.*E2*A*H3*B*J +-2.*E*A*H2*G*B*K*L +-2.*E*C*J2*G*B*K*L
-    +-2.*E*C*J2*G*A*K2 +-2.*E*B*H*J*G*C*L2 +-2.*E*B*H*J*G*A*K2 +G2*B2*K2*L2
-    +-2.*G2*B*K*L3*C +-2.*G2*B*K3*L*A +2.*G2*C*L2*A*K2 +-2.*F*E*A2*H3*K
-    +-2.*F*E*A*H*K*C*J2 +3.*F*E*A*H2*K*B*J +3.*F*A*H*K2*G*B*L
-    +-2.*F*A*H*K*G*C*L2 +-2.*F*A2*H*K3*G +F*E*B*H3*L*A +3.*F*E*B*H*L*C*J2
-    +-1.*F*E*B2*H2*L*J +-1.*F*B2*H*L2*G*K +F*B*H*L3*G*C +F*E*B*K*J3*C
-    +-1.*F*E*B2*K*J2*H +-1.*F*B2*K2*J*G*L +3.*F*B*K*J*G*C*L2 +F*B*K3*J*G*A
-    +-2.*F*E*C*J*L*A*H2 +-2.*F*E*C2*J3*L +-2.*F*C2*J*L3*G +-2.*F*C*J*L*G*A*K2
-    +F2*A2*K2*H2 +F2*A*K2*C*J2 +-1.*F2*A*K2*B*H*J +-1.*F2*B*K*L*A*H2
-    +-1.*F2*B*K*L*C*J2 +F2*B2*K*L*H*J +F2*C*L2*A*H2 +F2*C2*L2*J2
-    +-1.*F2*C*L2*B*H*J +G*E*B2*H2*L2 +G*E*B2*K2*J2 +8.*G*E*A*H*K*C*J*L;
+    -2.*E*A*H2*G*C*L2 +2.*E2*A*H2*C*J2 -2.*E2*C*J3*B*H +2.*E*C2*J2*G*L2
+    +2.*E*A2*H2*G*K2 -2.*E2*A*H3*B*J -2.*E*A*H2*G*B*K*L -2.*E*C*J2*G*B*K*L
+    -2.*E*C*J2*G*A*K2 -2.*E*B*H*J*G*C*L2 -2.*E*B*H*J*G*A*K2 +G2*B2*K2*L2
+    -2.*G2*B*K*L3*C -2.*G2*B*K3*L*A +2.*G2*C*L2*A*K2 -2.*F*E*A2*H3*K
+    -2.*F*E*A*H*K*C*J2 +3.*F*E*A*H2*K*B*J +3.*F*A*H*K2*G*B*L
+    -2.*F*A*H*K*G*C*L2 -2.*F*A2*H*K3*G +F*E*B*H3*L*A +3.*F*E*B*H*L*C*J2
+    -F*E*B2*H2*L*J -F*B2*H*L2*G*K +F*B*H*L3*G*C +F*E*B*K*J3*C
+    -F*E*B2*K*J2*H -F*B2*K2*J*G*L +3.*F*B*K*J*G*C*L2 +F*B*K3*J*G*A
+    -2.*F*E*C*J*L*A*H2 -2.*F*E*C2*J3*L -2.*F*C2*J*L3*G -2.*F*C*J*L*G*A*K2
+    +F2*A2*K2*H2 +F2*A*K2*C*J2 -F2*A*K2*B*H*J -F2*B*K*L*A*H2
+    -F2*B*K*L*C*J2 +F2*B2*K*L*H*J +F2*C*L2*A*H2 +F2*C2*L2*J2
+    -F2*C*L2*B*H*J +G*E*B2*H2*L2 +G*E*B2*K2*J2 +8.*G*E*A*H*K*C*J*L;
   }
   
 	inline T fn_t(const T t) { T b[10]; return fn_t(t, b); }
 	inline T operator()(T t) { return fn_t(t); }
   
-	inline void rhos_from_root_ids( 
-      const bool (&root_ids)[ROOT_IDS_LEN], 
-      T (*out)[3][ROOT_IDS_LEN], 
-      unsigned *out_ts_len) {
+	inline void rhos_from_root_ids(const bool (&root_ids)[ROOT_IDS_LEN], 
+                                 T (*out)[3][ROOT_IDS_LEN], 
+                                 unsigned *out_ts_len) {
     
     T (&ts)[ROOT_IDS_LEN] = (*out)[0];
     unsigned &ts_end = *out_ts_len; ts_end = 0;
@@ -198,9 +191,9 @@ struct pose_poly {
       if (!root_ids[i]) continue;
       T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
       T f0 = fn_t(t_vec(i)), f1 = fn_t(t_vec(i+1));
-      for (unsigned k = 0; k < 3; ++k) {
+      for (unsigned k = 0; k < 4; ++k) {
         t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
-        f0 = f1; if (k + 1 < 3) f1 = fn_t(t2);
+        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2);
       }
     }
     //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
@@ -218,11 +211,11 @@ struct pose_poly {
   }
   
 	void get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN], 
-      T (*out)[2][ROOT_IDS_LEN][4], char out_len[ROOT_IDS_LEN]);
+      T (*out)[2][ROOT_IDS_LEN][4], unsigned char out_len[ROOT_IDS_LEN]);
   
 	void get_r_t_from_rhos(
 		const unsigned ts_len,
-		const T sigmas1[ROOT_IDS_LEN][4], const char sigmas_len[ROOT_IDS_LEN],
+		const T sigmas1[ROOT_IDS_LEN][4], const unsigned char sigmas_len[ROOT_IDS_LEN],
 		const T sigmas2[ROOT_IDS_LEN][4],
 		const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
@@ -290,7 +283,7 @@ pose_from_point_tangents(
 	const T (&ts)[pose_poly<T>::ROOT_IDS_LEN]    = rhos[0]; 
   const T (&rhos1)[pose_poly<T>::ROOT_IDS_LEN] = rhos[1]; 
   const T (&rhos2)[pose_poly<T>::ROOT_IDS_LEN] = rhos[2];
-	T sigmas[2][pose_poly<T>::ROOT_IDS_LEN][4]; char sigmas_len[TS_MAX_LEN];
+	T sigmas[2][pose_poly<T>::ROOT_IDS_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
 
 //  std::cerr << "ts_len " << ts_len << std::endl;
 //  std::cerr << "ts:" << ts_len << std::endl;
@@ -311,14 +304,23 @@ pose_from_point_tangents(
 //  }
 //  std::cerr << std::endl;
 
-	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
+ 	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
 
-  std::cerr << "sigmas:" << std::endl;
-  for (unsigned i=0; i < ts_len; ++i) {
-    std::cerr << "sigmas_len[i]" << sigmas_len[i] << std::endl;
-    std::cerr << sigmas[i] << " ";
-  }
-  std::cerr << std::endl;
+//   std::cerr << "sigmas:" << std::endl;
+//   for (unsigned i=0; i < ts_len; ++i) {
+//     std::cerr << "sigmas_len[i] " << (int)(sigmas_len[i]) << "[" << i << "]" << std::endl;
+//     std::cerr << "sigmas1[i]: " <<  std::endl;
+//     for (unsigned k=0; k < sigmas_len[i]; ++k)
+//       std::cerr << sigmas[0][i][k] << " ";
+//     std::cerr << std::endl;
+// 
+//     std::cerr << "sigmas2[i]: " <<  std::endl;
+//     for (unsigned k=0; k < sigmas_len[i]; ++k)
+//       std::cerr << sigmas[1][i][k] << " ";
+//     std::cerr << std::endl;
+//     std::cerr << std::endl;
+//   }
+//   std::cerr << std::endl;
 
 	const T (&sigmas1)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[0];
 	const T (&sigmas2)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[1];
@@ -332,6 +334,9 @@ pose_from_point_tangents(
   return true;
 }
 
+// From problem input, build poly coefficients.
+// Behind the scenes, there is a polynomial in t
+// The polynomial itself can be valuated using fn_t()
 template<typename T>
 void pose_poly<T>::
 pose_from_point_tangents_2(
@@ -369,9 +374,9 @@ pose_from_point_tangents_2(
 	beta  = sqrt(-2.*a1 / (den1 - den2)); // sqrt(t25)
 	alpha = sqrt(2.*a1 / (den1 + den2));  // sqrt(t24)
 
+	// Coefficient code adapted from Maple ::: can be further cleaned up but works
   // TODO: remove parenthesis. Further reduce to known gates
   // Perhaps use gate optimization.
-	// Coefficient code adapted from Maple ::: can be further cleaned up but works
 	A0 = a4*a4*g12_2
 	+a4*a4*g11_2
 	+a4*a4
@@ -2637,7 +2642,7 @@ pose_from_point_tangents_2(
 template<typename T>
 void pose_poly<T>::
 get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
-	T (*sigmas)[2][ROOT_IDS_LEN][4], char sigmas_len[ROOT_IDS_LEN])
+	T (*sigmas)[2][ROOT_IDS_LEN][4], unsigned char sigmas_len[ROOT_IDS_LEN])
 {
 	T   (&sigmas1)[ROOT_IDS_LEN][4] = (*sigmas)[0];
 	T   (&sigmas2)[ROOT_IDS_LEN][4] = (*sigmas)[1];
@@ -2645,63 +2650,47 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
 	for (unsigned i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
 
-		fn_t(ts[i], pose);
+		fn_t(ts[i], pose); // TODO: perhaps normalize H J K L
 
-		//T &fvalue = pose[0]; // double-checked: not used in matlab
 		T &A = pose[0], &B = pose[1], &C = pose[2], 
       &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
       &J = pose[7], &K = pose[8], &L = pose[9];
     A += A; E += E;
 
     T delta = B*B - 2*A*C;
-    if (delta < -1e-4) {
-			// std::cerr << "Ignoring t = " << ts[i] << std::endl;
+    if (delta < -1e-4)
       continue;
-    }
     delta = (delta < 0)? 0 : sqrt(delta);
     B = -B;
 		T sigma1_m = (B - delta)/A;
 		T sigma1_p = (B + delta)/A;
 
 		delta = F*F - 2*E*G;
-    if (delta < -1e-4) {
-			// std::cerr << "Ignoring t = " << ts[i] << std::endl;
+    if (delta < -1e-4)
       continue;
-    }
     delta = (delta < 0)? 0 : sqrt(delta);
     F = -F;
 		T sigma2_m = (F - delta)/E;
 		T sigma2_p = (F + delta)/E;
 
-		//% Now check to see which pair pass. Only a single pair should pass, in theory.
-		//% If not, issue a warning.
-		static constexpr T my_eps = 1.0;
-
-    // TODO: optimize
-		if (std::abs(H + J*sigma1_m + K*sigma2_m + L*sigma1_m*sigma2_m) < my_eps) {
-			sigmas1[i][sigmas_len[i]] = sigma1_m;
+		static constexpr T my_eps = 1.0; // TODO optimize, and use my_eps a fraction
+                                     // of norm H J K L norm
+		if (std::fabs(H + J*sigma1_m + K*sigma2_m + L*sigma1_m*sigma2_m) < my_eps) {
+			sigmas1[i][sigmas_len[i]]   = sigma1_m;
 			sigmas2[i][sigmas_len[i]++] = sigma2_m;
 		}
-		if (std::abs(H + J*sigma1_p + K*sigma2_m + L*sigma1_p*sigma2_m) < my_eps) {
-			// if (sigmas_len[i] != 0) // !isempty(sigmas1[i])
-		  //		std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_p;
+		if (std::fabs(H + J*sigma1_p + K*sigma2_m + L*sigma1_p*sigma2_m) < my_eps) {
+			sigmas1[i][sigmas_len[i]]   = sigma1_p;
 			sigmas2[i][sigmas_len[i]++] = sigma2_m;
 		}
-		if (std::abs(H + J*sigma1_p + K*sigma2_p + L*sigma1_p*sigma2_p) < my_eps) {
-			// if (sigmas_len[i] != 0)
-      //	std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_p;
+		if (std::fabs(H + J*sigma1_p + K*sigma2_p + L*sigma1_p*sigma2_p) < my_eps) {
+			sigmas1[i][sigmas_len[i]]   = sigma1_p;
 			sigmas2[i][sigmas_len[i]++] = sigma2_p;
 		}
-		if (std::abs(H + J*sigma1_m + K*sigma2_p + L*sigma1_m*sigma2_p) < my_eps) {
-			// if (sigmas_len[i] != 0)
-			// std::cerr << "more than one sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
-			sigmas1[i][sigmas_len[i]] = sigma1_m;
+		if (std::fabs(H + J*sigma1_m + K*sigma2_p + L*sigma1_m*sigma2_p) < my_eps) {
+			sigmas1[i][sigmas_len[i]]   = sigma1_m;
 			sigmas2[i][sigmas_len[i]++] = sigma2_p;
 		}
-		// if (sigmas_len[i] == 0) // isempty(sigmas1[i])
-		// std::cerr << "no sigma1, sigma2 pair satisfies the 3rd constraint" << std::endl;
 	}
 }
 
@@ -2751,7 +2740,7 @@ template<typename T>
 void pose_poly<T>::
 get_r_t_from_rhos(
 	const unsigned ts_len,
-	const T sigmas1[ROOT_IDS_LEN][4], const char sigmas_len[ROOT_IDS_LEN],
+	const T sigmas1[ROOT_IDS_LEN][4], const unsigned char sigmas_len[ROOT_IDS_LEN],
 	const T sigmas2[ROOT_IDS_LEN][4],
 	const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
 	const T gama1[3], const T tgt1[3],
