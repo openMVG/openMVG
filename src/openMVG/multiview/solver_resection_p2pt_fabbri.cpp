@@ -73,54 +73,8 @@ struct pose_poly {
 		H0, H1, H2, H3, H4, J0, J1, J2, J3, K0, K1, K2, K3,
 		L0, L1, L2, alpha, beta, theta, sth, cth;
 
-  // cached computation for t-dependent part:
-  T cE2B2H2J2;
-
-  //void print() const {
-  //  OPENMVG_LOG_INFO << std::setprecision(20) << 
-  //  "A0: "<< A0 << std::endl << 
-  //  "A1: "<< A1 << std::endl << 
-  //  "A2: "<< A2 << std::endl << 
-  //  "B0: "<< B0 << std::endl << 
-  //  "B1: "<< B1 << std::endl << 
-  //  "B2: "<< B2 << std::endl << 
-  //  "B3: "<< B3 << std::endl << 
-  //  "C0: "<< C0 << std::endl << 
-  //  "C1: "<< C1 << std::endl << 
-  //  "C2: "<< C2 << std::endl << 
-  //  "C3: "<< C3 << std::endl << 
-  //  "C4: "<< C4 << std::endl << 
-  //  "E0: "<< E0 << std::endl << 
-  //  "E1: "<< E1 << std::endl << 
-  //  "E2: "<< E2 << std::endl << 
-  //  "F0: "<< F0 << std::endl << 
-  //  "F1: "<< F1 << std::endl << 
-  //  "F2: "<< F2 << std::endl << 
-  //  "F3: "<< F3 << std::endl << 
-  //  "G0: "<< G0 << std::endl << 
-  //  "G1: "<< G1 << std::endl << 
-  //  "G2: "<< G2 << std::endl << 
-  //  "G3: "<< G3 << std::endl << 
-  //  "G4: "<< G4 << std::endl << 
-  //  "H0: "<< H0 << std::endl << 
-  //  "H1: "<< H1 << std::endl << 
-  //  "H2: "<< H2 << std::endl << 
-  //  "H3: "<< H3 << std::endl << 
-  //  "H4: "<< H4 << std::endl << 
-  //  "J0: "<< J0 << std::endl << 
-  //  "J1: "<< J1 << std::endl << 
-  //  "J2: "<< J2 << std::endl << 
-  //  "J3: "<< J3 << std::endl << 
-  //  "K0: "<< K0 << std::endl << 
-  //  "K1: "<< K1 << std::endl << 
-  //  "K2: "<< K2 << std::endl << 
-  //  "K3: "<< K3 << std::endl << 
-  //  "L0: "<< L0 << std::endl << 
-  //  "L1: "<< L1 << std::endl << 
-  //  "L2: "<< L2;
-  //}
-
-  static constexpr unsigned T_LEN = 2001, ROOT_IDS_LEN = T_LEN - 1;
+  static constexpr unsigned T_LEN = 2001 /* fine-tune based on data, but has to be about >= 1500 */, 
+                            ROOT_IDS_LEN = T_LEN - 1;
   static constexpr double T_LEN_2 = 2./(T_LEN-1);
   inline T t_vec(unsigned i) { return T_LEN_2*i -1.; }
 
@@ -128,18 +82,7 @@ struct pose_poly {
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
-	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
-	  T p[10];
-    T curr_val = fn_t(t_vec(0), p), next_val;
-    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
-      next_val = fn_t(t_vec(i+1), p);
-       (*root_ids_out)[i] = curr_val * next_val < 0;
-      curr_val = next_val;
-    }
-  }
-  
-	inline T fn_t(const T t, T p[10]) {
-    //%function of t part :
+	inline T fn_t(const T t, T p[10]) { // function of t part
     const T t2 = t*t, t3 = t2*t, t4 = t3*t, t5 = t4*t, t6 = t5*t, t7 = t6*t, t8 = t7*t;
     const T t2p12 = (t2 + 1.) * (t2 + 1.), t2p13 = t2p12 * (t2 + 1.), t2p14 = t2p13 * (t2 + 1.);
 
@@ -155,18 +98,6 @@ struct pose_poly {
     J = (J0+J1*t+J2*t2+J3*t3-J2*t4+J1*t5-J0*t6)/t2p13;
     K = (K0+K1*t+K2*t2+K3*t3-K2*t4+K1*t5-K0*t6)/t2p13;
     L = (L0+L1*t+L2*t2-L1*t3+L0*t4)/t2p12;
-
-    //    OPENMVG_LOG_INFO << std::setprecision(20) <<  "t: " << t << std::endl <<
-    //    "A: "<< A << std::endl << 
-    //    "B: "<< B << std::endl << 
-    //    "C: "<< C << std::endl << 
-    //    "E: "<< E << std::endl << 
-    //    "F: "<< F << std::endl << 
-    //    "G: "<< G << std::endl << 
-    //    "H: "<< H << std::endl << 
-    //    "J: "<< J << std::endl << 
-    //    "K: "<< K << std::endl << 
-    //    "L: "<< L << std::endl;
 
     const T AA=A*A, BB=B*B, CC=C*C, EE=E*E, FF=F*F, GG=G*G, HH=H*H, 
             H3=HH*H, H4=H3*H, JJ=J*J, J3=JJ*J, KK=K*K, K3=KK*K, LL=L*L, L3=LL*L;
@@ -184,6 +115,16 @@ struct pose_poly {
     +FF*AA*KK*HH +FF*A*KK*C*JJ -FF*A*KK*B*H*J -FF*B*K*L*A*HH
     -FF*B*K*L*C*JJ +FF*BB*K*L*H*J +FF*C*LL*A*HH +FF*CC*LL*JJ
     -FF*C*LL*B*H*J +G*E*BB*HH*LL +G*E*BB*KK*JJ +8.*G*E*A*H*K*C*J*L;
+  }
+
+	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
+	  T p[10];
+    T curr_val = fn_t(t_vec(0), p), next_val;
+    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
+      next_val = fn_t(t_vec(i+1), p);
+      (*root_ids_out)[i] = curr_val * next_val < 0;
+      curr_val = next_val;
+    }
   }
   
 	// inline T operator()(T t) { return fn_t(t); }
@@ -208,8 +149,7 @@ struct pose_poly {
     T (&rhos1)[ROOT_IDS_LEN] = (*out)[1]; T (&rhos2)[ROOT_IDS_LEN] = (*out)[2];
     const T alpha_times_2 = 2.*alpha;
     for (unsigned i = 0; i < ts_end; i++) {
-      const T ts_new = ts[i],
-      x2 = ts_new * ts_new,
+      const T ts_new = ts[i], x2 = ts_new * ts_new,
       ts_den = 1. + x2,
       alpha_ts_new2 = alpha_times_2 * ts_new,
       beta_1_minus_x2 = beta * (1. - x2);
@@ -241,33 +181,22 @@ pose_from_point_tangents(
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
 )
 {
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "gama1: " << gama1[0] << " " << gama1[1] << " " << gama1[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "gama2: " << gama2[0] << " " << gama2[1] << " " << gama2[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt1 : " << tgt1[0] << " " << tgt1[1] << " " << tgt1[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "tgt2: " << tgt2[0] << " " << tgt2[1] << " " << tgt2[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama1: " << Gama1[0] << " " << Gama1[1] << " " << Gama1[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt1: " << Tgt1[0] << " " << Tgt1[1] << " " << Tgt1[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "Gama2: " << Gama2[0] << " " << Gama2[1] << " " << Gama2[2];
-//  OPENMVG_LOG_INFO << std::setprecision(20) << "Tgt2: " << Tgt2[0] << " " << Tgt2[1] << " " << Tgt2[2];
-                      
   { // test for geometric degeneracy -------------------------------
-	T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
-  const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
-	const T d[3][3] = { // Matrix for degeneracy calculation
-		DGama[0]/norm, Tgt1[0], Tgt2[0],
-		DGama[1]/norm, Tgt1[1], Tgt2[1],
-		DGama[2]/norm, Tgt1[2], Tgt2[2]
-	};
-	T &degen = *output_degen;
-	degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
-		     -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
+    T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
+    const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
+    const T d[3][3] = { // Matrix for degeneracy calculation
+      DGama[0]/norm, Tgt1[0], Tgt2[0],
+      DGama[1]/norm, Tgt1[1], Tgt2[1],
+      DGama[2]/norm, Tgt1[2], Tgt2[2]
+    };
+    T &degen = *output_degen;
+    degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
+           -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-//  OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
-	if (std::fabs(degen) < 1.0e-3) {
-    // OPENMVG_LOG_INFO << "degeneracy measure: " << std::fabs(degen);
-		*output_RT_len = 0;
-		return false;
-	}
+    if (std::fabs(degen) < 1.0e-3) {
+      *output_RT_len = 0;
+      return false;
+    }
   }
 
 	// compute roots -------------------------------
@@ -276,12 +205,6 @@ pose_from_point_tangents(
 
 	bool root_ids[pose_poly<T>::ROOT_IDS_LEN];
 	p.find_bounded_root_intervals(&root_ids);
-
-//  std::cerr << "root ids" << std::endl;
-//  for (unsigned i=0; i < pose_poly<T>::ROOT_IDS_LEN; ++i) {
-//    std::cerr << root_ids[i] << "\n";
-//  }
-
 
 	// compute rhos, r, t --------------------------
 	T rhos[3][pose_poly<T>::ROOT_IDS_LEN];
@@ -293,42 +216,7 @@ pose_from_point_tangents(
   const T (&rhos2)[pose_poly<T>::ROOT_IDS_LEN] = rhos[2];
 	T sigmas[2][pose_poly<T>::ROOT_IDS_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
 
-//  std::cerr << "ts_len " << ts_len << std::endl;
-//  std::cerr << "ts:" << ts_len << std::endl;
-//  for (unsigned i=0; i < ts_len; ++i) {
-//    std::cerr << ts[i] << " ";
-//  }
-//  std::cerr << std::endl;
-
-//  std::cerr << "rhos1:" << ts_len << std::endl;
-//  for (unsigned i=0; i < ts_len; ++i) {
-//    std::cerr << rhos1[i] << " ";
-//  }
-//  std::cerr << std::endl;
-
-//  std::cerr << "rhos2:" << ts_len << std::endl;
-//  for (unsigned i=0; i < ts_len; ++i) {
-//    std::cerr << rhos2[i] << " ";
-//  }
-//  std::cerr << std::endl;
-
  	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
-
-//   std::cerr << "sigmas:" << std::endl;
-//   for (unsigned i=0; i < ts_len; ++i) {
-//     std::cerr << "sigmas_len[i] " << (int)(sigmas_len[i]) << "[" << i << "]" << std::endl;
-//     std::cerr << "sigmas1[i]: " <<  std::endl;
-//     for (unsigned k=0; k < sigmas_len[i]; ++k)
-//       std::cerr << sigmas[0][i][k] << " ";
-//     std::cerr << std::endl;
-// 
-//     std::cerr << "sigmas2[i]: " <<  std::endl;
-//     for (unsigned k=0; k < sigmas_len[i]; ++k)
-//       std::cerr << sigmas[1][i][k] << " ";
-//     std::cerr << std::endl;
-//     std::cerr << std::endl;
-//   }
-//   std::cerr << std::endl;
 
 	const T (&sigmas1)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[0];
 	const T (&sigmas2)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[1];
@@ -336,13 +224,13 @@ pose_from_point_tangents(
 	T (&RT)[RT_MAX_LEN][4][3] = *output_RT;
 	unsigned &RT_len          = *output_RT_len;
 
-	p.get_r_t_from_rhos( ts_len, sigmas1, sigmas_len, sigmas2,
+	p.get_r_t_from_rhos(ts_len, sigmas1, sigmas_len, sigmas2,
 		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2, 
     &RT, &RT_len);
   return true;
 }
 
-// From problem input, build poly coefficients.
+// From problem input, build poly coefficients (independent of t).
 // Behind the scenes, there is a polynomial in t
 // The polynomial itself can be valuated using fn_t()
 template<typename T>
