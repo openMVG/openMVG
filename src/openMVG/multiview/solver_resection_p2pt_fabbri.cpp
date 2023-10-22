@@ -316,7 +316,7 @@ pose_from_point_tangents(
 
   std::cerr << "sigmas:" << std::endl;
   for (unsigned i=0; i < ts_len; ++i) {
-  std::cerr << "sigmas_len[i]" << sigmas_len << std::endl;
+    std::cerr << "sigmas_len[i]" << sigmas_len[i] << std::endl;
     std::cerr << sigmas[i] << " ";
   }
   std::cerr << std::endl;
@@ -2640,16 +2640,16 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
 {
 	T   (&sigmas1)[TS_MAX_LEN][TS_MAX_LEN] = (*sigmas)[0];
 	T   (&sigmas2)[TS_MAX_LEN][TS_MAX_LEN] = (*sigmas)[1];
-	T pose_out[10];
+	T pose[10];
 	for (unsigned i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
 
-		fn_t(ts[i], pose_out);
+		fn_t(ts[i], pose);
 
-		//T &fvalue = pose_out[0]; // double-checked: not used in matlab
-		const T &A = pose_out[0], &B = pose_out[1], &C = pose_out[2], 
-            &E = pose_out[3], &F = pose_out[4], &G = pose_out[5], &H = pose_out[6],
-            &J = pose_out[7], &K = pose_out[8], &L = pose_out[9];
+		//T &fvalue = pose[0]; // double-checked: not used in matlab
+		const T &A = pose[0], &B = pose[1], &C = pose[2], 
+            &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
+            &J = pose[7], &K = pose[8], &L = pose[9];
 
 		std::complex<T> delta = sqrt(B*B - 4*A*C);
 		std::complex<T> sigma1_m = (-B - delta)/(2*A);

@@ -237,7 +237,7 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
 
   // Solve the problem and check that fitted value are good enough
   for (int nResectionCameraIndex = 0; nResectionCameraIndex < nViews; ++nResectionCameraIndex) {
-    if (nResectionCameraIndex == 1)
+    if (nResectionCameraIndex != 1)
       continue;
     OPENMVG_LOG_INFO << "View " << nResectionCameraIndex << "------------------------------------------------------";
   // unsigned nResectionCameraIndex = 0;
