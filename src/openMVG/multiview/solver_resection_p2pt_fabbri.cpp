@@ -2651,11 +2651,11 @@ get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
             &E = pose[3], &F = pose[4], &G = pose[5], &H = pose[6],
             &J = pose[7], &K = pose[8], &L = pose[9];
 
-		std::complex<T> delta = sqrt(B*B - 4*A*C);
+		std::complex<T> delta = sqrt(std::complex<T>(B*B - 4*A*C));
 		std::complex<T> sigma1_m = (-B - delta)/(2*A);
 		std::complex<T> sigma1_p = (-B + delta)/(2*A);
 
-		delta = sqrt(F*F - 4*E*G);
+		delta = sqrt(std::complex<T>(F*F - 4*E*G));
 		std::complex<T> sigma2_m = (-F - delta)/(2*E);
 		std::complex<T> sigma2_p = (-F + delta)/(2*E);
 
