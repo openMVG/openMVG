@@ -82,7 +82,7 @@ struct pose_poly {
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
   
-	inline T fn_t(const T t, T p[10]) { // function of t part
+	inline T __attribute__((always_inline)) fn_t(const T t, T p[10]) { // function of t part
     const T t2 = t*t, t3 = t2*t, t4 = t3*t, t5 = t4*t, t6 = t5*t, t7 = t6*t, t8 = t7*t;
     const T t2p12 = (t2 + 1.) * (t2 + 1.), t2p13 = t2p12 * (t2 + 1.), t2p14 = t2p13 * (t2 + 1.);
 

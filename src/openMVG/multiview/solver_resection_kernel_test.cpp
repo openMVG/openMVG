@@ -262,6 +262,7 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
 
     std::vector<Mat34> Ps;
+    for (unsigned nr=0; nr < 10000; ++nr)
     kernel.Fit({2,3}, &Ps); // 2 points sample are required, lets take these
     OPENMVG_LOG_INFO << "Number of returned models: " << Ps.size();
 
