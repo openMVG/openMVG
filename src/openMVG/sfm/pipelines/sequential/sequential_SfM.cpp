@@ -863,16 +863,16 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       if (sfm_data_.structure.count(trackId) != 0) {
         // Since the 3D point was triangulated before we add the new the Inth view observation
         new_track_observations_valid_views.insert(I);
-      } else {
+      else
         // Go through the views that observe this track & look if a successful triangulation can be done
         for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track) {
           const IndexT & J = trackViewIt.first;
           // If view is valid try triangulation
           if (J != I && valid_views.count(J) != 0) {
             // If successfully triangulated add the observation from J view
-            if (sfm_data_.structure.count(trackId) != 0) {
+            if (sfm_data_.structure.count(trackId) != 0)
               new_track_observations_valid_views.insert(J);
-            } else {
+            else {
               const View * view_J = sfm_data_.GetViews().at(J).get();
               const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
               const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);

@@ -193,8 +193,7 @@ namespace sfm {
       // ------Pose from 2 points (with SIFT orientation) ------------------------
       case resection::SolverType::P2Pt_FABBRI_ECCV12:
       {
-        if (!optional_intrinsics)
-        {
+        if (!optional_intrinsics) {
           std::cerr << "Intrinsic data is required for P2Pt (poose from 2 points orientation solvers." << std::endl;
           return false;
         }
@@ -203,16 +202,22 @@ namespace sfm {
         using SolverType = openMVG::euclidean_resection::P2PtSolver_Fabbri;
         MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-        OPENMVG_LOG_INFO << "WiP in P2Pt";
-        exit(1);
-
-        /*
         using KernelType =
           ACKernelAdaptorResection_Intrinsics<
             SolverType,
             Mat34>;
 
-        KernelType kernel(resection_data.pt2D, resection_data.pt3D, optional_intrinsics);
+        //  pt2D 
+        //   1
+        //  tgt2D 
+        //   0
+        //
+        //  pt3D
+        //  tgt3D
+        resection_data.set_stacked();
+        KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics);
+
+
         // Robust estimation of the pose matrix and its precision
         const auto ACRansacOut =
           openMVG::robust::ACRANSAC(kernel,
@@ -223,7 +228,6 @@ namespace sfm {
                                     true, resection_data.min_consensus_ratio);
         // Update the upper bound precision of the model found by AC-RANSAC
         resection_data.error_max = ACRansacOut.first;
-        */
       }
       break;
       // -----------------------------------------------------------------------

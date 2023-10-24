@@ -247,7 +247,9 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
 
     for (unsigned ip=0; ip < nbPoints; ++ip) {
       point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
-      Pinhole_Intrinsic::invert_intrinsics_tgt((double (*)[3]) ((double *)d._K[0].data()), tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
+      Pinhole_Intrinsic::invert_intrinsics_tgt(
+          (double (*)[3]) ((double *)d._K[0].data()), 
+          tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
       point_tangents_2d.col(ip)(5) = 0;
     }
 

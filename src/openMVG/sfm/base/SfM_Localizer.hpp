@@ -28,10 +28,8 @@ namespace sfm {
 struct Image_Localizer_Match_Data
 {
   Mat34 projection_matrix;
-  Mat pt3D;
-  Mat pt2D;
-  Mat tgt3D; // 3D tangents, when available
-  Mat tgt2D; // 2D tangents, when available. TODO: make subclass
+  Mat pt3D;  // 3 x n
+  Mat pt2D;  // 2 x n
   std::vector<uint32_t> vec_inliers;
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
@@ -39,6 +37,33 @@ struct Image_Localizer_Match_Data
   double min_consensus_ratio = 2.5; // minimum number of inliers to proceed
                                     // with is 2.5 the minimum number of points
                                     // to get a model
+
+  // For oriented pipeline only-------------------------------------------------
+  Mat tgt3D; // 3 x n 3D unit tangents, when available 
+  Mat tgt2D; // 2 x n 2D unit tangents, when available. TODO: make subclass with orientatino info
+
+
+  // cache in the format for 2-view oriented kernel:
+  Mat point_tangents_2d, 
+      point_tangents_3d;
+
+  bool is_oriented() const {
+    return (bool) tgt3D.size();
+  }
+
+  unsigned n() const {
+    assert(pt3D.cols() == pt2D.cols())
+    assert(!is_oriented() || (is_oriented() && (tgt3D.cols() == tgt2D.cols() && tgt3D.cols() == pt3D.cols()))):
+    return pt3D.cols();
+  }
+
+  inline void set_stacked() {
+     point_tangents_2d.resize(6,n());
+     point_tangents_2d << pt2D << Mat::Ones(1,n()) << tgt2D << Mat::Zeros(1,n());
+
+     point_tangents_3d.resize(6,n());
+     point_tangents_3D << pt3D << tgt3D;
+  }
 };
 
 class SfM_Localizer
