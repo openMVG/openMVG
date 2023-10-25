@@ -50,10 +50,14 @@ public:
     camera_(camera)
   {
     N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
-    assert(2 == x2d_.rows());
-    assert(3 == x3D_.rows());
+    assert(2 == x2d_.rows() || (6 == x2d_.rows()));  // 6 is in the case of oriented
+    assert(3 == x3D_.rows() || (6 == x3D_.rows()));  // 6 is in the case of
+                                                     // oriented (this is a
+                                                     // geometric
+                                                     // featurestd::vector of
+                                                     // point + orientation)
     assert(x2d_.cols() == x3D_.cols());
-    bearing_vectors_= camera->operator()(x2d_);
+    bearing_vectors_= camera->operator()(x2d_); //.block(0,0,2,x2d_.cols())
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
@@ -70,7 +74,7 @@ public:
     // Convert the found model into a Pose3
     const Vec3 t = model.block(0, 3, 3, 1);
     const geometry::Pose3 pose(model.block(0, 0, 3, 3),
-                               - model.block(0, 0, 3, 3).transpose() * t);
+                             - model.block(0, 0, 3, 3).transpose() * t);
 
     vec_errors.resize(x2d_.cols());
 
@@ -78,8 +82,8 @@ public:
 
     for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample)
     {
-      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample)),
-                              x2d_.col(sample),
+      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample).head(3)),
+                              x2d_.col(sample).head(2),
                               ignore_distortion) * N1_(0,0)).squaredNorm();
     }
   }

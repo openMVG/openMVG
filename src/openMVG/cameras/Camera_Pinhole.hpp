@@ -138,6 +138,16 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
 
     /**
+    * @brief Get bearing vectors and unit tangent vectors in world units from image coordinates
+    * @return bearing vectors and tangent vectors [x y tx ty]^\top
+    */
+    Mat3X operator () ( const Mat2X& points ) const override
+    {
+      return (Kinv_ * points.colwise().homogeneous()).colwise().normalized();
+    }
+
+
+    /**
     * @brief Transform a point from the camera plane to the image plane
     * @param p Camera plane point
     * @return Point on image plane

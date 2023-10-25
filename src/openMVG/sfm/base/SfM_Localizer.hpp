@@ -29,7 +29,7 @@ struct Image_Localizer_Match_Data
 {
   Mat34 projection_matrix;
   Mat pt3D;  // 3 x n
-  Mat pt2D;  // 2 x n
+  Mat pt2D;  // 2 x n in px
   std::vector<uint32_t> vec_inliers;
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
@@ -57,6 +57,7 @@ struct Image_Localizer_Match_Data
     return pt3D.cols();
   }
 
+  // still in image units
   inline void set_stacked() {
      point_tangents_2d.resize(6,n());
      point_tangents_2d << pt2D, Mat::Ones(1,n()), tgt2D, Mat::Zero(1,n());
