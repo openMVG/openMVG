@@ -207,13 +207,6 @@ namespace sfm {
             SolverType,
             Mat34>;
 
-        //  pt2D 
-        //   1
-        //  tgt2D 
-        //   0
-        //
-        //  pt3D
-        //  tgt3D
         resection_data.set_stacked();
         KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics);
 

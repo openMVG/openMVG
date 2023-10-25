@@ -33,10 +33,10 @@ struct Image_Localizer_Match_Data
   std::vector<uint32_t> vec_inliers;
   // Upper bound pixel(s) tolerance for residual errors
   double error_max = std::numeric_limits<double>::infinity();
+  double min_consensus_ratio = 2; // minimum number of inliers to proceed
+                                  // with is 2.5 the minimum number of points
+                                  // to get a model
   uint32_t max_iteration = 4096;
-  double min_consensus_ratio = 2.5; // minimum number of inliers to proceed
-                                    // with is 2.5 the minimum number of points
-                                    // to get a model
 
   // For oriented pipeline only-------------------------------------------------
   Mat tgt3D; // 3 x n 3D unit tangents, when available 
@@ -52,17 +52,16 @@ struct Image_Localizer_Match_Data
   }
 
   unsigned n() const {
-    assert(pt3D.cols() == pt2D.cols())
-    assert(!is_oriented() || (is_oriented() && (tgt3D.cols() == tgt2D.cols() && tgt3D.cols() == pt3D.cols()))):
+    assert(pt3D.cols() == pt2D.cols());
+    assert(is_oriented() || (is_oriented() && (tgt3D.cols() == tgt2D.cols() && tgt3D.cols() == pt3D.cols())));
     return pt3D.cols();
   }
 
   inline void set_stacked() {
      point_tangents_2d.resize(6,n());
-     point_tangents_2d << pt2D << Mat::Ones(1,n()) << tgt2D << Mat::Zeros(1,n());
-
+     point_tangents_2d << pt2D, Mat::Ones(1,n()), tgt2D, Mat::Zero(1,n());
      point_tangents_3d.resize(6,n());
-     point_tangents_3D << pt3D << tgt3D;
+     point_tangents_3d << pt3D, tgt3D;
   }
 };
 
