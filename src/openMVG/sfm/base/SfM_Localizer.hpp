@@ -59,8 +59,8 @@ struct Image_Localizer_Match_Data
 
   // still in image units
   inline void set_stacked() {
-     point_tangents_2d.resize(6,n());
-     point_tangents_2d << pt2D, Mat::Ones(1,n()), tgt2D, Mat::Zero(1,n());
+     point_tangents_2d.resize(4,n());
+     point_tangents_2d << pt2D, tgt2D;
      point_tangents_3d.resize(6,n());
      point_tangents_3d << pt3D, tgt3D;
   }

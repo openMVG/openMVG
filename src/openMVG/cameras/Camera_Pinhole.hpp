@@ -138,14 +138,19 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
 
     /**
-    * @brief Get bearing vectors and unit tangent vectors in world units from image coordinates
-    * @return bearing vectors and tangent vectors [x y tx ty]^\top
+    * @brief Get unit tangent vectors in world units from image coordinates
+    * @return tangent vectors [tx ty]^\top
     */
-    Mat3X operator () ( const Mat2X& points ) const override
+    void tangents2world(const Mat2X& tgt_px, Mat2X &tgt) const 
     {
-      return (Kinv_ * points.colwise().homogeneous()).colwise().normalized();
+      tgt.resize(2,tgt_px.cols());
+      for (unsigned ip=0; ip < tgt.cols(); ++ip) {
+        invert_intrinsics_tgt(
+            (double (*)[3]) ((double *)K_.data()),
+            tgt_px.col(ip).data(), tgt.col(ip).data()
+            );
+      }
     }
-
 
     /**
     * @brief Transform a point from the camera plane to the image plane
@@ -332,7 +337,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
      * @brief converts unit tangent vector from pixel to world units
      * TODO: make into proper function of Pinhole_Intrinsic
      */
-    static void
+    static inline void
     invert_intrinsics_tgt(
         const double K[/*3 or 2 ignoring last line*/][3], 
         const double px_tgt_coords[2], 
@@ -348,7 +353,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     /**
      * @ brief overload variant for Mat3
      */
-    static void
+    static inline void
     invert_intrinsics_tgt(
         const Mat3 &K,
         const double px_tgt_coords[2],
@@ -361,7 +366,6 @@ class Pinhole_Intrinsic : public IntrinsicBase
       double n = hypot(t[0], t[1]);
       t[0] /= n; t[1] /= n;
     }
-        
 };
 
 } // namespace cameras

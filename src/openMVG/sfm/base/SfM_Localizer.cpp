@@ -40,9 +40,9 @@ public:
 
   ACKernelAdaptorResection_Intrinsics
   (
-    const Mat & x2d, // Undistorted 2d feature_point location
-    const Mat & x3D, // 3D corresponding points
-    const cameras::IntrinsicBase * camera
+    const Mat &x2d, // Undistorted 2d feature_point location
+    const Mat &x3D, // 3D corresponding points
+    const cameras::IntrinsicBase *camera
   ):x2d_(x2d),
     x3D_(x3D),
     logalpha0_(log10(M_PI)),
@@ -50,22 +50,37 @@ public:
     camera_(camera)
   {
     N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
-    assert(2 == x2d_.rows() || (6 == x2d_.rows()));  // 6 is in the case of oriented
+    assert(2 == x2d_.rows() || (4 == x2d_.rows()));  // 6 is in the case of oriented
     assert(3 == x3D_.rows() || (6 == x3D_.rows()));  // 6 is in the case of
                                                      // oriented (this is a
                                                      // geometric
                                                      // featurestd::vector of
                                                      // point + orientation)
     assert(x2d_.cols() == x3D_.cols());
-    bearing_vectors_= camera->operator()(x2d_); //.block(0,0,2,x2d_.cols())
+    Mat bearing_vectors = camera->operator()(x2d.block(0,0,2,NumSamples()));
+    Mat2X tangent_vectors;
+
+    OPENMVG_LOG_INFO << "OK1";
+
+    if (HasOrientation()) {
+    OPENMVG_LOG_INFO << "OK2";
+      dynamic_cast<const cameras::Pinhole_Intrinsic *>(camera)->tangents2world(x2d.block(2,0,2,NumSamples()), tangent_vectors);
+    OPENMVG_LOG_INFO << "OK3";
+      x2d_world_.resize(6, x2d_.cols());
+    OPENMVG_LOG_INFO << "OK4";
+      // even though we pass hnormalized, and if not HasOrientation() uses
+      // normalized(), we should be OK since Error uses only pixels.
+      x2d_world_ << bearing_vectors.colwise().hnormalized(), Mat::Ones(1,NumSamples()), tangent_vectors, Mat::Zero(1,NumSamples());
+    OPENMVG_LOG_INFO << "OK5";
+    }
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    Solver::Solve(ExtractColumns(bearing_vectors_, samples), // bearing vectors
-                  ExtractColumns(x3D_, samples), // 3D points
+    Solver::Solve(ExtractColumns(x2d_world_, samples), // bearing vectors and,  when available, unit 2d tangents
+                  ExtractColumns(x3D_, samples), // 3D points, and, when // available, unit 3d tangents x y z tx ty tz
                   models); // Found model hypothesis
   }
 
@@ -89,6 +104,7 @@ public:
   }
 
   size_t NumSamples() const { return x2d_.cols(); }
+  size_t HasOrientation() const { return x2d_.rows() == 4; }
 
   void Unnormalize(Model * model) const {
   }
@@ -100,7 +116,7 @@ public:
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
 
 private:
-  Mat x2d_, bearing_vectors_;
+  Mat x2d_, x2d_world_;
   const Mat & x3D_;
   Mat3 N1_;
   double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
