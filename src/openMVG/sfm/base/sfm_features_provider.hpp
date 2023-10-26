@@ -86,7 +86,10 @@ struct Features_Provider
           assert(sift_regions->Features().size());
           sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
         }
-        // also save loaded Features as PointFeature
+        // also save loaded Features as PointFeature. In the future:
+        // make feats_per_view map into class, and sio_ would be subclass.
+        // we can have an abstract base class to access them uniformly
+        // without wasting feature storage.
         feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
         }
         ++my_progress_bar;

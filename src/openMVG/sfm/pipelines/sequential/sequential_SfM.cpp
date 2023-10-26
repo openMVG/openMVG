@@ -892,14 +892,9 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
               const View * view_J = sfm_data_.GetViews().at(J).get();
               const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
               const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-              Vec2 xI, xJ;
-              if (features_provider_->has_sio_features()) { // Position of the point in view I
-                xJ = features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-                xI = features_provider_->sio_feats_per_view.at(I)[track.at(I)].coords().cast<double>();
-              } else { // Position of the point in view I
-                xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-                xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
-              }
+              Vec2
+              xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>(),
+              xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
 
               // Try to triangulate a 3D point from J view
               // A new 3D point must be added
