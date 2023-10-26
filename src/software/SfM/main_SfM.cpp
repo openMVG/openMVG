@@ -212,7 +212,6 @@ int main(int argc, char **argv)
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   std::string sExtrinsic_refinement_options = "ADJUST_ALL";
   bool use_motion_priors = false;
-  bool use_orientation_constraint = false;
 
   // Incremental SfM options
   int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
@@ -391,7 +390,6 @@ int main(int argc, char **argv)
   // as it uses only 3 points across 3 views (Fabbri CVPR'20)
   bool oriented_trifocal = !std::get<0>(initial_triplet_string).empty();
   use_motion_priors = cmd.used('P');
-  use_orientation_constraint = cmd.used('O');
 
   // Check validity of command line parameters:
   if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
@@ -477,10 +475,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::folder_exists(directory_output))
-  {
-    if (!stlplus::folder_create(directory_output))
-    {
+  if (!stlplus::folder_exists(directory_output)) {
+    if (!stlplus::folder_create(directory_output)) {
       OPENMVG_LOG_ERROR << "Cannot create the output directory";
       return EXIT_FAILURE;
     }
@@ -517,9 +513,14 @@ int main(int argc, char **argv)
     }
   }
 
+  if (!cmd.used('C')) { // set defaults for each case different than normal
+    if (oriented_trifocal || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
+      match_constraint = (int) MultiviewMatchConstraint::ORIENTED;    // default for trifocal and P2pt
+  }
+
   const bool need_orientation = oriented_trifocal 
-    || (resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12) 
-    || use_orientation_constraint;
+    || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12 
+    || match_constraint == (int) MultiviewMatchConstraint::ORIENTED;
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
@@ -529,8 +530,7 @@ int main(int argc, char **argv)
   }
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if // Try to read the provided match filename or the default one (matches.f.txt/bin)
-  (
+  if ( // Try to read the provided match filename or the default one (matches.f.txt/bin)
   !(matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, filename_match)) ||
     matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.txt")) ||
     matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.bin")) ||
@@ -542,8 +542,7 @@ int main(int argc, char **argv)
   }
 
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
-  switch(scene_initializer_enum)
-  {
+  switch(scene_initializer_enum) {
   case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
     OPENMVG_LOG_ERROR << "Not yet implemented.";
     return EXIT_FAILURE;
@@ -567,8 +566,7 @@ int main(int argc, char **argv)
     OPENMVG_LOG_ERROR << "Unknown SFM Scene initializer method";
     return EXIT_FAILURE;
   }
-  if (!scene_initializer)
-  {
+  if (!scene_initializer) {
     OPENMVG_LOG_ERROR << "Invalid scene initializer.";
     return EXIT_FAILURE;
   }
