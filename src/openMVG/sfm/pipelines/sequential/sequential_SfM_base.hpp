@@ -52,6 +52,8 @@ public:
   void SetMultiviewMatchConstraint(MultiviewMatchConstraint c) 
   { multiview_match_constraint_ = c; }
 
+  bool UsingOrientedConstraint() const { return multiview_match_constraint_ == ORIENTED; }
+
   void setInitialPair(const Pair & initialPair) 
   { initial_pair_ = initialPair; }
   void setInitialTriplet(const Triplet & initialTriplet) 

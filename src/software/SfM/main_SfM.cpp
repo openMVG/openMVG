@@ -251,7 +251,7 @@ int main(int argc, char **argv)
   // Incremental SfM2
   cmd.add( make_option('S', sfm_initializer_method, "sfm_initializer") );
   // Incremental SfM1
-  cmd.add( make_switch('C', "match_constraint") );
+  cmd.add( make_option('C', match_constraint, "match_constraint") );
   // 2-view initialization
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
       << "\n\n"
       << "[INCREMENTAL]\n"
       << "\t[-C|--match_constraint] multiview match constraint for filtering inliers when adding views (default =" << match_constraint << "):\n"
-      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::POSITION) << ": POSITION\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::POSITION)    << ": POSITION\n"
       << "\t\t" << static_cast<int>(MultiviewMatchConstraint::ORIENTATION) << ": ORIENTATION, enable feature orientation projection to \n"
       << "\t\t\tfilter inliers when adding >=3 views. Can be used with any resection method and both 2-view and oriented 3-view initialization.\n"
       << "\t\t\t In 2-view initialization, the constraint will only be applied during resection by projecting 3D orientations and matching to 2D features\n"

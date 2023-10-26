@@ -389,7 +389,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_ERROR << "Trifocal initialization only works for oriented features";
     return false;
   }
-  OPENMVG_LOG_INFO << "Has oriented features.";
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({t[0], t[1], t[2]}, map_tracksCommon);
   const size_t n = map_tracksCommon.size();
@@ -415,14 +414,15 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     ++cptIndex;
   }
-  OPENMVG_LOG_INFO << "DONE: Geting common features between the three views";
   // ---------------------------------------------------------------------------
   // c. Robust estimation of the relative pose
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose";
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
   RelativePoseTrifocal_Info relativePose_info; // TODO(trifocal future): include image size
-  if (!robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_)) {
+  if (!
+      robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_
+     )) {
     OPENMVG_LOG_ERROR 
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
       << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
@@ -572,6 +572,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
             OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " " 
               << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
           include_landmark = false;
+        } // else if (UsingOrientedConstraint()) { } TODO 
         }
       }
     if (include_landmark)
