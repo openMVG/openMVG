@@ -63,16 +63,17 @@ public:
     OPENMVG_LOG_INFO << "OK1";
 
     if (HasOrientation()) {
-    OPENMVG_LOG_INFO << "OK2";
+      OPENMVG_LOG_INFO << "OK2";
       dynamic_cast<const cameras::Pinhole_Intrinsic *>(camera)->tangents2world(x2d.block(2,0,2,NumSamples()), tangent_vectors);
-    OPENMVG_LOG_INFO << "OK3";
+      OPENMVG_LOG_INFO << "OK3";
       x2d_world_.resize(6, x2d_.cols());
-    OPENMVG_LOG_INFO << "OK4";
+      OPENMVG_LOG_INFO << "OK4";
       // even though we pass hnormalized, and if not HasOrientation() uses
       // normalized(), we should be OK since Error uses only pixels.
       x2d_world_ << bearing_vectors.colwise().hnormalized(), Mat::Ones(1,NumSamples()), tangent_vectors, Mat::Zero(1,NumSamples());
-    OPENMVG_LOG_INFO << "OK5";
-    }
+      OPENMVG_LOG_INFO << "OK5";
+    } else
+      x2d_world_ = bearing_vectors;
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
