@@ -503,7 +503,7 @@ int main(int argc, char **argv)
     if (resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
       OPENMVG_LOG_ERROR << "Resection from 2 feature points requires oriented features.";
       return EXIT_FAILURE;
-    if (use_orientation_constraint) {
+    if (match_constraint == (int) MultiviewMatchConstraint::ORIENTATION) {    // default for trifocal and P2pt
       OPENMVG_LOG_ERROR << "Tangent orientation constraints require oriented features.";
       return EXIT_FAILURE;
     }
@@ -511,12 +511,12 @@ int main(int argc, char **argv)
 
   if (!cmd.used('C')) { // set defaults for each case different than normal
     if (oriented_trifocal || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
-      match_constraint = (int) MultiviewMatchConstraint::ORIENTED;    // default for trifocal and P2pt
+      match_constraint = (int) MultiviewMatchConstraint::ORIENTATION;    // default for trifocal and P2pt
   }
 
   const bool need_orientation = oriented_trifocal 
     || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12 
-    || match_constraint == (int) MultiviewMatchConstraint::ORIENTED;
+    || match_constraint == (int) MultiviewMatchConstraint::ORIENTATION;
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
