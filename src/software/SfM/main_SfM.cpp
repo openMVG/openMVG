@@ -507,7 +507,7 @@ int main(int argc, char **argv)
     if (oriented_trifocal)
       OPENMVG_LOG_ERROR << "Trifocal initialization requires oriented features.";
       return EXIT_FAILURE;
-    if (resection_method == resection::SolverType::P2Pt_FABBRI_ECCV12)
+    if (resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
       OPENMVG_LOG_ERROR << "Resection from 2 feature points requires oriented features.";
       return EXIT_FAILURE;
     if (use_orientation_constraint) {
@@ -516,7 +516,9 @@ int main(int argc, char **argv)
     }
   }
 
-  const bool need_orientation = oriented_trifocal || (resection_method == resection::SolverType::P2Pt_FABBRI_ECCV12) || use_orientation_constraint;
+  const bool need_orientation = oriented_trifocal 
+    || (resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12) 
+    || use_orientation_constraint;
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
@@ -589,7 +591,7 @@ int main(int argc, char **argv)
     engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
-    engine->SetMultiviewMatchConstraint(static_cast<resection::MultiviewMatchConstraint>(match_constraint);
+    engine->SetMultiviewMatchConstraint(static_cast<MultiviewMatchConstraint>(match_constraint));
 
     // Handle Initial pair parameter
     if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())

@@ -24,7 +24,7 @@ static inline bool isValid( const MultiviewMatchConstraint method )
 {
   return
     method >= MultiviewMatchConstraint::POSITION &&
-    method <= ETriangulationMethod::DEFAULT;
+    method <= MultiviewMatchConstraint::DEFAULT;
 }
 
 }  // namespace openMVG
