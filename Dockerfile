@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
   libjpeg-dev \
   libpng-dev \
   libtiff-dev \
-  python-minimal; \
+  python3; \
   apt-get autoclean && apt-get clean
 
 # Clone the openvMVG repo
