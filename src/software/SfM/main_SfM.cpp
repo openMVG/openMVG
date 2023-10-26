@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
 
@@ -215,6 +216,7 @@ int main(int argc, char **argv)
 
   // Incremental SfM options
   int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
+  int match_constraint = static_cast<int>(MultiviewMatchConstraint::DEFAULT);
   int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
   int user_camera_model = PINHOLE_CAMERA_RADIAL3;
 
@@ -249,7 +251,7 @@ int main(int argc, char **argv)
   // Incremental SfM2
   cmd.add( make_option('S', sfm_initializer_method, "sfm_initializer") );
   // Incremental SfM1
-  cmd.add( make_switch('O', "orientation_constraint") );
+  cmd.add( make_switch('C', "match_constraint") );
   // 2-view initialization
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
@@ -306,10 +308,14 @@ int main(int argc, char **argv)
       << "[Engine specifics]\n"
       << "\n\n"
       << "[INCREMENTAL]\n"
-      << "\t[-O|--orientation_constraint] enable feature orientation projection to filter inliers when adding >=3 views. Can be used\n"
-      << "\t\t with any resection method and with both 2-view and oriented 3-view initialization. In 2-view initialization,
-      << "\t\t the constraint will only be applied during resection by projecting 3D orientations and matching to 2D features\n"
-      << "\t\t (default:false TODO-->default:true after tests confirm).\n"
+      << "\t[-C|--match_constraint] multiview match constraint for filtering inliers when adding views (default =" << match_constraint << "):\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::POSITION) << ": POSITION\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::ORIENTATION) << ": ORIENTATION, enable feature orientation projection to \n"
+      << "\t\t\tfilter inliers when adding >=3 views. Can be used with any resection method and both 2-view and oriented 3-view initialization.\n"
+      << "\t\t\t In 2-view initialization, the constraint will only be applied during resection by projecting 3D orientations and matching to 2D features\n"
+      << "\t\t\t This is the default when trifocal initial triplet is specified or when resection method is P2Pt_FABBRI_ECCV12.\n"
+      << "\t\t\t TODO likely to become default in the near future after we demonstrate it is superior\n\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::SCALE) << ": SCALE (not yet implemented)\n\n"
       << "\t[-a|--initial_pair_a] filename of the first image (without path) for 2-view initialization\n"
       << "\t[-b|--initial_pair_b] filename of the second image (without path) for 2-view initialization\n"
       << "\t[-x|--initial_triplet_x] filename of the first image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
@@ -496,18 +502,25 @@ int main(int argc, char **argv)
     OPENMVG_LOG_ERROR << "Invalid: " << sImage_describer << " regions type file.";
     return EXIT_FAILURE;
   }
-  if (oriented_trifocal && !dynamic_cast<SIFT_Regions *>(regions_type.get())) {
-    OPENMVG_LOG_ERROR << "Trifocal initialization requires oriented features.";
-    return EXIT_FAILURE;
+
+  if (!dynamic_cast<SIFT_Regions *>(regions_type.get())) {
+    if (oriented_trifocal)
+      OPENMVG_LOG_ERROR << "Trifocal initialization requires oriented features.";
+      return EXIT_FAILURE;
+    if (resection_method == resection::SolverType::P2Pt_FABBRI_ECCV12)
+      OPENMVG_LOG_ERROR << "Resection from 2 feature points requires oriented features.";
+      return EXIT_FAILURE;
+    if (use_orientation_constraint) {
+      OPENMVG_LOG_ERROR << "Tangent orientation constraints require oriented features.";
+      return EXIT_FAILURE;
+    }
   }
-  if (use_orientation_constraint && !dynamic_cast<SIFT_Regions *>(regions_type.get())) {
-    OPENMVG_LOG_ERROR << "Tangent orientation constraints require oriented features.";
-    return EXIT_FAILURE;
-  }
+
+  const bool need_orientation = oriented_trifocal || (resection_method == resection::SolverType::P2Pt_FABBRI_ECCV12) || use_orientation_constraint;
 
   // Features reading
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, directory_match, regions_type, oriented_trifocal || use_orientation_constraint)) {
+  if (!feats_provider->load(sfm_data, directory_match, regions_type, need_orientation)) {
     OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << directory_match << ".";
     return EXIT_FAILURE;
   }
@@ -528,7 +541,6 @@ int main(int argc, char **argv)
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
   switch(scene_initializer_enum)
   {
-  //TODO(trifocal future) incremental v2: update for triplet
   case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
     OPENMVG_LOG_ERROR << "Not yet implemented.";
     return EXIT_FAILURE;
@@ -577,6 +589,7 @@ int main(int argc, char **argv)
     engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
+    engine->SetMultiviewMatchConstraint(static_cast<resection::MultiviewMatchConstraint>(match_constraint);
 
     // Handle Initial pair parameter
     if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())

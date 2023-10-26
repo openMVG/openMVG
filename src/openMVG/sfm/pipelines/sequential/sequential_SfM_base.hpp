@@ -48,6 +48,9 @@ public:
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
 
+  void SetMultiviewMatchConstraint(MultiviewMatchConstraint c) 
+  { multiview_match_constraint_ = c; }
+
   void setInitialPair(const Pair & initialPair) 
   { initial_pair_ = initialPair; }
   void setInitialTriplet(const Triplet & initialTriplet) 
@@ -112,9 +115,10 @@ protected:
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
   std::string sLogging_file_;
-
   
   // Parameter
+
+  MultiviewMatchConstraint multiview_match_constraint_;
   Triplet initial_triplet_;
   Pair initial_pair_;
   
