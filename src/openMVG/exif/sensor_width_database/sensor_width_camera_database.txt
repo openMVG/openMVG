@@ -2004,6 +2004,7 @@ Gome K1;4.74
 Gome U7;4.73
 Google Pixel 2;5.5
 Google Pixel 3;5.76
+Google Pixel 3a;5.76
 Google Pixel XL;6.25
 Google Pixel;6.25
 GoPro Fusion;6.17
