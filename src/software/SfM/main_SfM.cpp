@@ -315,12 +315,12 @@ int main(int argc, char **argv)
       << "\t\t 3: Pinhole radial 3 (default)\n"
       << "\t\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t\t 5: Pinhole fisheye\n"
-      << "\t[--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+      << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
-      << "\t[--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+      << "\t[-r|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
       << "\t\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
@@ -499,6 +499,12 @@ int main(int argc, char **argv)
   if (oriented_trifocal && !dynamic_cast<SIFT_Regions *>(regions_type.get()))
   {
     OPENMVG_LOG_ERROR << "Trifocal initialization currently requires oriented features.";
+    return EXIT_FAILURE;
+  }
+
+  if (oriented_trifocal && !dynamic_cast<SIFT_Regions *>(regions_type.get()))
+  {
+    OPENMVG_LOG_ERROR << "currently requires oriented features.";
     return EXIT_FAILURE;
   }
 
