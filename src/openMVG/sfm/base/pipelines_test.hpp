@@ -56,6 +56,7 @@ struct Synthetic_Oriented_Features_Provider : public Features_Provider
         const Vec2 pt = synthetic_data._x[v].col(i);
         const Vec2 tgt = synthetic_data._tgt2d[v].col(i);
         sio_feats_per_view[v].emplace_back(pt(0), pt(1), 1.0, atan2(tgt(1),tgt(0)));
+        feats_per_view[v].emplace_back(pt(0), pt(1));
       }
     }
     return true;

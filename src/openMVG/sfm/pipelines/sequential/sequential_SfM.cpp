@@ -188,6 +188,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
   //  Check id_feat points to a real feature with same .x OK
   unsigned const nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
   for (const auto &lit : sfm_data_.GetStructure()) {
+    OPENMVG_LOG_INFO << "A";
     const Landmark       &l = lit.second;
     const Observations &obs = l.obs;
     unsigned nviews = obs.size(); 
@@ -195,16 +196,20 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
     assert(l.X[0]);
 
     for (const auto &o : obs) {
+      OPENMVG_LOG_INFO << "B";
       unsigned vi = o.first;
       const Observation &ob = o.second;
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob.id_feat]);
+      OPENMVG_LOG_INFO << "C";
       Vec2 xf = feature->coords().cast<double>();
       // OPENMVG_LOG_INFO << xf.transpose() << " ob: " << ob->x.transpose();
       assert((xf - ob.x).norm() < 1e-9);
+      OPENMVG_LOG_INFO << "D";
     }
   }
 
   for (const auto &vit : sfm_data_.GetViews()) {
+   OPENMVG_LOG_INFO << "E";
     assert(vit.first == vit.second->id_view);
   }
 
@@ -222,6 +227,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
   for (const auto &lit : sfm_data_.GetStructure()) {
     const Landmark       &l = lit.second;
 
+    OPENMVG_LOG_INFO << "A";
     assert(sfm_data_.info.count(lit.first));
     const LandmarkInfo &li = sfm_data_.GetInfo().at(lit.first); // [lit.first] but const
     const Observations &obs = l.obs;
@@ -232,14 +238,17 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
     assert(l.X.norm());
 
     for (const auto &o : obs) {
+      OPENMVG_LOG_INFO << "B";
       unsigned vi = o.first;
       const Observation *ob = &o.second;
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
       double theta = feature->orientation();
+      OPENMVG_LOG_INFO << "C";
       assert(theta);
       Vec2 orient(std::cos(theta),std::sin(theta));
       assert(iobs.count(vi));
       assert((orient - iobs.at(vi).t).norm() < 1e-9);
+      OPENMVG_LOG_INFO << "D";
     }
   }
   return true;
@@ -941,37 +950,21 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       // If successfully triangulated, add the valid view observations
       if (sfm_data_.structure.count(trackId) != 0 && !new_track_observations_valid_views.empty()) {
         Landmark & landmark = sfm_data_.structure[trackId];
-        if (features_provider_->has_sio_features()) {
-          // Check if view feature point observations of the track are valid (residual, depth) or not
-          for (const IndexT & J: new_track_observations_valid_views) {
-            const View * view_J = sfm_data_.GetViews().at(J).get();
-            const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-            const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-            const Vec2 xJ = features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
+        // Check if view feature point observations of the track are valid (residual, depth) or not
+        for (const IndexT & J: new_track_observations_valid_views) {
+          const View * view_J = sfm_data_.GetViews().at(J).get();
+          const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
+          const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+          const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+          const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
 
-            const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
-            if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) 
-              landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-          }
-        } else {
-          // Check if view feature point observations of the track are valid (residual, depth) or not
-          for (const IndexT & J: new_track_observations_valid_views) {
-            const View * view_J = sfm_data_.GetViews().at(J).get();
-            const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-            const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-            const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
-            const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
-
-            //    TODO: filter by tangent orientation
-            const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
-            if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-                && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
-              landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-          }
+          //    TODO: filter by tangent orientation
+          const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
+          if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
+              && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
+            landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
         }
-      }
+      } // if
     }// All the tracks in the view
   }
   return true;
