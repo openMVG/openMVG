@@ -32,6 +32,7 @@ namespace openMVG {
 namespace sfm {
 
 
+// TODO: we are assuming all images have the same intrinsics
 bool robustRelativePoseTrifocal
 (
   const cameras::IntrinsicBase *intrinsics[3],
@@ -72,7 +73,6 @@ bool robustRelativePoseTrifocal
   const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
 
   OPENMVG_LOG_INFO << "Initialized kernel. Calling relativePoseTrifocal";
-  // TODO: we are assuming all images have the same intrinsics
   double threshold_normalized_squared 
     = trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::
     threshold_pixel_to_normalized(threshold_px, (double (*)[3])(double *)((dynamic_cast<const cameras::Pinhole_Intrinsic *> (intrinsics[0]))->K().data()));
@@ -80,6 +80,8 @@ bool robustRelativePoseTrifocal
   OPENMVG_LOG_INFO << "RANSAC threshold is " << threshold_normalized_squared;
   relativePoseTrifocal_info.found_residual_precision = threshold_px; // XXX TODO: // improve
 
+  // TODO: use orientation for inlier determination
+  // easy way: modify the ::Error to be infinite if tangent beyond a certain level
   relativePoseTrifocal_info.relativePoseTrifocal 
     = MaxConsensus(trifocal_kernel, 
       robust::ScorerEvaluator<TrifocalKernel>(threshold_normalized_squared), 
@@ -98,9 +100,7 @@ bool robustRelativePoseTrifocal
         datum[2].col(relativePoseTrifocal_info.vec_inliers[i]));
   }
 
-  if (relativePoseTrifocal_info.vec_inliers.size() <=
-      TrifocalKernel::Solver::MINIMUM_SAMPLES)
-  {
+  if (relativePoseTrifocal_info.vec_inliers.size() <= TrifocalKernel::Solver::MINIMUM_SAMPLES) {
     OPENMVG_LOG_INFO << "No sufficient coverage";
     return false; // no sufficient coverage (the model does not support enough samples)
   }

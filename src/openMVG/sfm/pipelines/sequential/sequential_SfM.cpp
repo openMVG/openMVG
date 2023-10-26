@@ -485,7 +485,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation " << residual.transpose();
       OPENMVG_LOG_INFO << "Residual from error()";
       { // For debug
-
       std::array<Mat, nviews> datum;
       for (unsigned v = 0; v < nviews; ++v) {
         datum[v].resize(4,1);
@@ -494,7 +493,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         datum[v].col(0).head(2) = 
           (*cam[v])(landmarks[track_iterator.first].obs[view[v]->id_view].x).colwise().hnormalized(); // OK
       }
-
       OPENMVG_LOG_INFO << trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error(
         relativePose_info.relativePoseTrifocal,
         datum[0].col(0), datum[1].col(0), datum[2].col(0));
@@ -573,7 +571,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
               << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
           include_landmark = false;
         } // else if (UsingOrientedConstraint()) { } TODO 
-        }
       }
     if (include_landmark)
       sfm_data_.structure[trackId] = landmarks[trackId];
@@ -729,7 +726,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
         OPENMVG_LOG_ERROR << "Not yet supported";
     }
 
-    if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
+    if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
       resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
 
   }
@@ -783,8 +780,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     // If no valid intrinsic as input:
     //  init a new one from the projection matrix decomposition
     // Else use the existing one and consider it as constant.
-    if (b_new_intrinsic)
-    {
+    if (b_new_intrinsic) {
       // setup a default camera model from the found projection matrix
       Mat3 K, R;
       Vec3 t;
@@ -794,8 +790,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       const Vec2 principal_point(K(0,2), K(1,2));
 
       // Create the new camera intrinsic group
-      switch (cam_type_)
-      {
+      switch (cam_type_) {
         case PINHOLE_CAMERA:
           optional_intrinsic =
             std::make_shared<Pinhole_Intrinsic>
@@ -828,10 +823,11 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     }
     const bool b_refine_pose = true;
     const bool b_refine_intrinsics = false;
-    if (!sfm::SfM_Localizer::RefinePose(
+    if (!
+        sfm::SfM_Localizer::RefinePose(
         optional_intrinsic.get(), pose,
-        resection_data, b_refine_pose, b_refine_intrinsics))
-    {
+        resection_data, b_refine_pose, b_refine_intrinsics)
+        ){
       OPENMVG_LOG_ERROR << "Unable to refine the pose of the view id: " << viewIndex;
       return false;
     }
@@ -1021,6 +1017,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
         return false;
       OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
       if (!MakeInitialTriplet3D(initial_triplet_)) {
+        OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
         OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
         return false;
       }

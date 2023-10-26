@@ -381,7 +381,6 @@ int main(int argc, char **argv)
       << "\t\t -> STAR_X\n"
       << "\t[-g|--graph_simplification_value]\n"
       << "\t\t -> Number (default: " << graph_simplification_value << ")";
-
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
@@ -447,13 +446,11 @@ int main(int argc, char **argv)
   }
 
   EGraphSimplification graph_simplification_method;
-  if (!StringToEnum_EGraphSimplification(graph_simplification, graph_simplification_method))
-  {
+  if (!StringToEnum_EGraphSimplification(graph_simplification, graph_simplification_method)) {
     OPENMVG_LOG_ERROR << "Cannot recognize graph simplification method";
     return EXIT_FAILURE;
   }
-  if (graph_simplification_value <= 1)
-  {
+  if (graph_simplification_value <= 1) {
     OPENMVG_LOG_ERROR << "graph simplification value must be > 1";
     return EXIT_FAILURE;
   }
@@ -485,8 +482,7 @@ int main(int argc, char **argv)
   //
   // Match and features
   //
-  if (directory_match.empty() && !filename_match.empty() && stlplus::file_exists(filename_match))
-  {
+  if (directory_match.empty() && !filename_match.empty() && stlplus::file_exists(filename_match)) {
     directory_match = stlplus::folder_part(filename_match);
     filename_match = stlplus::filename_part(filename_match);
   }
