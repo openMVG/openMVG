@@ -199,9 +199,19 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
       OPENMVG_LOG_INFO << "B";
       unsigned vi = o.first;
       const Observation &ob = o.second;
-      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi][ob.id_feat]);
+      Vec2 xf;
+      const features::PointFeature *feature = &(features_provider_->feats_per_view[vi][ob.id_feat]);
       OPENMVG_LOG_INFO << "C";
-      Vec2 xf = feature->coords().cast<double>();
+      xf = feature->coords().cast<double>();
+
+      if (features_provider_->has_sio_features()) {
+        const features::PointFeature *siofeature = &(features_provider_->sio_feats_per_view[vi][ob.id_feat]);
+        OPENMVG_LOG_INFO << "C";
+        Vec2 xfs = siofeature->coords().cast<double>();
+        assert((xfs - xf).norm() < 1e-9);
+      }
+
+      OPENMVG_LOG_INFO << "D";
       // OPENMVG_LOG_INFO << xf.transpose() << " ob: " << ob->x.transpose();
       assert((xf - ob.x).norm() < 1e-9);
       OPENMVG_LOG_INFO << "D";

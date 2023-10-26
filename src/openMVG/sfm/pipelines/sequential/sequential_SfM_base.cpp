@@ -556,7 +556,7 @@ bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & curre
         Observations obs;
         obs[view_I->id_view] = Observation(x1, i);
         obs[view_J->id_view] = Observation(x2, j);
-        landmarks[track_iterator.first].obs = std::move(obs);
+        landmarks[track_iterator.first].obs = obs;
         landmarks[track_iterator.first].X = X;
       }
     }
