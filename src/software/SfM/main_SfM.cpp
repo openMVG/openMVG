@@ -218,6 +218,7 @@ int main(int argc, char **argv)
   int match_constraint = static_cast<int>(MultiviewMatchConstraint::DEFAULT);
   int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
   int user_camera_model = PINHOLE_CAMERA_RADIAL3;
+  int trifocal_iterations = SequentialSfMReconstructionEngineBase::maximum_trifocal_ransac_iterations_DEFAULT;
 
   // SfM v1
   // initial_tuple_string
@@ -258,6 +259,7 @@ int main(int argc, char **argv)
   cmd.add( make_option('x', std::get<0>(initial_triplet_string), "initial_triplet_x") );
   cmd.add( make_option('y', std::get<1>(initial_triplet_string), "initial_triplet_y") );
   cmd.add( make_option('z', std::get<2>(initial_triplet_string), "initial_triplet_z") );
+  cmd.add( make_option('3', trifocal_iterations, "trifocal_iterations") );
   // Global SfM
   cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
   cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
@@ -589,8 +591,7 @@ int main(int argc, char **argv)
     engine->SetMultiviewMatchConstraint(static_cast<MultiviewMatchConstraint>(match_constraint));
 
     // Handle Initial pair parameter
-    if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())
-    {
+    if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty()) {
       Pair initial_pair_index;
       if (!computeIndexFromImageNames(sfm_data, initial_pair_string, initial_pair_index))
       {
@@ -606,8 +607,7 @@ int main(int argc, char **argv)
     // set initial triplet parameter for now
     if (!std::get<0>(initial_triplet_string).empty() &&
         !std::get<1>(initial_triplet_string).empty() &&
-        !std::get<2>(initial_triplet_string).empty())
-    {
+        !std::get<2>(initial_triplet_string).empty()) {
       Triplet initial_triplet_index;
       if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index))
       {
@@ -618,8 +618,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
       }
       engine->setInitialTriplet(initial_triplet_index);
+      engine->SetMaximumTrifocalRansacIterations(trifocal_iterations);
     }
-
     sfm_engine.reset(engine);
   }
     break;

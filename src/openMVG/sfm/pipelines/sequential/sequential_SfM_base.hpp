@@ -87,6 +87,11 @@ public:
   void SetMaximumTrifocalRansacIterations(unsigned n) 
   { maximum_trifocal_ransac_iterations_ = n; }
 
+  unsigned MaximumTrifocalRansacIterations() 
+  { return maximum_trifocal_ransac_iterations_; }
+
+  static constexpr unsigned maximum_trifocal_ransac_iterations_DEFAULT = 100;
+
   void FinalStatistics();
 
 protected:
@@ -145,7 +150,7 @@ protected:
 
   resection::SolverType resection_method_ = resection::SolverType::DEFAULT;
 
-  unsigned maximum_trifocal_ransac_iterations_ = 100;
+  unsigned maximum_trifocal_ransac_iterations_ = maximum_trifocal_ransac_iterations_DEFAULT;
 
 private:
 
