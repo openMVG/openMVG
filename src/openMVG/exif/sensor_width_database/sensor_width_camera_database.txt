@@ -2232,6 +2232,8 @@ Huawei P9 Lite Premium;4.69
 Huawei P9 Lite;4.69
 Huawei P9 Premium Edition;4.54
 Huawei P9;4.54
+Huawei TAS-AL00;8.2
+Huawei TEL-AN00a;3.7
 I-mobile IQ X Pro 2;6.17
 Iberry Prime P8000;4.69
 ILCA-77M2;23.5
@@ -5451,6 +5453,7 @@ Samsung SM-G955F;5.76
 Samsung SM-G970U1;4.6
 Samsung SM-G9910;5.6
 Samsung SM-S901U;5.6
+Samsung SM-S9080;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
