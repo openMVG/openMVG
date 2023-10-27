@@ -52,6 +52,7 @@ public:
     return (v-v_ud).norm() < 1e-8;
   }
 
+
 protected:
 
 
@@ -73,6 +74,7 @@ private:
 
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(const uint32_t imageIndex);
+  void ResectionAddTracks(IndexT I);
 
   /// See if all observations are adequately filled-in
   /// Test assumptions about the code, eg links in observation feature id,
