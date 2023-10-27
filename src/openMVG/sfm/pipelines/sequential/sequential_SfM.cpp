@@ -138,8 +138,8 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
     // determine the best two views to triangulate
     float best_angle = 0;
     IndexT best_v0 = 0, best_v1 = 0;
-    for (IndexT v0 = 0; v0 + 1 < nviews; ++v0)
-      for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
+    for (IndexT v0 = 0; v0 + 1 < v; ++v0)
+      for (IndexT v1 = v0 + 1; v1 < v; ++v1) {
         const float angle = AngleBetweenRay(
           *pose[v0], intrinsics[v0].get(), *pose[v1], intrinsics[v1].get(), ob[v0]->x, ob[v1]->x);
         // We are chosing the biggest angle.
@@ -194,7 +194,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
     const IndexT   &lt = lit.first;
     const Observations &obs = l.obs;
     unsigned nviews = obs.size();
-    assert(nviews == nviews_assumed);
+    assert(nviews <= sfm_data_.num_views());
     assert(l.X[0]);
 
     for (const auto &o : obs) {
