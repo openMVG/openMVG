@@ -26,6 +26,11 @@
 #define _USE_CUSTOM_CV
 #endif
 
+// set to disable custom NO_ID declaration
+#ifndef _DISABLE_NO_ID
+#define _INTERFACE_NO_ID
+#endif
+
 
 // S T R U C T S ///////////////////////////////////////////////////
 
@@ -162,7 +167,9 @@ public:
 namespace _INTERFACE_NAMESPACE {
 
 // invalid index
+#ifdef _INTERFACE_NO_ID
 constexpr uint32_t NO_ID {std::numeric_limits<uint32_t>::max()};
+#endif
 
 // custom serialization
 namespace ARCHIVE {
@@ -514,14 +521,40 @@ struct Interface
 
 	// structure describing an image
 	struct Image {
+		// structure describing how an other image relates to this image in terms of overlap,
+		// i.e. how many 3D points are shared between the two images, base-line and common area,
+		// useful for ex. when selecting the best images to densly match with
+		struct ViewScore {
+			uint32_t ID; // image local-ID, the index in this scene images list
+			uint32_t points; // number of 3D points shared with the reference image
+			float scale; // image scale relative to the reference image
+			float angle; // image angle relative to the reference image (radians)
+			float area; // common image area relative to the reference image (ratio)
+			float score; // aggregated image score relative to the reference image (larger is better)
+
+			template<class Archive>
+			void serialize(Archive& ar, const unsigned int /*version*/) {
+				ar & ID;
+				ar & points;
+				ar & scale;
+				ar & angle;
+				ar & area;
+				ar & score;
+			}
+		};
+		
 		std::string name; // image file name
 		std::string maskName; // segmentation file name (optional)
 		uint32_t platformID; // ID of the associated platform
 		uint32_t cameraID; // ID of the associated camera on the associated platform
 		uint32_t poseID; // ID of the pose of the associated platform
-		uint32_t ID; // ID of this image in the global space (optional)
+		uint32_t ID; // image global-ID, ex. the ID given outside the current scene, like the index in the full list of image files (optional)
+		float minDepth; // minimum depth of the points seen by this image (optional)
+		float avgDepth; // average depth of the points seen by this image (optional)
+		float maxDepth; // maximum depth of the points seen by this image (optional)
+		std::vector<ViewScore> viewScores; // list of view scores for this image (optional)
 
-		Image() : platformID(NO_ID), cameraID(NO_ID), poseID(NO_ID), ID(NO_ID) {}
+		Image() : platformID(NO_ID), cameraID(NO_ID), poseID(NO_ID), ID(NO_ID), minDepth(0), avgDepth(0), maxDepth(0) {}
 
 		bool IsValid() const { return poseID != NO_ID; }
 
@@ -536,6 +569,12 @@ struct Interface
 			ar & poseID;
 			if (version > 2) {
 				ar & ID;
+			}
+			if (version > 6) {
+				ar & minDepth;
+				ar & avgDepth;
+				ar & maxDepth;
+				ar & viewScores;
 			}
 		}
 	};
