@@ -190,7 +190,8 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
   //  Check id_feat points to a real feature with same .x OK
   unsigned const nviews_assumed = sfm_data_.num_views() - set_remaining_view_id_.size();
   for (const auto &lit : sfm_data_.GetStructure()) {
-    const Landmark       &l = lit.second;
+    const Landmark &l  = lit.second;
+    const IndexT   &lt = lit.first;
     const Observations &obs = l.obs;
     unsigned nviews = obs.size();
     assert(nviews == nviews_assumed);
@@ -202,6 +203,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
       Vec2 xf;
       const features::PointFeature *feature = &(features_provider_->feats_per_view[vi][ob.id_feat]);
       xf = feature->coords().cast<double>();
+      assert((xf - ob.x).norm() < 1e-9);
 
       if (features_provider_->has_sio_features()) {
         const features::PointFeature *siofeature = &(features_provider_->sio_feats_per_view[vi][ob.id_feat]);
@@ -209,7 +211,13 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
         assert((xfs - xf).norm() < 1e-9);
       }
 
-      assert((xf - ob.x).norm() < 1e-9);
+      // cross-check
+      openMVG::tracks::STLMAPTracks m;
+      shared_track_visibility_helper_->GetTracksInImages({vi}, m);
+      assert(m.count(lt));
+
+      assert(m[lt].count(vi));
+      assert(m[lt][vi] == ob.id_feat);
     }
   }
 
@@ -642,17 +650,15 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   if (!SequentialSfMReconstructionEngine::ConsistencyCheck()) {
     OPENMVG_LOG_INFO << "Resection: Fail Test before starts";
     return false;
-  } else {
+  } else
     OPENMVG_LOG_INFO << "Resection: Pass Test before starts";
-  }
   if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
     if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
       OPENMVG_LOG_INFO << "Resection: Fail Oriented Test after 3d rec";
       return false;
-    } else {
+    } else
       OPENMVG_LOG_INFO << "Resection: Pass Oriented Test after 3d rec";
-    }
   }
   using namespace tracks;
 
@@ -663,13 +669,13 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::set<uint32_t> set_tracksIds;
   TracksUtilsMap::GetTracksIdVector(map_tracksCommon, &set_tracksIds);
 
-  // A2. intersects the track list with the reconstructed
+  // Get the ids of the already reconstructed tracks
   std::set<uint32_t> reconstructed_trackId;
   std::transform(sfm_data_.GetLandmarks().cbegin(), sfm_data_.GetLandmarks().cend(),
     std::inserter(reconstructed_trackId, reconstructed_trackId.begin()),
     stl::RetrieveKey());
 
-  // Get the ids of the already reconstructed tracks
+  // A2. intersects the view tracks with the reconstructed
   std::set<uint32_t> set_trackIdForResection;
   std::set_intersection(set_tracksIds.cbegin(), set_tracksIds.cend(),
     reconstructed_trackId.cbegin(), reconstructed_trackId.cend(),
@@ -686,15 +692,13 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   // These 2D/3D associations will be used for the resection.
   std::vector<uint32_t> vec_featIdForResection;
   TracksUtilsMap::GetFeatIndexPerViewAndTrackId(map_tracksCommon,
-    set_trackIdForResection,
-    viewIndex,
-    &vec_featIdForResection);
+    set_trackIdForResection, viewIndex, &vec_featIdForResection);
 
   // Localize the image inside the SfM reconstruction
   Image_Localizer_Match_Data resection_data;
   resection_data.min_consensus_ratio = 1; // TODO make this a parameter
-  resection_data.pt2D.resize(2, set_trackIdForResection.size());
-  resection_data.pt3D.resize(3, set_trackIdForResection.size());
+  resection_data.pt2D.resize(2,  set_trackIdForResection.size());
+  resection_data.pt3D.resize(3,  set_trackIdForResection.size());
   resection_data.tgt2D.resize(2, set_trackIdForResection.size());
   resection_data.tgt3D.resize(3, set_trackIdForResection.size());
   if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
@@ -745,18 +749,15 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
 
   geometry::Pose3 pose;
-  const bool bResection = sfm::SfM_Localizer::Localize
+  const bool bResection = sfm::SfM_Localizer::Localize // <<------------------------------------
   (
     optional_intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
     {view_I->ui_width, view_I->ui_height},
-    optional_intrinsic.get(),
-    resection_data,
-    pose
+    optional_intrinsic.get(), resection_data, pose
   );
   resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 
-  if (!sLogging_file_.empty())
-  {
+  if (!sLogging_file_.empty()) {
     using namespace htmlDocument;
     std::ostringstream os;
     os << "Resection of Image index: <" << viewIndex << "> image: "
@@ -778,8 +779,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     html_doc_stream_->pushInfo(os.str());
   }
 
-  if (!bResection)
-    return false;
+  if (!bResection) return false;
 
   // D. Refine the pose of the found camera.
   // We use a local scene with only the 3D points and the new camera.
@@ -791,9 +791,9 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     //  init a new one from the projection matrix decomposition
     // Else use the existing one and consider it as constant.
     if (b_new_intrinsic) {
+      assert(resection_method_ == resection::SolverType::DLT_6POINTS);
       // setup a default camera model from the found projection matrix
-      Mat3 K, R;
-      Vec3 t;
+      Mat3 K, R; Vec3 t;
       KRt_From_P(resection_data.projection_matrix, &K, &R, &t);
 
       const double focal = (K(0,0) + K(1,1))/2.0;
@@ -802,28 +802,23 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       // Create the new camera intrinsic group
       switch (cam_type_) {
         case PINHOLE_CAMERA:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic>
+          optional_intrinsic = std::make_shared<Pinhole_Intrinsic>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         case PINHOLE_CAMERA_RADIAL1:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Radial_K1>
+          optional_intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         case PINHOLE_CAMERA_RADIAL3:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Radial_K3>
+          optional_intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         case PINHOLE_CAMERA_BROWN:
-          optional_intrinsic =
-            std::make_shared<Pinhole_Intrinsic_Brown_T2>
+          optional_intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         case PINHOLE_CAMERA_FISHEYE:
-            optional_intrinsic =
-                std::make_shared<Pinhole_Intrinsic_Fisheye>
+            optional_intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         default:
@@ -831,13 +826,12 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           return false;
       }
     }
-    const bool b_refine_pose = true;
-    const bool b_refine_intrinsics = false;
+    constexpr bool b_refine_pose = true, b_refine_intrinsics = false;
     if (!
-        sfm::SfM_Localizer::RefinePose(
+        sfm::SfM_Localizer::RefinePose( // <<------------------------------------
         optional_intrinsic.get(), pose,
         resection_data, b_refine_pose, b_refine_intrinsics)
-        ){
+        ) {
       OPENMVG_LOG_ERROR << "Unable to refine the pose of the view id: " << viewIndex;
       return false;
     }
@@ -847,13 +841,13 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     sfm_data_.poses[view_I->id_pose] = pose;
     // - track the view's AContrario robust estimation found threshold
     map_ACThreshold_.insert({viewIndex, resection_data.error_max});
+
     // - intrinsic parameters (if the view has no intrinsic group add a new one)
-    if (b_new_intrinsic)
-    {
+    if (b_new_intrinsic) {
+      assert(resection_method_ == resection::SolverType::DLT_6POINTS);
       // Since the view have not yet an intrinsic group before, create a new one
       IndexT new_intrinsic_id = 0;
-      if (!sfm_data_.GetIntrinsics().empty())
-      {
+      if (!sfm_data_.GetIntrinsics().empty()) {
         // Since some intrinsic Id already exists,
         //  we have to create a new unique identifier following the existing one
         std::set<IndexT> existing_intrinsicId;
