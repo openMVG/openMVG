@@ -888,12 +888,12 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       // List the potential view observations of the track
       const tracks::submapTrack &allViews_of_track = map_tracks_[trackId];
       // List to save the new view observations that must be added to the track
-      std::set<IndexT> new_track_observations_valid_views;
+      std::set<IndexT> new_track_observations_candidate_views;
 
       // If the track was already reconstructed
       if (sfm_data_.structure.count(trackId))
         // Since the 3D point was triangulated before we add the new the Inth view observation
-        new_track_observations_valid_views.insert(I);
+        new_track_observations_candidate_views.insert(I);
       else for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track) {
           // Go through the views that observe this track & look if a successful triangulation can be done
           const IndexT & J = trackViewIt.first;
@@ -902,7 +902,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
             continue;
           // If successfully triangulated add the observation from J view
           if (sfm_data_.structure.count(trackId)) {
-            new_track_observations_valid_views.insert(J);
+            new_track_observations_candidate_views.insert(J);
             continue;
           }
           const View *view_J = sfm_data_.GetViews().at(J).get();
@@ -915,10 +915,18 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           // Try to triangulate a 3D point from J view
           // A new 3D point must be added
           // Triangulate it
-          const Vec2
-            xI_ud = cam_I->get_ud_pixel(xI),
-            xJ_ud = cam_J->get_ud_pixel(xJ);
+          const Vec2 xI_ud = cam_I->get_ud_pixel(xI), xJ_ud = cam_J->get_ud_pixel(xJ);
           Vec3 X = Vec3::Zero();
+
+          // Even though we may not successfully triangulate yet,
+          // mark the view to add the observations once the point is triangulated (if at all).
+          // Then we check below if the residual is low
+          //
+          // new_track_observations_candidate_views.insert(I) <<--- not needed // here
+          // Reason: if the point eventually gets triangulated, view I will be
+          // inserted below. If it never gets triangulated, no landmark will
+          // exist so no observation will be added below.
+          new_track_observations_candidate_views.insert(J);
 
           if (Triangulate2View(
                 pose_I.rotation(),
@@ -933,30 +941,25 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
               pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
             const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
             const Vec2 residual_J = cam_J->residual(pose_J(X), xJ);
-            if ( // TODO: track onrientation constraints
-                //  - Check angle (small angle leads to imprecise triangulation)
-                angle > 2.0 &&
-                //  - Check residual values (must be inferior to the found view's AContrario threshold)
+            if (angle > 2.0 && // Check angle (small angle leads to imprecise triangulation)
+                // Check residuals (must be inferior to the found view's AContrario threshold)
                 residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
                 residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
-                // Cheirality as been tested already in Triangulate2View
+                // Cheirality been tested already in Triangulate2View
+                // TODO: track orientation constraints
                ) {
-              // Add a new track
-              Landmark & landmark = sfm_data_.structure[trackId];
-              landmark.X = X;
-              new_track_observations_valid_views.insert(I);
-              new_track_observations_valid_views.insert(J);
-            } else // 3D point is valid
-              OPENMVG_LOG_INFO << "not adding track in views " << I << ", " << J;
-          } else
-              OPENMVG_LOG_INFO << "not adding track in views " << I << ", " << J;
+              sfm_data_.structure[trackId].X = X; // Add a new track
+              new_track_observations_candidate_views.insert(I);
+            } else // 3D point is invalid
+              OPENMVG_LOG_INFO << "not adding track in view, unreliable triangulation" << I << ", " << J;
+          }
       }// Go through all the views
 
       // If successfully triangulated, add the valid view observations
-      if (sfm_data_.structure.count(trackId) && !new_track_observations_valid_views.empty()) {
-        Landmark & landmark = sfm_data_.structure[trackId];
+      if (sfm_data_.structure.count(trackId) && !new_track_observations_candidate_views.empty()) {
+        Landmark &landmark = sfm_data_.structure[trackId];
         // Check if view feature point observations of the track are valid (residual, depth) or not
-        for (const IndexT &J: new_track_observations_valid_views) {
+        for (const IndexT &J: new_track_observations_candidate_views) {
           const View *view_J = sfm_data_.GetViews().at(J).get();
           const IntrinsicBase *cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
           const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
