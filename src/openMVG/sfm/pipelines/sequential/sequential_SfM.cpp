@@ -136,12 +136,11 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
     }
 
     // determine the best two views to triangulate
-    double best_angle = 0;
-    IndexT best_v0 = 0;
-    IndexT best_v1 = 0;
-    for (IndexT v0= 0; v0 + 1 < nviews; ++v0)
+    float best_angle = 0;
+    IndexT best_v0 = 0, best_v1 = 0;
+    for (IndexT v0 = 0; v0 + 1 < nviews; ++v0)
       for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
-        const double angle = AngleBetweenRay(
+        const float angle = AngleBetweenRay(
           *pose[v0], intrinsics[v0].get(), *pose[v1], intrinsics[v1].get(), ob[v0]->x, ob[v1]->x);
         // We are chosing the biggest angle.
         // TODO choose the closest to 90 degrees
@@ -647,19 +646,19 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
  */
 bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 {
-  OPENMVG_LOG_INFO << "Resection() new view - id " << viewIndex << "-----------------------------------";
+  OPENMVG_LOG_INFO << "Resection new view - id " << viewIndex << "-----------------------------------";
   if (!SequentialSfMReconstructionEngine::ConsistencyCheck()) {
-    OPENMVG_LOG_INFO << "Resection: Fail Test before starts";
+    OPENMVG_LOG_INFO << "Fail Test before starts";
     return false;
   } else
-    OPENMVG_LOG_INFO << "Resection: Pass Test before starts";
-  if (resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+    OPENMVG_LOG_INFO << "Pass Test before starts";
+  if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
     if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
-      OPENMVG_LOG_INFO << "Resection: Fail Oriented Test after 3d rec";
+      OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented";
       return false;
     } else
-      OPENMVG_LOG_INFO << "Resection: Pass Oriented Test after 3d rec";
+      OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented";
   }
   using namespace tracks;
 
@@ -675,6 +674,11 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::transform(sfm_data_.GetLandmarks().cbegin(), sfm_data_.GetLandmarks().cend(),
     std::inserter(reconstructed_trackId, reconstructed_trackId.begin()),
     stl::RetrieveKey());
+  if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
+    OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented2";
+    return false;
+  } else
+    OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented2";
 
   // A2. intersects the view tracks with the reconstructed
   std::set<uint32_t> set_trackIdForResection;
@@ -719,6 +723,11 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
 
+  if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
+    OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented2";
+    return false;
+  } else
+    OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented2";
   for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
     resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
     resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
@@ -728,7 +737,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       assert(features_provider_->has_sio_features());
       assert(sfm_data_.GetInfo().count(*iterTrackId));
       resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
-      double theta = features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId]->orientation();
+      double theta = features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].orientation();
       resection_data.tgt2D.col(cpt) = tgt2D_original.col(cpt) = Vec2(std::cos(theta), std::sin(theta));
     }
 
@@ -855,7 +864,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     }
   }
 
-  ResectionAddTracks(viewIndex);
+  ResectionAddTracks(viewIndex, map_tracksCommon);
   return true;
 }
 
@@ -863,7 +872,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 //    - If the track already exists, look if the new view tracks observation are valid
 //    - If not, try robust triangulation & add the new valid view track observation
 //    TODO: filter by tangent orientation
-void ResectionAddTracks(IndexT I)
+void SequentialSfMReconstructionEngine::
+ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksCommon)
 {
   // Get information of new view
   const View *view_I = sfm_data_.GetViews().at(I).get();
