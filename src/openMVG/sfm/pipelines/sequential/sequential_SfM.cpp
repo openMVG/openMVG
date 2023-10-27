@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//
 
 #include <array>
 #include <functional>
@@ -720,32 +721,25 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
     resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
-    if (features_provider_->has_sio_features()) {
-      const features::SIOPointFeature *feature =
-        &(features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId]);
-      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) = feature->coords().cast<double>();
-      double theta = feature->orientation();
+    resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
+        features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+
+    if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+      assert(features_provider_->has_sio_features());
+      assert(sfm_data_.GetInfo().count(*iterTrackId));
+      resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
+      double theta = features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId]->orientation();
       resection_data.tgt2D.col(cpt) = tgt2D_original.col(cpt) = Vec2(std::cos(theta), std::sin(theta));
-    } else
-      resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
-          features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
+    }
 
     // Handle image distortion if intrinsic is known (to ease the resection)
     if (optional_intrinsic && optional_intrinsic->have_disto()) {
       resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-      if ((resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12 || UsingOrientedConstraint())
-          && !isDistortionZero(optional_intrinsic.get())) {
-        OPENMVG_LOG_ERROR << "Non-zero distortion not yet fully supported in P2Pt";
-        exit(1);
-      }
+      assert( !((resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12 || UsingOrientedConstraint())
+          && !isDistortionZero(optional_intrinsic.get())) );// "Non-zero distortion not yet fully supported in P2Pt";
     }
-    OPENMVG_LOG_INFO << "oriented before at";
-    if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12)
-      resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
-    OPENMVG_LOG_INFO << "oriented after at";
   }
   // C. Do the resectioning: compute the camera pose
-  // TODO(p2pt)
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
 
   geometry::Pose3 pose;
@@ -947,9 +941,9 @@ void ResectionAddTracks(IndexT I)
               // TODO: track orientation constraints
              ) {
             sfm_data_.structure[trackId].X = X; // Add a new track
-            new_track_observations_candidate_views.insert(I);
-          } else // 3D point is invalid
-            OPENMVG_LOG_INFO << "not adding track in view, unreliable triangulation" << I << ", " << J;
+            new_track_observations_candidate_views.insert(I); // only now this is really a candidate
+          } // else // 3D point is invalid
+            // OPENMVG_LOG_INFO << "not adding track in view, unreliable triangulation" << I << ", " << J;
         }
     }// Go through all the views
 
@@ -970,7 +964,10 @@ void ResectionAddTracks(IndexT I)
             && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
           landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
       }
-    } // if
+    } // if // TODO: stereo: we should fix the outlier correspondences with the known cameras.
+            // Simply add tracks if any features are nearby reprojections  (in
+            // position, orientation, etc) even though they are not on tracks structure.
+            // Also leverage some SIFT match similarity as prior to decide ambiguous cases
   }// All the tracks in the view
 }
 
