@@ -322,8 +322,8 @@ int main(int argc, char **argv)
       << "\t[-x|--initial_triplet_x] filename of the first image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
       << "\t[-y|--initial_triplet_y] filename of the second image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
       << "\t[-z|--initial_triplet_z] filename of the third image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
-      << "\t\t NOTE: -x -y -z imply -C ORIENTATION by default"
-      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails."
+      << "\t\t NOTE: -x -y -z imply -C ORIENTATION by default.\n"
+      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails.\n"
       << "\t[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t\t 1: Pinhole \n"
       << "\t\t 2: Pinhole radial 1\n"
@@ -516,8 +516,8 @@ int main(int argc, char **argv)
       match_constraint = (int) MultiviewMatchConstraint::ORIENTATION;    // default for trifocal and P2pt
   }
 
-  const bool need_orientation = oriented_trifocal 
-    || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12 
+  const bool need_orientation = oriented_trifocal
+    || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12
     || match_constraint == (int) MultiviewMatchConstraint::ORIENTATION;
 
   // Features reading

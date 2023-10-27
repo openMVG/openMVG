@@ -24,8 +24,8 @@
 #include "openMVG/sfm/base/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/base/sfm_data_filters.hpp"
 #include "openMVG/sfm/base/sfm_data_io.hpp"
-#include "openMVG/stl/stl.hpp" 
-#include "openMVG/system/logger.hpp" 
+#include "openMVG/stl/stl.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/histogram/histogram_raw.hpp"
@@ -52,7 +52,7 @@ using namespace histogramming;
 //-------------------
 //-- Incremental reconstruction
 //-------------------
-bool SequentialSfMReconstructionEngine::Process() 
+bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
@@ -87,9 +87,9 @@ inline static void TriangulateTangent2View
 //
 // Input:
 //  - Points and cameras already reconstructed
-//    - Possibly, some points have not yet been reconstructed 
+//    - Possibly, some points have not yet been reconstructed
 //    (not inliers / other filters removed them)
-//  - Assume tracks connect all images 
+//  - Assume tracks connect all images
 //  (all reconstructed features visible in all views)
 //  - 3D tangents will be computed only for those points that have already been
 //  reconstructed
@@ -102,7 +102,7 @@ inline static void TriangulateTangent2View
 //
 // See also
 // bool track_triangulation in sfm_data_triangulation.cpp
-// 
+//
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
   OPENMVG_LOG_INFO <<  "ReconstructAllTangents -------------------------------------";
@@ -156,7 +156,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    // reconstruct T from best_v0 and best_v1
 
    //- bearing: invert intrinsic
-   
+
    Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
@@ -192,7 +192,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheck() const
   for (const auto &lit : sfm_data_.GetStructure()) {
     const Landmark       &l = lit.second;
     const Observations &obs = l.obs;
-    unsigned nviews = obs.size(); 
+    unsigned nviews = obs.size();
     assert(nviews == nviews_assumed);
     assert(l.X[0]);
 
@@ -236,7 +236,7 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
     const LandmarkInfo &li = sfm_data_.GetInfo().at(lit.first); // [lit.first] but const
     const Observations &obs = l.obs;
     const ObservationsInfo &iobs = li.obs_info;
-    unsigned nviews = obs.size(); 
+    unsigned nviews = obs.size();
     unsigned inviews = iobs.size();
     assert(inviews == nviews);
     assert(l.X.norm());
@@ -331,7 +331,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     sfm_data_.GetViews().at(t[1]).get(),
     sfm_data_.GetViews().at(t[2]).get()
   };
-    
+
   const Intrinsics::const_iterator iterIntrinsic[nviews] = {
     sfm_data_.GetIntrinsics().find(view[0]->id_intrinsic),
     sfm_data_.GetIntrinsics().find(view[1]->id_intrinsic),
@@ -343,13 +343,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       OPENMVG_LOG_ERROR << "Views with valid intrinsic data are required but this failed for view " << v;
       return false;
     }
-  
+
   const cameras::IntrinsicBase *cam[nviews] = {
     iterIntrinsic[0]->second.get(),
     iterIntrinsic[1]->second.get(),
     iterIntrinsic[2]->second.get()
   };
-  
+
   for (unsigned v=0; v < nviews; ++v) {
     if (!cam[v]) {
       OPENMVG_LOG_ERROR << "Cannot get back the camera intrinsic model for the triplet.";
@@ -361,7 +361,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     }
     OPENMVG_LOG_INFO << "K for v " << v << std::endl << dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K();
   }
-  
+
   OPENMVG_LOG_INFO << "Putative starting triplet info\n\tindex:";
   for (unsigned v = 0; v < nviews; ++v)
     OPENMVG_LOG_INFO << t[v] << " ";
@@ -385,7 +385,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   scdatum.resize(3,n);
   for (unsigned v = 0; v < nviews; ++v)
     pxdatum[v].resize(4,n);
-  
+
   uint32_t cptIndex = 0;
   for (const auto &track_iter : map_tracksCommon) {
     auto iter = track_iter.second.cbegin();
@@ -393,7 +393,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     for (unsigned v = 0; v < nviews; ++v) {
       assert(features_provider_->sio_feats_per_view[t[v]].size());
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[t[v]][i]);
-      pxdatum[v].col(cptIndex) << feature->x(), feature->y(), 
+      pxdatum[v].col(cptIndex) << feature->x(), feature->y(),
                                  cos(feature->orientation()), sin(feature->orientation());
       scdatum(v,cptIndex) = double(feature->scale());
 
@@ -415,12 +415,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   if (!
       robustRelativePoseTrifocal(cam, pxdatum, relativePose_info, 4.0, maximum_trifocal_ransac_iterations_
      )) {
-    OPENMVG_LOG_ERROR 
+    OPENMVG_LOG_ERROR
       << " /!\\ Robust estimation failed to compute calibrated trifocal tensor for this triplet: "
       << "{"<< t[0] << "," << t[1] << "," << t[2] << "}";
     return false;
   }
-  //  OPENMVG_LOG_INFO 
+  //  OPENMVG_LOG_INFO
   //    << "Trifocal Relative Pose residual from all inliers is: "
   //    << relativePose_info.found_residual_precision;
   // Bound min precision at 1 pix.
@@ -439,10 +439,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
     OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v];
-    if (v==0) 
+    if (v==0)
       tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     else
-      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0), 
+      tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0),
                                                 -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()*relativePose_info.relativePoseTrifocal[v].block<3,1>(0,3));
 
     // Init projection matrices
@@ -466,13 +466,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         // TODO(trifocal future) get_ud_pixel
         ifeat=(++iter)->second;
       }
-      
+
       // triangulate 3 views
       Vec4 X;
       TriangulateNView(x, P, &X);
       landmarks[track_iterator.first].X = X.hnormalized();
 
-      Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X), 
+      Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X),
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
       OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation " << residual.transpose();
       OPENMVG_LOG_INFO << "Residual from error()";
@@ -482,7 +482,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         datum[v].resize(4,1);
         // datum[v].col(0).head(2) = (*cam[v])(pxdatum[v].col(0).head<2>()).colwise().hnormalized(); // OK
         // datum[v].col(0).head(2) = (*cam[v])(x.col(v).hnormalized()).colwise().hnormalized();       // OK
-        datum[v].col(0).head(2) = 
+        datum[v].col(0).head(2) =
           (*cam[v])(landmarks[track_iterator.first].obs[view[v]->id_view].x).colwise().hnormalized(); // OK
       }
       OPENMVG_LOG_INFO << trifocal::NormalizedSquaredPointReprojectionOntoOneViewError::Error(
@@ -536,7 +536,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
 
-      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v 
+      // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
     }
     bool include_landmark = true;
@@ -544,11 +544,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
         const double angle = AngleBetweenRay(
           *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
-        
+
         const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
         const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
 
-        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1 
+        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1
           <<  "t\tresiduals norm " << residual_0.norm() << " " << residual_1.norm();
         if (angle <= 2.0) {
           OPENMVG_LOG_INFO << "\t\tFAIL angle test with angle " << angle;
@@ -559,10 +559,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           include_landmark = false;
         } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
                    residual_1.norm() >= relativePose_info.found_residual_precision) {
-            OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " " 
+            OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " "
               << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
           include_landmark = false;
-        } // else if (UsingOrientedConstraint()) { } TODO 
+        } // else if (UsingOrientedConstraint()) { } TODO
       }
     if (include_landmark)
       sfm_data_.structure[trackId] = landmarks[trackId];
@@ -717,7 +717,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
     resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
     if (features_provider_->has_sio_features()) {
-      const features::SIOPointFeature *feature = 
+      const features::SIOPointFeature *feature =
         &(features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId]);
       resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) = feature->coords().cast<double>();
       double theta = feature->orientation();
@@ -984,7 +984,7 @@ bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
   // or initial triplet relative pose
   //
   // Initial images choice
-  // 
+  //
   // TODO(trifocal future) Refine this: If both initial triplet and initial pair are specified,
   // then first try intial pair then try initial triplet if that fails
   // OR try initial triplet first and initial pair if fails, which might be more
@@ -1023,7 +1023,6 @@ bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()
         return false;
       OPENMVG_LOG_INFO << "Trying 3-view initialization from the provided one.";
       if (!MakeInitialTriplet3D(initial_triplet_)) {
-        OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
         OPENMVG_LOG_INFO << "Tried 3-view initialization from the provided one, fail.";
         return false;
       }
