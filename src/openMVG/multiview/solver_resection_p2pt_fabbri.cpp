@@ -162,7 +162,7 @@ struct pose_poly {
       T (*out)[2][TS_MAX_LEN][4], unsigned char out_len[TS_MAX_LEN]);
   
 	void get_r_t_from_rhos(
-		const unsigned ts_len,
+		const unsigned char ts_len,
 		const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
 		const T sigmas2[TS_MAX_LEN][4],
 		const T rhos1[TS_MAX_LEN], const T rhos2[TS_MAX_LEN],
@@ -207,19 +207,19 @@ pose_from_point_tangents(
 	p.find_bounded_root_intervals(&root_ids);
 
 	// compute rhos, r, t --------------------------
-	T rhos[3][pose_poly<T>::TS_MAX_LEN];
+	T rhos[3][TS_MAX_LEN];
 	unsigned char ts_len;
 	p.rhos_from_root_ids(root_ids, &rhos, &ts_len);
 
-	const T (&ts)[pose_poly<T>::TS_MAX_LEN]    = rhos[0]; 
-  const T (&rhos1)[pose_poly<T>::TS_MAX_LEN] = rhos[1]; 
-  const T (&rhos2)[pose_poly<T>::TS_MAX_LEN] = rhos[2];
-	T sigmas[2][pose_poly<T>::TS_MAX_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
+	const T (&ts)[TS_MAX_LEN]    = rhos[0]; 
+  const T (&rhos1)[TS_MAX_LEN] = rhos[1]; 
+  const T (&rhos2)[TS_MAX_LEN] = rhos[2];
+	T sigmas[2][TS_MAX_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
 
  	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
 
-	const T (&sigmas1)[pose_poly<T>::TS_MAX_LEN][4] = sigmas[0];
-	const T (&sigmas2)[pose_poly<T>::TS_MAX_LEN][4] = sigmas[1];
+	const T (&sigmas1)[TS_MAX_LEN][4] = sigmas[0];
+	const T (&sigmas2)[TS_MAX_LEN][4] = sigmas[1];
 
 	T (&RT)[RT_MAX_LEN][4][3] = *output_RT;
 	unsigned char &RT_len     = *output_RT_len;
@@ -2537,11 +2537,11 @@ pose_from_point_tangents_2(
 // needed to build R
 template<typename T>
 void pose_poly<T>::
-get_sigmas(const unsigned char ts_len, const T (&ts)[ROOT_IDS_LEN],
-	T (*sigmas)[2][ROOT_IDS_LEN][4], unsigned char sigmas_len[ROOT_IDS_LEN])
+get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN],
+	T (*sigmas)[2][TS_MAX_LEN][4], unsigned char sigmas_len[TS_MAX_LEN])
 {
-	T   (&sigmas1)[ROOT_IDS_LEN][4] = (*sigmas)[0];
-	T   (&sigmas2)[ROOT_IDS_LEN][4] = (*sigmas)[1];
+	T   (&sigmas1)[TS_MAX_LEN][4] = (*sigmas)[0];
+	T   (&sigmas2)[TS_MAX_LEN][4] = (*sigmas)[1];
 	T p[10];
 	for (unsigned char i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
@@ -2638,7 +2638,7 @@ get_r_t_from_rhos(
 	const unsigned char ts_len,
 	const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
 	const T sigmas2[TS_MAX_LEN][4],
-	const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
+	const T rhos1[TS_MAX_LEN], const T rhos2[TS_MAX_LEN],
 	const T gama1[3], const T tgt1[3],
 	const T gama2[3], const T tgt2[3],
 	const T Gama1[3], const T Tgt1[3],
@@ -2677,7 +2677,7 @@ get_r_t_from_rhos(
 
 	// Matrix containing Rotations and Translations
 	T (&RT)[RT_MAX_LEN][4][3] = *output;
-	unsigned char &RT_len     = *output_len; RT_len; RT_len = 0;
+	unsigned char &RT_len     = *output_len; RT_len = 0;
 	for (unsigned char i = 0; i < ts_len; i++) {
 		for (unsigned char j = 0; j < sigmas_len[i]; j++, RT_len++) {
       assert(RT_len < RT_MAX_LEN);
