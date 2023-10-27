@@ -45,6 +45,13 @@ public:
 
   virtual bool Process() override;
 
+  // tests that in fact the distortion is not identity
+  static bool isDistortionZero(const cameras::IntrinsicBase *cam) 
+  {
+    Vec2 v(2,3), v_ud = cam->get_ud_pixel(v); // dummy
+    return (v-v_ud).norm() < 1e-8;
+  }
+
 protected:
 
 

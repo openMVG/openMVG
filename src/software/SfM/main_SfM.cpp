@@ -609,8 +609,7 @@ int main(int argc, char **argv)
         !std::get<1>(initial_triplet_string).empty() &&
         !std::get<2>(initial_triplet_string).empty()) {
       Triplet initial_triplet_index;
-      if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index))
-      {
+      if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index)) {
         OPENMVG_LOG_ERROR << "Could not find the initial triplets <"
           << std::get<0>(initial_triplet_string) <<  ", "
           << std::get<1>(initial_triplet_string) <<  ", "
