@@ -46,8 +46,8 @@ namespace euclidean_resection
 {
   
 // At most 8 solutions with positive depth, TODO: assert if longer
-static constexpr unsigned TS_MAX_LEN = 8;
-static constexpr unsigned RT_MAX_LEN = (TS_MAX_LEN * TS_MAX_LEN);
+static constexpr unsigned char TS_MAX_LEN = 8;
+static constexpr unsigned char RT_MAX_LEN = (TS_MAX_LEN * TS_MAX_LEN);
 
 template <typename T=double>
 class p2pt { // fully static, not to be instantiated - just used for templating
@@ -58,7 +58,7 @@ class p2pt { // fully static, not to be instantiated - just used for templating
     const T Gama1[3], const T Tgt1[3],
     const T Gama2[3], const T Tgt2[3],
     T (*output_RT)[RT_MAX_LEN][4][3],
-    unsigned *output_RT_len,
+    unsigned char *output_RT_len,
     T *output_degen
   );
 };
@@ -73,10 +73,10 @@ struct pose_poly {
 		H0, H1, H2, H3, H4, J0, J1, J2, J3, K0, K1, K2, K3,
 		L0, L1, L2, alpha, beta, theta, sth, cth;
 
-  static constexpr unsigned T_LEN = 2001 /* fine-tune based on data, but has to be about >= 1500 */, 
-                            ROOT_IDS_LEN = T_LEN - 1;
+  static constexpr unsigned short T_LEN = 2001 /* fine-tune based on data, but has to be about >= 1500 */, 
+                                  ROOT_IDS_LEN = T_LEN - 1;
   static constexpr double T_LEN_2 = 2./(T_LEN-1);
-  inline T t_vec(unsigned i) { return T_LEN_2*i -1.; }
+  inline T t_vec(unsigned short i) { return T_LEN_2*i -1.; }
 
 	void pose_from_point_tangents_2(
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
@@ -120,7 +120,7 @@ struct pose_poly {
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
 	  T p[10];
     T curr_val = fn_t(t_vec(0), p), next_val;
-    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
+    for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
       (*root_ids_out)[i] = curr_val * next_val < 0;
       curr_val = next_val;
@@ -130,25 +130,25 @@ struct pose_poly {
 	// inline T operator()(T t) { return fn_t(t); }
   
 	inline void rhos_from_root_ids(const bool (&root_ids)[ROOT_IDS_LEN], 
-                                 T (*out)[3][ROOT_IDS_LEN], 
-                                 unsigned *out_ts_len) {
-    
-    T (&ts)[ROOT_IDS_LEN] = (*out)[0];
+                                 T (*out)[3][TS_MAX_LEN], 
+                                 unsigned char *out_ts_len) {
+    T (&ts)[TS_MAX_LEN] = (*out)[0];
     T p[10];
-    unsigned &ts_end = *out_ts_len; ts_end = 0;
-    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
+    unsigned char &ts_end = *out_ts_len; ts_end = 0;
+    for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       if (!root_ids[i]) continue;
       T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
       T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
-      for (unsigned k = 0; k < 4; ++k) {
+      for (unsigned char k = 0; k < 4; ++k) {
         t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
         f0 = f1; if (k + 1 < 4) f1 = fn_t(t2, p);
       }
+      assert(ts_end <= TS_MAX_LEN);
     }
     //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
-    T (&rhos1)[ROOT_IDS_LEN] = (*out)[1]; T (&rhos2)[ROOT_IDS_LEN] = (*out)[2];
+    T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
     const T alpha_times_2 = 2.*alpha;
-    for (unsigned i = 0; i < ts_end; i++) {
+    for (unsigned char i = 0; i < ts_end; i++) {
       const T ts_new = ts[i], x2 = ts_new * ts_new,
       ts_den = 1. + x2,
       alpha_ts_new2 = alpha_times_2 * ts_new,
@@ -158,17 +158,17 @@ struct pose_poly {
     }
   }
   
-	void get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN], 
-      T (*out)[2][ROOT_IDS_LEN][4], unsigned char out_len[ROOT_IDS_LEN]);
+	void get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN], 
+      T (*out)[2][TS_MAX_LEN][4], unsigned char out_len[TS_MAX_LEN]);
   
 	void get_r_t_from_rhos(
 		const unsigned ts_len,
-		const T sigmas1[ROOT_IDS_LEN][4], const unsigned char sigmas_len[ROOT_IDS_LEN],
-		const T sigmas2[ROOT_IDS_LEN][4],
-		const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
+		const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
+		const T sigmas2[TS_MAX_LEN][4],
+		const T rhos1[TS_MAX_LEN], const T rhos2[TS_MAX_LEN],
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3],
-		T (*out)[RT_MAX_LEN][4][3], unsigned *out_len
+		T (*out)[RT_MAX_LEN][4][3], unsigned char *out_len
 	);
 };
   
@@ -178,7 +178,7 @@ bool p2pt<T>::
 pose_from_point_tangents(
 	const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
 	const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3],
-	T (*output_RT)[RT_MAX_LEN][4][3], unsigned *output_RT_len, T *output_degen
+	T (*output_RT)[RT_MAX_LEN][4][3], unsigned char *output_RT_len, T *output_degen
 )
 {
   { // test for geometric degeneracy -------------------------------
@@ -207,22 +207,22 @@ pose_from_point_tangents(
 	p.find_bounded_root_intervals(&root_ids);
 
 	// compute rhos, r, t --------------------------
-	T rhos[3][pose_poly<T>::ROOT_IDS_LEN];
-	unsigned ts_len;
+	T rhos[3][pose_poly<T>::TS_MAX_LEN];
+	unsigned char ts_len;
 	p.rhos_from_root_ids(root_ids, &rhos, &ts_len);
 
-	const T (&ts)[pose_poly<T>::ROOT_IDS_LEN]    = rhos[0]; 
-  const T (&rhos1)[pose_poly<T>::ROOT_IDS_LEN] = rhos[1]; 
-  const T (&rhos2)[pose_poly<T>::ROOT_IDS_LEN] = rhos[2];
-	T sigmas[2][pose_poly<T>::ROOT_IDS_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
+	const T (&ts)[pose_poly<T>::TS_MAX_LEN]    = rhos[0]; 
+  const T (&rhos1)[pose_poly<T>::TS_MAX_LEN] = rhos[1]; 
+  const T (&rhos2)[pose_poly<T>::TS_MAX_LEN] = rhos[2];
+	T sigmas[2][pose_poly<T>::TS_MAX_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
 
  	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
 
-	const T (&sigmas1)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[0];
-	const T (&sigmas2)[pose_poly<T>::ROOT_IDS_LEN][4] = sigmas[1];
+	const T (&sigmas1)[pose_poly<T>::TS_MAX_LEN][4] = sigmas[0];
+	const T (&sigmas2)[pose_poly<T>::TS_MAX_LEN][4] = sigmas[1];
 
 	T (&RT)[RT_MAX_LEN][4][3] = *output_RT;
-	unsigned &RT_len          = *output_RT_len;
+	unsigned char &RT_len     = *output_RT_len;
 
 	p.get_r_t_from_rhos(ts_len, sigmas1, sigmas_len, sigmas2,
 		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2, 
@@ -2537,13 +2537,13 @@ pose_from_point_tangents_2(
 // needed to build R
 template<typename T>
 void pose_poly<T>::
-get_sigmas(const unsigned ts_len, const T (&ts)[ROOT_IDS_LEN],
+get_sigmas(const unsigned char ts_len, const T (&ts)[ROOT_IDS_LEN],
 	T (*sigmas)[2][ROOT_IDS_LEN][4], unsigned char sigmas_len[ROOT_IDS_LEN])
 {
 	T   (&sigmas1)[ROOT_IDS_LEN][4] = (*sigmas)[0];
 	T   (&sigmas2)[ROOT_IDS_LEN][4] = (*sigmas)[1];
 	T p[10];
-	for (unsigned i = 0; i < ts_len; i++) {
+	for (unsigned char i = 0; i < ts_len; i++) {
 		sigmas_len[i] = 0; 
 
 		fn_t(ts[i], p); // TODO: perhaps normalize H J K L
@@ -2624,10 +2624,10 @@ template<typename T>
 inline void
 multm3x3(const T (&m1)[3][3], const T (&m2)[3][3], T output_m[][3])
 {
-	for (unsigned i = 0; i < 3; i++)
-		for (unsigned j = 0; j < 3; j++) {
+	for (unsigned char i = 0; i < 3; i++)
+		for (unsigned char j = 0; j < 3; j++) {
 			output_m[i][j] = 0;
-			for (unsigned k = 0; k < 3; k++)
+			for (unsigned char k = 0; k < 3; k++)
 				output_m[i][j] += m1[i][k] * m2[k][j];
 		}
 }
@@ -2635,26 +2635,26 @@ multm3x3(const T (&m1)[3][3], const T (&m2)[3][3], T output_m[][3])
 template<typename T>
 void pose_poly<T>::
 get_r_t_from_rhos(
-	const unsigned ts_len,
-	const T sigmas1[ROOT_IDS_LEN][4], const unsigned char sigmas_len[ROOT_IDS_LEN],
-	const T sigmas2[ROOT_IDS_LEN][4],
+	const unsigned char ts_len,
+	const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
+	const T sigmas2[TS_MAX_LEN][4],
 	const T rhos1[ROOT_IDS_LEN], const T rhos2[ROOT_IDS_LEN],
 	const T gama1[3], const T tgt1[3],
 	const T gama2[3], const T tgt2[3],
 	const T Gama1[3], const T Tgt1[3],
 	const T Gama2[3], const T Tgt2[3],
-	T (*output)[RT_MAX_LEN][4][3], unsigned *output_len
+	T (*output)[RT_MAX_LEN][4][3], unsigned char *output_len
 )
 {
 	T lambdas1[TS_MAX_LEN][TS_MAX_LEN]; T lambdas2[TS_MAX_LEN][TS_MAX_LEN];
 	const T DGama[3] = {Gama1[0]-Gama2[0], Gama1[1]-Gama2[1], Gama1[2]-Gama2[2]};
   
-	for (unsigned i = 0; i < ts_len; i++) {
+	for (unsigned char i = 0; i < ts_len; i++) {
     const T dgamas_rhos[3] = {
      rhos1[i]*gama1[0] - rhos2[i]*gama2[0],
      rhos1[i]*gama1[1] - rhos2[i]*gama2[1],
      rhos1[i]*gama1[2] - rhos2[i]*gama2[2]};
-		for (unsigned j = 0; j < sigmas_len[i]; j++) {
+		for (unsigned char j = 0; j < sigmas_len[i]; j++) {
 			lambdas1[i][j] = 
         (DGama[0]*Tgt1[0]+DGama[1]*Tgt1[1] + DGama[2]*Tgt1[2]) / 
         (dgamas_rhos[0]*(rhos1[i]*tgt1[0]  + sigmas1[i][j]*gama1[0]) + 
@@ -2677,9 +2677,10 @@ get_r_t_from_rhos(
 
 	// Matrix containing Rotations and Translations
 	T (&RT)[RT_MAX_LEN][4][3] = *output;
-	unsigned &RT_len               = *output_len; RT_len = 0;
-	for (unsigned i = 0; i < ts_len; i++) {
-		for (unsigned j = 0; j < sigmas_len[i]; j++, RT_len++) {
+	unsigned char &RT_len     = *output_len; RT_len; RT_len = 0;
+	for (unsigned char i = 0; i < ts_len; i++) {
+		for (unsigned char j = 0; j < sigmas_len[i]; j++, RT_len++) {
+      assert(RT_len < RT_MAX_LEN);
 			T (&Rots)[4][3] = RT[RT_len]; T (&Transls)[3] = RT[RT_len][3];
 
 			#define B_row(r) \
@@ -2709,7 +2710,7 @@ void P2PtSolver_Fabbri::Solve(
   assert(bearing_vectors.cols() == X.cols());
   assert(bearing_vectors.cols() == 2);
 
-  unsigned nsols;
+  unsigned char nsols;
   double degen;
 	double rotation_translation_solutions[RT_MAX_LEN][4][3];
 
@@ -2722,13 +2723,13 @@ void P2PtSolver_Fabbri::Solve(
   ))
     OPENMVG_LOG_ERROR << "degeneracy"; 
 
-	for (unsigned i = 0; i < nsols; ++i) {
+	for (unsigned char i = 0; i < nsols; ++i) {
     Mat34 P;
-    for (unsigned j = 0 ; j < 3; ++j)
-      for (unsigned k = 0 ; k < 3; ++k)
+    for (unsigned char j = 0 ; j < 3; ++j)
+      for (unsigned char k = 0 ; k < 3; ++k)
         P(j,k) = rotation_translation_solutions[i][j][k];
 
-    for (unsigned k = 0 ; k < 3; ++k)
+    for (unsigned char k = 0 ; k < 3; ++k)
       P(k,3) = rotation_translation_solutions[i][3][k];
     models->push_back(P);
   }
