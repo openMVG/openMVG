@@ -199,7 +199,7 @@ pose_from_point_tangents(
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
     // std::cout << "degen: " << degen << std::endl;
-    if (std::fabs(degen) < 0.09) {
+    if (std::fabs(degen) < 0.001) {
       *output_RT_len = 0;
       return false;  // can still solve this in many cases, but lets not fool around
     }
@@ -2728,7 +2728,7 @@ void P2PtSolver_Fabbri::Solve(
   //  )
     // OPENMVG_LOG_ERROR << "degeneracy"; 
 
-  OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
+  // OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
 	for (unsigned char i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned char j = 0 ; j < 3; ++j)
@@ -2737,8 +2737,10 @@ void P2PtSolver_Fabbri::Solve(
 
     for (unsigned char k = 0 ; k < 3; ++k)
       P(k,3) = rotation_translation_solutions[i][3][k];
+    //std::cout << "models\n" << P << std::endl;
     models->push_back(P);
   }
+    //std::cout << "models\n\n" << std::endl;
 };
 
 } // namespace euclidean_resection

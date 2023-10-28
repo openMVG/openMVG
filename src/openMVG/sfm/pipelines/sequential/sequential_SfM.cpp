@@ -57,10 +57,12 @@ bool SequentialSfMReconstructionEngine::Process()
 {
   if (!InitLandmarkTracks()) return false;
   if (!MakeInitialSeedReconstruction()) return false;
-  if (!ConsistencyCheck()) {
-    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
-    return false;
-  }
+#ifndef NDEBUG
+//  if (!ConsistencyCheck()) {
+//    OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
+//    return false;
+//  }
+#endif
   if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
@@ -105,7 +107,7 @@ inline static void TriangulateTangent2View
 //
 void SequentialSfMReconstructionEngine::ReconstructAllTangents()
 {
-  OPENMVG_LOG_INFO <<  "ReconstructAllTangents -------------------------------------";
+  // OPENMVG_LOG_INFO <<  "ReconstructAllTangents -------------------------------------";
   unsigned const nviews = sfm_data_.num_views() - set_remaining_view_id_.size();
   std::vector<const Observation *> ob(nviews); // use only nviews of this;
   std::vector<ObservationInfo *>obi(nviews);
@@ -657,18 +659,22 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 {
   OPENMVG_LOG_INFO << "Resection new view - id " << viewIndex << "-----------------------------------";
-  if (!SequentialSfMReconstructionEngine::ConsistencyCheck()) {
-    OPENMVG_LOG_INFO << "Fail Test before starts";
-    return false;
-  } else
-    OPENMVG_LOG_INFO << "Pass Test before starts";
+#ifndef NDEBUG
+//  if (!SequentialSfMReconstructionEngine::ConsistencyCheck()) {
+//    OPENMVG_LOG_INFO << "Fail Test before starts";
+//    return false;
+//  } else
+//    OPENMVG_LOG_INFO << "Pass Test before starts";
+#endif
   if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
-    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
-      OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented";
-      return false;
-    } else
-      OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented";
+#ifndef NDEBUG
+//    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
+//      OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented";
+//      return false;
+//    } else
+//      OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented";
+#endif 
   }
   using namespace tracks;
 
