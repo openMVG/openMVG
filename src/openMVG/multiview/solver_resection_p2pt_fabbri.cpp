@@ -45,9 +45,9 @@ namespace openMVG
 namespace euclidean_resection
 {
   
-// At most 8 solutions with positive depth, TODO: assert if longer
-static constexpr unsigned char TS_MAX_LEN = 8;
-static constexpr unsigned char RT_MAX_LEN = (TS_MAX_LEN * TS_MAX_LEN);
+// At most 8 solutions with positive depth, 16 total
+static constexpr unsigned char TS_MAX_LEN = 16;
+static constexpr unsigned char RT_MAX_LEN = 4*TS_MAX_LEN;
 
 template <typename T=double>
 class p2pt { // fully static, not to be instantiated - just used for templating
@@ -133,28 +133,26 @@ struct pose_poly {
                                  T (*out)[3][TS_MAX_LEN], 
                                  unsigned char *out_ts_len) {
     T (&ts)[TS_MAX_LEN] = (*out)[0];
-    T p[10];
+    T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
+    T p[10], t2;
     unsigned char &ts_end = *out_ts_len; ts_end = 0;
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       if (!root_ids[i]) continue;
-      T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
+      T t0 = t_vec(i), t1 = t_vec(i+1), t;
       T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
       for (unsigned char k = 0; k < 4; ++k) {
-        t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
-        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2, p);
+        t = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t;
+        f0 = f1; if (k + 1 < 4) f1 = fn_t(t, p);
       }
+      // Root is t, plus minus t_stddev. Now get rho1(t):
+
+      const T x2 = t*t, alpha_times_2 = 2.*alpha,
+      alpha_ts_new2 = alpha_times_2 * t, beta_1_minus_x2 = beta * (1. - x2);
+      const T r1 = ( alpha_ts_new2 * cth + beta_1_minus_x2 * sth); if (r1 <= 1e-12) continue;
+      const T r2 = (-alpha_ts_new2 * sth + beta_1_minus_x2 * cth); if (r2 <= 1e-12) continue;
+      const T ts_den = 1. + x2; 
+      rhos1[ts_end] /= ts_den; rhos2[ts_end] /= ts_den; ts[ts_end++] = t;
       assert(ts_end <= TS_MAX_LEN);
-    }
-    //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
-    T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
-    const T alpha_times_2 = 2.*alpha;
-    for (unsigned char i = 0; i < ts_end; i++) {
-      const T ts_new = ts[i], x2 = ts_new * ts_new,
-      ts_den = 1. + x2,
-      alpha_ts_new2 = alpha_times_2 * ts_new,
-      beta_1_minus_x2 = beta * (1. - x2);
-      rhos1[i] = ( alpha_ts_new2 * cth + beta_1_minus_x2 * sth) / ts_den;
-      rhos2[i] = (-alpha_ts_new2 * sth + beta_1_minus_x2 * cth) / ts_den;
     }
   }
   
@@ -2690,9 +2688,9 @@ get_r_t_from_rhos(
 
 			const T B[3][3] = { B_row(0), B_row(1), B_row(2) };
 			multm3x3(B, inv_A, Rots);
-      Transls[0] = rhos1[i]*gama1[0] - Rots[0][0] * Gama1[0] - Rots[0][1] * Gama1[1] - Rots[0][2] * Gama1[2];
-      Transls[1] = rhos1[i]*gama1[1] - Rots[1][0] * Gama1[0] - Rots[1][1] * Gama1[1] - Rots[1][2] * Gama1[2];
-      Transls[2] = rhos1[i]*gama1[2] - Rots[2][0] * Gama1[0] - Rots[2][1] * Gama1[1] - Rots[2][2] * Gama1[2];
+      Transls[0] = rhos1[i]*gama1[0] - Rots[0][0]*Gama1[0] - Rots[0][1]*Gama1[1] - Rots[0][2]*Gama1[2];
+      Transls[1] = rhos1[i]*gama1[1] - Rots[1][0]*Gama1[0] - Rots[1][1]*Gama1[1] - Rots[1][2]*Gama1[2];
+      Transls[2] = rhos1[i]*gama1[2] - Rots[2][0]*Gama1[0] - Rots[2][1]*Gama1[1] - Rots[2][2]*Gama1[2];
 		}
 	}
 }
