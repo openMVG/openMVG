@@ -132,9 +132,35 @@ struct pose_poly {
 	inline void rhos_from_root_ids(const bool (&root_ids)[ROOT_IDS_LEN], 
                                  T (*out)[3][TS_MAX_LEN], 
                                  unsigned char *out_ts_len) {
+#if 0
+    T (&ts)[TS_MAX_LEN] = (*out)[0];
+    T p[10];
+    unsigned char &ts_end = *out_ts_len; ts_end = 0;
+    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
+      if (!root_ids[i]) continue;
+      T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
+      T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
+      for (unsigned k = 0; k < 4; ++k) {
+        t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
+        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2, p);
+      }
+    }
+    //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
+    T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
+    const T alpha_times_2 = 2.*alpha;
+    for (unsigned i = 0; i < ts_end; i++) {
+      const T ts_new = ts[i], tt = ts_new * ts_new,
+      ts_den = 1. + tt,
+      alpha_ts_new2 = alpha_times_2 * ts_new,
+      beta_1_minus_tt = beta * (1. - tt);
+      rhos1[i] = ( alpha_ts_new2 * cth + beta_1_minus_tt * sth) / ts_den;
+      rhos2[i] = (-alpha_ts_new2 * sth + beta_1_minus_tt * cth) / ts_den;
+    }
+#endif
+
     T (&ts)[TS_MAX_LEN] = (*out)[0];
     T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
-    T p[10], t2;
+    T p[10];
     unsigned char &ts_end = *out_ts_len; ts_end = 0;
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       if (!root_ids[i]) continue;
@@ -146,11 +172,11 @@ struct pose_poly {
       }
       // Root is t, plus minus t_stddev. Now get rho1(t):
 
-      const T x2 = t*t, alpha_times_2 = 2.*alpha,
-      alpha_ts_new2 = alpha_times_2 * t, beta_1_minus_x2 = beta * (1. - x2);
-      const T r1 = ( alpha_ts_new2 * cth + beta_1_minus_x2 * sth); if (r1 <= 1e-12) continue;
-      const T r2 = (-alpha_ts_new2 * sth + beta_1_minus_x2 * cth); if (r2 <= 1e-12) continue;
-      const T ts_den = 1. + x2; 
+      const T tt = t*t, alpha_times_2 = 2.*alpha,
+      alpha_ts_new2 = alpha_times_2 * t, beta_1_minus_tt = beta * (1. - tt);
+      const T r1 =  alpha_ts_new2 * cth + beta_1_minus_tt * sth; if (r1 <= 1e-12) continue;
+      const T r2 = -alpha_ts_new2 * sth + beta_1_minus_tt * cth; if (r2 <= 1e-12) continue;
+      const T ts_den = 1. + tt; 
       rhos1[ts_end] /= ts_den; rhos2[ts_end] /= ts_den; ts[ts_end++] = t;
       assert(ts_end <= TS_MAX_LEN);
     }
@@ -2552,16 +2578,14 @@ get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN],
     A += A; E += E;
 
     T delta = B*B - 2*A*C;
-    if (delta < -1e-4)
-      continue;
+    if (delta < -1e-4) continue;
     delta = (delta < 0)? 0 : sqrt(delta);
     B = -B;
 		T sigma1_m = (B - delta)/A;
 		T sigma1_p = (B + delta)/A;
 
 		delta = F*F - 2*E*G;
-    if (delta < -1e-4)
-      continue;
+    if (delta < -1e-4) continue;
     delta = (delta < 0)? 0 : sqrt(delta);
     F = -F;
 		T sigma2_m = (F - delta)/E;
