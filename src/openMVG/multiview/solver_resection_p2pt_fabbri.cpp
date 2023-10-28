@@ -123,7 +123,7 @@ struct pose_poly {
     // std::cout << "fn_t [";
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
-      static constexpr T eps = std::numeric_limits<T>::epsilon();
+      static constexpr T eps = std::numeric_limits<T>::epsilon()*1e-13;
       (*root_ids_out)[i] = curr_val > +eps && next_val < -eps || 
                            curr_val < -eps && next_val > +eps;
       // std::cout << curr_val << " ";
@@ -198,7 +198,7 @@ pose_from_point_tangents(
     degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-    // std::cout << "degen: " << degen << std::endl;
+    std::cout << "degen: " << degen << std::endl;
     if (std::fabs(degen) < 0.001) {
       *output_RT_len = 0;
       return false;  // can still solve this in many cases, but lets not fool around
@@ -2618,7 +2618,7 @@ invm3x3(T (&M)[3][3])
 	D = -(b*i - c*h), E =  (a*i - c*g), F = -(a*h - b*g),
 	G =  (b*f - c*e), H = -(a*f - c*d), I =  (a*e - b*d);
 
-	const T detm = (a*A + b*B + c*C);
+	const T detm = a*A + b*B + c*C;
 	M[0][0] = A/detm; M[0][1] = D/detm; M[0][2] = G/detm;
 	M[1][0] = B/detm; M[1][1] = E/detm; M[1][2] = H/detm;
 	M[2][0] = C/detm; M[2][1] = F/detm; M[2][2] = I/detm;
@@ -2728,7 +2728,7 @@ void P2PtSolver_Fabbri::Solve(
   //  )
     // OPENMVG_LOG_ERROR << "degeneracy"; 
 
-  // OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
+  OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
 	for (unsigned char i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned char j = 0 ; j < 3; ++j)

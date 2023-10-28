@@ -85,7 +85,7 @@ UNIT_TEST(openMVG translation_averaging "openMVG_multiview_test_data;openMVG_mul
 
 # For testing
 # TODO: consider --ffast-math default for multiview lib Release
-set_source_files_properties(solver_resection_p2pt_fabbri.cpp PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
+#set_source_files_properties(solver_resection_p2pt_fabbri.cpp PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
 #set_target_properties(openMVG_multiview PROPERTIES COMPILE_FLAGS "-O3 -march=native -ffast-math")
 #set_target_properties(openMVG_multiview PROPERTIES COMPILE_DEFINITIONS "NDEBUG")
 
