@@ -46,7 +46,7 @@ namespace euclidean_resection
 {
   
 // At most 8 solutions with positive depth, 16 total
-static constexpr unsigned char TS_MAX_LEN = 16;
+static constexpr unsigned char TS_MAX_LEN = 63;
 static constexpr unsigned char RT_MAX_LEN = 4*TS_MAX_LEN;
 
 template <typename T=double>
@@ -120,11 +120,14 @@ struct pose_poly {
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
 	  T p[10];
     T curr_val = fn_t(t_vec(0), p), next_val;
+    // std::cout << "fn_t [";
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
       (*root_ids_out)[i] = curr_val * next_val < 0;
+      // std::cout << curr_val << " ";
       curr_val = next_val;
     }
+    // std::cout << "]\n";
   }
   
 	// inline T operator()(T t) { return fn_t(t); }
@@ -132,31 +135,6 @@ struct pose_poly {
 	inline void rhos_from_root_ids(const bool (&root_ids)[ROOT_IDS_LEN], 
                                  T (*out)[3][TS_MAX_LEN], 
                                  unsigned char *out_ts_len) {
-#if 0
-    T (&ts)[TS_MAX_LEN] = (*out)[0];
-    T p[10];
-    unsigned char &ts_end = *out_ts_len; ts_end = 0;
-    for (unsigned i = 0; i < ROOT_IDS_LEN; i++) {
-      if (!root_ids[i]) continue;
-      T t0 = t_vec(i), t1 = t_vec(i+1), &t2 = ts[ts_end++];
-      T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
-      for (unsigned k = 0; k < 4; ++k) {
-        t2 = t1 - f1*(t1-t0)/(f1-f0); t0 = t1; t1 = t2;
-        f0 = f1; if (k + 1 < 4) f1 = fn_t(t2, p);
-      }
-    }
-    //% Each root is now ts(i), plus minus t_stddev. Now get rho1(t):
-    T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
-    const T alpha_times_2 = 2.*alpha;
-    for (unsigned i = 0; i < ts_end; i++) {
-      const T ts_new = ts[i], tt = ts_new * ts_new,
-      ts_den = 1. + tt,
-      alpha_ts_new2 = alpha_times_2 * ts_new,
-      beta_1_minus_tt = beta * (1. - tt);
-      rhos1[i] = ( alpha_ts_new2 * cth + beta_1_minus_tt * sth) / ts_den;
-      rhos2[i] = (-alpha_ts_new2 * sth + beta_1_minus_tt * cth) / ts_den;
-    }
-#endif
 
     T (&ts)[TS_MAX_LEN] = (*out)[0];
     T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
@@ -177,9 +155,10 @@ struct pose_poly {
       const T r1 =  alpha_ts_new2 * cth + beta_1_minus_tt * sth; if (r1 <= 1e-12) continue;
       const T r2 = -alpha_ts_new2 * sth + beta_1_minus_tt * cth; if (r2 <= 1e-12) continue;
       const T ts_den = 1. + tt; 
-      rhos1[ts_end] /= ts_den; rhos2[ts_end] /= ts_den; ts[ts_end++] = t;
+      rhos1[ts_end] = r1 / ts_den; rhos2[ts_end] = r2 / ts_den; ts[ts_end++] = t;
       assert(ts_end <= TS_MAX_LEN);
     }
+    std::cout << "ts_end: " << ts_end << std::endl;
   }
   
 	void get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN], 
@@ -217,7 +196,8 @@ pose_from_point_tangents(
     degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-    if (std::fabs(degen) < 1e-5) {
+    std::cout << "degen: " << degen << std::endl;
+    if (std::fabs(degen) < 0.09) {
       *output_RT_len = 0;
       return false;  // can still solve this in many cases, but lets not fool around
     }

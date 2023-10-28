@@ -674,11 +674,6 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::transform(sfm_data_.GetLandmarks().cbegin(), sfm_data_.GetLandmarks().cend(),
     std::inserter(reconstructed_trackId, reconstructed_trackId.begin()),
     stl::RetrieveKey());
-  if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
-    OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented2";
-    return false;
-  } else
-    OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented2";
 
   // A2. intersects the view tracks with the reconstructed
   std::set<uint32_t> set_trackIdForResection;
@@ -723,11 +718,6 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   std::set<uint32_t>::const_iterator iterTrackId = set_trackIdForResection.begin();
   std::vector<uint32_t>::const_iterator iterfeatId = vec_featIdForResection.begin();
 
-  if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
-    OPENMVG_LOG_INFO << "Fail ConsistencyCheckOriented2";
-    return false;
-  } else
-    OPENMVG_LOG_INFO << "Pass ConsistencyCheckOriented2";
   for (size_t cpt = 0; cpt < vec_featIdForResection.size(); ++cpt, ++iterTrackId, ++iterfeatId) {
     resection_data.pt3D.col(cpt) = sfm_data_.GetLandmarks().at(*iterTrackId).X;
     resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
