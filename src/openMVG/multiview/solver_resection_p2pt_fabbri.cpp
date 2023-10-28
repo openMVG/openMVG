@@ -2618,10 +2618,10 @@ invm3x3(T (&M)[3][3])
 	D = -(b*i - c*h), E =  (a*i - c*g), F = -(a*h - b*g),
 	G =  (b*f - c*e), H = -(a*f - c*d), I =  (a*e - b*d);
 
-	const T invdet_M = 1. / (a*A + b*B + c*C);
-	M[0][0] = invdet_M * A; M[0][1] = invdet_M * D; M[0][2] = invdet_M * G;
-	M[1][0] = invdet_M * B; M[1][1] = invdet_M * E; M[1][2] = invdet_M * H;
-	M[2][0] = invdet_M * C; M[2][1] = invdet_M * F; M[2][2] = invdet_M * I;
+	const T detm = (a*A + b*B + c*C);
+	M[0][0] = A/detm; M[0][1] = D/detm; M[0][2] = G/detm;
+	M[1][0] = B/detm; M[1][1] = E/detm; M[1][2] = H/detm;
+	M[2][0] = C/detm; M[2][1] = F/detm; M[2][2] = I/detm;
 }
 
 template<typename T>
