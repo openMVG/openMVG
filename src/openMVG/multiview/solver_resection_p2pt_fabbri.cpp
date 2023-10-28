@@ -158,7 +158,7 @@ struct pose_poly {
       rhos1[ts_end] = r1 / ts_den; rhos2[ts_end] = r2 / ts_den; ts[ts_end++] = t;
       assert(ts_end <= TS_MAX_LEN);
     }
-    std::cout << "ts_end: " << ts_end << std::endl;
+    // std::cout << "ts_end: " << ts_end << std::endl;
   }
   
 	void get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN], 
@@ -196,7 +196,7 @@ pose_from_point_tangents(
     degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-    std::cout << "degen: " << degen << std::endl;
+    // std::cout << "degen: " << degen << std::endl;
     if (std::fabs(degen) < 0.09) {
       *output_RT_len = 0;
       return false;  // can still solve this in many cases, but lets not fool around
@@ -2716,15 +2716,17 @@ void P2PtSolver_Fabbri::Solve(
   double degen;
 	double rotation_translation_solutions[RT_MAX_LEN][4][3];
 
-  if (!p2pt<double>::pose_from_point_tangents(
+  // if (!
+    p2pt<double>::pose_from_point_tangents(
     bearing_vectors.col(0).data(), tangent_vectors.col(0).data(),
     bearing_vectors.col(1).data(), tangent_vectors.col(1).data(),
     X.col(0).data(), T.col(0).data(),
     X.col(1).data(), T.col(1).data(),
-    &rotation_translation_solutions, &nsols, &degen
-  ))
-    OPENMVG_LOG_ERROR << "degeneracy"; 
+    &rotation_translation_solutions, &nsols, &degen);
+  //  )
+    // OPENMVG_LOG_ERROR << "degeneracy"; 
 
+  OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
 	for (unsigned char i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned char j = 0 ; j < 3; ++j)
