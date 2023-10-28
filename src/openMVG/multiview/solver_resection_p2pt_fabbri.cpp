@@ -46,7 +46,7 @@ namespace euclidean_resection
 {
   
 // At most 8 solutions with positive depth, 16 total
-static constexpr unsigned char TS_MAX_LEN = 32;
+static constexpr unsigned char TS_MAX_LEN = 63;
 static constexpr unsigned char RT_MAX_LEN = 4*TS_MAX_LEN;
 
 template <typename T=double>
