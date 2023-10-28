@@ -46,7 +46,7 @@ namespace euclidean_resection
 {
   
 // At most 8 solutions with positive depth, 16 total
-static constexpr unsigned char TS_MAX_LEN = 63;
+static constexpr unsigned char TS_MAX_LEN = 32;
 static constexpr unsigned char RT_MAX_LEN = 4*TS_MAX_LEN;
 
 template <typename T=double>
@@ -123,7 +123,9 @@ struct pose_poly {
     // std::cout << "fn_t [";
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
-      (*root_ids_out)[i] = curr_val * next_val < 0;
+      static constexpr T eps = std::numeric_limits<T>::epsilon();
+      (*root_ids_out)[i] = curr_val > +eps && next_val < -eps || 
+                           curr_val < -eps && next_val > +eps;
       // std::cout << curr_val << " ";
       curr_val = next_val;
     }
@@ -2594,7 +2596,7 @@ get_sigmas(const unsigned char ts_len, const T (&ts)[TS_MAX_LEN],
 
 template<typename T>
 inline void
-invm3x3(const T (&input_m)[3][3], T (&output_m)[3][3])
+invm3x3(T (&M)[3][3])
 {
 	// 3x3 MATRIX INVERSION ALGORITHM
 	//             -1               T
@@ -2607,9 +2609,9 @@ invm3x3(const T (&input_m)[3][3], T (&output_m)[3][3])
 	// C =  (dh - eg), F = -(ah - bg), I =  (ae - bd).
 
 	const T 
-	a = input_m[0][0], b = input_m[0][1], c = input_m[0][2],
-	d = input_m[1][0], e = input_m[1][1], f = input_m[1][2],
-	g = input_m[2][0], h = input_m[2][1], i = input_m[2][2];
+	a = M[0][0], b = M[0][1], c = M[0][2],
+	d = M[1][0], e = M[1][1], f = M[1][2],
+	g = M[2][0], h = M[2][1], i = M[2][2];
 
 	const T 
 	A =  (e*i - f*h), B = -(d*i - f*g), C =  (d*h - e*g),
@@ -2617,9 +2619,9 @@ invm3x3(const T (&input_m)[3][3], T (&output_m)[3][3])
 	G =  (b*f - c*e), H = -(a*f - c*d), I =  (a*e - b*d);
 
 	const T invdet_M = 1. / (a*A + b*B + c*C);
-	output_m[0][0] = invdet_M * A; output_m[0][1] = invdet_M * D; output_m[0][2] = invdet_M * G;
-	output_m[1][0] = invdet_M * B; output_m[1][1] = invdet_M * E; output_m[1][2] = invdet_M * H;
-	output_m[2][0] = invdet_M * C; output_m[2][1] = invdet_M * F; output_m[2][2] = invdet_M * I;
+	M[0][0] = invdet_M * A; M[0][1] = invdet_M * D; M[0][2] = invdet_M * G;
+	M[1][0] = invdet_M * B; M[1][1] = invdet_M * E; M[1][2] = invdet_M * H;
+	M[2][0] = invdet_M * C; M[2][1] = invdet_M * F; M[2][2] = invdet_M * I;
 }
 
 template<typename T>
@@ -2671,11 +2673,11 @@ get_r_t_from_rhos(
 	}
 
 	//% Rotation:
-	const T A[3][3] = {
+	T A[3][3] = {
 		DGama[0], Tgt1[0], Tgt2[0],
 		DGama[1], Tgt1[1], Tgt2[1],
 		DGama[2], Tgt1[2], Tgt2[2]};
-	T inv_A[3][3]; invm3x3(A, inv_A);
+	invm3x3(A);
 
 	// Matrix containing Rotations and Translations
 	T (&RT)[RT_MAX_LEN][4][3] = *output;
@@ -2691,7 +2693,7 @@ get_r_t_from_rhos(
 				lambdas2[i][j]*(rhos2[i]*tgt2[(r)] + sigmas2[i][j]*gama2[(r)])
 
 			const T B[3][3] = { B_row(0), B_row(1), B_row(2) };
-			multm3x3(B, inv_A, Rots);
+			multm3x3(B, A, Rots);
       Transls[0] = rhos1[i]*gama1[0] - Rots[0][0]*Gama1[0] - Rots[0][1]*Gama1[1] - Rots[0][2]*Gama1[2];
       Transls[1] = rhos1[i]*gama1[1] - Rots[1][0]*Gama1[0] - Rots[1][1]*Gama1[1] - Rots[1][2]*Gama1[2];
       Transls[2] = rhos1[i]*gama1[2] - Rots[2][0]*Gama1[0] - Rots[2][1]*Gama1[1] - Rots[2][2]*Gama1[2];
