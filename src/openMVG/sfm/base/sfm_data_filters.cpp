@@ -50,6 +50,9 @@ IndexT RemoveOutliers_PixelResidualError
   {
     Observations & obs = iterTracks->second.obs;
     Observations::iterator itObs = obs.begin();
+//    LandmarkInfo *li;
+//    if (sfm_data.is_oriented())
+//      li = &sfm_data.info.at(iterTracks->first); // [lit.first] but const
     while (itObs != obs.end())
     {
       const View * view = sfm_data.views.at(itObs->first).get();
@@ -59,11 +62,14 @@ IndexT RemoveOutliers_PixelResidualError
       if (residual.norm() > dThresholdPixel)
       {
         ++outlier_count;
+//        if (sfm_data.is_oriented())
+//          li->obs_info.erase(itObs->first);
         itObs = obs.erase(itObs);
       }
       else
         ++itObs;
     }
+    // assert (!sfm_data.is_oriented() || (sfm_data.is_oriented() && obs.size() == li->obs_info.size()));
     if (obs.empty() || obs.size() < minTrackLength)
       iterTracks = sfm_data.structure.erase(iterTracks);
     else
@@ -169,7 +175,7 @@ bool eraseObservationsWithMissingPoses
 
   std::set<IndexT> pose_Index;
   std::transform(sfm_data.poses.cbegin(), sfm_data.poses.cend(),
-    std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());
+  std::inserter(pose_Index, pose_Index.begin()), stl::RetrieveKey());
 
   // For each landmark:
   //  - Check if we need to keep the observations & the track

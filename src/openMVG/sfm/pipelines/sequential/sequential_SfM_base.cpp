@@ -614,6 +614,8 @@ bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & curre
           residual_J.norm() < relativePose_info.found_residual_precision)
       {
         sfm_data_.structure[trackId] = landmarks[trackId];
+//        if (sfm_data.is_oriented())
+//          landmark_info->obs_info[J] = landmark_info[trackId]
       }
     }
     // Save outlier residual information
@@ -695,7 +697,7 @@ double SequentialSfMReconstructionEngineBase::ComputeResidualsHistogram(Histogra
       vec_residuals.emplace_back( std::abs(residual(0)) );
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }
-    std::cerr << std::endl;
+    // std::cerr << std::endl;
   }
   // Display statistics
   if (vec_residuals.size() > 1)
@@ -745,6 +747,7 @@ bool SequentialSfMReconstructionEngineBase::badTrackRejector(double dPrecision, 
 {
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(sfm_data_, dPrecision, 2);
   const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(sfm_data_, 2.0);
+  // TODO: orientation
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }

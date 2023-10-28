@@ -61,7 +61,6 @@ bool SequentialSfMReconstructionEngine::Process()
     OPENMVG_LOG_INFO << "Internal SfM Consistency check failure";
     return false;
   }
-
   if (!ResectOneByOneTilDone()) return false;
   FinalStatistics();
   return true;
@@ -114,8 +113,10 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
   std::vector<const Pose3 *> pose(nviews);
   std::vector<std::shared_ptr<cameras::Pinhole_Intrinsic> > intrinsics(nviews);
 
+  sfm_data_.info.clear();
   for (auto &lit : sfm_data_.GetStructure()) {
-    const Landmark &l = lit.second;  LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
+    const Landmark &l = lit.second;
+    LandmarkInfo &li = sfm_data_.info[lit.first]; // creates info
     const Observations &obs = l.obs; ObservationsInfo &iobs = li.obs_info;
 
     //Observations::const_iterator iterObs[nviews];
@@ -156,7 +157,6 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    // reconstruct T from best_v0 and best_v1
 
    //- bearing: invert intrinsic
-
    Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
@@ -461,6 +461,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   // Init structure
   Landmarks &landmarks = tiny_scene.structure;
+  // LandmarksInfo &landmarks_info = tiny_scene.info;
   { // initial structure ---------------------------------------------------
     Mat3X x(3,3);
     for (const auto &track_iterator : map_tracksCommon) {
@@ -471,7 +472,12 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().cast<double>().homogeneous();
         landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), ifeat);
-        // TODO(trifocal future) get_ud_pixel
+
+        // if (sfm_data_.is_oriented() {
+        //   theta = features_provider_->sio_feats_per_view[vi][ob->id_feat].orientation();
+        //   Vec2 tgt(std::cos(theta),std::sin(theta));
+        //   landmarks_info[track_iterator.first].obs_info[view[v]->id_view] = ObservationInfo(tgt);
+        // }
         ifeat=(++iter)->second;
       }
 
@@ -479,11 +485,14 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec4 X;
       TriangulateNView(x, P, &X);
       landmarks[track_iterator.first].X = X.hnormalized();
+      // tangent will be rec'd later by ReconstructAllTangents but it could be
+      // here 
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X),
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
       OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation " << residual.transpose();
       OPENMVG_LOG_INFO << "Residual from error()";
+#if 0
       { // For debug
       std::array<Mat, nviews> datum;
       for (unsigned v = 0; v < nviews; ++v) {
@@ -497,6 +506,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         relativePose_info.relativePoseTrifocal,
         datum[0].col(0), datum[1].col(0), datum[2].col(0));
       }
+#endif
     }
     Save(tiny_scene, stlplus::create_filespec(sOut_directory_, "initialTriplet.ply"), ESfM_Data(ALL));
   } // !initial structure
@@ -950,6 +960,9 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
     // If successfully triangulated, add the valid view observations
     if (sfm_data_.structure.count(trackId) && !new_track_observations_candidate_views.empty()) {
       Landmark &landmark = sfm_data_.structure[trackId];
+      // Landmark *landmark_info;
+      // if (sfm_data.is_oriented())
+      //   landmark_info = &sfm_data_.info[trackId];
       // Check if view feature point observations of the track are valid (residual, depth) or not
       for (const IndexT &J: new_track_observations_candidate_views) {
         const View *view_J = sfm_data_.GetViews().at(J).get();
@@ -958,11 +971,22 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
         const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
         const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
 
+        // Vec2 tgtJ;
+        // const features::SIOPointFeature *feature;
+        // if (sfm_data.is_oriented()) {
+        //    feature = &(features_provider_->sio_feats_per_view[vi][ob->id_feat]);
+        //     double theta = feature->orientation();
+        //     Vec2 tgt(std::cos(theta),std::sin(theta));
+        // }
+
         //    TODO: filter by tangent orientation
         const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
         if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-            && residual.norm() < std::max(4.0, map_ACThreshold_.at(J)))
+            && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
           landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+          // if (sfm_data.is_oriented())
+          //   landmark_info->obs_info[J] = ObservationInfo(tgtJ);
+        }
       }
     } // if // TODO: stereo: we should fix the outlier correspondences with the known cameras.
             // Simply add tracks if any features are nearby reprojections  (in
