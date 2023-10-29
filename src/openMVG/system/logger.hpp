@@ -103,7 +103,7 @@ inline const char* filename(const char* path)
 
 inline void plot(double array[], size_t n)
 {
-  std::cerr << "-----------------------------------------------------------------\n";
+  std::cerr << "------------------ Attempt at python plotting -------------------\n";
   std::ostringstream s;
 
   s << std::setprecision(20);
