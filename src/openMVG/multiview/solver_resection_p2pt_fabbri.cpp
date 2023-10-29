@@ -262,7 +262,7 @@ pose_from_point_tangents_2(
           h11 = tgt1[0],  h12 = tgt1[1], h21 = tgt2[0],  h22 = tgt2[1];
 
 	const T 
-  a1 = 1, // XXX remove these variables
+  a1 = DGama[0]*DGama[0]+DGama[1]*DGama[1]+DGama[2]*DGama[2],// XXX remove these variables
   a2 = 1,
   a3 = 1,
   a4 = DGama[0]*Tgt1[0]+DGama[1]*Tgt1[1]+DGama[2]*Tgt1[2],
