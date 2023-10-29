@@ -263,7 +263,7 @@ pose_from_point_tangents_2(
           h11 = tgt1[0],  h12 = tgt1[1], h21 = tgt2[0],  h22 = tgt2[1];
 
 	const T 
-  a1 = 1.,// DGama[0]*DGama[0]+DGama[1]*DGama[1]+DGama[2]*DGama[2], 
+  a1 = 1.,
   a4 = DGama[0]*Tgt1[0]+DGama[1]*Tgt1[1]+DGama[2]*Tgt1[2],
   a5 = Tgt1[0]*Tgt2[0]+Tgt1[1]*Tgt2[1]+Tgt1[2]*Tgt2[2],
   a6 = DGama[0]*Tgt2[0]+DGama[1]*Tgt2[1]+DGama[2]*Tgt2[2];
@@ -275,8 +275,8 @@ pose_from_point_tangents_2(
   
 	const T den1 = 2.*s2th*(g11*g21+g12*g22+1.)+c2th*(g11_2+g12_2-g21_2-g22_2),
 	        den2 = g11_2 + g12_2 + g21_2 + g22_2 + 2.;
-	beta  = sqrt(-2.*a1 / (den1 - den2)); // sqrt(t25)
-	alpha = sqrt(2.*a1 / (den1 + den2));  // sqrt(t24)
+	beta  = sqrt(-2. / (den1 - den2)); // sqrt(t25)
+	alpha = sqrt( 2. / (den1 + den2));  // sqrt(t24)
 
 	// Coefficient code adapted from Maple ::: can be further cleaned up but works
   // TODO: remove parenthesis. Further reduce to known gates
