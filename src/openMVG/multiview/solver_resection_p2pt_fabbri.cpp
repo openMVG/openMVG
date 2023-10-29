@@ -120,15 +120,19 @@ struct pose_poly {
 	inline void find_bounded_root_intervals(bool (*root_ids_out)[ROOT_IDS_LEN]) {
 	  T p[10];
     T curr_val = fn_t(t_vec(0), p), next_val;
-    // std::cout << "fn_t [";
+    T fn_t_v[T_LEN];
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
       static constexpr T eps = std::numeric_limits<T>::epsilon()*1e-13;
       (*root_ids_out)[i] = curr_val > +eps && next_val < -eps || 
                            curr_val < -eps && next_val > +eps;
       // std::cout << curr_val << " ";
+      fn_t_v[i] = curr_val;
       curr_val = next_val;
     }
+    fn_t_v[ROOT_IDS_LEN] = curr_val;
+    system::logger::plot(fn_t_v, T_LEN);
+    //logger::plot(*root_ids_out,T_LEN);
     // std::cout << "]\n";
   }
   
@@ -2740,6 +2744,7 @@ void P2PtSolver_Fabbri::Solve(
     //std::cout << "models\n" << P << std::endl;
     models->push_back(P);
   }
+
     //std::cout << "models\n\n" << std::endl;
 };
 
