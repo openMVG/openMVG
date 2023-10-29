@@ -2722,6 +2722,10 @@ void P2PtSolver_Fabbri::Solve(
   double degen;
 	double rotation_translation_solutions[RT_MAX_LEN][4][3];
 
+  std::cout << "gammas = [\n" << bearing_vectors << "]\n"
+            << "tangents = [\n" << tangent_vectors << "]\n"
+            << "X = [\n" << X << "]\n"
+            << "T = [\n" << T << "]\n";
   // if (!
     p2pt<double>::pose_from_point_tangents(
     bearing_vectors.col(0).data(), tangent_vectors.col(0).data(),

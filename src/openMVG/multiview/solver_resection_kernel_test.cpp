@@ -244,7 +244,6 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     bearing_vectors.conservativeResize(3, nbPoints);
     bearing_vectors.row(2).setOnes();
 
-
     for (unsigned ip=0; ip < nbPoints; ++ip) {
       point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
       Pinhole_Intrinsic::invert_intrinsics_tgt(
@@ -252,14 +251,12 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
           tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
       point_tangents_2d.col(ip)(5) = 0;
     }
-
     const Mat &X = d._X;
     const Mat &T = d._Tgt3d;
     for (unsigned ip=0; ip < nbPoints; ++ip) {
       point_tangents_3d.col(ip).head(3) = X.col(ip);
       point_tangents_3d.col(ip).tail(3) = T.col(ip);
     }
-
     openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
 
     std::vector<Mat34> Ps;

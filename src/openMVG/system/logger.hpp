@@ -103,12 +103,12 @@ inline const char* filename(const char* path)
 
 inline void plot(double array[], size_t n)
 {
-  std::cerr << "------------------ Attempt at python plotting -------------------\n";
+  // std::cerr << "------------------ Attempt at python plotting -------------------\n";
   std::ostringstream s;
 
   s << std::setprecision(20);
 
-  s << "import matplotlib.pyplot as p\n"
+  s << "import matplotlib.pyplot as p\np.axhline(y=0.0, color='r', linestyle='-')\n"
     << "p.plot([";
 
   for (unsigned i=0; i +1 < n; ++i) {
@@ -117,9 +117,7 @@ inline void plot(double array[], size_t n)
   s << array[n-1] << "]";
   s << ")\np.show()\n";
 
-
-  
-  std::cerr << "Ploting with string: \n" << s.str();
+  // std::cerr << "Ploting with string: \n" << s.str();
   FILE *pFile = popen("/usr/bin/python3","w");
   assert(pFile);
 
@@ -129,7 +127,6 @@ inline void plot(double array[], size_t n)
     std::cerr << "Error plotting in python";
   
   pclose(pFile);
-  std::cerr << "-----------------------------------------------------------------\n";
 }
 
 } // namespace logger
