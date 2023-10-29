@@ -24,9 +24,9 @@ namespace trifocal {
 
 static unsigned constexpr max_solve_tries = 6; // this is so we can use
                                                // aggressive time optimizations
-                                               // inside the solver 
+                                               // inside the solver
 static unsigned constexpr max_solve_tries_with_candidates = 5;
-                                                            
+
 using namespace MiNuS;
 
 void Trifocal3PointPositionTangentialSolver::
@@ -61,8 +61,8 @@ Solve(const Mat &datum_0,
   std::vector<trifocal_model_t> &ttf = *trifocal_tensor;
   ttf.reserve(10); // on average should not return more than this
   unsigned num_tries = 0, num_tries_with_candidates = 0;
+  unsigned nsols_raw = 0;
   do {
-    unsigned nsols_raw = 0;
     unsigned id_sols[M::nsols];
     double  cameras[M::nsols][io::pp::nviews-1][4][3];  // first camera is always [I | 0]
     for (; num_tries < max_solve_tries; ++num_tries)
@@ -88,7 +88,7 @@ Solve(const Mat &datum_0,
     // - positive depth and
     // - using tangent at 3rd point
     //NormalizedSquaredPointReprojectionOntoOneViewErrorPassCheirality
-    std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
+    // std::cerr << "Trifocal SOLVER: raw number of solutions " << nsols_raw << std::endl;
 
     bool found = false;
     for (unsigned s = 0; s < nsols_raw; ++s)
@@ -102,7 +102,7 @@ Solve(const Mat &datum_0,
       num_tries_with_candidates++;
   } while (num_tries < max_solve_tries && num_tries_with_candidates < max_solve_tries_with_candidates);
 
-  std::cerr << "Trifocal SOLVER: number of final solutions " << ttf.size() << std::endl;
+  std::cerr << "Trifocal SOLVER: number  raw / final solutions " << nsols_raw << "/" << ttf.size() << std::endl;
 }
 
 } // namespace trifocal
