@@ -264,8 +264,8 @@ pose_from_point_tangents_2(
   
 	const T 
   a1 = V[0]*V[0]+V[1]*V[1]+V[2]*V[2],
-  a2 = Tgt1[0]*Tgt1[0]+Tgt1[1]*Tgt1[1]+Tgt1[2]*Tgt1[2],
-  a3 = Tgt2[0]*Tgt2[0]+Tgt2[1]*Tgt2[1]+Tgt2[2]*Tgt2[2],
+  a2 = 1,
+  a3 = 1,
   a4 = V[0]*Tgt1[0]+V[1]*Tgt1[1]+V[2]*Tgt1[2],
   a5 = Tgt1[0]*Tgt2[0]+Tgt1[1]*Tgt2[1]+Tgt1[2]*Tgt2[2],
   a6 = V[0]*Tgt2[0]+V[1]*Tgt2[1]+V[2]*Tgt2[2];
