@@ -10,6 +10,7 @@
 #ifndef OPENMVG_SYSTEM_LOGGER_HPP
 #define OPENMVG_SYSTEM_LOGGER_HPP
 
+#include <cassert>
 #include <string>
 #include <cstdio>
 #include <iostream>
@@ -125,7 +126,7 @@ inline void plot(double array[], size_t n)
 
   if(nNumWritten != s.str().size())
     std::cerr << "Error plotting in python";
-  
+
   pclose(pFile);
 }
 
