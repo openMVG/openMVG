@@ -80,7 +80,7 @@ struct pose_poly {
 
 	void pose_from_point_tangents_2(
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
-		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3]);
+		const T DGama[3], const T Tgt1[3], const T Tgt2[3]);
   
 	inline T __attribute__((always_inline)) fn_t(const T t, T p[10]) { // function of t part
     const T t2 = t*t, t3 = t2*t, t4 = t3*t, t5 = t4*t, t6 = t5*t, t7 = t6*t, t8 = t7*t;
@@ -174,9 +174,10 @@ struct pose_poly {
 		const unsigned char ts_len,
 		const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
 		const T sigmas2[TS_MAX_LEN][4],
-		const T rhos1[TS_MAX_LEN], const T rhos2[TS_MAX_LEN],
+		T rhos1[TS_MAX_LEN], T rhos2[TS_MAX_LEN],
 		const T gama1[3], const T tgt1[3], const T gama2[3], const T tgt2[3],
-		const T Gama1[3], const T Tgt1[3], const T Gama2[3], const T Tgt2[3],
+		const T Gama1[3], const T Tgt1[3], const T DGama[3], const T Tgt2[3],
+    const T scale,
 		T (*out)[RT_MAX_LEN][4][3], unsigned char *out_len
 	);
 };
@@ -190,9 +191,10 @@ pose_from_point_tangents(
 	T (*output_RT)[RT_MAX_LEN][4][3], unsigned char *output_RT_len, T *output_degen
 )
 {
+  T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
+  T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
+  // DGama[0] /= norm; DGama[1] /= norm; DGama[2] /= norm;
   { // test for geometric degeneracy -------------------------------
-    T DGama[3] = { Gama1[0] - Gama2[0], Gama1[1] - Gama2[1], Gama1[2] - Gama2[2] };
-    const T norm = sqrt(DGama[0]*DGama[0] + DGama[1]*DGama[1] + DGama[2]*DGama[2]);
     const T d[3][3] = { // Matrix for degeneracy calculation
       DGama[0]/norm, Tgt1[0], Tgt2[0],
       DGama[1]/norm, Tgt1[1], Tgt2[1],
@@ -211,7 +213,7 @@ pose_from_point_tangents(
 
 	// compute roots -------------------------------
 	pose_poly<T> p;
-	p.pose_from_point_tangents_2(gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2);
+	p.pose_from_point_tangents_2(gama1, tgt1, gama2, tgt2, DGama, Tgt1, Tgt2);
 
 	bool root_ids[pose_poly<T>::ROOT_IDS_LEN];
 	p.find_bounded_root_intervals(&root_ids);
@@ -222,8 +224,8 @@ pose_from_point_tangents(
 	p.rhos_from_root_ids(root_ids, &rhos, &ts_len);
 
 	const T (&ts)[TS_MAX_LEN]    = rhos[0]; 
-  const T (&rhos1)[TS_MAX_LEN] = rhos[1]; 
-  const T (&rhos2)[TS_MAX_LEN] = rhos[2];
+  T (&rhos1)[TS_MAX_LEN] = rhos[1]; 
+  T (&rhos2)[TS_MAX_LEN] = rhos[2];
 	T sigmas[2][TS_MAX_LEN][4]; unsigned char sigmas_len[TS_MAX_LEN];
 
  	p.get_sigmas(ts_len, ts, &sigmas, sigmas_len);
@@ -235,8 +237,8 @@ pose_from_point_tangents(
 	unsigned char &RT_len     = *output_RT_len;
 
 	p.get_r_t_from_rhos(ts_len, sigmas1, sigmas_len, sigmas2,
-		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, Gama2, Tgt2, 
-    &RT, &RT_len);
+		rhos1, rhos2, gama1, tgt1, gama2, tgt2, Gama1, Tgt1, DGama, Tgt2, 
+    1, &RT, &RT_len);
   return true;
 }
 
@@ -248,8 +250,8 @@ void pose_poly<T>::
 pose_from_point_tangents_2(
 	const T gama1[3], const T tgt1[3],
 	const T gama2[3], const T tgt2[3],
-	const T Gama1[3], const T Tgt1[3],
-	const T Gama2[3], const T Tgt2[3]
+  const T DGama[3], 
+	const T Tgt1[3], const T Tgt2[3]
 )
 {
 	const T g11 = gama1[0], g12 = gama1[1], g21 = gama2[0], g22 = gama2[1],
@@ -259,16 +261,13 @@ pose_from_point_tangents_2(
           g22_2 = g22*g22, g22_3 = g22_2*g22, g22_4 = g22_3*g22,
           h11 = tgt1[0],  h12 = tgt1[1], h21 = tgt2[0],  h22 = tgt2[1];
 
-	T *V = &A0; // reusing memory from poly
-  V[0] = Gama1[0] - Gama2[0]; V[1] = Gama1[1] - Gama2[1]; V[2] = Gama1[2] - Gama2[2];
-  
 	const T 
-  a1 = V[0]*V[0]+V[1]*V[1]+V[2]*V[2],
+  a1 = 1, // XXX remove these variables
   a2 = 1,
   a3 = 1,
-  a4 = V[0]*Tgt1[0]+V[1]*Tgt1[1]+V[2]*Tgt1[2],
+  a4 = DGama[0]*Tgt1[0]+DGama[1]*Tgt1[1]+DGama[2]*Tgt1[2],
   a5 = Tgt1[0]*Tgt2[0]+Tgt1[1]*Tgt2[1]+Tgt1[2]*Tgt2[2],
-  a6 = V[0]*Tgt2[0]+V[1]*Tgt2[1]+V[2]*Tgt2[2];
+  a6 = DGama[0]*Tgt2[0]+DGama[1]*Tgt2[1]+DGama[2]*Tgt2[2];
 
 	theta = 0.5 * atan( 2.*(1.+g11*g21+g12*g22)/(g11_2+g12_2-g21_2-g22_2) );
 	if (theta < 0) theta += M_PI_2;
@@ -2646,16 +2645,16 @@ get_r_t_from_rhos(
 	const unsigned char ts_len,
 	const T sigmas1[TS_MAX_LEN][4], const unsigned char sigmas_len[TS_MAX_LEN],
 	const T sigmas2[TS_MAX_LEN][4],
-	const T rhos1[TS_MAX_LEN], const T rhos2[TS_MAX_LEN],
+	T rhos1[TS_MAX_LEN], T rhos2[TS_MAX_LEN],
 	const T gama1[3], const T tgt1[3],
 	const T gama2[3], const T tgt2[3],
 	const T Gama1[3], const T Tgt1[3],
-	const T Gama2[3], const T Tgt2[3],
+	const T DGama[3], const T Tgt2[3],
+  const T scale,
 	T (*output)[RT_MAX_LEN][4][3], unsigned char *output_len
 )
 {
 	T lambdas1[TS_MAX_LEN][TS_MAX_LEN]; T lambdas2[TS_MAX_LEN][TS_MAX_LEN];
-	const T DGama[3] = {Gama1[0]-Gama2[0], Gama1[1]-Gama2[1], Gama1[2]-Gama2[2]};
   
 	for (unsigned char i = 0; i < ts_len; i++) {
     const T dgamas_rhos[3] = {
@@ -2698,9 +2697,11 @@ get_r_t_from_rhos(
 
 			const T B[3][3] = { B_row(0), B_row(1), B_row(2) };
 			multm3x3(B, A, Rots);
-      Transls[0] = rhos1[i]*gama1[0] - Rots[0][0]*Gama1[0] - Rots[0][1]*Gama1[1] - Rots[0][2]*Gama1[2];
-      Transls[1] = rhos1[i]*gama1[1] - Rots[1][0]*Gama1[0] - Rots[1][1]*Gama1[1] - Rots[1][2]*Gama1[2];
-      Transls[2] = rhos1[i]*gama1[2] - Rots[2][0]*Gama1[0] - Rots[2][1]*Gama1[1] - Rots[2][2]*Gama1[2];
+      Transls[0] = (rhos1[i]*gama1[0] - Rots[0][0]*Gama1[0] - Rots[0][1]*Gama1[1] - Rots[0][2]*Gama1[2])*scale;
+      Transls[1] = (rhos1[i]*gama1[1] - Rots[1][0]*Gama1[0] - Rots[1][1]*Gama1[1] - Rots[1][2]*Gama1[2])*scale;
+      Transls[2] = (rhos1[i]*gama1[2] - Rots[2][0]*Gama1[0] - Rots[2][1]*Gama1[1] - Rots[2][2]*Gama1[2])*scale;
+      rhos1[i] *= scale;
+      rhos2[i] *= scale;
 		}
 	}
 }
