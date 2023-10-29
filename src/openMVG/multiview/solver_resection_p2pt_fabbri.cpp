@@ -46,7 +46,7 @@ namespace euclidean_resection
 {
   
 // At most 8 solutions with positive depth, 16 total
-static constexpr unsigned char TS_MAX_LEN = 63;
+static constexpr unsigned char TS_MAX_LEN = 8;
 static constexpr unsigned char RT_MAX_LEN = 4*TS_MAX_LEN;
 
 template <typename T=double>
@@ -123,15 +123,15 @@ struct pose_poly {
     T fn_t_v[T_LEN];
     for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
       next_val = fn_t(t_vec(i+1), p);
-      static constexpr T eps = std::numeric_limits<T>::epsilon()*1e-13;
-      (*root_ids_out)[i] = curr_val > +eps && next_val < -eps || 
+      static constexpr T eps = std::numeric_limits<T>::epsilon();
+      (*root_ids_out)[i] = curr_val > +eps && next_val < -eps || // the solution must be minimally sharp
                            curr_val < -eps && next_val > +eps;
       // std::cout << curr_val << " ";
       fn_t_v[i] = curr_val;
       curr_val = next_val;
     }
     fn_t_v[ROOT_IDS_LEN] = curr_val;
-    system::logger::plot(fn_t_v, T_LEN);
+    // system::logger::plot(fn_t_v, T_LEN);
     //logger::plot(*root_ids_out,T_LEN);
     // std::cout << "]\n";
   }
@@ -146,7 +146,7 @@ struct pose_poly {
     T (&rhos1)[TS_MAX_LEN] = (*out)[1]; T (&rhos2)[TS_MAX_LEN] = (*out)[2];
     T p[10];
     unsigned char &ts_end = *out_ts_len; ts_end = 0;
-    for (unsigned short i = 0; i < ROOT_IDS_LEN; i++) {
+    for (unsigned short i = 0; i < ROOT_IDS_LEN && ts_end < TS_MAX_LEN; i++) {
       if (!root_ids[i]) continue;
       T t0 = t_vec(i), t1 = t_vec(i+1), t;
       T f0 = fn_t(t_vec(i), p), f1 = fn_t(t_vec(i+1), p);
@@ -162,7 +162,6 @@ struct pose_poly {
       const T r2 = -alpha_ts_new2 * sth + beta_1_minus_tt * cth; if (r2 <= 1e-12) continue;
       const T ts_den = 1. + tt; 
       rhos1[ts_end] = r1 / ts_den; rhos2[ts_end] = r2 / ts_den; ts[ts_end++] = t;
-      assert(ts_end <= TS_MAX_LEN);
     }
     // std::cout << "ts_end: " << ts_end << std::endl;
   }
@@ -205,7 +204,7 @@ pose_from_point_tangents(
     degen = (d[0][0]*d[1][1]*d[2][2]+d[0][1]*d[1][2]*d[2][0]+d[0][2]*d[1][0]*d[2][1]) // det(d)
            -(d[2][0]*d[1][1]*d[0][2]+d[2][1]*d[1][2]*d[0][0]+d[2][2]*d[1][0]*d[0][1]);
 
-    std::cout << "degen: " << degen << std::endl;
+    // std::cout << "degen: " << degen << std::endl;
     if (std::fabs(degen) < 0.001) {
       *output_RT_len = 0;
       return false;  // can still solve this in many cases, but lets not fool around
@@ -2722,10 +2721,10 @@ void P2PtSolver_Fabbri::Solve(
   double degen;
 	double rotation_translation_solutions[RT_MAX_LEN][4][3];
 
-  std::cout << "gammas = [\n" << bearing_vectors << "]\n"
-            << "tangents = [\n" << tangent_vectors << "]\n"
-            << "X = [\n" << X << "]\n"
-            << "T = [\n" << T << "]\n";
+//  std::cout << "gammas = [\n" << bearing_vectors << "]\n"
+//            << "tangents = [\n" << tangent_vectors << "]\n"
+//            << "X = [\n" << X << "]\n"
+//            << "T = [\n" << T << "]\n";
   // if (!
     p2pt<double>::pose_from_point_tangents(
     bearing_vectors.col(0).data(), tangent_vectors.col(0).data(),
@@ -2736,7 +2735,7 @@ void P2PtSolver_Fabbri::Solve(
   //  )
     // OPENMVG_LOG_ERROR << "degeneracy"; 
 
-  OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
+  // OPENMVG_LOG_INFO << "Number of models returned p2pt: " << (int)nsols;
 	for (unsigned char i = 0; i < nsols; ++i) {
     Mat34 P;
     for (unsigned char j = 0 ; j < 3; ++j)
