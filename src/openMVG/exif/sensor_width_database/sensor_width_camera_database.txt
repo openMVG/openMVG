@@ -5451,6 +5451,7 @@ Samsung SM-G955F;5.76
 Samsung SM-G970U1;4.6
 Samsung SM-G9910;5.6
 Samsung SM-S901U;5.6
+Samsung SM-S901B;5.6
 Samsung ST10;5.744
 Samsung ST100;6.16
 Samsung ST1000;6.16
