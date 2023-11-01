@@ -94,11 +94,10 @@ bool exportToOpenMVS(
   for (const auto& view : sfm_data.GetViews())
   {
     ++my_progress_bar;
-    IntrinsicBase *intrinsic = sfm_data.GetIntrinsics().at(view.second.get()->id_intrinsic).get();
     const std::string srcImage = stlplus::create_filespec(sfm_data.s_root_path, view.second->s_Img_path);
     const std::string mask_filename_local = stlplus::create_filespec(sfm_data.s_root_path, stlplus::basename_part(srcImage) + "_mask", "png");
-    const std::string maskName = stlplus::create_filespec(sOutDir, stlplus::basename_part(srcImage) + ".mask.png");
-    const std::string globalMaskName = stlplus::create_filespec(sOutDir, "global_mask_" + std::to_string(view.second.get()->id_intrinsic), ".png");
+    const std::string maskName = stlplus::create_filespec(sOutImagesDir, stlplus::basename_part(srcImage) + ".mask.png");
+    const std::string globalMaskName = stlplus::create_filespec(sOutImagesDir, "global_mask_" + std::to_string(view.second.get()->id_intrinsic), ".png");
     if (!stlplus::is_file(srcImage))
     {
       OPENMVG_LOG_INFO << "Cannot read the corresponding image: " << srcImage;
@@ -121,7 +120,7 @@ bool exportToOpenMVS(
 
       _INTERFACE_NAMESPACE::Interface::Platform::Pose pose;
       image.poseID = platform.poses.size();
-      image.ID = image.poseID;
+      image.ID = map_view[view.first];
       const openMVG::geometry::Pose3 poseMVG(sfm_data.GetPoseOrDie(view.second.get()));
       pose.R = poseMVG.rotation();
       pose.C = poseMVG.center();
