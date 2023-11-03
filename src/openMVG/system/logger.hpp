@@ -102,6 +102,32 @@ inline const char* filename(const char* path)
   return path;
 }
 
+inline void plot(bool array[], size_t n)
+{
+  // std::cerr << "------------------ Attempt at python plotting -------------------\n";
+  std::ostringstream s;
+
+  s << "import matplotlib.pyplot as p\np.axhline(y=0.0, color='r', linestyle='-')\n"
+    << "p.plot([";
+
+  for (unsigned i=0; i +1 < n; ++i) {
+    s << (double)array[i] << ", ";
+  }
+  s << array[n-1] << "]";
+  s << ")\np.show()\n";
+
+  // std::cerr << "Ploting with string: \n" << s.str();
+  FILE *pFile = popen("/usr/bin/python3","w");
+  assert(pFile);
+
+  size_t nNumWritten = fwrite(s.str().c_str(), 1, s.str().size(), pFile);
+
+  if(nNumWritten != s.str().size())
+    std::cerr << "Error plotting in python";
+
+  pclose(pFile);
+}
+
 inline void plot(double array[], size_t n)
 {
   // std::cerr << "------------------ Attempt at python plotting -------------------\n";
