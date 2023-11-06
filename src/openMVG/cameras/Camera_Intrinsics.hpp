@@ -11,10 +11,10 @@
 
 #include <vector>
 
-#include "openMVG/cameras/Camera_Common.hpp"
-#include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
+#include "openMVG/numeric/numeric.h"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
 
 namespace openMVG
 {
@@ -109,7 +109,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     const Vec3 &bearing,
     const bool ignore_distortion = false) const
   {
-    tproj = Tgt - Tgt(2)*bearing; // the equivalent for tangents of X.hnormalize()
+    Vec2 tproj = Tgt.head(2) - Tgt(2)*bearing.head(2); // the equivalent for tangents of X.hnormalize()
     assert(!ignore_distortion); // for now, we do not support disto for tangents
       //    if ( this->have_disto() && !ignore_distortion) // apply disto & intrinsics
       //    {
@@ -142,7 +142,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @param t image observation
   * @brief Residue as angle in radians
   */
-  Vec2 residual_orientation(
+  double residual_orientation(
     const Vec3 &Tgt,
     const Vec2 &tgt,
     const Vec3 &bearing,
@@ -208,7 +208,8 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
    * For the simple camera model, this is just a no-op.
    * But better use it for future.
    */
-  virtual Vec2 cam2ima_orientation( const Vec2& tgt ) const = 0;
+  virtual Vec2 cam2ima_orientation( const Vec2& tgt ) const
+  { abort(); /* coredump for debug if non-supported cam has called this */ };
 
   /**
   * @brief Does the camera model handle a distortion field?

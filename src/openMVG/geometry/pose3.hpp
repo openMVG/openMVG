@@ -123,7 +123,7 @@ class Pose3
       return rotation_ * V.colwise();
     }
     /// Specialization for Vec3
-    inline typename Vec3::PlainObject operator() (const Vec3& V) const
+    inline typename Vec3::PlainObject apply_to_orientation (const Vec3& V) const
     {
       return rotation_ * V;
     }

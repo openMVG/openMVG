@@ -9,24 +9,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/triangulation.hpp"
+#include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 
 namespace openMVG {
 namespace trifocal {
 
-//: clump arg from minus 1 to 1; also assert abs(arg) not much bigger than 1
-inline double clump_to_acos(double x)
-{ 
-  if (x > 1.0 || x < -1.0) {
-    assert(std::fabs(std::fabs(x)-1) < 1e-5);
-    if (x > 1.0)
-      return 1.0;
-    if (x < -1.0)
-      return -1.0;
-  }
-  return x;
-}
 
   
 double NormalizedSquaredPointReprojectionOntoOneViewError::
