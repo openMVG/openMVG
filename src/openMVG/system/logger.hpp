@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <string>
+#include <complex>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -142,6 +143,37 @@ inline void plot(double array[], size_t n)
     s << array[i] << ", ";
   }
   s << array[n-1] << "]";
+  s << ")\np.show()\n";
+
+  // std::cerr << "Ploting with string: \n" << s.str();
+  FILE *pFile = popen("/usr/bin/python3","w");
+  assert(pFile);
+
+  size_t nNumWritten = fwrite(s.str().c_str(), 1, s.str().size(), pFile);
+
+  if(nNumWritten != s.str().size())
+    std::cerr << "Error plotting in python";
+
+  pclose(pFile);
+}
+
+inline void plot(const std::complex<double> array[], size_t n)
+{
+  std::cerr << "------------------ Attempt at python plotting -------------------\n";
+  std::ostringstream s;
+
+  s << std::setprecision(20);
+
+  s << "import matplotlib.pyplot as p\np.axhline(y=0.0, color='r', linestyle='-')\np.axvline(x=0.0, color='r', linestyle='-')\np.plot([";
+
+  for (unsigned i=0; i +1 < n; ++i) {
+    s << array[i].real() << ", ";
+  }
+  s << array[n-1].real() << "],[";
+  for (unsigned i=0; i +1 < n; ++i) {
+    s << array[i].imag() << ", ";
+  }
+  s << array[n-1].imag() << "]";
   s << ")\np.show()\n";
 
   // std::cerr << "Ploting with string: \n" << s.str();

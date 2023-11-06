@@ -89,7 +89,7 @@ TEST(TrifocalSampleApp, solver)
       //        std::cout << sols[sol_id][j] << "\n" << std::endl;
       // break;
     }
-    std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
+    // std::cerr << "Test log: Solve failed to find ground truth. Retrying different randomization\n";
   // }
   
   CHECK(found);
