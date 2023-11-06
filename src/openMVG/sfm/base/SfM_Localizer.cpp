@@ -42,30 +42,29 @@ public:
   (
     const Mat &x2d, // Undistorted 2d feature_point location
     const Mat &x3D, // 3D corresponding points
-    const cameras::IntrinsicBase *camera
+    const cameras::IntrinsicBase *camera,
+    bool UsingOrientedConstraint=false
   ):x2d_(x2d),
     x3D_(x3D),
     logalpha0_(log10(M_PI)),
     N1_(Mat3::Identity()),
-    camera_(camera)
+    camera_(camera),
+    UsingOrientedConstraint_(UsingOrientedConstraint_)
   {
     N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
-    assert(2 == x2d_.rows() || (4 == x2d_.rows()));  // 6 is in the case of oriented
+    assert(2 == x2d_.rows() || (4 == x2d_.rows()));  // 4 is in the case of oriented
     assert(3 == x3D_.rows() || (6 == x3D_.rows()));  // 6 is in the case of
-                                                     // oriented (this is a
-                                                     // geometric
-                                                     // featurestd::vector of
-                                                     // point + orientation)
+                                                     // oriented (a geometric feature 
+                                                     // vector of point + orientation)
     assert(x2d_.cols() == x3D_.cols());
     Mat bearing_vectors = camera->operator()(x2d.block(0,0,2,NumSamples()));
     Mat2X tangent_vectors;
 
-
     if (HasOrientation()) {
       dynamic_cast<const cameras::Pinhole_Intrinsic *>(camera)->tangents2world(x2d.block(2,0,2,NumSamples()), tangent_vectors);
       x2d_world_.resize(6, x2d_.cols());
-      // even though we pass hnormalized, and if not HasOrientation() uses
-      // normalized(), we should be OK since Error uses only pixels.
+      // even though we pass hnormalized, and !HasOrientation() uses
+      // (unit-) normalized(), this is fine as Error uses only pixel-units.
       x2d_world_ << bearing_vectors.colwise().hnormalized(), Mat::Ones(1,NumSamples()), tangent_vectors, Mat::Zero(1,NumSamples());
     } else
       x2d_world_ = bearing_vectors;
@@ -86,37 +85,51 @@ public:
     const Vec3 t = model.block(0, 3, 3, 1);
     const geometry::Pose3 pose(model.block(0, 0, 3, 3),
                              - model.block(0, 0, 3, 3).transpose() * t);
-
     vec_errors.resize(x2d_.cols());
-
     const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+    for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample) {
+      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample).head(3)), x2d_.col(sample).head(2),
+                            ignore_distortion) * N1_(0,0)).squaredNorm();
+      if (UsingOrientedConstraint()) {
+         assert(HasOrientation());
+         x3D_.col(sample).tail(3);
+         x2d.col(sample).tail(2);
 
-    for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample)
-    {
-      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample).head(3)),
-                              x2d_.col(sample).head(2),
-                              ignore_distortion) * N1_(0,0)).squaredNorm();
+         // tangent errors - these thresholds are not currently adjusted by ACRANSAC
+         tproj = Trec - Trec(2)*bearing.col(third_view);
+         tproj.head(2).normalize();
+
+         // about 15 degrees tolerance
+         double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
+             
+         // about 15 degrees tolerance. TODO: make this a parameter
+         double angle_tol = 0.34;
+         if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) {
+           OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check PASS PASS PASS PASS PASS PASS";
+         } else {
+           OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check FAIL";
+           return false;
+         }
+      }
     }
   }
 
   size_t NumSamples() const { return x2d_.cols(); }
   size_t HasOrientation() const { return x2d_.rows() == 4; }
-
-  void Unnormalize(Model * model) const {
-  }
-
+  void Unnormalize(Model * model) const { }
   double logalpha0() const {return logalpha0_;}
   double multError() const {return 1.0;} // point to point error
   Mat3 normalizer1() const {return Mat3::Identity();}
   Mat3 normalizer2() const {return N1_;}
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
-
 private:
   Mat x2d_, x2d_world_;
   const Mat & x3D_;
   Mat3 N1_;
   double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
   const cameras::IntrinsicBase * camera_;   // Intrinsic camera parameter
+  bool UsingOrientedConstraint_; // if we are using orientation to refine
+                                 // inliers and filte out outliers
 };
 } // namespace openMVG
 
@@ -225,8 +238,6 @@ namespace sfm {
 
         resection_data.set_stacked();
         KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics);
-
-
         // Robust estimation of the pose matrix and its precision
         const auto ACRansacOut =
           openMVG::robust::ACRANSAC(kernel,

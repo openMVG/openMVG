@@ -111,6 +111,21 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     return x - proj;
   }
 
+  /**
+  * @brief Compute the residual between a projected 3D unit tangent orientation and an image observation (usually 2D feature orientation such as SIFT or edge)
+  * @param T 3d (usually unit) tangent to project on camera plane
+  * @param t image observation
+  * @brief Residue as angle in radians
+  */
+  Vec2 residual_orient(
+    const Vec3 &Tgt,
+    const Vec2 &tgt,
+    const bool ignore_distortion = false) const
+  {
+    const Vec2 tproj = this->project_orient(Tgt, ignore_distortion);
+    return std::acos(clump_to_acos(tproj.dot(tgt)));
+  }
+
   // --
   // Virtual members
   // --

@@ -277,7 +277,6 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
-
     // ------------------------------------------------------------------------
     // Add images to the 3D reconstruction
     bool bImageAdded = false;
@@ -678,8 +677,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   }
   using namespace tracks;
 
-  // A. Compute 2D/3D matches
-  // A1. list tracks ids used by the view
+  // Compute 2D/3D matches
+  // List tracks ids used by the view ------------------------------------------
   openMVG::tracks::STLMAPTracks map_tracksCommon;
   shared_track_visibility_helper_->GetTracksInImages({viewIndex}, map_tracksCommon);
   std::set<uint32_t> set_tracksIds;
@@ -691,7 +690,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     std::inserter(reconstructed_trackId, reconstructed_trackId.begin()),
     stl::RetrieveKey());
 
-  // A2. intersects the view tracks with the reconstructed
+  // intersects the view tracks with the reconstructed -------------------------
   std::set<uint32_t> set_trackIdForResection;
   std::set_intersection(set_tracksIds.cbegin(), set_tracksIds.cend(),
     reconstructed_trackId.cbegin(), reconstructed_trackId.cend(),
@@ -710,7 +709,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   TracksUtilsMap::GetFeatIndexPerViewAndTrackId(map_tracksCommon,
     set_trackIdForResection, viewIndex, &vec_featIdForResection);
 
-  // Localize the image inside the SfM reconstruction
+  // Localize the image inside the SfM reconstruction --------------------------
   Image_Localizer_Match_Data resection_data;
   resection_data.min_consensus_ratio = 1; // TODO make this a parameter
   resection_data.pt2D.resize(2,  set_trackIdForResection.size());
@@ -722,7 +721,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     assert(sfm_data_.is_oriented());
   }
 
-  // B. Look if the intrinsic data is known or not
+  // Look if the intrinsic data is known or not
   const View *view_I = sfm_data_.GetViews().at(viewIndex).get();
   std::shared_ptr<cameras::IntrinsicBase> optional_intrinsic;
   if (sfm_data_.GetIntrinsics().count(view_I->id_intrinsic))
@@ -754,7 +753,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           && !isDistortionZero(optional_intrinsic.get())) );// "Non-zero distortion not yet fully supported in P2Pt";
     }
   }
-  // C. Do the resectioning: compute the camera pose
+
+  // Do the resectioning: compute the camera pose 
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
 
   geometry::Pose3 pose;

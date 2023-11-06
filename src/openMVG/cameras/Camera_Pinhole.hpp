@@ -109,7 +109,6 @@ class Pinhole_Intrinsic : public IntrinsicBase
       return Kinv_;
     }
 
-
     /**
     * @brief Return the value of the focal in pixels
     * @return Focal of the camera (in pixel)

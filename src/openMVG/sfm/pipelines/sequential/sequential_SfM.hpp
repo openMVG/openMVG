@@ -31,7 +31,6 @@ struct Matches_Provider;
 class SequentialSfMReconstructionEngine : public SequentialSfMReconstructionEngineBase
 {
 public:
-
   SequentialSfMReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & soutDirectory,
@@ -57,7 +56,6 @@ protected:
 
 
 private:
-
   /// Highlevel methods -------------------------------------------------------
   /// Make initial 2- or 3-view reconstruction seed (robust plus BA and initial filters)
   bool MakeInitialSeedReconstruction();
