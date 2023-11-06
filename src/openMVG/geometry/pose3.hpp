@@ -120,7 +120,7 @@ class Pose3
     template<typename T>
     inline typename T::PlainObject apply_to_orientation (const T& V) const
     {
-      return rotation_ * V.colwise();
+      return rotation_ * V;
     }
     /// Specialization for Vec3
     inline typename Vec3::PlainObject apply_to_orientation (const Vec3& V) const

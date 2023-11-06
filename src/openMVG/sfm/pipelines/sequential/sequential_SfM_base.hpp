@@ -52,7 +52,7 @@ public:
   void SetMultiviewMatchConstraint(MultiviewMatchConstraint c) 
   { multiview_match_constraint_ = c; }
 
-  bool UsingOrientedConstraint() const { return multiview_match_constraint_ == MultiviewMatchConstraint::ORIENTATION; }
+  bool UseOrientedConstraint() const { return multiview_match_constraint_ == MultiviewMatchConstraint::ORIENTATION; }
 
   void setInitialPair(const Pair & initialPair) 
   { initial_pair_ = initialPair; }

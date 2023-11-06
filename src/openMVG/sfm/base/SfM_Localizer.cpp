@@ -43,13 +43,13 @@ public:
     const Mat &x2d, // Undistorted 2d feature_point location
     const Mat &x3D, // 3D corresponding points
     const cameras::IntrinsicBase *camera,
-    bool UsingOrientedConstraint=false
+    bool UseOrientationConstraint=false
   ):x2d_(x2d),
     x3D_(x3D),
     logalpha0_(log10(M_PI)),
     N1_(Mat3::Identity()),
     camera_(camera),
-    UsingOrientedConstraint_(UsingOrientedConstraint_)
+    UseOrientationConstraint_(UseOrientationConstraint)
   {
     N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
     assert(2 == x2d_.rows() || (4 == x2d_.rows()));  // 4 is in the case of oriented
@@ -87,24 +87,24 @@ public:
                              - model.block(0, 0, 3, 3).transpose() * t);
     vec_errors.resize(x2d_.cols());
     const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
-    Vec3 Xcam = pose(x3D_.col(sample).head(3));
     for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample) {
+      Vec3 Xcam = pose(x3D_.col(sample).head(3));
       vec_errors[sample] = (camera_->residual(Xcam, x2d_.col(sample).head(2),
                             ignore_distortion) * N1_(0,0)).squaredNorm();
-      if (UsingOrientedConstraint()) {
+      if (UseOrientationConstraint()) {
          assert(HasOrientation());
 
          // tangent errors - these thresholds are not currently adjusted by ACRANSAC
          // about 15 degrees tolerance
-         double angular_error = camera->residual_orientation(
-               pose.apply_to_orientation(X3D_.col(sample).tail(3)), 
-               x2d.col(sample).tail(2), Xcam.hnormalized(), ignore_distortion);
+         double angular_error = camera_->residual_orientation(
+               pose.apply_to_orientation(x3D_.col(sample).tail(3)), 
+               x2d_.col(sample).tail(2), Xcam/Xcam(2), ignore_distortion);
          // about 15 degrees tolerance. TODO: make this a parameter
          static constexpr double angle_tol = 0.34;
          if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) // {
            OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle check PASS, using error as is";
          else
-           vec_errors[sample] = std::numeric_limits<double>::infinity;
+           vec_errors[sample] = std::numeric_limits<double>::infinity();
 
 //         } else {
 //           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle filter out";
@@ -114,7 +114,8 @@ public:
   }
 
   size_t NumSamples() const { return x2d_.cols(); }
-  size_t HasOrientation() const { return x2d_.rows() == 4; }
+  bool HasOrientation() const { return x2d_.rows() == 4; }
+  bool UseOrientationConstraint() const { return UseOrientationConstraint_; }
   void Unnormalize(Model * model) const { }
   double logalpha0() const {return logalpha0_;}
   double multError() const {return 1.0;} // point to point error
@@ -127,7 +128,7 @@ private:
   Mat3 N1_;
   double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
   const cameras::IntrinsicBase * camera_;   // Intrinsic camera parameter
-  bool UsingOrientedConstraint_; // if we are using orientation to refine
+  bool UseOrientationConstraint_; // if we are using orientation to refine
                                  // inliers and filte out outliers
 };
 } // namespace openMVG
@@ -141,7 +142,8 @@ namespace sfm {
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,
-    geometry::Pose3 & pose
+    geometry::Pose3 & pose,
+    bool UseOrientationConstraint
   )
   {
     // --
@@ -236,7 +238,7 @@ namespace sfm {
             Mat34>;
 
         resection_data.set_stacked();
-        KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics);
+        KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics, UseOrientationConstraint);
         // Robust estimation of the pose matrix and its precision
         const auto ACRansacOut =
           openMVG::robust::ACRANSAC(kernel,

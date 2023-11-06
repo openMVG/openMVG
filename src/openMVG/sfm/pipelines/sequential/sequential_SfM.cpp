@@ -581,7 +581,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
             OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " "
               << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
           include_landmark = false;
-        } // else if (UsingOrientedConstraint()) { } TODO
+        } // else if (UseOrientedConstraint()) { } TODO
       }
     if (include_landmark)
       sfm_data_.structure[trackId] = landmarks[trackId];
@@ -665,7 +665,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 //  } else
 //    OPENMVG_LOG_INFO << "Pass Test before starts";
 #endif
-  if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+  if (UseOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
     ReconstructAllTangents();
 #ifndef NDEBUG
 //    if (!SequentialSfMReconstructionEngine::ConsistencyCheckOriented()) {
@@ -738,7 +738,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     resection_data.pt2D.col(cpt) = pt2D_original.col(cpt) =
         features_provider_->feats_per_view.at(viewIndex)[*iterfeatId].coords().cast<double>();
 
-    if (UsingOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
+    if (UseOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
       assert(features_provider_->has_sio_features());
       assert(sfm_data_.GetInfo().count(*iterTrackId));
       resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
@@ -749,7 +749,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     // Handle image distortion if intrinsic is known (to ease the resection)
     if (optional_intrinsic && optional_intrinsic->have_disto()) {
       resection_data.pt2D.col(cpt) = optional_intrinsic->get_ud_pixel(resection_data.pt2D.col(cpt));
-      assert( !((resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12 || UsingOrientedConstraint())
+      assert( !((resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12 || UseOrientedConstraint())
           && !isDistortionZero(optional_intrinsic.get())) );// "Non-zero distortion not yet fully supported in P2Pt";
     }
   }
@@ -762,7 +762,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   (
     optional_intrinsic ? resection_method_ : resection::SolverType::DLT_6POINTS,
     {view_I->ui_width, view_I->ui_height},
-    optional_intrinsic.get(), resection_data, pose
+    optional_intrinsic.get(), resection_data, pose,
+    UseOrientedConstraint()
   );
   resection_data.pt2D = std::move(pt2D_original); // restore original image domain points
 

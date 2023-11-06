@@ -122,7 +122,8 @@ public:
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,
-    geometry::Pose3 & pose
+    geometry::Pose3 & pose,
+    bool UseOrientationConstraint = false
   );
 
   /**
