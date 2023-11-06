@@ -161,6 +161,16 @@ class Pinhole_Intrinsic : public IntrinsicBase
       return focal() * p + principal_point();
     }
 
+    /* Same as cam2ima but for orientation (unit tangents) 
+     *
+     * For the simple camera model, this is just a no-op.
+     * But better use it for future.
+     */
+    Vec2 cam2ima_orientation( const Vec2& tgt ) const override
+    {
+      return (focal() * tgt).normalized();
+    }
+
     /**
     * @brief Transform a point from the image plane to the camera plane
     * @param p Image plane point

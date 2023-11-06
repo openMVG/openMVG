@@ -87,29 +87,28 @@ public:
                              - model.block(0, 0, 3, 3).transpose() * t);
     vec_errors.resize(x2d_.cols());
     const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+    Vec3 Xcam = pose(x3D_.col(sample).head(3));
     for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample) {
-      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample).head(3)), x2d_.col(sample).head(2),
+      vec_errors[sample] = (camera_->residual(Xcam, x2d_.col(sample).head(2),
                             ignore_distortion) * N1_(0,0)).squaredNorm();
       if (UsingOrientedConstraint()) {
          assert(HasOrientation());
-         x3D_.col(sample).tail(3);
-         x2d.col(sample).tail(2);
 
          // tangent errors - these thresholds are not currently adjusted by ACRANSAC
-         tproj = Trec - Trec(2)*bearing.col(third_view);
-         tproj.head(2).normalize();
-
          // about 15 degrees tolerance
-         double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
-             
+         double angular_error = camera->residual_orientation(
+               pose.apply_to_orientation(X3D_.col(sample).tail(3)), 
+               x2d.col(sample).tail(2), Xcam.hnormalized(), ignore_distortion);
          // about 15 degrees tolerance. TODO: make this a parameter
-         double angle_tol = 0.34;
-         if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) {
-           OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check PASS PASS PASS PASS PASS PASS";
-         } else {
-           OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check FAIL";
-           return false;
-         }
+         static constexpr double angle_tol = 0.34;
+         if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) // {
+           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle check PASS, using error as is";
+         else
+           vec_errors[sample] = std::numeric_limits<double>::infinity;
+
+//         } else {
+//           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle filter out";
+//         }
       }
     }
   }
