@@ -18,6 +18,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   liblemon-dev \
   libpng-dev \
   libtiff-dev \
+  libqt5svg5-dev \
+  qttools5-dev \
   git \
   python3-minimal; \
   apt-get autoclean && apt-get clean
