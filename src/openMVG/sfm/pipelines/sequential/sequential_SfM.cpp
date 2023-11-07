@@ -510,7 +510,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   // -----------------------------------------------------------------------
   // - refine only Structure and Rotations & translations (keep intrinsic constant)
-  constexpr bool bRefine_using_BA = false;
+  constexpr bool bRefine_using_BA = true;
   if (bRefine_using_BA) { // badj
     Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
