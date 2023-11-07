@@ -13,10 +13,11 @@
 #include <string>
 #include <vector>
 
+#include "openMVG/multiview/multiview_match_constraint.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
+#include "openMVG/multiview/solver_resection.hpp"
 #include "openMVG/sfm/base/sfm_engine.hpp"
 #include "openMVG/cameras/cameras.hpp"
-#include "openMVG/multiview/solver_resection.hpp"
-#include "openMVG/multiview/triangulation_method.hpp"
 #include "openMVG/tracks/tracks.hpp"
 #include "third_party/histogram/histogram_raw.hpp"
 
@@ -47,6 +48,11 @@ public:
 
   void SetFeaturesProvider(Features_Provider * provider);
   void SetMatchesProvider(Matches_Provider * provider);
+
+  void SetMultiviewMatchConstraint(MultiviewMatchConstraint c) 
+  { multiview_match_constraint_ = c; }
+
+  bool UseOrientedConstraint() const { return multiview_match_constraint_ == MultiviewMatchConstraint::ORIENTATION; }
 
   void setInitialPair(const Pair & initialPair) 
   { initial_pair_ = initialPair; }
@@ -81,6 +87,11 @@ public:
   void SetMaximumTrifocalRansacIterations(unsigned n) 
   { maximum_trifocal_ransac_iterations_ = n; }
 
+  unsigned MaximumTrifocalRansacIterations() 
+  { return maximum_trifocal_ransac_iterations_; }
+
+  static constexpr unsigned maximum_trifocal_ransac_iterations_DEFAULT = 100;
+
   void FinalStatistics();
 
 protected:
@@ -112,9 +123,10 @@ protected:
   // HTML logger
   std::shared_ptr<htmlDocument::htmlDocumentStream> html_doc_stream_;
   std::string sLogging_file_;
-
   
   // Parameter
+
+  MultiviewMatchConstraint multiview_match_constraint_;
   Triplet initial_triplet_;
   Pair initial_pair_;
   
@@ -138,7 +150,7 @@ protected:
 
   resection::SolverType resection_method_ = resection::SolverType::DEFAULT;
 
-  unsigned maximum_trifocal_ransac_iterations_ = 100;
+  unsigned maximum_trifocal_ransac_iterations_ = maximum_trifocal_ransac_iterations_DEFAULT;
 
 private:
 

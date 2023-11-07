@@ -11,10 +11,10 @@
 
 #include <vector>
 
-#include "openMVG/cameras/Camera_Common.hpp"
-#include "openMVG/geometry/pose3.hpp"
-#include "openMVG/numeric/numeric.h"
 #include "openMVG/stl/hash.hpp"
+#include "openMVG/numeric/numeric.h"
+#include "openMVG/geometry/pose3.hpp"
+#include "openMVG/cameras/Camera_Common.hpp"
 
 namespace openMVG
 {
@@ -97,6 +97,31 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
+  * @brief Compute projection of a 3D tangent Tgt into the image plane
+  * (Apply disto (if any) and Intrinsics)
+  * @param Tgt 3D-tangent orientation to project on image plane
+  * @param bearing: bearing vect of the point X where Tgt is based. If you have
+  * the 3D point X in camera coordinates then just hnormalize before calling this function.
+  * @return Projected (2D) point on image plane
+  */
+  virtual Vec2 project_orientation( // TODO: this is repeating X.hnormalized between project() and this.
+    const Vec3 &Tgt,
+    const Vec3 &bearing,
+    const bool ignore_distortion = false) const
+  {
+    Vec2 tproj = Tgt.head(2) - Tgt(2)*bearing.head(2); // the equivalent for tangents of X.hnormalize()
+    assert(!ignore_distortion); // for now, we do not support disto for tangents
+      //    if ( this->have_disto() && !ignore_distortion) // apply disto & intrinsics
+      //    {
+      //      return this->cam2ima( this->add_disto( tproj ) );
+      //    }
+      // else // apply intrinsics
+    {
+      return this->cam2ima_orientation(tproj);
+    }
+  }
+
+  /**
   * @brief Compute the residual between the 3D projected point and an image observation
   * @param X 3d point to project on camera plane
   * @param x image observation
@@ -107,8 +132,24 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     const Vec2 & x,
     const bool ignore_distortion = false) const
   {
-    const Vec2 proj = this->project(X, ignore_distortion );
+    const Vec2 proj = this->project(X, ignore_distortion);
     return x - proj;
+  }
+
+  /**
+  * @brief Compute the residual between a projected 3D unit tangent orientation and an image observation (usually 2D feature orientation such as SIFT or edge)
+  * @param T 3d (usually unit) tangent to project on camera plane
+  * @param t image observation
+  * @brief Residue as angle in radians
+  */
+  double residual_orientation(
+    const Vec3 &Tgt,
+    const Vec2 &tgt,
+    const Vec3 &bearing,
+    const bool ignore_distortion = false) const
+  {
+    const Vec2 tproj = this->project_orientation(Tgt, bearing,ignore_distortion);
+    return std::acos(clump_to_acos(tproj.dot(tgt)));
   }
 
   // --
@@ -161,6 +202,14 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @return camera plane point
   */
   virtual Vec2 ima2cam( const Vec2& p ) const = 0;
+
+  /* Same as cam2ima but for orientation (unit tangents) 
+   *
+   * For the simple camera model, this is just a no-op.
+   * But better use it for future.
+   */
+  virtual Vec2 cam2ima_orientation( const Vec2& tgt ) const
+  { abort(); /* coredump for debug if non-supported cam has called this */ };
 
   /**
   * @brief Does the camera model handle a distortion field?

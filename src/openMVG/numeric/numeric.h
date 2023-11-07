@@ -75,6 +75,20 @@ inline T clamp( const T & val, const T& min, const T & max )
   //(val < min) ? val : ((val>max) ? val : max);
 }
 
+//: clamp arg from minus 1 to 1; also assert abs(arg) not much bigger than 1
+// use this e.g. before calling acos on some numerically computed dot product
+inline double clump_to_acos(double x)
+{ 
+  if (x > 1.0 || x < -1.0) {
+    assert(std::fabs(std::fabs(x)-1) < 1e-5);
+    if (x > 1.0)
+      return 1.0;
+    if (x < -1.0)
+      return -1.0;
+  }
+  return x;
+}
+
 /**
 * @brief Given a vector, computes its cross product matrix
 *

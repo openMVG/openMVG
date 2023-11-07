@@ -556,7 +556,7 @@ bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & curre
         Observations obs;
         obs[view_I->id_view] = Observation(x1, i);
         obs[view_J->id_view] = Observation(x2, j);
-        landmarks[track_iterator.first].obs = std::move(obs);
+        landmarks[track_iterator.first].obs = obs;
         landmarks[track_iterator.first].X = X;
       }
     }
@@ -614,6 +614,8 @@ bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & curre
           residual_J.norm() < relativePose_info.found_residual_precision)
       {
         sfm_data_.structure[trackId] = landmarks[trackId];
+//        if (sfm_data.is_oriented())
+//          landmark_info->obs_info[J] = landmark_info[trackId]
       }
     }
     // Save outlier residual information
@@ -679,21 +681,23 @@ double SequentialSfMReconstructionEngineBase::ComputeResidualsHistogram(Histogra
   // Collect residuals for each observation
   std::vector<float> vec_residuals;
   vec_residuals.reserve(sfm_data_.structure.size());
+  // OPENMVG_LOG_INFO << "3D point info --------"; 
   for (const auto & landmark_entry : sfm_data_.GetLandmarks())
   {
-   OPENMVG_LOG_INFO << "3D point " << landmark_entry.second.X.transpose();
+    // std::cerr << "\tX" << landmark_entry.second.X.transpose();
     const Observations & obs = landmark_entry.second.obs;
     for (const auto & observation : obs)
     {
       const View * view = sfm_data_.GetViews().find(observation.first)->second.get();
       const Pose3 pose = sfm_data_.GetPoseOrDie(view);
-      OPENMVG_LOG_INFO << "Pose rc " << pose.rotation() << "\n" << pose.center().transpose();
+      // OPENMVG_LOG_INFO << "Pose rc " << pose.rotation() << "\n" << pose.center().transpose();
       const auto intrinsic = sfm_data_.GetIntrinsics().find(view->id_intrinsic)->second;
       const Vec2 residual = intrinsic->residual(pose(landmark_entry.second.X), observation.second.x);
-      OPENMVG_LOG_INFO << "Raw residual " << residual.transpose();
+      // std::cerr << " residual " << residual.transpose();
       vec_residuals.emplace_back( std::abs(residual(0)) );
       vec_residuals.emplace_back( std::abs(residual(1)) );
     }
+    // std::cerr << std::endl;
   }
   // Display statistics
   if (vec_residuals.size() > 1)
@@ -743,6 +747,7 @@ bool SequentialSfMReconstructionEngineBase::badTrackRejector(double dPrecision, 
 {
   const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(sfm_data_, dPrecision, 2);
   const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(sfm_data_, 2.0);
+  // TODO: orientation
 
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }

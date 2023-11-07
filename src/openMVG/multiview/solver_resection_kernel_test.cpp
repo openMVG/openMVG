@@ -221,7 +221,6 @@ TEST(UP2PSolver_Kukelova, Multiview) {
 
 TEST(P2Pt_Fabbri_ECCV12, Multiview) 
 {
-
   constexpr unsigned nViews = 4;
   constexpr unsigned nbPoints = 5;
   NViewOrientedDataSet d;
@@ -245,26 +244,25 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     bearing_vectors.conservativeResize(3, nbPoints);
     bearing_vectors.row(2).setOnes();
 
-
     for (unsigned ip=0; ip < nbPoints; ++ip) {
       point_tangents_2d.col(ip).head(3) = bearing_vectors.col(ip);
-      Pinhole_Intrinsic::invert_intrinsics_tgt((double (*)[3]) ((double *)d._K[0].data()), tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
+      Pinhole_Intrinsic::invert_intrinsics_tgt(
+          (double (*)[3]) ((double *)d._K[0].data()), 
+          tgt.col(ip).data(), point_tangents_2d.col(ip).data()+3);
       point_tangents_2d.col(ip)(5) = 0;
     }
-
     const Mat &X = d._X;
     const Mat &T = d._Tgt3d;
     for (unsigned ip=0; ip < nbPoints; ++ip) {
       point_tangents_3d.col(ip).head(3) = X.col(ip);
       point_tangents_3d.col(ip).tail(3) = T.col(ip);
     }
-
     openMVG::euclidean_resection::PoseResectionKernel_P2Pt_Fabbri kernel(point_tangents_2d, point_tangents_3d);
 
     std::vector<Mat34> Ps;
+    // for (unsigned nr=0; nr < 10000; ++nr)
     kernel.Fit({2,3}, &Ps); // 2 points sample are required, lets take these
     OPENMVG_LOG_INFO << "Number of returned models: " << Ps.size();
-
 
     bool bFound = false;
     size_t index = -1;
@@ -282,6 +280,25 @@ TEST(P2Pt_Fabbri_ECCV12, Multiview)
     for (Mat::Index i = 0; i < x.cols(); ++i)
       EXPECT_NEAR(0.0, kernel.Error(i, Ps[index]), 1e-8);
    }
+
+  // TODO test for this:
+//gammas = [
+//-0.341281 -0.369737
+// 0.162204  0.120409
+//        1         1]
+//tangents = [
+//  -0.999915           1
+//  0.0130322 0.000295105
+//          0           0]
+//X = [
+//-0.352904 -0.382805
+//   0.1444 0.0999838
+// 0.961412  0.956333]
+//T = [
+//-0.217666 -0.327676
+// 0.125541 0.0777356
+// 0.967916  0.941587]
+  // 
 }
 
 /* ************************************************************************* */

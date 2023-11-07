@@ -59,7 +59,7 @@ bool robustRelativePoseTrifocal
   std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   double threshold_px,
-  const size_t max_iteration_count = 1024
+  const size_t max_iteration_count = 128  // this default is overriden in sequential_SfM*.hpp
 );
 
 } // namespace sfm

@@ -108,6 +108,26 @@ class Pose3
       return rotation_ * ( p - center_ );
     }
 
+    /**
+    * @brief Apply pose
+    * @param V 3D vector (difference of points, 4th homogeneous coordinate zero,
+    * only rotation applies)
+    * @return transformed Vtransf = R*V (ignore translation/center)
+    *
+    * Usually can be applied to any vec but specially tangent vectors or feature
+    * orientations in 3D arising by reconstructing 2D feature orientations.
+    */
+    template<typename T>
+    inline typename T::PlainObject apply_to_orientation (const T& V) const
+    {
+      return rotation_ * V;
+    }
+    /// Specialization for Vec3
+    inline typename Vec3::PlainObject apply_to_orientation (const Vec3& V) const
+    {
+      return rotation_ * V;
+    }
+
 
     /**
     * @brief Composition of poses

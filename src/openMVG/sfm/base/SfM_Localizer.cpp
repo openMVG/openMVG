@@ -40,28 +40,42 @@ public:
 
   ACKernelAdaptorResection_Intrinsics
   (
-    const Mat & x2d, // Undistorted 2d feature_point location
-    const Mat & x3D, // 3D corresponding points
-    const cameras::IntrinsicBase * camera
+    const Mat &x2d, // Undistorted 2d feature_point location
+    const Mat &x3D, // 3D corresponding points
+    const cameras::IntrinsicBase *camera,
+    bool UseOrientationConstraint=false
   ):x2d_(x2d),
     x3D_(x3D),
     logalpha0_(log10(M_PI)),
     N1_(Mat3::Identity()),
-    camera_(camera)
+    camera_(camera),
+    UseOrientationConstraint_(UseOrientationConstraint)
   {
     N1_.diagonal().head(2) *= camera->imagePlane_toCameraPlaneError(1.0);
-    assert(2 == x2d_.rows());
-    assert(3 == x3D_.rows());
+    assert(2 == x2d_.rows() || (4 == x2d_.rows()));  // 4 is in the case of oriented
+    assert(3 == x3D_.rows() || (6 == x3D_.rows()));  // 6 is in the case of
+                                                     // oriented (a geometric feature 
+                                                     // vector of point + orientation)
     assert(x2d_.cols() == x3D_.cols());
-    bearing_vectors_= camera->operator()(x2d_);
+    Mat bearing_vectors = camera->operator()(x2d.block(0,0,2,NumSamples()));
+    Mat2X tangent_vectors;
+
+    if (HasOrientation()) {
+      dynamic_cast<const cameras::Pinhole_Intrinsic *>(camera)->tangents2world(x2d.block(2,0,2,NumSamples()), tangent_vectors);
+      x2d_world_.resize(6, x2d_.cols());
+      // even though we pass hnormalized, and !HasOrientation() uses
+      // (unit-) normalized(), this is fine as Error uses only pixel-units.
+      x2d_world_ << bearing_vectors.colwise().hnormalized(), Mat::Ones(1,NumSamples()), tangent_vectors, Mat::Zero(1,NumSamples());
+    } else
+      x2d_world_ = bearing_vectors;
   }
 
   enum { MINIMUM_SAMPLES = Solver::MINIMUM_SAMPLES };
   enum { MAX_MODELS = Solver::MAX_MODELS };
 
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
-    Solver::Solve(ExtractColumns(bearing_vectors_, samples), // bearing vectors
-                  ExtractColumns(x3D_, samples), // 3D points
+    Solver::Solve(ExtractColumns(x2d_world_, samples), // bearing vectors and,  when available, unit 2d tangents
+                  ExtractColumns(x3D_, samples), // 3D points, and, when // available, unit 3d tangents x y z tx ty tz
                   models); // Found model hypothesis
   }
 
@@ -70,37 +84,51 @@ public:
     // Convert the found model into a Pose3
     const Vec3 t = model.block(0, 3, 3, 1);
     const geometry::Pose3 pose(model.block(0, 0, 3, 3),
-                               - model.block(0, 0, 3, 3).transpose() * t);
-
+                             - model.block(0, 0, 3, 3).transpose() * t);
     vec_errors.resize(x2d_.cols());
-
     const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+    for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample) {
+      Vec3 Xcam = pose(x3D_.col(sample).head(3));
+      vec_errors[sample] = (camera_->residual(Xcam, x2d_.col(sample).head(2),
+                            ignore_distortion) * N1_(0,0)).squaredNorm();
+      if (UseOrientationConstraint()) {
+         assert(HasOrientation());
 
-    for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample)
-    {
-      vec_errors[sample] = (camera_->residual(pose(x3D_.col(sample)),
-                              x2d_.col(sample),
-                              ignore_distortion) * N1_(0,0)).squaredNorm();
+         // tangent errors - these thresholds are not currently adjusted by ACRANSAC
+         // about 15 degrees tolerance
+         double angular_error = camera_->residual_orientation(
+               pose.apply_to_orientation(x3D_.col(sample).tail(3)), 
+               x2d_.col(sample).tail(2), Xcam/Xcam(2), ignore_distortion);
+         // about 15 degrees tolerance. TODO: make this a parameter
+         static constexpr double angle_tol = 0.34;
+         if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) // {
+           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle check PASS, using error as is";
+         else
+           vec_errors[sample] = std::numeric_limits<double>::infinity();
+                  //         } else {
+                  //           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle filter out";
+                  //         }
+      }
     }
   }
 
   size_t NumSamples() const { return x2d_.cols(); }
-
-  void Unnormalize(Model * model) const {
-  }
-
+  bool HasOrientation() const { return x2d_.rows() == 4; }
+  bool UseOrientationConstraint() const { return UseOrientationConstraint_; }
+  void Unnormalize(Model * model) const { }
   double logalpha0() const {return logalpha0_;}
   double multError() const {return 1.0;} // point to point error
   Mat3 normalizer1() const {return Mat3::Identity();}
   Mat3 normalizer2() const {return N1_;}
   double unormalizeError(double val) const {return sqrt(val) / N1_(0,0);}
-
 private:
-  Mat x2d_, bearing_vectors_;
+  Mat x2d_, x2d_world_;
   const Mat & x3D_;
   Mat3 N1_;
   double logalpha0_;  // Alpha0 is used to make the error adaptive to the image size
   const cameras::IntrinsicBase * camera_;   // Intrinsic camera parameter
+  bool UseOrientationConstraint_; // if we are using orientation to refine
+                                 // inliers and filte out outliers
 };
 } // namespace openMVG
 
@@ -113,7 +141,8 @@ namespace sfm {
     const Pair & image_size,
     const cameras::IntrinsicBase * optional_intrinsics,
     Image_Localizer_Match_Data & resection_data,
-    geometry::Pose3 & pose
+    geometry::Pose3 & pose,
+    bool UseOrientationConstraint
   )
   {
     // --
@@ -193,8 +222,7 @@ namespace sfm {
       // ------Pose from 2 points (with SIFT orientation) ------------------------
       case resection::SolverType::P2Pt_FABBRI_ECCV12:
       {
-        if (!optional_intrinsics)
-        {
+        if (!optional_intrinsics) {
           std::cerr << "Intrinsic data is required for P2Pt (poose from 2 points orientation solvers." << std::endl;
           return false;
         }
@@ -203,16 +231,13 @@ namespace sfm {
         using SolverType = openMVG::euclidean_resection::P2PtSolver_Fabbri;
         MINIMUM_SAMPLES = SolverType::MINIMUM_SAMPLES;
 
-        OPENMVG_LOG_INFO << "WiP in P2Pt";
-        exit(1);
-
-        /*
         using KernelType =
           ACKernelAdaptorResection_Intrinsics<
             SolverType,
             Mat34>;
 
-        KernelType kernel(resection_data.pt2D, resection_data.pt3D, optional_intrinsics);
+        resection_data.set_stacked();
+        KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics, UseOrientationConstraint);
         // Robust estimation of the pose matrix and its precision
         const auto ACRansacOut =
           openMVG::robust::ACRANSAC(kernel,
@@ -223,7 +248,6 @@ namespace sfm {
                                     true, resection_data.min_consensus_ratio);
         // Update the upper bound precision of the model found by AC-RANSAC
         resection_data.error_max = ACRansacOut.first;
-        */
       }
       break;
       // -----------------------------------------------------------------------

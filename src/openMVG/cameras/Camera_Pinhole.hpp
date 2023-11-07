@@ -109,7 +109,6 @@ class Pinhole_Intrinsic : public IntrinsicBase
       return Kinv_;
     }
 
-
     /**
     * @brief Return the value of the focal in pixels
     * @return Focal of the camera (in pixel)
@@ -138,6 +137,21 @@ class Pinhole_Intrinsic : public IntrinsicBase
     }
 
     /**
+    * @brief Get unit tangent vectors in world units from image coordinates
+    * @return tangent vectors [tx ty]^\top
+    */
+    void tangents2world(const Mat2X& tgt_px, Mat2X &tgt) const 
+    {
+      tgt.resize(2,tgt_px.cols());
+      for (unsigned ip=0; ip < tgt.cols(); ++ip) {
+        invert_intrinsics_tgt(
+            (double (*)[3]) ((double *)K_.data()),
+            tgt_px.col(ip).data(), tgt.col(ip).data()
+            );
+      }
+    }
+
+    /**
     * @brief Transform a point from the camera plane to the image plane
     * @param p Camera plane point
     * @return Point on image plane
@@ -145,6 +159,16 @@ class Pinhole_Intrinsic : public IntrinsicBase
     Vec2 cam2ima( const Vec2& p ) const override
     {
       return focal() * p + principal_point();
+    }
+
+    /* Same as cam2ima but for orientation (unit tangents) 
+     *
+     * For the simple camera model, this is just a no-op.
+     * But better use it for future.
+     */
+    Vec2 cam2ima_orientation( const Vec2& tgt ) const override
+    {
+      return (focal() * tgt).normalized();
     }
 
     /**
@@ -322,7 +346,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
      * @brief converts unit tangent vector from pixel to world units
      * TODO: make into proper function of Pinhole_Intrinsic
      */
-    static void
+    static inline void
     invert_intrinsics_tgt(
         const double K[/*3 or 2 ignoring last line*/][3], 
         const double px_tgt_coords[2], 
@@ -338,7 +362,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     /**
      * @ brief overload variant for Mat3
      */
-    static void
+    static inline void
     invert_intrinsics_tgt(
         const Mat3 &K,
         const double px_tgt_coords[2],
@@ -351,7 +375,6 @@ class Pinhole_Intrinsic : public IntrinsicBase
       double n = hypot(t[0], t[1]);
       t[0] /= n; t[1] /= n;
     }
-        
 };
 
 } // namespace cameras

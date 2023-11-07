@@ -368,68 +368,68 @@ bool computePosesNordberg(
   std::array<Vec3, 4> Ls;
 
   // use the t=Vl with t2,st2,t3 and solve for t3 in t2
-    std::array<double, 2> ss = {v,-v};
-    for(const double s : ss)
-    {
-        // u = V(:, 1) - sV(:,2)
-        const Vec3 U = V.col(0) - s * V.col(1);
-        const double u1 = U(0);
-        const double u2 = U(1);
-        const double u3 = U(2);
+  std::array<double, 2> ss = {v,-v};
+  for(const double s : ss)
+  {
+      // u = V(:, 1) - sV(:,2)
+      const Vec3 U = V.col(0) - s * V.col(1);
+      const double u1 = U(0);
+      const double u2 = U(1);
+      const double u3 = U(2);
 
-        // we are computing lambda using a linear relation
-        // u1*l1 + u2*l2 + u3*l3=0
-        // li>0, implies all three ui=0 is degenerate...
-        // if two are zero the third must be
-        // hence at most one can be zero.
-        // divide by the largest for best numerics,
-        // simple version, use the bigger of u1, u2, one will always be non-zero
-        if(std::abs(u1)<std::abs(u2))
-        {// solve for l2
-          const double a = (a23 - a12) * u3*u3 - a12 * u2*u2 + a12 * b23 *u2 * u3;
-          const double b = (2.* a23 * u1 * u3 - 2. * a12 * u1*u3 + a12 * b23 * u1 * u2 - a23 * b12 * u2 *u3)/a;
-          const double c = (a23 * u1*u1 - a12 * u1*u1 + a23 * u2*u2 - a23 * b12 *u1 *u2)/a;
+      // we are computing lambda using a linear relation
+      // u1*l1 + u2*l2 + u3*l3=0
+      // li>0, implies all three ui=0 is degenerate...
+      // if two are zero the third must be
+      // hence at most one can be zero.
+      // divide by the largest for best numerics,
+      // simple version, use the bigger of u1, u2, one will always be non-zero
+      if(std::abs(u1)<std::abs(u2))
+      {// solve for l2
+        const double a = (a23 - a12) * u3*u3 - a12 * u2*u2 + a12 * b23 *u2 * u3;
+        const double b = (2.* a23 * u1 * u3 - 2. * a12 * u1*u3 + a12 * b23 * u1 * u2 - a23 * b12 * u2 *u3)/a;
+        const double c = (a23 * u1*u1 - a12 * u1*u1 + a23 * u2*u2 - a23 * b12 *u1 *u2)/a;
 
-          std::array<double, 2> taus;
-          if (!root2real(b, c, taus[0], taus[1])) continue;
-          for (const double tau : taus)
-          {
-            if (tau<=0) continue;
-            //(tau^2 + b13*tau + 1)*l1^2 = a13
-            //positive only
-            const double l1 = std::sqrt(a13 / (tau *(tau + b13) + 1.));
-            const double l3 = tau * l1;
-            const double l2 = -(u1 * l1 + u3 * l3)/u2;
-            if (l2 <= 0.) continue;
+        std::array<double, 2> taus;
+        if (!root2real(b, c, taus[0], taus[1])) continue;
+        for (const double tau : taus)
+        {
+          if (tau<=0) continue;
+          //(tau^2 + b13*tau + 1)*l1^2 = a13
+          //positive only
+          const double l1 = std::sqrt(a13 / (tau *(tau + b13) + 1.));
+          const double l3 = tau * l1;
+          const double l2 = -(u1 * l1 + u3 * l3)/u2;
+          if (l2 <= 0.) continue;
+          Ls[valid] = {l1,l2,l3}; // Vec3 list init
+          ++valid;
+        }
+      }
+      else
+      { // solve for l1
+        const double w2 = 1./( -u1);
+        const double w0 = u2*w2;
+        const double w1 = u3*w2;
+
+        const double a = 1.0 / ( (a13 - a12) *w1*w1 - a12 * b13 *w1 - a12);
+        const double b = (a13 * b12 * w1 - a12 * b13 * w0 - 2. * w0 * w1 * (a12 - a13)) * a;
+        const double c = ((a13 - a12) * w0 * w0 + a13 * b12 * w0 + a13) * a;
+
+        std::array<double, 2> taus;
+        if (!root2real(b, c, taus[0], taus[1])) continue;
+        for (const double tau : taus)
+        {
+            if(tau<=0.) continue;
+            const double d = a23 / (tau * (b23 + tau) + 1.0);
+            const double l2 = std::sqrt(d);
+            const double l3 = tau * l2;
+            const double l1 = w0 * l2 + w1 * l3;
+            if (l1 <= 0.) continue;
             Ls[valid] = {l1,l2,l3}; // Vec3 list init
             ++valid;
-          }
         }
-        else
-        { // solve for l1
-          const double w2 = 1./( -u1);
-          const double w0 = u2*w2;
-          const double w1 = u3*w2;
-
-          const double a = 1.0 / ( (a13 - a12) *w1*w1 - a12 * b13 *w1 - a12);
-          const double b = (a13 * b12 * w1 - a12 * b13 * w0 - 2. * w0 * w1 * (a12 - a13)) * a;
-          const double c = ((a13 - a12) * w0 * w0 + a13 * b12 * w0 + a13) * a;
-
-          std::array<double, 2> taus;
-          if (!root2real(b, c, taus[0], taus[1])) continue;
-          for (const double tau : taus)
-          {
-              if(tau<=0.) continue;
-              const double d = a23 / (tau * (b23 + tau) + 1.0);
-              const double l2 = std::sqrt(d);
-              const double l3 = tau * l2;
-              const double l1 = w0 * l2 + w1 * l3;
-              if (l1 <= 0.) continue;
-              Ls[valid] = {l1,l2,l3}; // Vec3 list init
-              ++valid;
-          }
-        }
-    }
+      }
+  }
 
   // if constexpr (refinement_iterations>0)
   for (int i = 0; i < valid; ++i)

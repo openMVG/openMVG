@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/cameras/Camera_Common.hpp"
 #include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
 
@@ -15,6 +16,7 @@
 #include "openMVG/sfm/base/sfm_data_io.hpp"
 #include "openMVG/sfm/base/sfm_report.hpp"
 #include "openMVG/sfm/base/sfm_view.hpp"
+
 #include "openMVG/system/timer.hpp"
 #include "openMVG/types.hpp"
 
@@ -209,12 +211,14 @@ int main(int argc, char **argv)
   // Bundle adjustment options:
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
   std::string sExtrinsic_refinement_options = "ADJUST_ALL";
-  bool b_use_motion_priors = false;
+  bool use_motion_priors = false;
 
   // Incremental SfM options
   int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
+  int match_constraint = static_cast<int>(MultiviewMatchConstraint::DEFAULT);
   int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
   int user_camera_model = PINHOLE_CAMERA_RADIAL3;
+  int trifocal_iterations = SequentialSfMReconstructionEngineBase::maximum_trifocal_ransac_iterations_DEFAULT;
 
   // SfM v1
   // initial_tuple_string
@@ -227,7 +231,6 @@ int main(int argc, char **argv)
   // Global SfM
   int rotation_averaging_method = int (ROTATION_AVERAGING_L2);
   int translation_averaging_method = int (TRANSLATION_AVERAGING_SOFTL1);
-
 
   // Common options
   cmd.add( make_option('i', filename_sfm_data, "input_file") );
@@ -248,12 +251,15 @@ int main(int argc, char **argv)
   // Incremental SfM2
   cmd.add( make_option('S', sfm_initializer_method, "sfm_initializer") );
   // Incremental SfM1
+  cmd.add( make_option('C', match_constraint, "match_constraint") );
+  // 2-view initialization
   cmd.add( make_option('a', initial_pair_string.first, "initial_pair_a") );
   cmd.add( make_option('b', initial_pair_string.second, "initial_pair_b") );
   // Incremental SfM1 with trifocal initialization
   cmd.add( make_option('x', std::get<0>(initial_triplet_string), "initial_triplet_x") );
   cmd.add( make_option('y', std::get<1>(initial_triplet_string), "initial_triplet_y") );
   cmd.add( make_option('z', std::get<2>(initial_triplet_string), "initial_triplet_z") );
+  cmd.add( make_option('3', trifocal_iterations, "trifocal_iterations") );
   // Global SfM
   cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
   cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
@@ -303,30 +309,39 @@ int main(int argc, char **argv)
       << "[Engine specifics]\n"
       << "\n\n"
       << "[INCREMENTAL]\n"
-      << "\t[-a|--initial_pair_a] filename of the first image (without path)\n"
-      << "\t[-b|--initial_pair_b] filename of the second image (without path)\n"
-      << "\t[-x|--initial_triplet_x] filename of the first image (without path)\n"
-      << "\t[-y|--initial_triplet_y] filename of the second image (without path)\n"
-      << "\t[-z|--initial_triplet_z] filename of the third image (without path)\n"
-      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails."
+      << "\t[-C|--match_constraint] multiview match constraint for filtering inliers when adding views (default =" << match_constraint << "):\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::POSITION)    << ": POSITION\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::ORIENTATION) << ": ORIENTATION, enable feature orientation projection to \n"
+      << "\t\t\tfilter inliers when adding >=3 views. Can be used with any resection method and both 2-view and oriented 3-view initialization.\n"
+      << "\t\t\t In 2-view initialization, the constraint will only be applied during resection by projecting 3D orientations and matching to 2D features\n"
+      << "\t\t\t This is the default when trifocal initial triplet is specified or when resection method is P2Pt_FABBRI_ECCV12.\n"
+      << "\t\t\t TODO likely to become default in the near future after we demonstrate it is superior\n\n"
+      << "\t\t" << static_cast<int>(MultiviewMatchConstraint::SCALE) << ": SCALE (not yet implemented)\n\n"
+      << "\t[-a|--initial_pair_a] filename of the first image (without path) for 2-view initialization\n"
+      << "\t[-b|--initial_pair_b] filename of the second image (without path) for 2-view initialization. Implies -C POSITION by default\n"
+      << "\t[-x|--initial_triplet_x] filename of the first image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
+      << "\t[-y|--initial_triplet_y] filename of the second image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
+      << "\t[-z|--initial_triplet_z] filename of the third image (without path) for trifocal initialization, for added robustness in hard scenes (can be slower).\n"
+      << "\t\t NOTE: -x -y -z imply -C ORIENTATION by default.\n"
+      << "\t\tIf both initial triplet and initial pair are specified, try initial pair then initial triplet if that fails.\n"
       << "\t[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
       << "\t\t 1: Pinhole \n"
       << "\t\t 2: Pinhole radial 1\n"
       << "\t\t 3: Pinhole radial 3 (default)\n"
       << "\t\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t\t 5: Pinhole fisheye\n"
-      << "\t[--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+      << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
-      << "\t[--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+      << "\t[-r|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
       << "\t\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
       << "\t\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
-      << "\t\t" << static_cast<int>(resection::SolverType::P2Pt_FABBRI_ECCV12)  << ": P2Pt_FABBRI_ECCV12 | 2Points with tangent\n"
+      << "\t\t" << static_cast<int>(resection::SolverType::P2Pt_FABBRI_ECCV12)  << ": P2Pt_FABBRI_ECCV12 | 2Points with tangent, for added robustness in hard scenes\n"
       << "\n\n"
       << "[INCREMENTALV2]\n"
       << "\t[-S|--sfm_initializer] Choose the SfM initializer method:\n"
@@ -340,12 +355,12 @@ int main(int argc, char **argv)
       << "\t\t 3: Pinhole radial 3 (default)\n"
       << "\t\t 4: Pinhole radial 3 + tangential 2\n"
       << "\t\t 5: Pinhole fisheye\n"
-      << "\t[--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
+      << "\t[-t|--triangulation_method] triangulation method (default=" << triangulation_method << "):\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::DIRECT_LINEAR_TRANSFORM) << ": DIRECT_LINEAR_TRANSFORM\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::L1_ANGULAR) << ": L1_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::LINFINITY_ANGULAR) << ": LINFINITY_ANGULAR\n"
       << "\t\t" << static_cast<int>(ETriangulationMethod::INVERSE_DEPTH_WEIGHTED_MIDPOINT) << ": INVERSE_DEPTH_WEIGHTED_MIDPOINT\n"
-      << "\t[--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+      << "\t[-r|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
       << "\t\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
       << "\t\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
@@ -368,8 +383,6 @@ int main(int argc, char **argv)
       << "\t\t -> STAR_X\n"
       << "\t[-g|--graph_simplification_value]\n"
       << "\t\t -> Number (default: " << graph_simplification_value << ")";
-
-
     OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
@@ -377,8 +390,7 @@ int main(int argc, char **argv)
   // We always use oriented trifocal for trifocal initialization
   // as it uses only 3 points across 3 views (Fabbri CVPR'20)
   bool oriented_trifocal = !std::get<0>(initial_triplet_string).empty();
-
-  b_use_motion_priors = cmd.used('P');
+  use_motion_priors = cmd.used('P');
 
   // Check validity of command line parameters:
   if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
@@ -393,30 +405,26 @@ int main(int argc, char **argv)
 
   const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
       cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
-  if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
-  {
+  if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) ) {
     OPENMVG_LOG_ERROR << "Invalid input for Bundle Adjustment Intrinsic parameter refinement option";
     return EXIT_FAILURE;
   }
 
   const sfm::Extrinsic_Parameter_Type extrinsic_refinement_options =
       sfm::StringTo_Extrinsic_Parameter_Type(sExtrinsic_refinement_options);
-  if (extrinsic_refinement_options == static_cast<sfm::Extrinsic_Parameter_Type>(0) )
-  {
+  if (extrinsic_refinement_options == static_cast<sfm::Extrinsic_Parameter_Type>(0) ) {
     OPENMVG_LOG_ERROR << "Invalid input for the Bundle Adjustment Extrinsic parameter refinement option";
     return EXIT_FAILURE;
   }
 
   ESfMSceneInitializer scene_initializer_enum;
-  if (!StringToEnum(sfm_initializer_method, scene_initializer_enum))
-  {
+  if (!StringToEnum(sfm_initializer_method, scene_initializer_enum)) {
     OPENMVG_LOG_ERROR << "Invalid input for the SfM initializer option";
     return EXIT_FAILURE;
   }
 
   ESfMEngine sfm_engine_type;
-  if (!StringToEnum(engine_name, sfm_engine_type))
-  {
+  if (!StringToEnum(engine_name, sfm_engine_type)) {
     OPENMVG_LOG_ERROR << "Invalid input for the SfM Engine type";
     return EXIT_FAILURE;
   }
@@ -440,13 +448,11 @@ int main(int argc, char **argv)
   }
 
   EGraphSimplification graph_simplification_method;
-  if (!StringToEnum_EGraphSimplification(graph_simplification, graph_simplification_method))
-  {
+  if (!StringToEnum_EGraphSimplification(graph_simplification, graph_simplification_method)) {
     OPENMVG_LOG_ERROR << "Cannot recognize graph simplification method";
     return EXIT_FAILURE;
   }
-  if (graph_simplification_value <= 1)
-  {
+  if (graph_simplification_value <= 1) {
     OPENMVG_LOG_ERROR << "graph simplification value must be > 1";
     return EXIT_FAILURE;
   }
@@ -468,10 +474,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (!stlplus::folder_exists(directory_output))
-  {
-    if (!stlplus::folder_create(directory_output))
-    {
+  if (!stlplus::folder_exists(directory_output)) {
+    if (!stlplus::folder_create(directory_output)) {
       OPENMVG_LOG_ERROR << "Cannot create the output directory";
       return EXIT_FAILURE;
     }
@@ -480,8 +484,7 @@ int main(int argc, char **argv)
   //
   // Match and features
   //
-  if (directory_match.empty() && !filename_match.empty() && stlplus::file_exists(filename_match))
-  {
+  if (directory_match.empty() && !filename_match.empty() && stlplus::file_exists(filename_match)) {
     directory_match = stlplus::folder_part(filename_match);
     filename_match = stlplus::filename_part(filename_match);
   }
@@ -490,74 +493,81 @@ int main(int argc, char **argv)
   using namespace openMVG::features;
   const std::string sImage_describer = stlplus::create_filespec(directory_match, "image_describer", "json");
   std::unique_ptr<Regions> regions_type = Init_region_type_from_file(sImage_describer);
-  if (!regions_type)
-  {
+  if (!regions_type) {
     OPENMVG_LOG_ERROR << "Invalid: " << sImage_describer << " regions type file.";
     return EXIT_FAILURE;
   }
 
-  if (oriented_trifocal && !dynamic_cast<SIFT_Regions *>(regions_type.get()))
-  {
-    OPENMVG_LOG_ERROR << "Trifocal initialization currently requires oriented features.";
-    return EXIT_FAILURE;
+  if (!dynamic_cast<SIFT_Regions *>(regions_type.get())) {
+    if (oriented_trifocal)
+      OPENMVG_LOG_ERROR << "Trifocal initialization requires oriented features.";
+      return EXIT_FAILURE;
+    if (resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
+      OPENMVG_LOG_ERROR << "Resection from 2 feature points requires oriented features.";
+      return EXIT_FAILURE;
+    if (match_constraint == (int) MultiviewMatchConstraint::ORIENTATION) {    // default for trifocal and P2pt
+      OPENMVG_LOG_ERROR << "Tangent orientation constraints require oriented features.";
+      return EXIT_FAILURE;
+    }
   }
 
+  if (!cmd.used('C')) { // set defaults for each case different than normal
+    if (oriented_trifocal || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
+      match_constraint = (int) MultiviewMatchConstraint::ORIENTATION;    // default for trifocal and P2pt
+  }
+
+  const bool need_orientation = oriented_trifocal
+    || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12
+    || match_constraint == (int) MultiviewMatchConstraint::ORIENTATION;
+
   // Features reading
-  // TODO(p2pt) if request p2pt resection, then load orientations
-  //
   std::shared_ptr<Features_Provider> feats_provider = std::make_shared<Features_Provider>();
-  if (!feats_provider->load(sfm_data, directory_match, regions_type, oriented_trifocal)) {
+  if (!feats_provider->load(sfm_data, directory_match, regions_type, need_orientation)) {
     OPENMVG_LOG_ERROR << "Cannot load view corresponding features in directory: " << directory_match << ".";
     return EXIT_FAILURE;
   }
   // Matches reading
   std::shared_ptr<Matches_Provider> matches_provider = std::make_shared<Matches_Provider>();
-  if // Try to read the provided match filename or the default one (matches.f.txt/bin)
-  (
+  if ( // Try to read the provided match filename or the default one (matches.f.txt/bin)
   !(matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, filename_match)) ||
-      matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.txt")) ||
-      matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.bin")) ||
-      matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.e.txt")) ||
-      matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.e.bin")))
-      )
-  {
+    matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.txt")) ||
+    matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.f.bin")) ||
+    matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.e.txt")) ||
+    matches_provider->load(sfm_data, stlplus::create_filespec(directory_match, "matches.e.bin")))
+  ) {
     OPENMVG_LOG_ERROR << "Cannot load the match file.";
     return EXIT_FAILURE;
   }
 
   std::unique_ptr<SfMSceneInitializer> scene_initializer;
-  switch(scene_initializer_enum)
-  {
-  //TODO(trifocal future) incremental v2: update for triplet
+  switch(scene_initializer_enum) {
   case ESfMSceneInitializer::INITIALIZE_AUTO_PAIR:
     OPENMVG_LOG_ERROR << "Not yet implemented.";
     return EXIT_FAILURE;
     break;
   case ESfMSceneInitializer::INITIALIZE_MAX_PAIR:
     scene_initializer.reset(new SfMSceneInitializerMaxPair(sfm_data,
-                                 feats_provider.get(),
-                                 matches_provider.get()));
+                                feats_provider.get(),
+                                matches_provider.get()));
     break;
   case ESfMSceneInitializer::INITIALIZE_EXISTING_POSES:
     scene_initializer.reset(new SfMSceneInitializer(sfm_data,
-                            feats_provider.get(),
-                            matches_provider.get()));
+                                feats_provider.get(),
+                                matches_provider.get()));
     break;
   case ESfMSceneInitializer::INITIALIZE_STELLAR:
     scene_initializer.reset(new SfMSceneInitializerStellar(sfm_data,
-                                 feats_provider.get(),
-                                 matches_provider.get()));
+                                feats_provider.get(),
+                                matches_provider.get()));
     break;
   default:
     OPENMVG_LOG_ERROR << "Unknown SFM Scene initializer method";
     return EXIT_FAILURE;
   }
-  if (!scene_initializer)
-  {
+  if (!scene_initializer) {
     OPENMVG_LOG_ERROR << "Invalid scene initializer.";
     return EXIT_FAILURE;
   }
-
 
   std::unique_ptr<ReconstructionEngine> sfm_engine;
   switch (sfm_engine_type)
@@ -578,10 +588,10 @@ int main(int argc, char **argv)
     engine->SetUnknownCameraType(EINTRINSIC(user_camera_model));
     engine->SetTriangulationMethod(static_cast<ETriangulationMethod>(triangulation_method));
     engine->SetResectionMethod(static_cast<resection::SolverType>(resection_method));
+    engine->SetMultiviewMatchConstraint(static_cast<MultiviewMatchConstraint>(match_constraint));
 
     // Handle Initial pair parameter
-    if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty())
-    {
+    if (!initial_pair_string.first.empty() && !initial_pair_string.second.empty()) {
       Pair initial_pair_index;
       if (!computeIndexFromImageNames(sfm_data, initial_pair_string, initial_pair_index))
       {
@@ -597,11 +607,9 @@ int main(int argc, char **argv)
     // set initial triplet parameter for now
     if (!std::get<0>(initial_triplet_string).empty() &&
         !std::get<1>(initial_triplet_string).empty() &&
-        !std::get<2>(initial_triplet_string).empty())
-    {
+        !std::get<2>(initial_triplet_string).empty()) {
       Triplet initial_triplet_index;
-      if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index))
-      {
+      if (!computeIndexFromImageNames(sfm_data, initial_triplet_string, initial_triplet_index)) {
         OPENMVG_LOG_ERROR << "Could not find the initial triplets <"
           << std::get<0>(initial_triplet_string) <<  ", "
           << std::get<1>(initial_triplet_string) <<  ", "
@@ -609,8 +617,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
       }
       engine->setInitialTriplet(initial_triplet_index);
+      engine->SetMaximumTrifocalRansacIterations(trifocal_iterations);
     }
-
     sfm_engine.reset(engine);
   }
     break;
@@ -683,7 +691,7 @@ int main(int argc, char **argv)
 
   sfm_engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfm_engine->Set_Extrinsics_Refinement_Type(extrinsic_refinement_options);
-  sfm_engine->Set_Use_Motion_Prior(b_use_motion_priors);
+  sfm_engine->Set_Use_Motion_Prior(use_motion_priors);
 
   //---------------------------------------
   // Sequential reconstruction process

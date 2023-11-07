@@ -14,16 +14,49 @@ working branch: develop_keypoint_orientation_sfm_tmp
 ## Misc. Notes
 
 src/software 
- - Complete software(s) build on openMVG libraries
+ - Complete software using openMVG libraries
+
+## Running
+
+### Initial run
+
+python3 ./openMVG-bin/software/SfM/SfM_SequentialPipeline.py ~/lib/data/openMVG/SceauxCastle/images-subset ~/lib/data/openMVG/SceauxCastle/images-subset-results
+
+(results file dos not need to be created beforehand.
+
+
+### Re-run only sfm:
+
+openmvg/src/openMVG_Samples/multiview_trifocal/s
+
+### Debug Mac OS CLang:
+
+compile with debug flags (not Release)
+
+Run the program. If it crashes, run:
+
+openmvg/src/openMVG_Samples/multiview_trifocal/debug
+
+
+### Debug Linux
+
+Install ddd  graphical display debugger
+
+Habilitate cores using ulimit etc
+
+use ddd (executable) core
+
 
 ## Inclusion into OpenMVG
 
-### Next thing to work on
-
-MakeInitialPair3D
-sequential_SfM.cpp:188
-
-Make trifocal one
+### TODO 
+- Experiments on robustness
+- AutomaticInitialTriplet choice 
+- Scale
+- ACRansac for trifocal
+- Complete validation of solvers and parameter tuning
+- Tangent constraint thgoughout ransac and inlier filtering/determination
+  post-ransac
 
 
 ## main() ##
@@ -34,10 +67,8 @@ src/software/SfM/SfM_SequentialPipeline.py.in
   - calls all the executables from python.
   - main: main_SfM.cpp 
     - main funciton: ReconstructionEngine::Process() 
-        SfMEngine::INCREMENTALV:
-          - we are mainly targeting this one
-          
-        SfMEngine::INCREMENTALV2:
+        SfMEngine::INCREMENTALV: (current)
+        SfMEngine::INCREMENTALV2 (future):
           - this one allows to set the triples and initializer (see\ref{pierre:comment})
   - also see main_GeometricFilter.cpp
 
@@ -56,6 +87,9 @@ GeometricFilter
     - TODO: investigate where intrinsics are provided, if we can fix it, and
       whether intrinsics are actually optimized / estimated
         - sfm_data has intrinsics and views (see \ref{sec:views} below)
+
+Running
+
 
 ### Sequential reconstruction engine v1
 
@@ -135,9 +169,6 @@ IndMatches
 
 
 
-### TODO 
-  - search agan for all uses of the 5 pt algorithm and P3P and adapt for trifocal+p2pt
- 
 
 ### How to add orientation to OpenMVG?
 

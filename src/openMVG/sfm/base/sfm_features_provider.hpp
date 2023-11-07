@@ -34,7 +34,7 @@ struct Features_Provider
   Hash_Map<IndexT, features::PointFeatures> feats_per_view;
 
   /// SIOPointFeature array per ViewId of the considered SfM_Data container
-  /// This will only be active when feats_per_view is not
+  /// This will be active with feats_per_view (redundant). 
   /// This is for backward compatibility with the usual Features_Provider
   /// Ideally, we could have a better structure
   Hash_Map<IndexT, features::SIOPointFeatures> sio_feats_per_view;
@@ -85,11 +85,12 @@ struct Features_Provider
           // that use feature orientation etc
           assert(sift_regions->Features().size());
           sio_feats_per_view[iter->second->id_view] = sift_regions->Features();
-        } else {
-          // save loaded Features as PointFeature
-          feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
-          assert(!store_as_sio_features);
         }
+        // also save loaded Features as PointFeature. In the future:
+        // make feats_per_view map into class, and sio_ would be subclass.
+        // we can have an abstract base class to access them uniformly
+        // without wasting feature storage.
+        feats_per_view[iter->second->id_view] = regions->GetRegionsPositions();
         }
         ++my_progress_bar;
       }

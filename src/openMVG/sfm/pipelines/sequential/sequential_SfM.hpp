@@ -31,7 +31,6 @@ struct Matches_Provider;
 class SequentialSfMReconstructionEngine : public SequentialSfMReconstructionEngineBase
 {
 public:
-
   SequentialSfMReconstructionEngine(
     const SfM_Data & sfm_data,
     const std::string & soutDirectory,
@@ -45,11 +44,18 @@ public:
 
   virtual bool Process() override;
 
+  // tests that in fact the distortion is not identity
+  static bool isDistortionZero(const cameras::IntrinsicBase *cam) 
+  {
+    Vec2 v(2,3), v_ud = cam->get_ud_pixel(v); // dummy
+    return (v-v_ud).norm() < 1e-8;
+  }
+
+
 protected:
 
 
 private:
-
   /// Highlevel methods -------------------------------------------------------
   /// Make initial 2- or 3-view reconstruction seed (robust plus BA and initial filters)
   bool MakeInitialSeedReconstruction();
@@ -66,6 +72,7 @@ private:
 
   /// Add a single Image to the scene and triangulate new possible tracks.
   bool Resection(const uint32_t imageIndex);
+  void ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksCommon);
 
   /// See if all observations are adequately filled-in
   /// Test assumptions about the code, eg links in observation feature id,
