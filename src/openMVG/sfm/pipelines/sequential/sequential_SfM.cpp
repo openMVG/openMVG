@@ -435,6 +435,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // Bound min precision at 1 pix.
   relativePose_info.found_residual_precision = std::max(relativePose_info.found_residual_precision, 1.0);
 
+  // ---------------------------------------------------------------------------
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
   OPENMVG_LOG_INFO << "Starting Bundle Adjustment for initial triplet";
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
@@ -442,9 +443,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   SfM_Data tiny_scene;
   std::vector<Mat34> P;
   P.reserve(nviews);
-  // tiny_scene.poses[view_J->id_pose] = relativePose_info.relativePose;
+  // Init views and intrincics -----------------------------------------------
   for (unsigned v = 0; v < nviews; ++v) {
-    // Init views and intrincics
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
     OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v];
@@ -452,9 +452,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       tiny_scene.poses[view[v]->id_pose] = Pose3(Mat3::Identity(), Vec3::Zero());
     else
       tiny_scene.poses[view[v]->id_pose] = Pose3(relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0),
-                                                -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()*relativePose_info.relativePoseTrifocal[v].block<3,1>(0,3));
-
-    // Init projection matrices
+                                                -relativePose_info.relativePoseTrifocal[v].block<3,3>(0,0).transpose()
+                                                *relativePose_info.relativePoseTrifocal[v].block<3,1>(0,3));
     P.push_back(dynamic_cast<const Pinhole_Intrinsic *>(cam[v])->K()*(relativePose_info.relativePoseTrifocal[v]));
   }
 
@@ -466,15 +465,13 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   { // initial structure ---------------------------------------------------
     Mat3X x(3,3);
     for (const auto &track_iterator : map_tracksCommon) {
-      // Get corresponding points
       auto iter = track_iterator.second.cbegin();
       uint32_t ifeat = iter->second;
-      for (unsigned v = 0; v < nviews; ++v) {
+      for (unsigned v = 0; v < nviews; ++v) { // Get corresponding points: all, not just inliers
         x.col(v) =
           features_provider_->sio_feats_per_view[t[v]][ifeat].coords().cast<double>().homogeneous();
         landmarks[track_iterator.first].obs[view[v]->id_view] = Observation(x.col(v).hnormalized(), ifeat);
-
-        // if (sfm_data_.is_oriented() {
+        // if (sfm_data_.is_oriented() {     // currently done a posteriori in recostruct all tangents
         //   theta = features_provider_->sio_feats_per_view[vi][ob->id_feat].orientation();
         //   Vec2 tgt(std::cos(theta),std::sin(theta));
         //   landmarks_info[track_iterator.first].obs_info[view[v]->id_view] = ObservationInfo(tgt);
@@ -486,8 +483,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec4 X;
       TriangulateNView(x, P, &X);
       landmarks[track_iterator.first].X = X.hnormalized();
-      // tangent will be rec'd later by ReconstructAllTangents but it could be
-      // here 
+      // tangent will be recd later by ReconstructAllTangents but could be here 
 
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X),
           landmarks[track_iterator.first].obs[view[0]->id_view].x );

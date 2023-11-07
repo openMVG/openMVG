@@ -105,10 +105,9 @@ public:
            OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle check PASS, using error as is";
          else
            vec_errors[sample] = std::numeric_limits<double>::infinity();
-
-//         } else {
-//           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle filter out";
-//         }
+                  //         } else {
+                  //           OPENMVG_LOG_INFO << "\tRansac-internal Resection view reprojection angle filter out";
+                  //         }
       }
     }
   }
