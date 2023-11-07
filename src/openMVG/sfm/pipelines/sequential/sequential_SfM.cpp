@@ -459,10 +459,9 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   // OPENMVG_LOG_INFO << "\tscale[0]" << scdatum(0);
 
-  // Init structure
-  Landmarks &landmarks = tiny_scene.structure;
-  // LandmarksInfo &landmarks_info = tiny_scene.info;
-  { // initial structure ---------------------------------------------------
+  // Init structure ------------------------------------------------------------
+  Landmarks &landmarks = tiny_scene.structure; // LandmarksInfo &landmarks_info = tiny_scene.info;
+  { 
     Mat3X x(3,3);
     for (const auto &track_iterator : map_tracksCommon) {
       auto iter = track_iterator.second.cbegin();
@@ -510,7 +509,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   // -----------------------------------------------------------------------
   // - refine only Structure and Rotations & translations (keep intrinsic constant)
-  constexpr bool bRefine_using_BA = true;
+  static constexpr bool bRefine_using_BA = true;
   if (bRefine_using_BA) { // badj
     Bundle_Adjustment_Ceres::BA_Ceres_options options(true, true);
     options.linear_solver_type_ = ceres::DENSE_SCHUR;
@@ -521,7 +520,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           Structure_Parameter_Type::ADJUST_ALL))) { // Adjust structure
       return false;
     }
-    std::cout << "passed BA\n";
   } // !badj
   // Save computed data
   Pose3 *pose[nviews];
@@ -533,10 +531,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_INFO << "pose rc\n" << pose[v]->rotation() << "\n" <<  pose[v]->center().transpose();
   }
 
-  OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
+  //----------------------------------------------------------------------------
   // Recompute inliers and save them
-  // TODO: this is currently too strict,
-  // every 2-view must pass
+  // TODO: this is currently too strict, every 2-view must pass
+  OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
     const IndexT trackId = landmark_entry.first;
     const Landmark &landmark = landmark_entry.second;
