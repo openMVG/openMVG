@@ -176,6 +176,8 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      li.T
    );
    li.T.normalize();
+   OPENMVG_LOG_INFO <<" tangent 3D recon:\n"<< li.T; // Gabriel: Somewhat print
+                                                     // it fixes the issue. WTF!
   } // end for each landmark
 }
 
@@ -735,6 +737,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
     if (UseOrientedConstraint() || resection_method_ == resection::SolverType::P2Pt_FABBRI_ECCV12) {
       assert(features_provider_->has_sio_features());
       assert(sfm_data_.GetInfo().count(*iterTrackId));
+      OPENMVG_LOG_INFO << "3D tgt:\n" << sfm_data_.GetInfo().at(*iterTrackId).T;
       resection_data.tgt3D.col(cpt) = sfm_data_.GetInfo().at(*iterTrackId).T;
       double theta = features_provider_->sio_feats_per_view.at(viewIndex)[*iterfeatId].orientation();
       resection_data.tgt2D.col(cpt) = tgt2D_original.col(cpt) = Vec2(std::cos(theta), std::sin(theta));

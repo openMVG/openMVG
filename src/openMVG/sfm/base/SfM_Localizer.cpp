@@ -237,6 +237,8 @@ namespace sfm {
             Mat34>;
 
         resection_data.set_stacked();
+        OPENMVG_LOG_INFO << "bearing:\n"<< resection_data.point_tangents_2d;
+        OPENMVG_LOG_INFO << "3d:\n"<< resection_data.point_tangents_3d;
         KernelType kernel(resection_data.point_tangents_2d, resection_data.point_tangents_3d, optional_intrinsics, UseOrientationConstraint);
         // Robust estimation of the pose matrix and its precision
         const auto ACRansacOut =
