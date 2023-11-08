@@ -223,7 +223,7 @@ namespace sfm {
       case resection::SolverType::P2Pt_FABBRI_ECCV12:
       {
         if (!optional_intrinsics) {
-          std::cerr << "Intrinsic data is required for P2Pt (poose from 2 points orientation solvers." << std::endl;
+          std::cerr << "Intrinsic data is required for P2Pt (pose from 2 points orientation solvers.)" << std::endl;
           return false;
         }
         //--
