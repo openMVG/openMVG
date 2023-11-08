@@ -15,8 +15,6 @@
 
 namespace openMVG {
 namespace trifocal {
-
-
   
 double NormalizedSquaredPointReprojectionOntoOneViewError::
 Error(
@@ -58,7 +56,6 @@ Error(
   Vec2 p_reprojected = (tt[third_view]*triangulated_homg).hnormalized();
   return (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
 }
-
 
 // Meant to be run by the 3 points given to trifocal solver
 bool  NormalizedSquaredPointReprojectionOntoOneViewError::
