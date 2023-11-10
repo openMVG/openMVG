@@ -307,9 +307,7 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   sfm_data_2.poses.clear();
   sfm_data_2.structure.clear();
 
-  SequentialSfMReconstructionEngine sfmEngine(
-    sfm_data_2,
-    "./",
+  SequentialSfMReconstructionEngine sfmEngine( sfm_data_2, "./",
     stlplus::create_filespec("./", "Reconstruction_Report.html"));
 
   // Configure the features_provider & the matches_provider from the synthetic dataset

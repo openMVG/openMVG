@@ -463,7 +463,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   // Init structure ------------------------------------------------------------
   Landmarks &landmarks = tiny_scene.structure; // LandmarksInfo &landmarks_info = tiny_scene.info;
-  { 
+  {
     Mat3X x(3,3);
     for (const auto &track_iterator : map_tracksCommon) {
       auto iter = track_iterator.second.cbegin();
@@ -533,7 +533,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     OPENMVG_LOG_INFO << "pose rc\n" << pose[v]->rotation() << "\n" <<  pose[v]->center().transpose();
   }
 
-  //----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
   // Recompute inliers and save them
   // TODO: this is currently too strict, every 2-view must pass
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";

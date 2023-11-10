@@ -510,11 +510,9 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
     }
   }
-
-  if (!cmd.used('C')) { // set defaults for each case different than normal
-    if (oriented_trifocal || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12)
+  // set defaults for each case different than normal
+  if (!cmd.used('C') && (oriented_trifocal || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12))
       match_constraint = (int) MultiviewMatchConstraint::ORIENTATION;    // default for trifocal and P2pt
-  }
 
   const bool need_orientation = oriented_trifocal
     || resection_method == (int) resection::SolverType::P2Pt_FABBRI_ECCV12
