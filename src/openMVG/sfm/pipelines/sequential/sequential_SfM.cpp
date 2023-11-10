@@ -165,6 +165,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    Vec3 tangent0, tangent1;
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
+   tangent0(2) = tangent1(2) = 0;
 
    TriangulateTangent2View (
      pose[best_v0]->rotation(),
@@ -176,7 +177,8 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      li.T
    );
    li.T.normalize();
-   OPENMVG_LOG_INFO <<" tangent 3D recon:\n"<< li.T; // Gabriel: Somewhat print
+   //abort();
+   //OPENMVG_LOG_INFO <<" tangent 3D recon:\n"<< li.T; // Gabriel: Somewhat print
                                                      // it fixes the issue. WTF!
   } // end for each landmark
 }
