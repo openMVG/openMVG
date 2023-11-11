@@ -1,7 +1,5 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
-
 // Copyright (c) 2015 Pierre MOULON.
-
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -11,8 +9,8 @@
 // mimmicking sfm_robust_model_estimation.{cpp,hpp} therein
 // -----------------------------------------------------------------------------
 
-
 #include <utility>
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 #include "openMVG/cameras/Camera_Intrinsics.hpp"
@@ -24,13 +22,11 @@
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
 #include "openMVG/sfm/pipelines/sequential/sfm_robust_model_estimation_trifocal.hpp"
 
-
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 
 namespace openMVG {
 namespace sfm {
-
 
 // TODO: we are assuming all images have the same intrinsics
 bool robustRelativePoseTrifocal
@@ -39,7 +35,8 @@ bool robustRelativePoseTrifocal
   std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   double threshold_px,
-  const size_t max_iteration_count
+  const size_t max_iteration_count,
+  MultiviewMatchConstraint multiview_match_constraint
 )
 {
   OPENMVG_LOG_INFO << "npts = " << pxdatum[0].cols();
@@ -70,7 +67,8 @@ bool robustRelativePoseTrifocal
   using TrifocalKernel = trifocal::ThreeViewKernel<trifocal::Trifocal3PointPositionTangentialSolver,
                          trifocal::NormalizedSquaredPointReprojectionOntoOneViewError>;
 
-  const TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
+  TrifocalKernel trifocal_kernel(datum[0], datum[1], datum[2]); // perhaps pass K
+  trifocal_kernel.SetMultiviewMatchConstraint(multiview_match_constraint);
 
   OPENMVG_LOG_INFO << "Initialized kernel. Calling relativePoseTrifocal";
   double threshold_normalized_squared
@@ -98,7 +96,9 @@ bool robustRelativePoseTrifocal
         relativePoseTrifocal_info.relativePoseTrifocal,
         datum[0].col(relativePoseTrifocal_info.vec_inliers[i]),
         datum[1].col(relativePoseTrifocal_info.vec_inliers[i]),
-        datum[2].col(relativePoseTrifocal_info.vec_inliers[i]));
+        datum[2].col(relativePoseTrifocal_info.vec_inliers[i]),
+        MultiviewMatchConstraint::ORIENTATION
+        );
   }
 
   if (relativePoseTrifocal_info.vec_inliers.size() <= TrifocalKernel::Solver::MINIMUM_SAMPLES) {

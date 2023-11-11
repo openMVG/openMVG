@@ -15,13 +15,15 @@
 
 namespace openMVG {
 namespace trifocal {
-  
+
 double NormalizedSquaredPointReprojectionOntoOneViewError::
 Error(
   const trifocal_model_t &tt,
   const Vec &bearing_0, // x,y,tangentialx,tangentialy
   const Vec &bearing_1,
-  const Vec &bearing_2) 
+  const Vec &bearing_2,
+  MultiviewMatchConstraint constraint
+  )
 {
   // Return the cost related to this model and those sample data point
   // Ideal algorithm:
@@ -29,25 +31,54 @@ Error(
   // 2) project the 3D points and orientations on all images_
   // 3) compute error 
   // 
-  // In practice we ignore the directions and only reproject to one third view
-  // 3x3: each column is x,y,1
+  // In practice we ignore the directions and only reproject to one third view // 3x3: each column is x,y,1 Mat3 bearing;
   Mat3 bearing;
   bearing << bearing_0.head(2).homogeneous(),
              bearing_1.head(2).homogeneous(), 
              bearing_2.head(2).homogeneous();
+  Mat3 t;
+  if (constraint == MultiviewMatchConstraint::ORIENTATION) {
+    t       << bearing_0.tail(2).homogeneous(),
+               bearing_1.tail(2).homogeneous(), 
+               bearing_2.tail(2).homogeneous();
+    t(2,0) = t(2,1) = t(2,2) = 0;
+    assert(fabs(t.col(0).squaredNorm() -  1.0) < 1e-6 && fabs(t.col(1).squaredNorm() -  1.0) < 1e-6  &&  fabs(t.col(2).squaredNorm() -  1.0) < 1e-6);
+  }
   
   Vec4 triangulated_homg;
+  Vec3 Trec;
   unsigned third_view = 0;
   // pick the wider baseline. TODO: measure all pairwise translation distances
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
     // TODO(trifocal future) compare to triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
+    if (constraint == MultiviewMatchConstraint::ORIENTATION)
+      Trec = t.col(0).cross(bearing.col(0)).cross(tt[1].block<3,3>(0,0).transpose()*(t.col(1).cross(bearing.col(1))));
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
+    if (constraint == MultiviewMatchConstraint::ORIENTATION)
+      Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
+  if (std::isnan(triangulated_homg(0)) || std::isnan(triangulated_homg(1)) ||
+      std::isnan(triangulated_homg(2)) || std::isnan(triangulated_homg(3))) {
+    OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+    OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+                     << "tt[0]" << tt[0];
+  }
 
+  if (constraint == MultiviewMatchConstraint::ORIENTATION) {
+    Trec = tt[third_view].block<3,3>(0,0) * Trec;
+    Vec3 &tproj  = Trec;
+    tproj = Trec - Trec(2)*bearing.col(third_view);
+    tproj.head(2).normalize();
+    double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
+    static constexpr double angle_tol = 0.34; // about 15 degrees tolerance. TODO: make parameter
+    if (angular_error > angle_tol  && angular_error + angle_tol <= M_PI)
+      return std::numeric_limits<double>::infinity();
+  }
+  
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
   // and report only one error
@@ -100,32 +131,18 @@ Check(
   if (tt[1].col(3).squaredNorm() > tt[2].col(3).squaredNorm()) {
     // TODO(trifocal future) compare to triangulation from the three views at once
     TriangulateDLT(tt[0], bearing.col(0), tt[1], bearing.col(1), &triangulated_homg);
-    if (
-        std::isnan(triangulated_homg(0)) ||
-        std::isnan(triangulated_homg(1)) ||
-        std::isnan(triangulated_homg(2)) ||
-        std::isnan(triangulated_homg(3))
-       ) {
-      OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
-      OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
-                       << "tt[0]" << tt[0];
-    }
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[1].block<3,3>(0,0).transpose()*(t.col(1).cross(bearing.col(1))));
     third_view = 2;
   } else {
     TriangulateDLT(tt[0], bearing.col(0), tt[2], bearing.col(2), &triangulated_homg);
-    if (
-        std::isnan(triangulated_homg(0)) ||
-        std::isnan(triangulated_homg(1)) ||
-        std::isnan(triangulated_homg(2)) ||
-        std::isnan(triangulated_homg(3))
-        ) {
-      OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
-      OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
-                       << "tt[0]" << tt[0];
-    }
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
+  }
+  if (std::isnan(triangulated_homg(0)) || std::isnan(triangulated_homg(1)) ||
+      std::isnan(triangulated_homg(2)) || std::isnan(triangulated_homg(3))) {
+    OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
+    OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
+                     << "tt[0]" << tt[0];
   }
 
   OPENMVG_LOG_INFO << "\tCheck: third view = "<< third_view;

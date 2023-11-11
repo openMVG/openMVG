@@ -14,7 +14,9 @@
 #define OPENMVG_MULTIVIEW_TRIFOCAL_METRICS_HPP
 
 #include "openMVG/system/logger.hpp"
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/multiview/trifocal/trifocal_model.hpp"
+
 
 namespace openMVG {
 namespace trifocal {
@@ -24,7 +26,9 @@ struct NormalizedSquaredPointReprojectionOntoOneViewError {
     const trifocal_model_t &tt,
     const Vec &bearing_0, // x,y,tangentialx,tangentialy
     const Vec &bearing_1,
-    const Vec &bearing_2);
+    const Vec &bearing_2,
+    MultiviewMatchConstraint constraint
+    );
 
   // Meant to be run by the 3 points given to trifocal solver
   static bool  Check(

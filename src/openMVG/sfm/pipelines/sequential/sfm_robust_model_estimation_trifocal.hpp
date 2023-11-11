@@ -16,6 +16,7 @@
 #include <limits>
 #include <array>
 #include <vector>
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/multiview/trifocal/trifocal_model.hpp"
 
 
@@ -59,7 +60,8 @@ bool robustRelativePoseTrifocal
   std::array<Mat, 3> pxdatum,
   RelativePoseTrifocal_Info & relativePoseTrifocal_info,
   double threshold_px,
-  const size_t max_iteration_count = 128  // this default is overriden in sequential_SfM*.hpp
+  const size_t max_iteration_count, /* = 128, */ // this default is overriden in sequential_SfM*.hpp
+  MultiviewMatchConstraint multiview_match_constraint
 );
 
 } // namespace sfm

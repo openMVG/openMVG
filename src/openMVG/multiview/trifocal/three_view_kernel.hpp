@@ -15,6 +15,7 @@
 
 #include <vector>
 #include "openMVG/numeric/extract_columns.hpp"
+#include "openMVG/multiview/multiview_match_constraint.hpp"
 #include "openMVG/multiview/trifocal/trifocal_model.hpp"
 
 namespace openMVG {
@@ -34,7 +35,7 @@ public:
   enum { MAX_MODELS = Solver::MAX_MODELS };
   
   ThreeViewKernel(const Mat &x1, const Mat &x2, const Mat &x3) 
-    : x1_(x1), x2_(x2), x3_(x3) {}
+    : x1_(x1), x2_(x2), x3_(x3), multiview_match_constraint_(MultiviewMatchConstraint::ORIENTATION) {}
 
   /// Extract required sample and fit model(s) to the sample
   void Fit(const std::vector<uint32_t> &samples, std::vector<Model> *models) const {
@@ -47,7 +48,7 @@ public:
   
   /// Return the error associated to the model and sample^nth point
   double Error(uint32_t sample, const Model &model) const {
-    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample));
+    return ErrorArg::Error(model, x1_.col(sample), x2_.col(sample), x3_.col(sample), multiview_match_constraint_);
   }
 
   /// Number of putative point
@@ -57,9 +58,13 @@ public:
   static void Solve(const Mat &x1, const Mat &x2, const Mat &x3, std::vector<Model> *models) {
     Solver::Solve(x1, x2, x3, models); // By offering this, Kernel types can be passed to templates.
   }
+
+  void SetMultiviewMatchConstraint(MultiviewMatchConstraint c) 
+  { multiview_match_constraint_ = c; }
   
 protected:
   const Mat &x1_, &x2_, &x3_; // corresponding point of the trifocal configuration
+  MultiviewMatchConstraint multiview_match_constraint_;
 };
 
 } // namespace trifocal
