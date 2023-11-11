@@ -177,9 +177,6 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      li.T
    );
    li.T.normalize();
-   //abort();
-   //OPENMVG_LOG_INFO <<" tangent 3D recon:\n"<< li.T; // Gabriel: Somewhat print
-                                                     // it fixes the issue. WTF!
   } // end for each landmark
 }
 
