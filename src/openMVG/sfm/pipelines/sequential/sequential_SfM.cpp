@@ -540,49 +540,55 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // TODO: this is currently too strict, every 2-view must pass
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
-    const IndexT trackId = landmark_entry.first;
+    const IndexT trackId     = landmark_entry.first; OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
-    const Observations &obs = landmark.obs;
-    OPENMVG_LOG_INFO << "\tTrack id " << trackId;
+    const Observations &obs  = landmark.obs;
+    bool include_landmark = true;
 
     Observations::const_iterator iterObs_x[nviews];
-    const Observation *ob_x[nviews];
-    Vec2 ob_x_ud[nviews];
+    const Observation *ob_x[nviews]; Vec2 ob_x_ud[nviews];
     for (unsigned v = 0; v < nviews; ++v) {
       iterObs_x[v] = obs.find(view[v]->id_view);
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
-
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
-    }
-    bool include_landmark = true;
-    for (unsigned v0 = 0; v0 + 1 < nviews; ++v0)
-      for (unsigned v1 = v0 + 1; v1 < nviews; ++v1) {
-        const double angle = AngleBetweenRay(
-          *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
 
-        const Vec2 residual_0 = cam[v0]->residual((*pose[v0])(landmark.X), ob_x[v0]->x);
-        const Vec2 residual_1 = cam[v1]->residual((*pose[v1])(landmark.X), ob_x[v1]->x);
-
-        OPENMVG_LOG_INFO << "\t\tv0, v1 = " << v0 << ", " << v1
-          <<  "t\tresiduals norm " << residual_0.norm() << " " << residual_1.norm();
-        if (angle <= 2.0) {
-          OPENMVG_LOG_INFO << "\t\tFAIL angle test with angle " << angle;
-          include_landmark = false;
-        } else if (!CheiralityTest((*cam[v0])(ob_x_ud[v0]), *pose[v0],
-                            (*cam[v1])(ob_x_ud[v1]), *pose[v1], landmark.X)) {
-          OPENMVG_LOG_INFO << "\t\tFAIL Cheirality test ";
-          include_landmark = false;
-        } else if (residual_0.norm() >= relativePose_info.found_residual_precision ||
-                   residual_1.norm() >= relativePose_info.found_residual_precision) {
-            OPENMVG_LOG_INFO << "\t\tFAIL residual test: " << residual_0.norm() << " "
-              << residual_1.norm() << " both greater than " << relativePose_info.found_residual_precision;
-          include_landmark = false;
-        } // else if (UseOrientedConstraint()) { } TODO
+      if (!CheiralityTest((*cam[v])(ob_x_ud[v]), pose[v], landmark.X)) {
+        include_landmark = false;
+        break;
       }
-    if (include_landmark)
-      sfm_data_.structure[trackId] = landmarks[trackId];
+      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x[v]->x);
+      if (residual.norm() > relativePose_info.found_residual_precision) {
+        include_landmark = false;
+        break;
+      }
+    }
+    if (!include_landmark)
+      continue;
+
+    // determine the best two views
+    float best_angle = 0;
+    IndexT best_v0 = 0, best_v1 = 0;
+    for (IndexT v0 = 0; v0 + 1 < v; ++v0)
+      for (IndexT v1 = v0 + 1; v1 < v; ++v1) {
+        const float angle = AngleBetweenRay(
+          *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
+        // We are chosing the biggest angle.
+        if (angle > best_angle) {
+          best_angle = angle;
+          best_v0 = v0;
+          best_v1 = v1;
+        }
+      }
+
+    if (best_angle <= 2.0) // TODO: experiment to show that trifocal can accept
+      continue;            // this angle as smaller than 2-view and get equal precision
+
+    // reconstruct tangent from the best views and reproject into the 3rd.
+    
+    assert(include_landmark);
+    sfm_data_.structure[trackId] = landmarks[trackId];
   }
 
   OPENMVG_LOG_INFO << "Final initial triplet residual histogram ---------------";
