@@ -124,7 +124,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
     //Observations::const_iterator iterObs[nviews];
     unsigned v = 0;
     for (auto &o : obs) {
-      vi[v] = o.first;
+      vi[v]  = o.first;
       ob[v]  = &o.second;
       obi[v] = &li.obs_info[vi[v]];  // creates obs
       const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]);
@@ -132,7 +132,6 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
       double theta = feature->orientation();
       obi[v]->t = Vec2(std::cos(theta), std::sin(theta));
       pose[v] = &sfm_data_.poses.at(sfm_data_.GetViews().at(vi[v])->id_pose);
-
       intrinsics[v] = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(
          sfm_data_.GetIntrinsics().at(sfm_data_.GetViews().at(vi[v])->id_intrinsic));
       v++;
@@ -162,6 +161,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
+   assert(obi[best_v0].t.norm() > .99 && obi[best_v1].t.norm() > .99);
    Vec3 tangent0, tangent1;
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
@@ -176,7 +176,9 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
      tangent1,
      li.T
    );
+   assert(li.T.norm() > 1e-10);
    li.T.normalize();
+   assert(li.T.norm() > .99);
   } // end for each landmark
 }
 
@@ -753,7 +755,6 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 
   // Do the resectioning: compute the camera pose 
   OPENMVG_LOG_INFO << "-- Trying robust Resection of view: " << viewIndex;
-
   geometry::Pose3 pose;
   const bool bResection = sfm::SfM_Localizer::Localize // <<------------------------------------
   (
@@ -789,8 +790,8 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
   if (!bResection) return false;
 
   // D. Refine the pose of the found camera.
-  // We use a local scene with only the 3D points and the new camera.
-  // TODO: are we just ignoring the inliers info and recomputing it?
+  // We use a local scene with only the 3D points and the new camera,
+  // and only for inliers.
   {
     const bool b_new_intrinsic = (optional_intrinsic == nullptr);
     // A valid pose has been found (try to refine it):
@@ -875,34 +876,34 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
 // F. List tracks that share content with this view and add observations and new 3D track if required.
 //    - If the track already exists, look if the new view tracks observation are valid
 //    - If not, try robust triangulation & add the new valid view track observation
-//    TODO: filter by tangent orientation
+//
+// \input I : index of the new view
 void SequentialSfMReconstructionEngine::
 ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksCommon)
 {
-  // Get information of new view
-  const View *view_I = sfm_data_.GetViews().at(I).get();
+  const View *view_I         = sfm_data_.GetViews().at(I).get();
   const IntrinsicBase *cam_I = sfm_data_.GetIntrinsics().at(view_I->id_intrinsic).get();
-  const Pose3 pose_I = sfm_data_.GetPoseOrDie(view_I);
+  const Pose3 pose_I         = sfm_data_.GetPoseOrDie(view_I);
 
-  // Vector of all already reconstructed views
+  // Already reconstructed views
   const std::set<IndexT> valid_views = Get_Valid_Views(sfm_data_);
 
-  // Go through each track and look if we must add new view observations or new 3D points
+  // For each track look if we must add new view observations or new 3D points
   for (const std::pair<uint32_t, tracks::submapTrack>& trackIt : map_tracksCommon) {
     const uint32_t trackId = trackIt.first;
     const tracks::submapTrack &track = trackIt.second;
-    // List the potential view observations of the track
+    // The potential view observations of the track
     const tracks::submapTrack &allViews_of_track = map_tracks_[trackId];
-    // List to save the new view observations that must be added to the track
+    // The new view observations that must be added to the track
     std::set<IndexT> new_track_observations_candidate_views;
 
     // If the track was already reconstructed
     if (sfm_data_.structure.count(trackId))
-      // Since the 3D point was triangulated before we add the new the Inth view observation
+      // Since the 3D point was triangulated before we add the new the I-th view observation
       new_track_observations_candidate_views.insert(I);
     else for (const std::pair<IndexT, IndexT>& trackViewIt : allViews_of_track) {
         // Go through the views that observe this track & look if a successful triangulation can be done
-        const IndexT & J = trackViewIt.first;
+        const IndexT &J = trackViewIt.first;
         // If view is valid try triangulation
         if (J == I || !valid_views.count(J))
           continue;
@@ -911,38 +912,37 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
           new_track_observations_candidate_views.insert(J);
           continue;
         }
-        const View *view_J = sfm_data_.GetViews().at(J).get();
+        const View *view_J         = sfm_data_.GetViews().at(J).get();
         const IntrinsicBase *cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-        const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
+        const Pose3 pose_J         = sfm_data_.GetPoseOrDie(view_J);
         Vec2
-        xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>(),
-        xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
+          xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>(),
+          xI = features_provider_->feats_per_view.at(I)[track.at(I)].coords().cast<double>();
 
         // Try to triangulate a 3D point from J view
-        // A new 3D point must be added
-        // Triangulate it
         const Vec2 xI_ud = cam_I->get_ud_pixel(xI), xJ_ud = cam_J->get_ud_pixel(xJ);
         Vec3 X = Vec3::Zero();
 
-        // Even though we may not successfully triangulate yet,
-        // mark the view to add the observations once the point is triangulated (if at all).
-        // Then we check below if the residual is low
-        //
-        // new_track_observations_candidate_views.insert(I) <<--- not needed // here
+        // Even though we may not successfully triangulate yet, mark the view to
+        // add the observations once the point is triangulated (if at all).
+        // Then we check below if (*) the residual is low.
+        new_track_observations_candidate_views.insert(J);
+        // new_track_observations_candidate_views.insert(I) not needed here.
         // Reason: if the point eventually gets triangulated, view I will be
         // inserted below. If it never gets triangulated, no landmark will
         // exist so no observation will be added below.
-        new_track_observations_candidate_views.insert(J);
 
-        if (Triangulate2View(
+        Vec3 bearingI = (*cam_I)(xI_ud), bearingJ = (*cam_J)(xJ_ud);
+
+        if (Triangulate2View(           // Cheirality is tested inside Triangulate2View
               pose_I.rotation(),
               pose_I.translation(),
-              (*cam_I)(xI_ud),
+              bearingI,
               pose_J.rotation(),
               pose_J.translation(),
-              (*cam_J)(xJ_ud),
+              bearingJ,
               X, triangulation_method_)) {
-          // Check triangulation result
+
           const double angle = AngleBetweenRay(
             pose_I, cam_I, pose_J, cam_J, xI_ud, xJ_ud);
           const Vec2 residual_I = cam_I->residual(pose_I(X), xI);
@@ -950,29 +950,74 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
           if (angle > 2.0 && // Check angle (small angle leads to imprecise triangulation)
               // Check residuals (must be inferior to the found view's AContrario threshold)
               residual_I.norm() < std::max(4.0, map_ACThreshold_.at(I)) &&
-              residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))
-              // Cheirality been tested already in Triangulate2View
-              // TODO: track orientation constraints
-             ) {
+              residual_J.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
+
             sfm_data_.structure[trackId].X = X; // Add a new track
             new_track_observations_candidate_views.insert(I); // only now this is really a candidate
+            if (UseOrientedConstraint()) { // reconstruct 3D tangent. This one
+                                           // is only used for the constraint.
+                                           // Later on RecosntructAllTangents we
+                                           // reconstruct them in a more optimal
+                                           // and robust way
+              Vec3 tangentJ;
+              {
+              const features::SIOPointFeature * const sioJ = &(features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
+              double theta = sioJ->orientation();
+              tangentJ = Vec3(std::cos(theta), std::sin(theta), 0);
+              std::shared_ptr<cameras::Pinhole_Intrinsic> intr = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(cam_J);
+              assert(intr.get());
+              Pinhole_Intrinsic::invert_intrinsics_tgt(intr->K(), tangentJ.data(), tangentJ.data());
+              }
+
+              Vec3 tangentI;
+              {
+              const features::SIOPointFeature * const sioI = &(features_provider_->sio_feats_per_view.at(I)[track.at(I)]; assert(sioI);
+              double theta = sioI->orientation();
+              tangentI = Vec3(std::cos(theta), std::sin(theta), 0);
+              std::shared_ptr<cameras::Pinhole_Intrinsic> intr = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(cam_I);
+              assert(intr.get());
+              Pinhole_Intrinsic::invert_intrinsics_tgt(intr->K(), tangentI.data(), tangentI.data());
+              }
+
+              TriangulateTangent2View (
+                pose_I.rotation(),
+                bearingI,
+                tangent0,
+                pose_J.rotation(),
+                bearingJ,
+                tangent1,
+                sfm_data_.info[trackId].T
+              );
+              // Orientation constraint not applied here since only observation is I
+              // and J, and we need 3 views for it.
+              // We delay the constraint to the loop (*) below.
+            }
           } // else // 3D point is invalid
             // OPENMVG_LOG_INFO << "not adding track in view, unreliable triangulation" << I << ", " << J;
         }
-    }// Go through all the views
+    } // Go through all the views
 
-    // If successfully triangulated, add the valid view observations
+    // (*) If successfully triangulated, add the valid view observations
     if (sfm_data_.structure.count(trackId) && !new_track_observations_candidate_views.empty()) {
+      // new_track_observations_candidate_views at this point contains:
+      //  - view I if the point was reconstructed before (so the point has a
+      //  triangulation excluding I, and it is thus seen by at least two other views
+      //  other than I, or
+      //  - view I plus and J != I of the already rec'd views, that see the same track in
+      //  common with view I, that we had to reconstruct above. In this case a
+      //  new reconstruction was generated between one of these J and I, but
+      //  there might be more than one J, so the new track length might be >= 2.
+      //  If new_track_observations_candidate_views.size() >= 2, then we have 3 obs
+      //  in the same track. The only case we only see 2 observations for the
+      //  track is if new_track_observations_candidate_views.size() == 2, and,
+      //  hence, no orientation constraint is of use (even position residual).
       Landmark &landmark = sfm_data_.structure[trackId];
-      // Landmark *landmark_info;
-      // if (sfm_data.is_oriented())
-      //   landmark_info = &sfm_data_.info[trackId];
-      // Check if view feature point observations of the track are valid (residual, depth) or not
       for (const IndexT &J: new_track_observations_candidate_views) {
-        const View *view_J = sfm_data_.GetViews().at(J).get();
+        // Check if view feature point observations of the track are valid (residual, depth, tangent orientation)
+        const View *view_J         = sfm_data_.GetViews().at(J).get();
         const IntrinsicBase *cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
-        const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
-        const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+        const Pose3 pose_J         = sfm_data_.GetPoseOrDie(view_J);
+        const Vec2 xJ    = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
         const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
 
         // Vec2 tgtJ;
@@ -983,20 +1028,37 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
         //     Vec2 tgt(std::cos(theta),std::sin(theta));
         // }
 
-        //    TODO: filter by tangent orientation
-        const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
-        if (CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-            && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))) {
-          landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
-          // if (sfm_data.is_oriented())
-          //   landmark_info->obs_info[J] = ObservationInfo(tgtJ);
+        Vec3 Xcam = pose_J(landmark.X);
+        const Vec2 residual = cam_J->residual(Xcam, xJ);
+        if ( CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
+         &&  residual.norm() < std::max(4.0, map_ACThreshold_.at(J)) ) {
+          bool pass_oriented_constraint = true;
+          if (UseOrientedConstraint() && new_track_observations_candidate_views.size() != 2) {
+            const bool ignore_distortion = true; // We ignore distortion for now
+            assert(sfm_data_.GetInfo().count(trackId));
+
+            const features::SIOPointFeature * const sioJ = &(features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
+            double theta = sioJ->orientation();
+            Vec3 tangentJ(std::cos(theta), std::sin(theta), 0);
+
+            // measure tangent reprojection error
+            double angular_error = cam_J->residual_orientation(
+                  pose_J.apply_to_orientation(sfm_data_.info.at(trackId).T), 
+                  tangentJ, Xcam/Xcam(2), ignore_distortion);
+            // about 15 degrees tolerance. TODO: make this a parameter
+            static constexpr double angle_tol = 0.34;
+            if (angular_error > angle_tol  && angular_error + angle_tol <= M_PI)
+              pass_oriented_constraint = false;
+          }
+          if (pass_oriented_constraint)
+            landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
         }
       }
     } // if // TODO: stereo: we should fix the outlier correspondences with the known cameras.
             // Simply add tracks if any features are nearby reprojections  (in
             // position, orientation, etc) even though they are not on tracks structure.
             // Also leverage some SIFT match similarity as prior to decide ambiguous cases
-  }// All the tracks in the view
+  } // All the tracks in the view
 }
 
 bool SequentialSfMReconstructionEngine::MakeInitialSeedReconstruction()

@@ -61,12 +61,14 @@ Error(
       Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
+#ifndef NDEBUG
   if (std::isnan(triangulated_homg(0)) || std::isnan(triangulated_homg(1)) ||
       std::isnan(triangulated_homg(2)) || std::isnan(triangulated_homg(3))) {
     OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
     OPENMVG_LOG_INFO << "\tbearing " << bearing.col(0) << " bearing1 " << bearing.col(1)
                      << "tt[0]" << tt[0];
   }
+#endif 
 
   if (constraint == MultiviewMatchConstraint::ORIENTATION) {
     Trec = tt[third_view].block<3,3>(0,0) * Trec;

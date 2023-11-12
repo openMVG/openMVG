@@ -173,8 +173,8 @@ struct TracksBuilder
     return parent_id.size();
   }
 
-  /// Export tracks as a map (each entry is a sequence of imageId and featureIndex):
-  ///  {TrackIndex => {(imageIndex, featureIndex), ... ,(imageIndex, featureIndex)}
+  /// Export tracks as a map (each entry is a sequence of imageId and featureId):
+  ///  {TrackId => {(imageId, featureId), ... ,(imageId, featureId)}
   void ExportToSTL(STLMAPTracks & map_tracks)
   {
     map_tracks.clear();
