@@ -86,7 +86,7 @@ public:
     const geometry::Pose3 pose(model.block(0, 0, 3, 3),
                              - model.block(0, 0, 3, 3).transpose() * t);
     vec_errors.resize(x2d_.cols());
-    const bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
+    static constexpr bool ignore_distortion = true; // We ignore distortion since we are using undistorted bearing vector as input
     for (Mat::Index sample = 0; sample < x2d_.cols(); ++sample) {
       Vec3 Xcam = pose(x3D_.col(sample).head(3));
       vec_errors[sample] = (camera_->residual(Xcam, x2d_.col(sample).head(2),

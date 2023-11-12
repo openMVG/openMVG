@@ -161,7 +161,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
    Vec3 bearing0 = ((*intrinsics[best_v0])(ob[best_v0]->x));
    Vec3 bearing1 = ((*intrinsics[best_v0])(ob[best_v1]->x));
 
-   assert(obi[best_v0].t.norm() > .99 && obi[best_v1].t.norm() > .99);
+   assert(obi[best_v0]->t.norm() > .99 && obi[best_v1]->t.norm() > .99);
    Vec3 tangent0, tangent1;
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v0]->K(), obi[best_v0]->t.data(), tangent0.data());
    Pinhole_Intrinsic::invert_intrinsics_tgt(intrinsics[best_v1]->K(), obi[best_v1]->t.data(), tangent1.data());
@@ -961,31 +961,31 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
                                            // and robust way
               Vec3 tangentJ;
               {
-              const features::SIOPointFeature * const sioJ = &(features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
+              const features::SIOPointFeature *const sioJ = &features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
               double theta = sioJ->orientation();
               tangentJ = Vec3(std::cos(theta), std::sin(theta), 0);
-              std::shared_ptr<cameras::Pinhole_Intrinsic> intr = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(cam_J);
-              assert(intr.get());
+              const cameras::Pinhole_Intrinsic *intr = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam_J);
+              assert(intr);
               Pinhole_Intrinsic::invert_intrinsics_tgt(intr->K(), tangentJ.data(), tangentJ.data());
               }
 
               Vec3 tangentI;
               {
-              const features::SIOPointFeature * const sioI = &(features_provider_->sio_feats_per_view.at(I)[track.at(I)]; assert(sioI);
+              const features::SIOPointFeature *const sioI = &features_provider_->sio_feats_per_view.at(I)[track.at(I)];  assert(sioI);
               double theta = sioI->orientation();
               tangentI = Vec3(std::cos(theta), std::sin(theta), 0);
-              std::shared_ptr<cameras::Pinhole_Intrinsic> intr = std::dynamic_pointer_cast<cameras::Pinhole_Intrinsic>(cam_I);
-              assert(intr.get());
+              const cameras::Pinhole_Intrinsic *intr = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam_I);
+              assert(intr);
               Pinhole_Intrinsic::invert_intrinsics_tgt(intr->K(), tangentI.data(), tangentI.data());
               }
 
               TriangulateTangent2View (
                 pose_I.rotation(),
                 bearingI,
-                tangent0,
+                tangentI,
                 pose_J.rotation(),
                 bearingJ,
-                tangent1,
+                tangentJ,
                 sfm_data_.info[trackId].T
               );
               // Orientation constraint not applied here since only observation is I
@@ -1030,16 +1030,20 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
 
         Vec3 Xcam = pose_J(landmark.X);
         const Vec2 residual = cam_J->residual(Xcam, xJ);
-        if ( CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X)
-         &&  residual.norm() < std::max(4.0, map_ACThreshold_.at(J)) ) {
+        if ( CheiralityTest((*cam_J)(xJ_ud), pose_J, landmark.X) &&  
+             residual.norm() < std::max(4.0, map_ACThreshold_.at(J)) ) {
+
           bool pass_oriented_constraint = true;
           if (UseOrientedConstraint() && new_track_observations_candidate_views.size() != 2) {
-            const bool ignore_distortion = true; // We ignore distortion for now
+            static constexpr bool ignore_distortion = true; // We ignore distortion for now
             assert(sfm_data_.GetInfo().count(trackId));
 
-            const features::SIOPointFeature * const sioJ = &(features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
+            Vec2 tangentJ;
+            {
+            const features::SIOPointFeature *const sioJ = &features_provider_->sio_feats_per_view.at(J)[allViews_of_track.at(J)]; assert(sioJ);
             double theta = sioJ->orientation();
-            Vec3 tangentJ(std::cos(theta), std::sin(theta), 0);
+            tangentJ = Vec2(std::cos(theta), std::sin(theta));
+            }
 
             // measure tangent reprojection error
             double angular_error = cam_J->residual_orientation(

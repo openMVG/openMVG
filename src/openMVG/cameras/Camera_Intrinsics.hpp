@@ -102,7 +102,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @param Tgt 3D-tangent orientation to project on image plane
   * @param bearing: bearing vect of the point X where Tgt is based. If you have
   * the 3D point X in camera coordinates then just hnormalize before calling this function.
-  * @return Projected (2D) point on image plane
+  * @return Projected (2D) tangent on pixel image plane
   */
   virtual Vec2 project_orientation( // TODO: this is repeating X.hnormalized between project() and this.
     const Vec3 &Tgt,
@@ -113,8 +113,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     assert(!ignore_distortion); // for now, we do not support disto for tangents
       //    if ( this->have_disto() && !ignore_distortion) // apply disto & intrinsics
       //    {
-      //      return this->cam2ima( this->add_disto( tproj ) );
-      //    }
+      //      return this->cam2ima( this->add_disto( tproj ) ); //    }
       // else // apply intrinsics
     {
       return this->cam2ima_orientation(tproj);
@@ -138,8 +137,8 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
 
   /**
   * @brief Compute the residual between a projected 3D unit tangent orientation and an image observation (usually 2D feature orientation such as SIFT or edge)
-  * @param T 3d (usually unit) tangent to project on camera plane
-  * @param t image observation
+  * @param Tgt 3d (usually unit) tangent to project on camera plane
+  * @param tgt (pixel) image observation
   * @brief Residue as angle in radians
   */
   double residual_orientation(
@@ -148,7 +147,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     const Vec3 &bearing,
     const bool ignore_distortion = false) const
   {
-    const Vec2 tproj = this->project_orientation(Tgt, bearing,ignore_distortion);
+    const Vec2 tproj = this->project_orientation(Tgt, bearing, ignore_distortion);
     return std::acos(clump_to_acos(tproj.dot(tgt)));
   }
 
