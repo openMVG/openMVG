@@ -127,7 +127,7 @@ void SequentialSfMReconstructionEngine::ReconstructAllTangents()
       vi[v]  = o.first;
       ob[v]  = &o.second;
       obi[v] = &li.obs_info[vi[v]];  // creates obs
-      const features::SIOPointFeature *feature = &(features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat];
       assert(feature);
       double theta = feature->orientation();
       obi[v]->t = Vec2(std::cos(theta), std::sin(theta));
@@ -540,7 +540,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // TODO: this is currently too strict, every 2-view must pass
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
-    const IndexT trackId     = landmark_entry.first; OPENMVG_LOG_INFO << "\tTrack id " << trackId;
+    const IndexT trackId     = landmark_entry.first;  OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs  = landmark.obs;
     bool include_landmark = true;
@@ -558,7 +558,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         include_landmark = false;
         break;
       }
-      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x[v]->x);
+      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x_ud[v]->x);
       if (residual.norm() > relativePose_info.found_residual_precision) {
         include_landmark = false;
         break;
@@ -581,11 +581,50 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
           best_v1 = v1;
         }
       }
-
     if (best_angle <= 2.0) // TODO: experiment to show that trifocal can accept
       continue;            // this angle as smaller than 2-view and get equal precision
 
-    // reconstruct tangent from the best views and reproject into the 3rd.
+     // reconstruct tangent from the best views and reproject into the 3rd.
+    if (UseOrientedConstraint()) {
+      //- bearing: invert intrinsic
+      Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]->x));
+      Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]->x));
+      
+      Vec3 tangent0;
+      const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
+      {
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      double theta = feature->orientation();
+      tangent_0 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      }
+
+      Vec3 tangent1;
+      const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
+      {
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      double theta = feature->orientation();
+      tangent_1 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      }
+
+      Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), obi[best_v0]->t.data(), tangent0.data());
+      Pinhole_Intrinsic::invert_intrinsics_tgt(intr1->K(), obi[best_v1]->t.data(), tangent1.data());
+      tangent0(2) = tangent1(2) = 0;
+      
+      TriangulateTangent2View (
+        pose[best_v0]->rotation(),
+        bearing0,
+        tangent0,
+        pose[best_v1]->rotation(),
+        bearing1,
+        tangent1,
+        li.T
+      );
+      assert(li.T.norm() > 1e-10);
+      li.T.normalize();
+      assert(li.T.norm() > .99);
+
+      // project into 3rd view, measure error
+    }
     
     assert(include_landmark);
     sfm_data_.structure[trackId] = landmarks[trackId];

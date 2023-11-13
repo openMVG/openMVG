@@ -91,7 +91,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
   
   float err = NormalizedSquaredPointReprojectionOntoOneViewError::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0)); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0), MultiviewMatchConstraint::ORIENTATION); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << 
@@ -130,7 +130,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
 
   float err = NormalizedSquaredPointReprojectionOntoOneViewError::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0)); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0), MultiviewMatchConstraint::ORIENTATION); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << 
