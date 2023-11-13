@@ -558,7 +558,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         include_landmark = false;
         break;
       }
-      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x_ud[v]->x);
+      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x[v]->x);
       if (residual.norm() > relativePose_info.found_residual_precision) {
         include_landmark = false;
         break;
@@ -570,8 +570,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     // determine the best two views
     float best_angle = 0;
     IndexT best_v0 = 0, best_v1 = 0;
-    for (IndexT v0 = 0; v0 + 1 < v; ++v0)
-      for (IndexT v1 = v0 + 1; v1 < v; ++v1) {
+    for (IndexT v0 = 0; v0 + 1 < nviews; ++v0)
+      for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
         const float angle = AngleBetweenRay(
           *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
         // We are chosing the biggest angle.
@@ -587,23 +587,23 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
      // reconstruct tangent from the best views and reproject into the 3rd.
     if (UseOrientedConstraint()) {
       //- bearing: invert intrinsic
-      Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]->x));
-      Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]->x));
+      Vec3 bearing0 = ((*cam[best_v0])(ob_x[best_v0]->x));
+      Vec3 bearing1 = ((*cam[best_v1])(ob_x[best_v1]->x));
       
       Vec3 tangent0;
       const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
       {
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent_0 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent0 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
 
       Vec3 tangent1;
-      const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
+      const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
       {
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent_1 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent1 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
 
       Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), obi[best_v0]->t.data(), tangent0.data());
