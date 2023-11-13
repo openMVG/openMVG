@@ -554,7 +554,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
 
-      if (!CheiralityTest((*cam[v])(ob_x_ud[v]), pose[v], landmark.X)) {
+      if (!CheiralityTest((*cam[v])(ob_x_ud[v]), *pose[v], landmark.X)) {
         include_landmark = false;
         break;
       }
@@ -593,7 +593,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec3 tangent0;
       const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[v]][ob_x[v]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent0 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
@@ -601,7 +601,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec3 tangent1;
       const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[v]][ob_x[v]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent1 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
