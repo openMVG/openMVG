@@ -12,6 +12,7 @@
 #include <testing/testing.h>
 #include <minus/chicago-default.h>
 #include "openMVG/multiview/trifocal/solver_trifocal_metrics.hpp"
+#include "openMVG/multiview//multiview_match_constraint.hpp"
 
 using namespace std;
 using namespace openMVG;
@@ -91,7 +92,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
   
   float err = NormalizedSquaredPointReprojectionOntoOneViewError::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0), MultiviewMatchConstraint::ORIENTATION); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0),openMVG::MultiviewMatchConstraint::DEFAULT); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << 
@@ -130,7 +131,7 @@ TEST(TrifocalSampleApp, error_simple)
   }
 
   float err = NormalizedSquaredPointReprojectionOntoOneViewError::Error(tt_gt_, 
-      datum[0].col(0), datum[1].col(0), datum[2].col(0), MultiviewMatchConstraint::ORIENTATION); 
+      datum[0].col(0), datum[1].col(0), datum[2].col(0),openMVG::MultiviewMatchConstraint::DEFAULT); 
   
   std::cerr << "Error (squared, normalized): " << err << "\n";
   std::cerr << "Error (pixel, not squared): " << 
