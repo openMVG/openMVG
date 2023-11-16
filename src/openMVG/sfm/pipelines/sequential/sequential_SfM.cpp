@@ -419,7 +419,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     ++cptIndex;
   }
   // ---------------------------------------------------------------------------
-  // c. Robust estimation of the relative pose
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
   OPENMVG_LOG_INFO << "Starting Trifocal robust estimation of the relative pose";
   OPENMVG_LOG_INFO << "---------------------------------------------------------";
@@ -449,6 +448,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   P.reserve(nviews);
   // Init views and intrincics -----------------------------------------------
   for (unsigned v = 0; v < nviews; ++v) {
+    assert(view[v]->id_view == t[v]);
     tiny_scene.views.insert(*sfm_data_.GetViews().find(view[v]->id_view));
     tiny_scene.intrinsics.insert(*iterIntrinsic[v]);
     OPENMVG_LOG_INFO << "Relative pose in _info \n" << relativePose_info.relativePoseTrifocal[v];
@@ -491,8 +491,8 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec2 residual = cam[0]->residual( tiny_scene.poses[view[0]->id_pose](landmarks[track_iterator.first].X),
           landmarks[track_iterator.first].obs[view[0]->id_view].x );
       OPENMVG_LOG_INFO << "Residual from reconstructed point after robust-estimation " << residual.transpose();
-      OPENMVG_LOG_INFO << "Residual from error()";
 #if 0
+      OPENMVG_LOG_INFO << "Residual from error()";
       { // For debug
       std::array<Mat, nviews> datum;
       for (unsigned v = 0; v < nviews; ++v) {
@@ -540,25 +540,29 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
   // TODO: this is currently too strict, every 2-view must pass
   OPENMVG_LOG_INFO << "After triplet BA, recompute inliers and save them";
   for (const auto & landmark_entry : tiny_scene.GetLandmarks()) {
-    const IndexT trackId     = landmark_entry.first;  OPENMVG_LOG_INFO << "\tTrack id " << trackId;
+    const IndexT trackId     = landmark_entry.first;    OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs  = landmark.obs;
+    LandmarkInfo &li   = sfm_data_.info[trackId];
     bool include_landmark = true;
 
     Observations::const_iterator iterObs_x[nviews];
     const Observation *ob_x[nviews]; Vec2 ob_x_ud[nviews];
+    const ObservationInfo *obi[nviews];
     for (unsigned v = 0; v < nviews; ++v) {
-      iterObs_x[v] = obs.find(view[v]->id_view);
-      ob_x[v] = &iterObs_x[v]->second;
-      ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
+      assert(view[v]->id_view == t[v]);
+      iterObs_x[v] = obs.find(view[v]->id_view); assert(iterObs_x[v]->first == t[v]);
+      ob_x[v]      = &iterObs_x[v]->second;
+      ob_x_ud[v]   = cam[v]->get_ud_pixel(ob_x[v]->x);
+      obi[v]       = &li.obs_info.at(t[v]);
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
 
-      if (!CheiralityTest((*cam[v])(ob_x_ud[v]), pose[v], landmark.X)) {
+      if (!CheiralityTest((*cam[v])(ob_x_ud[v]), *pose[v], landmark.X)) {
         include_landmark = false;
         break;
       }
-      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x_ud[v]->x);
+      const Vec2 residual = cam[v]->residual((*pose[v])(landmark.X), ob_x_ud[v]);
       if (residual.norm() > relativePose_info.found_residual_precision) {
         include_landmark = false;
         break;
@@ -568,11 +572,11 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       continue;
 
     // determine the best two views
-    float best_angle = 0;
+    double best_angle = 0;
     IndexT best_v0 = 0, best_v1 = 0;
-    for (IndexT v0 = 0; v0 + 1 < v; ++v0)
-      for (IndexT v1 = v0 + 1; v1 < v; ++v1) {
-        const float angle = AngleBetweenRay(
+    for (IndexT v0 = 0; v0 + 1 < nviews; ++v0)
+      for (IndexT v1 = v0 + 1; v1 < nviews; ++v1) {
+        const double angle = AngleBetweenRay(
           *pose[v0], cam[v0], *pose[v1], cam[v1], ob_x_ud[v0], ob_x_ud[v1]);
         // We are chosing the biggest angle.
         if (angle > best_angle) {
@@ -587,23 +591,25 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
      // reconstruct tangent from the best views and reproject into the 3rd.
     if (UseOrientedConstraint()) {
       //- bearing: invert intrinsic
-      Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]->x));
-      Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]->x));
+      Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]));
+      Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]));
       
       Vec3 tangent0;
       const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      assert(iterObs_x[best_v0]->first == t[best_v0]);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v0]][ob_x[best_v0]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent_0 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent0 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
 
       Vec3 tangent1;
-      const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
+      const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[vi[v]][ob[v]->id_feat]; assert(feature);
+      assert(iterObs_x[best_v1]->first == t[best_v1]);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v1]][ob_x[best_v1]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent_1 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent1 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
 
       Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), obi[best_v0]->t.data(), tangent0.data());
@@ -623,7 +629,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       li.T.normalize();
       assert(li.T.norm() > .99);
 
-      // project into 3rd view, measure error
+      // project into 3rd view, measure error XXX
     }
     
     assert(include_landmark);
