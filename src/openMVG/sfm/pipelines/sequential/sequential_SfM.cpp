@@ -544,7 +544,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     const IndexT trackId     = landmark_entry.first;    OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs  = landmark.obs;
-    // LandmarkInfo &li   = sfm_data_.info[trackId];
     bool include_landmark = true;
 
     Observations::const_iterator iterObs_x[nviews];
@@ -555,7 +554,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       iterObs_x[v] = obs.find(view[v]->id_view); assert(iterObs_x[v]->first == t[v]);
       ob_x[v]      = &iterObs_x[v]->second;
       ob_x_ud[v]   = cam[v]->get_ud_pixel(ob_x[v]->x);
-      // obi[v]       = &li.obs_info.at(t[v]);
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
 
@@ -593,7 +591,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     if (UseOrientedConstraint()) {
       unsigned third_v = 0*(best_v0 !=0 && best_v1 != 0) +
                          1*(best_v0 !=1 && best_v1 != 1) + 2*(best_v0 !=2 && best_v1 != 2);
-      //- bearing: invert intrinsic
       Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]));
       Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]));
       Vec3 tangent0;
@@ -603,7 +600,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v0]][ob_x[best_v0]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent0 = Vec3(std::cos(theta), std::sin(theta), 0);
-      // assert((obi[best_v0]->t - tangent0_tmp).norm() < 1e-8);
       }
       Vec3 tangent1;
       const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
@@ -612,7 +608,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v1]][ob_x[best_v1]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent1 = Vec3(std::cos(theta), std::sin(theta), 0);
-      // assert((obi[best_v0]->t - tangent0_tmp).norm() < 1e-8);
       }
 
       Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), tangent0.data(), tangent0.data());
