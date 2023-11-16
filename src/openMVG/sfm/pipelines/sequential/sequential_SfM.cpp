@@ -68,6 +68,8 @@ bool SequentialSfMReconstructionEngine::Process()
   return true;
 }
 
+// All 8input bearing and tangent must be in world coordinates (intrinsics are
+// inverted)
 inline static void TriangulateTangent2View
 (
   const Mat3 &R0,
@@ -329,7 +331,6 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
                                  std::get<1>(current_triplet),
                                  std::get<2>(current_triplet)} };
   std::sort(t.begin(),t.end());
-
   for (unsigned v = 0; v < nviews; ++v)
     if (sfm_data_.GetViews().count(t[v]) == 0) {
       OPENMVG_LOG_ERROR << "Cannot find the view corresponding to the view id: " << t[v];
@@ -543,18 +544,18 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     const IndexT trackId     = landmark_entry.first;    OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs  = landmark.obs;
-    LandmarkInfo &li   = sfm_data_.info[trackId];
+    // LandmarkInfo &li   = sfm_data_.info[trackId];
     bool include_landmark = true;
 
     Observations::const_iterator iterObs_x[nviews];
     const Observation *ob_x[nviews]; Vec2 ob_x_ud[nviews];
-    const ObservationInfo *obi[nviews];
+    // const ObservationInfo *obi[nviews];
     for (unsigned v = 0; v < nviews; ++v) {
       assert(view[v]->id_view == t[v]);
       iterObs_x[v] = obs.find(view[v]->id_view); assert(iterObs_x[v]->first == t[v]);
       ob_x[v]      = &iterObs_x[v]->second;
       ob_x_ud[v]   = cam[v]->get_ud_pixel(ob_x[v]->x);
-      obi[v]       = &li.obs_info.at(t[v]);
+      // obi[v]       = &li.obs_info.at(t[v]);
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
 
@@ -590,32 +591,35 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
      // reconstruct tangent from the best views and reproject into the 3rd.
     if (UseOrientedConstraint()) {
+      unsigned third_v = 0*(best_v0 !=0 && best_v1 != 0) +
+                         1*(best_v0 !=1 && best_v1 != 1) + 2*(best_v0 !=2 && best_v1 != 2);
       //- bearing: invert intrinsic
       Vec3 bearing0 = ((*cam[best_v0])(ob_x_ud[best_v0]));
       Vec3 bearing1 = ((*cam[best_v1])(ob_x_ud[best_v1]));
-      
       Vec3 tangent0;
       const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
-      {
+      { 
       assert(iterObs_x[best_v0]->first == t[best_v0]);
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v0]][ob_x[best_v0]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent0 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent0 = Vec3(std::cos(theta), std::sin(theta), 0);
+      // assert((obi[best_v0]->t - tangent0_tmp).norm() < 1e-8);
       }
-
       Vec3 tangent1;
       const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
-      {
+      { 
       assert(iterObs_x[best_v1]->first == t[best_v1]);
       const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[best_v1]][ob_x[best_v1]->id_feat]; assert(feature);
       double theta = feature->orientation();
-      tangent1 = Vec3(std::cos(theta), std::sin(theta), 0.);
+      tangent1 = Vec3(std::cos(theta), std::sin(theta), 0);
+      // assert((obi[best_v0]->t - tangent0_tmp).norm() < 1e-8);
       }
 
-      Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), obi[best_v0]->t.data(), tangent0.data());
-      Pinhole_Intrinsic::invert_intrinsics_tgt(intr1->K(), obi[best_v1]->t.data(), tangent1.data());
+      Pinhole_Intrinsic::invert_intrinsics_tgt(intr0->K(), tangent0.data(), tangent0.data());
+      Pinhole_Intrinsic::invert_intrinsics_tgt(intr1->K(), tangent1.data(), tangent1.data());
       tangent0(2) = tangent1(2) = 0;
       
+      Vec3 T;
       TriangulateTangent2View (
         pose[best_v0]->rotation(),
         bearing0,
@@ -623,17 +627,31 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
         pose[best_v1]->rotation(),
         bearing1,
         tangent1,
-        li.T
+        T
       );
-      assert(li.T.norm() > 1e-10);
-      li.T.normalize();
-      assert(li.T.norm() > .99);
+      assert(T.norm() > 1e-10);
+      T.normalize(); assert(T.norm() > .99);
 
-      // project into 3rd view, measure error XXX
+      Vec2 tangent2;
+      { 
+      assert(iterObs_x[third_v]->first == t[third_v]);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[t[third_v]][ob_x[third_v]->id_feat]; assert(feature);
+      double theta = feature->orientation();
+      tangent2 = Vec2(std::cos(theta), std::sin(theta));
+      }
+      // project into 3rd view, measure error
+      static constexpr bool ignore_distortion = true; // We ignore distortion for now
+      double angular_error = cam[third_v]->residual_orientation(
+            pose[third_v]->apply_to_orientation(T), 
+            tangent2, landmark.X/landmark.X(2), ignore_distortion);
+      static constexpr double angle_tol = 0.34;
+      if (angular_error > angle_tol  && angular_error + angle_tol <= M_PI)
+        continue;
     }
     
     assert(include_landmark);
     sfm_data_.structure[trackId] = landmarks[trackId];
+    // 3D T will be computed in ReconstructAllTangents
   }
 
   OPENMVG_LOG_INFO << "Final initial triplet residual histogram ---------------";
@@ -1095,7 +1113,6 @@ ResectionAddTracks(IndexT I, const openMVG::tracks::STLMAPTracks &map_tracksComm
             double theta = sioJ->orientation();
             tangentJ = Vec2(std::cos(theta), std::sin(theta));
             }
-
             // measure tangent reprojection error
             double angular_error = cam_J->residual_orientation(
                   pose_J.apply_to_orientation(sfm_data_.info.at(trackId).T), 

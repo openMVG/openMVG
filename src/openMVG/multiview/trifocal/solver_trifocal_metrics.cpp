@@ -98,6 +98,7 @@ Check(
   const Vec &bearing_1,
   const Vec &bearing_2) 
 {
+#ifndef NDEBUG
   openMVG::system::logger::logger_severity = openMVG::system::logger::ELogMode::VERBOSITY_WARNING;
   OPENMVG_LOG_INFO << "Check ---------------------------------------------------";
   if (
@@ -106,6 +107,7 @@ Check(
       (tt[2].array().isNaN()).any()
      )  /* TODO: fix this inside MINUS */
     return false;
+#endif
 
   // Ideal algorithm:
   // 1) reconstruct the 3D points and orientations
@@ -140,6 +142,7 @@ Check(
     Trec = t.col(0).cross(bearing.col(0)).cross(tt[2].block<3,3>(0,0).transpose()*(t.col(2).cross(bearing.col(2))));
     third_view = 1;
   }
+#ifndef NDEBUG
   if (std::isnan(triangulated_homg(0)) || std::isnan(triangulated_homg(1)) ||
       std::isnan(triangulated_homg(2)) || std::isnan(triangulated_homg(3))) {
     OPENMVG_LOG_INFO << "\tTriang NAN <<<<<<<<<<<<<<<<<<<<<<<<" << triangulated_homg;
@@ -148,6 +151,7 @@ Check(
   }
 
   OPENMVG_LOG_INFO << "\tCheck: third view = "<< third_view;
+#endif
 
   // Computing the projection of triangulated points using projection.hpp
   // For prototyping and speed, for now we will only project to the third view
@@ -168,9 +172,9 @@ Check(
   // OPENMVG_LOG_INFO << "\tP third " << bearing.col(third_view).head(2);
   // OPENMVG_LOG_INFO << "\tP difference " << (p_reprojected - bearing.col(third_view).head(2));
   double err = (p_reprojected - bearing.col(third_view).head(2)).squaredNorm();
-  OPENMVG_LOG_INFO <<  "\tSolver 3rd point sq reprojection error: " << err;
+  // OPENMVG_LOG_INFO <<  "\tSolver 3rd point sq reprojection error: " << err;
   if (err > 1e-5) { // This funciton is meant to run only on the 3 points given to the solver
-    OPENMVG_LOG_INFO << "\tInternal reprojection check FAIL";
+    //OPENMVG_LOG_INFO << "\tInternal reprojection check FAIL";
     return false;
   }
 
@@ -183,27 +187,28 @@ Check(
 
   // compute angle between tproj t.col(2)
   double angular_error = std::acos(clump_to_acos(tproj.dot(t.col(third_view))));
-  OPENMVG_LOG_INFO << "\tAngular error rad (deg): " << angular_error << "(" << angular_error*180./M_PI << ")";
-  OPENMVG_LOG_INFO << "\t\ttproj: " << tproj;
-  OPENMVG_LOG_INFO << "\t\tt third view: " << t.col(third_view);
+  // OPENMVG_LOG_INFO << "\tAngular error rad (deg): " << angular_error << "(" << angular_error*180./M_PI << ")";
+  // OPENMVG_LOG_INFO << "\t\ttproj: " << tproj;
+  // OPENMVG_LOG_INFO << "\t\tt third view: " << t.col(third_view);
 
   // TODO: put this before any angle computation
   if (triangulated_homg.hnormalized()(2) <= 0. || p_third_view(2) <= 0. || p_second_view(2) <= 0.) {
-    OPENMVG_LOG_INFO << "\tInternal Cheirality check FAIL";
-    OPENMVG_LOG_INFO <<  "\t\t" << triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
+    // OPENMVG_LOG_INFO << "\tInternal Cheirality check FAIL";
+    // OPENMVG_LOG_INFO <<  "\t\t" << triangulated_homg.hnormalized()(2)  << " , " <<  p_third_view(2) << " , " << p_second_view(2);
     return false;
   }
-  OPENMVG_LOG_INFO << "\tInternal Cheirality check PASS";
+  // OPENMVG_LOG_INFO << "\tInternal Cheirality check PASS";
 
   // about 15 degrees tolerance
   static constexpr double angle_tol = 0.34;
   if (angular_error < angle_tol  || angular_error + angle_tol > M_PI) {
-    OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check PASS PASS PASS PASS PASS PASS";
+    return true;
+    //OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check PASS PASS PASS PASS PASS PASS";
   } else {
-    OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check FAIL";
+    //OPENMVG_LOG_INFO << "\tInternal 3rd view reprojection angle check FAIL";
     return false;
   }
-  return true;
+  // return true;
 }
 
 } // namespace trifocal
