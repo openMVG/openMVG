@@ -543,14 +543,18 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     const IndexT trackId     = landmark_entry.first;  OPENMVG_LOG_INFO << "\tTrack id " << trackId;
     const Landmark &landmark = landmark_entry.second;
     const Observations &obs  = landmark.obs;
+    LandmarkInfo &li = sfm_data_.info[trackId]; // Info
+    ObservationsInfo &iobs = li.obs_info;
     bool include_landmark = true;
 
     Observations::const_iterator iterObs_x[nviews];
     const Observation *ob_x[nviews]; Vec2 ob_x_ud[nviews];
+    const ObservationInfo *obi[nviews];
     for (unsigned v = 0; v < nviews; ++v) {
       iterObs_x[v] = obs.find(view[v]->id_view);
       ob_x[v] = &iterObs_x[v]->second;
       ob_x_ud[v] = cam[v]->get_ud_pixel(ob_x[v]->x);
+      obi[v] = &li.obs_info[iterObs_x[v]->first];
       // OPENMVG_LOG_INFO << "\t\tPoint in view " << v
       // << " view id " << view[v]->id_view << " " << ob_x[v]->x << " = " << ob_x_ud[v];
 
@@ -593,7 +597,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec3 tangent0;
       const cameras::Pinhole_Intrinsic *intr0 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v0]); assert(intr0);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[v]][ob_x[v]->id_feat]; assert(feature);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[best_v0]->first][ob_x[best_v0]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent0 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
@@ -601,7 +605,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
       Vec3 tangent1;
       const cameras::Pinhole_Intrinsic *intr1 = dynamic_cast<const cameras::Pinhole_Intrinsic *>(cam[best_v1]); assert(intr1);
       {
-      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[v]][ob_x[v]->id_feat]; assert(feature);
+      const features::SIOPointFeature *feature = &features_provider_->sio_feats_per_view[iterObs_x[best_v1]->first][ob_x[best_v1]->id_feat]; assert(feature);
       double theta = feature->orientation();
       tangent1 = Vec3(std::cos(theta), std::sin(theta), 0.);
       }
