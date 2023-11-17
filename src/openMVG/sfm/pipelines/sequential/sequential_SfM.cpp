@@ -280,8 +280,9 @@ bool SequentialSfMReconstructionEngine::ConsistencyCheckOriented() const
 // - group of images will be selected and resection + scene completion will be tried
 bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 {
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
   OPENMVG_LOG_INFO << "-------------------------------------------------------";
-  OPENMVG_LOG_INFO << "ResctOneByOneTilDOne";
+  OPENMVG_LOG_INFO << "ResectOneByOneTilDOne";
   size_t resectionGroupIndex = 0;
   std::vector<uint32_t> vec_possible_resection_indexes;
   while (FindImagesWithPossibleResection(vec_possible_resection_indexes)) {
@@ -291,6 +292,12 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
     for (const auto & iter : vec_possible_resection_indexes) {
       bImageAdded |= Resection(iter); // <<------------------------------------
       set_remaining_view_id_.erase(iter);
+      if (bImageAdded) {
+        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(t2 - t1).count();
+        OPENMVG_LOG_INFO << "\033[1;32mTime to resect 1 view id " << iter << " + 1-view BA: " << duration << "ms\e[m" << std::endl;
+        t1 = high_resolution_clock::now();
+      }
     }
     // ------------------------------------------------------------------------
     if (bImageAdded) {
@@ -542,7 +549,7 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
 
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>(t2 - t1).count();
-  OPENMVG_LOG_INFO << "\033[1;32mTime to setup initial triplet: " << duration << "ms\e[m" << std::endl;
+  OPENMVG_LOG_INFO << "\033[1;32mTime to setup initial triplet with 3-view BA: " << duration << "ms\e[m" << std::endl;
 
   // ----------------------------------------------------------------------------
   // Recompute inliers and save them

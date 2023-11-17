@@ -39,6 +39,7 @@
 namespace openMVG {
 namespace sfm {
 
+using namespace std::chrono;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
@@ -427,6 +428,7 @@ bool SequentialSfMReconstructionEngineBase::AutomaticInitialPairChoice(Pair & in
 //  - set_remaining_view_id_: remaining views to reconstruct
 bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & current_pair)
 {
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
   // Compute robust Essential matrix for ImageId [I,J]
   // use min max to have I < J
   const uint32_t
@@ -618,6 +620,12 @@ bool SequentialSfMReconstructionEngineBase::MakeInitialPair3D(const Pair & curre
 //          landmark_info->obs_info[J] = landmark_info[trackId]
       }
     }
+
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(t2 - t1).count();
+    OPENMVG_LOG_INFO << "\033[1;32mTime to setup initial pair with pair BA (not counting 3rd view p3p + BA): " << duration << "ms\e[m" << std::endl;
+
+
     // Save outlier residual information
     Histogram<double> histoResiduals;
     OPENMVG_LOG_INFO
