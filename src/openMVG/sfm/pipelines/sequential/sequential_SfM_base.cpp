@@ -282,7 +282,7 @@ bool SequentialSfMReconstructionEngineBase::AutomaticInitialPairChoice(Pair & in
 }
 
 // Sketching automatic triplet generation!
-// TODO XXX: MAKE IT WORK AND INTEGRATE INTO MAIN!!!
+// TODO: MAKE IT WORK AND INTEGRATE INTO MAIN!!!
 //
 //bool SequentialSfMReconstructionEngineBase::AutomaticInitialTripletChoice(Triplet & initial_triplet) const
 //{

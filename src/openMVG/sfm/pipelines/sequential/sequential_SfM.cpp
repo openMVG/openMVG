@@ -309,7 +309,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 
       // Perform BA until all point are under the given precision
       do BundleAdjustment(); while (badTrackRejector(4.0, 50));
-      eraseUnstablePosesAndObservations(sfm_data_, 4); // XXX we are allowing 4
+      eraseUnstablePosesAndObservations(sfm_data_, 4); // we are allowing 4
                                                        // points per pose as we
                                                        // are working with more
                                                        // radical pipeline
