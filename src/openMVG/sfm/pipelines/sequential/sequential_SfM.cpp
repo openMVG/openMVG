@@ -11,6 +11,7 @@
 #include <functional>
 #include <iostream>
 #include <utility>
+#include <chrono>
 
 //#include "openMVG/geometry/pose3.hpp"
 #include "openMVG/multiview/triangulation.hpp"
@@ -45,10 +46,12 @@
 namespace openMVG {
 namespace sfm {
 
+using namespace std::chrono;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::matching;
 using namespace histogramming;
+
 
 //-------------------
 //-- Incremental reconstruction
@@ -316,7 +319,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 }
 
 // Compute the initial 3D seed (First camera t=0; R=Id, second and third by
-// Fabbri etal CVPR20 trifocal algorithm ). Computes the robust calibrated trifocal
+// Fabbri etal CVPR20/PAMI2022 trifocal algorithm ). Computes the robust calibrated trifocal
 // tensor / relative pose for ImageId [t[0],t[1],t[2]]
 //
 // Output
@@ -326,6 +329,7 @@ bool SequentialSfMReconstructionEngine::ResectOneByOneTilDone()
 bool SequentialSfMReconstructionEngine::
 MakeInitialTriplet3D(const Triplet &current_triplet)
 {
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
   static constexpr unsigned nviews = 3;
   std::array<IndexT, nviews> t{ {std::get<0>(current_triplet),
                                  std::get<1>(current_triplet),
@@ -535,6 +539,10 @@ MakeInitialTriplet3D(const Triplet &current_triplet)
     set_remaining_view_id_.erase(view[v]->id_view);
     OPENMVG_LOG_INFO << "pose rc\n" << pose[v]->rotation() << "\n" <<  pose[v]->center().transpose();
   }
+
+  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  auto duration = duration_cast<milliseconds>(t2 - t1).count();
+  OPENMVG_LOG_INFO << "\033[1;32mTime to setup initial triplet: " << duration << "ms\e[m" << std::endl;
 
   // ----------------------------------------------------------------------------
   // Recompute inliers and save them
