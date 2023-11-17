@@ -13,6 +13,7 @@
 #include <limits>
 #include <random>
 #include <vector>
+#include <chrono>
 
 #include "openMVG/system/logger.hpp"
 #include "openMVG/robust_estimation/rand_sampling.hpp"
@@ -108,7 +109,6 @@ typename Kernel::Model MaxParallelConsensus
   int max_iteration = 1024
 )
 {
-
   // TO use mulithreading we keep inlier count and model for each iteration
   std::vector<uint32_t> inlier_count_per_iteration(max_iteration, 0);
   std::vector<std::vector<uint32_t>> inliers_per_iteration(max_iteration);
@@ -143,6 +143,7 @@ typename Kernel::Model MaxParallelConsensus
 
       // Compute costs for each fit and keep the best one (largest count of inliers)
 
+      std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
       typename Kernel::Model best_model;
       for (const auto& model_it : models) {
         std::vector<uint32_t> inliers;
@@ -154,6 +155,9 @@ typename Kernel::Model MaxParallelConsensus
           inliers_per_iteration[iteration] = inliers;
         }
       }
+      std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+      OPENMVG_LOG_INFO << "\033[1;32mTime to compute inliers: " << duration << "ms\e[m";
   }
   // Find iteration that lead to the best inlier count
   const auto iter_max = std::max_element(inlier_count_per_iteration.begin(), inlier_count_per_iteration.end());
