@@ -323,8 +323,10 @@ TEST(SEQUENTIAL_SFM, OrientedSfM)
   sfmEngine.SetFeaturesProvider(feats_provider.get());
   sfmEngine.SetMatchesProvider(matches_provider.get());
   sfmEngine.SetResectionMethod(static_cast<resection::SolverType>(static_cast<int>(resection::SolverType::P2Pt_FABBRI_ECCV12)));
+  sfmEngine.SetMultiviewMatchConstraint(MultiviewMatchConstraint::ORIENTATION);
   // Configure reconstruction parameters (intrinsic parameters are held constant)
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
+  sfmEngine.SetUnknownCameraType(cameras::EINTRINSIC::PINHOLE_CAMERA);
 
   // Will use view ids (1,2,3) as the initial triplet, not (0,1,2)
   assert(nviews > 3); // assuming 4 views

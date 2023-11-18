@@ -110,7 +110,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
     const bool ignore_distortion = false) const
   {
     Vec2 tproj = Tgt.head(2) - Tgt(2)*bearing.head(2); // the equivalent for tangents of X.hnormalize()
-    assert(!ignore_distortion); // for now, we do not support disto for tangents
+    assert(ignore_distortion); // for now, we do not support disto for tangents
       //    if ( this->have_disto() && !ignore_distortion) // apply disto & intrinsics
       //    {
       //      return this->cam2ima( this->add_disto( tproj ) ); //    }
