@@ -8,7 +8,9 @@
 
 
 #include "openMVG/matching/metric.hpp"
+#ifdef OPENMVG_USE_AVX2
 #include "openMVG/system/cpu_instruction_set.hpp"
+#endif
 
 #include "testing/testing.h"
 
