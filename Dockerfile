@@ -18,8 +18,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   liblemon-dev \
   libpng-dev \
   libtiff-dev \
-  git \
-  python3-minimal; \
+  python3; \
   apt-get autoclean && apt-get clean
 
 # Clone the openvMVG repo
