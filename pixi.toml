@@ -1,0 +1,24 @@
+[project]
+name = "openMVG"
+version = "0.1.0"
+description = "openMVG 'open Multiple View Geometry' library. Basis for 3D computer vision and Structure from Motion."
+authors = ["OpenMVG Team<openmvg-team@googlegroups.com>"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64"]
+repository = "https://github.com/openMVG/openMVG"
+
+[tasks]
+clean = { cmd = "rm -rf build " }
+print-env = { cmd = "echo $PATH" }
+configure = "cmake -B build -S ./src -DOpenMVG_BUILD_TESTS:BOOL=ON"
+build = { cmd = "cmake --build build -j 4", depends_on = ["configure"] }
+test = { cmd = "cd build; ctest -j", depends_on = ["build"] }
+
+[dependencies]
+ceres-solver = "2.2.0.*"
+libjpeg-turbo = "3.0.0.*"
+cmake = "3.28.1.*"
+cxx-compiler = "1.7.0.*"
+libpng = "1.6.39.*"
+zlib = "1.2.13.*"
+libtiff = "4.6.0.*"

@@ -44,6 +44,7 @@ Checking out the project and build it
 - [Compiling on MacOS](#macos)
 - [Compiling using VCPKG](#vcpkg)
 - [Using Docker](#docker)
+- [Using Pixi](#pixi)
 
 Getting the project
 --------------------
@@ -201,6 +202,30 @@ $ docker run -it \
 root@de138d2f6223:/# ls /
 ...   dataset/  ...
 ```
+
+Using Pixi
+------------
+<a name="pixi"></a>
+
+[Pixi](https://pixi.sh/) enables you to have a contained environment to compile and run openMVG in a local folder for Linux and Mac platforms.
+
+Install pixi and compile openMVG
+```shell
+$ git clone --recursive https://github.com/openMVG/openMVG.git
+$ cd openMVG
+$ curl -fsSL https://pixi.sh/install.sh | bash
+$ pixi run build
+```
+
+Then running openMVG is as easy as running the pixi shell (here an example for Linux):
+```shell
+$ pixi shell
+# Running one of the python script
+$ python3 ./build/software/SfM/tutorial_demo.py
+# Running one of OpenMVG binary
+$ ./build/Linux-x86_64-Release/openMVG_main_SfMInit_ImageListing
+```
+
 
 Using OpenCV sample
 --------------------

@@ -12,3 +12,6 @@
 build*
 *.out
 docs/openmvg.pdf
+# Pixi related
+build
+.pixi
