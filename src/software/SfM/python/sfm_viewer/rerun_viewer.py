@@ -45,12 +45,13 @@ def read_and_log_sparse_reconstruction(args) -> None:
 
     # Collect views
     print("Setup Views")
-    for v in tqdm(views):
-        value = v['value']['ptr_wrapper']['data']
-        filename = value['filename']
-        id_view = value['id_view']
-        id_intrinsic = value['id_intrinsic']
-        id_pose = value['id_pose']
+    for view in tqdm(views):
+        view_data = view['value']['ptr_wrapper']['data']
+        filename = view_data['filename']
+        id_view = view_data['id_view']
+        id_intrinsic = view_data['id_intrinsic']
+        id_pose = view_data['id_pose']
+        entity_name = f"world/camera/\"{filename}\""
 
         # Collect poses
         if id_pose not in extrinsics_ids:
@@ -61,27 +62,36 @@ def read_and_log_sparse_reconstruction(args) -> None:
         rot = Rotation.from_matrix(rot).as_matrix()
         center = np.array(extrinsic['value']['center'])
         t = - rot @ center
-        rr.log_transform3d(f"world/camera/{filename}", rr.TranslationAndMat3(translation=t, matrix=rot), from_parent=True)
-        rr.log_view_coordinates(f"world/camera/{filename}", xyz="RDF")  # X=Right, Y=Down, Z=Forward
+        rr.log(
+            entity_name,
+            rr.Transform3D(
+                rr.TranslationAndMat3x3(
+                    translation = t,
+                    mat3x3 = rot,
+                    from_parent=True,
+                    )
+            )
+        )
 
         # Collect intrinsic data (show every image as if they were a pinhole camera)
         # We ignore camera distortion
         intrinsic = intrinsics[id_intrinsic]['value']['ptr_wrapper']['data']
-        rr.log_pinhole(
-            f"world/camera/{filename}",
-                width=intrinsic['width'],
-                height=intrinsic['height'],
-                focal_length_px=intrinsic['focal_length'],
-                principal_point_px=intrinsic['principal_point'],
+        rr.log(
+            entity_name,
+            rr.Pinhole(
+                resolution = [intrinsic['width'], intrinsic['height']],
+                focal_length = intrinsic['focal_length'],
+                principal_point = intrinsic['principal_point'],
+            )
         )
         if args.show_images and filename in args.show_images:
-            rr.log_image_file(f"world/camera/{filename}", img_path=root_path + "/" + filename)
+            rr.log(entity_name, rr.ImageEncoded(path=root_path + "/" + filename))
 
     # Collect 3D points
     print("Setup Structure")
     points = [obs['value']['X'] for obs in structure]
     tracks_ids = [obs['key'] for obs in structure]
-    rr.log_points("world/points", points, keypoint_ids=tracks_ids)
+    rr.log("world/points", rr.Points3D(positions = points, keypoint_ids = tracks_ids))
 
     if args.show_keypoints or args.show_rays:
         print("Setup observations")
@@ -99,30 +109,34 @@ def read_and_log_sparse_reconstruction(args) -> None:
                 points_per_image[image_id].append(x)
                 XPoints_per_images[image_id].append(X)
 
-        for i in points_per_image.keys():
-            value = views[i]['value']['ptr_wrapper']['data']
-            filename = value['filename']
-            id_pose = value['id_pose']
-            id_view = value['id_view']
+        for id_view in points_per_image.keys():
+
+            # Find the "view" == id_view
+            for view in views:
+                view_data = view['value']['ptr_wrapper']['data']
+                if id_view == view_data['id_view']:
+                    filename = view_data['filename']
+                    id_pose = view_data['id_pose']
 
             if args.show_keypoints and filename in args.show_keypoints:
                 # Print keypoint corresponding to the 3D points used in the SfM reconstruction
-                rr.log_points(f"world/camera/{filename}", points_per_image[i])
+                rr.log(f"world/camera/\"{filename}\"", rr.Points2D(positions = points_per_image[id_view]))
 
             if args.show_rays and filename in args.show_rays:
                 # Print camera rays
                 if id_pose not in extrinsics_ids:
                     continue
 
-                X = XPoints_per_images[id_view]
+                X = XPoints_per_images[id_pose]
                 extrinsic = [it for it in extrinsics if it['key'] == id_pose]
-                extrinsic = extrinsic[0]
-                center = np.array(extrinsic['value']['center'])
-                centers = np.tile(center, (len(X), 1))
-                interleaved_points = np.ravel(np.column_stack((centers, X)))
-                interleaved_points = np.reshape(interleaved_points, [len(X)*2, 3])
+                if extrinsic:
+                    extrinsic = extrinsic[0]
+                    center = np.array(extrinsic['value']['center'])
+                    centers = np.tile(center, (len(X), 1))
+                    interleaved_points = np.ravel(np.column_stack((centers, X)))
+                    interleaved_points = np.reshape(interleaved_points, [len(X)*2, 3])
 
-                rr.log_line_segments(f"world/camera/rays/{filename}", interleaved_points, stroke_width=0.01)
+                    rr.log(f"world/camera/rays/\"{filename}\"", rr.LineStrips3D(interleaved_points, radii=0.01))
 
     f.close()
 
