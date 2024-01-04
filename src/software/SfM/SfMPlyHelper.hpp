@@ -29,19 +29,19 @@ exportToPly
 )
 {
   std::ofstream outfile(sFileName.c_str());
-  if (!outfile.is_open())
+  if (!outfile)
     return false;
 
   outfile << "ply"
-    << std::endl << "format ascii 1.0"
-    << std::endl << "element vertex " << vec_points.size()
-    << std::endl << "property double x"
-    << std::endl << "property double y"
-    << std::endl << "property double z"
-    << std::endl << "property uchar red"
-    << std::endl << "property uchar green"
-    << std::endl << "property uchar blue"
-    << std::endl << "end_header" << std::endl;
+    << "\n" << "format ascii 1.0"
+    << "\n" << "element vertex " << vec_points.size()
+    << "\n" << "property double x"
+    << "\n" << "property double y"
+    << "\n" << "property double z"
+    << "\n" << "property uchar red"
+    << "\n" << "property uchar green"
+    << "\n" << "property uchar blue"
+    << "\n" << "end_header" << "\n";
 
   outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
 
@@ -68,7 +68,7 @@ inline bool exportToPly
 )
 {
   std::ofstream outfile(sFileName.c_str());
-  if (!outfile.is_open())
+  if (!outfile)
     return false;
 
   outfile << "ply"
@@ -80,7 +80,7 @@ inline bool exportToPly
     << '\n' << "property uchar red"
     << '\n' << "property uchar green"
     << '\n' << "property uchar blue"
-    << '\n' << "end_header" << std::endl;
+    << '\n' << "end_header" << "\n";
 
   outfile << std::fixed << std::setprecision (std::numeric_limits<double>::digits10 + 1);
 
@@ -119,4 +119,3 @@ inline bool exportToPly
 } // namespace openMVG
 
 #endif // OPENMVG_SFM_PLY_HELPER_H
-

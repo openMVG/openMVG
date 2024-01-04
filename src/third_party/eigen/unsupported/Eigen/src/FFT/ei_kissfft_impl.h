@@ -25,16 +25,47 @@ struct kiss_cpx_fft
   std::vector<Complex> m_scratchBuf;
   bool m_inverse;
 
-  inline
-    void make_twiddles(int nfft,bool inverse)
+  inline void make_twiddles(int nfft, bool inverse)
+  {
+    using numext::sin;
+    using numext::cos;
+    m_inverse = inverse;
+    m_twiddles.resize(nfft);
+    double phinc =  0.25 * double(EIGEN_PI) / nfft;
+    Scalar flip = inverse ? Scalar(1) : Scalar(-1);
+    m_twiddles[0] = Complex(Scalar(1), Scalar(0));
+    if ((nfft&1)==0)
+      m_twiddles[nfft/2] = Complex(Scalar(-1), Scalar(0));
+    int i=1;
+    for (;i*8<nfft;++i)
     {
-      using std::acos;
-      m_inverse = inverse;
-      m_twiddles.resize(nfft);
-      Scalar phinc =  (inverse?2:-2)* acos( (Scalar) -1)  / nfft;
-      for (int i=0;i<nfft;++i)
-        m_twiddles[i] = exp( Complex(0,i*phinc) );
+      Scalar c = Scalar(cos(i*8*phinc));
+      Scalar s = Scalar(sin(i*8*phinc));
+      m_twiddles[i] = Complex(c, s*flip);
+      m_twiddles[nfft-i] = Complex(c, -s*flip);
     }
+    for (;i*4<nfft;++i)
+    {
+      Scalar c = Scalar(cos((2*nfft-8*i)*phinc));
+      Scalar s = Scalar(sin((2*nfft-8*i)*phinc));
+      m_twiddles[i] = Complex(s, c*flip);
+      m_twiddles[nfft-i] = Complex(s, -c*flip);
+    }
+    for (;i*8<3*nfft;++i)
+    {
+      Scalar c = Scalar(cos((8*i-2*nfft)*phinc));
+      Scalar s = Scalar(sin((8*i-2*nfft)*phinc));
+      m_twiddles[i] = Complex(-s, c*flip);
+      m_twiddles[nfft-i] = Complex(-s, -c*flip);
+    }
+    for (;i*2<nfft;++i)
+    {
+      Scalar c = Scalar(cos((4*nfft-8*i)*phinc));
+      Scalar s = Scalar(sin((4*nfft-8*i)*phinc));
+      m_twiddles[i] = Complex(-c, s*flip);
+      m_twiddles[nfft-i] = Complex(-c, -s*flip);
+    }
+  }
 
   void factorize(int nfft)
   {
@@ -316,8 +347,8 @@ struct kissfft_impl
 
         // use optimized mode for even real
         fwd( dst, reinterpret_cast<const Complex*> (src), ncfft);
-        Complex dc = dst[0].real() +  dst[0].imag();
-        Complex nyquist = dst[0].real() -  dst[0].imag();
+        Complex dc(dst[0].real() +  dst[0].imag());
+        Complex nyquist(dst[0].real() -  dst[0].imag());
         int k;
         for ( k=1;k <= ncfft2 ; ++k ) {
           Complex fpk = dst[k];
@@ -416,5 +447,3 @@ struct kissfft_impl
 } // end namespace internal
 
 } // end namespace Eigen
-
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

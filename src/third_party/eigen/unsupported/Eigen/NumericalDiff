@@ -10,7 +10,7 @@
 #ifndef EIGEN_NUMERICALDIFF_MODULE
 #define EIGEN_NUMERICALDIFF_MODULE
 
-#include <Eigen/Core>
+#include "../../Eigen/Core"
 
 namespace Eigen {
 

@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "openMVG/robust_estimation/rand_sampling.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/histogram/histogram.hpp"
 
 namespace openMVG {
@@ -107,8 +108,8 @@ static void makelogcombi
 {
   // compute a lookuptable of log10 value for the range [0,n+1]
   std::vector<float> vec_log10(n + 1);
-  for (uint32_t k = 0; k <= n; ++k)
-    vec_log10[k] = log10(static_cast<float>(k));
+  for (uint32_t i = 0; i <= n; ++i)
+    vec_log10[i] = log10(static_cast<float>(i));
 
   makelogcombi_n(n, vec_logc_n, vec_log10);
   makelogcombi_k(k, n, vec_logc_k, vec_log10);
@@ -427,15 +428,16 @@ std::pair<double, double> ACRANSAC
 
           if (bVerbose)
           {
-            std::cout << "  nfa=" << minNFA
+            std::ostringstream os;
+            os << "  nfa=" << minNFA
               << " inliers=" << vec_inliers.size() << "/" << nData
               << " precisionNormalized=" << errorMax
               << " precision=" << kernel.unormalizeError(errorMax)
               << " (iter=" << iter
               << " ,sample=";
             std::copy(vec_sample.begin(), vec_sample.end(),
-              std::ostream_iterator<uint32_t>(std::cout, ","));
-            std::cout << ")" << std::endl;
+              std::ostream_iterator<uint32_t>(os, ","));
+            OPENMVG_LOG_INFO << os.str() << ")";
           }
         }
       }

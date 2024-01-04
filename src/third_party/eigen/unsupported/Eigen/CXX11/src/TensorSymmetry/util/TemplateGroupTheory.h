@@ -17,7 +17,7 @@ namespace internal {
 namespace group_theory {
 
 /** \internal
-  * \file CXX11/Tensor/util/TemplateGroupTheory.h
+  * \file CXX11/src/TensorSymmetry/util/TemplateGroupTheory.h
   * This file contains C++ templates that implement group theory algorithms.
   *
   * The algorithms allow for a compile-time analysis of finite groups.
@@ -167,7 +167,9 @@ template<
   typename elements,
   bool dont_add_current_element   // = false
 >
-struct dimino_first_step_elements_helper :
+struct dimino_first_step_elements_helper
+#ifndef EIGEN_PARSED_BY_DOXYGEN
+  : // recursive inheritance is too difficult for Doxygen
   public dimino_first_step_elements_helper<
     Multiply,
     Equality,
@@ -187,6 +189,7 @@ template<
   typename elements
 >
 struct dimino_first_step_elements_helper<Multiply, Equality, id, g, current_element, elements, true>
+#endif // EIGEN_PARSED_BY_DOXYGEN
 {
   typedef elements type;
   constexpr static int global_flags = Equality<current_element, id>::global_flags;
@@ -241,7 +244,7 @@ struct dimino_first_step_elements
   * multiplying all elements in the given subgroup with the new
   * coset representative. Note that the first element of the
   * subgroup is always the identity element, so the first element of
-  * ther result of this template is going to be the coset
+  * the result of this template is going to be the coset
   * representative itself.
   *
   * Note that this template accepts an additional boolean parameter

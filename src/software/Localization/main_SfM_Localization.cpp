@@ -9,20 +9,20 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include <openMVG/sfm/sfm.hpp>
 #include <openMVG/features/feature.hpp>
 #include <openMVG/features/image_describer.hpp>
 #include <openMVG/image/image_io.hpp>
-#include <software/SfM/SfMPlyHelper.hpp>
-
+#include <openMVG/sfm/sfm.hpp>
+#include <openMVG/system/loggerprogress.hpp>
 #include <openMVG/system/timer.hpp>
-#include "openMVG/stl/stl.hpp"
+#include <openMVG/stl/stl.hpp>
+#include <software/SfM/SfMPlyHelper.hpp>
 
 using namespace openMVG;
 using namespace openMVG::sfm;
 
 #include "nonFree/sift/SIFT_describer_io.hpp"
-#include "openMVG/features/image_describer_akaze_io.hpp"
+#include "openMVG/features/akaze/image_describer_akaze_io.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
@@ -49,7 +49,6 @@ std::string FindCommonRootDir(const std::string & dir1, const std::string & dir2
 // ----------------------------------------------------
 int main(int argc, char **argv)
 {
-  using namespace std;
   std::cout << std::endl
     << "-----------------------------------------------------------\n"
     << "  Images localization in an existing SfM reconstruction:\n"
@@ -64,8 +63,10 @@ int main(int argc, char **argv)
   std::string sMatchesOutDir;
   std::string sQueryDir;
   double dMaxResidualError = std::numeric_limits<double>::infinity();
+  int i_User_camera_model = cameras::PINHOLE_CAMERA_RADIAL3;
   bool bUseSingleIntrinsics = false;
   bool bExportStructure = false;
+  int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
 
 #ifdef OPENMVG_USE_OPENMP
   int iNumThreads = 0;
@@ -77,8 +78,11 @@ int main(int argc, char **argv)
   cmd.add( make_option('u', sMatchesOutDir, "match_out_dir") );
   cmd.add( make_option('q', sQueryDir, "query_image_dir"));
   cmd.add( make_option('r', dMaxResidualError, "residual_error"));
+  cmd.add( make_option('c', i_User_camera_model, "camera_model") );
   cmd.add( make_switch('s', "single_intrinsics"));
   cmd.add( make_switch('e', "export_structure"));
+  cmd.add( make_option('R', resection_method, "resection_method"));
+
 #ifdef OPENMVG_USE_OPENMP
   cmd.add( make_option('n', iNumThreads, "numThreads") );
 #endif
@@ -105,12 +109,30 @@ int main(int argc, char **argv)
     << "  (OFF by default)\n"
     << "[-e|--export_structure] (switch) when switched on, the program will also export structure to output sfm_data.\n"
     << "  if OFF only VIEWS, INTRINSICS and EXTRINSICS are exported (OFF by default)\n"
+    << "[-c|--camera_model] Camera model type for view with unknown intrinsic:\n"
+      << "\t 1: Pinhole\n"
+      << "\t 2: Pinhole radial 1\n"
+      << "\t 3: Pinhole radial 3 (default)\n"
+      << "\t 4: Pinhole radial 3 + tangential 2\n"
+      << "\t 5: Pinhole fisheye\n"
+      << "\t 7: Spherical camera\n"
+    << "[-R|--resection_method] resection/pose estimation method (default=" << resection_method << "):\n"
+      << "\t" << static_cast<int>(resection::SolverType::DLT_6POINTS) << ": DIRECT_LINEAR_TRANSFORM 6Points | does not use intrinsic data\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_KE_CVPR17) << ": P3P_KE_CVPR17\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_KNEIP_CVPR11) << ": P3P_KNEIP_CVPR11\n"
+      << "\t" << static_cast<int>(resection::SolverType::P3P_NORDBERG_ECCV18) << ": P3P_NORDBERG_ECCV18\n"
+      << "\t" << static_cast<int>(resection::SolverType::UP2P_KUKELOVA_ACCV10)  << ": UP2P_KUKELOVA_ACCV10 | 2Points | upright camera\n"
 #ifdef OPENMVG_USE_OPENMP
     << "[-n|--numThreads] number of thread(s)\n"
 #endif
     << std::endl;
 
     std::cerr << s << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  if ( !isValid(openMVG::cameras::EINTRINSIC(i_User_camera_model)) )  {
+    std::cerr << "\n Invalid camera type" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -157,7 +179,7 @@ int main(int argc, char **argv)
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
     std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    if (!stream)
       return EXIT_FAILURE;
 
     try
@@ -179,7 +201,7 @@ int main(int argc, char **argv)
   }
 
   // Show the progress on the command line:
-  C_Progress_display progress;
+  system::LoggerProgress progress;
 
   // Load the SfM_Data region's views
   std::shared_ptr<Regions_Provider> regions_provider = std::make_shared<Regions_Provider>();
@@ -242,7 +264,7 @@ int main(int argc, char **argv)
 
   if (stlplus::is_file(sQueryDir))
   {
-    vec_image.push_back(stlplus::filename_part(sQueryDir)); // single file
+    vec_image.emplace_back(stlplus::filename_part(sQueryDir)); // single file
     sQueryDir = stlplus::folder_part(sQueryDir);
   }
   else vec_image = stlplus::folder_files(sQueryDir); // multiple files
@@ -349,7 +371,14 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cout << "- use UNknown intrinsics for the resection. Then create a Pinhole_Intrinsic_Radial_K3 camera." << std::endl;
+      std::cout << "- use Unknown intrinsics for the resection. A new camera (intrinsic) will be created." << std::endl;
+
+      // Since the spherical image is only defined by its image size we can initialize its camera model.
+      // This way the resection will be performed with valid bearing vector
+      if (openMVG::cameras::EINTRINSIC(i_User_camera_model) == cameras::CAMERA_SPHERICAL)
+      {
+        optional_intrinsic = std::make_shared<cameras::Intrinsic_Spherical>(imageGray.Width(), imageGray.Height());
+      }
     }
 
     geometry::Pose3 pose;
@@ -360,7 +389,7 @@ int main(int argc, char **argv)
 
     // Try to localize the image in the database thanks to its regions
     if (!localizer.Localize(
-      optional_intrinsic ? resection::SolverType::P3P_KE_CVPR17 : resection::SolverType::DLT_6POINTS,
+      optional_intrinsic ? static_cast<resection::SolverType>(resection_method) : resection::SolverType::DLT_6POINTS,
       {imageGray.Width(), imageGray.Height()},
       optional_intrinsic.get(),
       *(query_regions.get()),
@@ -386,20 +415,42 @@ int main(int argc, char **argv)
 
         const double focal = (K(0,0) + K(1,1))/2.0;
         const Vec2 principal_point(K(0,2), K(1,2));
-        optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>(
-          imageGray.Width(), imageGray.Height(),
-          focal, principal_point(0), principal_point(1));
 
+        switch (openMVG::cameras::EINTRINSIC(i_User_camera_model))
+        {
+          case cameras::PINHOLE_CAMERA:
+            optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic>(imageGray.Width(), imageGray.Height(),focal, principal_point(0), principal_point(1));
+          break;
+          case cameras::PINHOLE_CAMERA_RADIAL1:
+            optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K1>(imageGray.Width(), imageGray.Height(),focal, principal_point(0), principal_point(1));
+          break;
+          case cameras::PINHOLE_CAMERA_RADIAL3:
+            optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>(imageGray.Width(), imageGray.Height(),focal, principal_point(0), principal_point(1));
+          break;
+          case cameras::PINHOLE_CAMERA_BROWN:
+            optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Brown_T2>(imageGray.Width(), imageGray.Height(),focal, principal_point(0), principal_point(1));
+          break;
+          case cameras::PINHOLE_CAMERA_FISHEYE:
+            optional_intrinsic = std::make_shared<cameras::Pinhole_Intrinsic_Fisheye>(imageGray.Width(), imageGray.Height(),focal, principal_point(0), principal_point(1));
+          break;
+          case cameras::CAMERA_SPHERICAL:
+            std::cerr << "The spherical camera cannot be created there. Resection of a spherical camera must be done with an existing camera model." << std::endl;
+          break;
+          default:
+            std::cerr << "Error: unknown camera model: " << static_cast<int>(i_User_camera_model) << std::endl;
+        }
       }
-      if (!sfm::SfM_Localizer::RefinePose(
+      if (optional_intrinsic && sfm::SfM_Localizer::RefinePose(
         optional_intrinsic.get(),
         pose, matching_data,
         true, b_new_intrinsic))
       {
-        std::cerr << "Refining pose for image " << *iter_image << " failed." << std::endl;
+        bSuccessfulLocalization = true;
       }
-
-      bSuccessfulLocalization = true;
+      else
+      {
+        std::cerr << "Refining pose for the image " << *iter_image << " failed." << std::endl;
+      }
 
     }
 #ifdef OPENMVG_USE_OPENMP
@@ -434,7 +485,7 @@ int main(int argc, char **argv)
 
   GroupSharedIntrinsics(sfm_data);
 
-  std::cout << " Total poses found : " << vec_found_poses.size() << "/" << total_num_images << endl;
+  std::cout << " Total poses found : " << vec_found_poses.size() << "/" << total_num_images << std::endl;
 
   // Export the found camera position in a ply.
   const std::string out_file_name = stlplus::create_filespec(sOutDir, "found_pose_centers", "ply");

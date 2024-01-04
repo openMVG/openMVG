@@ -14,6 +14,7 @@
 
 #include "openMVG/image/image_drawing.hpp"
 #include "openMVG/features/feature.hpp"
+
 namespace openMVG {
 
 //-- A slow but accurate way to draw K-VLD lines

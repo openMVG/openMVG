@@ -1,16 +1,17 @@
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
-// Copyright (C) 2017 Bjorn Piltz Pierre Moulon
+// Copyright (C) 2017 Bjorn Piltz, Pierre Moulon
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "third_party/progress/progress.hpp"
+#include "openMVG/system/progressinterface.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 
 #include "testing/testing.h"
 
-#include <sstream>
+#include <set>
 
 #ifdef OPENMVG_USE_OPENMP
 #include <omp.h>
@@ -19,11 +20,13 @@
 static const int Count = 100*1000;
 static const int num_threads = 10;
 
-// This funcion counts to Count
-int singleThreadedCount(C_Progress * progress=nullptr)
+using openMVG::system::ProgressInterface;
+
+// This function counts to Count
+int singleThreadedCount(ProgressInterface * progress=nullptr)
 {
   if (!progress)
-      progress = &C_Progress::dummy();
+    progress = &ProgressInterface::dummy();
   int result = 0;
   for (int i = 0; i<Count; i++)
   {
@@ -37,10 +40,10 @@ int singleThreadedCount(C_Progress * progress=nullptr)
 }
 
 // This function counts to Count
-int multiThreadedCount(C_Progress * progress=nullptr)
+int multiThreadedCount(ProgressInterface * progress=nullptr)
 {
   if (!progress)
-      progress = &C_Progress::dummy();
+    progress = &ProgressInterface::dummy();
   int result = 0;
 
 #ifdef OPENMVG_USE_OPENMP
@@ -50,7 +53,7 @@ int multiThreadedCount(C_Progress * progress=nullptr)
   for (int i = 0; i<Count; i++)
   {
     if (progress->hasBeenCanceled())
-      // We are not allowed to use 'break' in an omp loop, 
+      // We are not allowed to use 'break' in an omp loop,
       continue;
 
 #ifdef OPENMVG_USE_OPENMP
@@ -64,23 +67,26 @@ int multiThreadedCount(C_Progress * progress=nullptr)
   return result;
 }
 
-class MockProgress : public C_Progress
+class MockProgress : public ProgressInterface
 {
 public:
-  virtual void restart(unsigned long ulExpected_count, const std::string& msg=std::string())override
+  virtual void Restart(const std::uint32_t expected_count, const std::string& msg = {})override
   {
-    this->ulExpected_count = ulExpected_count;
+    ProgressInterface::Restart(expected_count, msg);
+    this->ulExpected_count = expected_count;
     this->currentCount = 0;
   }
   virtual bool hasBeenCanceled()const override
   {
     return false;
   }
-  virtual void inc_tic() override
+  virtual std::uint32_t operator+=(const std::uint32_t increment) override
   {
-    currentCount++;
+    ProgressInterface::operator+=(increment);
+    ++currentCount;
+    return currentCount;
   }
-  unsigned long ulExpected_count = 0, currentCount = 0;
+  std::uint32_t ulExpected_count = 0, currentCount = 0;
 };
 
 class CancelProgress : public MockProgress
@@ -112,7 +118,7 @@ TEST(Progress, dummy)
   EXPECT_EQ(Count, singleThreadedCount(&progress));
   EXPECT_EQ(Count, progress.currentCount);
 
-  progress.restart(Count);
+  progress.Restart(Count);
   EXPECT_EQ(Count, multiThreadedCount(&progress));
   EXPECT_EQ(Count, progress.currentCount);
 }
@@ -123,37 +129,65 @@ TEST(Progress, cancel)
   CancelProgress progress;
   EXPECT_EQ(0, singleThreadedCount(&progress));
 
-  progress.restart(Count);
+  progress.Restart(Count);
   EXPECT_EQ(0, multiThreadedCount(&progress));
 
   CancelAt<13> cancelAtThirteen;
   EXPECT_EQ(13, singleThreadedCount(&cancelAtThirteen));
 }
 
-// Put this include here, because C_Progress_display is not needed earlier
-#include "third_party/progress/progress_display.hpp"
-
-TEST(Progress, terminalProgress)
+TEST(Progress, percent)
 {
-  // Test C_Progress_display:
-  const std::string expectedOutPut =
-    "\nCounting electric sheep\n"
-    "0%   10   20   30   40   50   60   70   80   90   100%\n"
-    "|----|----|----|----|----|----|----|----|----|----|\n"
-    "***************************************************\n";
+  ProgressInterface progress(10);
+  EXPECT_EQ(10, progress.expected_count());
+  EXPECT_EQ(0, progress.count());
+  EXPECT_EQ(0, progress.Percent());
 
-  std::ostringstream out;
+  progress += 2;
+  EXPECT_EQ(2, progress.count());
+  EXPECT_EQ(20, progress.Percent());
+  progress += 4;
+  EXPECT_EQ(6, progress.count());
+  EXPECT_EQ(60, progress.Percent());
+  progress += 4;
+  EXPECT_EQ(10, progress.count());
+  EXPECT_EQ(100, progress.Percent());
+}
 
-  // Make sure the singleThreadedCount() works with MockProgress
-  C_Progress_display progress(Count, out, "\nCounting electric sheep\n");
-  EXPECT_EQ(Count, singleThreadedCount(&progress));
+using openMVG::system::LoggerProgress;
 
-  EXPECT_EQ(expectedOutPut, out.str());
-  out.seekp(0);
+TEST(LogProgress, logging)
+{
+  LoggerProgress progress(10);
+  for (int i = 0; i < 10; ++i)
+  {
+    ++progress;
+  }
+}
 
-  progress.restart(Count);
-  EXPECT_EQ(Count, multiThreadedCount(&progress));
-  EXPECT_EQ(expectedOutPut, out.str());
+TEST(LogProgress, logging_if)
+{
+  LoggerProgress progress(10);
+  for (int i = 0; i < 10; ++i)
+  {
+    const bool b_update_progress_required = progress.Increment(1);
+    OPENMVG_LOG_INFO_IF(b_update_progress_required) << progress.PercentString();
+  }
+}
+
+// Check that every pourcentage is displayed once
+TEST(LogProgress, conditional_logging)
+{
+  LoggerProgress progress(800, "", 2);
+  std::set<int> previously_displayed_percentage;
+  for (int i = 0; i < progress.count(); ++i)
+  {
+    if (progress.Increment(1)) // If display is triggered
+    {
+      EXPECT_EQ(0, previously_displayed_percentage.count(progress.Percent()));
+      previously_displayed_percentage.insert(progress.Percent());
+    }
+  }
 }
 
 /* ************************************************************************* */

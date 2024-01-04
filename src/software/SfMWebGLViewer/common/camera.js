@@ -67,12 +67,11 @@ PerspectiveCamera.prototype.pointOnSphere = function( aPixX , aPixY , aRad )
 
   var hit_plane = Plane.intersectLine( pl , this.m_pos , pt );
 
-  var z = hit_plane[2];
-
   var dst = Vector.sub( hit_plane , this.m_dir ); 
 
   var d = dst[0] * dst[0] + dst[1] * dst[1];
 
+  var z ;
   if (d < aRad * Math.sqrt( 2 ) / 2.0 )
   {
     z = Math.sqrt( aRad * aRad - d * d );

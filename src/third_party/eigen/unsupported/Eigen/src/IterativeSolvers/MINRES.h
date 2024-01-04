@@ -3,6 +3,7 @@
 //
 // Copyright (C) 2012 Giacomo Po <gpo@ucla.edu>
 // Copyright (C) 2011-2014 Gael Guennebaud <gael.guennebaud@inria.fr>
+// Copyright (C) 2018 David Hyde <dabh@stanford.edu>
 //
 // This Source Code Form is subject to the terms of the Mozilla
 // Public License v. 2.0. If a copy of the MPL was not distributed
@@ -64,8 +65,6 @@ namespace Eigen {
             eigen_assert(beta_new2 >= 0.0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
             RealScalar beta_new(sqrt(beta_new2));
             const RealScalar beta_one(beta_new);
-            v_new /= beta_new;
-            w_new /= beta_new;
             // Initialize other variables
             RealScalar c(1.0); // the cosine of the Givens rotation
             RealScalar c_old(1.0);
@@ -83,18 +82,18 @@ namespace Eigen {
                 /* Note that there are 4 variants on the Lanczos algorithm. These are
                  * described in Paige, C. C. (1972). Computational variants of
                  * the Lanczos method for the eigenproblem. IMA Journal of Applied
-                 * Mathematics, 10(3), 373–381. The current implementation corresponds 
+                 * Mathematics, 10(3), 373-381. The current implementation corresponds 
                  * to the case A(2,7) in the paper. It also corresponds to 
-                 * algorithm 6.14 in Y. Saad, Iterative Methods ￼￼￼for Sparse Linear
+                 * algorithm 6.14 in Y. Saad, Iterative Methods for Sparse Linear
                  * Systems, 2003 p.173. For the preconditioned version see 
                  * A. Greenbaum, Iterative Methods for Solving Linear Systems, SIAM (1987).
                  */
                 const RealScalar beta(beta_new);
                 v_old = v; // update: at first time step, this makes v_old = 0 so value of beta doesn't matter
-//                const VectorType v_old(v); // NOT SURE IF CREATING v_old EVERY ITERATION IS EFFICIENT
+                v_new /= beta_new; // overwrite v_new for next iteration
+                w_new /= beta_new; // overwrite w_new for next iteration
                 v = v_new; // update
                 w = w_new; // update
-//                const VectorType w(w_new); // NOT SURE IF CREATING w EVERY ITERATION IS EFFICIENT
                 v_new.noalias() = mat*w - beta*v_old; // compute v_new
                 const RealScalar alpha = v_new.dot(w);
                 v_new -= alpha*v; // overwrite v_new
@@ -102,8 +101,6 @@ namespace Eigen {
                 beta_new2 = v_new.dot(w_new); // compute beta_new
                 eigen_assert(beta_new2 >= 0.0 && "PRECONDITIONER IS NOT POSITIVE DEFINITE");
                 beta_new = sqrt(beta_new2); // compute beta_new
-                v_new /= beta_new; // overwrite v_new for next iteration
-                w_new /= beta_new; // overwrite w_new for next iteration
                 
                 // Givens rotation
                 const RealScalar r2 =s*alpha+c*c_old*beta; // s, s_old, c and c_old are still from previous iteration
@@ -117,7 +114,6 @@ namespace Eigen {
                 
                 // Update solution
                 p_oold = p_old;
-//                const VectorType p_oold(p_old); // NOT SURE IF CREATING p_oold EVERY ITERATION IS EFFICIENT
                 p_old = p;
                 p.noalias()=(w-r2*p_old-r3*p_oold) /r1; // IS NOALIAS REQUIRED?
                 x += beta_one*c*eta*p;
@@ -237,7 +233,7 @@ namespace Eigen {
 
         /** \internal */
         template<typename Rhs,typename Dest>
-        void _solve_with_guess_impl(const Rhs& b, Dest& x) const
+        void _solve_vector_with_guess_impl(const Rhs& b, Dest& x) const
         {
             typedef typename Base::MatrixWrapper MatrixWrapper;
             typedef typename Base::ActualMatrixType ActualMatrixType;
@@ -257,26 +253,9 @@ namespace Eigen {
             m_iterations = Base::maxIterations();
             m_error = Base::m_tolerance;
             RowMajorWrapper row_mat(matrix());
-            for(int j=0; j<b.cols(); ++j)
-            {
-                m_iterations = Base::maxIterations();
-                m_error = Base::m_tolerance;
-                
-                typename Dest::ColXpr xj(x,j);
-                internal::minres(SelfAdjointWrapper(row_mat), b.col(j), xj,
-                                 Base::m_preconditioner, m_iterations, m_error);
-            }
-            
-            m_isInitialized = true;
+            internal::minres(SelfAdjointWrapper(row_mat), b, x,
+                             Base::m_preconditioner, m_iterations, m_error);
             m_info = m_error <= Base::m_tolerance ? Success : NoConvergence;
-        }
-        
-        /** \internal */
-        template<typename Rhs,typename Dest>
-        void _solve_impl(const Rhs& b, MatrixBase<Dest> &x) const
-        {
-            x.setZero();
-            _solve_with_guess_impl(b,x.derived());
         }
         
     protected:
@@ -286,4 +265,3 @@ namespace Eigen {
 } // end namespace Eigen
 
 #endif // EIGEN_MINRES_H
-

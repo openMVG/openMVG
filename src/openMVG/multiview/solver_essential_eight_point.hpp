@@ -9,7 +9,6 @@
 #ifndef OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_SPHERICAL_HPP
 #define OPENMVG_MULTIVIEW_SOLVER_ESSENTIAL_SPHERICAL_HPP
 
-#include <vector>
 #include "openMVG/numeric/eigen_alias_definition.hpp"
 
 namespace openMVG {

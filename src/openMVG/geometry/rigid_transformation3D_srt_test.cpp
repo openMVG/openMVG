@@ -13,7 +13,6 @@
 
 using namespace openMVG;
 using namespace openMVG::geometry;
-using namespace std;
 
 TEST(SRT_precision, Experiment_ScaleOnly) {
 

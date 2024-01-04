@@ -18,10 +18,9 @@
 #include <Eigen/SparseCholesky>
 #endif
 
-
 #include <algorithm>
-#include <iostream>
-#include <string>
+
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 
@@ -127,7 +126,7 @@ class L1Solver {
     // Since constructor was called before we check Compute status
     if (linear_solver_.info() != Eigen::Success)
     {
-      std::cerr << "Cannot compute the matrix factorization" << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot compute the matrix factorization";
       return false;
     }
 

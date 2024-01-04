@@ -24,13 +24,55 @@ namespace Eigen {
   * \sa Eigen::igammac(), Eigen::lgamma()
   */
 template<typename Derived,typename ExponentDerived>
-inline const Eigen::CwiseBinaryOp<Eigen::internal::scalar_igamma_op<typename Derived::Scalar>, const Derived, const ExponentDerived>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_igamma_op<typename Derived::Scalar>, const Derived, const ExponentDerived>
 igamma(const Eigen::ArrayBase<Derived>& a, const Eigen::ArrayBase<ExponentDerived>& x)
 {
   return Eigen::CwiseBinaryOp<Eigen::internal::scalar_igamma_op<typename Derived::Scalar>, const Derived, const ExponentDerived>(
     a.derived(),
     x.derived()
   );
+}
+
+/** \cpp11 \returns an expression of the coefficient-wise igamma_der_a(\a a, \a x) to the given arrays.
+  *
+  * This function computes the coefficient-wise derivative of the incomplete
+  * gamma function with respect to the parameter a.
+  *
+  * \note This function supports only float and double scalar types in c++11
+  * mode. To support other scalar types,
+  * or float/double in non c++11 mode, the user has to provide implementations
+  * of igamma_der_a(T,T) for any scalar
+  * type T to be supported.
+  *
+  * \sa Eigen::igamma(), Eigen::lgamma()
+  */
+template <typename Derived, typename ExponentDerived>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_igamma_der_a_op<typename Derived::Scalar>, const Derived, const ExponentDerived>
+igamma_der_a(const Eigen::ArrayBase<Derived>& a, const Eigen::ArrayBase<ExponentDerived>& x) {
+  return Eigen::CwiseBinaryOp<Eigen::internal::scalar_igamma_der_a_op<typename Derived::Scalar>, const Derived, const ExponentDerived>(
+    a.derived(),
+    x.derived());
+}
+
+/** \cpp11 \returns an expression of the coefficient-wise gamma_sample_der_alpha(\a alpha, \a sample) to the given arrays.
+  *
+  * This function computes the coefficient-wise derivative of the sample
+  * of a Gamma(alpha, 1) random variable with respect to the parameter alpha.
+  *
+  * \note This function supports only float and double scalar types in c++11
+  * mode. To support other scalar types,
+  * or float/double in non c++11 mode, the user has to provide implementations
+  * of gamma_sample_der_alpha(T,T) for any scalar
+  * type T to be supported.
+  *
+  * \sa Eigen::igamma(), Eigen::lgamma()
+  */
+template <typename AlphaDerived, typename SampleDerived>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_gamma_sample_der_alpha_op<typename AlphaDerived::Scalar>, const AlphaDerived, const SampleDerived>
+gamma_sample_der_alpha(const Eigen::ArrayBase<AlphaDerived>& alpha, const Eigen::ArrayBase<SampleDerived>& sample) {
+  return Eigen::CwiseBinaryOp<Eigen::internal::scalar_gamma_sample_der_alpha_op<typename AlphaDerived::Scalar>, const AlphaDerived, const SampleDerived>(
+      alpha.derived(),
+      sample.derived());
 }
 
 /** \cpp11 \returns an expression of the coefficient-wise igammac(\a a, \a x) to the given arrays.
@@ -44,7 +86,7 @@ igamma(const Eigen::ArrayBase<Derived>& a, const Eigen::ArrayBase<ExponentDerive
   * \sa Eigen::igamma(), Eigen::lgamma()
   */
 template<typename Derived,typename ExponentDerived>
-inline const Eigen::CwiseBinaryOp<Eigen::internal::scalar_igammac_op<typename Derived::Scalar>, const Derived, const ExponentDerived>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_igammac_op<typename Derived::Scalar>, const Derived, const ExponentDerived>
 igammac(const Eigen::ArrayBase<Derived>& a, const Eigen::ArrayBase<ExponentDerived>& x)
 {
   return Eigen::CwiseBinaryOp<Eigen::internal::scalar_igammac_op<typename Derived::Scalar>, const Derived, const ExponentDerived>(
@@ -66,7 +108,7 @@ igammac(const Eigen::ArrayBase<Derived>& a, const Eigen::ArrayBase<ExponentDeriv
 // * \warning Be careful with the order of the parameters: x.polygamma(n) is equivalent to polygamma(n,x)
 // * \sa ArrayBase::polygamma()
 template<typename DerivedN,typename DerivedX>
-inline const Eigen::CwiseBinaryOp<Eigen::internal::scalar_polygamma_op<typename DerivedX::Scalar>, const DerivedN, const DerivedX>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_polygamma_op<typename DerivedX::Scalar>, const DerivedN, const DerivedX>
 polygamma(const Eigen::ArrayBase<DerivedN>& n, const Eigen::ArrayBase<DerivedX>& x)
 {
   return Eigen::CwiseBinaryOp<Eigen::internal::scalar_polygamma_op<typename DerivedX::Scalar>, const DerivedN, const DerivedX>(
@@ -86,7 +128,7 @@ polygamma(const Eigen::ArrayBase<DerivedN>& n, const Eigen::ArrayBase<DerivedX>&
   * \sa Eigen::betainc(), Eigen::lgamma()
   */
 template<typename ArgADerived, typename ArgBDerived, typename ArgXDerived>
-inline const Eigen::CwiseTernaryOp<Eigen::internal::scalar_betainc_op<typename ArgXDerived::Scalar>, const ArgADerived, const ArgBDerived, const ArgXDerived>
+EIGEN_STRONG_INLINE const Eigen::CwiseTernaryOp<Eigen::internal::scalar_betainc_op<typename ArgXDerived::Scalar>, const ArgADerived, const ArgBDerived, const ArgXDerived>
 betainc(const Eigen::ArrayBase<ArgADerived>& a, const Eigen::ArrayBase<ArgBDerived>& b, const Eigen::ArrayBase<ArgXDerived>& x)
 {
   return Eigen::CwiseTernaryOp<Eigen::internal::scalar_betainc_op<typename ArgXDerived::Scalar>, const ArgADerived, const ArgBDerived, const ArgXDerived>(
@@ -101,7 +143,7 @@ betainc(const Eigen::ArrayBase<ArgADerived>& a, const Eigen::ArrayBase<ArgBDeriv
   *
   * It returns the Riemann zeta function of two arguments \a x and \a q:
   *
-  * \param x is the exposent, it must be > 1
+  * \param x is the exponent, it must be > 1
   * \param q is the shift, it must be > 0
   *
   * \note This function supports only float and double scalar types. To support other scalar types, the user has
@@ -110,7 +152,7 @@ betainc(const Eigen::ArrayBase<ArgADerived>& a, const Eigen::ArrayBase<ArgBDeriv
   * \sa ArrayBase::zeta()
   */
 template<typename DerivedX,typename DerivedQ>
-inline const Eigen::CwiseBinaryOp<Eigen::internal::scalar_zeta_op<typename DerivedX::Scalar>, const DerivedX, const DerivedQ>
+EIGEN_STRONG_INLINE const Eigen::CwiseBinaryOp<Eigen::internal::scalar_zeta_op<typename DerivedX::Scalar>, const DerivedX, const DerivedQ>
 zeta(const Eigen::ArrayBase<DerivedX>& x, const Eigen::ArrayBase<DerivedQ>& q)
 {
   return Eigen::CwiseBinaryOp<Eigen::internal::scalar_zeta_op<typename DerivedX::Scalar>, const DerivedX, const DerivedQ>(
@@ -118,6 +160,7 @@ zeta(const Eigen::ArrayBase<DerivedX>& x, const Eigen::ArrayBase<DerivedQ>& q)
     q.derived()
   );
 }
+
 
 } // end namespace Eigen
 

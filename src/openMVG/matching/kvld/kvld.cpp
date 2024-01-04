@@ -9,10 +9,10 @@
 #include "openMVG/matching/kvld/kvld.h"
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/features/feature.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <cassert>
 #include <cmath>
-#include <fstream>
 
 using namespace openMVG;
 using namespace openMVG::image;
@@ -114,7 +114,7 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
   distance = std::hypot( dy, dx );
 
   if (distance == 0 )
-    std::cerr<<"Two SIFT points have the same coordinate"<< std::endl;
+    OPENMVG_LOG_ERROR << "Two SIFT points have the same coordinate";
 
   const float radius = std::max( distance / float( dimension + 1 ), 2.0f );//at least 2
 
@@ -155,7 +155,6 @@ VLD::VLD( const ImageScale& series, T const& P1, T const& P2 ) : contrast( 0.0 )
             angle = ang( y, x ) - mainAngle;//relative angle
           else angle = 0.0;
 
-          //cout<<angle<<endl;
           while (angle < 0)
             angle += 2 * PI_;
           while (angle >= 2 * PI_)
@@ -210,15 +209,15 @@ float KVLD( const Image<float>& I1,
   ImageScale Chaine1( I1 );
   ImageScale Chaine2( I2 );
 
-  std::cout << "Image scale-space complete..." << std::endl;
+  OPENMVG_LOG_INFO << "Image scale-space complete...";
 
   const float range1 = getRange( I1, std::min( F1.size(), matches.size() ), kvldParameters.inlierRate );
   const float range2 = getRange( I2, std::min( F2.size(), matches.size() ), kvldParameters.inlierRate );
 
   const size_t size = matches.size();
 
-  //================distance map construction, foruse of selecting neighbors===============//
-  std::cout << "computing distance maps" << std::endl;
+  //================distance map construction, used of selecting neighbors===============//
+  OPENMVG_LOG_INFO << "computing distance maps";
 
   const bool bPrecomputedDist = false;
 
@@ -243,7 +242,6 @@ float KVLD( const Image<float>& I1,
 
 
 //============main iteration formatch verification==========//
-//    cout<<"main iteration";
   bool change = true;
 
   while (change)
@@ -274,7 +272,7 @@ float KVLD( const Image<float>& I1,
             if (bOk )
             {
               if (E( it1, it2 ) == -1 )
-              { //update E ifunknow
+              { //update E if unknown
                 E( it1, it2 ) = -2;
                 E( it2, it1 ) = -2;
 
@@ -282,14 +280,11 @@ float KVLD( const Image<float>& I1,
                 {
                   VLD vld1( Chaine1, F1[ a1 ], F1[ a2 ] );
                   VLD vld2( Chaine2, F2[ b1 ], F2[ b2 ] );
-                  //vld1.test();
-                  double error = vld1.difference( vld2 );
-                  //cout<<endl<<it1<<" "<<it2<<" "<<dist1(a1,a2)<<" "<< dist2(b1,b2)<<" "<<error<<endl;
+                  const double error = vld1.difference( vld2 );
                   if (error < juge )
                   {
                     E( it1, it2 ) = ( float ) error;
                     E( it2, it1 ) = ( float ) error;
-                    //cout<<E(it2,it1)<<endl;
                   }
                 }
               }

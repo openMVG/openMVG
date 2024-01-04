@@ -11,8 +11,8 @@
 #include "openMVG/features/akaze/AKAZE.hpp"
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
+#include "openMVG/system/logger.hpp"
 
-#include <iostream>
 #include <numeric>
 
 namespace openMVG {
@@ -66,6 +66,7 @@ public:
       params_.options_.fThreshold = features::AKAZE::Params().fThreshold/100.f;
     break;
     default:
+      OPENMVG_LOG_ERROR << "Unknow preset configuration";
       return false;
     }
     return true;

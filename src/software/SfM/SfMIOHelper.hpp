@@ -66,9 +66,8 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
                            bool bVerbose = true )
 {
   std::ifstream in(sFileName.c_str());
-  if (!in.is_open())  {
-    std::cerr << std::endl
-      << "Impossible to read the specified file." << std::endl;
+  if (!in)  {
+    OPENMVG_LOG_ERROR << "Impossible to read the specified file: " << sFileName;
   }
   std::string sValue;
   std::vector<std::string> vec_str;
@@ -78,7 +77,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
     stl::split(sValue, ';', vec_str);
     if (vec_str.size() == 1)
     {
-      std::cerr << "Invalid input file" << std::endl;
+      OPENMVG_LOG_ERROR << "Invalid input file";
       in.close();
       return false;
     }
@@ -160,7 +159,7 @@ static bool loadImageList( std::vector<CameraInfo> & vec_camImageName,
       break;
       default:
       {
-        std::cerr << "Invalid image list line: wrong number of arguments" << std::endl;
+        OPENMVG_LOG_ERROR << "Invalid image list line: wrong number of arguments";
         in.close();
         return false;
       }

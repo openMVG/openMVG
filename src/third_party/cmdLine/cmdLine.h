@@ -160,7 +160,7 @@ public:
     }
     /// Parse of command line acting as a filter. All options are virtually
     /// removed from the command line.
-    void process(int& argc, char* argv[]) throw(std::string) {
+    void process(int& argc, char* argv[]) {
         std::vector<Option*>::iterator it=opts.begin();
         for(; it != opts.end(); ++it)
             (*it)->used = false;

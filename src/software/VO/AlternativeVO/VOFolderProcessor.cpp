@@ -219,10 +219,11 @@ std::vector< VOViewerLine > VOFolderProcessor::GetCurrentTrackTrajectories( void
       std::deque<openMVG::VO::Measurement>::const_reverse_iterator iter = obs.rbegin();
       std::deque<openMVG::VO::Measurement>::const_reverse_iterator iterEnd = obs.rend();
 
-      VOViewerLine cur_traj;
-      cur_traj.m_color = VOViewerLine::DEFAULT_LINE_COLOR;
       /* Trajectories */
       int limit = 10;
+      VOViewerLine cur_traj;
+      cur_traj.m_pts.reserve(limit);
+      cur_traj.m_color = VOViewerLine::DEFAULT_LINE_COLOR;
       for (; iter != iterEnd && limit >= 0; ++iter, --limit )
       {
         const openMVG::Vec2f & p0 = iter->pos_;

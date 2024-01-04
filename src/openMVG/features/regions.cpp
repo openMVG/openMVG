@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // The <cereal/archives> headers are special and must be included first.
-#include <cereal/archives/json.hpp> 
+#include <cereal/archives/json.hpp>
 
 #include <fstream>
 #include <string>
@@ -30,8 +30,8 @@ std::unique_ptr<features::Regions> Init_region_type_from_file
   if (stlplus::is_file(sImage_describer_file))
   {
     // Dynamically load the regions type from the file
-    std::ifstream stream(sImage_describer_file.c_str());
-    if (stream.is_open())
+    std::ifstream stream(sImage_describer_file);
+    if (stream)
     {
       cereal::JSONInputArchive archive(stream);
       archive(cereal::make_nvp("regions_type", regions_type));

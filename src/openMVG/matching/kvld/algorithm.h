@@ -95,20 +95,22 @@ inline bool inside( int w, int h, int x,int y, double radius )
 
 inline bool anglefrom( const float& x, const float& y, float& angle )
 {
+  float ang = 0.f;
   if (x != 0 )
-    angle = atan( y / x );
+    ang = atan( y / x );
   else if (y > 0 )
-    angle = PI_ / 2;
+    ang = PI_ / 2;
   else if (y < 0 )
-    angle =- PI_ / 2;
+    ang =- PI_ / 2;
   else return false;
 
   if (x < 0 )
-    angle += PI_;
-  while (angle < 0)
-    angle += 2 * PI_;
-  while (angle >= 2 * PI_)
-    angle -= 2 * PI_;
+    ang += PI_;
+  while (ang < 0)
+    ang += 2 * PI_;
+  while (ang >= 2 * PI_)
+    ang -= 2 * PI_;
+  angle = ang;
   assert( angle >= 0 && angle < 2 * PI_ );
   return true;
 }

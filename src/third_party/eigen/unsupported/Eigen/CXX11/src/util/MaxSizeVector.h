@@ -29,13 +29,13 @@ namespace Eigen {
   */
 template <typename T>
 class MaxSizeVector {
+  static const size_t alignment = EIGEN_PLAIN_ENUM_MAX(EIGEN_ALIGNOF(T), sizeof(void*));
  public:
   // Construct a new MaxSizeVector, reserve n elements.
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   explicit MaxSizeVector(size_t n)
       : reserve_(n), size_(0),
-        data_(static_cast<T*>(internal::aligned_malloc(n * sizeof(T)))) {
-    for (size_t i = 0; i < n; ++i) { new (&data_[i]) T; }
+        data_(static_cast<T*>(internal::handmade_aligned_malloc(n * sizeof(T), alignment))) {
   }
 
   // Construct a new MaxSizeVector, reserve and resize to n.
@@ -43,35 +43,55 @@ class MaxSizeVector {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   MaxSizeVector(size_t n, const T& init)
       : reserve_(n), size_(n),
-        data_(static_cast<T*>(internal::aligned_malloc(n * sizeof(T)))) {
-    for (size_t i = 0; i < n; ++i) { new (&data_[i]) T(init); }
+        data_(static_cast<T*>(internal::handmade_aligned_malloc(n * sizeof(T), alignment))) {
+    size_t i = 0;
+    EIGEN_TRY
+    {
+      for(; i < size_; ++i) { new (&data_[i]) T(init); }
+    }
+    EIGEN_CATCH(...)
+    {
+      // Construction failed, destruct in reverse order:
+      for(; (i+1) > 0; --i) { data_[i-1].~T(); }
+      internal::handmade_aligned_free(data_);
+      EIGEN_THROW;
+    }
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   ~MaxSizeVector() {
-    for (size_t i = 0; i < size_; ++i) {
-      data_[i].~T();
+    for (size_t i = size_; i > 0; --i) {
+      data_[i-1].~T();
     }
-    internal::aligned_free(data_);
+    internal::handmade_aligned_free(data_);
   }
 
   void resize(size_t n) {
     eigen_assert(n <= reserve_);
-    for (size_t i = size_; i < n; ++i) {
-      new (&data_[i]) T;
+    for (; size_ < n; ++size_) {
+      new (&data_[size_]) T;
     }
-    for (size_t i = n; i < size_; ++i) {
-      data_[i].~T();
+    for (; size_ > n; --size_) {
+      data_[size_-1].~T();
     }
-    size_ = n;
+    eigen_assert(size_ == n);
   }
 
   // Append new elements (up to reserved size).
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   void push_back(const T& t) {
     eigen_assert(size_ < reserve_);
-    data_[size_++] = t;
+    new (&data_[size_++]) T(t);
   }
+
+  // For C++03 compatibility this only takes one argument
+  template<class X>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  void emplace_back(const X& x) {
+    eigen_assert(size_ < reserve_);
+    new (&data_[size_++]) T(x);
+  }
+
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   const T& operator[] (size_t i) const {
@@ -99,11 +119,8 @@ class MaxSizeVector {
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   void pop_back() {
-    // NOTE: This does not destroy the value at the end the way
-    // std::vector's version of pop_back() does.  That happens when
-    // the Vector is destroyed.
     eigen_assert(size_ > 0);
-    size_--;
+    data_[--size_].~T();
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE

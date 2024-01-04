@@ -55,46 +55,46 @@ struct Triplet
              ( Jt == i || Jt == j || Jt == k ) && It != Jt );
   }
 
-  /**
-  * @brief Indicate if triplet are the same
-  * @param m1 First triplet
-  * @param m2 Second triplet
-  * @retval true if triplets are the same
-  * @retval false if triplets are differents
-  */
-  friend bool operator==( const Triplet& m1, const Triplet& m2 )
-  {
-    return m1.contain( { m2.i, m2.j } ) &&
-           m1.contain( { m2.i, m2.k } );
-  }
-
-  /**
-  * @brief Indicate if triplet are differents
-  * @param m1 First triplet
-  * @param m2 Second triplet
-  * @retval true if triplets are differents
-  * @retval false if triplets are the same
-  */
-  friend bool operator!=( const Triplet & m1, const Triplet & m2 )
-  {
-    return !( m1 == m2 );
-  }
-
-  /**
-  * @brief Stream operation
-  * @param os Stream in which triplet is written
-  * @param t Triplet to write
-  * @return stream after write operation
-  */
-  friend std::ostream & operator<<( std::ostream & os, const Triplet & t )
-  {
-    os << t.i << ' ' << t.j << ' ' << t.k << '\n';
-    return os;
-  }
-
   /// the three triplet index id
   IndexT i, j, k;
 };
+
+/**
+* @brief Indicate if triplet are the same
+* @param m1 First triplet
+* @param m2 Second triplet
+* @retval true if triplets are the same
+* @retval false if triplets are differents
+*/
+inline bool operator==( const Triplet& m1, const Triplet& m2 )
+{
+  return m1.contain( { m2.i, m2.j } ) &&
+         m1.contain( { m2.i, m2.k } );
+}
+
+/**
+* @brief Indicate if triplet are differents
+* @param m1 First triplet
+* @param m2 Second triplet
+* @retval true if triplets are differents
+* @retval false if triplets are the same
+*/
+inline bool operator!=( const Triplet & m1, const Triplet & m2 )
+{
+  return !( m1 == m2 );
+}
+
+/**
+* @brief Stream operation
+* @param os Stream in which triplet is written
+* @param t Triplet to write
+* @return stream after write operation
+*/
+inline std::ostream & operator<<( std::ostream & os, const Triplet & t )
+{
+  os << t.i << ' ' << t.j << ' ' << t.k << '\n';
+  return os;
+}
 
 /**
 * @brief Return triplets contained in the graph build from IterablePairs

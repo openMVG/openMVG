@@ -16,9 +16,10 @@
 #include "openMVG/features/image_describer.hpp"
 #include "openMVG/features/regions_factory.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/progressinterface.hpp"
 #include "openMVG/types.hpp"
 
-#include "third_party/progress/progress.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
@@ -48,7 +49,7 @@ public:
       return region_type_->IsScalar();
     else
     {
-      std::cerr << "Invalid region type" << std::endl;
+      OPENMVG_LOG_ERROR << "Invalid region type";
       return false;
     }
   }
@@ -59,7 +60,7 @@ public:
       return region_type_->IsBinary();
     else
     {
-      std::cerr << "Invalid region type" << std::endl;
+      OPENMVG_LOG_ERROR << "Invalid region type";
       return false;
     }
   }
@@ -74,15 +75,13 @@ public:
 
   virtual std::shared_ptr<features::Regions> get(const IndexT x) const
   {
-    auto it = cache_.find(x);
-    std::shared_ptr<features::Regions> ret;
-
-    if (it != end(cache_))
+    const auto it = cache_.find(x);
+    if (it != std::end(cache_))
     {
-      ret = it->second;
+      return it->second;
     }
     // else Invalid ressource
-    return ret;
+    return {};
   }
 
   // Load Regions related to a provided SfM_Data View container
@@ -90,13 +89,13 @@ public:
     const SfM_Data & sfm_data,
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type,
-    C_Progress *  my_progress_bar = nullptr)
+    system::ProgressInterface * my_progress_bar = nullptr)
   {
     if (!my_progress_bar)
-      my_progress_bar = &C_Progress::dummy();
+      my_progress_bar = &system::ProgressInterface::dummy();
     region_type_.reset(region_type->EmptyClone());
 
-    my_progress_bar->restart(sfm_data.GetViews().size(), "\n- Regions Loading -\n");
+    my_progress_bar->Restart(sfm_data.GetViews().size(), "- Regions Loading -");
     // Read for each view the corresponding regions and store them
     std::atomic<bool> bContinue(true);
 #ifdef OPENMVG_USE_OPENMP
@@ -122,10 +121,10 @@ public:
         std::unique_ptr<features::Regions> regions_ptr(region_type->EmptyClone());
         if (!regions_ptr->Load(featFile, descFile))
         {
-          std::cerr << "Invalid regions files for the view: " << sImageName << std::endl;
+          OPENMVG_LOG_ERROR << "Invalid regions files for the view: " << sImageName;
           bContinue = false;
         }
-        //else
+
 #ifdef OPENMVG_USE_OPENMP
         #pragma omp critical
 #endif

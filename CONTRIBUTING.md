@@ -22,14 +22,14 @@ Here the list of things to check for contribution:
  
   - Please use doxygen documentation.
 
-     - You can also consider extending the exiting Sphinx documentation (see ./docs/sphinx)
+     - You can also consider extending the exiting Sphinx documentation (see ``./docs/sphinx``)
 
 
 4. Push your change and make a PR towards develop:
 
   - please check the status of the continuous integration tools:
       -  Compilation (travis, appveyor),
-      -  Code quality and style (codacity)).
+      -  Code quality and style (codacity).
       
 If you want to learn more about OpenSource we refer you to this:
 https://opensource.guide/

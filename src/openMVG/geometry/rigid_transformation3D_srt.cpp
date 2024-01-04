@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
@@ -25,6 +26,7 @@ bool FindRTS
 {
   if ( x1.cols() < 3 || x2.cols() < 3 )
   {
+    OPENMVG_LOG_ERROR << "At least 3 points are required for computing a RTS transform.";
     return false;
   }
 
@@ -50,6 +52,7 @@ bool FindRTS
   // Check for degenerate case (if all points have the same value...)
   if ( *S < std::numeric_limits<double>::epsilon() )
   {
+    OPENMVG_LOG_ERROR << "Degeneration configuration for a RTS transform estimation.";
     return false;
   }
 

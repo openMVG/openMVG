@@ -52,7 +52,7 @@ public:
         Parameters()
             : factor(Scalar(100.))
             , maxfev(1000)
-            , xtol(std::sqrt(NumTraits<Scalar>::epsilon()))
+            , xtol(numext::sqrt(NumTraits<Scalar>::epsilon()))
             , nb_of_subdiagonals(-1)
             , nb_of_superdiagonals(-1)
             , epsfcn(Scalar(0.)) {}
@@ -70,7 +70,7 @@ public:
 
     HybridNonLinearSolverSpace::Status hybrj1(
             FVectorType  &x,
-            const Scalar tol = std::sqrt(NumTraits<Scalar>::epsilon())
+            const Scalar tol = numext::sqrt(NumTraits<Scalar>::epsilon())
             );
 
     HybridNonLinearSolverSpace::Status solveInit(FVectorType  &x);
@@ -79,7 +79,7 @@ public:
 
     HybridNonLinearSolverSpace::Status hybrd1(
             FVectorType  &x,
-            const Scalar tol = std::sqrt(NumTraits<Scalar>::epsilon())
+            const Scalar tol = numext::sqrt(NumTraits<Scalar>::epsilon())
             );
 
     HybridNonLinearSolverSpace::Status solveNumericalDiffInit(FVectorType  &x);

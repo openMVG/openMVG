@@ -113,8 +113,8 @@ void MatchesPairToMat
 
   // Load features of Inth and Jnth images
   const features::PointFeatures
-    feature_I = features_provider->feats_per_view.at(pairIndex.first),
-    feature_J = features_provider->feats_per_view.at(pairIndex.second);
+    & feature_I = features_provider->feats_per_view.at(pairIndex.first),
+    & feature_J = features_provider->feats_per_view.at(pairIndex.second);
 
   MatchesPointsToMat(
     putativeMatches,
@@ -123,5 +123,5 @@ void MatchesPairToMat
     x_I, x_J);
 }
 
-} //namespace matching_image_collection
+} // namespace matching_image_collection
 } // namespace openMVG

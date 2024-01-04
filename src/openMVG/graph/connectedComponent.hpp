@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "openMVG/graph/graph_builder.hpp"
+#include "openMVG/system/logger.hpp"
 #include "openMVG/tracks/union_find.hpp"
 #include "openMVG/types.hpp"
 
@@ -95,8 +96,8 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
   std::set<IndexT> largestBiEdgeCC;
 
   const int connectedComponentCount = lemon::countConnectedComponents( putativeGraph.g );
-  std::cout << "\n" << "CleanGraph_KeepLargestBiEdge_Nodes():: => connected Component: "
-            << connectedComponentCount << std::endl;
+  OPENMVG_LOG_INFO << "CleanGraph_KeepLargestBiEdge_Nodes():: => connected Component: "
+            << connectedComponentCount;
   if ( connectedComponentCount >= 1 )
   {
     // Keep only the largest connected component
@@ -114,7 +115,7 @@ std::set<IndexT> CleanGraph_KeepLargestBiEdge_Nodes
         count = iter->second.size();
         iterLargestCC = iter;
       }
-      std::cout << "Connected component of size: " << iter->second.size() << std::endl;
+      OPENMVG_LOG_INFO << "Connected component of size: " << iter->second.size();
     }
 
     //-- Keep only the nodes that are in the largest CC

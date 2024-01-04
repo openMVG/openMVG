@@ -60,7 +60,7 @@
 
 namespace Eigen { 
 
-/** \ingroup IterativeSolvers_Module
+/** \ingroup IterativeLinearSolvers_Module
   * \class IterationController
   *
   * \brief Controls the iterations of the iterative solvers

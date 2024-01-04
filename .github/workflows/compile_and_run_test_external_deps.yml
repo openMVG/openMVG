@@ -1,0 +1,79 @@
+name: CI-external-deps
+
+on:
+  pull_request:
+    branches: [develop]
+
+ # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-tests:
+    name: ubuntu-latest - external deps
+    runs-on: ubuntu-latest
+    env:
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Git submodule
+        run: |
+          mkdir ./build
+          git submodule update -i
+
+      - name: 3rd Party libs
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y git cmake
+
+          cd /tmp
+          git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0
+          mkdir eigen_build
+          cd eigen_build
+          cmake -DCMAKE_BUILD_TYPE=RELEASE /tmp/eigen .
+          sudo make install
+          rm -rf /tmp/eigen
+          rm -rf /tmp/eigen_build
+
+          cd /tmp
+          git clone https://github.com/ceres-solver/ceres-solver.git -b 2.1.0
+          cd ceres-solver
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=RELEASE -DMINIGLOG=ON .. .
+          sudo make install
+          rm -rf /tmp/ceres-solver
+
+          sudo apt-get install -y \
+          cmake \
+          coinor-libclp-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev
+          sudo apt-get autoclean && sudo apt-get clean
+
+      - name: Configure CMake
+        working-directory: ./build
+        run: |
+          cmake ../src \
+          -DOpenMVG_BUILD_SHARED=ON \
+          -DOpenMVG_BUILD_TESTS=ON \
+          -DOpenMVG_BUILD_EXAMPLES=ON \
+          -DOpenMVG_BUILD_SOFTWARES=ON \
+          -DTARGET_ARCHITECTURE=core \
+          -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
+          -DCLP_INCLUDE_DIR_HINTS=/usr/include \
+          -DOSI_INCLUDE_DIR_HINTS=/usr/include
+        shell: bash
+
+      - name: Build
+        working-directory: ./build
+        run: |
+              cmake --build . -- -j$(nproc)
+        shell: bash
+
+
+      - name: Unit Tests
+        working-directory: ./build
+        run: |
+          ctest -j$(nproc) --build-config Release

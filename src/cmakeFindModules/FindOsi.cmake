@@ -4,8 +4,8 @@
 
 FIND_PATH(OSI_DIR OsiConfig.h
     HINTS "${OSI_ROOT}" "$ENV{OSI_ROOT}" "${OSI_INCLUDE_DIR_HINTS}"
-    PATHS "$ENV{PROGRAMFILES}/Osi" "$ENV{PROGRAMW6432}/Osi" "/usr" "/usr/local"
-    PATH_SUFFIXES Osi
+    PATHS "$ENV{PROGRAMFILES}" "$ENV{PROGRAMW6432}" "/usr" "/usr/local"
+    PATH_SUFFIXES coin
     DOC "Root directory of OSI includes")
 
 ##====================================================
@@ -59,10 +59,9 @@ IF(EXISTS "${OSI_DIR}" AND NOT "${OSI_DIR}" STREQUAL "")
 
         MESSAGE(STATUS "Osi ${OSI_VERSION} found (include: ${OSI_INCLUDE_DIRS})")
 ELSE()
-  MESSAGE(FATAL_ERROR "You are attempting to build without Osi. "
+  MESSAGE(STATUS "You are attempting to build without Osi. "
           "Please use cmake variable -DOSI_INCLUDE_DIR_HINTS:STRING=\"PATH\" "
           "or OSI_INCLUDE_DIR_HINTS env. variable to a valid Osi path. "
           "Or install last Osi version.")
-  package_report_not_found(OSI "Osi cannot be found")
 ENDIF()
 ##====================================================

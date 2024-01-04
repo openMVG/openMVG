@@ -26,7 +26,8 @@ bool RelativePoseFromEssential
   Pose3 * relative_pose,
   std::vector<uint32_t> * vec_selected_points,
   std::vector<Vec3> * vec_points,
-  const double positive_depth_solution_ratio
+  const double positive_depth_solution_ratio,
+  const ETriangulationMethod triangulation_method
 )
 {
   // Recover plausible relative poses from E.
@@ -42,22 +43,23 @@ bool RelativePoseFromEssential
   std::vector<std::vector<Vec3>> vec_3D(relative_poses.size());
 
   const Pose3 pose1(Mat3::Identity(), Vec3::Zero());
-  const Mat34 P1 = pose1.asMatrix();
 
   for (size_t i = 0; i < relative_poses.size(); ++i)
   {
-    const Pose3 pose2 = relative_poses[i];
-    const Mat34 P2 = pose2.asMatrix();
+    const Pose3 &pose2 = relative_poses[i];
     Vec3 X;
-
     for (const uint32_t inlier_idx : bearing_vector_index_to_use)
     {
       const auto
         f1 = x1.col(inlier_idx),
         f2 = x2.col(inlier_idx);
-      TriangulateDLT(P1, f1, P2, f2, &X);
-      // Test if X is visible by the two cameras
-      if (CheiralityTest(f1, pose1, f2, pose2, X))
+      if (Triangulate2View
+      (
+        pose1.rotation(), pose1.translation(), f1,
+        pose2.rotation(), pose2.translation(), f2,
+        X,
+        triangulation_method
+      ))
       {
         ++cheirality_accumulator[i];
         vec_newInliers[i].push_back(inlier_idx);

@@ -90,7 +90,7 @@ TEST(Translation_Structure_L_Infinity_Noisy, Outlier_OSICLP_SOLVER) {
             0.0, 1e-8);
 
     std::cout << "Found solution:\n";
-    std::copy(vec_solution.begin(), vec_solution.end(), std::ostream_iterator<double>(std::cout, " "));
+    std::copy(vec_solution.cbegin(), vec_solution.cend(), std::ostream_iterator<double>(std::cout, " "));
 
     //-- First the ti and after the Xi :
 

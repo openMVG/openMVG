@@ -31,9 +31,8 @@ endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pnglibconf.h.prebuilt
                ${CMAKE_CURRENT_BINARY_DIR}/config/pnglibconf.h)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/config/)
 
-set(libpng_public_hdrs 
+set(libpng_public_hdrs
   png.h
   pngconf.h
   ${CMAKE_CURRENT_BINARY_DIR}/config/pnglibconf.h
@@ -64,19 +63,17 @@ set(libpng_sources
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
 endif(MSVC)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ../zlib)
-add_library(png STATIC ${libpng_sources})
-target_link_libraries(png zlib ${M_LIBRARY})
-SET_PROPERTY(TARGET png PROPERTY FOLDER OpenMVG/3rdParty)
+add_library(openMVG_png STATIC ${libpng_sources})
+target_link_libraries(openMVG_png PUBLIC openMVG_zlib ${M_LIBRARY})
+set_property(TARGET openMVG_png PROPERTY FOLDER OpenMVG/3rdParty)
 
-if(PNG_INCLUDE_INSTALL_DIR)
-  set(INCLUDE_INSTALL_DIR ${PNG_INCLUDE_INSTALL_DIR})
-else()
-  set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/png")
-endif()
-
-install(FILES
-  ${libpng_public_hdrs}
-  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
+target_include_directories(openMVG_png PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/config/>
 )
-INSTALL(TARGETS png DESTINATION lib EXPORT openMVG-targets)
+
+install(
+  TARGETS openMVG_png
+  DESTINATION lib
+  EXPORT openMVG-targets
+)

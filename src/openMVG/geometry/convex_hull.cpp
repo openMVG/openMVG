@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/geometry/convex_hull.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <algorithm>
 
@@ -49,10 +50,14 @@ bool ConvexPolygonArea
   if (!polygon.empty())
   {
     if (polygon.front() != polygon.back())
+    {
+      OPENMVG_LOG_ERROR << "We need a closed polygon (first and last point must be the same).";
       return false;
+    }
   }
   else
   {
+    OPENMVG_LOG_WARNING << "Cannot compute the area of an empty polygon.";
     return false;
   }
 
@@ -69,8 +74,11 @@ bool IsIn
   const Polygon2d & polygon
 )
 {
-  if (polygon.size() <= 2) // A point or line does not have any surface
+  if (polygon.size() <= 2)
+  {
+    OPENMVG_LOG_ERROR << "A point or line does not have any surface.";
     return false;
+  }
 
   for (int i = 0; i < polygon.size() - 1; ++i)
   {

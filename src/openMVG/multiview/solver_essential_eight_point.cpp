@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
-#include "openMVG/numeric/nullspace.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 

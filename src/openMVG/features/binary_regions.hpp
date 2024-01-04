@@ -11,8 +11,9 @@
 
 #include <typeinfo>
 
-#include "openMVG/features/regions.hpp"
 #include "openMVG/features/descriptor.hpp"
+#include "openMVG/features/regions.hpp"
+#include "openMVG/features/regions_scale_sort.hpp"
 #include "openMVG/matching/metric.hpp"
 
 namespace openMVG {
@@ -72,7 +73,7 @@ public:
 
   PointFeatures GetRegionsPositions() const override
   {
-    return PointFeatures(vec_feats_.begin(), vec_feats_.end());
+    return {vec_feats_.cbegin(), vec_feats_.cend()};
   }
 
   Vec2 GetRegionPosition(size_t i) const override
@@ -124,6 +125,11 @@ public:
     assert(i < vec_feats_.size() && i < vec_descs_.size());
     static_cast<Binary_Regions<FeatT, L> *>(region_container)->vec_feats_.push_back(vec_feats_[i]);
     static_cast<Binary_Regions<FeatT, L> *>(region_container)->vec_descs_.push_back(vec_descs_[i]);
+  }
+
+  bool SortAndSelectByRegionScale(int keep_count = -1) override
+  {
+    return features::SortAndSelectByRegionScale<FeatT, DescsT>(vec_feats_, vec_descs_, keep_count);
   }
 
 private:

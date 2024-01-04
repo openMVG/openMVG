@@ -233,8 +233,9 @@ void MainWindow::registerProject()
   // - compute a coarse registration between the controls points & the triangulated point
   // - transform the scene according the found transformation
   //---
-  std::map<IndexT, Vec3> vec_control_points, vec_triangulated;
-  std::map<IndexT, double> vec_triangulation_errors;
+  std::map<IndexT, Vec3> map_control_points, map_triangulated;
+  
+  std::map<IndexT, double> map_triangulation_errors;
   for (const auto & control_point_it : m_doc._sfm_data.control_points)
   {
     const Landmark & landmark = control_point_it.second;
@@ -244,6 +245,7 @@ void MainWindow::registerProject()
     std::vector<Mat34> poses;
     bearing.reserve(obs.size());
     poses.reserve(obs.size());
+
     for (const auto & obs_it : obs)
     {
       const View * view = m_doc._sfm_data.views.at(obs_it.first).get();
@@ -264,7 +266,7 @@ void MainWindow::registerProject()
     }
     const Vec3 X = Xhomogeneous.hnormalized();
     // Test validity of the hypothesis (front of the cameras):
-    bool bChierality = true;
+    bool bCheirality = true;
     int i(0);
     double reprojection_error_sum(0.0);
     for (const auto & obs_it : obs)
@@ -274,18 +276,18 @@ void MainWindow::registerProject()
         continue;
 
       const Pose3 pose = m_doc._sfm_data.GetPoseOrDie(view);
-      bChierality &= CheiralityTest(bearing[i], pose, X);
+      bCheirality &= CheiralityTest(bearing[i], pose, X);
       const openMVG::cameras::IntrinsicBase * cam = m_doc._sfm_data.GetIntrinsics().at(view->id_intrinsic).get();
       const Vec2 pt = obs_it.second.x;
       const Vec2 residual = cam->residual(pose(X), pt);
       reprojection_error_sum += residual.norm();
       ++i;
     }
-    if (bChierality) // Keep the point only if it has a positive depth
+    if (bCheirality) // Keep the point only if it has a positive depth
     {
-      vec_triangulated[control_point_it.first] = X;
-      vec_control_points[control_point_it.first] = landmark.X;
-      vec_triangulation_errors[control_point_it.first] = reprojection_error_sum/(double)bearing.size();
+      map_triangulated[control_point_it.first] = X;
+      map_control_points[control_point_it.first] = landmark.X;
+      map_triangulation_errors[control_point_it.first] = reprojection_error_sum/(double)bearing.size();
     }
     else
     {
@@ -294,7 +296,7 @@ void MainWindow::registerProject()
     }
   }
 
-  if (vec_control_points.size() < 3)
+  if (map_control_points.size() < 3)
   {
     QMessageBox msgBox;
     msgBox.setText("Insufficient number of triangulated control points.");
@@ -305,12 +307,15 @@ void MainWindow::registerProject()
   // compute the similarity
   {
     // data conversion to appropriate container
-    Mat x1(3, vec_control_points.size()),
-        x2(3, vec_control_points.size());
-    for (size_t i=0; i < vec_control_points.size(); ++i)
+    Mat x1(3, map_control_points.size()),
+        x2(3, map_control_points.size());
+    
+    IndexT id_col = 0;
+    for (const auto & cp : map_control_points)
     {
-      x1.col(i) = vec_triangulated[i];
-      x2.col(i) = vec_control_points[i];
+      x1.col(id_col) = map_triangulated[cp.first];
+      x2.col(id_col) = cp.second;
+      ++id_col;
     }
 
     std::cout
@@ -345,14 +350,14 @@ void MainWindow::registerProject()
       {
         const IndexT CPIndex = iterL->first;
         // If the control point has not been used, continue...
-        if (vec_triangulation_errors.find(CPIndex) == vec_triangulation_errors.end())
+        if (map_triangulation_errors.find(CPIndex) == map_triangulation_errors.end())
           continue;
 
         os
           << "CP index: " << CPIndex << "\n"
-          << "CP triangulation error: " << vec_triangulation_errors[CPIndex] << " pixel(s)\n"
+          << "CP triangulation error: " << map_triangulation_errors[CPIndex] << " pixel(s)\n"
           << "CP registration error: "
-          << (sim(vec_triangulated[CPIndex]) - vec_control_points[CPIndex]).norm() << " user unit(s)"<< "\n\n";
+          << (sim(map_triangulated[CPIndex]) - map_control_points[CPIndex]).norm() << " user unit(s)"<< "\n\n";
       }
       std::cout << os.str();
 

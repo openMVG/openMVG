@@ -13,6 +13,7 @@
 #include "openMVG/sfm/sfm_filters.hpp"
 #include "openMVG/sfm/pipelines/global/sfm_global_reindex.hpp"
 #include "openMVG/stl/stlMap.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "third_party/histogram/histogram.hpp"
 
@@ -59,9 +60,9 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
     }
   break;
     default:
-    std::cerr
+    OPENMVG_LOG_ERROR
       << "Unknown relative rotation inference method: "
-      << (int) eRelativeRotationInferenceMethod << std::endl;
+      << (int) eRelativeRotationInferenceMethod;
   }
 
   // Compute contiguous index (mapping between sparse index and contiguous index)
@@ -116,9 +117,10 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
       bSuccess = rotation_averaging::l1::GlobalRotationsRobust(
         relativeRotations, vec_globalR, nMainViewID, 0.0f, &vec_inliers);
 
-      std::cout << "\ninliers: " << std::endl;
-      std::copy(vec_inliers.begin(), vec_inliers.end(), std::ostream_iterator<bool>(std::cout, " "));
-      std::cout << std::endl;
+      std::ostringstream os;
+      os  << "\ninliers:\n";
+      std::copy(vec_inliers.begin(), vec_inliers.end(), std::ostream_iterator<bool>(os, " "));
+      OPENMVG_LOG_INFO << os.str();
 
       // save kept pairs (restore original pose indices using the backward reindexing)
       for (size_t i = 0; i < vec_inliers.size(); ++i)
@@ -126,16 +128,14 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
         if (vec_inliers[i])
         {
           used_pairs.insert(
-            Pair(reindexBackward[relativeRotations[i].i],
-                 reindexBackward[relativeRotations[i].j]));
+            {reindexBackward[relativeRotations[i].i],
+            reindexBackward[relativeRotations[i].j]});
         }
       }
     }
     break;
     default:
-    std::cerr
-      << "Unknown rotation averaging method: "
-      << (int) eRotationAveragingMethod << std::endl;
+    OPENMVG_LOG_ERROR << "Unknown rotation averaging method: " << (int) eRotationAveragingMethod;
   }
 
   if (bSuccess)
@@ -146,7 +146,7 @@ bool GlobalSfM_Rotation_AveragingSolver::Run(
     }
   }
   else {
-    std::cerr << "Global rotation solving failed." << std::endl;
+    OPENMVG_LOG_ERROR << "Global rotation solving failed.";
   }
 
   return bSuccess;
@@ -225,8 +225,9 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   std::transform(map_relatives.cbegin(), map_relatives.cend(), std::inserter(used_pairs, used_pairs.begin()), stl::RetrieveKey());
 
   // Display statistics about rotation triplets error:
-  std::cout << "\nStatistics about rotation triplets:" << std::endl;
-  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend());
+  std::ostringstream os;
+  os << "Statistics about rotation triplets:\n";
+  minMaxMeanMedian<float>(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend(), os);
 
   std::sort(vec_errToIdentityPerTriplet.begin(), vec_errToIdentityPerTriplet.end());
 
@@ -234,19 +235,20 @@ void GlobalSfM_Rotation_AveragingSolver::TripletRotationRejection(
   {
     Histogram<float> histo(0.0f, *max_element(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend()), 20);
     histo.Add(vec_errToIdentityPerTriplet.cbegin(), vec_errToIdentityPerTriplet.cend());
-    std::cout << histo.ToString() << std::endl;
+    os << histo.ToString() << "\n";
   }
 
   {
-    std::cout << "\nTriplets filtering based on composition error on unit cycles\n";
-    std::cout << "#Triplets before: " << vec_triplets.size() << "\n"
-    << "#Triplets after: " << vec_triplets_validated.size() << std::endl;
+    os << "\nTriplets filtering based on unit cycle rotation composition error:"
+      << "\n#Triplets before: " << vec_triplets.size()
+      << "\n#Triplets after: " << vec_triplets_validated.size();
+    OPENMVG_LOG_INFO << os.str();
   }
 
   vec_triplets = std::move(vec_triplets_validated);
 
   const size_t edges_end_count = relativeRotations.size();
-  std::cout << "\n #Edges removed by triplet inference: " << edges_start_count - edges_end_count << std::endl;
+  OPENMVG_LOG_INFO << "\n #Edges removed by triplet inference: " << edges_start_count - edges_end_count;
 }
 
 } // namespace sfm

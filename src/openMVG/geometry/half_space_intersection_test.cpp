@@ -17,7 +17,6 @@
 
 using namespace openMVG;
 using namespace openMVG::geometry::halfPlane;
-using namespace std;
 
 TEST(HALF_PLANE, ExistingSubspace) {
 

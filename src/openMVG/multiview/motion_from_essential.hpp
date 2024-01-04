@@ -9,6 +9,7 @@
 
 #include "openMVG/geometry/pose3.hpp"
 #include "openMVG/numeric/eigen_alias_definition.hpp"
+#include "openMVG/multiview/triangulation_method.hpp"
 
 namespace openMVG
 {
@@ -41,7 +42,8 @@ bool RelativePoseFromEssential
   geometry::Pose3 * relative_pose = nullptr,
   std::vector<uint32_t> * vec_selected_points = nullptr,
   std::vector<Vec3> * vec_points = nullptr,
-  const double positive_depth_solution_ratio = 0.7
+  const double positive_depth_solution_ratio = 0.7,
+  const ETriangulationMethod triangulation_method = ETriangulationMethod::DEFAULT
 );
 
 } // namespace openMVG

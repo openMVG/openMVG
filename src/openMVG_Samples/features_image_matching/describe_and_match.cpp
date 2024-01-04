@@ -21,7 +21,6 @@
 
 using namespace openMVG;
 using namespace openMVG::image;
-using namespace std;
 
 int main(int argc, char **argv) {
 
@@ -47,9 +46,9 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
   }
 
-  const string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string jpg_filenameL = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  const string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string jpg_filenameR = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
@@ -69,7 +68,7 @@ int main(int argc, char **argv) {
     image_describer = AKAZE_Image_describer::create
       (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB));
 
-  if (image_describer == nullptr)
+  if (!image_describer)
   {
     std::cerr << "Invalid Image_describer type" << std::endl;
     return EXIT_FAILURE;
@@ -90,7 +89,7 @@ int main(int argc, char **argv) {
     //- Show images side by side
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    const string out_filename = "00_images.jpg";
+    const std::string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 

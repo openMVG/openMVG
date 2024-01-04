@@ -256,4 +256,4 @@ public:
 
 } // end namespace Eigen
 
-#endif // EIGEN_COMPRESSED_STORAGE_H
+#endif // EIGEN_SKYLINE_STORAGE_H

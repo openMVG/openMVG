@@ -67,7 +67,7 @@ enable_testing()
 option(MINIGLOG "Use a stripped down version of glog." ON)
 option(GFLAGS "Enable Google Flags." OFF)
 option(SUITESPARSE "Enable SuiteSparse." OFF)
-option(CXSPARSE "Enable CXSparse." ON)
+option(CXSPARSE "Enable CXSparse." OFF)
 option(LAPACK "Enable use of LAPACK." ON)
 # Template specializations for the Schur complement based solvers. If
 # compile time, binary size or compiler performance is an issue, you
@@ -78,15 +78,8 @@ option(CUSTOM_BLAS
        ON)
 # Multithreading using OpenMP
 option(OPENMP "Enable threaded solving in Ceres (requires OpenMP)" ON)
-# Enable the use of Eigen as a sparse linear algebra library for
-# solving the nonlinear least squares problems. Enabling this
-# option will result in an LGPL licensed version of Ceres Solver
-# as the Simplicial Cholesky factorization in Eigen is licensed under the LGPL.
-# This does not affect the covariance estimation algorithm, as it
-# depends on the sparse QR factorization algorithm, which is licensed
-# under the MPL.
 OPTION(EIGENSPARSE
-  "Enable Eigen as a sparse linear algebra library, WARNING: results in an LGPL licensed Ceres." OFF)
+  "Enable Eigen as a sparse linear algebra library." ON)
 if (NOT MSVC)
   # Ceres does not use C++11 internally, however it does use shared_ptr
   # (required) and unordered_map (if available), both of which were present in
@@ -109,7 +102,7 @@ option(EXPORT_BUILD_DIR
 option(BUILD_TESTING "Enable tests" OFF)
 option(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
-option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
+#option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
 if (MSVC)
   option(MSVC_USE_STATIC_CRT
     "MS Visual Studio: Use static C-Run Time Library in place of shared." OFF)
@@ -161,7 +154,7 @@ if (IOS)
   message(STATUS "Building for iOS: Forcing use of miniglog instead of glog.")
 
   update_cache_variable(SUITESPARSE OFF)
-  update_cache_variable(CXSPARSE ON)
+  update_cache_variable(CXSPARSE OFF)
   update_cache_variable(GFLAGS OFF)
   update_cache_variable(OPENMP OFF)
   # Apple claims that the BLAS call dsyrk_ is a private API, and will not allow
@@ -295,7 +288,7 @@ if (CXSPARSE)
   set(CXSPARSE_FOUND ON)
   message("-- Found CXSparse in: ${CXSPARSE_INCLUDE_DIRS}, "
       "building with CXSparse.")
-  set(CXSPARSE_LIBRARIES cxsparse)
+  set(CXSPARSE_LIBRARIES openMVG_cxsparse)
 else (CXSPARSE)
   message("-- Building without CXSPARSE.")
   list(APPEND CERES_COMPILE_OPTIONS CERES_NO_CXSPARSE)
@@ -735,23 +728,23 @@ else (BUILD_EXAMPLES)
 endif (BUILD_EXAMPLES)
 
 # Setup installation of Ceres public headers.
-file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
-install(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
+#file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
+#install(FILES ${CERES_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR})
 
-file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
-install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+#file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
+#install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
 # Also setup installation of Ceres config.h configured with the current
 # build options into the installed headers directory.
-install(FILES ${Ceres_BINARY_DIR}/config/ceres/internal/config.h
-        DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
+#install(FILES ${Ceres_BINARY_DIR}/config/ceres/internal/config.h
+#        DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/internal)
 
-if (MINIGLOG)
-  # Install miniglog header if being used as logging #includes appear in
-  # installed public Ceres headers.
-  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
-          DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
-endif (MINIGLOG)
+#if (MINIGLOG)
+#  # Install miniglog header if being used as logging #includes appear in
+#  # installed public Ceres headers.
+#  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
+#          DESTINATION ${CERES_INCLUDE_INSTALL_DIR}/miniglog/glog)
+#endif (MINIGLOG)
 
 message("   ===============================================================")
 message("   Ceres-solver configuration end.")

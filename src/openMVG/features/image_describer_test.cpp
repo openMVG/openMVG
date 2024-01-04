@@ -9,7 +9,7 @@
 // The <cereal/archives> headers are special and must be included first.
 #include <cereal/archives/json.hpp>
 
-#include "openMVG/features/image_describer_akaze_io.hpp"
+#include "openMVG/features/akaze/image_describer_akaze_io.hpp"
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "openMVG/features/regions_factory_io.hpp"
 
@@ -21,9 +21,6 @@
 
 using namespace openMVG;
 using namespace openMVG::features;
-using namespace std;
-
-using std::string;
 
 bool SaveAndLoad
 (
@@ -32,8 +29,8 @@ bool SaveAndLoad
 {
   const std::string sImage_describer = stlplus::create_filespec("./", "image_describer", "json");
   {
-    std::ofstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    std::ofstream stream(sImage_describer);
+    if (!stream)
       return false;
 
     try
@@ -55,8 +52,8 @@ bool SaveAndLoad
 
   {
     // Dynamically load the image_describer from the file (will restore old used settings)
-    std::ifstream stream(sImage_describer.c_str());
-    if (!stream.is_open())
+    std::ifstream stream(sImage_describer);
+    if (!stream)
       return false;
     try
     {

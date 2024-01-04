@@ -25,6 +25,7 @@ openMVG provides solver for the following geometric estimation:
 
   * 8 to n pt (Direct Linear Transform) [HZ]_,
   * 5pt + intrinsic [Stewenius]_, [Nister]_.
+  * 3pt orthographic [Magnus]_.
 
 N-View geometry estimation
 ============================
@@ -83,7 +84,7 @@ The relation :math:`x'^T_i Fx_i = 0` exists for all corresponding point belongin
    The fundamental matrix and the point to line constraint.
 
 The fundamental matrix is sometime called bifocal-tensor, it is a 3 x 3 matrix of rank 2
-with 7 degree of freedom. 8 ou 7 correspondences are sufficient to compute the :math:`F` matrix.
+with 7 degree of freedom. 8 or 7 non-coplanar correspondences are sufficient to compute the :math:`F` matrix.
 Implementation follows the DLT (Direct Linear Transform) explained in [HZ]_ book.
 
 Relative pose estimation (Essential matrix)
@@ -120,11 +121,12 @@ It consists in estimating the camera parameters of the right camera that minimiz
 	
    Residual error.
 
-openMVG provides 3 different solvers for this problem:
+openMVG provides 4 different solvers for this problem:
 
 * 6pt Direct Linear Transform [HZ]_,
-* 3pt with intrinsic EPnP [Ke]_,  
+* 3pt with intrinsic P3P [Ke]_,  
 * 3pt with intrinsic P3P [Kneip]_.
+* 3pt with intrinsic P3P [Nordberg]_,
 
 Kernel concept
 ---------------------

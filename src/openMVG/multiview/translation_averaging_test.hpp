@@ -20,9 +20,9 @@
 #include "openMVG/multiview/test_data_sets.hpp"
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/numeric/numeric.h"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "testing/testing.h"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 int modifiedMod
 (
@@ -67,12 +67,12 @@ void visibleCamPosToSVGSurface
     svg::svgDrawer svgSurface_GT(size,size);
     for (size_t i = 0; i  < vec_Ci.size(); ++i)
     {
-      svgSurface_GT.drawCircle(out[i](0), out[i](2),
-                               3,svg::svgStyle().stroke("black",0.2).fill("red"));
+      svgSurface_GT << svg::drawCircle(out[i](0), out[i](2),
+                               3,svg::svgAttributes().stroke("black",0.2).fill("red"));
     }
     std::ostringstream osSvgGT;
     osSvgGT << fileName;
-    std::ofstream svgFileGT( osSvgGT.str().c_str());
+    std::ofstream svgFileGT( osSvgGT.str());
     svgFileGT << svgSurface_GT.closeSvgFile().str();
   }
 }

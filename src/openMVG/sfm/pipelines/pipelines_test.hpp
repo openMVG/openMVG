@@ -36,8 +36,8 @@ struct Synthetic_Features_Provider : public Features_Provider
       for (Mat2X::Index i = 0; i < synthetic_data._x[j].cols(); ++i)
       {
         const Vec2 pt = synthetic_data._x[j].col(i);
-        feats_per_view[j].push_back(
-          features::PointFeature(pt(0)+noise(generator), pt(1)+noise(generator)));
+        feats_per_view[j].emplace_back(pt(0) + noise(generator),
+                                       pt(1) + noise(generator));
       }
     }
     return true;
@@ -140,14 +140,14 @@ SfM_Data getInputScene
       break;
       case cameras::PINHOLE_CAMERA_RADIAL1:
         sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K1>
-          (w, h, config._fx, config._cx, config._cy, 0.0);
+          (w, h, config._fx, config._cx, config._cy);
       break;
       case cameras::PINHOLE_CAMERA_RADIAL3:
         sfm_data.intrinsics[0] = std::make_shared<cameras::Pinhole_Intrinsic_Radial_K3>
-          (w, h, config._fx, config._cx, config._cy, 0., 0., 0.);
+          (w, h, config._fx, config._cx, config._cy);
       break;
       default:
-        std::cout << "Not yet supported" << std::endl;
+        OPENMVG_LOG_ERROR << "This camera model is not yet supported for this test";
     }
   }
 

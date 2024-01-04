@@ -26,6 +26,7 @@ class Exif_IO
 {
   public:
 
+    virtual ~Exif_IO() = default;
     /**
     * @brief Get image width
     * @return Width of the image (in pixel)
@@ -58,7 +59,7 @@ class Exif_IO
     virtual float getFocalPlaneXResolution() const = 0;
 
     /**
-    * @brief Get FocalPlaneYResolution 
+    * @brief Get FocalPlaneYResolution
     * @return Number of pixels in the image height (Y) direction per
     *           FocalPlaneResolutionUnit on the camera focal plane.
     */
@@ -141,4 +142,3 @@ class Exif_IO
 } // namespace openMVG
 
 #endif // OPENMVG_EXIF_EXIF_IO_HPP
-

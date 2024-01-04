@@ -51,7 +51,7 @@ bool isNotEmpty
     cstraint.constraint_objective_.resize( nbConstraints );
 
     // Fill the constrains (half-space equations)
-    for ( unsigned char i = 0; i < hplanes.size(); ++i )
+    for (size_t i = 0; i < hplanes.size(); ++i)
     {
       const Vec & half_plane_coeff = hplanes[i].coeffs();
       // add the half plane equation to the system

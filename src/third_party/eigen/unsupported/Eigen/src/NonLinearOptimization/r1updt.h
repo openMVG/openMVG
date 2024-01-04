@@ -22,7 +22,7 @@ void r1updt(
     Scalar temp;
     JacobiRotation<Scalar> givens;
 
-    // r1updt had a broader usecase, but we dont use it here. And, more
+    // r1updt had a broader usecase, but we don't use it here. And, more
     // importantly, we can not test it.
     eigen_assert(m==n);
     eigen_assert(u.size()==m);

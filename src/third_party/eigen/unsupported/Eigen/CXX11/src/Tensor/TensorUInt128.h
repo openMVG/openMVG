@@ -23,6 +23,7 @@ struct static_val {
 
   template <typename T>
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE static_val(const T& v) {
+    EIGEN_UNUSED_VARIABLE(v);
     eigen_assert(v == n);
   }
 };

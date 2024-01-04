@@ -73,11 +73,8 @@ TEST(SEQUENTIAL_SFM, Known_Intrinsics) {
   sfmEngine.Set_Intrinsics_Refinement_Type(cameras::Intrinsic_Parameter_Type::NONE);
 
   // Will use view ids (0,1) as the initial pair
-  Views::const_iterator iter_view_0 = sfm_data_2.GetViews().begin();
-  Views::const_iterator iter_view_1 = sfm_data_2.GetViews().begin();
-  std::advance(iter_view_1, 1);
-  sfmEngine.setInitialPair({iter_view_0->second->id_view,
-                            iter_view_1->second->id_view});
+  sfmEngine.setInitialPair({sfm_data_2.GetViews().at(0)->id_view,
+                            sfm_data_2.GetViews().at(1)->id_view});
 
   EXPECT_TRUE (sfmEngine.Process());
 

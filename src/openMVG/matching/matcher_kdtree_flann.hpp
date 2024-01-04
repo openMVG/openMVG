@@ -171,8 +171,8 @@ class ArrayMatcher_Kdtree_Flann : public ArrayMatcher<Scalar, Metric>
 
   private:
 
-  std::unique_ptr< flann::Matrix<Scalar>> datasetM_;
-  std::unique_ptr< flann::Index<Metric>> index_;
+  std::unique_ptr<flann::Matrix<Scalar>> datasetM_;
+  std::unique_ptr<flann::Index<Metric>> index_;
   std::size_t dimension_;
 };
 

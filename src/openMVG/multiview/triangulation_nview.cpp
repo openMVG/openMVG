@@ -17,18 +17,18 @@ namespace openMVG {
 void TriangulateNView
 (
   const Mat3X &x,
-  const std::vector<Mat34> &Ps,
+  const std::vector<Mat34> &poses,
   Vec4 *X
 )
 {
   assert(X != nullptr);
   const Mat2X::Index nviews = x.cols();
-  assert(static_cast<size_t>(nviews) == Ps.size());
+  assert(static_cast<size_t>(nviews) == poses.size());
 
   Mat A = Mat::Zero(3 * nviews, 4 + nviews);
   for (Mat::Index i = 0; i < nviews; ++i)
   {
-    A.block<3, 4>(3 * i, 0)     = -Ps[i];
+    A.block<3, 4>(3 * i, 0)     = -poses[i];
     A.block<3,1> (3 * i, 4 + i) = x.col(i);
   }
   Vec X_and_alphas(4 + nviews);
@@ -39,8 +39,8 @@ void TriangulateNView
 bool TriangulateNViewAlgebraic
 (
   const Mat3X & points,
-  const std::vector<Mat34>& poses,
-  Vec4* X
+  const std::vector<Mat34> &poses,
+  Vec4 *X
 )
 {
   assert(poses.size() == points.cols());

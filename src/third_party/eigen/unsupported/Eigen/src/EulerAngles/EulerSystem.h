@@ -12,13 +12,13 @@
 
 namespace Eigen
 {
-  // Forward declerations
+  // Forward declarations
   template <typename _Scalar, class _System>
   class EulerAngles;
   
   namespace internal
   {
-    // TODO: Check if already exists on the rest API
+    // TODO: Add this trait to the Eigen internal API?
     template <int Num, bool IsPositive = (Num > 0)>
     struct Abs
     {
@@ -36,6 +36,12 @@ namespace Eigen
     {
       enum { value = Axis != 0 && Abs<Axis>::value <= 3 };
     };
+    
+    template<typename System,
+            typename Other,
+            int OtherRows=Other::RowsAtCompileTime,
+            int OtherCols=Other::ColsAtCompileTime>
+    struct eulerangles_assign_impl;
   }
   
   #define EIGEN_EULER_ANGLES_CLASS_STATIC_ASSERT(COND,MSG) typedef char static_assertion_##MSG[(COND)?1:-1]
@@ -69,7 +75,7 @@ namespace Eigen
     *
     * You can use this class to get two things:
     *  - Build an Euler system, and then pass it as a template parameter to EulerAngles.
-    *  - Query some compile time data about an Euler system. (e.g. Whether it's tait bryan)
+    *  - Query some compile time data about an Euler system. (e.g. Whether it's Tait-Bryan)
     *
     * Euler rotation is a set of three rotation on fixed axes. (see \ref EulerAngles)
     * This meta-class store constantly those signed axes. (see \ref EulerAxis)
@@ -80,7 +86,7 @@ namespace Eigen
     *  signed axes{+X,+Y,+Z,-X,-Y,-Z} are supported:
     *  - all axes X, Y, Z in each valid order (see below what order is valid)
     *  - rotation over the axis is supported both over the positive and negative directions.
-    *  - both tait bryan and proper/classic Euler angles (i.e. the opposite).
+    *  - both Tait-Bryan and proper/classic Euler angles (i.e. the opposite).
     *
     * Since EulerSystem support both positive and negative directions,
     *  you may call this rotation distinction in other names:
@@ -90,7 +96,7 @@ namespace Eigen
     * Notice all axed combination are valid, and would trigger a static assertion.
     * Same unsigned axes can't be neighbors, e.g. {X,X,Y} is invalid.
     * This yield two and only two classes:
-    *  - _tait bryan_ - all unsigned axes are distinct, e.g. {X,Y,Z}
+    *  - _Tait-Bryan_ - all unsigned axes are distinct, e.g. {X,Y,Z}
     *  - _proper/classic Euler angles_ - The first and the third unsigned axes is equal,
     *     and the second is different, e.g. {X,Y,X}
     *
@@ -112,9 +118,9 @@ namespace Eigen
     *
     * \tparam _AlphaAxis the first fixed EulerAxis
     *
-    * \tparam _AlphaAxis the second fixed EulerAxis
+    * \tparam _BetaAxis the second fixed EulerAxis
     *
-    * \tparam _AlphaAxis the third fixed EulerAxis
+    * \tparam _GammaAxis the third fixed EulerAxis
     */
   template <int _AlphaAxis, int _BetaAxis, int _GammaAxis>
   class EulerSystem
@@ -138,14 +144,16 @@ namespace Eigen
       BetaAxisAbs = internal::Abs<BetaAxis>::value, /*!< the second rotation axis unsigned */
       GammaAxisAbs = internal::Abs<GammaAxis>::value, /*!< the third rotation axis unsigned */
       
-      IsAlphaOpposite = (AlphaAxis < 0) ? 1 : 0, /*!< weather alpha axis is negative */
-      IsBetaOpposite = (BetaAxis < 0) ? 1 : 0, /*!< weather beta axis is negative */
-      IsGammaOpposite = (GammaAxis < 0) ? 1 : 0, /*!< weather gamma axis is negative */
-      
-      IsOdd = ((AlphaAxisAbs)%3 == (BetaAxisAbs - 1)%3) ? 0 : 1, /*!< weather the Euler system is odd */
-      IsEven = IsOdd ? 0 : 1, /*!< weather the Euler system is even */
+      IsAlphaOpposite = (AlphaAxis < 0) ? 1 : 0, /*!< whether alpha axis is negative */
+      IsBetaOpposite = (BetaAxis < 0) ? 1 : 0, /*!< whether beta axis is negative */
+      IsGammaOpposite = (GammaAxis < 0) ? 1 : 0, /*!< whether gamma axis is negative */
 
-      IsTaitBryan = ((unsigned)AlphaAxisAbs != (unsigned)GammaAxisAbs) ? 1 : 0 /*!< weather the Euler system is tait bryan */
+      // Parity is even if alpha axis X is followed by beta axis Y, or Y is followed
+      // by Z, or Z is followed by X; otherwise it is odd.
+      IsOdd = ((AlphaAxisAbs)%3 == (BetaAxisAbs - 1)%3) ? 0 : 1, /*!< whether the Euler system is odd */
+      IsEven = IsOdd ? 0 : 1, /*!< whether the Euler system is even */
+
+      IsTaitBryan = ((unsigned)AlphaAxisAbs != (unsigned)GammaAxisAbs) ? 1 : 0 /*!< whether the Euler system is Tait-Bryan */
     };
     
     private:
@@ -165,142 +173,113 @@ namespace Eigen
     EIGEN_EULER_ANGLES_CLASS_STATIC_ASSERT((unsigned)BetaAxisAbs != (unsigned)GammaAxisAbs,
       BETA_AXIS_CANT_BE_EQUAL_TO_GAMMA_AXIS);
 
-    enum
-    {
+    static const int
       // I, J, K are the pivot indexes permutation for the rotation matrix, that match this Euler system. 
       // They are used in this class converters.
       // They are always different from each other, and their possible values are: 0, 1, or 2.
-      I = AlphaAxisAbs - 1,
-      J = (AlphaAxisAbs - 1 + 1 + IsOdd)%3,
-      K = (AlphaAxisAbs - 1 + 2 - IsOdd)%3
-    };
+      I_ = AlphaAxisAbs - 1,
+      J_ = (AlphaAxisAbs - 1 + 1 + IsOdd)%3,
+      K_ = (AlphaAxisAbs - 1 + 2 - IsOdd)%3
+    ;
     
     // TODO: Get @mat parameter in form that avoids double evaluation.
     template <typename Derived>
     static void CalcEulerAngles_imp(Matrix<typename MatrixBase<Derived>::Scalar, 3, 1>& res, const MatrixBase<Derived>& mat, internal::true_type /*isTaitBryan*/)
     {
       using std::atan2;
-      using std::sin;
-      using std::cos;
+      using std::sqrt;
       
       typedef typename Derived::Scalar Scalar;
-      typedef Matrix<Scalar,2,1> Vector2;
-      
-      res[0] = atan2(mat(J,K), mat(K,K));
-      Scalar c2 = Vector2(mat(I,I), mat(I,J)).norm();
-      if((IsOdd && res[0]<Scalar(0)) || ((!IsOdd) && res[0]>Scalar(0))) {
-        if(res[0] > Scalar(0)) {
-          res[0] -= Scalar(EIGEN_PI);
-        }
-        else {
-          res[0] += Scalar(EIGEN_PI);
-        }
-        res[1] = atan2(-mat(I,K), -c2);
+
+      const Scalar plusMinus = IsEven? 1 : -1;
+      const Scalar minusPlus = IsOdd?  1 : -1;
+
+      const Scalar Rsum = sqrt((mat(I_,I_) * mat(I_,I_) + mat(I_,J_) * mat(I_,J_) + mat(J_,K_) * mat(J_,K_) + mat(K_,K_) * mat(K_,K_))/2);
+      res[1] = atan2(plusMinus * mat(I_,K_), Rsum);
+
+      // There is a singularity when cos(beta) == 0
+      if(Rsum > 4 * NumTraits<Scalar>::epsilon()) {// cos(beta) != 0
+        res[0] = atan2(minusPlus * mat(J_, K_), mat(K_, K_));
+        res[2] = atan2(minusPlus * mat(I_, J_), mat(I_, I_));
       }
-      else
-        res[1] = atan2(-mat(I,K), c2);
-      Scalar s1 = sin(res[0]);
-      Scalar c1 = cos(res[0]);
-      res[2] = atan2(s1*mat(K,I)-c1*mat(J,I), c1*mat(J,J) - s1 * mat(K,J));
+      else if(plusMinus * mat(I_, K_) > 0) {// cos(beta) == 0 and sin(beta) == 1
+        Scalar spos = mat(J_, I_) + plusMinus * mat(K_, J_); // 2*sin(alpha + plusMinus * gamma
+        Scalar cpos = mat(J_, J_) + minusPlus * mat(K_, I_); // 2*cos(alpha + plusMinus * gamma)
+        Scalar alphaPlusMinusGamma = atan2(spos, cpos);
+        res[0] = alphaPlusMinusGamma;
+        res[2] = 0;
+      }
+      else {// cos(beta) == 0 and sin(beta) == -1
+        Scalar sneg = plusMinus * (mat(K_, J_) + minusPlus * mat(J_, I_)); // 2*sin(alpha + minusPlus*gamma)
+        Scalar cneg = mat(J_, J_) + plusMinus * mat(K_, I_);               // 2*cos(alpha + minusPlus*gamma)
+        Scalar alphaMinusPlusBeta = atan2(sneg, cneg);
+        res[0] = alphaMinusPlusBeta;
+        res[2] = 0;
+      }
     }
 
     template <typename Derived>
-    static void CalcEulerAngles_imp(Matrix<typename MatrixBase<Derived>::Scalar,3,1>& res, const MatrixBase<Derived>& mat, internal::false_type /*isTaitBryan*/)
+    static void CalcEulerAngles_imp(Matrix<typename MatrixBase<Derived>::Scalar,3,1>& res,
+                                    const MatrixBase<Derived>& mat, internal::false_type /*isTaitBryan*/)
     {
       using std::atan2;
-      using std::sin;
-      using std::cos;
+      using std::sqrt;
 
       typedef typename Derived::Scalar Scalar;
-      typedef Matrix<Scalar,2,1> Vector2;
-      
-      res[0] = atan2(mat(J,I), mat(K,I));
-      if((IsOdd && res[0]<Scalar(0)) || ((!IsOdd) && res[0]>Scalar(0)))
-      {
-        if(res[0] > Scalar(0)) {
-          res[0] -= Scalar(EIGEN_PI);
-        }
-        else {
-          res[0] += Scalar(EIGEN_PI);
-        }
-        Scalar s2 = Vector2(mat(J,I), mat(K,I)).norm();
-        res[1] = -atan2(s2, mat(I,I));
-      }
-      else
-      {
-        Scalar s2 = Vector2(mat(J,I), mat(K,I)).norm();
-        res[1] = atan2(s2, mat(I,I));
-      }
 
-      // With a=(0,1,0), we have i=0; j=1; k=2, and after computing the first two angles,
-      // we can compute their respective rotation, and apply its inverse to M. Since the result must
-      // be a rotation around x, we have:
-      //
-      //  c2  s1.s2 c1.s2                   1  0   0 
-      //  0   c1    -s1       *    M    =   0  c3  s3
-      //  -s2 s1.c2 c1.c2                   0 -s3  c3
-      //
-      //  Thus:  m11.c1 - m21.s1 = c3  &   m12.c1 - m22.s1 = s3
+      const Scalar plusMinus = IsEven? 1 : -1;
+      const Scalar minusPlus = IsOdd?  1 : -1;
 
-      Scalar s1 = sin(res[0]);
-      Scalar c1 = cos(res[0]);
-      res[2] = atan2(c1*mat(J,K)-s1*mat(K,K), c1*mat(J,J) - s1 * mat(K,J));
+      const Scalar Rsum = sqrt((mat(I_, J_) * mat(I_, J_) + mat(I_, K_) * mat(I_, K_) + mat(J_, I_) * mat(J_, I_) + mat(K_, I_) * mat(K_, I_)) / 2);
+
+      res[1] = atan2(Rsum, mat(I_, I_));
+
+      // There is a singularity when sin(beta) == 0
+      if(Rsum > 4 * NumTraits<Scalar>::epsilon()) {// sin(beta) != 0
+        res[0] = atan2(mat(J_, I_), minusPlus * mat(K_, I_));
+        res[2] = atan2(mat(I_, J_), plusMinus * mat(I_, K_));
+      }
+      else if(mat(I_, I_) > 0) {// sin(beta) == 0 and cos(beta) == 1
+        Scalar spos = plusMinus * mat(K_, J_) + minusPlus * mat(J_, K_); // 2*sin(alpha + gamma)
+        Scalar cpos = mat(J_, J_) + mat(K_, K_);                         // 2*cos(alpha + gamma)
+        res[0] = atan2(spos, cpos);
+        res[2] = 0;
+      }
+      else {// sin(beta) == 0 and cos(beta) == -1
+        Scalar sneg = plusMinus * mat(K_, J_) + plusMinus * mat(J_, K_); // 2*sin(alpha - gamma)
+        Scalar cneg = mat(J_, J_) - mat(K_, K_);                         // 2*cos(alpha - gamma)
+        res[0] = atan2(sneg, cneg);
+        res[2] = 0;
+      }
     }
     
     template<typename Scalar>
     static void CalcEulerAngles(
       EulerAngles<Scalar, EulerSystem>& res,
       const typename EulerAngles<Scalar, EulerSystem>::Matrix3& mat)
-    {
-      CalcEulerAngles(res, mat, false, false, false);
-    }
-    
-    template<
-      bool PositiveRangeAlpha,
-      bool PositiveRangeBeta,
-      bool PositiveRangeGamma,
-      typename Scalar>
-    static void CalcEulerAngles(
-      EulerAngles<Scalar, EulerSystem>& res,
-      const typename EulerAngles<Scalar, EulerSystem>::Matrix3& mat)
-    {
-      CalcEulerAngles(res, mat, PositiveRangeAlpha, PositiveRangeBeta, PositiveRangeGamma);
-    }
-    
-    template<typename Scalar>
-    static void CalcEulerAngles(
-      EulerAngles<Scalar, EulerSystem>& res,
-      const typename EulerAngles<Scalar, EulerSystem>::Matrix3& mat,
-      bool PositiveRangeAlpha,
-      bool PositiveRangeBeta,
-      bool PositiveRangeGamma)
     {
       CalcEulerAngles_imp(
         res.angles(), mat,
         typename internal::conditional<IsTaitBryan, internal::true_type, internal::false_type>::type());
 
-      if (IsAlphaOpposite == IsOdd)
+      if (IsAlphaOpposite)
         res.alpha() = -res.alpha();
         
-      if (IsBetaOpposite == IsOdd)
+      if (IsBetaOpposite)
         res.beta() = -res.beta();
         
-      if (IsGammaOpposite == IsOdd)
+      if (IsGammaOpposite)
         res.gamma() = -res.gamma();
-      
-      // Saturate results to the requested range
-      if (PositiveRangeAlpha && (res.alpha() < 0))
-        res.alpha() += Scalar(2 * EIGEN_PI);
-      
-      if (PositiveRangeBeta && (res.beta() < 0))
-        res.beta() += Scalar(2 * EIGEN_PI);
-      
-      if (PositiveRangeGamma && (res.gamma() < 0))
-        res.gamma() += Scalar(2 * EIGEN_PI);
     }
     
     template <typename _Scalar, class _System>
     friend class Eigen::EulerAngles;
+    
+    template<typename System,
+            typename Other,
+            int OtherRows,
+            int OtherCols>
+    friend struct internal::eulerangles_assign_impl;
   };
 
 #define EIGEN_EULER_SYSTEM_TYPEDEF(A, B, C) \

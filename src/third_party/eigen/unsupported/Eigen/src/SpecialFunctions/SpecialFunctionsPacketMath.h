@@ -38,9 +38,31 @@ Packet perf(const Packet& a) { using numext::erf; return erf(a); }
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet perfc(const Packet& a) { using numext::erfc; return erfc(a); }
 
+/** \internal \returns the ndtri(\a a) (coeff-wise) */
+template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
+Packet pndtri(const Packet& a) {
+  typedef typename unpacket_traits<Packet>::type ScalarType;
+  using internal::generic_ndtri; return generic_ndtri<Packet, ScalarType>(a);
+}
+
 /** \internal \returns the incomplete gamma function igamma(\a a, \a x) */
 template<typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
 Packet pigamma(const Packet& a, const Packet& x) { using numext::igamma; return igamma(a, x); }
+
+/** \internal \returns the derivative of the incomplete gamma function
+ * igamma_der_a(\a a, \a x) */
+template <typename Packet>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pigamma_der_a(const Packet& a, const Packet& x) {
+  using numext::igamma_der_a; return igamma_der_a(a, x);
+}
+
+/** \internal \returns compute the derivative of the sample
+  * of Gamma(alpha, 1) random variable with respect to the parameter a
+  * gamma_sample_der_alpha(\a alpha, \a sample) */
+template <typename Packet>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pgamma_sample_der_alpha(const Packet& alpha, const Packet& sample) {
+  using numext::gamma_sample_der_alpha; return gamma_sample_der_alpha(alpha, sample);
+}
 
 /** \internal \returns the complementary incomplete gamma function igammac(\a a, \a x) */
 template<typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
@@ -55,4 +77,3 @@ Packet pbetainc(const Packet& a, const Packet& b,const Packet& x) { using numext
 } // end namespace Eigen
 
 #endif // EIGEN_SPECIALFUNCTIONS_PACKETMATH_H
-

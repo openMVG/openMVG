@@ -37,7 +37,6 @@ using namespace openMVG::matching;
 using namespace openMVG::cameras;
 using namespace openMVG::geometry;
 using namespace openMVG::sfm;
-using namespace std;
 
 /// Read intrinsic K matrix from a file (ASCII)
 /// F 0 ppx
@@ -52,11 +51,11 @@ bool readIntrinsic(const std::string & fileName, Mat3 & K);
 ///   way 2: independent cameras motion [R|t], shared focal [f] and structure
 int main() {
 
-  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  const string jpg_filenameL = sInputDir + "100_7101.jpg";
-  const string jpg_filenameR = sInputDir + "100_7102.jpg";
+  const std::string jpg_filenameL = sInputDir + "100_7101.jpg";
+  const std::string jpg_filenameR = sInputDir + "100_7102.jpg";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -82,7 +81,7 @@ int main() {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -236,24 +235,28 @@ int main() {
     const Pose3 pose1 = tiny_scene.poses[tiny_scene.views[1]->id_pose] = relativePose_info.relativePose;
 
     // Init structure by inlier triangulation
-    const Mat34 P1 = tiny_scene.intrinsics[tiny_scene.views[0]->id_intrinsic]->get_projective_equivalent(pose0);
-    const Mat34 P2 = tiny_scene.intrinsics[tiny_scene.views[1]->id_intrinsic]->get_projective_equivalent(pose1);
     Landmarks & landmarks = tiny_scene.structure;
-    for (size_t i = 0; i < relativePose_info.vec_inliers.size(); ++i)  {
-      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_];
-      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_];
+    for (const auto inlier_idx : relativePose_info.vec_inliers)  {
+      const SIOPointFeature & LL = regionsL->Features()[vec_PutativeMatches[inlier_idx].i_];
+      const SIOPointFeature & RR = regionsR->Features()[vec_PutativeMatches[inlier_idx].j_];
       // Point triangulation
       Vec3 X;
-      TriangulateDLT(
-        P1, LL.coords().cast<double>().homogeneous(),
-        P2, RR.coords().cast<double>().homogeneous(), &X);
-      // Reject point that is behind the camera
-      if (pose0.depth(X) < 0 && pose1.depth(X) < 0)
-        continue;
-      // Add a new landmark (3D point with it's 2d observations)
-      landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_);
-      landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_);
-      landmarks[i].X = X;
+      const ETriangulationMethod triangulation_method = ETriangulationMethod::DEFAULT;
+      if (Triangulate2View
+      (
+        pose0.rotation(), pose0.translation(), (*tiny_scene.intrinsics[0])(LL.coords().cast<double>()),
+        pose1.rotation(), pose1.translation(), (*tiny_scene.intrinsics[1])(RR.coords().cast<double>()),
+        X,
+        triangulation_method
+      ))
+      {
+        // Add a new landmark (3D point with it's 2d observations)
+        Landmark landmark;
+        landmark.obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[inlier_idx].i_);
+        landmark.obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[inlier_idx].j_);
+        landmark.X = X;
+        landmarks.insert({landmarks.size(), landmark});
+      }
     }
     Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));
 
@@ -274,9 +277,9 @@ int main() {
 bool readIntrinsic(const std::string & fileName, Mat3 & K)
 {
   // Load the K matrix
-  ifstream in;
-  in.open( fileName.c_str(), ifstream::in);
-  if (in.is_open())  {
+  std::ifstream in;
+  in.open(fileName.c_str(), std::ifstream::in);
+  if (in)  {
     for (int j=0; j < 3; ++j)
       for (int i=0; i < 3; ++i)
         in >> K(j,i);

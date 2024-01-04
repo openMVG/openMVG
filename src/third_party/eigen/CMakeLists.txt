@@ -1,12 +1,14 @@
-project(Eigen3)
+# cmake_minimum_require must be the first command of the file
+cmake_minimum_required(VERSION 3.5.0)
 
-cmake_minimum_required(VERSION 2.8.5)
+project(Eigen3)
 
 # guard against in-source builds
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt. ")
 endif()
+
 
 # Alias Eigen_*_DIR to Eigen3_*_DIR:
 
@@ -17,13 +19,6 @@ set(Eigen_BINARY_DIR ${Eigen3_BINARY_DIR})
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
-endif()
-
-string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-if(    NOT cmake_build_type_tolower STREQUAL "debug"
-   AND NOT cmake_build_type_tolower STREQUAL "release"
-   AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo")
-  message(FATAL_ERROR "Unknown build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release, RelWithDebInfo (case-insensitive).")
 endif()
 
 
@@ -41,22 +36,25 @@ string(REGEX MATCH "define[ \t]+EIGEN_MINOR_VERSION[ \t]+([0-9]+)" _eigen_minor_
 set(EIGEN_MINOR_VERSION "${CMAKE_MATCH_1}")
 set(EIGEN_VERSION_NUMBER ${EIGEN_WORLD_VERSION}.${EIGEN_MAJOR_VERSION}.${EIGEN_MINOR_VERSION})
 
-# if the mercurial program is absent, this will leave the EIGEN_HG_CHANGESET string empty,
-# but won't stop CMake.
-execute_process(COMMAND hg tip -R ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE EIGEN_HGTIP_OUTPUT)
-execute_process(COMMAND hg branch -R ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE EIGEN_BRANCH_OUTPUT)
+# if we are not in a git clone
+if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
+  # if the git program is absent or this will leave the EIGEN_GIT_REVNUM string empty,
+  # but won't stop CMake.
+  execute_process(COMMAND git ls-remote --refs -q ${CMAKE_SOURCE_DIR} HEAD OUTPUT_VARIABLE EIGEN_GIT_OUTPUT)
+endif()
 
-# if this is the default (aka development) branch, extract the mercurial changeset number from the hg tip output...
-if(EIGEN_BRANCH_OUTPUT MATCHES "default")
-string(REGEX MATCH "^changeset: *[0-9]*:([0-9;a-f]+).*" EIGEN_HG_CHANGESET_MATCH "${EIGEN_HGTIP_OUTPUT}")
-set(EIGEN_HG_CHANGESET "${CMAKE_MATCH_1}")
-endif(EIGEN_BRANCH_OUTPUT MATCHES "default")
+# extract the git rev number from the git output...
+if(EIGEN_GIT_OUTPUT)
+string(REGEX MATCH "^([0-9;a-f]+).*" EIGEN_GIT_CHANGESET_MATCH "${EIGEN_GIT_OUTPUT}")
+set(EIGEN_GIT_REVNUM "${CMAKE_MATCH_1}")
+endif()
 #...and show it next to the version number
-if(EIGEN_HG_CHANGESET)
-  set(EIGEN_VERSION "${EIGEN_VERSION_NUMBER} (mercurial changeset ${EIGEN_HG_CHANGESET})")
-else(EIGEN_HG_CHANGESET)
+if(EIGEN_GIT_REVNUM)
+  set(EIGEN_VERSION "${EIGEN_VERSION_NUMBER} (git rev ${EIGEN_GIT_REVNUM})")
+else()
   set(EIGEN_VERSION "${EIGEN_VERSION_NUMBER}")
-endif(EIGEN_HG_CHANGESET)
+endif()
+
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -64,10 +62,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 # Backward compatibility support for EIGEN_INCLUDE_INSTALL_DIR
 if(EIGEN_INCLUDE_INSTALL_DIR)
-  message(WARNING "EIGEN_INCLUDE_INSTALL_DIR is deprecated. Use INCLUDE_INSTALL_DIR instead.")
-endif()
-
-if(EIGEN_INCLUDE_INSTALL_DIR AND NOT INCLUDE_INSTALL_DIR)
+  #message(WARNING "EIGEN_INCLUDE_INSTALL_DIR is deprecated. Use INCLUDE_INSTALL_DIR instead.")
   set(INCLUDE_INSTALL_DIR ${EIGEN_INCLUDE_INSTALL_DIR}
       CACHE PATH "The directory relative to CMAKE_PREFIX_PATH where Eigen header files are installed")
 else()
@@ -86,7 +81,6 @@ set(PKGCONFIG_INSTALL_DIR
     )
 
 add_subdirectory(Eigen)
-
 add_subdirectory(unsupported)
 
 message(STATUS "")

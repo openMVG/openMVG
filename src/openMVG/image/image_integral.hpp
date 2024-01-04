@@ -11,7 +11,6 @@
 
 #include "openMVG/image/image_container.hpp"
 
-#include <iostream>
 namespace openMVG
 {
 namespace image

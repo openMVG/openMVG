@@ -46,15 +46,17 @@ Arguments description:
     - AUTO: auto choice from regions type,
     - For Scalar based descriptor you can use:
     
-      - BRUTEFORCEL2: BruteForce L2 matching for Scalar based regions descriptor,
-      - ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based regions descriptor,
+      - BRUTEFORCEL2: BruteForce L2 matching for Scalar based region descriptors,
+      - ANNL2: Approximate Nearest Neighbor L2 matching for Scalar based region descriptors,
+      - HNSWL2: Approximate Nearest Neighbor using L2 metric for Scalar based region descriptors,
+      - HNSWL1: Approximate Nearest Neighbor using L1 metric for quantized (as unsigned char) region descriptors,
       - CASCADEHASHINGL2: L2 Cascade Hashing matching,
       - FASTCASCADEHASHINGL2: (default).
           L2 Cascade Hashing with precomputed hashed regions,
           (faster than CASCADEHASHINGL2 but use more memory).
-    - For Binary based descriptor you must use:
-    
-      - BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based regions descriptor,
+    - For Binary based descriptor you should use:
+      - BRUTEFORCEHAMMING: BruteForce Hamming matching for binary based region descriptors,
+      - HNSWL1: Approximate Nearest Neighbor using Hamming distance for binary based region descriptors,
 
   - **[-v|--video_mode_matching]**
   

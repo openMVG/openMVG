@@ -11,11 +11,8 @@
 #include "openMVG/graph/connectedComponent.hpp"
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/graph/graph_builder.hpp"
-#include "openMVG/stl/stl.hpp"
 #include "openMVG/types.hpp"
 
-#include <fstream>
-#include <iosfwd>
 
 namespace openMVG {
 namespace sfm {

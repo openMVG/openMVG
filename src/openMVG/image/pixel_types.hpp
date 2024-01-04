@@ -134,23 +134,6 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
     //------------------------------
 
     /**
-    * @brief stream operator
-    * @param os Stream in which rgb value is outputed
-    * @param col Color to store into the stream
-    * @return stream after output
-    */
-    friend std::ostream& operator<<( std::ostream& os, const Rgb& col )
-    {
-      os << " {";
-      for (int i = 0; i < 2; ++i )
-      {
-        os << col( i ) << ",";
-      }
-      os << col( 2 ) << "} ";
-      return os;
-    }
-
-    /**
     * @brief scalar division
     * @param val Scalar divisor factor
     * @return Rgb color after scalar division
@@ -178,6 +161,24 @@ class Rgb : public Eigen::Matrix<T, 3, 1, 0, 3, 1>
                   T( ( Z )( *this )( 2 ) * val ) );
     }
 };
+
+/**
+* @brief stream operator
+* @param os Stream in which rgb value is outputed
+* @param col Color to store into the stream
+* @return stream after output
+*/
+template <typename T>
+std::ostream& operator<<( std::ostream& os, const Rgb<T>& col )
+{
+  os << " {";
+  for (int i = 0; i < 2; ++i )
+  {
+    os << col( i ) << ",";
+  }
+  os << col( 2 ) << "} ";
+  return os;
+}
 
 /// Instantiation for unsigned char color component
 using RGBColor = Rgb<unsigned char>;
@@ -323,22 +324,6 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     }
     //-- accessors/getters methods
     //------------------------------
-    /**
-    * @brief stream operator
-    * @param os Stream in which rgb value is outputed
-    * @param col Color to store into the stream
-    * @return stream after output
-    */
-    friend std::ostream& operator<<( std::ostream& os, const Rgba& col )
-    {
-      os << " {";
-      for (int i = 0; i < 3; ++i )
-      {
-        os << col( i ) << ",";
-      }
-      os << col( 3 ) << "} ";
-      return os;
-    }
 
     /**
     * @brief scalar division
@@ -371,10 +356,29 @@ class Rgba : public Eigen::Matrix<T, 4, 1, 0, 4, 1>
     }
 };
 
+/**
+* @brief stream operator
+* @param os Stream in which rgb value is outputed
+* @param col Color to store into the stream
+* @return stream after output
+*/
+template <typename T>
+std::ostream& operator<<( std::ostream& os, const Rgba<T>& col )
+{
+  os << " {";
+  for (int i = 0; i < 3; ++i )
+  {
+    os << col( i ) << ",";
+  }
+  os << col( 3 ) << "} ";
+  return os;
+}
+
 /// Type used to handle RGBA color in unsigned char format for each component
 using RGBAColor = Rgba<unsigned char>;
 
 const RGBColor WHITE( 255, 255, 255 );
+const RGBColor GRAY( 127, 127, 127);
 const RGBColor BLACK( 0, 0, 0 );
 const RGBColor BLUE( 0, 0, 255 );
 const RGBColor RED( 255, 0, 0 );

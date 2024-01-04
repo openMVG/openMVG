@@ -21,6 +21,7 @@
 #include "openMVG/sfm/sfm_view_io.hpp"
 #include "openMVG/sfm/sfm_view_priors_io.hpp"
 #include "openMVG/types.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <fstream>
@@ -96,8 +97,8 @@ bool Load_Cereal(
   const bool b_control_point = (flags_part & CONTROL_POINTS) == CONTROL_POINTS;
 
   //Create the stream and check it is ok
-  std::ifstream stream(filename.c_str(), std::ios::binary | std::ios::in);
-  if (!stream.is_open())
+  std::ifstream stream(filename, std::ios::binary | std::ios::in);
+  if (!stream)
     return false;
 
   // Data serialization
@@ -138,7 +139,7 @@ bool Load_Cereal(
         }
         catch (cereal::Exception& e)
         {
-          std::cerr << e.what() << std::endl;
+          OPENMVG_LOG_ERROR << e.what();
           stream.close();
           return false;
         }
@@ -213,7 +214,7 @@ bool Load_Cereal(
   }
   catch (const cereal::Exception & e)
   {
-    std::cerr << e.what() << std::endl;
+    OPENMVG_LOG_ERROR << e.what();
     stream.close();
     return false;
   }
@@ -239,7 +240,7 @@ bool Save_Cereal(
 
   //Create the stream and check it is ok
   std::ofstream stream(filename.c_str(), std::ios::binary | std::ios::out);
-  if (!stream.is_open())
+  if (!stream)
     return false;
 
   // Data serialization

@@ -8,6 +8,7 @@
 
 #include "openMVG/multiview/translation_averaging_common.hpp"
 #include "openMVG/multiview/translation_averaging_solver.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include <ctime>
 
@@ -104,7 +105,9 @@ bool solve_translations_problem_l2_chordal
   Solver::Options options;
 #ifdef OPENMVG_USE_OPENMP
   options.num_threads = omp_get_max_threads();
+#if CERES_VERSION_MAJOR < 2
   options.num_linear_solver_threads = omp_get_max_threads();
+#endif
 #endif // OPENMVG_USE_OPENMP
   options.minimizer_progress_to_stdout = false;
   options.logging_type = ceres::SILENT;
@@ -116,11 +119,6 @@ bool solve_translations_problem_l2_chordal
   if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE))
   {
     options.sparse_linear_algebra_library_type = ceres::SUITE_SPARSE;
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  }
-  else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::CX_SPARSE))
-  {
-    options.sparse_linear_algebra_library_type = ceres::CX_SPARSE;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   }
   else if (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
@@ -136,7 +134,7 @@ bool solve_translations_problem_l2_chordal
   Solver::Summary summary;
   Solve(options, &problem, &summary);
 
-  std::cout << summary.FullReport() << "\n";
+  OPENMVG_LOG_INFO << summary.FullReport();
 
   if (summary.IsSolutionUsable())
   {

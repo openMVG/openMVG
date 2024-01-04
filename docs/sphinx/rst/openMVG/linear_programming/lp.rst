@@ -47,7 +47,7 @@ openMVG provide access to different solvers (not exhaustive):
 - OSI_CLP (COIN-OR) project,
 - MOSEK commercial, free in a research context.
 
-Those solver have been choosen due to the stability of their results and ability to handle large problems without numerical stability (LPSolve and GPLK have been discarded after extensive experiments).
+Those solver have been chosen due to the stability of their results and ability to handle large problems without numerical stability (LPSolve and GPLK have been discarded after extensive experiments).
 
 I refer the reader to openMVG/src/openMVG/linearProgramming/linear_programming_test.cpp to know more.
 
@@ -65,14 +65,14 @@ The linear programming module of openMVG can be used for:
 Here an example of usage of the framework:
 
 .. code-block:: c++
-  
+
   // Setup the LP (fill A,b,c and the constraint over x)
   LP_Constraints cstraint;
   BuildLinearProblem(cstraint);
 
   // Solve the LP with the solver of your choice
   std::vector<double> vec_solution(2);
-  #if OPENMVG_HAVE_MOSEK  
+  #if OPENMVG_HAVE_MOSEK
     MOSEK_SolveWrapper solver(2);
   #else
     OSI_CLP_SolverWrapper solver(2);
@@ -109,7 +109,7 @@ Optimization of this upper bound parameter can be done by iterating over all the
   Require: gammaLow, gammUp (Low and upper bound of the parameter to optimize)
   Require: the LP problem (cstraintBuilder)
   Ensure: the optimal gamma value, or return infeasibility of the contraints set.
-  
+
   BisectionLP(
     LP_Solver & solver,
     ConstraintBuilder & cstraintBuilder,
@@ -128,7 +128,7 @@ Optimization of this upper bound parameter can be done by iterating over all the
       //-- Setup constraint and solver
       cstraintBuilder.Build(gamma, constraint);
       solver.setup( constraint );
-      
+
       //-- Solving
       bool bFeasible = solver.solve();
 
@@ -136,7 +136,7 @@ Optimization of this upper bound parameter can be done by iterating over all the
       //-> Feasible, update the upper bound
       //-> Not feasible, update the lower bound
       (bFeasible) ? gammaUp = gamma; : gammaLow = gamma;
-      
+
     } while (k < maxIteration && gammaUp - gammaLow > eps);
   }
 
@@ -162,4 +162,3 @@ OpenMVG propose solvers for the following problems:
 
 - Translation averaging:
   - Registration of relative translations to compute global translations [GlobalACSfM]_.
-

@@ -58,7 +58,7 @@ void RelativeCameraMotion( const Mat3 &R1,
                            Vec3 *t );
 
 /**
-* @brief Given F, Left/Right K matrix it compute the Essential matrix
+* @brief Given F, Left/Right K matrix it computes the Essential matrix
 * @param F Fundamental matrix
 * @param K1 Intrinsic matrix of first camera
 * @param K2 Intrinsic matrix of second camera
@@ -84,7 +84,7 @@ void EssentialFromRt( const Mat3 &R1,
                       Mat3 *E );
 
 /**
-* @brief Given E, Left/Right K matrix it compute the Fundamental matrix
+* @brief Given E, Left/Right K matrix it computes the Fundamental matrix
 * @param E Essential matrix
 * @param K1 Intrinsic matrix of first camera
 * @param K2 Intrinsic matrix of second camera

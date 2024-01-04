@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <openMVG/features/svg_features.hpp>
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include <openMVG/system/logger.hpp>
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 namespace openMVG {
 namespace features {
@@ -25,24 +26,25 @@ bool Features2SVG
   svg::svgDrawer svgStream(image_size.first, image_size.second);
 
   // Draw image
-  svgStream.drawImage(image_path, image_size.first, image_size.second);
+  svgStream << svg::drawImage(image_path, image_size.first, image_size.second);
 
   // Draw features
   for (const features::PointFeature & feat_it : features) {
     // Draw the feature (circle)
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x(), feat_it.y(), feature_circle_radius,
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -58,24 +60,25 @@ bool Features2SVG
   svg::svgDrawer svgStream(image_size.first, image_size.second);
 
   // Draw image
-  svgStream.drawImage(image_path, image_size.first, image_size.second);
+  svgStream << svg::drawImage(image_path, image_size.first, image_size.second);
 
   // Draw features
   for (const features::SIOPointFeature & feat_it : features) {
     // Draw the feature (circle)
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x(), feat_it.y(), feat_it.scale(),
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -113,31 +116,32 @@ bool Features2SVG
   svg::svgDrawer svgStream(svg_w, svg_h);
 
   // Draw image side by side
-  svgStream.drawImage(left_image_path, left_image_size.first, left_image_size.second);
-  svgStream.drawImage(right_image_path, right_image_size.first, right_image_size.second,
+  svgStream << svg::drawImage(left_image_path, left_image_size.first, left_image_size.second);
+  svgStream << svg::drawImage(right_image_path, right_image_size.first, right_image_size.second,
     b_vertical_display ? 0 : left_image_size.first,
     b_vertical_display ? left_image_size.second : 0);
 
   // Display feature circles
   for (const features::PointFeature & feat_it : left_features) {
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x(), feat_it.y(), feature_circle_radius,
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
   for (const features::PointFeature & feat_it : right_features) {
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x() + svg_offset_x, feat_it.y() + svg_offset_y, feature_circle_radius,
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename );
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 
@@ -174,31 +178,32 @@ bool Features2SVG
   svg::svgDrawer svgStream(svg_w, svg_h);
 
   // Draw image side by side
-  svgStream.drawImage(left_image_path, left_image_size.first, left_image_size.second);
-  svgStream.drawImage(right_image_path, right_image_size.first, right_image_size.second,
+  svgStream << svg::drawImage(left_image_path, left_image_size.first, left_image_size.second);
+  svgStream << svg::drawImage(right_image_path, right_image_size.first, right_image_size.second,
     b_vertical_display ? 0 : left_image_size.first,
     b_vertical_display ? left_image_size.second : 0);
 
   // Display feature circles
   for (const features::SIOPointFeature & feat_it : left_features) {
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x(), feat_it.y(), feat_it.scale(),
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
   for (const features::SIOPointFeature & feat_it : right_features) {
-    svgStream.drawCircle(
+    svgStream << svg::drawCircle(
       feat_it.x() + svg_offset_x, feat_it.y() + svg_offset_y, feat_it.scale(),
-      svg::svgStyle().stroke("yellow", stroke_size));
+      svg::svgAttributes().stroke("yellow", stroke_size));
   }
 
   // Save the SVG file
-  std::ofstream svgFile( svg_filename.c_str() );
-  if (svgFile.is_open())
+  std::ofstream svgFile( svg_filename);
+  if (svgFile)
   {
     svgFile << svgStream.closeSvgFile().str();
     svgFile.close();
     return true;
   }
+  OPENMVG_LOG_ERROR << "Cannot open svg file: " << svg_filename;
   return false;
 }
 

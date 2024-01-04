@@ -31,13 +31,13 @@
 #ifndef EIGEN_CONSTRAINEDCG_H
 #define EIGEN_CONSTRAINEDCG_H
 
-#include <Eigen/Core>
+#include "../../../../Eigen/Core"
 
 namespace Eigen { 
 
 namespace internal {
 
-/** \ingroup IterativeSolvers_Module
+/** \ingroup IterativeLinearSolvers_Module
   * Compute the pseudo inverse of the non-square matrix C such that
   * \f$ CINV = (C * C^T)^{-1} * C \f$ based on a conjugate gradient method.
   *
@@ -96,10 +96,10 @@ void pseudo_inverse(const CMatrix &C, CINVMatrix &CINV)
 
 
 
-/** \ingroup IterativeSolvers_Module
+/** \ingroup IterativeLinearSolvers_Module
   * Constrained conjugate gradient
   *
-  * Computes the minimum of \f$ 1/2((Ax).x) - bx \f$ under the contraint \f$ Cx \le f \f$
+  * Computes the minimum of \f$ 1/2((Ax).x) - bx \f$ under the constraint \f$ Cx \le f \f$
   */
 template<typename TMatrix, typename CMatrix,
          typename VectorX, typename VectorB, typename VectorF>
@@ -158,8 +158,6 @@ void constrained_cg(const TMatrix& A, const CMatrix& C, VectorX& x,
     rho = r.dot(z);
 
     if (iter.finished(rho)) break;
-
-    if (iter.noiseLevel() > 0 && transition) std::cerr << "CCG: transition\n";
     if (transition || iter.first()) gamma = 0.0;
     else gamma = (std::max)(0.0, (rho - old_z.dot(z)) / rho_1);
     p = z + gamma*p;

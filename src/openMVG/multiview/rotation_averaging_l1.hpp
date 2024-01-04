@@ -48,7 +48,7 @@ void InitRotationsMST
  * @param[in] RelRs Relative weighted rotation matrices
  * @param[out] Rs output global rotation matrices
  * @param[in] nMainViewID Id of the image considered as Identity (unit rotation)
- * @param[in] threshold (optionnal) threshold
+ * @param[in] threshold (optional) threshold
  * @param[out] vec_inliers rotation labelled as inliers or outliers
  */
 bool GlobalRotationsRobust(

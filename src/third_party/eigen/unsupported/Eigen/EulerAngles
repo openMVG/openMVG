@@ -11,10 +11,10 @@
 #define EIGEN_EULERANGLES_MODULE_H
 
 
-#include "Eigen/Core"
-#include "Eigen/Geometry"
+#include "../../Eigen/Core"
+#include "../../Eigen/Geometry"
 
-#include "Eigen/src/Core/util/DisableStupidWarnings.h"
+#include "../../Eigen/src/Core/util/DisableStupidWarnings.h"
 
 namespace Eigen {
 
@@ -38,6 +38,6 @@ namespace Eigen {
 #include "src/EulerAngles/EulerSystem.h"
 #include "src/EulerAngles/EulerAngles.h"
 
-#include "Eigen/src/Core/util/ReenableStupidWarnings.h"
+#include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_EULERANGLES_MODULE_H

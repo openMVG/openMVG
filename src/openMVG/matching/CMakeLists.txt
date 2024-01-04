@@ -1,6 +1,4 @@
 
-project(matching)
-
 file(
   GLOB
   matching_files_header
@@ -23,14 +21,47 @@ set_source_files_properties(${matching_files_cpp} PROPERTIES LANGUAGE CXX)
 add_library(openMVG_matching
   ${matching_files_header}
   ${matching_files_cpp})
-target_link_libraries(openMVG_matching PRIVATE openMVG_features stlplus)
-target_link_libraries(openMVG_matching PUBLIC Threads::Threads)
+target_compile_features(openMVG_matching INTERFACE ${CXX11_FEATURES})
+target_include_directories(openMVG_matching
+  PUBLIC
+    $<BUILD_INTERFACE:${FLANN_INCLUDE_DIRS}>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/openMVG>
+)
+target_link_libraries(openMVG_matching
+  PRIVATE
+    ${STLPLUS_LIBRARY}
+    ${OPENMVG_LIBRARY_DEPENDENCIES}
+  PUBLIC
+    openMVG_features
+    Threads::Threads
+    ${cereal_TARGET}
+)
+if (NOT DEFINED OpenMVG_USE_INTERNAL_FLANN)
+target_link_libraries(openMVG_matching
+  PUBLIC
+    ${FLANN_LIBRARIES}
+)
+endif()
 set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
-if (UNIX AND AVX2_FOUND)
-  target_compile_options(openMVG_matching PUBLIC "-mavx2")
-endif(UNIX AND AVX2_FOUND)
-install(TARGETS openMVG_matching DESTINATION lib EXPORT openMVG-targets)
+
+
+if (USE_AVX2)
+  target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX2")
+  if (UNIX)
+    target_compile_options(openMVG_matching PUBLIC "-mavx2")
+  endif (UNIX)
+endif (USE_AVX2)
+
+if (USE_AVX)
+  target_compile_options(openMVG_matching PUBLIC "-DOPENMVG_USE_AVX")
+  if (UNIX)
+    target_compile_options(openMVG_matching PUBLIC "-mavx")
+  endif (UNIX)
+endif (USE_AVX)
+
+install(TARGETS openMVG_matching DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-targets)
 
 UNIT_TEST(openMVG matching "openMVG_matching")
 UNIT_TEST(openMVG matching_filters "openMVG_matching")

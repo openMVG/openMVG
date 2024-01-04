@@ -23,14 +23,13 @@
 using namespace openMVG;
 using namespace openMVG::image;
 using namespace openMVG::matching;
-using namespace std;
 
 int main() {
 
   Image<RGBColor> image;
-  string jpg_filenameL = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  std::string jpg_filenameL = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_0.png";
-  string jpg_filenameR = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  std::string jpg_filenameR = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/StanfordMobileVisualSearch/Ace_1.png";
 
   Image<unsigned char> imageL, imageR;
@@ -54,7 +53,7 @@ int main() {
   {
     Image<unsigned char> concat;
     ConcatV(imageL, imageR, concat);
-    string out_filename = "00_images.jpg";
+    std::string out_filename = "00_images.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 

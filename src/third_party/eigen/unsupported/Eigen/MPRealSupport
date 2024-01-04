@@ -12,7 +12,7 @@
 #ifndef EIGEN_MPREALSUPPORT_MODULE_H
 #define EIGEN_MPREALSUPPORT_MODULE_H
 
-#include <Eigen/Core>
+#include "../../Eigen/Core"
 #include <mpreal.h>
 
 namespace Eigen {
@@ -90,6 +90,9 @@ int main()
 #ifdef MPREAL_HAVE_DYNAMIC_STD_NUMERIC_LIMITS
     static inline int digits10 (long Precision = mpfr::mpreal::get_default_prec())  { return std::numeric_limits<Real>::digits10(Precision); }
     static inline int digits10 (const Real& x)                                      { return std::numeric_limits<Real>::digits10(x); }
+    
+    static inline int digits ()               { return std::numeric_limits<Real>::digits(); }
+    static inline int digits (const Real& x)  { return std::numeric_limits<Real>::digits(x); }
 #endif
 
     static inline Real dummy_precision()
@@ -159,6 +162,7 @@ int main()
       typedef ResScalar LhsPacket;
       typedef ResScalar RhsPacket;
       typedef ResScalar ResPacket;
+      typedef LhsPacket LhsPacket4Packing;
       
     };
 

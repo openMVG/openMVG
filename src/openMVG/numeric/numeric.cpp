@@ -138,9 +138,8 @@ bool exportMatToTextFile(const Mat & mat, const std::string & filename,
   const std::string & sPrefix)
 {
   bool bOk = false;
-  std::ofstream outfile;
-  outfile.open(filename.c_str(), std::ios_base::out);
-  if (outfile.is_open()) {
+  std::ofstream outfile(filename.c_str(), std::ios_base::out);
+  if (outfile) {
     outfile << sPrefix << "=[" << std::endl;
     for (int j=0; j < mat.rows(); ++j)  {
       for (int i=0; i < mat.cols(); ++i)  {

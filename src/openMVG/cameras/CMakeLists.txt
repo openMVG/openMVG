@@ -1,14 +1,25 @@
 
-UNIT_TEST(openMVG Camera_IO "openMVG_multiview;stlplus;openMVG_geometry")
+add_library(openMVG_camera INTERFACE)
+set_property(TARGET openMVG_camera APPEND PROPERTY
+  INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:include>")
 
-UNIT_TEST(openMVG Camera_Pinhole "openMVG_multiview;openMVG_geometry")
+target_compile_features(openMVG_camera INTERFACE ${CXX11_FEATURES})
+target_link_libraries(openMVG_camera INTERFACE openMVG_numeric ${cereal_TARGET} ${OPENMVG_LIBRARY_DEPENDENCIES})
+install(TARGETS openMVG_camera EXPORT openMVG-targets)
 
-UNIT_TEST(openMVG Camera_Pinhole_Radial "openMVG_multiview;openMVG_geometry")
+UNIT_TEST(openMVG Camera_Pinhole openMVG_camera)
 
-UNIT_TEST(openMVG Camera_Pinhole_Brown "openMVG_multiview;openMVG_geometry")
+UNIT_TEST(openMVG Camera_Pinhole_Radial openMVG_camera)
 
-UNIT_TEST(openMVG Camera_Pinhole_Fisheye "openMVG_multiview;openMVG_geometry")
+UNIT_TEST(openMVG Camera_Pinhole_Brown openMVG_camera)
 
-UNIT_TEST(openMVG Camera_Spherical "openMVG_multiview;openMVG_geometry")
+UNIT_TEST(openMVG Camera_Pinhole_Fisheye openMVG_camera)
 
-UNIT_TEST(openMVG Camera_Subset_Parametrization "openMVG_multiview;openMVG_geometry")
+UNIT_TEST(openMVG Camera_Spherical openMVG_camera)
+
+UNIT_TEST(openMVG Camera_Subset_Parametrization openMVG_camera)
+
+add_library(openMVG_camera_test INTERFACE)
+target_link_libraries(openMVG_camera_test INTERFACE openMVG_camera)
+
+UNIT_TEST(openMVG Camera_IO "openMVG_camera_test;${STLPLUS_LIBRARY}")

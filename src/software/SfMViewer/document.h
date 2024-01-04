@@ -47,7 +47,7 @@ struct Document
     {
       // Read visibility file (3Dpoint, NbVisbility, [(imageId, featId); ... )
       std::ifstream iFilein(stlplus::create_filespec(sDirectoryPly,"visibility","txt").c_str());
-      if (iFilein.is_open())
+      if (iFilein)
       {
         size_t trackId = 0;
         while (!iFilein.eof())
@@ -90,7 +90,7 @@ struct Document
     //Read views file
     {
       std::ifstream iFilein(stlplus::create_filespec(_sDirectory,"views","txt").c_str());
-      if (iFilein.is_open())
+      if (iFilein)
       {
         std::string temp;
         getline(iFilein,temp); //directory name

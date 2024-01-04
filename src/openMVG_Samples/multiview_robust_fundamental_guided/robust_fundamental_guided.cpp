@@ -19,7 +19,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansac.hpp"
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 
-#include "third_party/vectorGraphics/svgDrawer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <iostream>
@@ -31,15 +31,14 @@ using namespace openMVG::image;
 using namespace openMVG::matching;
 using namespace openMVG::robust;
 using namespace svg;
-using namespace std;
 
 int main() {
 
-  const std::string sInputDir = stlplus::folder_up(string(THIS_SOURCE_DIR))
+  const std::string sInputDir = stlplus::folder_up(std::string(THIS_SOURCE_DIR))
     + "/imageData/SceauxCastle/";
   Image<RGBColor> image;
-  const string jpg_filenameL = sInputDir + "100_7101.jpg";
-  const string jpg_filenameR = sInputDir + "100_7102.jpg";
+  const std::string jpg_filenameL = sInputDir + "100_7101.jpg";
+  const std::string jpg_filenameR = sInputDir + "100_7102.jpg";
 
   Image<unsigned char> imageL, imageR;
   ReadImage(jpg_filenameL.c_str(), &imageL);
@@ -65,7 +64,7 @@ int main() {
   {
     Image<unsigned char> concat;
     ConcatH(imageL, imageR, concat);
-    string out_filename = "01_concat.jpg";
+    std::string out_filename = "01_concat.jpg";
     WriteImage(out_filename.c_str(), concat);
   }
 
@@ -227,23 +226,23 @@ int main() {
       {
         const std::vector<IndMatch> & vec_corresponding_index = vec_corresponding_indexes[idx];
         //Show fundamental validated correspondences
-        svgDrawer svgStream( imageL.Width() + imageR.Width(), max(imageL.Height(), imageR.Height()));
-        svgStream.drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
-        svgStream.drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
+        svgDrawer svgStream( imageL.Width() + imageR.Width(), std::max(imageL.Height(), imageR.Height()));
+        svgStream << svg::drawImage(jpg_filenameL, imageL.Width(), imageL.Height());
+        svgStream << svg::drawImage(jpg_filenameR, imageR.Width(), imageR.Height(), imageL.Width());
         for ( size_t i = 0; i < vec_corresponding_index.size(); ++i)  {
 
           const SIOPointFeature & LL = regionsL->Features()[vec_corresponding_index[i].i_];
           const SIOPointFeature & RR = regionsR->Features()[vec_corresponding_index[i].j_];
           const Vec2f L = LL.coords();
           const Vec2f R = RR.coords();
-          svgStream.drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgStyle().stroke("green", 2.0));
-          svgStream.drawCircle(L.x(), L.y(), LL.scale(), svgStyle().stroke("yellow", 2.0));
-          svgStream.drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgStyle().stroke("yellow", 2.0));
+          svgStream << svg::drawLine(L.x(), L.y(), R.x()+imageL.Width(), R.y(), svgAttributes().stroke("green", 2.0));
+          svgStream << svg::drawCircle(L.x(), L.y(), LL.scale(), svgAttributes().stroke("yellow", 2.0));
+          svgStream << svg::drawCircle(R.x()+imageL.Width(), R.y(), RR.scale(),svgAttributes().stroke("yellow", 2.0));
         }
-        const string out_filename =
+        const std::string out_filename =
           (idx == 0) ? "04_ACRansacFundamental_guided_geom.svg"
             : "04_ACRansacFundamental_guided_geom_distratio.svg";
-        ofstream svgFile( out_filename.c_str() );
+        std::ofstream svgFile( out_filename.c_str() );
         svgFile << svgStream.closeSvgFile().str();
         svgFile.close();
       }

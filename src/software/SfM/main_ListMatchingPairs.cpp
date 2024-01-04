@@ -10,12 +10,12 @@
 #include "openMVG/matching_image_collection/Pair_Builder.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/system/timer.hpp"
+#include "openMVG/vector_graphics/svgDrawer.hpp"
 
 #include "third_party/cmdLine/cmdLine.h"
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
-#include "third_party/vectorGraphics/svgDrawer.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -53,27 +53,27 @@ void AdjacencyMatrixToSVG
         const auto iterSearch = corresponding_indexes.find(std::make_pair(I,J));
         if (iterSearch != corresponding_indexes.end())
         {
-          svgStream.drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
-          svgStyle().fill("blue").noStroke());
+          svgStream << svg::drawSquare(J*scaleFactor, I*scaleFactor, scaleFactor/2.0f,
+          svgAttributes().fill("blue").noStroke());
         }
       }
     }
     // Display axes with 0 -> NbImages annotation : _|
     std::ostringstream osNbImages;
     osNbImages << NbImages;
-    svgStream.drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages+1)*scaleFactor,
+    svgStream << svg::drawText((NbImages+1)*scaleFactor, scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
+    svgStream << svg::drawLine((NbImages+1)*scaleFactor, 2*scaleFactor,
       (NbImages+1)*scaleFactor, (NbImages)*scaleFactor - 2*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svgAttributes().stroke("black", 1.0));
 
-    svgStream.drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
-    svgStream.drawText((NbImages)*scaleFactor - scaleFactor,
+    svgStream << svg::drawText(scaleFactor, (NbImages+1)*scaleFactor, scaleFactor, "0", "black");
+    svgStream << svg::drawText((NbImages)*scaleFactor - scaleFactor,
       (NbImages+1)*scaleFactor, scaleFactor, osNbImages.str(), "black");
-    svgStream.drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
+    svgStream << svg::drawLine(2*scaleFactor, (NbImages+1)*scaleFactor,
       (NbImages)*scaleFactor - 2*scaleFactor, (NbImages+1)*scaleFactor,
-      svgStyle().stroke("black", 1.0));
+      svgAttributes().stroke("black", 1.0));
 
     std::ofstream svgFileStream(sOutName.c_str());
     svgFileStream << svgStream.closeSvgFile().str();
@@ -82,14 +82,12 @@ void AdjacencyMatrixToSVG
 
 int main(int argc, char **argv)
 {
-  using namespace std;
-  std::cout << std::endl
-    << "-----------------------------------------------------------\n"
-    << "Compute a view pair list file for main_ComputeMatches:\n"
-    << " - various pair modes are available to adapt to user dataset\n"
-    << "   configuration.\n"
-    << "-----------------------------------------------------------\n"
-    << std::endl;
+  OPENMVG_LOG_INFO
+    << "\n-----------------------------------------------------------"
+    << "\nCompute a view pair list file for main_ComputeMatches:"
+    << "\n - various pair modes are available to adapt to user dataset"
+    << "\n   configuration."
+    << "\n-----------------------------------------------------------";
 
   CmdLine cmd;
 
@@ -109,23 +107,22 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-    std::cerr << "Usage: " << argv[0] << '\n'
-    << "[-i|--input_file] path to a SfM_Data scene\n"
-    << "[-o|--output_file] the output pairlist file (i.e ./pair_list.txt)\n"
-    << "optional:\n"
-    << "Matching pair modes [E/V/G]:\n"
-    << "\t[-E|--exhaustive_mode] exhaustive mode (default mode)\n"
-    << "\t[-V|--video_mode] link views that belongs to contiguous poses ids\n"
-    << "\t[-G|--gps_mode] use the pose center priors to link neighbor views\n"
-    << "Note: options V & G are linked the following parameter:\n"
-    << "\t [-n|--neighbor_count] number of maximum neighbor\n"
-    << std::endl;
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[-i|--input_file] path to a SfM_Data scene\n"
+      << "[-o|--output_file] the output pairlist file (i.e ./pair_list.txt)\n"
+      << "optional:\n"
+      << "Matching pair modes [E/V/G]:\n"
+      << "\t[-E|--exhaustive_mode] exhaustive mode (default mode)\n"
+      << "\t[-V|--video_mode] link views that belongs to contiguous poses ids\n"
+      << "\t[-G|--gps_mode] use the pose center priors to link neighbor views\n"
+      << "Note: options V & G are linked the following parameter:\n"
+      << "\t [-n|--neighbor_count] number of maximum neighbor";
 
-    std::cerr << s << std::endl;
+    OPENMVG_LOG_ERROR << s;
     return EXIT_FAILURE;
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << " You called : " << "\n"
     << argv[0] << "\n"
     << "--input_file " << s_SfM_Data_filename << "\n"
@@ -135,9 +132,8 @@ int main(int argc, char **argv)
     << "--video_mode " <<  (cmd.used('V') ? "ON" : "OFF") << "\n"
     << "--gps_mode "  << (cmd.used('G') ? "ON" : "OFF") << "\n";
   if (cmd.used('V') || cmd.used('G'))
-    std::cout << "--neighbor_count " << i_neighbor_count << std::endl;
+    OPENMVG_LOG_INFO << "--neighbor_count " << i_neighbor_count;
 
-  std::cout << std::endl;
 
   //--
   // Check validity of the input parameters
@@ -146,7 +142,7 @@ int main(int argc, char **argv)
   // pair list mode
   if ( int(cmd.used('E')) + int(cmd.used('V')) + int(cmd.used('G')) > 1)
   {
-    std::cerr << "You can use only one matching mode." << std::endl;
+    OPENMVG_LOG_ERROR << "You can use only one matching mode.";
     return EXIT_FAILURE;
   }
   if (cmd.used('E'))
@@ -160,20 +156,18 @@ int main(int argc, char **argv)
   SfM_Data sfm_data;
   if (!Load(sfm_data, s_SfM_Data_filename, ESfM_Data(VIEWS|INTRINSICS)))
   {
-    std::cerr << std::endl
-      << "The input SfM_Data file \"" << s_SfM_Data_filename << "\" cannot be read." << std::endl;
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \"" << s_SfM_Data_filename << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
-  std::cout
+  OPENMVG_LOG_INFO
     << "Loaded a sfm_data scene with:\n"
-    << " #views: " << sfm_data.GetViews().size() << "\n"
-    << std::endl;
+    << " #views: " << sfm_data.GetViews().size();
 
   // out file
   if (s_out_file.empty())
   {
-    std::cerr << "Invalid output filename." << std::endl;
+    OPENMVG_LOG_ERROR << "Invalid output filename.";
     return EXIT_FAILURE;
   }
 
@@ -181,7 +175,7 @@ int main(int argc, char **argv)
   {
     if (!stlplus::folder_create(stlplus::folder_part(s_out_file)))
     {
-      std::cerr << "Cannot create directory for the output file." << std::endl;
+      OPENMVG_LOG_ERROR << "Cannot create directory for the output file.";
       return EXIT_FAILURE;
     }
   }
@@ -238,32 +232,31 @@ int main(int argc, char **argv)
       }
       if (vec_pose_centers.empty())
       {
-        std::cerr << "You are trying to use the gps_mode but your data does"
-          << " not have any pose priors."
-          << std::endl;
+        OPENMVG_LOG_ERROR << "You are trying to use the gps_mode but your data does"
+          << " not have any pose priors.";
       }
       // Compute i_neighbor_count neighbor(s) for each pose
+      matching::ArrayMatcherBruteForce<double> matcher;
+      if (!matcher.Build(vec_pose_centers[0].data(), vec_pose_centers.size(), 3))
+      {
+        return EXIT_FAILURE;
+      }
       size_t contiguous_pose_id = 0;
       for (const Vec3 pose_it : vec_pose_centers)
       {
-        matching::ArrayMatcherBruteForce<double> matcher;
-        if (matcher.Build(vec_pose_centers[0].data(), vec_pose_centers.size(), 3))
+        const double * query = pose_it.data();
+        IndMatches vec_indices;
+        std::vector<double> vec_distance;
+        const int NN = i_neighbor_count + 1; // since itself will be found
+        if (matcher.SearchNeighbours(query, 1, &vec_indices, &vec_distance, NN))
         {
-          const double * query = pose_it.data();
-
-          IndMatches vec_indices;
-          std::vector<double> vec_distance;
-          const int NN = i_neighbor_count + 1; // since itself will be found
-          if (matcher.SearchNeighbours(query, 1, &vec_indices, &vec_distance, NN))
+          for (size_t i = 1; i < vec_indices.size(); ++i)
           {
-            for (size_t i = 1; i < vec_indices.size(); ++i)
-            {
-              IndexT idxI = contiguous_to_pose_id.at(contiguous_pose_id);
-              IndexT idxJ = contiguous_to_pose_id.at(vec_indices[i].j_);
-              if (idxI > idxJ)
-                std::swap(idxI, idxJ);
-              pose_pairs.insert(Pair(idxI, idxJ));
-            }
+            IndexT idxI = contiguous_to_pose_id.at(contiguous_pose_id);
+            IndexT idxJ = contiguous_to_pose_id.at(vec_indices[i].j_);
+            if (idxI > idxJ)
+              std::swap(idxI, idxJ);
+            pose_pairs.insert(Pair(idxI, idxJ));
           }
         }
         ++contiguous_pose_id;
@@ -271,7 +264,7 @@ int main(int argc, char **argv)
     }
     break;
     default:
-      std::cerr << "Unknown pair mode." << std::endl;
+      OPENMVG_LOG_ERROR << "Unknown pair mode.";
       return EXIT_FAILURE;
   }
 
@@ -301,7 +294,7 @@ int main(int argc, char **argv)
 
   if (view_pair.empty())
   {
-    std::cout << "Warning: The computed pair list is empty...!" << std::endl;
+    OPENMVG_LOG_INFO << "Warning: The computed pair list is empty...!";
   }
 
   // d. Export the view graph to a file and a SVG adjacency list
@@ -313,9 +306,9 @@ int main(int argc, char **argv)
 
   if (savePairs(s_out_file, view_pair))
   {
-    std::cout << "Exported " << view_pair.size() << " view pairs\n"
+    OPENMVG_LOG_INFO << "Exported " << view_pair.size() << " view pairs\n"
       <<"from a view graph that have " << pose_pairs.size()
-      << " relative pose pairs." << std::endl;
+      << " relative pose pairs.";
     return EXIT_SUCCESS;
   }
 

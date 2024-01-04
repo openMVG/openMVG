@@ -16,9 +16,10 @@
 #include "openMVG/features/feature_container.hpp"
 #include "openMVG/features/regions.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/system/logger.hpp"
+#include "openMVG/system/loggerprogress.hpp"
 #include "openMVG/types.hpp"
 
-#include "third_party/progress/progress_display.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 namespace openMVG {
@@ -38,8 +39,7 @@ struct Features_Provider
     const std::string & feat_directory,
     std::unique_ptr<features::Regions>& region_type)
   {
-    C_Progress_display my_progress_bar( sfm_data.GetViews().size(),
-      std::cout, "\n- Features Loading -\n" );
+    system::LoggerProgress my_progress_bar(sfm_data.GetViews().size(), "- Features Loading -");
     // Read for each view the corresponding features and store them as PointFeatures
     bool bContinue = true;
 #ifdef OPENMVG_USE_OPENMP
@@ -59,7 +59,7 @@ struct Features_Provider
         std::unique_ptr<features::Regions> regions(region_type->EmptyClone());
         if (!stlplus::file_exists(featFile) || !regions->LoadFeatures(featFile))
         {
-          std::cerr << "Invalid feature files for the view: " << sImageName << std::endl;
+          OPENMVG_LOG_ERROR << "Invalid feature files for the view: " << sImageName;
 #ifdef OPENMVG_USE_OPENMP
       #pragma omp critical
 #endif

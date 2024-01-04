@@ -14,14 +14,15 @@
 #include <string>
 #include <vector>
 
-#include "datasheet.hpp"
+#include "openMVG/exif/sensor_width_database/datasheet.hpp"
 #include "openMVG/stl/split.hpp"
+#include "openMVG/system/logger.hpp"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 // Parse the database
 bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& vec_database )
 {
-  std::ifstream iFilein( sfileDatabase.c_str() );
+  std::ifstream iFilein( sfileDatabase );
   if ( stlplus::is_file(sfileDatabase) && iFilein)
   {
     std::string line;
@@ -48,6 +49,7 @@ bool parseDatabase( const std::string& sfileDatabase, std::vector<Datasheet>& ve
   }
   else
   {
+    OPENMVG_LOG_ERROR << "Cannot read the database file: " << sfileDatabase;
     return false;
   }
 }

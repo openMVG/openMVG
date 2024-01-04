@@ -3,7 +3,7 @@ patented
 ############################
 
 
-The openMVG licence is MPL2 but some code used to provide interesting functionnalities have different licences or are subject to patent.
+The openMVG licence is MPL2 but some code used to provide interesting functionalities have different licences or are subject to patent.
 
 Such code takes place in the patented directory.
 
