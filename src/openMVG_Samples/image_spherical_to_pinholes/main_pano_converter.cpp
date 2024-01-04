@@ -111,7 +111,7 @@ int main(int argc, char **argv)
   //-- Simulate a camera with many rotations along the Y axis
   const int pinhole_width = image_resolution, pinhole_height = image_resolution;
   const double focal = spherical::FocalFromPinholeHeight(pinhole_height, openMVG::D2R(fov));
-  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera = spherical::ComputeCubicCameraIntrinsics(image_resolution);
+  const openMVG::cameras::Pinhole_Intrinsic pinhole_camera = spherical::ComputeCubicCameraIntrinsics(image_resolution, openMVG::D2R(fov));
 
   const double alpha = (M_PI * 2.0) / static_cast<double>(nb_split); // 360 / split_count
   std::vector<Mat3> camera_rotations;
