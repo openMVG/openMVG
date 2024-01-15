@@ -116,8 +116,11 @@ int main(int argc, char* argv[]) {
           rerun::archetypes::Points3D(points3d).with_keypoint_ids(track_ids));
 
   for (const auto& view : sfm_data.views) {
-    rec.log(camera_entity + stlplus::filename_part(view.second->s_Img_path),
-            rerun::archetypes::Points2D(points2d_per_img.at(view.first)));
+    auto it = points2d_per_img.find(view.first);
+    if (it != points2d_per_img.end()) {
+      rec.log(camera_entity + stlplus::filename_part(view.second->s_Img_path),
+              rerun::archetypes::Points2D(points2d_per_img.at(view.first)));
+    }
   }
   return 0;
 }
