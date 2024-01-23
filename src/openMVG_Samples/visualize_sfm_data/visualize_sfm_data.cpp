@@ -85,8 +85,9 @@ int main(int argc, char* argv[]) {
                   sfm_data.GetIntrinsics().at(id_intrinsic)->getParams()[0],
                   resolution));
       openMVG::image::Image<openMVG::image::RGBColor> img;
+      const auto image_name = stlplus::create_filespec(sfm_data.s_root_path, view_file_name);
       auto is_img_loaded =
-          openMVG::image::ReadImage(view->s_Img_path.c_str(), &img);
+          openMVG::image::ReadImage(image_name.c_str(), &img);
       if (is_img_loaded) {
         rec.log(camera_entity + view_file_name,
                 rerun::Image({static_cast<uint64_t>(img.rows()),
@@ -103,8 +104,8 @@ int main(int argc, char* argv[]) {
   std::unordered_map<uint32_t, std::vector<rerun::components::Position2D>>
       points2d_per_img;
   for (const auto& landmark : landmarks) {
-    points3d.push_back(rerun::components::Position3D(
-        landmark.second.X(0), landmark.second.X(1), landmark.second.X(2)));
+    points3d.emplace_back(landmark.second.X(0), landmark.second.X(1),
+                          landmark.second.X(2));
     track_ids.push_back(landmark.first);
     for (const auto& obs : landmark.second.obs) {
       points2d_per_img[obs.first].push_back(
