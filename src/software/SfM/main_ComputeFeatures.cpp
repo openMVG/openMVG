@@ -260,7 +260,8 @@ int main(int argc, char **argv)
     if (iNumThreads > 0) {
         omp_set_num_threads(iNumThreads);
     } else {
-        omp_set_num_threads(nb_max_thread);
+        iNumThreads = nb_max_thread - 1;
+        omp_set_num_threads(iNumThreads);
     }
 
     #pragma omp parallel for schedule(dynamic) if (iNumThreads > 0) private(imageGray)
