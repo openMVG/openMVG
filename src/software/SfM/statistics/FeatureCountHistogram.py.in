@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+#! -*- encoding: utf-8 -*-
+
+# This file is part of the OpenMVG (Open Multiple View Geometry) C++ library.
+# Created by Kwame Wright (@rockokw)
+#
+# For usage details, please run:
+#   python FeatureCountHistogram.py -h
+
+import argparse
+import json
+import os
+
+try:
+    import matplotlib.pyplot as plt
+
+except ImportError:
+    print('Import error: Please install matplotlib')
+
+    import sys
+    sys.exit(1)
+
+def not_none(x):
+    return not x is None
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generates histogram of \
+                                     feature counts')
+
+    parser.add_argument('sfm_data', type=str,
+                        help='path to SfM data file (json) from openMVG_main_ComputeFeatures')
+
+    parser.add_argument('-o', '--output', type=str,
+                        help='save histogram image as specified file')
+
+    parser.add_argument('-t', '--title', type=str,
+                        help='title for figure')
+
+    parser.add_argument('--num_bins', type=int, default=20,
+                        help='number of bins in histogram (default: 20)')
+
+    parser.add_argument('--min_feat', type=int,
+                        help='start of first bin in histogram')
+
+    parser.add_argument('--max_feat', type=int,
+                        help='end of last bin in histogram (inclusive)')
+
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='verbose output')
+
+    args = parser.parse_args()
+    print(args)
+
+    NBINS = args.num_bins
+    MIN_FEAT = args.min_feat
+    MAX_FEAT = args.max_feat
+
+    # Location of matches folder extracted from SfM data file
+    BASEDIR = os.path.dirname(args.sfm_data)
+
+    with open(args.sfm_data, 'r') as f:
+        data = json.load(f)
+
+    feature_counts = []
+
+    # Iterate over list of images in SfM data JSON file
+    views = data['views']
+    for v in views:
+        image = v['value']['ptr_wrapper']['data']['filename']
+
+        feat_file = image.rsplit('.')[0] + '.feat'
+        fullpath = os.path.join(BASEDIR, feat_file)
+
+        with open(fullpath, 'r') as f:
+            # Count lines in feature file
+            c = 0
+            for c, l in enumerate(f, 1):
+                pass
+
+            if args.verbose:
+                print(image, c)
+
+            feature_counts.append(c)
+
+            # Feature count sanity checks
+            if not_none(MAX_FEAT) and (c > MAX_FEAT):
+                print('WARNING: {} has {} features, exceeds max of {}'
+                      .format(image, c, MAX_FEAT))
+
+            if not_none(MIN_FEAT) and (c < MIN_FEAT):
+                print('WARNING: {} has {} features, below min of {}'
+                      .format(image, c, MIN_FEAT))
+
+    # Set bin range defaults if necessary
+    if MAX_FEAT is None:
+        MAX_FEAT = max(feature_counts)
+
+    if MIN_FEAT is None:
+        MIN_FEAT = min(feature_counts)
+
+    plt.hist(feature_counts, bins=NBINS, range=(MIN_FEAT, MAX_FEAT))
+
+    title = args.title if args.title else 'Feature Histogram'
+    plt.title(title)
+
+    if args.output:
+        plt.savefig(args.output)
+
+    else:
+        plt.show()
