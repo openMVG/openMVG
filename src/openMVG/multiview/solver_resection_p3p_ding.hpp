@@ -9,8 +9,9 @@
 #ifndef OPENMVG_MULTIVIEW_RESECTION_P3P_DING_HPP
 #define OPENMVG_MULTIVIEW_RESECTION_P3P_DING_HPP
 
-#include "openMVG/multiview/solver_resection_metrics.hpp"
 #include "openMVG/multiview/two_view_kernel.hpp"
+#include "openMVG/multiview/solver_resection_metrics.hpp"
+
 
 namespace openMVG {
 namespace euclidean_resection {
