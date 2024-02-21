@@ -114,6 +114,9 @@ Bibliography
 .. [Lee_BMVC19] **Triangulation: Why Optimize?**
    S.H. Lee, J. Civera. BMVC 2019.
 
+.. [Ding] **Revisiting the P3P Problem.**
+   Y Ding, J Yang, V Larsson, C Olsson, K Åström. CVPR 2023.
+
 .. [Ceres] **Ceres Solver.**
     Sameer Agarwal and Keir Mierle and Others, http://ceres-solver.org
 

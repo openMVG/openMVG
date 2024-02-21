@@ -12,5 +12,6 @@
 #include "openMVG/multiview/solver_resection_p3p_ke.hpp"
 #include "openMVG/multiview/solver_resection_p3p_kneip.hpp"
 #include "openMVG/multiview/solver_resection_p3p_nordberg.hpp"
+#include "openMVG/multiview/solver_resection_p3p_ding.hpp"
 
 #endif // OPENMVG_MULTIVIEW_RESECTION_P3P_HPP
