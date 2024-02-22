@@ -52,30 +52,12 @@ static void gauss_newton_refineL(double &lambda1, double &lambda2,
     double x33 = lambda3 - lambda2 * b23;
     double detJ = 0.5 / (x11 * x23 * x32 +
                          x12 * x21 * x33); // half minus inverse determinant
-    // This uses the closed form of the inverse for the jacobean.
+    // This uses the closed form of the inverse for the jacobian.
     // Due to the zero elements this actually becomes quite nice.
     lambda1 += (-x23 * x32 * r1 - x12 * x33 * r2 + x12 * x23 * r3) * detJ;
     lambda2 += (-x21 * x33 * r1 + x11 * x33 * r2 - x11 * x23 * r3) * detJ;
     lambda3 += (x21 * x32 * r1 - x11 * x32 * r2 - x12 * x21 * r3) * detJ;
   }
-};
-
-static inline bool root2real(const double b, const double c, double &r1,
-                             double &r2) {
-  const double v = b * b - 4.0 * c;
-  if (v <= 0.0) {
-    r1 = r2 = -0.5 * b;
-    return v >= 0.0;
-  }
-  const double y = std::sqrt(v);
-  if (b < 0.0) {
-    r1 = 0.5 * (-b + y);
-    r2 = 0.5 * (-b - y);
-  } else {
-    r1 = 2.0 * c / (-b + y);
-    r2 = 2.0 * c / (-b - y);
-  }
-  return true;
 };
 
 /**
@@ -279,7 +261,7 @@ bool computePosesDing(
       double cb = 2.0 * (b * m12 - m02 * w1 + w0 * w1) * ca;
       double cc = (w0 * w0 - 2 * m02 * w0 - b + 1.0) * ca;
       double taus[2];
-      if (!root2real(cb, cc, taus[0], taus[1]))
+      if (!P3PSolver_Nordberg::root2real(cb, cc, taus[0], taus[1]))
         continue;
       for (double tau : taus) {
         if (tau <= 0)
@@ -311,7 +293,7 @@ bool computePosesDing(
       double cc = (1 - a * w0 * w0) * ca;
 
       double taus[2];
-      if (!root2real(cb, cc, taus[0], taus[1]))
+      if (!P3PSolver_Nordberg::root2real(cb, cc, taus[0], taus[1]))
         continue;
       for (double tau : taus) {
         if (tau <= 0)

@@ -11,7 +11,7 @@
 
 #include "openMVG/multiview/two_view_kernel.hpp"
 #include "openMVG/multiview/solver_resection_metrics.hpp"
-
+#include "openMVG/multiview/solver_resection_p3p_nordberg.hpp"
 
 namespace openMVG {
 namespace euclidean_resection {
