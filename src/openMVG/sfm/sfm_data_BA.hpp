@@ -55,11 +55,13 @@ struct Control_Point_Parameter
   Control_Point_Parameter
   (
     double weight_val = 20.0,
-    bool use_control_points = false
-  ): weight(weight_val), bUse_control_points(use_control_points)
+    bool use_control_points = false,
+    bool fix_control_points = true
+  ): weight(weight_val), bUse_control_points(use_control_points), bFix_control_points(fix_control_points)
   {}
   double weight;
   bool bUse_control_points;
+  bool bFix_control_points;
 };
 
 /// Structure to control which parameter will be refined during the BundleAjdustment process
