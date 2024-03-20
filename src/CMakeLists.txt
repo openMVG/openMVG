@@ -24,6 +24,12 @@ endif()
 
 set(CMAKE_FIND_FRAMEWORK LAST)
 
+# Download the rerun_sdk:
+include(FetchContent)
+FetchContent_Declare(rerun_sdk URL
+    https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip)
+FetchContent_MakeAvailable(rerun_sdk)
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
@@ -133,7 +139,7 @@ include(CXX11)
 check_for_cxx11_compiler(CXX11_COMPILER)
 # If a C++11 compiler is available, then set the appropriate flags
 if (CXX11_COMPILER)
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
 else (CXX11_COMPILER)
