@@ -167,7 +167,7 @@ static bool loadFeatsFromFile(
 template<typename FeaturesT >
 static bool saveFeatsToFile(
   const std::string & sfileNameFeats,
-  FeaturesT & vec_feat)
+  const FeaturesT & vec_feat)
 {
   std::ofstream file(sfileNameFeats.c_str());
   if (!file.is_open())

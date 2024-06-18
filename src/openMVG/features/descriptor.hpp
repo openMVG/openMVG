@@ -206,7 +206,7 @@ inline bool loadDescsFromBinFile(
 template<typename DescriptorsT >
 inline bool saveDescsToBinFile(
   const std::string & sfileNameDescs,
-  DescriptorsT & vec_desc)
+  const DescriptorsT & vec_desc)
 {
   using VALUE = typename DescriptorsT::value_type;
 
@@ -217,8 +217,8 @@ inline bool saveDescsToBinFile(
   const std::size_t cardDesc = vec_desc.size();
   file.write((const char*) &cardDesc,  sizeof(std::size_t));
   //Write descriptor content
-  for (const auto iter : vec_desc) {
-    file.write((const char*) iter.data(),
+  for (const auto & desc : vec_desc) {
+    file.write((const char*) desc.data(),
       VALUE::static_size*sizeof(typename VALUE::bin_type));
   }
   const bool bOk = file.good();
