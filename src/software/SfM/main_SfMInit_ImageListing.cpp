@@ -68,31 +68,28 @@ bool getGPS
   Vec3 & pose_center
 )
 {
-  std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
-  if (exifReader)
+  Exif_IO_EasyExif exifReader;
+  // Try to parse EXIF metada & check existence of EXIF data
+  if ( exifReader.open( filename ) && exifReader.doesHaveExifInfo() )
   {
-    // Try to parse EXIF metada & check existence of EXIF data
-    if ( exifReader->open( filename ) && exifReader->doesHaveExifInfo() )
+    // Check existence of GPS coordinates
+    double latitude, longitude, altitude;
+    if ( exifReader.GPSLatitude( &latitude ) &&
+         exifReader.GPSLongitude( &longitude ) &&
+         exifReader.GPSAltitude( &altitude ) )
     {
-      // Check existence of GPS coordinates
-      double latitude, longitude, altitude;
-      if ( exifReader->GPSLatitude( &latitude ) &&
-           exifReader->GPSLongitude( &longitude ) &&
-           exifReader->GPSAltitude( &altitude ) )
+      // Add ECEF or UTM XYZ position to the GPS position array
+      switch (GPS_to_XYZ_method)
       {
-        // Add ECEF or UTM XYZ position to the GPS position array
-        switch (GPS_to_XYZ_method)
-        {
-          case 1:
-            pose_center = lla_to_utm( latitude, longitude, altitude );
-            break;
-          case 0:
-          default:
-            pose_center = lla_to_ecef( latitude, longitude, altitude );
-            break;
-        }
-        return true;
+        case 1:
+          pose_center = lla_to_utm( latitude, longitude, altitude );
+          break;
+        case 0:
+        default:
+          pose_center = lla_to_ecef( latitude, longitude, altitude );
+          break;
       }
+      return true;
     }
   }
   return false;
@@ -323,18 +320,18 @@ int main(int argc, char **argv)
     // If not manually provided or wrongly provided
     if (focal == -1)
     {
-      std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
-      exifReader->open( sImageFilename );
+      Exif_IO_EasyExif exifReader;
+      exifReader.open( sImageFilename );
 
       const bool bHaveValidExifMetadata =
-        exifReader->doesHaveExifInfo()
-        && !exifReader->getModel().empty()
-        && !exifReader->getBrand().empty();
+        exifReader.doesHaveExifInfo()
+        && !exifReader.getModel().empty()
+        && !exifReader.getBrand().empty();
 
       if (bHaveValidExifMetadata) // If image contains meta data
       {
         // Handle case where focal length is equal to 0
-        if (exifReader->getFocal() == 0.0f)
+        if (exifReader.getFocal() == 0.0f)
         {
           error_report_stream
             << stlplus::basename_part(sImageFilename) << ": Focal length is missing." << "\n";
@@ -343,14 +340,14 @@ int main(int argc, char **argv)
         else
         // Create the image entry in the list file
         {
-          const std::string sCamModel = exifReader->getBrand() + " " + exifReader->getModel();
+          const std::string sCamModel = exifReader.getBrand() + " " + exifReader.getModel();
 
           Datasheet datasheet;
           if ( getInfo( sCamModel, vec_database, datasheet ))
           {
             // The camera model was found in the database so we can compute it's approximated focal length
             const double ccdw = datasheet.sensorSize_;
-            focal = std::max ( width, height ) * exifReader->getFocal() / ccdw;
+            focal = std::max ( width, height ) * exifReader.getFocal() / ccdw;
           }
           else
           {

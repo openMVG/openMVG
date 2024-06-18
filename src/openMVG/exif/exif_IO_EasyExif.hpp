@@ -38,6 +38,11 @@ class Exif_IO_EasyExif : public Exif_IO
     explicit Exif_IO_EasyExif( const std::string & sFileName );
 
     /**
+    * @brief Destructor
+    */
+    ~Exif_IO_EasyExif() override;
+
+    /**
     * @brief Open and populate EXIF data
     * @param sFileName path of the image to analyze
     * @retval true if image file could be parsed correctly
@@ -152,9 +157,6 @@ class Exif_IO_EasyExif : public Exif_IO
     /// Hide the easyexif::EXIFInfo to a Pimp "Pointer to implementation".
     class EXIFInfoImpl;
     std::unique_ptr<EXIFInfoImpl> pimpl_;
-
-    /// Indicate if exifInfo_ is populated
-    bool bHaveExifInfo_;
 };
 
 } // namespace exif

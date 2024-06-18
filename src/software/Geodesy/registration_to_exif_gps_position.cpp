@@ -97,12 +97,7 @@ int main(int argc, char **argv)
   }
 
   // Init the EXIF reader (will be used for GPS data reading)
-  std::unique_ptr<Exif_IO> exifReader(new Exif_IO_EasyExif);
-  if (!exifReader)
-  {
-    std::cerr << "Cannot instantiate the EXIF metadata reader." << std::endl;
-    return EXIT_FAILURE;
-  }
+  Exif_IO_EasyExif exifReader;
 
   // List corresponding poses (SfM - GPS)
   std::vector<Vec3> vec_sfm_center, vec_gps_center;
@@ -116,15 +111,15 @@ int main(int argc, char **argv)
       stlplus::create_filespec(sfm_data.s_root_path, view_it.second->s_Img_path);
 
     // Try to parse EXIF metada & check existence of EXIF data
-    if (! (exifReader->open( view_filename ) &&
-           exifReader->doesHaveExifInfo()) )
+    if (! (exifReader.open( view_filename ) &&
+           exifReader.doesHaveExifInfo()) )
       continue;
 
     // Check existence of GPS coordinates
     double latitude, longitude, altitude;
-    if ( exifReader->GPSLatitude( &latitude ) &&
-         exifReader->GPSLongitude( &longitude ) &&
-         exifReader->GPSAltitude( &altitude ) )
+    if ( exifReader.GPSLatitude( &latitude ) &&
+         exifReader.GPSLongitude( &longitude ) &&
+         exifReader.GPSAltitude( &altitude ) )
     {
       // Add XYZ position to the GPS position array
       switch (i_GPS_XYZ_method)
