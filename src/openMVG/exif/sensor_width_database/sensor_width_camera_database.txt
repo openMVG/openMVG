@@ -5303,6 +5303,7 @@ Samsung Galaxy S7 Edge Exynos;3.2
 Samsung Galaxy S7 Edge SD820;3.2
 Samsung Galaxy S7 Exynos;3.2
 Samsung Galaxy S7 SD820;3.2
+Samsung Galaxy S23+;8.19
 Samsung Galaxy Tab S 10.5 LTE;3.6
 Samsung Galaxy Tab S 10.5 Wi-Fi;3.6
 Samsung Galaxy Tab S 8.4 LTE;3.6
