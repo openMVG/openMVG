@@ -27,6 +27,10 @@ The implementation is based on
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/image/image_container.hpp"
 
+#ifdef _MSC_VER
+#pragma warning( once : 4267 4244 )
+#endif
+
 namespace openMVG{
 namespace features{
 namespace sift{

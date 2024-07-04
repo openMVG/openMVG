@@ -18,6 +18,10 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/system/logger.hpp"
 
+#ifdef _MSC_VER
+#pragma warning( once : 4244 )
+#endif
+
 namespace openMVG{
 namespace features{
 

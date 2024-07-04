@@ -25,6 +25,11 @@ The implementation is based on
 #include "openMVG/features/sift/sift_keypoint.hpp"
 #include "openMVG/image/image_container.hpp"
 
+#ifdef _MSC_VER
+#pragma warning( once : 4267 ) //warning C4267: 'argument' : conversion from 'size_t' to 'const int', possible loss of data
+#pragma warning( once : 4244 ) //warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+#endif
+
 namespace openMVG{
 namespace features{
 namespace sift{
