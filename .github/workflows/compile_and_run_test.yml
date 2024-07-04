@@ -40,7 +40,7 @@ jobs:
         working-directory: ./build
         run: |
            if [ "$RUNNER_OS" == "Windows" ]; then
-              cmake --build . --config Release
+              cmake --build . --config Release --parallel
            else
               cmake --build . -- -j$(getconf _NPROCESSORS_ONLN)
            fi
