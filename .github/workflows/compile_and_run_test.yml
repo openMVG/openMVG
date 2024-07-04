@@ -33,8 +33,7 @@ jobs:
           -DOpenMVG_BUILD_TESTS=ON \
           -DOpenMVG_BUILD_EXAMPLES=ON \
           -DOpenMVG_BUILD_SOFTWARES=ON \
-          -DSCHUR_SPECIALIZATIONS=OFF \
-          -DTARGET_ARCHITECTURE=core
+          -DSCHUR_SPECIALIZATIONS=OFF
         shell: bash
 
       - name: Build
@@ -43,7 +42,7 @@ jobs:
            if [ "$RUNNER_OS" == "Windows" ]; then
               cmake --build . --config Release
            else
-              cmake --build . -- -j$(nproc)
+              cmake --build . -- -j$(getconf _NPROCESSORS_ONLN)
            fi
         shell: bash
 
@@ -51,4 +50,5 @@ jobs:
       - name: Unit Tests
         working-directory: ./build
         run: |
-          ctest -j$(nproc) --build-config Release
+          ctest -j$(getconf _NPROCESSORS_ONLN) --build-config Release
+        shell: bash
