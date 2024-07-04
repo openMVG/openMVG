@@ -40,9 +40,9 @@ jobs:
         working-directory: ./build
         run: |
            if [ "$RUNNER_OS" == "Windows" ]; then
-              cmake --build . --config Release --parallel
+              cmake --build . --config Release --parallel 4 -- /p:CL_MPcount=4
            else
-              cmake --build . -- -j$(getconf _NPROCESSORS_ONLN)
+              cmake --build . -j$(getconf _NPROCESSORS_ONLN)
            fi
         shell: bash
 

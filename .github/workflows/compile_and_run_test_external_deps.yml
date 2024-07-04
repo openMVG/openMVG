@@ -69,7 +69,7 @@ jobs:
       - name: Build
         working-directory: ./build
         run: |
-              cmake --build . -- -j$(nproc)
+              cmake --build . -j$(nproc)
         shell: bash
 
 
