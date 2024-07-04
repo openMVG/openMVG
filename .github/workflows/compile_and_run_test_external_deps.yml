@@ -77,3 +77,4 @@ jobs:
         working-directory: ./build
         run: |
           ctest -j$(nproc) --build-config Release
+        shell: bash
