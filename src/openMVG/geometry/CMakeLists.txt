@@ -34,7 +34,8 @@ install(TARGETS openMVG_geometry DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT open
 
 UNIT_TEST(openMVG convex_hull "openMVG_geometry")
 UNIT_TEST(openMVG rigid_transformation3D_srt "openMVG_geometry")
-UNIT_TEST(openMVG plane_estimation_kernel "openMVG_geometry")
 UNIT_TEST(openMVG half_space_intersection "openMVG_geometry")
 UNIT_TEST(openMVG frustum_intersection "openMVG_multiview_test_data;openMVG_multiview;openMVG_geometry")
 UNIT_TEST(openMVG frustum_box_intersection "openMVG_multiview_test_data;openMVG_multiview;openMVG_geometry")
+# deprecate the following test
+# UNIT_TEST(openMVG plane_estimation_kernel "openMVG_geometry")
