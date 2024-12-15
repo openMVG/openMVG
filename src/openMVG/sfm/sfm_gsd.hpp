@@ -13,10 +13,9 @@ namespace sfm {
 
 bool AreSame(double a, double b);
 
-Vec2 get_ground_sampling_distance(
-    const SfM_Data & sfm_data, 
-    const Vec2 & sensor_size
-);
+double get_ground_sampling_distance(IndexT view_id, const SfM_Data & sfm_data, const Vec2 & sensor_size);
+
+double get_ground_sampling_distance_cm(IndexT view_id, const SfM_Data & sfm_data, const Vec2 & sensor_size);
 
 std::vector<Vec2> getRealGroundCoordinates(
     IndexT view_id, 
