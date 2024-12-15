@@ -41,6 +41,7 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     * @brief Constructor
     * @param w Width of image plane
     * @param h Height of image plane
+    * @param ccdw width of the ccd sensor
     * @param focal Focal distance in pixel
     * @param ppx Principal point on X-axis
     * @param ppy Principal point on Y-axis
@@ -51,9 +52,10 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     */
     Pinhole_Intrinsic_Fisheye(
       int w = 0, int h = 0,
+      double ccdw = 0.0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0, double k4 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+      : Pinhole_Intrinsic( w, h, ccdw, focal, ppx, ppy ),
         params_({k1, k2, k3, k4})
     {
     }
