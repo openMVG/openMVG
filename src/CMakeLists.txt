@@ -22,6 +22,11 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
 
+# Reduce MSVC verbosity
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4805 /wd4244 /wd4267 /wd4305 /wd4996")
+endif()
+
 set(CMAKE_FIND_FRAMEWORK LAST)
 
 # ==============================================================================
