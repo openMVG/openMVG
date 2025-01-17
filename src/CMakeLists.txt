@@ -326,28 +326,6 @@ if (NOT Ceres_FOUND)
 endif()
 
 # ==============================================================================
-# Flann
-# ==============================================================================
-# - internal by default (flann),
-# - external if FLANN_INCLUDE_DIR_HINTS and a valid Flann setup is found
-# ==============================================================================
-if (NOT DEFINED FLANN_INCLUDE_DIR_HINTS)
-  set(FLANN_INCLUDE_DIR_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
-  set(OpenMVG_USE_INTERNAL_FLANN ON)
-  find_package(Flann QUIET)
-else()
-  find_package(Flann QUIET CONFIG)
-  if (TARGET flann::flann)
-    set(FLANN_LIBRARIES "flann::flann;flann::flann_cpp")
-  else()
-    find_package(Flann QUIET)
-  endif()
-endif()
-if (NOT FLANN_FOUND OR OpenMVG_USE_INTERNAL_FLANN)
-  set(FLANN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/flann/src/cpp)
-endif()
-
-# ==============================================================================
 # CoinUtils
 # ==============================================================================
 # - internal by default (CoinUtils),
@@ -404,6 +382,7 @@ if (OpenMVG_USE_INTERNAL_OSI AND OpenMVG_USE_INTERNAL_CLP AND OpenMVG_USE_INTERN
   add_subdirectory(dependencies/osi_clp/)
   set_property(TARGET lib_clp PROPERTY FOLDER OpenMVG/3rdParty/lib_clp)
   set_property(TARGET lib_CoinUtils PROPERTY FOLDER OpenMVG/3rdParty/lib_CoinUtils)
+  set_property(TARGET lib_CoinUtils PROPERTY CXX_STANDARD 11)
   set_property(TARGET lib_Osi PROPERTY FOLDER OpenMVG/3rdParty/lib_Osi)
   set_property(TARGET lib_OsiClpSolver PROPERTY FOLDER OpenMVG/3rdParty/lib_OsiClpSolver)
 endif()
@@ -573,12 +552,6 @@ if (DEFINED OpenMVG_USE_INTERNAL_CERES)
   message(STATUS "CERES: " ${CERES_VERSION} " (internal)")
 else()
   message(STATUS "CERES: " ${CERES_VERSION} " (external)")
-endif()
-
-if (DEFINED OpenMVG_USE_INTERNAL_FLANN)
-  message(STATUS "FLANN: " ${FLANN_VERSION} " (internal)")
-else()
-  message(STATUS "FLANN: " ${FLANN_VERSION} " (external)")
 endif()
 
 if (DEFINED OpenMVG_USE_INTERNAL_TIFF)

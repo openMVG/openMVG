@@ -9,7 +9,6 @@
 #include "openMVG/matching/regions_matcher.hpp"
 #include "openMVG/matching/matcher_brute_force.hpp"
 #include "openMVG/matching/matcher_cascade_hashing.hpp"
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
 #include "openMVG/matching/matcher_hnsw.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/matching/metric_hamming.hpp"
@@ -79,13 +78,6 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
         break;
-        case ANN_L2:
-        {
-          using MetricT = flann::L2<unsigned char>;
-          using MatcherT = ArrayMatcher_Kdtree_Flann<unsigned char, MetricT>;
-          region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
-        }
-        break;
         case HNSW_L2: 
         {
           using MetricT = L2<unsigned char>;
@@ -123,13 +115,6 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
         break;
-        case ANN_L2:
-        {
-          using MetricT = flann::L2<float>;
-          using MatcherT = ArrayMatcher_Kdtree_Flann<float, MetricT>;
-          region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
-        }
-        break;
         case HNSW_L2: 
         {
           using MetricT = L2<float>;
@@ -157,13 +142,6 @@ std::unique_ptr<RegionsMatcher> RegionMatcherFactory
         {
           using MetricT = L2<double>;
           using MatcherT = ArrayMatcherBruteForce<double, MetricT>;
-          region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
-        }
-        break;
-        case ANN_L2:
-        {
-          using MetricT = flann::L2<double>;
-          using MatcherT = ArrayMatcher_Kdtree_Flann<double, MetricT>;
           region_matcher.reset(new matching::RegionsMatcherT<MatcherT>(regions, true));
         }
         break;

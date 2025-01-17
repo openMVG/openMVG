@@ -15,7 +15,6 @@ namespace matching{
 enum EMatcherType : unsigned char
 {
   BRUTE_FORCE_L2,
-  ANN_L2,
   CASCADE_HASHING_L2,
   HNSW_L2,
   HNSW_L1,

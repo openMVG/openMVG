@@ -731,10 +731,6 @@ EMatcherType MainWindow::GetMatcherType( void )
   {
     return BRUTE_FORCE_HAMMING;
   }
-  else if ( sNearestMatchingMethod == "ANNL2" )
-  {
-    return ANN_L2;
-  }
   else if ( sNearestMatchingMethod == "CASCADEHASHINGL2" )
   {
     return CASCADE_HASHING_L2;
