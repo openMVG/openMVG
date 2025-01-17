@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,  macOS-latest, windows-latest]
+        os: [ubuntu-24.04-arm]
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
