@@ -37,28 +37,25 @@ jobs:
       run: |
         cmake ../src \
         -DOpenMVG_BUILD_TESTS=ON \
-        -DOpenMVG_BUILD_EXAMPLES=ON \
-        -DOpenMVG_BUILD_SOFTWARES=ON \
+        -DOpenMVG_BUILD_EXAMPLES=OFF \
+        -DOpenMVG_BUILD_SOFTWARES=OFF \
+        -DOpenMVG_USE_RERUN=OFF \
         -DSCHUR_SPECIALIZATIONS=OFF \
         -DTARGET_ARCHITECTURE=core
       shell: bash
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         
     - name: Build
       working-directory: ./build
       run: |
-         if [ "$RUNNER_OS" == "Windows" ]; then
-            cmake --build . --config Release
-         else
-            cmake --build . -- -j$(nproc)
-         fi
+        cmake --build . -- -j$(nproc)
       shell: bash
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
