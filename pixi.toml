@@ -20,7 +20,7 @@ test = { cmd = "cd build; ctest -j", depends_on = ["build"] }
 
 configure = "cmake -B build -S ./src -DCMAKE_BUILD_TYPE=Release -DOpenMVG_BUILD_TESTS:BOOL=ON"
 build = { cmd = "cmake --build build --config Release -- /nologo /verbosity:minimal /maxcpucount", depends_on = ["configure"] }
-test = { cmd = "cd build; ctest -C Release", depends_on = ["build"] }
+test = { cmd = "cd build; ctest -j4 -C Release", depends_on = ["build"] }
 
 
 [dependencies]

@@ -1,0 +1,38 @@
+name: CI - pixi
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+ # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-tests:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    env:
+      CTEST_OUTPUT_ON_FAILURE: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Git submodule
+        run: |
+          mkdir ./build
+          git submodule update -i
+
+
+      - name : Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.25.0
+          cache: true
+
+      - name: C++ - Configure, Build and Test
+        shell: bash
+        run: pixi run test
