@@ -7,7 +7,8 @@ if(UNIX)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif(UNIX)
 
-if(NOT USE_SSE2)
+if(NOT USE_SSE2 OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64)")
+  message(STATUS "Detected ARM architecture")  
   add_definitions(-DVL_DISABLE_SSE2)
 endif()
 
