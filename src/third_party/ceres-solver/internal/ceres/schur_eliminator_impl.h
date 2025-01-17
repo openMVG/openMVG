@@ -152,9 +152,6 @@ void SchurEliminator<kRowBlockSize, kEBlockSize, kFBlockSize>::Init(
   const Chunk& chunk = chunks_.back();
 
   uneliminated_row_begins_ = chunk.start + chunk.size;
-  if (num_threads_ > 1) {
-    random_shuffle(chunks_.begin(), chunks_.end());
-  }
 
   buffer_.reset(new double[buffer_size_ * num_threads_]);
 
