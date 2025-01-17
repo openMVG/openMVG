@@ -136,25 +136,18 @@ if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
 endif ()
 
 # ==============================================================================
-# Check C++17 (required for rerun) or C++11 (minimal) support
+# Check C++11 compiler support
 # ==============================================================================
-if (OpenMVG_USE_RERUN)
-  set(CMAKE_CXX_STANDARD 17)
+include(CXX11)
+check_for_cxx11_compiler(CXX11_COMPILER)
+# If a C++11 compiler is available, then set the appropriate flags
+if (CXX11_COMPILER)
+  set(CMAKE_CXX_STANDARD 11)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
-else (OpenMVG_USE_RERUN)
-  include(CXX11)
-  check_for_cxx11_compiler(CXX11_COMPILER)
-  # If a C++11 compiler is available, then set the appropriate flags
-  if (CXX11_COMPILER)
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-  else (CXX11_COMPILER)
-    message(FATAL_ERROR "A CXX11 compiler is required.")
-  endif (CXX11_COMPILER)
-
-endif(OpenMVG_USE_RERUN)
+else (CXX11_COMPILER)
+  message(FATAL_ERROR "A CXX11 compiler is required.")
+endif (CXX11_COMPILER)
 
 # ==============================================================================
 # OpenMP detection
