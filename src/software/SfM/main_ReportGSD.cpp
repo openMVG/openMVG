@@ -55,7 +55,10 @@ int main(int argc, char **argv)
   // then as GSD should, format is h,w
   double gsd = get_ground_sampling_distance(0, sfm_data, Vec2(0.0,ccdw));
 
-  OPENMVG_LOG_INFO << "Scene GSD is: " << gsd;
+  double gsd_cm = get_ground_sampling_distance_cm(0, sfm_data, Vec2(0.0,ccdw));
+
+  OPENMVG_LOG_INFO << "Scene GSD is: " << gsd << " m/px";
+  OPENMVG_LOG_INFO << "Scene GSD is: " << gsd_cm << " cm/px";
 
   return EXIT_FAILURE;
 }

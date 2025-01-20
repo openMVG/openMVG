@@ -1,5 +1,6 @@
 
 #include "openMVG/sfm/sfm_gsd.hpp"
+#include "openMVG/system/logger.hpp"
 
 namespace openMVG {
 namespace sfm {
@@ -39,7 +40,8 @@ double get_ground_sampling_distance(IndexT view_id, const SfM_Data & sfm_data, c
     unsigned int width = intrinsic->w();
     unsigned int height= intrinsic->h();
     
-    double focal_mm = params[0] * sensor_size[0]/width;
+    OPENMVG_LOG_INFO << params[0] << " " << sensor_size[1] << " " << width;
+    double focal_mm = params[0] * sensor_size[1]/width;
 
     // GSD is the maximum value of the horizontal and vertical GSDs
     double GSD_H = -1.0;
@@ -49,9 +51,10 @@ double get_ground_sampling_distance(IndexT view_id, const SfM_Data & sfm_data, c
         GSD_H = (average_distance_to_ground * sensor_size[0]) / (focal_mm * height);
     }
     if(!AreSame(0.0,sensor_size[1])){
+        OPENMVG_LOG_INFO << average_distance_to_ground << " " << sensor_size[1] << " " << focal_mm << " " << width;
         GSD_W = (average_distance_to_ground * sensor_size[1]) / (focal_mm * width);
     }
-    
+    OPENMVG_LOG_INFO << GSD_H << " " << GSD_W;
     return std::max(GSD_H,GSD_W);
 }
 
@@ -87,17 +90,19 @@ double get_ground_sampling_distance_cm(IndexT view_id, const SfM_Data & sfm_data
     unsigned int width = intrinsic->w();
     unsigned int height= intrinsic->h();
     
-    double focal_mm = params[0] * sensor_size[0]/width;
+    double focal_mm = params[0] * sensor_size[1]/width;
 
     // GSD is the maximum value of the horizontal and vertical GSDs
     double GSD_H = -1.0;
     double GSD_W = -1.0;
 
     if(!AreSame(0.0,sensor_size[0])){
-        GSD_H = (average_distance_to_ground * sensor_size[0] * 100) / (focal_mm * height);
+        GSD_H = (average_distance_to_ground * sensor_size[0] ) / (focal_mm * height);
+        GSD_H *= 100;
     }
     if(!AreSame(0.0,sensor_size[1])){
-        GSD_W = (average_distance_to_ground * sensor_size[1] * 100) / (focal_mm * width);
+        GSD_W = (average_distance_to_ground * sensor_size[1] ) / (focal_mm * width);
+        GSD_W *= 100;
     }
     
     return std::max(GSD_H,GSD_W);
