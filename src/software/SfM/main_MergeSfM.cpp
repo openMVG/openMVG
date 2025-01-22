@@ -1,0 +1,324 @@
+// This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
+
+// Copyright (c) 2012, 2021 Pierre MOULON.
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "openMVG/cameras/Camera_Common.hpp"
+#include "openMVG/cameras/Cameras_Common_command_line_helper.hpp"
+
+#include "openMVG/sfm/pipelines/sfm_features_provider.hpp"
+#include "openMVG/sfm/pipelines/sfm_matches_provider.hpp"
+#include "openMVG/sfm/sfm_data.hpp"
+#include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_BA.hpp"
+#include "openMVG/sfm/sfm_report.hpp"
+#include "openMVG/sfm/sfm_view.hpp"
+#include "openMVG/system/timer.hpp"
+#include "openMVG/types.hpp"
+
+#include "openMVG/sfm/sfm_data_merge.hpp"
+
+#include "openMVG/sfm/sfm_data_utils.hpp"
+
+#include "third_party/cmdLine/cmdLine.h"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include "openMVG/geometry/rigid_transformation3D_srt.hpp"
+#include "openMVG/sfm/sfm_data_transform.hpp"
+#include "openMVG/system/timer.hpp"
+
+#include <cstdlib>
+#include <memory>
+#include <string>
+#include <utility>
+#include <algorithm>
+#include <unordered_set>
+#include <filesystem>
+
+#include "openMVG/sfm/pipelines/global/GlobalSfM_rotation_averaging.hpp"
+#include "openMVG/sfm/pipelines/global/GlobalSfM_translation_averaging.hpp"
+
+#ifdef OPENMVG_USE_OPENMP
+#include <omp.h>
+#endif
+
+using namespace openMVG;
+using namespace openMVG::cameras;
+using namespace openMVG::sfm;
+
+enum class ESfMSceneInitializer
+{
+  INITIALIZE_EXISTING_POSES,
+  INITIALIZE_MAX_PAIR,
+  INITIALIZE_AUTO_PAIR,
+  INITIALIZE_STELLAR
+};
+
+enum class ESfMEngine
+{
+  INCREMENTAL,
+  INCREMENTALV2,
+  GLOBAL
+};
+
+bool StringToEnum
+(
+  const std::string & str,
+  ESfMEngine & sfm_engine
+)
+{
+  const std::map<std::string, ESfMEngine> string_to_enum_mapping =
+  {
+    {"INCREMENTAL", ESfMEngine::INCREMENTAL},
+    {"INCREMENTALV2", ESfMEngine::INCREMENTALV2},
+    {"GLOBAL", ESfMEngine::GLOBAL},
+  };
+  const auto it  = string_to_enum_mapping.find(str);
+  if (it == string_to_enum_mapping.end())
+    return false;
+  sfm_engine = it->second;
+  return true;
+}
+
+int main(int argc, char **argv)
+{
+  using namespace std;
+  OPENMVG_LOG_INFO
+      << "\n-----------------------------------------------------------"
+      << "\n Structure from Motion:"
+      << "\n-----------------------------------------------------------";
+  CmdLine cmd;
+
+  // Common options:
+  std::string
+      filename_sfm_data,
+      filename_sfm_data_child,
+      directory_match,
+      filename_match,
+      directory_output,
+      engine_name = "GLOBAL";
+
+  // Bundle adjustment options:
+  std::string sIntrinsic_refinement_options = "ADJUST_ALL";
+  std::string sExtrinsic_refinement_options = "ADJUST_ALL";
+  bool b_use_motion_priors = false;
+  bool preform_final_ba = false;
+
+  // Incremental SfM options
+  /*
+  int triangulation_method = static_cast<int>(ETriangulationMethod::DEFAULT);
+  int resection_method  = static_cast<int>(resection::SolverType::DEFAULT);
+  */
+  int user_camera_model = PINHOLE_CAMERA_RADIAL3;
+  
+
+  // Global SfM
+  int rotation_averaging_method = int (ROTATION_AVERAGING_L2);
+  int translation_averaging_method = int (TRANSLATION_AVERAGING_SOFTL1);
+
+
+  // Common options
+  cmd.add( make_option('i', filename_sfm_data, "main_sfm_file") );
+  cmd.add( make_option('c', filename_sfm_data_child, "second_sfm_file") );
+  cmd.add( make_option('o', directory_output, "output") );
+  
+  cmd.add( make_option('s', engine_name, "sfm_engine") );
+
+  // Bundle adjustment options
+  cmd.add( make_option('f', sIntrinsic_refinement_options, "refine_intrinsic_config") );
+  cmd.add( make_option('e', sExtrinsic_refinement_options, "refine_extrinsic_config") );
+  cmd.add( make_switch('P', "prior_usage") );
+  cmd.add( make_switch('B', "final_ba") );
+
+  // Global SfM
+  cmd.add( make_option('R', rotation_averaging_method, "rotationAveraging") );
+  cmd.add( make_option('T', translation_averaging_method, "translationAveraging") );
+
+  try {
+    if (argc == 1) throw std::string("Invalid parameter.");
+    cmd.process(argc, argv);
+  } catch (const std::string& s) {
+
+    OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
+      << "[Required]\n"
+      << "[-i|--main_sfm_file] path to the parent SfM_Data scene\n"
+      << "[-c|--second_sfm_file] path to the child SfM_Data scene to merge\n"
+      << "[-o|--output_dir] path where the output data will be stored\n"
+      << "[-s|--sfm_engine] Type of SfM Engine to use for the reconstruction\n"
+      << "\t GLOBAL    : initialize globally rotation and translations\n"
+      << "\n\n"
+      << "[Optional parameters]\n"
+      << "\n\n"
+      << "[Common]\n"
+      << "[-M|--match_file] path to the match file to use (i.e matches.f.txt or matches.f.bin)\n"
+      << "[-f|--refine_extrinsic_config] Intrinsic parameters refinement option\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> intrinsic parameters are held as constant\n"
+      << "\t ADJUST_FOCAL_LENGTH -> refine only the focal length\n"
+      << "\t ADJUST_PRINCIPAL_POINT -> refine only the principal point position\n"
+      << "\t ADJUST_DISTORTION -> refine only the distortion coefficient(s) (if any)\n"
+      << "\t -> NOTE: options can be combined thanks to '|'\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_PRINCIPAL_POINT\n"
+      <<    "\t\t-> refine the focal length & the principal point position\n"
+      << "\t ADJUST_FOCAL_LENGTH|ADJUST_DISTORTION\n"
+      <<    "\t\t-> refine the focal length & the distortion coefficient(s) (if any)\n"
+      << "\t ADJUST_PRINCIPAL_POINT|ADJUST_DISTORTION\n"
+      <<    "\t\t-> refine the principal point position & the distortion coefficient(s) (if any)\n"
+      << "[-e|--refine_extrinsic_config] Extrinsic parameters refinement option\n"
+      << "\t ADJUST_ALL -> refine all existing parameters (default) \n"
+      << "\t NONE -> extrinsic parameters are held as constant\n"
+      << "[-P|--prior_usage] Enable usage of motion priors (i.e GPS positions) (default: false)\n"
+      << "[-B|--preform_final_ba] Run a final bundle adjustment on the merge operation (default: false)\n"
+      << "\n\n"
+      << "[Engine specifics]\n"
+      << "[GLOBAL]\n"
+      << "\t[-R|--rotationAveraging]\n"
+      << "\t\t 1 -> L1 minimization\n"
+      << "\t\t 2 -> L2 minimization (default)\n"
+      << "\t[-T|--translationAveraging]:\n"
+      << "\t\t 1 -> L1 minimization\n"
+      << "\t\t 2 -> L2 minimization of sum of squared Chordal distances\n"
+      << "\t\t 3 -> SoftL1 minimization (default)\n"
+      << "\t\t 4 -> LiGT: Linear Global Translation constraints from rotation and matches\n";
+
+    OPENMVG_LOG_ERROR << s;
+    return EXIT_FAILURE;
+  }
+
+  b_use_motion_priors = cmd.used('P');
+  preform_final_ba = cmd.used('B');
+
+/*
+  // Check validity of command line parameters:
+  if ( !isValid(static_cast<ETriangulationMethod>(triangulation_method))) {
+    OPENMVG_LOG_ERROR << "Invalid triangulation method";
+    return EXIT_FAILURE;
+  }
+  */
+
+  if ( !isValid(openMVG::cameras::EINTRINSIC(user_camera_model)) )  {
+    OPENMVG_LOG_ERROR << "Invalid camera type";
+    return EXIT_FAILURE;
+  }
+
+  const cameras::Intrinsic_Parameter_Type intrinsic_refinement_options =
+      cameras::StringTo_Intrinsic_Parameter_Type(sIntrinsic_refinement_options);
+  if (intrinsic_refinement_options == static_cast<cameras::Intrinsic_Parameter_Type>(0) )
+  {
+    OPENMVG_LOG_ERROR << "Invalid input for Bundle Adjustment Intrinsic parameter refinement option";
+    return EXIT_FAILURE;
+  }
+
+  const sfm::Extrinsic_Parameter_Type extrinsic_refinement_options =
+      sfm::StringTo_Extrinsic_Parameter_Type(sExtrinsic_refinement_options);
+  if (extrinsic_refinement_options == static_cast<sfm::Extrinsic_Parameter_Type>(0) )
+  {
+    OPENMVG_LOG_ERROR << "Invalid input for the Bundle Adjustment Extrinsic parameter refinement option";
+    return EXIT_FAILURE;
+  }
+
+  ESfMEngine sfm_engine_type;
+  if (!StringToEnum(engine_name, sfm_engine_type))
+  {
+    OPENMVG_LOG_ERROR << "Invalid input for the SfM Engine type";
+    return EXIT_FAILURE;
+  }
+
+  if (rotation_averaging_method < ROTATION_AVERAGING_L1 ||
+      rotation_averaging_method > ROTATION_AVERAGING_L2 )  {
+    OPENMVG_LOG_ERROR << "Rotation averaging method is invalid";
+    return EXIT_FAILURE;
+  }
+
+#ifndef USE_PATENTED_LIGT
+  if (translation_averaging_method == TRANSLATION_LIGT) {
+    OPENMVG_LOG_ERROR << "OpenMVG was not compiled with USE_PATENTED_LIGT cmake option";
+    return EXIT_FAILURE;
+  }
+#endif
+  if (translation_averaging_method < TRANSLATION_AVERAGING_L1 ||
+      translation_averaging_method > TRANSLATION_LIGT )  {
+    OPENMVG_LOG_ERROR << "Translation averaging method is invalid";
+    return EXIT_FAILURE;
+  }
+
+  if (directory_output.empty())  {
+    OPENMVG_LOG_ERROR << "It is an invalid output directory";
+    return EXIT_FAILURE;
+  }
+
+  // SfM related
+  OPENMVG_LOG_INFO << "main SfM:\n"<< filename_sfm_data;
+  // Load input SfM_Data scene
+  SfM_Data sfm_data,child_sfm_data;
+  if (!Load(sfm_data, filename_sfm_data, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< filename_sfm_data << "\" cannot be read.";
+    return EXIT_FAILURE;
+  }
+  OPENMVG_LOG_INFO << "second SfM:\n"<< filename_sfm_data_child;
+
+  if (!Load(child_sfm_data, filename_sfm_data_child, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
+    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< filename_sfm_data_child << "\" cannot be read.";
+    return EXIT_FAILURE;
+  }
+
+  if (!stlplus::folder_exists(directory_output))
+  {
+    if (!stlplus::folder_create(directory_output))
+    {
+      OPENMVG_LOG_ERROR << "Cannot create the output directory";
+      return EXIT_FAILURE;
+    }
+  }
+
+  //---------------------------------------
+  // GLOBAL reconstruction merging operation
+  //---------------------------------------
+
+  IndexT start_views = sfm_data.views.size();
+  IndexT start_poses = sfm_data.poses.size();
+  IndexT start_tracks = sfm_data.structure.size();
+
+  std::cout << "#Main SfM Views:" << start_views  << " #Secondary SfM Views:" << child_sfm_data.views.size() << std::endl;
+
+  openMVG::system::Timer timer;
+  
+  std::shared_ptr<cameras::IntrinsicBase> best_camera = findBestIntrinsic(sfm_data,child_sfm_data,0);
+
+  std::cout << "Best camera : " << best_camera << std::endl;
+
+  // this contains the name of the file, whether it's new for the first scene and the indexes it occurs in each SfM scene
+  std::map< std::string, std::pair<bool,std::vector<IndexT>> > sfm_filenames_indexes;
+
+  // we'll read in the filenames and id's within the SfM scenes
+  bool has_overlap = getOverlappingImages(sfm_data, child_sfm_data, sfm_filenames_indexes);
+  // first is do a simple overlap test
+  if(has_overlap){
+    std::cout << "Do datasets have overlap: true" << std::endl;
+  }else{
+    std::cout << "Do datasets have overlap: false" << std::endl;
+  }
+  // next we'll see if it's enough to register the two scenes
+  int overlap_amount = getNumberOverlapping(sfm_filenames_indexes);
+
+  OPENMVG_LOG_INFO  << "Overlap amount: " << overlap_amount;
+
+  if(overlap_amount < 6){
+    OPENMVG_LOG_ERROR << "Too few images to merge correctly, only " << overlap_amount << " overlapping images found";
+    return EXIT_FAILURE;
+  }
+
+  std::string overlap_printout = printOverlapInformation(sfm_filenames_indexes);
+
+  //OPENMVG_LOG_INFO << overlap_printout;
+
+  //bool has_alignableVecs = getVecs2Align();
+  
+  //return EXIT_SUCCESS;
+  //return EXIT_FAILURE
+  return EXIT_SUCCESS;
+}

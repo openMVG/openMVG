@@ -174,6 +174,7 @@ target_link_libraries(openMVG_main_SfM
     ${STLPLUS_LIBRARY}
 )
 
+
 add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)
 target_link_libraries(openMVG_main_ConvertSfM_DataFormat
   PRIVATE
@@ -264,6 +265,30 @@ target_link_libraries(openMVG_main_SplitMatchFileIntoMatchFiles
 # Installation rules
 set_property(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
+
+# merge SfM files 
+add_executable(openMVG_main_MergeSfM main_MergeSfM.cpp)
+target_link_libraries(openMVG_main_MergeSfM
+  PRIVATE
+    openMVG_system
+    openMVG_image
+    openMVG_features
+    openMVG_sfm
+    ${STLPLUS_LIBRARY}
+)
+
+target_include_directories(openMVG_main_MergeSfM
+  PRIVATE
+    ${CERES_INCLUDE_DIRS}
+    ${EIGEN_INCLUDE_DIRS}
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/openMVG>
+)
+
+# Installation rules
+set_property(TARGET openMVG_main_MergeSfM PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_MergeSfM DESTINATION bin/)
 
 # -
 # Use openCV Feature detector to describe the images
