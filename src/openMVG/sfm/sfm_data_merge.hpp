@@ -40,7 +40,7 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    openMVG::IndexT& overlap_amount, std::vector<openMVG::Vec3>& parent_vecs,
+    std::vector<openMVG::Vec3>& parent_vecs,
     std::vector<openMVG::Vec3>& child_vecs,
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
 
@@ -49,6 +49,10 @@ bool computeSimilarity(
   const std::vector<openMVG::Vec3> & vec_camPosComputed,
   std::vector<openMVG::Vec3> & vec_camPosComputed_T,
   double *Sout, openMVG::Mat3 * Rout, openMVG::Vec3 * tout);
+
+bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& child_sfm_data, 
+   const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
+   const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
 
 }//end of namespace sfm
 }//end of namespace openmvg

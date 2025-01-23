@@ -303,7 +303,7 @@ int main(int argc, char **argv)
     std::cout << "Do datasets have overlap: false" << std::endl;
   }
   // next we'll see if it's enough to register the two scenes
-  int overlap_amount = getNumberOverlapping(sfm_filenames_indexes);
+  IndexT overlap_amount = getNumberOverlapping(sfm_filenames_indexes);
 
   OPENMVG_LOG_INFO  << "Overlap amount: " << overlap_amount;
 
@@ -312,12 +312,45 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  std::string overlap_printout = printOverlapInformation(sfm_filenames_indexes);
+  // this could be used to print a report of the overlap information
+  //std::string overlap_printout = printOverlapInformation(sfm_filenames_indexes);
 
   //OPENMVG_LOG_INFO << overlap_printout;
 
-  //bool has_alignableVecs = getVecs2Align();
+  std::vector<openMVG::Vec3> first_vecs,second_vecs,result_vecs;
+  first_vecs.reserve(overlap_amount);
+  second_vecs.reserve(overlap_amount);
+
+  bool has_alignableVecs = getVecs2Align(sfm_data, child_sfm_data, first_vecs, second_vecs, sfm_filenames_indexes);
   
+  if(!has_alignableVecs){
+    OPENMVG_LOG_ERROR << "Not enough poses in both SfM scenes for images that exist in both scenes";
+    OPENMVG_LOG_ERROR << "maybe try a higher overlap to increase likelyhood of success";
+    return EXIT_FAILURE;
+  }
+
+  Mat3 R;
+  Vec3 t;
+  double S;
+
+  OPENMVG_LOG_INFO << "Calculating similarity transform:";
+
+  bool p_res = computeSimilarity(first_vecs, second_vecs, result_vecs, &S, &R, &t);
+
+  if(!p_res){
+    OPENMVG_LOG_ERROR << " SRT transform failed to get a stable lock ";
+    return EXIT_FAILURE;
+  }
+
+  OPENMVG_LOG_INFO << "Beginning the SRT transforms of views in scene two";
+
+  bool merge_success = mergeSfMScenes(sfm_data, child_sfm_data, S,R,T,sfm_filenames_indexes);
+
+  if(!merge_success){
+    OPENMVG_LOG_ERROR << " Merging the scenes failed";
+    return EXIT_FAILURE;
+  }
+
   //return EXIT_SUCCESS;
   //return EXIT_FAILURE
   return EXIT_SUCCESS;

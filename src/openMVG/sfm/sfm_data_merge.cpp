@@ -194,20 +194,24 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
 }
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    openMVG::IndexT& overlap_amount, std::vector<openMVG::Vec3>& parent_vecs,
+    std::vector<openMVG::Vec3>& parent_vecs,
     std::vector<openMVG::Vec3>& child_vecs,
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
 {
+  parent_vecs.clear();
+  child_vecs.clear();
   
   IndexT counter=0;
   std::vector<Pair> unused_cameras;
 
   for(auto p: sfm_filenames_indexes){
     std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
-    if(info.second.size()<1){continue;}
+    // lets make sure we have index in each SfM scene
+    if(info.second.size()<2){continue;}
 
     IndexT p1 = info.second[0];
     IndexT p2 = info.second[1];
+
     try{
       const View * view1 = first.views.at(p1).get();
       const View * view2 = second.views.at(p2).get();
@@ -230,6 +234,10 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_
       //std::cout << "Views not used in final reconstructions" << std::endl;
       unused_cameras.push_back(std::make_pair(p1,p2));
     }
+  }
+
+  if(parent_vecs.size() == child_vecs.size() && parent_vecs.size()>3){
+    return true;
   }
 
   return false;
@@ -274,6 +282,77 @@ bool computeSimilarity(
   *Rout = R;
   *tout = t;
   return true;
+}
+
+bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& child_sfm_data, 
+   const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
+   const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes
+){
+    // references
+    Views & parent_views = sfm_data.views;
+    Poses & parent_poses = sfm_data.poses;
+
+    Views & child_views = child_sfm_data.views;
+    Poses & child_poses = child_sfm_data.poses;
+
+    IndexT parent_views_size = parent_views.size();
+
+    std::set<IndexT> remove_track_ids = std::set<IndexT>();
+  
+    for(auto & iterV : child_views){
+        ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(iterV.second.get());
+        IndexT id_view = prior->id_view;
+        IndexT id_pose = prior->id_pose;
+
+        // if the pose for the parent exists then we skip, if the pose doesn't we use 
+        // the child scenes pose and update the parents
+        if(child_overlap_ids.find(id_view) != child_overlap_ids.end()){
+
+        for(auto p: common_ids){
+            if(p.second!=id_view){continue;}
+            const View * view1 = sfm_data.views.at(p.first).get();
+            const View * view2 = child_sfm_data.views.at(p.second).get();
+
+            if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && child_sfm_data.IsPoseAndIntrinsicDefined(view2)){
+                std::cout << "Pose reinstiated from child sfm scene " << std::endl;
+
+                Pose3 pose = child_poses.at(view2->id_pose);
+                Vec3 nloc = S * R * ( pose.center() ) + t; // update the camera position to the reference scene
+                Pose3 npose = Pose3(pose.rotation(),nloc);
+
+                parent_poses[view1->id_pose] = npose;
+
+                break;
+            }
+        }
+
+            continue;
+        }
+
+        // need to store the new view id to modify the observation ids
+        new_view_pairings.insert(Pair(id_view,parent_views_size));
+
+        // if there's a pose then modify the pose position
+        if (child_sfm_data.IsPoseAndIntrinsicDefined(prior)){
+            // image was not used in reconstruction
+            // use the similarity transform and generate the new poses
+            Pose3 pose = child_poses.at(id_pose);
+            Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
+            Pose3 npose = Pose3(pose.rotation(),nloc);
+
+            parent_poses[parent_views_size] = npose;
+
+        }else{
+            remove_track_ids.insert(id_view);
+        }
+
+        prior->id_view = parent_views_size;// new view id 
+        prior->id_pose = parent_views_size;// new pose id
+
+        parent_views[parent_views_size] = std::make_shared<ViewPriors>(*prior);
+
+        parent_views_size++;
+  }
 }
 
 }//end of namespace sfm
