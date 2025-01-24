@@ -194,12 +194,10 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
 }
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    std::vector<openMVG::Vec3>& parent_vecs,
-    std::vector<openMVG::Vec3>& child_vecs,
+    std::vector<openMVG::Vec3> *parent_vecs,
+    std::vector<openMVG::Vec3> *child_vecs,
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
 {
-  parent_vecs.clear();
-  child_vecs.clear();
   
   IndexT counter=0;
   std::vector<Pair> unused_cameras;
@@ -208,9 +206,11 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_
     std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
     // lets make sure we have index in each SfM scene
     if(info.second.size()<2){continue;}
-
+    
     IndexT p1 = info.second[0];
     IndexT p2 = info.second[1];
+
+    //OPENMVG_LOG_INFO << p1 << "," << p2;
 
     try{
       const View * view1 = first.views.at(p1).get();
@@ -225,8 +225,8 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_
         unused_cameras.push_back(std::make_pair(p1,p2));
       }
       else{
-        parent_vecs[counter] = first.poses.at(view1->id_pose).center();
-        child_vecs[counter] = second.poses.at(view2->id_pose).center();
+        parent_vecs -> push_back(first.poses.at(view1->id_pose).center());
+        child_vecs -> push_back( second.poses.at(view2->id_pose).center() );
         counter++;
       }
     }
@@ -236,7 +236,7 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_
     }
   }
 
-  if(parent_vecs.size() == child_vecs.size() && parent_vecs.size()>3){
+  if(parent_vecs->size() == child_vecs->size() && parent_vecs->size()>3){
     return true;
   }
 
@@ -268,7 +268,7 @@ bool computeSimilarity(
   Vec3 t;
   Mat3 R;
   openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  OPENMVG_LOG_INFO << "Non linear refinement" << std::endl;
+  //OPENMVG_LOG_INFO << "Non linear refinement" << std::endl;
   openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
@@ -288,6 +288,7 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
    const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
    const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes
 ){
+    /*
     // references
     Views & parent_views = sfm_data.views;
     Poses & parent_poses = sfm_data.poses;
@@ -352,7 +353,72 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
         parent_views[parent_views_size] = std::make_shared<ViewPriors>(*prior);
 
         parent_views_size++;
-  }
+    }
+
+    std::cout << "Views with no poses: " << remove_track_ids.size() << std::endl;
+
+    std::string root_directory = directory_output.substr(0, directory_output.find_last_of("/\\"));
+    root_directory = root_directory.substr(0, root_directory.find_last_of("/\\"));
+
+    sfm_data.s_root_path = stlplus::create_filespec(root_directory, "Originals");
+    Landmarks child_tracks = child_sfm_data.GetLandmarks();
+
+    IndexT new_track_counter = sfm_data.structure.size();
+    IndexT original_track_num = sfm_data.structure.size();
+    // first update the landmarks in the child scene to the reference frame of the first
+    for (auto& track: child_tracks)
+    {
+        IndexT track_id = track.first;
+        Landmark landmark = track.second;
+    
+        Observations new_observations;
+        for (auto& iterOb: landmark.obs)
+        {
+            IndexT id_view = iterOb.first;
+            // need to update the view_id to the most up to date
+            if(child_overlap_ids.find(id_view) != child_overlap_ids.end()){
+                // it's one of the overlapping features
+                for(auto id: common_ids){
+                    if(id.second == id_view){//child observation is an overlap observation
+                        id_view = id.first;
+                        break;
+                    }
+                }
+            }else{
+                for( auto np: new_view_pairings){
+                    if(np.first == id_view){
+                        id_view = np.second;
+                    }
+                }
+            }
+
+            try{
+                const View * view = sfm_data.views.at(id_view).get();
+                if(!sfm_data.IsPoseAndIntrinsicDefined(view)){
+                    std::cerr << "Pose not defined for view " << id_view << std::endl;
+                    continue;
+                }
+            }catch(...){
+                std::cerr << "View id does not exist " << id_view << std::endl;
+                continue;
+            }
+        
+
+            // view id will have been updated by now, just have to insert it
+            //iterOb.second.id_feat
+            new_observations.insert({id_view,Observation(iterOb.second.x, UndefinedIndexT)});
+            // new observations will have been added
+        }
+
+        Landmark new_landmark;
+        new_landmark.X = S * R * ( landmark.X ) + t;
+        new_landmark.obs = new_observations;
+
+        sfm_data.structure[new_track_counter++] = std::move( new_landmark );
+    }
+    */
+
+    return true;
 }
 
 }//end of namespace sfm

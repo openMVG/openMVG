@@ -318,11 +318,11 @@ int main(int argc, char **argv)
   //OPENMVG_LOG_INFO << overlap_printout;
 
   std::vector<openMVG::Vec3> first_vecs,second_vecs,result_vecs;
-  first_vecs.reserve(overlap_amount);
-  second_vecs.reserve(overlap_amount);
 
-  bool has_alignableVecs = getVecs2Align(sfm_data, child_sfm_data, first_vecs, second_vecs, sfm_filenames_indexes);
+  bool has_alignableVecs = getVecs2Align(sfm_data, child_sfm_data, &first_vecs, &second_vecs, sfm_filenames_indexes);
   
+  OPENMVG_LOG_INFO << first_vecs.size() << " " << second_vecs.size();
+
   if(!has_alignableVecs){
     OPENMVG_LOG_ERROR << "Not enough poses in both SfM scenes for images that exist in both scenes";
     OPENMVG_LOG_ERROR << "maybe try a higher overlap to increase likelyhood of success";
@@ -330,26 +330,50 @@ int main(int argc, char **argv)
   }
 
   Mat3 R;
-  Vec3 t;
+  Vec3 T;
   double S;
 
   OPENMVG_LOG_INFO << "Calculating similarity transform:";
 
-  bool p_res = computeSimilarity(first_vecs, second_vecs, result_vecs, &S, &R, &t);
+  bool p_res = computeSimilarity(first_vecs, second_vecs, result_vecs, &S, &R, &T);
 
   if(!p_res){
     OPENMVG_LOG_ERROR << " SRT transform failed to get a stable lock ";
     return EXIT_FAILURE;
   }
 
+  OPENMVG_LOG_INFO << "SRT calculated";
+
   OPENMVG_LOG_INFO << "Beginning the SRT transforms of views in scene two";
 
-  bool merge_success = mergeSfMScenes(sfm_data, child_sfm_data, S,R,T,sfm_filenames_indexes);
+  bool merge_success = mergeSfMScenes(sfm_data, child_sfm_data, S, R, T, sfm_filenames_indexes);
 
   if(!merge_success){
     OPENMVG_LOG_ERROR << " Merging the scenes failed";
     return EXIT_FAILURE;
   }
+
+  // use the best camera for the scene
+  sfm_data.intrinsics[0] = best_camera;
+  // group the shared intrinsics
+  GroupSharedIntrinsics(sfm_data);
+
+  if(preform_final_ba){
+    OPENMVG_LOG_INFO << "";
+  }
+  
+  OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";
+
+  Generate_SfM_Report(sfm_data,
+    stlplus::create_filespec(directory_output, "SfMReconstruction_Report.html"));
+
+  Save(sfm_data,
+    stlplus::create_filespec(directory_output, "sfm_data", ".bin"),
+    ESfM_Data(ALL));
+
+  Save(sfm_data,
+     stlplus::create_filespec(directory_output, "cloud_and_poses", "ply"),
+     ESfM_Data(ALL));
 
   //return EXIT_SUCCESS;
   //return EXIT_FAILURE

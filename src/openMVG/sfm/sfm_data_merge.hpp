@@ -40,8 +40,8 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    std::vector<openMVG::Vec3>& parent_vecs,
-    std::vector<openMVG::Vec3>& child_vecs,
+    std::vector<openMVG::Vec3> *parent_vecs,
+    std::vector<openMVG::Vec3> *child_vecs,
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
 
 bool computeSimilarity(
