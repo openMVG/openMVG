@@ -353,13 +353,95 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // fix a new directory for the accumulation of all the images
+  std::string root_directory = directory_output.substr(0, directory_output.find_last_of("/\\"));
+  root_directory = root_directory.substr(0, root_directory.find_last_of("/\\"));
+
+  sfm_data.s_root_path = stlplus::create_filespec(root_directory, "Originals");
+
   // use the best camera for the scene
   sfm_data.intrinsics[0] = best_camera;
   // group the shared intrinsics
   GroupSharedIntrinsics(sfm_data);
 
   if(preform_final_ba){
-    OPENMVG_LOG_INFO << "";
+    OPENMVG_LOG_INFO << "Starting final BA";
+
+    Bundle_Adjustment_Ceres::BA_Ceres_options options;
+    if ( sfm_data.GetPoses().size() > 100 &&
+      (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
+       ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
+      ){
+      // Enable sparse BA only if a sparse lib is available and if there more than 100 poses
+      options.preconditioner_type_ = ceres::JACOBI;
+      options.linear_solver_type_ = ceres::SPARSE_SCHUR;
+    }
+    else{
+      options.linear_solver_type_ = ceres::DENSE_SCHUR;
+    }
+
+    Bundle_Adjustment_Ceres bundle_adjustment_obj(options);
+
+    Optimize_Options ba_refine1_options(
+      Intrinsic_Parameter_Type::NONE, // Intrinsics are held as constant
+      Extrinsic_Parameter_Type::ADJUST_ALL,// rotations are constant ADJUST_TRANSLATION
+      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure ADJUST_ALL
+      Control_Point_Parameter(),
+      b_use_motion_priors // Use motion priors
+    );
+
+    Optimize_Options ba_refine2_options(
+      Intrinsic_Parameter_Type::NONE,
+      Extrinsic_Parameter_Type::NONE,
+      Structure_Parameter_Type::ADJUST_ALL, // Adjust scene structure
+      Control_Point_Parameter(),
+      b_use_motion_priors // Use motion priors
+    );
+
+    // note : parameters copied from sequential sfm
+    const double requiredPixelResidualError = 4.0;
+    const double angle_error = 2.0;
+    const size_t outlierNumberThreshold = 100;
+
+    
+    if(engine_name=="GLOBAL"){
+      // do the initial adjustment with no changes to intrinsic to remove excess noise
+      bundle_adjustment_obj.Adjust(sfm_data,ba_refine1_options);
+
+      const size_t pointcount_initial = sfm_data.structure.size();
+      RemoveOutliers_PixelResidualError(sfm_data, requiredPixelResidualError);
+      const size_t pointcount_pixelresidual_filter = sfm_data.structure.size();
+      RemoveOutliers_AngleError(sfm_data, angle_error);
+      const size_t pointcount_angular_filter = sfm_data.structure.size();
+
+      // Check that poses & intrinsic cover some measures (after outlier removal)
+      const IndexT minPointPerPose = 6; // 6 min , 12
+      const IndexT minTrackLength = 2; // 2 min , 3
+      if (eraseUnstablePosesAndObservations(sfm_data, minPointPerPose, minTrackLength))
+      {
+        // TODO: must ensure that track graph is producing a single connected component
+        const size_t pointcount_cleaning = sfm_data.structure.size();
+        OPENMVG_LOG_INFO << "Point_cloud cleaning:\n"
+          << "\t #3DPoints: " << pointcount_cleaning << "\n";
+      }
+
+      bundle_adjustment_obj.Adjust(sfm_data,ba_refine2_options);
+      
+    }
+    else if(engine_name=="STELLAR"){
+      OPENMVG_LOG_WARNING << "INCREMENTALV2 not implemented yet";
+    }
+    else if(engine_name=="INCREMENTALV2"){
+      OPENMVG_LOG_WARNING << "INCREMENTALV2 not implemented yet";
+    }
+    else{
+      // sequential method for pose recitifcation
+      do{
+        bundle_adjustment_obj.Adjust(sfm_data,ba_refine1_options);
+      }
+      while (badTrackRejector(requiredPixelResidualError, outlierNumberThreshold, sfm_data));
+      eraseUnstablePosesAndObservations(sfm_data);
+    }
   }
   
   OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";

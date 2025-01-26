@@ -193,6 +193,24 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
   return false;
 }
 
+bool badTrackRejector(double dPrecision, size_t count, SfM_Data& scene)
+{
+  /**
+   * @brief Discard tracks with too large residual error
+   *
+   * Remove observation/tracks that have:
+   *  - too large residual error
+   *  - too small angular value
+   *
+   * @note copied over from sequential sfm !
+   * @return True if more than 'count' outliers have been removed.
+   */
+  const size_t nbOutliers_residualErr = RemoveOutliers_PixelResidualError(scene, dPrecision, 2);
+    const size_t nbOutliers_angleErr = RemoveOutliers_AngleError(scene, 2.0);
+
+  return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
+}
+
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
     std::vector<openMVG::Vec3> *parent_vecs,
     std::vector<openMVG::Vec3> *child_vecs,
@@ -288,7 +306,22 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
    const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
    const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes
 ){
-    /*
+
+    std::set<Pair> common_ids;
+    std::set<openMVG::IndexT> child_overlap_ids;
+
+    for(auto pair: sfm_filenames_indexes){
+        std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = pair.second;
+        // lets make sure we have index in each SfM scene
+        if(info.second.size()<2){continue;}
+        
+        IndexT p1 = info.second[0];
+        IndexT p2 = info.second[1];
+
+        common_ids.insert( Pair(p1,p2) );
+        child_overlap_ids.insert(p2);
+    }
+    
     // references
     Views & parent_views = sfm_data.views;
     Poses & parent_poses = sfm_data.poses;
@@ -299,6 +332,8 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
     IndexT parent_views_size = parent_views.size();
 
     std::set<IndexT> remove_track_ids = std::set<IndexT>();
+
+    std::set<Pair> new_view_pairings;
   
     for(auto & iterV : child_views){
         ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(iterV.second.get());
@@ -318,7 +353,7 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
                 std::cout << "Pose reinstiated from child sfm scene " << std::endl;
 
                 Pose3 pose = child_poses.at(view2->id_pose);
-                Vec3 nloc = S * R * ( pose.center() ) + t; // update the camera position to the reference scene
+                Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
                 Pose3 npose = Pose3(pose.rotation(),nloc);
 
                 parent_poses[view1->id_pose] = npose;
@@ -355,12 +390,8 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
         parent_views_size++;
     }
 
-    std::cout << "Views with no poses: " << remove_track_ids.size() << std::endl;
+    OPENMVG_LOG_INFO << "Views with no poses: " << remove_track_ids.size();
 
-    std::string root_directory = directory_output.substr(0, directory_output.find_last_of("/\\"));
-    root_directory = root_directory.substr(0, root_directory.find_last_of("/\\"));
-
-    sfm_data.s_root_path = stlplus::create_filespec(root_directory, "Originals");
     Landmarks child_tracks = child_sfm_data.GetLandmarks();
 
     IndexT new_track_counter = sfm_data.structure.size();
@@ -377,46 +408,45 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
             IndexT id_view = iterOb.first;
             // need to update the view_id to the most up to date
             if(child_overlap_ids.find(id_view) != child_overlap_ids.end()){
-                // it's one of the overlapping features
-                for(auto id: common_ids){
-                    if(id.second == id_view){//child observation is an overlap observation
-                        id_view = id.first;
-                        break;
-                    }
-                }
+                // check if the second view has any new information
+                auto it = std::find_if(common_ids.begin(), common_ids.end(),
+                [&](const Pair& val) -> bool {
+                    return val.second == id_view;
+                });
+                id_view = it->first;
             }else{
-                for( auto np: new_view_pairings){
-                    if(np.first == id_view){
-                        id_view = np.second;
-                    }
-                }
+                // else we want to use the first views pose if present
+                auto it = std::find_if(new_view_pairings.begin(), new_view_pairings.end(),
+                [&](const Pair& val) -> bool {
+                    return val.first == id_view;
+                });
+                id_view = it->second;
             }
 
             try{
                 const View * view = sfm_data.views.at(id_view).get();
                 if(!sfm_data.IsPoseAndIntrinsicDefined(view)){
-                    std::cerr << "Pose not defined for view " << id_view << std::endl;
+                    OPENMVG_LOG_WARNING << "Pose not defined for view " << id_view;
                     continue;
                 }
             }catch(...){
-                std::cerr << "View id does not exist " << id_view << std::endl;
+                OPENMVG_LOG_WARNING << "View id does not exist " << id_view;
                 continue;
             }
         
 
             // view id will have been updated by now, just have to insert it
-            //iterOb.second.id_feat
-            new_observations.insert({id_view,Observation(iterOb.second.x, UndefinedIndexT)});
+            // iterOb.second.id_feat
+            new_observations.insert({id_view, Observation(iterOb.second.x, UndefinedIndexT)});
             // new observations will have been added
         }
 
         Landmark new_landmark;
-        new_landmark.X = S * R * ( landmark.X ) + t;
+        new_landmark.X = S * R * ( landmark.X ) + T;
         new_landmark.obs = new_observations;
 
         sfm_data.structure[new_track_counter++] = std::move( new_landmark );
     }
-    */
 
     return true;
 }

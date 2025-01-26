@@ -11,8 +11,15 @@
 
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/sfm/sfm_data_transform.hpp"
+#include "openMVG/sfm/sfm_data_filters.hpp"
+#include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 
 #include "openMVG/system/logger.hpp"
+
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
+
+#include "ceres/problem.h"
+#include "ceres/solver.h"
 
 namespace openMVG {
 namespace sfm {
@@ -38,6 +45,8 @@ std::string printOverlapInformation(const std::map< std::string, std::pair<bool,
 */
 bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes);
+
+bool badTrackRejector(double dPrecision, size_t count, SfM_Data& scene);
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
     std::vector<openMVG::Vec3> *parent_vecs,
