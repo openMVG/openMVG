@@ -29,9 +29,6 @@ endif()
 
 set(CMAKE_FIND_FRAMEWORK LAST)
 
-# Helper utility for overriding cached variables
-include(UpdateCacheVariable)
-
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
@@ -132,6 +129,9 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmakeFindModules)
 include(OptimizeForArchitecture)
 OptimizeForArchitecture()
+
+# Helper utility for overriding cached variables
+include(UpdateCacheVariable)
 
 if (UNIX AND NOT OpenMVG_BUILD_COVERAGE)
   set(CMAKE_C_FLAGS_RELEASE "-O3")
