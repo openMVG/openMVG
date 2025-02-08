@@ -29,6 +29,9 @@ endif()
 
 set(CMAKE_FIND_FRAMEWORK LAST)
 
+# Helper utility for overriding cached variables
+include(UpdateCacheVariable)
+
 # ==============================================================================
 # OpenMVG build options
 # ==============================================================================
@@ -179,9 +182,7 @@ if (OpenMVG_USE_OPENMP)
     endif()
     list(APPEND OPENMVG_LIBRARY_DEPENDENCIES OpenMP::OpenMP_CXX)
   else (OPENMP_FOUND)
-      include(UpdateCacheVariable)
       UPDATE_CACHE_VARIABLE(OpenMVG_USE_OPENMP OFF)
-      remove_definitions(-DOPENMVG_USE_OPENMP)
   endif (OPENMP_FOUND)
 endif (OpenMVG_USE_OPENMP)
 
