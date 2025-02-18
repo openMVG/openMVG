@@ -392,6 +392,7 @@ if (NOT DEFINED LEMON_INCLUDE_DIR_HINTS)
 endif()
 find_package(Lemon QUIET)
 if (NOT LEMON_FOUND OR OpenMVG_USE_INTERNAL_LEMON)
+  set(OpenMVG_USE_INTERNAL_LEMON ON)
   set(LEMON_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lemon
     ${PROJECT_BINARY_DIR}/third_party/lemon)
