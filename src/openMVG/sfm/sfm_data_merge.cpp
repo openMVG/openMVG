@@ -68,7 +68,7 @@ std::shared_ptr<cameras::IntrinsicBase> findBestIntrinsic(const SfM_Data& sfm_da
 
   RMSE_A = std::sqrt((RMSE_A)/(n_totalResiduals));
   RMSE_B = std::sqrt((RMSE_B)/(n_totalResiduals));
-  std::cout << "RMSE_A : " << RMSE_A << " RMSE_B : "  << RMSE_B << std::endl;
+  OPENMVG_LOG_INFO << "RMSE_A : " << RMSE_A << " RMSE_B : "  << RMSE_B ;
 
   if (RMSE_A < RMSE_B){
     return std::shared_ptr<cameras::IntrinsicBase>(intrinsicA->clone());
@@ -212,8 +212,8 @@ bool badTrackRejector(double dPrecision, size_t count, SfM_Data& scene)
 }
 
 bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    std::vector<openMVG::Vec3> *parent_vecs,
-    std::vector<openMVG::Vec3> *child_vecs,
+    std::vector<openMVG::Vec3> *first_vecs,
+    std::vector<openMVG::Vec3> *second_vecs,
     std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
 {
   
@@ -235,26 +235,26 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_
       const View * view2 = second.views.at(p2).get();
 
       if(!first.IsPoseAndIntrinsicDefined(view1)){
-        OPENMVG_LOG_INFO << view1->id_view << " has no pose associated in parent";
+        OPENMVG_LOG_INFO << view1->id_view << " has no pose associated in first";
         unused_cameras.push_back(std::make_pair(p1,p2));
       }
       else if(!second.IsPoseAndIntrinsicDefined(view2)){
-        OPENMVG_LOG_INFO << view2->id_view << " has no pose associated in child";
+        OPENMVG_LOG_INFO << view2->id_view << " has no pose associated in second";
         unused_cameras.push_back(std::make_pair(p1,p2));
       }
       else{
-        parent_vecs -> push_back(first.poses.at(view1->id_pose).center());
-        child_vecs -> push_back( second.poses.at(view2->id_pose).center() );
+        first_vecs -> push_back(first.poses.at(view1->id_pose).center());
+        second_vecs -> push_back( second.poses.at(view2->id_pose).center() );
         counter++;
       }
     }
     catch(...){
-      //std::cout << "Views not used in final reconstructions" << std::endl;
+      //OPENMVG_LOG_WARNING << "Views not used in final reconstructions" ;
       unused_cameras.push_back(std::make_pair(p1,p2));
     }
   }
 
-  if(parent_vecs->size() == child_vecs->size() && parent_vecs->size()>3){
+  if(first_vecs->size() == second_vecs->size() && first_vecs->size()>3){
     return true;
   }
 
@@ -286,7 +286,7 @@ bool computeSimilarity(
   Vec3 t;
   Mat3 R;
   openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  //OPENMVG_LOG_INFO << "Non linear refinement" << std::endl;
+  //OPENMVG_LOG_INFO << "Non linear refinement" ;
   openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
@@ -302,13 +302,13 @@ bool computeSimilarity(
   return true;
 }
 
-bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& child_sfm_data, 
+bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& second_sfm_data, 
    const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
    const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes
 ){
 
     std::set<Pair> common_ids;
-    std::set<openMVG::IndexT> child_overlap_ids;
+    std::set<openMVG::IndexT> second_overlap_ids;
 
     for(auto pair: sfm_filenames_indexes){
         std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = pair.second;
@@ -319,85 +319,86 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
         IndexT p2 = info.second[1];
 
         common_ids.insert( Pair(p1,p2) );
-        child_overlap_ids.insert(p2);
+        second_overlap_ids.insert(p2);
     }
     
     // references
-    Views & parent_views = sfm_data.views;
-    Poses & parent_poses = sfm_data.poses;
+    Views & first_views = sfm_data.views;
+    Poses & first_poses = sfm_data.poses;
 
-    Views & child_views = child_sfm_data.views;
-    Poses & child_poses = child_sfm_data.poses;
+    Views & second_views = second_sfm_data.views;
+    Poses & second_poses = second_sfm_data.poses;
 
-    IndexT parent_views_size = parent_views.size();
+    IndexT first_views_size = first_views.size();
 
     std::set<IndexT> remove_track_ids = std::set<IndexT>();
 
     std::set<Pair> new_view_pairings;
   
-    for(auto & iterV : child_views){
+    // This is where we add the poses from the second scene
+
+    for(auto & iterV : second_views){
         ViewPriors *prior = dynamic_cast<sfm::ViewPriors*>(iterV.second.get());
         IndexT id_view = prior->id_view;
         IndexT id_pose = prior->id_pose;
 
-        // if the pose for the parent exists then we skip, if the pose doesn't we use 
-        // the child scenes pose and update the parents
-        if(child_overlap_ids.find(id_view) != child_overlap_ids.end()){
+        // if the pose for the first scene exists then we skip, if the pose doesn't we use 
+        // the second scenes pose and update the firsts
+        if(second_overlap_ids.find(id_view) != second_overlap_ids.end()){
+          for(auto p: common_ids){
+              if(p.second!=id_view){continue;}
+              const View * view1 = sfm_data.views.at(p.first).get();
+              const View * view2 = second_sfm_data.views.at(p.second).get();
 
-        for(auto p: common_ids){
-            if(p.second!=id_view){continue;}
-            const View * view1 = sfm_data.views.at(p.first).get();
-            const View * view2 = child_sfm_data.views.at(p.second).get();
+              if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && second_sfm_data.IsPoseAndIntrinsicDefined(view2)){
+                  OPENMVG_LOG_INFO << "Pose reinstiated from second sfm scene " ;
 
-            if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && child_sfm_data.IsPoseAndIntrinsicDefined(view2)){
-                std::cout << "Pose reinstiated from child sfm scene " << std::endl;
+                  Pose3 pose = second_poses.at(view2->id_pose);
+                  Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
+                  Pose3 npose = Pose3(pose.rotation(),nloc);
 
-                Pose3 pose = child_poses.at(view2->id_pose);
-                Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
-                Pose3 npose = Pose3(pose.rotation(),nloc);
+                  first_poses[view1->id_pose] = npose;
 
-                parent_poses[view1->id_pose] = npose;
-
-                break;
-            }
-        }
-
-            continue;
+                  break;
+              }
+          }
+          continue;
         }
 
         // need to store the new view id to modify the observation ids
-        new_view_pairings.insert(Pair(id_view,parent_views_size));
+        new_view_pairings.insert(Pair(id_view,first_views_size));
 
         // if there's a pose then modify the pose position
-        if (child_sfm_data.IsPoseAndIntrinsicDefined(prior)){
+        if (second_sfm_data.IsPoseAndIntrinsicDefined(prior)){
             // image was not used in reconstruction
             // use the similarity transform and generate the new poses
-            Pose3 pose = child_poses.at(id_pose);
+            Pose3 pose = second_poses.at(id_pose);
             Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
             Pose3 npose = Pose3(pose.rotation(),nloc);
 
-            parent_poses[parent_views_size] = npose;
+            first_poses[first_views_size] = npose;
 
         }else{
             remove_track_ids.insert(id_view);
         }
 
-        prior->id_view = parent_views_size;// new view id 
-        prior->id_pose = parent_views_size;// new pose id
+        prior->id_view = first_views_size;// new view id
+        prior->id_pose = first_views_size;// new pose id
 
-        parent_views[parent_views_size] = std::make_shared<ViewPriors>(*prior);
+        first_views[first_views_size] = std::make_shared<ViewPriors>(*prior);
 
-        parent_views_size++;
+        first_views_size++;
     }
 
     OPENMVG_LOG_INFO << "Views with no poses: " << remove_track_ids.size();
 
-    Landmarks child_tracks = child_sfm_data.GetLandmarks();
+    Landmarks second_tracks = second_sfm_data.GetLandmarks();
 
     IndexT new_track_counter = sfm_data.structure.size();
     IndexT original_track_num = sfm_data.structure.size();
-    // first update the landmarks in the child scene to the reference frame of the first
-    for (auto& track: child_tracks)
+
+    // first update the landmarks in the second scene to the reference frame of the first
+    for (auto& track: second_tracks)
     {
         IndexT track_id = track.first;
         Landmark landmark = track.second;
@@ -407,7 +408,7 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& ch
         {
             IndexT id_view = iterOb.first;
             // need to update the view_id to the most up to date
-            if(child_overlap_ids.find(id_view) != child_overlap_ids.end()){
+            if(second_overlap_ids.find(id_view) != second_overlap_ids.end()){
                 // check if the second view has any new information
                 auto it = std::find_if(common_ids.begin(), common_ids.end(),
                 [&](const Pair& val) -> bool {

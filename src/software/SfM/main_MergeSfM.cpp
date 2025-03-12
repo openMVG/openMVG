@@ -95,8 +95,8 @@ int main(int argc, char **argv)
 
   // Common options:
   std::string
-      filename_sfm_data,
-      filename_sfm_data_child,
+      filename_first_sfm_scene,
+      filename_first_sfm_scene_child,
       directory_match,
       filename_match,
       directory_output,
@@ -122,8 +122,8 @@ int main(int argc, char **argv)
 
 
   // Common options
-  cmd.add( make_option('i', filename_sfm_data, "main_sfm_file") );
-  cmd.add( make_option('c', filename_sfm_data_child, "second_sfm_file") );
+  cmd.add( make_option('i', filename_first_sfm_scene, "main_sfm_file") );
+  cmd.add( make_option('c', filename_first_sfm_scene_child, "second_sfm_file") );
   cmd.add( make_option('o', directory_output, "output") );
   
   cmd.add( make_option('s', engine_name, "sfm_engine") );
@@ -145,8 +145,8 @@ int main(int argc, char **argv)
 
     OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[Required]\n"
-      << "[-i|--main_sfm_file] path to the parent SfM_Data scene\n"
-      << "[-c|--second_sfm_file] path to the child SfM_Data scene to merge\n"
+      << "[-i|--main_sfm_file] path to the parent first_sfm_scene scene\n"
+      << "[-c|--second_sfm_file] path to the child first_sfm_scene scene to merge\n"
       << "[-o|--output_dir] path where the output data will be stored\n"
       << "[-s|--sfm_engine] Type of SfM Engine to use for the reconstruction\n"
       << "\t GLOBAL    : initialize globally rotation and translations\n"
@@ -252,17 +252,17 @@ int main(int argc, char **argv)
   }
 
   // SfM related
-  OPENMVG_LOG_INFO << "main SfM:\n"<< filename_sfm_data;
-  // Load input SfM_Data scene
-  SfM_Data sfm_data,child_sfm_data;
-  if (!Load(sfm_data, filename_sfm_data, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
-    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< filename_sfm_data << "\" cannot be read.";
+  OPENMVG_LOG_INFO << "main SfM:\n"<< filename_first_sfm_scene;
+  // Load input first_sfm_scene scene
+  SfM_Data first_sfm_scene,second_sfm_scene;
+  if (!Load(first_sfm_scene, filename_first_sfm_scene, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
+    OPENMVG_LOG_ERROR << "The input first_sfm_scene file \""<< filename_first_sfm_scene << "\" cannot be read.";
     return EXIT_FAILURE;
   }
-  OPENMVG_LOG_INFO << "second SfM:\n"<< filename_sfm_data_child;
+  OPENMVG_LOG_INFO << "second SfM:\n"<< filename_first_sfm_scene_child;
 
-  if (!Load(child_sfm_data, filename_sfm_data_child, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
-    OPENMVG_LOG_ERROR << "The input SfM_Data file \""<< filename_sfm_data_child << "\" cannot be read.";
+  if (!Load(second_sfm_scene, filename_first_sfm_scene_child, openMVG::sfm::ESfM_Data(openMVG::sfm::ALL))) {
+    OPENMVG_LOG_ERROR << "The input first_sfm_scene file \""<< filename_first_sfm_scene_child << "\" cannot be read.";
     return EXIT_FAILURE;
   }
 
@@ -279,15 +279,18 @@ int main(int argc, char **argv)
   // GLOBAL reconstruction merging operation
   //---------------------------------------
 
-  IndexT start_views = sfm_data.views.size();
-  IndexT start_poses = sfm_data.poses.size();
-  IndexT start_tracks = sfm_data.structure.size();
+  IndexT start_views = first_sfm_scene.views.size();
+  IndexT start_poses = first_sfm_scene.poses.size();
+  IndexT start_tracks = first_sfm_scene.structure.size();
 
-  std::cout << "#Main SfM Views:" << start_views  << " #Secondary SfM Views:" << child_sfm_data.views.size() << std::endl;
+  std::cout << "#Main SfM Views:" << start_views  << " #Secondary SfM Views:" << second_sfm_scene.views.size() << std::endl;
 
   openMVG::system::Timer timer;
   
-  std::shared_ptr<cameras::IntrinsicBase> best_camera = findBestIntrinsic(sfm_data,child_sfm_data,0);
+  std::set<IndexT> first_scene_intrinsics = GetValidIntrinsicsIds(first_sfm_scene);
+  std::set<IndexT> second_scene_intrinsics = GetValidIntrinsicsIds(second_sfm_scene);
+
+  std::shared_ptr<cameras::IntrinsicBase> best_camera = findBestIntrinsic(first_sfm_scene,second_sfm_scene,0);
 
   std::cout << "Best camera : " << best_camera << std::endl;
 
@@ -295,7 +298,7 @@ int main(int argc, char **argv)
   std::map< std::string, std::pair<bool,std::vector<IndexT>> > sfm_filenames_indexes;
 
   // we'll read in the filenames and id's within the SfM scenes
-  bool has_overlap = getOverlappingImages(sfm_data, child_sfm_data, sfm_filenames_indexes);
+  bool has_overlap = getOverlappingImages(first_sfm_scene, second_sfm_scene, sfm_filenames_indexes);
   // first is do a simple overlap test
   if(has_overlap){
     std::cout << "Do datasets have overlap: true" << std::endl;
@@ -319,7 +322,7 @@ int main(int argc, char **argv)
 
   std::vector<openMVG::Vec3> first_vecs,second_vecs,result_vecs;
 
-  bool has_alignableVecs = getVecs2Align(sfm_data, child_sfm_data, &first_vecs, &second_vecs, sfm_filenames_indexes);
+  bool has_alignableVecs = getVecs2Align(first_sfm_scene, second_sfm_scene, &first_vecs, &second_vecs, sfm_filenames_indexes);
   
   OPENMVG_LOG_INFO << first_vecs.size() << " " << second_vecs.size();
 
@@ -342,11 +345,15 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  OPENMVG_LOG_INFO << "Scale: " << S;
+  OPENMVG_LOG_INFO << "Rotation:" << R;
+  OPENMVG_LOG_INFO << "Translation:" << T;
+
   OPENMVG_LOG_INFO << "SRT calculated";
 
   OPENMVG_LOG_INFO << "Beginning the SRT transforms of views in scene two";
 
-  bool merge_success = mergeSfMScenes(sfm_data, child_sfm_data, S, R, T, sfm_filenames_indexes);
+  bool merge_success = mergeSfMScenes(first_sfm_scene, second_sfm_scene, S, R, T, sfm_filenames_indexes);
 
   if(!merge_success){
     OPENMVG_LOG_ERROR << " Merging the scenes failed";
@@ -354,21 +361,21 @@ int main(int argc, char **argv)
   }
 
   // fix a new directory for the accumulation of all the images
-  std::string root_directory = directory_output.substr(0, directory_output.find_last_of("/\\"));
-  root_directory = root_directory.substr(0, root_directory.find_last_of("/\\"));
+  //std::string root_directory = directory_output.substr(0, directory_output.find_last_of("/\\"));
+  //root_directory = root_directory.substr(0, root_directory.find_last_of("/\\"));
 
-  sfm_data.s_root_path = stlplus::create_filespec(root_directory, "Originals");
+  //first_sfm_scene.s_root_path = stlplus::create_filespec(root_directory, "Originals");
 
   // use the best camera for the scene
-  sfm_data.intrinsics[0] = best_camera;
+  first_sfm_scene.intrinsics[0] = best_camera;
   // group the shared intrinsics
-  GroupSharedIntrinsics(sfm_data);
+  GroupSharedIntrinsics(first_sfm_scene);
 
   if(preform_final_ba){
     OPENMVG_LOG_INFO << "Starting final BA";
 
     Bundle_Adjustment_Ceres::BA_Ceres_options options;
-    if ( sfm_data.GetPoses().size() > 100 &&
+    if ( first_sfm_scene.GetPoses().size() > 100 &&
       (ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::SUITE_SPARSE) ||
        ceres::IsSparseLinearAlgebraLibraryTypeAvailable(ceres::EIGEN_SPARSE))
       ){
@@ -406,27 +413,29 @@ int main(int argc, char **argv)
     
     if(engine_name=="GLOBAL"){
       // do the initial adjustment with no changes to intrinsic to remove excess noise
-      bundle_adjustment_obj.Adjust(sfm_data,ba_refine1_options);
+      bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine1_options);
 
-      const size_t pointcount_initial = sfm_data.structure.size();
-      RemoveOutliers_PixelResidualError(sfm_data, requiredPixelResidualError);
-      const size_t pointcount_pixelresidual_filter = sfm_data.structure.size();
-      RemoveOutliers_AngleError(sfm_data, angle_error);
-      const size_t pointcount_angular_filter = sfm_data.structure.size();
+      bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine2_options);
+      
+
+      /*
+      const size_t pointcount_initial = first_sfm_scene.structure.size();
+      RemoveOutliers_PixelResidualError(first_sfm_scene, requiredPixelResidualError);
+      const size_t pointcount_pixelresidual_filter = first_sfm_scene.structure.size();
+      RemoveOutliers_AngleError(first_sfm_scene, angle_error);
+      const size_t pointcount_angular_filter = first_sfm_scene.structure.size();
 
       // Check that poses & intrinsic cover some measures (after outlier removal)
       const IndexT minPointPerPose = 6; // 6 min , 12
       const IndexT minTrackLength = 2; // 2 min , 3
-      if (eraseUnstablePosesAndObservations(sfm_data, minPointPerPose, minTrackLength))
+      if (eraseUnstablePosesAndObservations(first_sfm_scene, minPointPerPose, minTrackLength))
       {
         // TODO: must ensure that track graph is producing a single connected component
-        const size_t pointcount_cleaning = sfm_data.structure.size();
+        const size_t pointcount_cleaning = first_sfm_scene.structure.size();
         OPENMVG_LOG_INFO << "Point_cloud cleaning:\n"
           << "\t #3DPoints: " << pointcount_cleaning << "\n";
       }
-
-      bundle_adjustment_obj.Adjust(sfm_data,ba_refine2_options);
-      
+      */
     }
     else if(engine_name=="STELLAR"){
       OPENMVG_LOG_WARNING << "INCREMENTALV2 not implemented yet";
@@ -437,23 +446,23 @@ int main(int argc, char **argv)
     else{
       // sequential method for pose recitifcation
       do{
-        bundle_adjustment_obj.Adjust(sfm_data,ba_refine1_options);
+        bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine1_options);
       }
-      while (badTrackRejector(requiredPixelResidualError, outlierNumberThreshold, sfm_data));
-      eraseUnstablePosesAndObservations(sfm_data);
+      while (badTrackRejector(requiredPixelResidualError, outlierNumberThreshold, first_sfm_scene));
+      eraseUnstablePosesAndObservations(first_sfm_scene);
     }
   }
   
-  OPENMVG_LOG_INFO << "...Export SfM_Data to disk.";
+  OPENMVG_LOG_INFO << "...Export first_sfm_scene to disk.";
 
-  Generate_SfM_Report(sfm_data,
+  Generate_SfM_Report(first_sfm_scene,
     stlplus::create_filespec(directory_output, "SfMReconstruction_Report.html"));
 
-  Save(sfm_data,
-    stlplus::create_filespec(directory_output, "sfm_data", ".bin"),
+  Save(first_sfm_scene,
+    stlplus::create_filespec(directory_output, "first_sfm_scene", ".bin"),
     ESfM_Data(ALL));
 
-  Save(sfm_data,
+  Save(first_sfm_scene,
      stlplus::create_filespec(directory_output, "cloud_and_poses", "ply"),
      ESfM_Data(ALL));
 
