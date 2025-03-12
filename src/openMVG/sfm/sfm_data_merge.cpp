@@ -1,4 +1,3 @@
-
 // This file is part of OpenMVG, an Open Multiple View Geometry C++ library.
 
 // Copyright (c) 2015 Pierre MOULON.
@@ -211,8 +210,8 @@ bool badTrackRejector(double dPrecision, size_t count, SfM_Data& scene)
   return (nbOutliers_residualErr + nbOutliers_angleErr) > count;
 }
 
-bool getVecs2Align(const openMVG::sfm::SfM_Data& first, 
-  const openMVG::sfm::SfM_Data& second, 
+bool getVecs2Align(const openMVG::sfm::SfM_Data& first,
+  const openMVG::sfm::SfM_Data& second,
   std::vector<openMVG::Vec3> *first_vecs,
   std::vector<openMVG::Vec3> *second_vecs,
   std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
@@ -347,6 +346,7 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
               if(p.second!=id_view){continue;}
               const View * view1 = sfm_data.views.at(p.first).get();
               const View * view2 = second_sfm_data.views.at(p.second).get();
+
               if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && second_sfm_data.IsPoseAndIntrinsicDefined(view2)){
                   OPENMVG_LOG_INFO << "Pose reinstiated from second sfm scene " ;
 
