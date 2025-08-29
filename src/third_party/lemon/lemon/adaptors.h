@@ -3446,26 +3446,26 @@ namespace lemon {
     ///
     /// This map adaptor class adapts two node maps of the original digraph
     /// to get a node map of the split digraph.
-    /// Its value type is inherited from the first node map type (\c IN).
-    /// \tparam IN The type of the node map for the in-nodes.
-    /// \tparam OUT The type of the node map for the out-nodes.
-/*    template <typename IN, typename OUT>
+    /// Its value type is inherited from the first node map type (\c In).
+    /// \tparam In The type of the node map for the in-nodes.
+    /// \tparam Out The type of the node map for the out-nodes.
+    template <typename In, typename Out>
     class CombinedNodeMap {
     public:
 
       /// The key type of the map
       typedef Node Key;
       /// The value type of the map
-      typedef typename IN::Value Value;
+      typedef typename In::Value Value;
 
-      typedef typename MapTraits<IN>::ReferenceMapTag ReferenceMapTag;
-      typedef typename MapTraits<IN>::ReturnValue ReturnValue;
-      typedef typename MapTraits<IN>::ConstReturnValue ConstReturnValue;
-      typedef typename MapTraits<IN>::ReturnValue Reference;
-      typedef typename MapTraits<IN>::ConstReturnValue ConstReference;
+      typedef typename MapTraits<In>::ReferenceMapTag ReferenceMapTag;
+      typedef typename MapTraits<In>::ReturnValue ReturnValue;
+      typedef typename MapTraits<In>::ConstReturnValue ConstReturnValue;
+      typedef typename MapTraits<In>::ReturnValue Reference;
+      typedef typename MapTraits<In>::ConstReturnValue ConstReference;
 
       /// Constructor
-      CombinedNodeMap(IN& in_map, OUT& out_map)
+      CombinedNodeMap(In& in_map, Out& out_map)
         : _in_map(in_map), _out_map(out_map) {}
 
       /// Returns the value associated with the given key.
@@ -3497,8 +3497,8 @@ namespace lemon {
 
     private:
 
-      IN& _in_map;
-      OUT& _out_map;
+      In& _in_map;
+      Out& _out_map;
 
     };
 
@@ -3506,29 +3506,29 @@ namespace lemon {
     /// \brief Returns a combined node map
     ///
     /// This function just returns a combined node map.
-    template <typename IN, typename OUT>
-    static CombinedNodeMap<IN, OUT>
-    combinedNodeMap(IN& in_map, OUT& out_map) {
-      return CombinedNodeMap<IN, OUT>(in_map, out_map);
+    template <typename In, typename Out>
+    static CombinedNodeMap<In, Out>
+    combinedNodeMap(In& in_map, Out& out_map) {
+      return CombinedNodeMap<In, Out>(in_map, out_map);
     }
 
-    template <typename IN, typename OUT>
-    static CombinedNodeMap<const IN, OUT>
-    combinedNodeMap(const IN& in_map, OUT& out_map) {
-      return CombinedNodeMap<const IN, OUT>(in_map, out_map);
+    template <typename In, typename Out>
+    static CombinedNodeMap<const In, Out>
+    combinedNodeMap(const In& in_map, Out& out_map) {
+      return CombinedNodeMap<const In, Out>(in_map, out_map);
     }
 
-    template <typename IN, typename OUT>
-    static CombinedNodeMap<IN, const OUT>
-    combinedNodeMap(IN& in_map, const OUT& out_map) {
-      return CombinedNodeMap<IN, const OUT>(in_map, out_map);
+    template <typename In, typename Out>
+    static CombinedNodeMap<In, const Out>
+    combinedNodeMap(In& in_map, const Out& out_map) {
+      return CombinedNodeMap<In, const Out>(in_map, out_map);
     }
 
-    template <typename IN, typename OUT>
-    static CombinedNodeMap<const IN, const OUT>
-    combinedNodeMap(const IN& in_map, const OUT& out_map) {
-      return CombinedNodeMap<const IN, const OUT>(in_map, out_map);
-    }*/
+    template <typename In, typename Out>
+    static CombinedNodeMap<const In, const Out>
+    combinedNodeMap(const In& in_map, const Out& out_map) {
+      return CombinedNodeMap<const In, const Out>(in_map, out_map);
+    }
 
     /// \brief Arc map combined from an arc map and a node map of the
     /// original digraph.

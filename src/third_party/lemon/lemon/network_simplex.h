@@ -198,7 +198,7 @@ namespace lemon {
     int _search_arc_num;
 
     // Parameters of the problem
-    bool _have_lower;
+    bool _has_lower;
     SupplyType _stype;
     Value _sum_supply;
 
@@ -682,7 +682,7 @@ namespace lemon {
     /// \return <tt>(*this)</tt>
     template <typename LowerMap>
     NetworkSimplex& lowerMap(const LowerMap& map) {
-      _have_lower = true;
+      _has_lower = true;
       for (ArcIt a(_graph); a != INVALID; ++a) {
         _lower[_arc_id[a]] = map[a];
       }
@@ -879,7 +879,7 @@ namespace lemon {
         _upper[i] = INF;
         _cost[i] = 1;
       }
-      _have_lower = false;
+      _has_lower = false;
       _stype = GEQ;
       return *this;
     }
@@ -936,7 +936,7 @@ namespace lemon {
       for (NodeIt n(_graph); n != INVALID; ++n, ++i) {
         _node_id[n] = i;
       }
-      if (_arc_mixing) {
+      if (_arc_mixing && _node_num > 1) {
         // Store the arcs in a mixed order
         const int skip = std::max(_arc_num / _node_num, 3);
         int i = 0, j = 0;
@@ -1072,7 +1072,7 @@ namespace lemon {
           "Upper bounds must be greater or equal to the lower bounds");
 
       // Remove non-zero lower bounds
-      if (_have_lower) {
+      if (_has_lower) {
         for (int i = 0; i != _arc_num; ++i) {
           Value c = _lower[i];
           if (c >= 0) {
@@ -1235,7 +1235,7 @@ namespace lemon {
       return true;
     }
 
-    // Check if the upper bound is greater or equal to the lower bound
+    // Check if the upper bound is greater than or equal to the lower bound
     // on each arc.
     bool checkBoundMaps() {
       for (int j = 0; j != _arc_num; ++j) {
@@ -1612,7 +1612,7 @@ namespace lemon {
       }
 
       // Transform the solution and the supply map to the original form
-      if (_have_lower) {
+      if (_has_lower) {
         for (int i = 0; i != _arc_num; ++i) {
           Value c = _lower[i];
           if (c != 0) {

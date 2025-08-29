@@ -25,6 +25,7 @@
 #include <limits>
 #include <lemon/maps.h>
 #include <lemon/error.h>
+
 /// \ingroup dimacs_group
 /// \file
 /// \brief DIMACS file format reader.
@@ -122,7 +123,7 @@ namespace lemon {
   /// a non-zero value, that value will be used as "infinite".
   ///
   /// If the file type was previously evaluated by dimacsType(), then
-  /// the descriptor struct should be given by the \c dest parameter.
+  /// the descriptor struct should be given by the \c desc parameter.
   template <typename Digraph, typename LowerMap,
             typename CapacityMap, typename CostMap,
             typename SupplyMap>
@@ -276,7 +277,7 @@ namespace lemon {
   /// a non-zero value, that value will be used as "infinite".
   ///
   /// If the file type was previously evaluated by dimacsType(), then
-  /// the descriptor struct should be given by the \c dest parameter.
+  /// the descriptor struct should be given by the \c desc parameter.
   template<typename Digraph, typename CapacityMap>
   void readDimacsMax(std::istream& is,
                      Digraph &g,
@@ -303,7 +304,7 @@ namespace lemon {
   /// source node.
   ///
   /// If the file type was previously evaluated by dimacsType(), then
-  /// the descriptor struct should be given by the \c dest parameter.
+  /// the descriptor struct should be given by the \c desc parameter.
   template<typename Digraph, typename LengthMap>
   void readDimacsSp(std::istream& is,
                     Digraph &g,
@@ -334,7 +335,7 @@ namespace lemon {
   /// a non-zero value, that value will be used as "infinite".
   ///
   /// If the file type was previously evaluated by dimacsType(), then
-  /// the descriptor struct should be given by the \c dest parameter.
+  /// the descriptor struct should be given by the \c desc parameter.
   template<typename Digraph, typename CapacityMap>
   void readDimacsCap(std::istream& is,
                      Digraph &g,
@@ -343,7 +344,7 @@ namespace lemon {
                      DimacsDescriptor desc=DimacsDescriptor()) {
     typename Digraph::Node u,v;
     if(desc.type==DimacsDescriptor::NONE) desc=dimacsType(is);
-    if(desc.type!=DimacsDescriptor::MAX || desc.type!=DimacsDescriptor::SP)
+    if(desc.type!=DimacsDescriptor::MAX && desc.type!=DimacsDescriptor::SP)
       throw FormatError("Problem type mismatch");
     _readDimacs(is, g, capacity, u, v, infty, desc);
   }
@@ -374,7 +375,7 @@ namespace lemon {
   /// At the beginning, \c g is cleared by \c g.clear().
   ///
   /// If the file type was previously evaluated by dimacsType(), then
-  /// the descriptor struct should be given by the \c dest parameter.
+  /// the descriptor struct should be given by the \c desc parameter.
   template<typename Graph>
   void readDimacsMat(std::istream& is, Graph &g,
                      DimacsDescriptor desc=DimacsDescriptor())

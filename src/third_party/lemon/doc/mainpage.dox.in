@@ -1,0 +1,61 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2010
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+/**
+\mainpage @PACKAGE_NAME@ @PACKAGE_VERSION@ Documentation
+
+\section intro Introduction
+
+<b>LEMON</b> stands for <i><b>L</b>ibrary for <b>E</b>fficient <b>M</b>odeling
+and <b>O</b>ptimization in <b>N</b>etworks</i>.
+It is a C++ template library providing efficient implementations of common
+data structures and algorithms with focus on combinatorial optimization
+tasks connected mainly with graphs and networks \cite DezsoJuttnerKovacs11Lemon.
+
+<b>
+LEMON is an <a class="el" href="http://opensource.org/">open&nbsp;source</a>
+project.
+You are free to use it in your commercial or
+non-commercial applications under very permissive
+\ref license "license terms".
+</b>
+
+The project is maintained by the
+<a href="http://www.cs.elte.hu/egres/">Egerv&aacute;ry Research Group on
+Combinatorial Optimization</a> \cite egres
+at the Operations Research Department of the
+<a href="http://www.elte.hu/en/">E&ouml;tv&ouml;s Lor&aacute;nd University</a>,
+Budapest, Hungary.
+LEMON is also a member of the <a href="http://www.coin-or.org/">COIN-OR</a>
+initiative \cite coinor.
+
+\section howtoread How to Read the Documentation
+
+If you would like to get to know the library, see
+<a class="el" href="http://lemon.cs.elte.hu/pub/tutorial/">LEMON Tutorial</a>.
+
+If you are interested in starting to use the library, see the <a class="el"
+href="http://lemon.cs.elte.hu/trac/lemon/wiki/InstallGuide/">Installation
+Guide</a>.
+
+If you know what you are looking for, then try to find it under the
+<a class="el" href="modules.html">Modules</a> section.
+
+If you are a user of the old (0.x) series of LEMON, please check out the
+\ref migration "Migration Guide" for the backward incompatibilities.
+*/

@@ -37,8 +37,8 @@ namespace lemon {
   }
 
   SoplexLp::SoplexLp(const SoplexLp& lp) {
-    rows = lp.rows;
-    cols = lp.cols;
+    _rows = lp._rows;
+    _cols = lp._cols;
 
     soplex = new soplex::SoPlex;
     (*static_cast<soplex::SPxLP*>(soplex)) = *(lp.soplex);
@@ -122,12 +122,12 @@ namespace lemon {
   }
 
   void SoplexLp::_eraseColId(int i) {
-    cols.eraseIndex(i);
-    cols.relocateIndex(i, cols.maxIndex());
+    _cols.eraseIndex(i);
+    _cols.relocateIndex(i, _cols.maxIndex());
   }
   void SoplexLp::_eraseRowId(int i) {
-    rows.eraseIndex(i);
-    rows.relocateIndex(i, rows.maxIndex());
+    _rows.eraseIndex(i);
+    _rows.relocateIndex(i, _rows.maxIndex());
   }
 
   void SoplexLp::_getColName(int c, std::string &name) const {
@@ -432,8 +432,8 @@ namespace lemon {
     _col_names_ref.clear();
     _row_names.clear();
     _row_names_ref.clear();
-    cols.clear();
-    rows.clear();
+    _cols.clear();
+    _rows.clear();
     _clear_temporals();
   }
 

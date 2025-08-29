@@ -23,6 +23,7 @@
 ///\brief Header of the LEMON-CPLEX lp solver interface.
 
 #include <lemon/lp_base.h>
+#include <lemon/bits/lock.h>
 
 struct cpxenv;
 struct cpxlp;
@@ -40,7 +41,11 @@ namespace lemon {
   private:
     cpxenv* _env;
     mutable int* _cnt;
+    mutable bits::Lock* _cnt_lock;
 
+    void incCnt();
+    void decCnt();
+    
   public:
 
     /// \brief This exception is thrown when the license check is not

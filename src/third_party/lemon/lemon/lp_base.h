@@ -31,6 +31,8 @@
 #include<lemon/core.h>
 #include<lemon/bits/solver_bits.h>
 
+#include<lemon/bits/stl_iterators.h>
+
 ///\file
 ///\brief The interface of the LP solver interface.
 ///\ingroup lp_group
@@ -45,8 +47,8 @@ namespace lemon {
 
   protected:
 
-    _solver_bits::VarIndex rows;
-    _solver_bits::VarIndex cols;
+    _solver_bits::VarIndex _rows;
+    _solver_bits::VarIndex _cols;
 
   public:
 
@@ -166,7 +168,7 @@ namespace lemon {
       ///
       ColIt(const LpBase &solver) : _solver(&solver)
       {
-        _solver->cols.firstItem(_id);
+        _solver->_cols.firstItem(_id);
       }
       /// Invalid constructor \& conversion
 
@@ -179,10 +181,26 @@ namespace lemon {
       ///
       ColIt &operator++()
       {
-        _solver->cols.nextItem(_id);
+        _solver->_cols.nextItem(_id);
         return *this;
       }
     };
+
+    /// \brief Gets the collection of the columns of the LP problem.
+    ///
+    /// This function can be used for iterating on
+    /// the columns of the LP problem. It returns a wrapped ColIt, which looks
+    /// like an STL container (by having begin() and end())
+    /// which you can use in range-based for loops, STL algorithms, etc.
+    /// For example you can write:
+    ///\code
+    /// for(auto c: lp.cols())
+    ///   doSomething(c);
+    ///\endcode
+    LemonRangeWrapper1<ColIt, LpBase> cols() {
+      return LemonRangeWrapper1<ColIt, LpBase>(*this);
+    }
+
 
     /// \brief Returns the ID of the column.
     static int id(const Col& col) { return col._id; }
@@ -261,7 +279,7 @@ namespace lemon {
       ///
       RowIt(const LpBase &solver) : _solver(&solver)
       {
-        _solver->rows.firstItem(_id);
+        _solver->_rows.firstItem(_id);
       }
       /// Invalid constructor \& conversion
 
@@ -274,10 +292,26 @@ namespace lemon {
       ///
       RowIt &operator++()
       {
-        _solver->rows.nextItem(_id);
+        _solver->_rows.nextItem(_id);
         return *this;
       }
     };
+    
+    /// \brief Gets the collection of the rows of the LP problem.
+    ///
+    /// This function can be used for iterating on
+    /// the rows of the LP problem. It returns a wrapped RowIt, which looks
+    /// like an STL container (by having begin() and end())
+    /// which you can use in range-based for loops, STL algorithms, etc.
+    /// For example you can write:
+    ///\code
+    /// for(auto c: lp.rows())
+    ///   doSomething(c);
+    ///\endcode
+    LemonRangeWrapper1<RowIt, LpBase> rows() {
+      return LemonRangeWrapper1<RowIt, LpBase>(*this);
+    }
+    
 
     /// \brief Returns the ID of the row.
     static int id(const Row& row) { return row._id; }
@@ -625,7 +659,7 @@ namespace lemon {
 
     ///This data structure represents a column of the matrix,
     ///thas is it strores a linear expression of the dual variables
-    ///(\ref Row "Row"s).
+    ///(\ref LpBase::Row "Row"s).
     ///
     ///There are several ways to access and modify the contents of this
     ///container.
@@ -642,7 +676,7 @@ namespace lemon {
     ///\endcode
     ///(This code computes the sum of all coefficients).
     ///- Numbers (<tt>double</tt>'s)
-    ///and variables (\ref Row "Row"s) directly convert to an
+    ///and variables (\ref LpBase::Row "Row"s) directly convert to an
     ///\ref DualExpr and the usual linear operations are defined, so
     ///\code
     ///v+w
@@ -934,11 +968,11 @@ namespace lemon {
 
     //Abstract virtual functions
 
-    virtual int _addColId(int col) { return cols.addIndex(col); }
-    virtual int _addRowId(int row) { return rows.addIndex(row); }
+    virtual int _addColId(int col) { return _cols.addIndex(col); }
+    virtual int _addRowId(int row) { return _rows.addIndex(row); }
 
-    virtual void _eraseColId(int col) { cols.eraseIndex(col); }
-    virtual void _eraseRowId(int row) { rows.eraseIndex(row); }
+    virtual void _eraseColId(int col) { _cols.eraseIndex(col); }
+    virtual void _eraseRowId(int row) { _rows.eraseIndex(row); }
 
     virtual int _addCol() = 0;
     virtual int _addRow() = 0;
@@ -1003,7 +1037,7 @@ namespace lemon {
     //Constant component of the objective function
     Value obj_const_comp;
 
-    LpBase() : rows(), cols(), obj_const_comp(0) {}
+    LpBase() : _rows(), _cols(), obj_const_comp(0) {}
 
   public:
 
@@ -1115,8 +1149,8 @@ namespace lemon {
     ///a better one.
     void col(Col c, const DualExpr &e) {
       e.simplify();
-      _setColCoeffs(cols(id(c)), ExprIterator(e.comps.begin(), rows),
-                    ExprIterator(e.comps.end(), rows));
+      _setColCoeffs(_cols(id(c)), ExprIterator(e.comps.begin(), _rows),
+                    ExprIterator(e.comps.end(), _rows));
     }
 
     ///Get a column (i.e a dual constraint) of the LP
@@ -1125,7 +1159,7 @@ namespace lemon {
     ///\return the dual expression associated to the column
     DualExpr col(Col c) const {
       DualExpr e;
-      _getColCoeffs(cols(id(c)), InsertIterator(e.comps, rows));
+      _getColCoeffs(_cols(id(c)), InsertIterator(e.comps, _rows));
       return e;
     }
 
@@ -1154,13 +1188,13 @@ namespace lemon {
     ///its elements with new row (i.e. variables)
     ///\param t can be
     ///- a standard STL compatible iterable container with
-    ///\ref Row as its \c values_type like
+    ///\ref LpBase::Row "Row" as its \c values_type like
     ///\code
     ///std::vector<LpBase::Row>
     ///std::list<LpBase::Row>
     ///\endcode
     ///- a standard STL compatible iterable container with
-    ///\ref Row as its \c mapped_type like
+    ///\ref LpBase::Row "Row" as its \c mapped_type like
     ///\code
     ///std::map<AnyType,LpBase::Row>
     ///\endcode
@@ -1212,10 +1246,10 @@ namespace lemon {
     ///\param u is the upper bound (\ref INF means no bound)
     void row(Row r, Value l, const Expr &e, Value u) {
       e.simplify();
-      _setRowCoeffs(rows(id(r)), ExprIterator(e.comps.begin(), cols),
-                    ExprIterator(e.comps.end(), cols));
-      _setRowLowerBound(rows(id(r)),l - *e);
-      _setRowUpperBound(rows(id(r)),u - *e);
+      _setRowCoeffs(_rows(id(r)), ExprIterator(e.comps.begin(), _cols),
+                    ExprIterator(e.comps.end(), _cols));
+      _setRowLowerBound(_rows(id(r)),l - *e);
+      _setRowUpperBound(_rows(id(r)),u - *e);
     }
 
     ///Set a row (i.e a constraint) of the LP
@@ -1234,7 +1268,7 @@ namespace lemon {
     ///\return the expression associated to the row
     Expr row(Row r) const {
       Expr e;
-      _getRowCoeffs(rows(id(r)), InsertIterator(e.comps, cols));
+      _getRowCoeffs(_rows(id(r)), InsertIterator(e.comps, _cols));
       return e;
     }
 
@@ -1247,8 +1281,8 @@ namespace lemon {
     Row addRow(Value l,const Expr &e, Value u) {
       Row r;
       e.simplify();
-      r._id = _addRowId(_addRow(l - *e, ExprIterator(e.comps.begin(), cols),
-                                ExprIterator(e.comps.end(), cols), u - *e));
+      r._id = _addRowId(_addRow(l - *e, ExprIterator(e.comps.begin(), _cols),
+                                ExprIterator(e.comps.end(), _cols), u - *e));
       return r;
     }
 
@@ -1260,8 +1294,8 @@ namespace lemon {
       Row r;
       c.expr().simplify();
       r._id = _addRowId(_addRow(c.lowerBounded()?c.lowerBound()-*c.expr():-INF,
-                                ExprIterator(c.expr().comps.begin(), cols),
-                                ExprIterator(c.expr().comps.end(), cols),
+                                ExprIterator(c.expr().comps.begin(), _cols),
+                                ExprIterator(c.expr().comps.end(), _cols),
                                 c.upperBounded()?c.upperBound()-*c.expr():INF));
       return r;
     }
@@ -1269,15 +1303,15 @@ namespace lemon {
 
     ///\param c is the column to be deleted
     void erase(Col c) {
-      _eraseCol(cols(id(c)));
-      _eraseColId(cols(id(c)));
+      _eraseCol(_cols(id(c)));
+      _eraseColId(_cols(id(c)));
     }
     ///Erase a row (i.e a constraint) from the LP
 
     ///\param r is the row to be deleted
     void erase(Row r) {
-      _eraseRow(rows(id(r)));
-      _eraseRowId(rows(id(r)));
+      _eraseRow(_rows(id(r)));
+      _eraseRowId(_rows(id(r)));
     }
 
     /// Get the name of a column
@@ -1286,7 +1320,7 @@ namespace lemon {
     ///\return The name of the colunm
     std::string colName(Col c) const {
       std::string name;
-      _getColName(cols(id(c)), name);
+      _getColName(_cols(id(c)), name);
       return name;
     }
 
@@ -1295,7 +1329,7 @@ namespace lemon {
     ///\param c is the coresponding column
     ///\param name The name to be given
     void colName(Col c, const std::string& name) {
-      _setColName(cols(id(c)), name);
+      _setColName(_cols(id(c)), name);
     }
 
     /// Get the column by its name
@@ -1304,7 +1338,7 @@ namespace lemon {
     ///\return the proper column or \c INVALID
     Col colByName(const std::string& name) const {
       int k = _colByName(name);
-      return k != -1 ? Col(cols[k]) : Col(INVALID);
+      return k != -1 ? Col(_cols[k]) : Col(INVALID);
     }
 
     /// Get the name of a row
@@ -1313,7 +1347,7 @@ namespace lemon {
     ///\return The name of the row
     std::string rowName(Row r) const {
       std::string name;
-      _getRowName(rows(id(r)), name);
+      _getRowName(_rows(id(r)), name);
       return name;
     }
 
@@ -1322,7 +1356,7 @@ namespace lemon {
     ///\param r is the coresponding row
     ///\param name The name to be given
     void rowName(Row r, const std::string& name) {
-      _setRowName(rows(id(r)), name);
+      _setRowName(_rows(id(r)), name);
     }
 
     /// Get the row by its name
@@ -1331,7 +1365,7 @@ namespace lemon {
     ///\return the proper row or \c INVALID
     Row rowByName(const std::string& name) const {
       int k = _rowByName(name);
-      return k != -1 ? Row(rows[k]) : Row(INVALID);
+      return k != -1 ? Row(_rows[k]) : Row(INVALID);
     }
 
     /// Set an element of the coefficient matrix of the LP
@@ -1340,7 +1374,7 @@ namespace lemon {
     ///\param c is the column of the element to be modified
     ///\param val is the new value of the coefficient
     void coeff(Row r, Col c, Value val) {
-      _setCoeff(rows(id(r)),cols(id(c)), val);
+      _setCoeff(_rows(id(r)),_cols(id(c)), val);
     }
 
     /// Get an element of the coefficient matrix of the LP
@@ -1349,7 +1383,7 @@ namespace lemon {
     ///\param c is the column of the element
     ///\return the corresponding coefficient
     Value coeff(Row r, Col c) const {
-      return _getCoeff(rows(id(r)),cols(id(c)));
+      return _getCoeff(_rows(id(r)),_cols(id(c)));
     }
 
     /// Set the lower bound of a column (i.e a variable)
@@ -1358,7 +1392,7 @@ namespace lemon {
     /// extended number of type Value, i.e. a finite number of type
     /// Value or -\ref INF.
     void colLowerBound(Col c, Value value) {
-      _setColLowerBound(cols(id(c)),value);
+      _setColLowerBound(_cols(id(c)),value);
     }
 
     /// Get the lower bound of a column (i.e a variable)
@@ -1367,7 +1401,7 @@ namespace lemon {
     /// (this might be -\ref INF as well).
     ///\return The lower bound for column \c c
     Value colLowerBound(Col c) const {
-      return _getColLowerBound(cols(id(c)));
+      return _getColLowerBound(_cols(id(c)));
     }
 
     ///\brief Set the lower bound of  several columns
@@ -1413,7 +1447,7 @@ namespace lemon {
     /// extended number of type Value, i.e. a finite number of type
     /// Value or \ref INF.
     void colUpperBound(Col c, Value value) {
-      _setColUpperBound(cols(id(c)),value);
+      _setColUpperBound(_cols(id(c)),value);
     };
 
     /// Get the upper bound of a column (i.e a variable)
@@ -1422,7 +1456,7 @@ namespace lemon {
     /// (this might be \ref INF as well).
     /// \return The upper bound for column \c c
     Value colUpperBound(Col c) const {
-      return _getColUpperBound(cols(id(c)));
+      return _getColUpperBound(_cols(id(c)));
     }
 
     ///\brief Set the upper bound of  several columns
@@ -1469,8 +1503,8 @@ namespace lemon {
     /// extended number of type Value, i.e. a finite number of type
     /// Value, -\ref INF or \ref INF.
     void colBounds(Col c, Value lower, Value upper) {
-      _setColLowerBound(cols(id(c)),lower);
-      _setColUpperBound(cols(id(c)),upper);
+      _setColLowerBound(_cols(id(c)),lower);
+      _setColUpperBound(_cols(id(c)),upper);
     }
 
     ///\brief Set the lower and the upper bound of several columns
@@ -1515,7 +1549,7 @@ namespace lemon {
     /// extended number of type Value, i.e. a finite number of type
     /// Value or -\ref INF.
     void rowLowerBound(Row r, Value value) {
-      _setRowLowerBound(rows(id(r)),value);
+      _setRowLowerBound(_rows(id(r)),value);
     }
 
     /// Get the lower bound of a row (i.e a constraint)
@@ -1524,7 +1558,7 @@ namespace lemon {
     /// (this might be -\ref INF as well).
     ///\return The lower bound for row \c r
     Value rowLowerBound(Row r) const {
-      return _getRowLowerBound(rows(id(r)));
+      return _getRowLowerBound(_rows(id(r)));
     }
 
     /// Set the upper bound of a row (i.e a constraint)
@@ -1533,7 +1567,7 @@ namespace lemon {
     /// extended number of type Value, i.e. a finite number of type
     /// Value or -\ref INF.
     void rowUpperBound(Row r, Value value) {
-      _setRowUpperBound(rows(id(r)),value);
+      _setRowUpperBound(_rows(id(r)),value);
     }
 
     /// Get the upper bound of a row (i.e a constraint)
@@ -1542,22 +1576,22 @@ namespace lemon {
     /// (this might be -\ref INF as well).
     ///\return The upper bound for row \c r
     Value rowUpperBound(Row r) const {
-      return _getRowUpperBound(rows(id(r)));
+      return _getRowUpperBound(_rows(id(r)));
     }
 
     ///Set an element of the objective function
-    void objCoeff(Col c, Value v) {_setObjCoeff(cols(id(c)),v); };
+    void objCoeff(Col c, Value v) {_setObjCoeff(_cols(id(c)),v); };
 
     ///Get an element of the objective function
-    Value objCoeff(Col c) const { return _getObjCoeff(cols(id(c))); };
+    Value objCoeff(Col c) const { return _getObjCoeff(_cols(id(c))); };
 
     ///Set the objective function
 
     ///\param e is a linear expression of type \ref Expr.
     ///
     void obj(const Expr& e) {
-      _setObjCoeffs(ExprIterator(e.comps.begin(), cols),
-                    ExprIterator(e.comps.end(), cols));
+      _setObjCoeffs(ExprIterator(e.comps.begin(), _cols),
+                    ExprIterator(e.comps.end(), _cols));
       obj_const_comp = *e;
     }
 
@@ -1567,7 +1601,7 @@ namespace lemon {
     ///Expr.
     Expr obj() const {
       Expr e;
-      _getObjCoeffs(InsertIterator(e.comps, cols));
+      _getObjCoeffs(InsertIterator(e.comps, _cols));
       *e = obj_const_comp;
       return e;
     }
@@ -1586,7 +1620,7 @@ namespace lemon {
     void min() { _setSense(MIN); }
 
     ///Clear the problem
-    void clear() { _clear(); rows.clear(); cols.clear(); }
+    void clear() { _clear(); _rows.clear(); _cols.clear(); }
 
     /// Set the message level of the solver
     void messageLevel(MessageLevel level) { _messageLevel(level); }
@@ -1929,7 +1963,7 @@ namespace lemon {
 
     /// Return the primal value of the column.
     /// \pre The problem is solved.
-    Value primal(Col c) const { return _getPrimal(cols(id(c))); }
+    Value primal(Col c) const { return _getPrimal(_cols(id(c))); }
 
     /// Return the primal value of the expression
 
@@ -1956,13 +1990,13 @@ namespace lemon {
     /// \pre The problem is solved and the dual problem is infeasible.
     /// \note Some solvers does not provide primal ray calculation
     /// functions.
-    Value primalRay(Col c) const { return _getPrimalRay(cols(id(c))); }
+    Value primalRay(Col c) const { return _getPrimalRay(_cols(id(c))); }
 
     /// Return the dual value of the row
 
     /// Return the dual value of the row.
     /// \pre The problem is solved.
-    Value dual(Row r) const { return _getDual(rows(id(r))); }
+    Value dual(Row r) const { return _getDual(_rows(id(r))); }
 
     /// Return the dual value of the dual expression
 
@@ -1990,17 +2024,17 @@ namespace lemon {
     /// \pre The problem is solved and the primal problem is infeasible.
     /// \note Some solvers does not provide dual ray calculation
     /// functions.
-    Value dualRay(Row r) const { return _getDualRay(rows(id(r))); }
+    Value dualRay(Row r) const { return _getDualRay(_rows(id(r))); }
 
     /// Return the basis status of the column
 
     /// \see VarStatus
-    VarStatus colStatus(Col c) const { return _getColStatus(cols(id(c))); }
+    VarStatus colStatus(Col c) const { return _getColStatus(_cols(id(c))); }
 
     /// Return the basis status of the row
 
     /// \see VarStatus
-    VarStatus rowStatus(Row r) const { return _getRowStatus(rows(id(r))); }
+    VarStatus rowStatus(Row r) const { return _getRowStatus(_rows(id(r))); }
 
     ///The value of the objective function
 
@@ -2080,7 +2114,7 @@ namespace lemon {
     ///Sets the type of the given column to the given type.
     ///
     void colType(Col c, ColTypes col_type) {
-      _setColType(cols(id(c)),col_type);
+      _setColType(_cols(id(c)),col_type);
     }
 
     ///Gives back the type of the column.
@@ -2088,7 +2122,7 @@ namespace lemon {
     ///Gives back the type of the column.
     ///
     ColTypes colType(Col c) const {
-      return _getColType(cols(id(c)));
+      return _getColType(_cols(id(c)));
     }
     ///@}
 
@@ -2105,7 +2139,7 @@ namespace lemon {
 
     ///  Return the value of the row in the solution.
     /// \pre The problem is solved.
-    Value sol(Col c) const { return _getSol(cols(id(c))); }
+    Value sol(Col c) const { return _getSol(_cols(id(c))); }
 
     /// Return the value of the expression in the solution
 

@@ -29,6 +29,7 @@
 #include <lemon/error.h>
 #include <lemon/maps.h>
 #include <lemon/path.h>
+#include <lemon/bits/stl_iterators.h>
 
 #include <limits>
 
@@ -689,6 +690,21 @@ namespace lemon {
       const BellmanFord* _algorithm;
       int _index;
     };
+
+    /// \brief Gets the collection of the active nodes.
+    ///
+    /// This function can be used for iterating on the active nodes of the
+    /// Bellman-Ford algorithm after the last phase.
+    /// These nodes should be checked in the next phase to
+    /// find augmenting arcs outgoing from them.
+    /// It returns a wrapped ActiveIt, which looks
+    /// like an STL container (by having begin() and end())
+    /// which you can use in range-based for loops, STL algorithms, etc.
+    LemonRangeWrapper1<ActiveIt, BellmanFord>
+    activeNodes() const {
+      return LemonRangeWrapper1<ActiveIt, BellmanFord>(*this);
+    }
+
 
     /// \name Query Functions
     /// The result of the Bellman-Ford algorithm can be obtained using these

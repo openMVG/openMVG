@@ -21,7 +21,11 @@
 
 #include<lemon/bits/windows.h>
 
-#ifdef WIN32
+#if defined(LEMON_WIN32) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
+#ifdef LEMON_WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -40,7 +44,7 @@
 #else
 #include <unistd.h>
 #include <ctime>
-#ifndef WIN32
+#ifndef LEMON_WIN32
 #include <sys/times.h>
 #endif
 #include <sys/time.h>
@@ -55,7 +59,7 @@ namespace lemon {
                          double &utime, double &stime,
                          double &cutime, double &cstime)
     {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       static const double ch = 4294967296.0e-7;
       static const double cl = 1.0e-7;
 
@@ -94,11 +98,11 @@ namespace lemon {
     std::string getWinFormattedDate()
     {
       std::ostringstream os;
-#ifdef WIN32
+#ifdef LEMON_WIN32
       SYSTEMTIME time;
       GetSystemTime(&time);
       char buf1[11], buf2[9], buf3[5];
-          if (GetDateFormat(MY_LOCALE, 0, &time,
+      if (GetDateFormat(MY_LOCALE, 0, &time,
                         ("ddd MMM dd"), buf1, 11) &&
           GetTimeFormat(MY_LOCALE, 0, &time,
                         ("HH':'mm':'ss"), buf2, 9) &&
@@ -120,7 +124,7 @@ namespace lemon {
 
     int getWinRndSeed()
     {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       FILETIME time;
       GetSystemTimeAsFileTime(&time);
       return GetCurrentProcessId() + time.dwHighDateTime + time.dwLowDateTime;
@@ -132,7 +136,7 @@ namespace lemon {
     }
 
     WinLock::WinLock() {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       CRITICAL_SECTION *lock = new CRITICAL_SECTION;
       InitializeCriticalSection(lock);
       _repr = lock;
@@ -142,7 +146,7 @@ namespace lemon {
     }
 
     WinLock::~WinLock() {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
       DeleteCriticalSection(lock);
       delete lock;
@@ -150,14 +154,14 @@ namespace lemon {
     }
 
     void WinLock::lock() {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
       EnterCriticalSection(lock);
 #endif
     }
 
     void WinLock::unlock() {
-#ifdef WIN32
+#ifdef LEMON_WIN32
       CRITICAL_SECTION *lock = static_cast<CRITICAL_SECTION*>(_repr);
       LeaveCriticalSection(lock);
 #endif

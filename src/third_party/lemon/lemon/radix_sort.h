@@ -328,7 +328,7 @@ namespace lemon {
       typedef std::allocator<Key> Allocator;
       Allocator allocator;
 
-      int length = std::distance(first, last);
+      int length = static_cast<int>(std::distance(first, last));
       Key* buffer = allocator.allocate(2 * length);
       try {
         bool dir = true;

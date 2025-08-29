@@ -27,6 +27,7 @@
 #include <vector>
 #include <limits>
 #include <lemon/core.h>
+#include <lemon/maps.h>
 #include <lemon/bin_heap.h>
 
 namespace lemon {
@@ -163,7 +164,7 @@ namespace lemon {
     int _root;
 
     // Parameters of the problem
-    bool _have_lower;
+    bool _has_lower;
     Value _sum_supply;
 
     // Data structures for storing the digraph
@@ -356,10 +357,9 @@ namespace lemon {
     /// \return <tt>(*this)</tt>
     template <typename LowerMap>
     CapacityScaling& lowerMap(const LowerMap& map) {
-      _have_lower = true;
+      _has_lower = true;
       for (ArcIt a(_graph); a != INVALID; ++a) {
         _lower[_arc_idf[a]] = map[a];
-        _lower[_arc_idb[a]] = map[a];
       }
       return *this;
     }
@@ -543,7 +543,7 @@ namespace lemon {
         _upper[j] = INF;
         _cost[j] = _forward[j] ? 1 : -1;
       }
-      _have_lower = false;
+      _has_lower = false;
       return *this;
     }
 
@@ -754,7 +754,7 @@ namespace lemon {
       // Remove non-zero lower bounds
       const Value MAX = std::numeric_limits<Value>::max();
       int last_out;
-      if (_have_lower) {
+      if (_has_lower) {
         for (int i = 0; i != _root; ++i) {
           last_out = _first_out[i+1];
           for (int j = _first_out[i]; j != last_out; ++j) {
@@ -839,11 +839,11 @@ namespace lemon {
       return OPTIMAL;
     }
 
-    // Check if the upper bound is greater or equal to the lower bound
-    // on each arc.
+    // Check if the upper bound is greater than or equal to the lower bound
+    // on each forward arc.
     bool checkBoundMaps() {
       for (int j = 0; j != _res_arc_num; ++j) {
-        if (_upper[j] < _lower[j]) return false;
+        if (_forward[j] && _upper[j] < _lower[j]) return false;
       }
       return true;
     }
@@ -857,10 +857,10 @@ namespace lemon {
         pt = startWithoutScaling();
 
       // Handle non-zero lower bounds
-      if (_have_lower) {
+      if (_has_lower) {
         int limit = _first_out[_root];
         for (int j = 0; j != limit; ++j) {
-          if (!_forward[j]) _res_cap[j] += _lower[j];
+          if (_forward[j]) _res_cap[_reverse[j]] += _lower[j];
         }
       }
 

@@ -49,7 +49,12 @@ namespace lemon {
 
       /// Returns the value associated with the given key.
       Value operator[](const Key &) const {
-        return *(static_cast<Value *>(0)+1);
+        // return *(static_cast<Value *>(0));
+        // return *(static_cast<Value *>(0)+1);
+        // return *(static_cast<Value *>(sizeof(Value)));
+        // return *(reinterpret_cast<Value *>(0));
+        // return *(reinterpret_cast<Value *>(0)+1);
+        return *(reinterpret_cast<Value *>(sizeof(Value)));
       }
 
       template<typename _ReadMap>
@@ -131,8 +136,7 @@ namespace lemon {
 
       /// Returns the value associated with the given key.
       Value operator[](const Key &) const {
-        Value *r = 0;
-        return *r;
+        return *(reinterpret_cast<Value *>(sizeof(Value)));
       }
 
       /// Sets the value associated with the given key.
@@ -172,14 +176,12 @@ namespace lemon {
 
       /// Returns a reference to the value associated with the given key.
       Reference operator[](const Key &) {
-        Value *r = 0;
-        return *r;
+        return *(reinterpret_cast<Value *>(sizeof(Value)));
       }
 
       /// Returns a const reference to the value associated with the given key.
       ConstReference operator[](const Key &) const {
-        Value *r = 0;
-        return *r;
+        return *(reinterpret_cast<Value *>(sizeof(Value)));
       }
 
       /// Sets the value associated with the given key.

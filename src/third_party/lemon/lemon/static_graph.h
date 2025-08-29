@@ -29,6 +29,7 @@
 namespace lemon {
 
   class StaticDigraphBase {
+
   public:
 
     StaticDigraphBase()
@@ -203,7 +204,7 @@ namespace lemon {
       built = true;
 
       node_num = n;
-      arc_num = std::distance(first, last);
+      arc_num = static_cast<int>(std::distance(first, last));
 
       node_first_out = new int[node_num + 1];
       node_first_in = new int[node_num];
@@ -296,6 +297,14 @@ namespace lemon {
   ///
   /// \sa concepts::Digraph
   class StaticDigraph : public ExtendedStaticDigraphBase {
+
+  private:
+    /// Graphs are \e not copy constructible. Use DigraphCopy instead.
+    StaticDigraph(const StaticDigraph &) : ExtendedStaticDigraphBase() {};
+    /// \brief Assignment of a graph to another one is \e not allowed.
+    /// Use DigraphCopy instead.
+    void operator=(const StaticDigraph&) {}
+
   public:
 
     typedef ExtendedStaticDigraphBase Parent;

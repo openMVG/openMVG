@@ -167,7 +167,7 @@ namespace lemon {
     ///Return the number of items on level \c l.
     int onLevel(int l) const
     {
-      return _first[l+1]-_first[l];
+      return static_cast<int>(_first[l+1]-_first[l]);
     }
     ///Return true if level \c l is empty.
     bool emptyLevel(int l) const
@@ -177,12 +177,12 @@ namespace lemon {
     ///Return the number of items above level \c l.
     int aboveLevel(int l) const
     {
-      return _first[_max_level+1]-_first[l+1];
+      return static_cast<int>(_first[_max_level+1]-_first[l+1]);
     }
     ///Return the number of active items on level \c l.
     int activesOnLevel(int l) const
     {
-      return _last_active[l]-_first[l]+1;
+      return static_cast<int>(_last_active[l]-_first[l]+1);
     }
     ///Return true if there is no active item on level \c l.
     bool activeFree(int l) const

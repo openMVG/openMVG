@@ -38,8 +38,8 @@ namespace lemon {
     lp = glp_create_prob();
     glp_copy_prob(lp, other.lp, GLP_ON);
     glp_create_index(lp);
-    rows = other.rows;
-    cols = other.cols;
+    _rows = other._rows;
+    _cols = other._cols;
     messageLevel(MESSAGE_NOTHING);
   }
 
@@ -108,13 +108,13 @@ namespace lemon {
   }
 
   void GlpkBase::_eraseColId(int i) {
-    cols.eraseIndex(i);
-    cols.shiftIndices(i);
+    _cols.eraseIndex(i);
+    _cols.shiftIndices(i);
   }
 
   void GlpkBase::_eraseRowId(int i) {
-    rows.eraseIndex(i);
-    rows.shiftIndices(i);
+    _rows.eraseIndex(i);
+    _rows.shiftIndices(i);
   }
 
   void GlpkBase::_getColName(int c, std::string& name) const {

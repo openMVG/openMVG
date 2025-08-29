@@ -37,37 +37,54 @@ namespace lemon {
     }
   }
 
+  void CplexEnv::incCnt()
+  {
+    _cnt_lock->lock();
+    ++(*_cnt);
+    _cnt_lock->unlock();
+  }
+
+  void CplexEnv::decCnt()
+  {
+    _cnt_lock->lock();
+    --(*_cnt);
+    if (*_cnt == 0) {
+      delete _cnt;
+      _cnt_lock->unlock();
+      delete _cnt_lock;
+      CPXcloseCPLEX(&_env);
+    }
+    else _cnt_lock->unlock();
+  }
+  
   CplexEnv::CplexEnv() {
     int status;
+    _env = CPXopenCPLEX(&status);
+    if (_env == 0)
+      throw LicenseError(status);
     _cnt = new int;
     (*_cnt) = 1;
-    _env = CPXopenCPLEX(&status);
-    if (_env == 0) {
-      delete _cnt;
-      _cnt = 0;
-      throw LicenseError(status);
-    }
+    _cnt_lock = new bits::Lock;
   }
 
   CplexEnv::CplexEnv(const CplexEnv& other) {
     _env = other._env;
     _cnt = other._cnt;
-    ++(*_cnt);
+    _cnt_lock = other._cnt_lock;
+    incCnt();
   }
 
   CplexEnv& CplexEnv::operator=(const CplexEnv& other) {
+    decCnt();
     _env = other._env;
     _cnt = other._cnt;
-    ++(*_cnt);
+    _cnt_lock = other._cnt_lock;
+    incCnt();
     return *this;
   }
 
   CplexEnv::~CplexEnv() {
-    --(*_cnt);
-    if (*_cnt == 0) {
-      delete _cnt;
-      CPXcloseCPLEX(&_env);
-    }
+    decCnt();
   }
 
   CplexBase::CplexBase() : LpBase() {
@@ -87,8 +104,8 @@ namespace lemon {
     : LpBase() {
     int status;
     _prob = CPXcloneprob(cplexEnv(), cplex._prob, &status);
-    rows = cplex.rows;
-    cols = cplex.cols;
+    _rows = cplex._rows;
+    _cols = cplex._cols;
     messageLevel(MESSAGE_NOTHING);
   }
 
@@ -115,34 +132,37 @@ namespace lemon {
   int CplexBase::_addRow(Value lb, ExprIterator b,
                          ExprIterator e, Value ub) {
     int i = CPXgetnumrows(cplexEnv(), _prob);
-    if (lb == -INF) {
-      const char s = 'L';
-      CPXnewrows(cplexEnv(), _prob, 1, &ub, &s, 0, 0);
-    } else if (ub == INF) {
-      const char s = 'G';
-      CPXnewrows(cplexEnv(), _prob, 1, &lb, &s, 0, 0);
-    } else if (lb == ub){
-      const char s = 'E';
-      CPXnewrows(cplexEnv(), _prob, 1, &lb, &s, 0, 0);
-    } else {
-      const char s = 'R';
-      double len = ub - lb;
-      CPXnewrows(cplexEnv(), _prob, 1, &lb, &s, &len, 0);
-    }
 
+    int rmatbeg = 0;
+    
     std::vector<int> indices;
-    std::vector<int> rowlist;
     std::vector<Value> values;
 
     for(ExprIterator it=b; it!=e; ++it) {
       indices.push_back(it->first);
       values.push_back(it->second);
-      rowlist.push_back(i);
     }
 
-    CPXchgcoeflist(cplexEnv(), _prob, values.size(),
-                   &rowlist.front(), &indices.front(), &values.front());
-
+    if (lb == -INF) {
+      const char s = 'L';
+      CPXaddrows(cplexEnv(), _prob, 0, 1, values.size(), &ub, &s,
+                 &rmatbeg, &indices.front(), &values.front(), 0, 0);
+    } else if (ub == INF) {
+      const char s = 'G';
+      CPXaddrows(cplexEnv(), _prob, 0, 1, values.size(), &lb, &s,
+                 &rmatbeg, &indices.front(), &values.front(), 0, 0);
+    } else if (lb == ub){
+      const char s = 'E';
+      CPXaddrows(cplexEnv(), _prob, 0, 1, values.size(), &lb, &s,
+                 &rmatbeg, &indices.front(), &values.front(), 0, 0);
+    } else {
+      const char s = 'R';
+      double len = ub - lb;
+      CPXaddrows(cplexEnv(), _prob, 0, 1, values.size(), &lb, &s,
+                 &rmatbeg, &indices.front(), &values.front(), 0, 0);
+      CPXchgrngval(cplexEnv(), _prob, 1, &i, &len);
+    }
+    
     return i;
   }
 
@@ -155,12 +175,12 @@ namespace lemon {
   }
 
   void CplexBase::_eraseColId(int i) {
-    cols.eraseIndex(i);
-    cols.shiftIndices(i);
+    _cols.eraseIndex(i);
+    _cols.shiftIndices(i);
   }
   void CplexBase::_eraseRowId(int i) {
-    rows.eraseIndex(i);
-    rows.shiftIndices(i);
+    _rows.eraseIndex(i);
+    _rows.shiftIndices(i);
   }
 
   void CplexBase::_getColName(int col, std::string &name) const {

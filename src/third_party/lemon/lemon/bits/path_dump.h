@@ -61,7 +61,7 @@ namespace lemon {
         if (path->predMap[current] == INVALID) current = INVALID;
       }
 
-      operator const typename Digraph::Arc() const {
+      operator typename Digraph::Arc() const {
         return path->predMap[current];
       }
 

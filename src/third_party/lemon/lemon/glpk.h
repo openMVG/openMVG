@@ -141,10 +141,10 @@ namespace lemon {
     _solver_bits::VoidPtr lpx() const {return lp;}
 
     ///Returns the constraint identifier understood by GLPK.
-    int lpxRow(Row r) const { return rows(id(r)); }
+    int lpxRow(Row r) const { return _rows(id(r)); }
 
     ///Returns the variable identifier understood by GLPK.
-    int lpxCol(Col c) const { return cols(id(c)); }
+    int lpxCol(Col c) const { return _cols(id(c)); }
 
 #ifdef DOXYGEN
     /// Write the problem or the solution to a file in the given format

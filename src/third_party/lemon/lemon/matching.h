@@ -115,7 +115,7 @@ namespace lemon {
     NodeQueue _node_queue;
     int _process, _postpone, _last;
 
-    int _node_num;
+    int _node_num, _unmatched;
 
   private:
 
@@ -179,6 +179,7 @@ namespace lemon {
             extendOnArc(a);
           } else if ((*_status)[v] == UNMATCHED) {
             augmentOnArc(a);
+            --_unmatched;
             return;
           }
         }
@@ -204,6 +205,7 @@ namespace lemon {
                 extendOnArc(b);
               } else if ((*_status)[x] == UNMATCHED) {
                 augmentOnArc(b);
+                --_unmatched;
                 return;
               }
             }
@@ -228,6 +230,7 @@ namespace lemon {
             extendOnArc(a);
           } else if ((*_status)[v] == UNMATCHED) {
             augmentOnArc(a);
+            --_unmatched;
             return;
           }
         }
@@ -437,6 +440,7 @@ namespace lemon {
         (*_matching)[n] = INVALID;
         (*_status)[n] = UNMATCHED;
       }
+      _unmatched = _node_num;
     }
 
     /// \brief Find an initial matching in a greedy way.
@@ -448,6 +452,7 @@ namespace lemon {
         (*_matching)[n] = INVALID;
         (*_status)[n] = UNMATCHED;
       }
+      _unmatched = _node_num;
       for (NodeIt n(_graph); n != INVALID; ++n) {
         if ((*_matching)[n] == INVALID) {
           for (OutArcIt a(_graph, n); a != INVALID ; ++a) {
@@ -457,6 +462,7 @@ namespace lemon {
               (*_status)[n] = MATCHED;
               (*_matching)[v] = _graph.oppositeArc(a);
               (*_status)[v] = MATCHED;
+              _unmatched -= 2;
               break;
             }
           }
@@ -479,6 +485,7 @@ namespace lemon {
         (*_matching)[n] = INVALID;
         (*_status)[n] = UNMATCHED;
       }
+      _unmatched = _node_num;
       for(EdgeIt e(_graph); e!=INVALID; ++e) {
         if (matching[e]) {
 
@@ -491,6 +498,8 @@ namespace lemon {
           if ((*_matching)[v] != INVALID) return false;
           (*_matching)[v] = _graph.direct(e, false);
           (*_status)[v] = MATCHED;
+
+          _unmatched -= 2;
         }
       }
       return true;
@@ -498,16 +507,20 @@ namespace lemon {
 
     /// \brief Start Edmonds' algorithm
     ///
-    /// This function runs the original Edmonds' algorithm.
+    /// This function runs the original Edmonds' algorithm. If the
+    /// \c decomposition parameter is set to false, then the Gallai-Edmonds
+    /// decomposition is not computed.
     ///
     /// \pre \ref init(), \ref greedyInit() or \ref matchingInit() must be
     /// called before using this function.
-    void startSparse() {
-      for(NodeIt n(_graph); n != INVALID; ++n) {
+    void startSparse(bool decomposition = true) {
+      int _unmatched_limit = decomposition ? 0 : 1;
+      for(NodeIt n(_graph); _unmatched > _unmatched_limit; ++n) {
         if ((*_status)[n] == UNMATCHED) {
           (*_blossom_rep)[_blossom_set->insert(n)] = n;
           _tree_set->insert(n);
           (*_status)[n] = EVEN;
+          --_unmatched;
           processSparse(n);
         }
       }
@@ -517,16 +530,20 @@ namespace lemon {
     /// for dense graphs
     ///
     /// This function runs Edmonds' algorithm with a heuristic of postponing
-    /// shrinks, therefore resulting in a faster algorithm for dense graphs.
+    /// shrinks, therefore resulting in a faster algorithm for dense graphs.  If
+    /// the \c decomposition parameter is set to false, then the Gallai-Edmonds
+    /// decomposition is not computed.
     ///
     /// \pre \ref init(), \ref greedyInit() or \ref matchingInit() must be
     /// called before using this function.
-    void startDense() {
-      for(NodeIt n(_graph); n != INVALID; ++n) {
+    void startDense(bool decomposition = true) {
+      int _unmatched_limit = decomposition ? 0 : 1;
+      for(NodeIt n(_graph); _unmatched > _unmatched_limit; ++n) {
         if ((*_status)[n] == UNMATCHED) {
           (*_blossom_rep)[_blossom_set->insert(n)] = n;
           _tree_set->insert(n);
           (*_status)[n] = EVEN;
+          --_unmatched;
           processDense(n);
         }
       }
@@ -536,15 +553,18 @@ namespace lemon {
     /// \brief Run Edmonds' algorithm
     ///
     /// This function runs Edmonds' algorithm. An additional heuristic of
-    /// postponing shrinks is used for relatively dense graphs
-    /// (for which <tt>m>=2*n</tt> holds).
-    void run() {
+    /// postponing shrinks is used for relatively dense graphs (for which
+    /// <tt>m>=2*n</tt> holds). If the \c decomposition parameter is set to
+    /// false, then the Gallai-Edmonds decomposition is not computed. In some
+    /// cases, this can speed up the algorithm significantly, especially when a
+    /// maximum matching is computed in a dense graph with odd number of nodes.
+    void run(bool decomposition = true) {
       if (countEdges(_graph) < 2 * countNodes(_graph)) {
         greedyInit();
-        startSparse();
+        startSparse(decomposition);
       } else {
         init();
-        startDense();
+        startDense(decomposition);
       }
     }
 
@@ -723,8 +743,8 @@ namespace lemon {
       int begin, end;
       Value value;
 
-      BlossomVariable(int _begin, int _end, Value _value)
-        : begin(_begin), end(_end), value(_value) {}
+      BlossomVariable(int _begin, Value _value)
+          : begin(_begin), end(-1), value(_value) {}
 
     };
 
@@ -1501,40 +1521,60 @@ namespace lemon {
       _tree_set->erase(blossom);
     }
 
+    struct ExtractBlossomItem {
+      int blossom;
+      Node base;
+      Arc matching;
+      int close_index;
+      ExtractBlossomItem(int _blossom, Node _base,
+                         Arc _matching, int _close_index)
+          : blossom(_blossom), base(_base), matching(_matching),
+            close_index(_close_index) {}
+    };
+
     void extractBlossom(int blossom, const Node& base, const Arc& matching) {
-      if (_blossom_set->trivial(blossom)) {
-        int bi = (*_node_index)[base];
-        Value pot = (*_node_data)[bi].pot;
+      std::vector<ExtractBlossomItem> stack;
+      std::vector<int> close_stack;
+      stack.push_back(ExtractBlossomItem(blossom, base, matching, 0));
+      while (!stack.empty()) {
+        if (_blossom_set->trivial(stack.back().blossom)) {
+          int bi = (*_node_index)[stack.back().base];
+          Value pot = (*_node_data)[bi].pot;
 
-        (*_matching)[base] = matching;
-        _blossom_node_list.push_back(base);
-        (*_node_potential)[base] = pot;
-      } else {
+          (*_matching)[stack.back().base] = stack.back().matching;
+          (*_node_potential)[stack.back().base] = pot;
+          _blossom_node_list.push_back(stack.back().base);
+          while (int(close_stack.size()) > stack.back().close_index) {
+            _blossom_potential[close_stack.back()].end = _blossom_node_list.size();
+            close_stack.pop_back();
+          }
+          stack.pop_back();
+        } else {
+          Value pot = (*_blossom_data)[stack.back().blossom].pot;
+          int bn = _blossom_node_list.size();
+          close_stack.push_back(_blossom_potential.size());
+          _blossom_potential.push_back(BlossomVariable(bn, pot));
 
-        Value pot = (*_blossom_data)[blossom].pot;
-        int bn = _blossom_node_list.size();
+          std::vector<int> subblossoms;
+          _blossom_set->split(stack.back().blossom, std::back_inserter(subblossoms));
+          int b = _blossom_set->find(stack.back().base);
+          int ib = -1;
+          for (int i = 0; i < int(subblossoms.size()); ++i) {
+            if (subblossoms[i] == b) { ib = i; break; }
+          }
 
-        std::vector<int> subblossoms;
-        _blossom_set->split(blossom, std::back_inserter(subblossoms));
-        int b = _blossom_set->find(base);
-        int ib = -1;
-        for (int i = 0; i < int(subblossoms.size()); ++i) {
-          if (subblossoms[i] == b) { ib = i; break; }
+          stack.back().blossom = subblossoms[ib];
+          for (int i = 1; i < int(subblossoms.size()); i += 2) {
+            int sb = subblossoms[(ib + i) % subblossoms.size()];
+            int tb = subblossoms[(ib + i + 1) % subblossoms.size()];
+
+            Arc m = (*_blossom_data)[tb].next;
+            stack.push_back(ExtractBlossomItem(
+                sb, _graph.target(m), _graph.oppositeArc(m), close_stack.size()));
+            stack.push_back(ExtractBlossomItem(
+                tb, _graph.source(m), m, close_stack.size()));
+          }
         }
-
-        for (int i = 1; i < int(subblossoms.size()); i += 2) {
-          int sb = subblossoms[(ib + i) % subblossoms.size()];
-          int tb = subblossoms[(ib + i + 1) % subblossoms.size()];
-
-          Arc m = (*_blossom_data)[tb].next;
-          extractBlossom(sb, _graph.target(m), _graph.oppositeArc(m));
-          extractBlossom(tb, _graph.source(m), m);
-        }
-        extractBlossom(subblossoms[ib], base, matching);
-
-        int en = _blossom_node_list.size();
-
-        _blossom_potential.push_back(BlossomVariable(bn, en, pot));
       }
     }
 
@@ -2196,8 +2236,8 @@ namespace lemon {
       int begin, end;
       Value value;
 
-      BlossomVariable(int _begin, int _end, Value _value)
-        : begin(_begin), end(_end), value(_value) {}
+      BlossomVariable(int _begin, Value _value)
+        : begin(_begin), value(_value) {}
 
     };
 
@@ -2929,40 +2969,60 @@ namespace lemon {
       _tree_set->erase(blossom);
     }
 
+    struct ExtractBlossomItem {
+      int blossom;
+      Node base;
+      Arc matching;
+      int close_index;
+      ExtractBlossomItem(int _blossom, Node _base,
+                         Arc _matching, int _close_index)
+          : blossom(_blossom), base(_base), matching(_matching),
+            close_index(_close_index) {}
+    };
+
     void extractBlossom(int blossom, const Node& base, const Arc& matching) {
-      if (_blossom_set->trivial(blossom)) {
-        int bi = (*_node_index)[base];
-        Value pot = (*_node_data)[bi].pot;
+      std::vector<ExtractBlossomItem> stack;
+      std::vector<int> close_stack;
+      stack.push_back(ExtractBlossomItem(blossom, base, matching, 0));
+      while (!stack.empty()) {
+        if (_blossom_set->trivial(stack.back().blossom)) {
+          int bi = (*_node_index)[stack.back().base];
+          Value pot = (*_node_data)[bi].pot;
 
-        (*_matching)[base] = matching;
-        _blossom_node_list.push_back(base);
-        (*_node_potential)[base] = pot;
-      } else {
+          (*_matching)[stack.back().base] = stack.back().matching;
+          (*_node_potential)[stack.back().base] = pot;
+          _blossom_node_list.push_back(stack.back().base);
+          while (int(close_stack.size()) > stack.back().close_index) {
+            _blossom_potential[close_stack.back()].end = _blossom_node_list.size();
+            close_stack.pop_back();
+          }
+          stack.pop_back();
+        } else {
+          Value pot = (*_blossom_data)[stack.back().blossom].pot;
+          int bn = _blossom_node_list.size();
+          close_stack.push_back(_blossom_potential.size());
+          _blossom_potential.push_back(BlossomVariable(bn, pot));
 
-        Value pot = (*_blossom_data)[blossom].pot;
-        int bn = _blossom_node_list.size();
+          std::vector<int> subblossoms;
+          _blossom_set->split(stack.back().blossom, std::back_inserter(subblossoms));
+          int b = _blossom_set->find(stack.back().base);
+          int ib = -1;
+          for (int i = 0; i < int(subblossoms.size()); ++i) {
+            if (subblossoms[i] == b) { ib = i; break; }
+          }
 
-        std::vector<int> subblossoms;
-        _blossom_set->split(blossom, std::back_inserter(subblossoms));
-        int b = _blossom_set->find(base);
-        int ib = -1;
-        for (int i = 0; i < int(subblossoms.size()); ++i) {
-          if (subblossoms[i] == b) { ib = i; break; }
+          stack.back().blossom = subblossoms[ib];
+          for (int i = 1; i < int(subblossoms.size()); i += 2) {
+            int sb = subblossoms[(ib + i) % subblossoms.size()];
+            int tb = subblossoms[(ib + i + 1) % subblossoms.size()];
+
+            Arc m = (*_blossom_data)[tb].next;
+            stack.push_back(ExtractBlossomItem(
+                sb, _graph.target(m), _graph.oppositeArc(m), close_stack.size()));
+            stack.push_back(ExtractBlossomItem(
+                tb, _graph.source(m), m, close_stack.size()));
+          }
         }
-
-        for (int i = 1; i < int(subblossoms.size()); i += 2) {
-          int sb = subblossoms[(ib + i) % subblossoms.size()];
-          int tb = subblossoms[(ib + i + 1) % subblossoms.size()];
-
-          Arc m = (*_blossom_data)[tb].next;
-          extractBlossom(sb, _graph.target(m), _graph.oppositeArc(m));
-          extractBlossom(tb, _graph.source(m), m);
-        }
-        extractBlossom(subblossoms[ib], base, matching);
-
-        int en = _blossom_node_list.size();
-
-        _blossom_potential.push_back(BlossomVariable(bn, en, pot));
       }
     }
 

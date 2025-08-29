@@ -1376,7 +1376,7 @@ namespace lemon {
     template <class T>
     struct SetReachedMapTraits : public Traits {
       typedef T ReachedMap;
-      static ReachedMap *createReachedMap(const Digraph &digraph) {
+      static ReachedMap *createReachedMap(const Digraph &) {
         LEMON_ASSERT(false, "ReachedMap is not initialized");
         return 0; // ignore warnings
       }

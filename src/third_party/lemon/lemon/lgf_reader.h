@@ -451,13 +451,13 @@ namespace lemon {
   /// rules.
   ///
   ///\code
-  /// DigraphReader<DGR>(digraph, std::cin).
-  ///   nodeMap("coordinates", coord_map).
-  ///   arcMap("capacity", cap_map).
-  ///   node("source", src).
-  ///   node("target", trg).
-  ///   attribute("caption", caption).
-  ///   run();
+  /// DigraphReader<DGR>(digraph, std::cin)
+  ///   .nodeMap("coordinates", coord_map)
+  ///   .arcMap("capacity", cap_map)
+  ///   .node("source", src)
+  ///   .node("target", trg)
+  ///   .attribute("caption", caption)
+  ///   .run();
   ///\endcode
   ///
   /// By default, the reader uses the first section in the file of the
@@ -1244,13 +1244,13 @@ namespace lemon {
   ///
   ///\code
   ///ListDigraph digraph;
-  ///ListDigraph::ArcMap<int> cm(digraph);
+  ///ListDigraph::ArcMap<int> cap(digraph);
   ///ListDigraph::Node src, trg;
-  ///digraphReader(digraph, std::cin).
-  ///  arcMap("capacity", cap).
-  ///  node("source", src).
-  ///  node("target", trg).
-  ///  run();
+  ///digraphReader(digraph, std::cin)
+  ///  .arcMap("capacity", cap)
+  ///  .node("source", src)
+  ///  .node("target", trg)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the
@@ -2123,9 +2123,9 @@ namespace lemon {
   ///\code
   ///ListGraph graph;
   ///ListGraph::EdgeMap<int> weight(graph);
-  ///graphReader(graph, std::cin).
-  ///  edgeMap("weight", weight).
-  ///  run();
+  ///graphReader(graph, std::cin)
+  ///  .edgeMap("weight", weight)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the
@@ -3191,9 +3191,9 @@ namespace lemon {
   ///\code
   ///ListBpGraph graph;
   ///ListBpGraph::EdgeMap<int> weight(graph);
-  ///bpGraphReader(graph, std::cin).
-  ///  edgeMap("weight", weight).
-  ///  run();
+  ///bpGraphReader(graph, std::cin)
+  ///  .edgeMap("weight", weight)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the

@@ -29,8 +29,8 @@ namespace lemon {
 
   ClpLp::ClpLp(const ClpLp& other) {
     _prob = new ClpSimplex(*other._prob);
-    rows = other.rows;
-    cols = other.cols;
+    _rows = other._rows;
+    _cols = other._cols;
     _init_temporals();
     messageLevel(MESSAGE_NOTHING);
   }
@@ -103,13 +103,13 @@ namespace lemon {
   }
 
   void ClpLp::_eraseColId(int i) {
-    cols.eraseIndex(i);
-    cols.shiftIndices(i);
+    _cols.eraseIndex(i);
+    _cols.shiftIndices(i);
   }
 
   void ClpLp::_eraseRowId(int i) {
-    rows.eraseIndex(i);
-    rows.shiftIndices(i);
+    _rows.eraseIndex(i);
+    _rows.shiftIndices(i);
   }
 
   void ClpLp::_getColName(int c, std::string& name) const {
@@ -227,14 +227,14 @@ namespace lemon {
   }
 
   ClpLp::Value ClpLp::_getCoeff(int ix, int jx) const {
-    CoinBigIndex begin = _prob->clpMatrix()->getVectorStarts()[ix];
-    CoinBigIndex end = begin + _prob->clpMatrix()->getVectorLengths()[ix];
+    CoinBigIndex begin = _prob->clpMatrix()->getVectorStarts()[jx];
+    CoinBigIndex end = begin + _prob->clpMatrix()->getVectorLengths()[jx];
 
     const int* indices = _prob->clpMatrix()->getIndices();
     const double* elements = _prob->clpMatrix()->getElements();
 
-    const int* it = std::lower_bound(indices + begin, indices + end, jx);
-    if (it != indices + end && *it == jx) {
+    const int* it = std::lower_bound(indices + begin, indices + end, ix);
+    if (it != indices + end && *it == ix) {
       return elements[it - indices];
     } else {
       return 0.0;
@@ -461,4 +461,14 @@ namespace lemon {
     }
   }
 
+   void ClpLp::_write(std::string file, std::string format) const
+  {
+    if(format == "LP")
+      _prob->writeLp(file.c_str(), "", 1e-5, 10, 5,
+                     sense()==ClpLp::MIN?1:-1,
+                     true
+                     );
+    else throw UnsupportedFormatError(format);
+  }
+ 
 } //END OF NAMESPACE LEMON

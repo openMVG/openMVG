@@ -67,7 +67,7 @@ namespace lemon {
 
   ///Round a value to its closest integer
   inline double round(double r) {
-    return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
+    return (r > 0.0) ? std::floor(r + 0.5) : std::ceil(r - 0.5);
   }
 
   /// @}

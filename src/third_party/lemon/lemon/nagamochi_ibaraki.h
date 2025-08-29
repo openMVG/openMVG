@@ -174,7 +174,7 @@ namespace lemon {
     struct SetHeapTraits : public Traits {
       typedef CR HeapCrossRef;
       typedef H Heap;
-      static HeapCrossRef *createHeapCrossRef(int num) {
+      static HeapCrossRef *createHeapCrossRef(int) {
         LEMON_ASSERT(false, "HeapCrossRef is not initialized");
         return 0; // ignore warnings
       }

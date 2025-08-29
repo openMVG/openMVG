@@ -25,7 +25,7 @@
 #include<algorithm>
 #include<vector>
 
-#ifndef WIN32
+#ifndef LEMON_WIN32
 #include<sys/time.h>
 #include<ctime>
 #else
@@ -222,7 +222,6 @@ template<class T> class GraphToEps : public T
   using T::_title;
   using T::_copyright;
 
-  using T::NodeTextColorType;
   using T::CUST_COL;
   using T::DIST_COL;
   using T::DIST_BW;
@@ -675,7 +674,7 @@ public:
 
     {
       os << "%%CreationDate: ";
-#ifndef WIN32
+#ifndef LEMON_WIN32
       timeval tv;
       gettimeofday(&tv, 0);
 

@@ -27,6 +27,7 @@
 #include <lemon/concepts/maps.h>
 #include <lemon/concept_check.h>
 #include <lemon/core.h>
+#include <lemon/bits/stl_iterators.h>
 
 namespace lemon {
   namespace concepts {
@@ -107,6 +108,11 @@ namespace lemon {
         /// Copy constructor.
         ///
         Node(const Node&) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const Node &operator=(const Node&) { return *this; }
 
         /// %Invalid constructor \& conversion.
 
@@ -158,6 +164,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         NodeIt(const NodeIt& n) : Node(n) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const NodeIt &operator=(const NodeIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -180,6 +192,25 @@ namespace lemon {
         NodeIt& operator++() { return *this; }
       };
 
+      /// \brief Gets the collection of the nodes of the graph.
+      ///
+      /// This function can be used for iterating on
+      /// the nodes of the graph. It returns a wrapped NodeIt, which looks
+      /// like an STL container (by having begin() and end())
+      /// which you can use in range-based for loops, STL algorithms, etc.
+      /// For example you can write:
+      ///\code
+      /// ListGraph g;
+      /// for(auto v: g.nodes())
+      ///   doSomething(v);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.nodes().begin(), g.nodes().end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper1<NodeIt, Graph> nodes() const {
+        return LemonRangeWrapper1<NodeIt, Graph>(*this);
+      }
+
 
       /// The edge type of the graph
 
@@ -198,6 +229,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         Edge(const Edge&) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const Edge &operator=(const Edge&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the object to be invalid.
@@ -246,6 +283,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         EdgeIt(const EdgeIt& e) : Edge(e) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const EdgeIt &operator=(const EdgeIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -267,6 +310,27 @@ namespace lemon {
         ///
         EdgeIt& operator++() { return *this; }
       };
+
+      /// \brief Gets the collection of the edges of the graph.
+      ///
+      /// This function can be used for iterating on the
+      /// edges of the graph. It returns a wrapped
+      /// EdgeIt, which looks like an STL container
+      /// (by having begin() and end()) which you can use in range-based
+      /// for loops, STL algorithms, etc.
+      /// For example you can write:
+      ///\code
+      /// ListGraph g;
+      /// for(auto e: g.edges())
+      ///   doSomething(e);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.edges().begin(), g.edges().end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper1<EdgeIt, Graph> edges() const {
+        return LemonRangeWrapper1<EdgeIt, Graph>(*this);
+      }
+
 
       /// Iterator class for the incident edges of a node.
 
@@ -294,6 +358,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         IncEdgeIt(const IncEdgeIt& e) : Edge(e) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const IncEdgeIt &operator=(const IncEdgeIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -316,6 +386,28 @@ namespace lemon {
         IncEdgeIt& operator++() { return *this; }
       };
 
+      /// \brief Gets the collection of the incident undirected edges
+      ///  of a certain node of the graph.
+      ///
+      /// This function can be used for iterating on the
+      /// incident undirected edges of a certain node of the graph.
+      /// It returns a wrapped
+      /// IncEdgeIt, which looks like an STL container
+      /// (by having begin() and end()) which you can use in range-based
+      /// for loops, STL algorithms, etc.
+      /// For example if g is a Graph and u is a Node, you can write:
+      ///\code
+      /// for(auto e: g.incEdges(u))
+      ///   doSomething(e);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.incEdges(u).begin(), g.incEdges(u).end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper2<IncEdgeIt, Graph, Node> incEdges(const Node& u) const {
+        return LemonRangeWrapper2<IncEdgeIt, Graph, Node>(*this, u);
+      }
+
+
       /// The arc type of the graph
 
       /// This class identifies a directed arc of the graph. It also serves
@@ -333,6 +425,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         Arc(const Arc&) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const Arc &operator=(const Arc&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the object to be invalid.
@@ -387,6 +485,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         ArcIt(const ArcIt& e) : Arc(e) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const ArcIt &operator=(const ArcIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -411,6 +515,27 @@ namespace lemon {
         ArcIt& operator++() { return *this; }
       };
 
+      /// \brief Gets the collection of the directed arcs of the graph.
+      ///
+      /// This function can be used for iterating on the
+      /// arcs of the graph. It returns a wrapped
+      /// ArcIt, which looks like an STL container
+      /// (by having begin() and end()) which you can use in range-based
+      /// for loops, STL algorithms, etc.
+      /// For example you can write:
+      ///\code
+      /// ListGraph g;
+      /// for(auto a: g.arcs())
+      ///   doSomething(a);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.arcs().begin(), g.arcs().end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper1<ArcIt, Graph> arcs() const {
+        return LemonRangeWrapper1<ArcIt, Graph>(*this);
+      }
+
+
       /// Iterator class for the outgoing arcs of a node.
 
       /// This iterator goes trough the \e outgoing directed arcs of a
@@ -434,6 +559,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         OutArcIt(const OutArcIt& e) : Arc(e) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const OutArcIt &operator=(const OutArcIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -459,6 +590,27 @@ namespace lemon {
         OutArcIt& operator++() { return *this; }
       };
 
+      /// \brief Gets the collection of the outgoing directed arcs of a
+      /// certain node of the graph.
+      ///
+      /// This function can be used for iterating on the
+      /// outgoing arcs of a certain node of the graph. It returns a wrapped
+      /// OutArcIt, which looks like an STL container
+      /// (by having begin() and end()) which you can use in range-based
+      /// for loops, STL algorithms, etc.
+      /// For example if g is a Graph and u is a Node, you can write:
+      ///\code
+      /// for(auto a: g.outArcs(u))
+      ///   doSomething(a);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.outArcs(u).begin(), g.outArcs(u).end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper2<OutArcIt, Graph, Node> outArcs(const Node& u) const {
+        return LemonRangeWrapper2<OutArcIt, Graph, Node>(*this, u);
+      }
+
+
       /// Iterator class for the incoming arcs of a node.
 
       /// This iterator goes trough the \e incoming directed arcs of a
@@ -482,6 +634,12 @@ namespace lemon {
         /// Copy constructor.
         ///
         InArcIt(const InArcIt& e) : Arc(e) { }
+        /// Assignment operator
+
+        /// Assignment operator.
+        ///
+        const InArcIt &operator=(const InArcIt&) { return *this; }
+
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -507,6 +665,26 @@ namespace lemon {
         InArcIt& operator++() { return *this; }
       };
 
+      /// \brief Gets the collection of the incoming directed arcs of
+      /// a certain node of the graph.
+      ///
+      /// This function can be used for iterating on the
+      /// incoming directed arcs of a certain node of the graph. It returns
+      /// a wrapped InArcIt, which looks like an STL container
+      /// (by having begin() and end()) which you can use in range-based
+      /// for loops, STL algorithms, etc.
+      /// For example if g is a Graph and u is a Node, you can write:
+      ///\code
+      /// for(auto a: g.inArcs(u))
+      ///   doSomething(a);
+      ///
+      /// //Using an STL algorithm:
+      /// copy(g.inArcs(u).begin(), g.inArcs(u).end(), vect.begin());
+      ///\endcode
+      LemonRangeWrapper2<InArcIt, Graph, Node> inArcs(const Node& u) const {
+        return LemonRangeWrapper2<InArcIt, Graph, Node>(*this, u);
+      }
+
       /// \brief Standard graph map type for the nodes.
       ///
       /// Standard graph map type for the nodes.
@@ -526,6 +704,10 @@ namespace lemon {
         NodeMap(const NodeMap& nm) :
           ReferenceMap<Node, T, T&, const T&>(nm) { }
         ///Assignment operator
+        NodeMap& operator=(const NodeMap&) {
+          return *this;
+        }
+        ///Template Assignment operator
         template <typename CMap>
         NodeMap& operator=(const CMap&) {
           checkConcept<ReadMap<Node, T>, CMap>();
@@ -552,6 +734,10 @@ namespace lemon {
         ArcMap(const ArcMap& em) :
           ReferenceMap<Arc, T, T&, const T&>(em) { }
         ///Assignment operator
+        ArcMap& operator=(const ArcMap&) {
+          return *this;
+        }
+        ///Template Assignment operator
         template <typename CMap>
         ArcMap& operator=(const CMap&) {
           checkConcept<ReadMap<Arc, T>, CMap>();
@@ -578,6 +764,10 @@ namespace lemon {
         EdgeMap(const EdgeMap& em) :
           ReferenceMap<Edge, T, T&, const T&>(em) {}
         ///Assignment operator
+        EdgeMap& operator=(const EdgeMap&) {
+          return *this;
+        }
+        ///Template Assignment operator
         template <typename CMap>
         EdgeMap& operator=(const CMap&) {
           checkConcept<ReadMap<Edge, T>, CMap>();

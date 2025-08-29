@@ -47,8 +47,8 @@ namespace lemon {
       ArcT() {}
     };
 
-    std::vector<NodeT> nodes;
-    std::vector<ArcT> arcs;
+    std::vector<NodeT> _nodes;
+    std::vector<ArcT> _arcs;
 
   public:
 
@@ -59,46 +59,46 @@ namespace lemon {
 
   public:
 
-    SmartDigraphBase() : nodes(), arcs() { }
+    SmartDigraphBase() : _nodes(), _arcs() { }
     SmartDigraphBase(const SmartDigraphBase &_g)
-      : nodes(_g.nodes), arcs(_g.arcs) { }
+      : _nodes(_g._nodes), _arcs(_g._arcs) { }
 
     typedef True NodeNumTag;
     typedef True ArcNumTag;
 
-    int nodeNum() const { return nodes.size(); }
-    int arcNum() const { return arcs.size(); }
+    int nodeNum() const { return _nodes.size(); }
+    int arcNum() const { return _arcs.size(); }
 
-    int maxNodeId() const { return nodes.size()-1; }
-    int maxArcId() const { return arcs.size()-1; }
+    int maxNodeId() const { return _nodes.size()-1; }
+    int maxArcId() const { return _arcs.size()-1; }
 
     Node addNode() {
-      int n = nodes.size();
-      nodes.push_back(NodeT());
-      nodes[n].first_in = -1;
-      nodes[n].first_out = -1;
+      int n = _nodes.size();
+      _nodes.push_back(NodeT());
+      _nodes[n].first_in = -1;
+      _nodes[n].first_out = -1;
       return Node(n);
     }
 
     Arc addArc(Node u, Node v) {
-      int n = arcs.size();
-      arcs.push_back(ArcT());
-      arcs[n].source = u._id;
-      arcs[n].target = v._id;
-      arcs[n].next_out = nodes[u._id].first_out;
-      arcs[n].next_in = nodes[v._id].first_in;
-      nodes[u._id].first_out = nodes[v._id].first_in = n;
+      int n = _arcs.size();
+      _arcs.push_back(ArcT());
+      _arcs[n].source = u._id;
+      _arcs[n].target = v._id;
+      _arcs[n].next_out = _nodes[u._id].first_out;
+      _arcs[n].next_in = _nodes[v._id].first_in;
+      _nodes[u._id].first_out = _nodes[v._id].first_in = n;
 
       return Arc(n);
     }
 
     void clear() {
-      arcs.clear();
-      nodes.clear();
+      _arcs.clear();
+      _nodes.clear();
     }
 
-    Node source(Arc a) const { return Node(arcs[a._id].source); }
-    Node target(Arc a) const { return Node(arcs[a._id].target); }
+    Node source(Arc a) const { return Node(_arcs[a._id].source); }
+    Node target(Arc a) const { return Node(_arcs[a._id].target); }
 
     static int id(Node v) { return v._id; }
     static int id(Arc a) { return a._id; }
@@ -107,10 +107,10 @@ namespace lemon {
     static Arc arcFromId(int id) { return Arc(id);}
 
     bool valid(Node n) const {
-      return n._id >= 0 && n._id < static_cast<int>(nodes.size());
+      return n._id >= 0 && n._id < static_cast<int>(_nodes.size());
     }
     bool valid(Arc a) const {
-      return a._id >= 0 && a._id < static_cast<int>(arcs.size());
+      return a._id >= 0 && a._id < static_cast<int>(_arcs.size());
     }
 
     class Node {
@@ -145,7 +145,7 @@ namespace lemon {
     };
 
     void first(Node& node) const {
-      node._id = nodes.size() - 1;
+      node._id = _nodes.size() - 1;
     }
 
     static void next(Node& node) {
@@ -153,7 +153,7 @@ namespace lemon {
     }
 
     void first(Arc& arc) const {
-      arc._id = arcs.size() - 1;
+      arc._id = _arcs.size() - 1;
     }
 
     static void next(Arc& arc) {
@@ -161,19 +161,19 @@ namespace lemon {
     }
 
     void firstOut(Arc& arc, const Node& node) const {
-      arc._id = nodes[node._id].first_out;
+      arc._id = _nodes[node._id].first_out;
     }
 
     void nextOut(Arc& arc) const {
-      arc._id = arcs[arc._id].next_out;
+      arc._id = _arcs[arc._id].next_out;
     }
 
     void firstIn(Arc& arc, const Node& node) const {
-      arc._id = nodes[node._id].first_in;
+      arc._id = _nodes[node._id].first_in;
     }
 
     void nextIn(Arc& arc) const {
-      arc._id = arcs[arc._id].next_in;
+      arc._id = _arcs[arc._id].next_in;
     }
 
   };
@@ -266,10 +266,10 @@ namespace lemon {
     Node split(Node n, bool connect = true)
     {
       Node b = addNode();
-      nodes[b._id].first_out=nodes[n._id].first_out;
-      nodes[n._id].first_out=-1;
-      for(int i=nodes[b._id].first_out; i!=-1; i=arcs[i].next_out) {
-        arcs[i].source=b._id;
+      _nodes[b._id].first_out=_nodes[n._id].first_out;
+      _nodes[n._id].first_out=-1;
+      for(int i=_nodes[b._id].first_out; i!=-1; i=_arcs[i].next_out) {
+        _arcs[i].source=b._id;
       }
       if(connect) addArc(n,b);
       return b;
@@ -291,7 +291,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the digraph.
     /// \sa reserveArc()
-    void reserveNode(int n) { nodes.reserve(n); };
+    void reserveNode(int n) { _nodes.reserve(n); };
 
     /// Reserve memory for arcs.
 
@@ -301,7 +301,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the digraph.
     /// \sa reserveNode()
-    void reserveArc(int m) { arcs.reserve(m); };
+    void reserveArc(int m) { _arcs.reserve(m); };
 
   public:
 
@@ -311,17 +311,17 @@ namespace lemon {
 
     void restoreSnapshot(const Snapshot &s)
     {
-      while(s.arc_num<arcs.size()) {
-        Arc arc = arcFromId(arcs.size()-1);
+      while(s.arc_num<_arcs.size()) {
+        Arc arc = arcFromId(_arcs.size()-1);
         Parent::notifier(Arc()).erase(arc);
-        nodes[arcs.back().source].first_out=arcs.back().next_out;
-        nodes[arcs.back().target].first_in=arcs.back().next_in;
-        arcs.pop_back();
+        _nodes[_arcs.back().source].first_out=_arcs.back().next_out;
+        _nodes[_arcs.back().target].first_in=_arcs.back().next_in;
+        _arcs.pop_back();
       }
-      while(s.node_num<nodes.size()) {
-        Node node = nodeFromId(nodes.size()-1);
+      while(s.node_num<_nodes.size()) {
+        Node node = nodeFromId(_nodes.size()-1);
         Parent::notifier(Node()).erase(node);
-        nodes.pop_back();
+        _nodes.pop_back();
       }
     }
 
@@ -362,8 +362,8 @@ namespace lemon {
       ///This constructor immediately makes a snapshot of the given digraph.
       ///
       Snapshot(SmartDigraph &gr) : _graph(&gr) {
-        node_num=_graph->nodes.size();
-        arc_num=_graph->arcs.size();
+        node_num=_graph->_nodes.size();
+        arc_num=_graph->_arcs.size();
       }
 
       ///Make a snapshot.
@@ -373,8 +373,8 @@ namespace lemon {
       ///call, the previous snapshot gets lost.
       void save(SmartDigraph &gr) {
         _graph=&gr;
-        node_num=_graph->nodes.size();
-        arc_num=_graph->arcs.size();
+        node_num=_graph->_nodes.size();
+        arc_num=_graph->_arcs.size();
       }
 
       ///Undo the changes until a snapshot.
@@ -402,8 +402,8 @@ namespace lemon {
       int next_out;
     };
 
-    std::vector<NodeT> nodes;
-    std::vector<ArcT> arcs;
+    std::vector<NodeT> _nodes;
+    std::vector<ArcT> _arcs;
 
   public:
 
@@ -465,25 +465,25 @@ namespace lemon {
 
 
     SmartGraphBase()
-      : nodes(), arcs() {}
+      : _nodes(), _arcs() {}
 
     typedef True NodeNumTag;
     typedef True EdgeNumTag;
     typedef True ArcNumTag;
 
-    int nodeNum() const { return nodes.size(); }
-    int edgeNum() const { return arcs.size() / 2; }
-    int arcNum() const { return arcs.size(); }
+    int nodeNum() const { return _nodes.size(); }
+    int edgeNum() const { return _arcs.size() / 2; }
+    int arcNum() const { return _arcs.size(); }
 
-    int maxNodeId() const { return nodes.size()-1; }
-    int maxEdgeId() const { return arcs.size() / 2 - 1; }
-    int maxArcId() const { return arcs.size()-1; }
+    int maxNodeId() const { return _nodes.size()-1; }
+    int maxEdgeId() const { return _arcs.size() / 2 - 1; }
+    int maxArcId() const { return _arcs.size()-1; }
 
-    Node source(Arc e) const { return Node(arcs[e._id ^ 1].target); }
-    Node target(Arc e) const { return Node(arcs[e._id].target); }
+    Node source(Arc e) const { return Node(_arcs[e._id ^ 1].target); }
+    Node target(Arc e) const { return Node(_arcs[e._id].target); }
 
-    Node u(Edge e) const { return Node(arcs[2 * e._id].target); }
-    Node v(Edge e) const { return Node(arcs[2 * e._id + 1].target); }
+    Node u(Edge e) const { return Node(_arcs[2 * e._id].target); }
+    Node v(Edge e) const { return Node(_arcs[2 * e._id + 1].target); }
 
     static bool direction(Arc e) {
       return (e._id & 1) == 1;
@@ -494,7 +494,7 @@ namespace lemon {
     }
 
     void first(Node& node) const {
-      node._id = nodes.size() - 1;
+      node._id = _nodes.size() - 1;
     }
 
     static void next(Node& node) {
@@ -502,7 +502,7 @@ namespace lemon {
     }
 
     void first(Arc& arc) const {
-      arc._id = arcs.size() - 1;
+      arc._id = _arcs.size() - 1;
     }
 
     static void next(Arc& arc) {
@@ -510,7 +510,7 @@ namespace lemon {
     }
 
     void first(Edge& arc) const {
-      arc._id = arcs.size() / 2 - 1;
+      arc._id = _arcs.size() / 2 - 1;
     }
 
     static void next(Edge& arc) {
@@ -518,23 +518,23 @@ namespace lemon {
     }
 
     void firstOut(Arc &arc, const Node& v) const {
-      arc._id = nodes[v._id].first_out;
+      arc._id = _nodes[v._id].first_out;
     }
     void nextOut(Arc &arc) const {
-      arc._id = arcs[arc._id].next_out;
+      arc._id = _arcs[arc._id].next_out;
     }
 
     void firstIn(Arc &arc, const Node& v) const {
-      arc._id = ((nodes[v._id].first_out) ^ 1);
+      arc._id = ((_nodes[v._id].first_out) ^ 1);
       if (arc._id == -2) arc._id = -1;
     }
     void nextIn(Arc &arc) const {
-      arc._id = ((arcs[arc._id ^ 1].next_out) ^ 1);
+      arc._id = ((_arcs[arc._id ^ 1].next_out) ^ 1);
       if (arc._id == -2) arc._id = -1;
     }
 
     void firstInc(Edge &arc, bool& d, const Node& v) const {
-      int de = nodes[v._id].first_out;
+      int de = _nodes[v._id].first_out;
       if (de != -1) {
         arc._id = de / 2;
         d = ((de & 1) == 1);
@@ -544,7 +544,7 @@ namespace lemon {
       }
     }
     void nextInc(Edge &arc, bool& d) const {
-      int de = (arcs[(arc._id * 2) | (d ? 1 : 0)].next_out);
+      int de = (_arcs[(arc._id * 2) | (d ? 1 : 0)].next_out);
       if (de != -1) {
         arc._id = de / 2;
         d = ((de & 1) == 1);
@@ -563,43 +563,43 @@ namespace lemon {
     static Edge edgeFromId(int id) { return Edge(id);}
 
     bool valid(Node n) const {
-      return n._id >= 0 && n._id < static_cast<int>(nodes.size());
+      return n._id >= 0 && n._id < static_cast<int>(_nodes.size());
     }
     bool valid(Arc a) const {
-      return a._id >= 0 && a._id < static_cast<int>(arcs.size());
+      return a._id >= 0 && a._id < static_cast<int>(_arcs.size());
     }
     bool valid(Edge e) const {
-      return e._id >= 0 && 2 * e._id < static_cast<int>(arcs.size());
+      return e._id >= 0 && 2 * e._id < static_cast<int>(_arcs.size());
     }
 
     Node addNode() {
-      int n = nodes.size();
-      nodes.push_back(NodeT());
-      nodes[n].first_out = -1;
+      int n = _nodes.size();
+      _nodes.push_back(NodeT());
+      _nodes[n].first_out = -1;
 
       return Node(n);
     }
 
     Edge addEdge(Node u, Node v) {
-      int n = arcs.size();
-      arcs.push_back(ArcT());
-      arcs.push_back(ArcT());
+      int n = _arcs.size();
+      _arcs.push_back(ArcT());
+      _arcs.push_back(ArcT());
 
-      arcs[n].target = u._id;
-      arcs[n | 1].target = v._id;
+      _arcs[n].target = u._id;
+      _arcs[n | 1].target = v._id;
 
-      arcs[n].next_out = nodes[v._id].first_out;
-      nodes[v._id].first_out = n;
+      _arcs[n].next_out = _nodes[v._id].first_out;
+      _nodes[v._id].first_out = n;
 
-      arcs[n | 1].next_out = nodes[u._id].first_out;
-      nodes[u._id].first_out = (n | 1);
+      _arcs[n | 1].next_out = _nodes[u._id].first_out;
+      _nodes[u._id].first_out = (n | 1);
 
       return Edge(n / 2);
     }
 
     void clear() {
-      arcs.clear();
-      nodes.clear();
+      _arcs.clear();
+      _nodes.clear();
     }
 
   };
@@ -701,7 +701,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveEdge()
-    void reserveNode(int n) { nodes.reserve(n); };
+    void reserveNode(int n) { _nodes.reserve(n); };
 
     /// Reserve memory for edges.
 
@@ -711,7 +711,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveNode()
-    void reserveEdge(int m) { arcs.reserve(2 * m); };
+    void reserveEdge(int m) { _arcs.reserve(2 * m); };
 
   public:
 
@@ -722,30 +722,30 @@ namespace lemon {
     void saveSnapshot(Snapshot &s)
     {
       s._graph = this;
-      s.node_num = nodes.size();
-      s.arc_num = arcs.size();
+      s.node_num = _nodes.size();
+      s.arc_num = _arcs.size();
     }
 
     void restoreSnapshot(const Snapshot &s)
     {
-      while(s.arc_num<arcs.size()) {
-        int n=arcs.size()-1;
+      while(s.arc_num<_arcs.size()) {
+        int n=_arcs.size()-1;
         Edge arc=edgeFromId(n/2);
         Parent::notifier(Edge()).erase(arc);
         std::vector<Arc> dir;
         dir.push_back(arcFromId(n));
         dir.push_back(arcFromId(n-1));
         Parent::notifier(Arc()).erase(dir);
-        nodes[arcs[n-1].target].first_out=arcs[n].next_out;
-        nodes[arcs[n].target].first_out=arcs[n-1].next_out;
-        arcs.pop_back();
-        arcs.pop_back();
+        _nodes[_arcs[n-1].target].first_out=_arcs[n].next_out;
+        _nodes[_arcs[n].target].first_out=_arcs[n-1].next_out;
+        _arcs.pop_back();
+        _arcs.pop_back();
       }
-      while(s.node_num<nodes.size()) {
-        int n=nodes.size()-1;
+      while(s.node_num<_nodes.size()) {
+        int n=_nodes.size()-1;
         Node node = nodeFromId(n);
         Parent::notifier(Node()).erase(node);
-        nodes.pop_back();
+        _nodes.pop_back();
       }
     }
 
@@ -825,8 +825,8 @@ namespace lemon {
       int next_out;
     };
 
-    std::vector<NodeT> nodes;
-    std::vector<ArcT> arcs;
+    std::vector<NodeT> _nodes;
+    std::vector<ArcT> _arcs;
 
     int first_red, first_blue;
     int max_red, max_blue;
@@ -863,7 +863,8 @@ namespace lemon {
     public:
       RedNode() {}
       RedNode(const RedNode& node) : Node(node) {}
-      RedNode(Invalid) : Node(INVALID){}
+      RedNode(Invalid) : Node(INVALID) {}
+      const RedNode& operator=(const RedNode& node) { Node::operator=(node); return *this;}
     };
 
     class BlueNode : public Node {
@@ -876,6 +877,7 @@ namespace lemon {
       BlueNode() {}
       BlueNode(const BlueNode& node) : Node(node) {}
       BlueNode(Invalid) : Node(INVALID){}
+      const BlueNode& operator=(const BlueNode& node) { Node::operator=(node); return *this;}
     };
 
     class Edge {
@@ -915,39 +917,39 @@ namespace lemon {
 
 
     SmartBpGraphBase()
-      : nodes(), arcs(), first_red(-1), first_blue(-1),
+      : _nodes(), _arcs(), first_red(-1), first_blue(-1),
         max_red(-1), max_blue(-1) {}
 
     typedef True NodeNumTag;
     typedef True EdgeNumTag;
     typedef True ArcNumTag;
 
-    int nodeNum() const { return nodes.size(); }
+    int nodeNum() const { return _nodes.size(); }
     int redNum() const { return max_red + 1; }
     int blueNum() const { return max_blue + 1; }
-    int edgeNum() const { return arcs.size() / 2; }
-    int arcNum() const { return arcs.size(); }
+    int edgeNum() const { return _arcs.size() / 2; }
+    int arcNum() const { return _arcs.size(); }
 
-    int maxNodeId() const { return nodes.size()-1; }
+    int maxNodeId() const { return _nodes.size()-1; }
     int maxRedId() const { return max_red; }
     int maxBlueId() const { return max_blue; }
-    int maxEdgeId() const { return arcs.size() / 2 - 1; }
-    int maxArcId() const { return arcs.size()-1; }
+    int maxEdgeId() const { return _arcs.size() / 2 - 1; }
+    int maxArcId() const { return _arcs.size()-1; }
 
-    bool red(Node n) const { return nodes[n._id].red; }
-    bool blue(Node n) const { return !nodes[n._id].red; }
+    bool red(Node n) const { return _nodes[n._id].red; }
+    bool blue(Node n) const { return !_nodes[n._id].red; }
 
     static RedNode asRedNodeUnsafe(Node n) { return RedNode(n._id); }
     static BlueNode asBlueNodeUnsafe(Node n) { return BlueNode(n._id); }
 
-    Node source(Arc a) const { return Node(arcs[a._id ^ 1].target); }
-    Node target(Arc a) const { return Node(arcs[a._id].target); }
+    Node source(Arc a) const { return Node(_arcs[a._id ^ 1].target); }
+    Node target(Arc a) const { return Node(_arcs[a._id].target); }
 
     RedNode redNode(Edge e) const {
-      return RedNode(arcs[2 * e._id].target);
+      return RedNode(_arcs[2 * e._id].target);
     }
     BlueNode blueNode(Edge e) const {
-      return BlueNode(arcs[2 * e._id + 1].target);
+      return BlueNode(_arcs[2 * e._id + 1].target);
     }
 
     static bool direction(Arc a) {
@@ -959,7 +961,7 @@ namespace lemon {
     }
 
     void first(Node& node) const {
-      node._id = nodes.size() - 1;
+      node._id = _nodes.size() - 1;
     }
 
     static void next(Node& node) {
@@ -971,7 +973,7 @@ namespace lemon {
     }
 
     void next(RedNode& node) const {
-      node._id = nodes[node._id].partition_next;
+      node._id = _nodes[node._id].partition_next;
     }
 
     void first(BlueNode& node) const {
@@ -979,11 +981,11 @@ namespace lemon {
     }
 
     void next(BlueNode& node) const {
-      node._id = nodes[node._id].partition_next;
+      node._id = _nodes[node._id].partition_next;
     }
 
     void first(Arc& arc) const {
-      arc._id = arcs.size() - 1;
+      arc._id = _arcs.size() - 1;
     }
 
     static void next(Arc& arc) {
@@ -991,7 +993,7 @@ namespace lemon {
     }
 
     void first(Edge& arc) const {
-      arc._id = arcs.size() / 2 - 1;
+      arc._id = _arcs.size() / 2 - 1;
     }
 
     static void next(Edge& arc) {
@@ -999,23 +1001,23 @@ namespace lemon {
     }
 
     void firstOut(Arc &arc, const Node& v) const {
-      arc._id = nodes[v._id].first_out;
+      arc._id = _nodes[v._id].first_out;
     }
     void nextOut(Arc &arc) const {
-      arc._id = arcs[arc._id].next_out;
+      arc._id = _arcs[arc._id].next_out;
     }
 
     void firstIn(Arc &arc, const Node& v) const {
-      arc._id = ((nodes[v._id].first_out) ^ 1);
+      arc._id = ((_nodes[v._id].first_out) ^ 1);
       if (arc._id == -2) arc._id = -1;
     }
     void nextIn(Arc &arc) const {
-      arc._id = ((arcs[arc._id ^ 1].next_out) ^ 1);
+      arc._id = ((_arcs[arc._id ^ 1].next_out) ^ 1);
       if (arc._id == -2) arc._id = -1;
     }
 
     void firstInc(Edge &arc, bool& d, const Node& v) const {
-      int de = nodes[v._id].first_out;
+      int de = _nodes[v._id].first_out;
       if (de != -1) {
         arc._id = de / 2;
         d = ((de & 1) == 1);
@@ -1025,7 +1027,7 @@ namespace lemon {
       }
     }
     void nextInc(Edge &arc, bool& d) const {
-      int de = (arcs[(arc._id * 2) | (d ? 1 : 0)].next_out);
+      int de = (_arcs[(arc._id * 2) | (d ? 1 : 0)].next_out);
       if (de != -1) {
         arc._id = de / 2;
         d = ((de & 1) == 1);
@@ -1036,8 +1038,8 @@ namespace lemon {
     }
 
     static int id(Node v) { return v._id; }
-    int id(RedNode v) const { return nodes[v._id].partition_index; }
-    int id(BlueNode v) const { return nodes[v._id].partition_index; }
+    int id(RedNode v) const { return _nodes[v._id].partition_index; }
+    int id(BlueNode v) const { return _nodes[v._id].partition_index; }
     static int id(Arc e) { return e._id; }
     static int id(Edge e) { return e._id; }
 
@@ -1046,59 +1048,59 @@ namespace lemon {
     static Edge edgeFromId(int id) { return Edge(id);}
 
     bool valid(Node n) const {
-      return n._id >= 0 && n._id < static_cast<int>(nodes.size());
+      return n._id >= 0 && n._id < static_cast<int>(_nodes.size());
     }
     bool valid(Arc a) const {
-      return a._id >= 0 && a._id < static_cast<int>(arcs.size());
+      return a._id >= 0 && a._id < static_cast<int>(_arcs.size());
     }
     bool valid(Edge e) const {
-      return e._id >= 0 && 2 * e._id < static_cast<int>(arcs.size());
+      return e._id >= 0 && 2 * e._id < static_cast<int>(_arcs.size());
     }
 
     RedNode addRedNode() {
-      int n = nodes.size();
-      nodes.push_back(NodeT());
-      nodes[n].first_out = -1;
-      nodes[n].red = true;
-      nodes[n].partition_index = ++max_red;
-      nodes[n].partition_next = first_red;
+      int n = _nodes.size();
+      _nodes.push_back(NodeT());
+      _nodes[n].first_out = -1;
+      _nodes[n].red = true;
+      _nodes[n].partition_index = ++max_red;
+      _nodes[n].partition_next = first_red;
       first_red = n;
 
       return RedNode(n);
     }
 
     BlueNode addBlueNode() {
-      int n = nodes.size();
-      nodes.push_back(NodeT());
-      nodes[n].first_out = -1;
-      nodes[n].red = false;
-      nodes[n].partition_index = ++max_blue;
-      nodes[n].partition_next = first_blue;
+      int n = _nodes.size();
+      _nodes.push_back(NodeT());
+      _nodes[n].first_out = -1;
+      _nodes[n].red = false;
+      _nodes[n].partition_index = ++max_blue;
+      _nodes[n].partition_next = first_blue;
       first_blue = n;
 
       return BlueNode(n);
     }
 
     Edge addEdge(RedNode u, BlueNode v) {
-      int n = arcs.size();
-      arcs.push_back(ArcT());
-      arcs.push_back(ArcT());
+      int n = _arcs.size();
+      _arcs.push_back(ArcT());
+      _arcs.push_back(ArcT());
 
-      arcs[n].target = u._id;
-      arcs[n | 1].target = v._id;
+      _arcs[n].target = u._id;
+      _arcs[n | 1].target = v._id;
 
-      arcs[n].next_out = nodes[v._id].first_out;
-      nodes[v._id].first_out = n;
+      _arcs[n].next_out = _nodes[v._id].first_out;
+      _nodes[v._id].first_out = n;
 
-      arcs[n | 1].next_out = nodes[u._id].first_out;
-      nodes[u._id].first_out = (n | 1);
+      _arcs[n | 1].next_out = _nodes[u._id].first_out;
+      _nodes[u._id].first_out = (n | 1);
 
       return Edge(n / 2);
     }
 
     void clear() {
-      arcs.clear();
-      nodes.clear();
+      _arcs.clear();
+      _nodes.clear();
       first_red = -1;
       first_blue = -1;
       max_blue = -1;
@@ -1213,7 +1215,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveEdge()
-    void reserveNode(int n) { nodes.reserve(n); };
+    void reserveNode(int n) { _nodes.reserve(n); };
 
     /// Reserve memory for edges.
 
@@ -1223,7 +1225,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveNode()
-    void reserveEdge(int m) { arcs.reserve(2 * m); };
+    void reserveEdge(int m) { _arcs.reserve(2 * m); };
 
   public:
 
@@ -1234,47 +1236,47 @@ namespace lemon {
     void saveSnapshot(Snapshot &s)
     {
       s._graph = this;
-      s.node_num = nodes.size();
-      s.arc_num = arcs.size();
+      s.node_num = _nodes.size();
+      s.arc_num = _arcs.size();
     }
 
     void restoreSnapshot(const Snapshot &s)
     {
-      while(s.arc_num<arcs.size()) {
-        int n=arcs.size()-1;
+      while(s.arc_num<_arcs.size()) {
+        int n=_arcs.size()-1;
         Edge arc=edgeFromId(n/2);
         Parent::notifier(Edge()).erase(arc);
         std::vector<Arc> dir;
         dir.push_back(arcFromId(n));
         dir.push_back(arcFromId(n-1));
         Parent::notifier(Arc()).erase(dir);
-        nodes[arcs[n-1].target].first_out=arcs[n].next_out;
-        nodes[arcs[n].target].first_out=arcs[n-1].next_out;
-        arcs.pop_back();
-        arcs.pop_back();
+        _nodes[_arcs[n-1].target].first_out=_arcs[n].next_out;
+        _nodes[_arcs[n].target].first_out=_arcs[n-1].next_out;
+        _arcs.pop_back();
+        _arcs.pop_back();
       }
-      while(s.node_num<nodes.size()) {
-        int n=nodes.size()-1;
+      while(s.node_num<_nodes.size()) {
+        int n=_nodes.size()-1;
         Node node = nodeFromId(n);
         if (Parent::red(node)) {
-          first_red = nodes[n].partition_next;
+          first_red = _nodes[n].partition_next;
           if (first_red != -1) {
-            max_red = nodes[first_red].partition_index;
+            max_red = _nodes[first_red].partition_index;
           } else {
             max_red = -1;
           }
           Parent::notifier(RedNode()).erase(asRedNodeUnsafe(node));
         } else {
-          first_blue = nodes[n].partition_next;
+          first_blue = _nodes[n].partition_next;
           if (first_blue != -1) {
-            max_blue = nodes[first_blue].partition_index;
+            max_blue = _nodes[first_blue].partition_index;
           } else {
             max_blue = -1;
           }
           Parent::notifier(BlueNode()).erase(asBlueNodeUnsafe(node));
         }
         Parent::notifier(Node()).erase(node);
-        nodes.pop_back();
+        _nodes.pop_back();
       }
     }
 

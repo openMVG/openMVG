@@ -115,7 +115,7 @@ namespace lemon {
           if (min_edge1 == INVALID) {
             for (IncEdgeIt e(_gr, n1); e != INVALID; ++e) {
               if (!used[_gr.runningNode(e)] &&
-                  (_cost[e] < _cost[min_edge1] || min_edge1 == INVALID)) {
+                  (min_edge1 == INVALID || _cost[e] < _cost[min_edge1])) {
                 min_edge1 = e;
               }
             }
@@ -124,7 +124,7 @@ namespace lemon {
           if (min_edge2 == INVALID) {
             for (IncEdgeIt e(_gr, n2); e != INVALID; ++e) {
               if (!used[_gr.runningNode(e)] &&
-                  (_cost[e] < _cost[min_edge2] || min_edge2 == INVALID)) {
+                  (min_edge2 == INVALID||_cost[e] < _cost[min_edge2])) {
                 min_edge2 = e;
               }
             }

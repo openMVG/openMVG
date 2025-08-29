@@ -85,6 +85,9 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<NodeIt, Adaptor> nodes() const {
+      return LemonRangeWrapper1<NodeIt, Adaptor>(*this);
+    }
 
     class ArcIt : public Arc {
       const Adaptor* _adaptor;
@@ -107,6 +110,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<ArcIt, Adaptor> arcs() const {
+      return LemonRangeWrapper1<ArcIt, Adaptor>(*this);
+    }
 
 
     class OutArcIt : public Arc {
@@ -132,6 +139,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<OutArcIt, Adaptor, Node> outArcs(const Node& u) const {
+      return LemonRangeWrapper2<OutArcIt, Adaptor, Node>(*this, u);
+    }
+
 
     class InArcIt : public Arc {
       const Adaptor* _adaptor;
@@ -155,6 +166,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper2<InArcIt, Adaptor, Node> inArcs(const Node& u) const {
+      return LemonRangeWrapper2<InArcIt, Adaptor, Node>(*this, u);
+    }
 
     Node baseNode(const OutArcIt &e) const {
       return Parent::source(e);
@@ -254,6 +269,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<NodeIt, Adaptor> nodes() const {
+      return LemonRangeWrapper1<NodeIt, Adaptor>(*this);
+    }
+
 
     class ArcIt : public Arc {
       const Adaptor* _adaptor;
@@ -276,6 +295,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<ArcIt, Adaptor> arcs() const {
+      return LemonRangeWrapper1<ArcIt, Adaptor>(*this);
+    }
 
 
     class OutArcIt : public Arc {
@@ -301,6 +324,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<OutArcIt, Adaptor, Node> outArcs(const Node& u) const {
+      return LemonRangeWrapper2<OutArcIt, Adaptor, Node>(*this, u);
+    }
+
 
     class InArcIt : public Arc {
       const Adaptor* _adaptor;
@@ -325,6 +352,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<InArcIt, Adaptor, Node> inArcs(const Node& u) const {
+      return LemonRangeWrapper2<InArcIt, Adaptor, Node>(*this, u);
+    }
+
     class EdgeIt : public Parent::Edge {
       const Adaptor* _adaptor;
     public:
@@ -346,6 +377,11 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<EdgeIt, Adaptor> edges() const {
+      return LemonRangeWrapper1<EdgeIt, Adaptor>(*this);
+    }
+
 
     class IncEdgeIt : public Edge {
       friend class GraphAdaptorExtender;
@@ -371,6 +407,11 @@ namespace lemon {
         return *this;
       }
     };
+
+    LemonRangeWrapper2<IncEdgeIt, Adaptor, Node> incEdges(const Node& u) const {
+      return LemonRangeWrapper2<IncEdgeIt, Adaptor, Node>(*this, u);
+    }
+
 
     Node baseNode(const OutArcIt &a) const {
       return Parent::source(a);

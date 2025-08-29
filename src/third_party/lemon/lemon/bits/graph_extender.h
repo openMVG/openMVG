@@ -27,6 +27,8 @@
 #include <lemon/concept_check.h>
 #include <lemon/concepts/maps.h>
 
+#include <lemon/bits/stl_iterators.h>
+
 //\ingroup graphbits
 //\file
 //\brief Extenders for the graph types
@@ -116,6 +118,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<NodeIt, Digraph> nodes() const {
+      return LemonRangeWrapper1<NodeIt, Digraph>(*this);
+    }
+
 
     class ArcIt : public Arc {
       const Digraph* _digraph;
@@ -138,6 +144,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<ArcIt, Digraph> arcs() const {
+      return LemonRangeWrapper1<ArcIt, Digraph>(*this);
+    }
 
 
     class OutArcIt : public Arc {
@@ -163,6 +173,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<OutArcIt, Digraph, Node> outArcs(const Node& u) const {
+      return LemonRangeWrapper2<OutArcIt, Digraph, Node>(*this, u);
+    }
+
 
     class InArcIt : public Arc {
       const Digraph* _digraph;
@@ -186,6 +200,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper2<InArcIt, Digraph, Node> inArcs(const Node& u) const {
+      return LemonRangeWrapper2<InArcIt, Digraph, Node>(*this, u);
+    }
 
     // \brief Base node of the iterator
     //
@@ -436,6 +454,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<NodeIt, Graph> nodes() const {
+      return LemonRangeWrapper1<NodeIt, Graph>(*this);
+    }
+
 
     class ArcIt : public Arc {
       const Graph* _graph;
@@ -458,6 +480,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<ArcIt, Graph> arcs() const {
+      return LemonRangeWrapper1<ArcIt, Graph>(*this);
+    }
 
 
     class OutArcIt : public Arc {
@@ -483,6 +509,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<OutArcIt, Graph, Node> outArcs(const Node& u) const {
+      return LemonRangeWrapper2<OutArcIt, Graph, Node>(*this, u);
+    }
+
 
     class InArcIt : public Arc {
       const Graph* _graph;
@@ -507,6 +537,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<InArcIt, Graph, Node> inArcs(const Node& u) const {
+      return LemonRangeWrapper2<InArcIt, Graph, Node>(*this, u);
+    }
+
 
     class EdgeIt : public Parent::Edge {
       const Graph* _graph;
@@ -529,6 +563,11 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<EdgeIt, Graph> edges() const {
+      return LemonRangeWrapper1<EdgeIt, Graph>(*this);
+    }
+
 
     class IncEdgeIt : public Parent::Edge {
       friend class GraphExtender;
@@ -554,6 +593,11 @@ namespace lemon {
         return *this;
       }
     };
+
+    LemonRangeWrapper2<IncEdgeIt, Graph, Node> incEdges(const Node& u) const {
+      return LemonRangeWrapper2<IncEdgeIt, Graph, Node>(*this, u);
+    }
+
 
     // \brief Base node of the iterator
     //
@@ -903,6 +947,11 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<NodeIt, BpGraph> nodes() const {
+      return LemonRangeWrapper1<NodeIt, BpGraph>(*this);
+    }
+
+
     class RedNodeIt : public RedNode {
       const BpGraph* _graph;
     public:
@@ -924,6 +973,11 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<RedNodeIt, BpGraph> redNodes() const {
+      return LemonRangeWrapper1<RedNodeIt, BpGraph>(*this);
+    }
+
 
     class BlueNodeIt : public BlueNode {
       const BpGraph* _graph;
@@ -947,6 +1001,11 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper1<BlueNodeIt, BpGraph> blueNodes() const {
+      return LemonRangeWrapper1<BlueNodeIt, BpGraph>(*this);
+    }
+
+
 
     class ArcIt : public Arc {
       const BpGraph* _graph;
@@ -969,6 +1028,10 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<ArcIt, BpGraph> arcs() const {
+      return LemonRangeWrapper1<ArcIt, BpGraph>(*this);
+    }
 
 
     class OutArcIt : public Arc {
@@ -994,6 +1057,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<OutArcIt, BpGraph, Node> outArcs(const Node& u) const {
+      return LemonRangeWrapper2<OutArcIt, BpGraph, Node>(*this, u);
+    }
+
 
     class InArcIt : public Arc {
       const BpGraph* _graph;
@@ -1018,6 +1085,10 @@ namespace lemon {
 
     };
 
+    LemonRangeWrapper2<InArcIt, BpGraph, Node> inArcs(const Node& u) const {
+      return LemonRangeWrapper2<InArcIt, BpGraph, Node>(*this, u);
+    }
+
 
     class EdgeIt : public Parent::Edge {
       const BpGraph* _graph;
@@ -1040,6 +1111,11 @@ namespace lemon {
       }
 
     };
+
+    LemonRangeWrapper1<EdgeIt, BpGraph> edges() const {
+      return LemonRangeWrapper1<EdgeIt, BpGraph>(*this);
+    }
+
 
     class IncEdgeIt : public Parent::Edge {
       friend class BpGraphExtender;
@@ -1065,6 +1141,11 @@ namespace lemon {
         return *this;
       }
     };
+
+    LemonRangeWrapper2<IncEdgeIt, BpGraph, Node> incEdges(const Node& u) const {
+      return LemonRangeWrapper2<IncEdgeIt, BpGraph, Node>(*this, u);
+    }
+
 
     // \brief Base node of the iterator
     //

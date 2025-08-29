@@ -408,15 +408,15 @@ namespace lemon {
   /// arc() functions are used to add attribute writing rules.
   ///
   ///\code
-  /// DigraphWriter<DGR>(digraph, std::cout).
-  ///   nodeMap("coordinates", coord_map).
-  ///   nodeMap("size", size).
-  ///   nodeMap("title", title).
-  ///   arcMap("capacity", cap_map).
-  ///   node("source", src).
-  ///   node("target", trg).
-  ///   attribute("caption", caption).
-  ///   run();
+  /// DigraphWriter<DGR>(digraph, std::cout)
+  ///   .nodeMap("coordinates", coord_map)
+  ///   .nodeMap("size", size)
+  ///   .nodeMap("title", title)
+  ///   .arcMap("capacity", cap_map)
+  ///   .node("source", src)
+  ///   .node("target", trg)
+  ///   .attribute("caption", caption)
+  ///   .run();
   ///\endcode
   ///
   ///
@@ -961,11 +961,11 @@ namespace lemon {
   ///ListDigraph::ArcMap<int> cap(digraph);
   ///ListDigraph::Node src, trg;
   ///  // Setting the capacity map and source and target nodes
-  ///digraphWriter(digraph, std::cout).
-  ///  arcMap("capacity", cap).
-  ///  node("source", src).
-  ///  node("target", trg).
-  ///  run();
+  ///digraphWriter(digraph, std::cout)
+  ///  .arcMap("capacity", cap)
+  ///  .node("source", src)
+  ///  .node("target", trg)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the
@@ -1599,9 +1599,9 @@ namespace lemon {
   ///ListGraph graph;
   ///ListGraph::EdgeMap<int> weight(graph);
   ///  // Setting the weight map
-  ///graphWriter(graph, std::cout).
-  ///  edgeMap("weight", weight).
-  ///  run();
+  ///graphWriter(graph, std::cout)
+  ///  .edgeMap("weight", weight)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the
@@ -2419,9 +2419,9 @@ namespace lemon {
   ///ListBpGraph graph;
   ///ListBpGraph::EdgeMap<int> weight(graph);
   ///  // Setting the weight map
-  ///bpGraphWriter(graph, std::cout).
-  ///  edgeMap("weight", weight).
-  ///  run();
+  ///bpGraphWriter(graph, std::cout)
+  ///  .edgeMap("weight", weight)
+  ///  .run();
   ///\endcode
   ///
   /// For a complete documentation, please see the

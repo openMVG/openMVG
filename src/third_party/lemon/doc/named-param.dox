@@ -1,0 +1,119 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2009
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+/*!
+
+\page named-param Named Parameters
+
+\section named-func-param Named Function Parameters
+
+Several modern languages provide a convenient way to refer the
+function parameters by name also when you call the function. It is
+especially comfortable in case of a function having tons of parameters
+with natural default values. Sadly, C++ lacks this amenity.
+
+However, with a crafty trick and with some little
+inconvenience, it is possible to emulate is.
+The example below shows how to do it.
+
+\code
+class namedFn
+{
+  int _id;
+  double _val;
+  int _dim;
+
+  public:
+  namedFn() : _id(0), _val(1), _dim(2) {}
+  namedFn& id(int p)     { _id  = p ; return *this; }
+  namedFn& val(double p) { _val = p ; return *this; }
+  namedFn& dim(int p)    { _dim = p ; return *this; }
+
+  run() {
+    std::cout << "Here comes the function itself\n" <<
+              << "With parameters "
+              << _id << ", " << _val << ", " << _dim << std::endl;
+  }
+};
+\endcode
+
+Then you can use it like this.
+
+\code
+namedFn().id(3).val(2).run();
+\endcode
+
+The trick is obvious, each "named parameter" changes one component of
+the underlying class, then gives back a reference to it. Finally,
+<tt>run()</tt> executes the algorithm itself.
+
+\note Although it is a class, namedFn is used pretty much like as it were
+a function. That it why we called it namedFn instead of \c NamedFn.
+
+\note In fact, the final <tt>.run()</tt> could be made unnecessary,
+because the algorithm could also be implemented in the destructor of
+\c namedFn instead. This however would make it impossible to implement
+functions with return values, and would also cause serious problems when
+implementing \ref named-templ-func-param "named template parameters".
+<b>Therefore, by convention, <tt>.run()</tt> must be used
+explicitly to execute a function having named parameters
+everywhere in LEMON.</b>
+
+\section named-templ-func-param Named Function Template Parameters
+
+A named parameter can also be a template function. The usage is
+exactly the same, but the implementation behind is a kind of black
+magic and they are the dirtiest part of the LEMON code.
+
+You will probably never need to know how it works, but if you really
+committed, have a look at \ref lemon/graph_to_eps.h for an example.
+
+\section traits-classes Traits Classes
+
+A similar game can also be played when defining classes. In this case
+the type of the class attributes can be changed. Initially we have to
+define a special class called <em>Traits Class</em> defining the
+default type of the attributes. Then the types of these attributes can
+be changed in the same way as described in the next section.
+
+See \ref lemon::DijkstraDefaultTraits for an
+example how a traits class implementation looks like.
+
+\section named-templ-param Named Class Template Parameters
+
+If we would like to change the type of an attribute in a class that
+was instantiated by using a traits class as a template parameter, and
+the class contains named parameters, we do not have to instantiate again
+the class with new traits class, but instead adaptor classes can
+be used as shown in the following example.
+
+\code
+Dijkstra<>::SetPredMap<NullMap<Node,Arc> >::Create
+\endcode
+
+It can also be used in conjunction with other named template
+parameters in arbitrary order.
+
+\code
+Dijkstra<>::SetDistMap<MyMap>::SetPredMap<NullMap<Node,Arc> >::Create
+\endcode
+
+The result will be an instantiated Dijkstra class, in which the
+DistMap and the PredMap is modified.
+
+*/
