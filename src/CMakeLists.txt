@@ -435,8 +435,7 @@ endif()
 # ==============================================================================
 if (OpenMVG_USE_RERUN)
   include(FetchContent)
-  FetchContent_Declare(rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/download/prerelease/rerun_cpp_sdk.zip)
+  FetchContent_Declare(rerun_sdk URL https://build.rerun.io/commit/4c8211c/rerun_cpp_sdk.zip)
   FetchContent_MakeAvailable(rerun_sdk)
 endif()
 
