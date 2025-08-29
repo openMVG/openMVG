@@ -26,7 +26,6 @@
 
 #include <lemon/core.h>
 #include <lemon/concept_check.h>
-#include <lemon/bits/stl_iterators.h>
 
 namespace lemon {
   namespace concepts {
@@ -71,9 +70,7 @@ namespace lemon {
 
       /// \brief Template copy constructor
       template <typename CPath>
-      Path(const CPath& cpath) {
-        ::lemon::ignore_unused_variable_warning(cpath);
-      }
+      Path(const CPath& cpath) {}
 
       /// \brief Template assigment operator
       template <typename CPath>
@@ -117,23 +114,6 @@ namespace lemon {
         bool operator<(const ArcIt&) const {return false;}
 
       };
-
-      /// \brief Gets the collection of the arcs of the path.
-      ///
-      /// This function can be used for iterating on the
-      /// arcs of the path. It returns a wrapped
-      /// ArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, STL algorithms, etc.
-      /// For example you can write:
-      ///\code
-      /// for(auto a: p.arcs())
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper1<ArcIt, Path> arcs() const {
-        return LemonRangeWrapper1<ArcIt, Path>(*this);
-      }
-
 
       template <typename _Path>
       struct Constraints {
@@ -284,23 +264,6 @@ namespace lemon {
 
       };
 
-      /// \brief Gets the collection of the arcs of the path.
-      ///
-      /// This function can be used for iterating on the
-      /// arcs of the path. It returns a wrapped
-      /// ArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, STL algorithms, etc.
-      /// For example you can write:
-      ///\code
-      /// for(auto a: p.arcs())
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper1<ArcIt, PathDumper> arcs() const {
-        return LemonRangeWrapper1<ArcIt, PathDumper>(*this);
-      }
-
-
       /// \brief LEMON style iterator for enumerating the arcs of a path
       /// in reverse direction.
       ///
@@ -329,24 +292,6 @@ namespace lemon {
         bool operator<(const RevArcIt&) const {return false;}
 
       };
-
-      /// \brief Gets the collection of the arcs of the path
-      /// in reverse direction.
-      ///
-      /// This function can be used for iterating on the
-      /// arcs of the path in reverse direction. It returns a wrapped
-      /// RevArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, STL algorithms, etc.
-      /// For example you can write:
-      ///\code
-      /// for(auto a: p.revArcs())
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper1<RevArcIt, PathDumper> revArcs() const {
-        return LemonRangeWrapper1<RevArcIt, PathDumper>(*this);
-      }
-
 
       template <typename _Path>
       struct Constraints {

@@ -2383,7 +2383,7 @@ namespace lemon {
       PlanarEmbedding<Graph> pe(_graph);
       if (!pe.run()) return false;
 
-      run(pe.embeddingMap());
+      run(pe);
       return true;
     }
 
@@ -2397,15 +2397,6 @@ namespace lemon {
     template <typename EmbeddingMap>
     void run(const EmbeddingMap& embedding) {
       typedef SmartEdgeSet<Graph> AuxGraph;
-
-      if (countNodes(_graph) < 3) {
-        int y = 0;
-        for (typename Graph::NodeIt n(_graph); n != INVALID; ++n) {
-          _point_map[n].x = 0;
-          _point_map[n].y = y++;
-        }
-        return;
-      }
 
       if (3 * countNodes(_graph) - 6 == countEdges(_graph)) {
         drawing(_graph, embedding, _point_map);

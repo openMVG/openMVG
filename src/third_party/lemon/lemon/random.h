@@ -62,8 +62,6 @@
 #ifndef LEMON_RANDOM_H
 #define LEMON_RANDOM_H
 
-#include <lemon/config.h>
-
 #include <algorithm>
 #include <iterator>
 #include <vector>
@@ -73,7 +71,7 @@
 #include <lemon/math.h>
 #include <lemon/dim2.h>
 
-#ifndef LEMON_WIN32
+#ifndef WIN32
 #include <sys/time.h>
 #include <ctime>
 #include <sys/types.h>
@@ -110,6 +108,7 @@ namespace lemon {
       static const Word mask = 0x9908B0DFu;
       static const Word loMask = (1u << 31) - 1;
       static const Word hiMask = ~loMask;
+
 
       static Word tempering(Word rnd) {
         rnd ^= (rnd >> 11);
@@ -200,7 +199,7 @@ namespace lemon {
 
         initState(init);
 
-        num = static_cast<int>(length > end - begin ? length : end - begin);
+        num = length > end - begin ? length : end - begin;
         while (num--) {
           curr[0] = (curr[0] ^ ((curr[1] ^ (curr[1] >> (bits - 2))) * mul1))
             + *it + cnt;
@@ -214,7 +213,7 @@ namespace lemon {
           --curr;
         }
 
-        num = length - 1; cnt = static_cast<int>(length - (curr - state) - 1);
+        num = length - 1; cnt = length - (curr - state) - 1;
         while (num--) {
           curr[0] = (curr[0] ^ ((curr[1] ^ (curr[1] >> (bits - 2))) * mul2))
             - cnt;
@@ -241,6 +240,7 @@ namespace lemon {
       }
 
     private:
+
 
       void fillState() {
         static const Word mask[2] = { 0x0ul, RandomTraits<Word>::mask };
@@ -269,6 +269,7 @@ namespace lemon {
 
       }
 
+
       Word *current;
       Word state[length];
 
@@ -293,7 +294,7 @@ namespace lemon {
 
     template <typename Result, typename Word,
               int rest = std::numeric_limits<Result>::digits, int shift = 0,
-              bool last = (rest <= std::numeric_limits<Word>::digits)>
+              bool last = rest <= std::numeric_limits<Word>::digits>
     struct IntConversion {
       static const int bits = std::numeric_limits<Word>::digits;
 
@@ -339,7 +340,7 @@ namespace lemon {
         do {
           num = rnd() & mask;
         } while (num > max);
-        return static_cast<Result>(num);
+        return num;
       }
     };
 
@@ -462,594 +463,543 @@ namespace lemon {
       }
     };
 
-    /// \ingroup misc
-    ///
-    /// \brief Mersenne Twister random number generator
-    ///
-    /// The Mersenne Twister is a twisted generalized feedback
-    /// shift-register generator of Matsumoto and Nishimura. The period
-    /// of this generator is \f$ 2^{19937} - 1\f$ and it is
-    /// equi-distributed in 623 dimensions for 32-bit numbers. The time
-    /// performance of this generator is comparable to the commonly used
-    /// generators.
-    ///
-    /// This is a template implementation of both 32-bit and
-    /// 64-bit architecture optimized versions. The generators differ
-    /// sligthly in the initialization and generation phase so they
-    /// produce two completly different sequences.
-    ///
-    /// \alert Do not use this class directly, but instead one of \ref
-    /// Random, \ref Random32 or \ref Random64.
-    ///
-    /// The generator gives back random numbers of serveral types. To
-    /// get a random number from a range of a floating point type, you
-    /// can use one form of the \c operator() or the \c real() member
-    /// function. If you want to get random number from the {0, 1, ...,
-    /// n-1} integer range, use the \c operator[] or the \c integer()
-    /// method. And to get random number from the whole range of an
-    /// integer type, you can use the argumentless \c integer() or
-    /// \c uinteger() functions. Finally, you can get random bool with
-    /// equal chance of true and false or with given probability of true
-    /// result using the \c boolean() member functions.
-    ///
-    /// Various non-uniform distributions are also supported: normal (Gauss),
-    /// exponential, gamma, Poisson, etc.; and a few two-dimensional
-    /// distributions, too.
-    ///
-    ///\code
-    /// // The commented code is identical to the other
-    /// double a = rnd();                     // [0.0, 1.0)
-    /// // double a = rnd.real();             // [0.0, 1.0)
-    /// double b = rnd(100.0);                // [0.0, 100.0)
-    /// // double b = rnd.real(100.0);        // [0.0, 100.0)
-    /// double c = rnd(1.0, 2.0);             // [1.0, 2.0)
-    /// // double c = rnd.real(1.0, 2.0);     // [1.0, 2.0)
-    /// int d = rnd[100000];                  // 0..99999
-    /// // int d = rnd.integer(100000);       // 0..99999
-    /// int e = rnd[6] + 1;                   // 1..6
-    /// // int e = rnd.integer(1, 1 + 6);     // 1..6
-    /// int b = rnd.uinteger<int>();          // 0 .. 2^31 - 1
-    /// int c = rnd.integer<int>();           // - 2^31 .. 2^31 - 1
-    /// bool g = rnd.boolean();               // P(g = true) = 0.5
-    /// bool h = rnd.boolean(0.8);            // P(h = true) = 0.8
-    ///\endcode
-    ///
-    /// LEMON provides a global instance of the random number generator:
-    /// \ref lemon::rnd "rnd". In most cases, it is a good practice
-    /// to use this global generator to get random numbers.
-    ///
-    /// \sa \ref Random, \ref Random32 or \ref Random64.
-    template<class Word>
-    class Random {
-    private:
-
-      _random_bits::RandomCore<Word> core;
-      _random_bits::BoolProducer<Word> bool_producer;
-
-
-    public:
-
-      ///\name Initialization
-      ///
-      /// @{
-
-      /// \brief Default constructor
-      ///
-      /// Constructor with constant seeding.
-      Random() { core.initState(); }
-
-      /// \brief Constructor with seed
-      ///
-      /// Constructor with seed. The current number type will be converted
-      /// to the architecture word type.
-      template <typename Number>
-      Random(Number seed) {
-        _random_bits::Initializer<Number, Word>::init(core, seed);
-      }
-
-      /// \brief Constructor with array seeding
-      ///
-      /// Constructor with array seeding. The given range should contain
-      /// any number type and the numbers will be converted to the
-      /// architecture word type.
-      template <typename Iterator>
-      Random(Iterator begin, Iterator end) {
-        typedef typename std::iterator_traits<Iterator>::value_type Number;
-        _random_bits::Initializer<Number, Word>::init(core, begin, end);
-      }
-
-      /// \brief Copy constructor
-      ///
-      /// Copy constructor. The generated sequence will be identical to
-      /// the other sequence. It can be used to save the current state
-      /// of the generator and later use it to generate the same
-      /// sequence.
-      Random(const Random& other) {
-        core.copyState(other.core);
-      }
-
-      /// \brief Assign operator
-      ///
-      /// Assign operator. The generated sequence will be identical to
-      /// the other sequence. It can be used to save the current state
-      /// of the generator and later use it to generate the same
-      /// sequence.
-      Random& operator=(const Random& other) {
-        if (&other != this) {
-          core.copyState(other.core);
-        }
-        return *this;
-      }
-
-      /// \brief Seeding random sequence
-      ///
-      /// Seeding the random sequence. The current number type will be
-      /// converted to the architecture word type.
-      template <typename Number>
-      void seed(Number seed) {
-        _random_bits::Initializer<Number, Word>::init(core, seed);
-      }
-
-      /// \brief Seeding random sequence
-      ///
-      /// Seeding the random sequence. The given range should contain
-      /// any number type and the numbers will be converted to the
-      /// architecture word type.
-      template <typename Iterator>
-      void seed(Iterator begin, Iterator end) {
-        typedef typename std::iterator_traits<Iterator>::value_type Number;
-        _random_bits::Initializer<Number, Word>::init(core, begin, end);
-      }
-
-      /// \brief Seeding from file or from process id and time
-      ///
-      /// By default, this function calls the \c seedFromFile() member
-      /// function with the <tt>/dev/urandom</tt> file. If it does not success,
-      /// it uses the \c seedFromTime().
-      /// \return Currently always \c true.
-      bool seed() {
-#ifndef LEMON_WIN32
-        if (seedFromFile("/dev/urandom", 0)) return true;
-#endif
-        if (seedFromTime()) return true;
-        return false;
-      }
-
-      /// \brief Seeding from file
-      ///
-      /// Seeding the random sequence from file. The linux kernel has two
-      /// devices, <tt>/dev/random</tt> and <tt>/dev/urandom</tt> which
-      /// could give good seed values for pseudo random generators (The
-      /// difference between two devices is that the <tt>random</tt> may
-      /// block the reading operation while the kernel can give good
-      /// source of randomness, while the <tt>urandom</tt> does not
-      /// block the input, but it could give back bytes with worse
-      /// entropy).
-      /// \param file The source file
-      /// \param offset The offset, from the file read.
-      /// \return \c true when the seeding successes.
-#ifndef LEMON_WIN32
-      bool seedFromFile(const std::string& file = "/dev/urandom", int offset = 0)
-#else
-        bool seedFromFile(const std::string& file = "", int offset = 0)
-#endif
-      {
-        std::ifstream rs(file.c_str());
-        const int size = 4;
-        Word buf[size];
-        if (offset != 0 && !rs.seekg(offset)) return false;
-        if (!rs.read(reinterpret_cast<char*>(buf), sizeof(buf))) return false;
-        seed(buf, buf + size);
-        return true;
-      }
-
-      /// \brief Seeding from process id and time
-      ///
-      /// Seeding from process id and time. This function uses the
-      /// current process id and the current time for initialize the
-      /// random sequence.
-      /// \return Currently always \c true.
-      bool seedFromTime() {
-#ifndef LEMON_WIN32
-        timeval tv;
-        gettimeofday(&tv, 0);
-        seed(getpid() + tv.tv_sec + tv.tv_usec);
-#else
-        seed(bits::getWinRndSeed());
-#endif
-        return true;
-      }
-
-      /// @}
-
-      ///\name Uniform Distributions
-      ///
-      /// @{
-
-      /// \brief Returns a random real number from the range [0, 1)
-      ///
-      /// It returns a random real number from the range [0, 1). The
-      /// default Number type is \c double.
-      template <typename Number>
-      Number real() {
-        return _random_bits::RealConversion<Number, Word>::convert(core);
-      }
-
-      double real() {
-        return real<double>();
-      }
-
-      /// \brief Returns a random real number from the range [0, 1)
-      ///
-      /// It returns a random double from the range [0, 1).
-      double operator()() {
-        return real<double>();
-      }
-
-      /// \brief Returns a random real number from the range [0, b)
-      ///
-      /// It returns a random real number from the range [0, b).
-      double operator()(double b) {
-        return real<double>() * b;
-      }
-
-      /// \brief Returns a random real number from the range [a, b)
-      ///
-      /// It returns a random real number from the range [a, b).
-      double operator()(double a, double b) {
-        return real<double>() * (b - a) + a;
-      }
-
-      /// \brief Returns a random integer from a range
-      ///
-      /// It returns a random integer from the range {0, 1, ..., b - 1}.
-      template <typename Number>
-      Number integer(Number b) {
-        return _random_bits::Mapping<Number, Word>::map(core, b);
-      }
-
-      /// \brief Returns a random integer from a range
-      ///
-      /// It returns a random integer from the range {a, a + 1, ..., b - 1}.
-      template <typename Number>
-      Number integer(Number a, Number b) {
-        return _random_bits::Mapping<Number, Word>::map(core, b - a) + a;
-      }
-
-      /// \brief Returns a random integer from a range
-      ///
-      /// It returns a random integer from the range {0, 1, ..., b - 1}.
-      template <typename Number>
-      Number operator[](Number b) {
-        return _random_bits::Mapping<Number, Word>::map(core, b);
-      }
-
-      /// \brief Returns a random non-negative integer
-      ///
-      /// It returns a random non-negative integer uniformly from the
-      /// whole range of the current \c Number type. The default result
-      /// type of this function is <tt>unsigned int</tt>.
-      template <typename Number>
-      Number uinteger() {
-        return _random_bits::IntConversion<Number, Word>::convert(core);
-      }
-
-      unsigned int uinteger() {
-        return uinteger<unsigned int>();
-      }
-
-      /// \brief Returns a random integer
-      ///
-      /// It returns a random integer uniformly from the whole range of
-      /// the current \c Number type. The default result type of this
-      /// function is \c int.
-      template <typename Number>
-      Number integer() {
-        static const int nb = std::numeric_limits<Number>::digits +
-          (std::numeric_limits<Number>::is_signed ? 1 : 0);
-        return _random_bits::IntConversion<Number, Word, nb>::convert(core);
-      }
-
-      int integer() {
-        return integer<int>();
-      }
-
-      /// \brief Returns a random bool
-      ///
-      /// It returns a random bool. The generator holds a buffer for
-      /// random bits. Every time when it become empty the generator makes
-      /// a new random word and fill the buffer up.
-      bool boolean() {
-        return bool_producer.convert(core);
-      }
-
-      /// @}
-
-      ///\name Non-uniform Distributions
-      ///
-      ///@{
-
-      /// \brief Returns a random bool with given probability of true result.
-      ///
-      /// It returns a random bool with given probability of true result.
-      bool boolean(double p) {
-        return operator()() < p;
-      }
-
-      /// Standard normal (Gauss) distribution
-
-      /// Standard normal (Gauss) distribution.
-      /// \note The Cartesian form of the Box-Muller
-      /// transformation is used to generate a random normal distribution.
-      double gauss()
-      {
-        double V1,V2,S;
-        do {
-          V1=2*real<double>()-1;
-          V2=2*real<double>()-1;
-          S=V1*V1+V2*V2;
-        } while(S>=1);
-        return std::sqrt(-2*std::log(S)/S)*V1;
-      }
-      /// Normal (Gauss) distribution with given mean and standard deviation
-
-      /// Normal (Gauss) distribution with given mean and standard deviation.
-      /// \sa gauss()
-      double gauss(double mean,double std_dev)
-      {
-        return gauss()*std_dev+mean;
-      }
-
-      /// Lognormal distribution
-
-      /// Lognormal distribution. The parameters are the mean and the standard
-      /// deviation of <tt>exp(X)</tt>.
-      ///
-      double lognormal(double n_mean,double n_std_dev)
-      {
-        return std::exp(gauss(n_mean,n_std_dev));
-      }
-      /// Lognormal distribution
-
-      /// Lognormal distribution. The parameter is an <tt>std::pair</tt> of
-      /// the mean and the standard deviation of <tt>exp(X)</tt>.
-      ///
-      double lognormal(const std::pair<double,double> &params)
-      {
-        return std::exp(gauss(params.first,params.second));
-      }
-      /// Compute the lognormal parameters from mean and standard deviation
-
-      /// This function computes the lognormal parameters from mean and
-      /// standard deviation. The return value can direcly be passed to
-      /// lognormal().
-      std::pair<double,double> lognormalParamsFromMD(double mean,
-                                                     double std_dev)
-      {
-        double fr=std_dev/mean;
-        fr*=fr;
-        double lg=std::log(1+fr);
-        return std::pair<double,double>(std::log(mean)-lg/2.0,std::sqrt(lg));
-      }
-      /// Lognormal distribution with given mean and standard deviation
-
-      /// Lognormal distribution with given mean and standard deviation.
-      ///
-      double lognormalMD(double mean,double std_dev)
-      {
-        return lognormal(lognormalParamsFromMD(mean,std_dev));
-      }
-
-      /// Exponential distribution with given mean
-
-      /// This function generates an exponential distribution random number
-      /// with mean <tt>1/lambda</tt>.
-      ///
-      double exponential(double lambda=1.0)
-      {
-        return -std::log(1.0-real<double>())/lambda;
-      }
-
-      /// Gamma distribution with given integer shape
-
-      /// This function generates a gamma distribution random number.
-      ///
-      ///\param k shape parameter (<tt>k>0</tt> integer)
-      double gamma(int k)
-      {
-        double s = 0;
-        for(int i=0;i<k;i++) s-=std::log(1.0-real<double>());
-        return s;
-      }
-
-      /// Gamma distribution with given shape and scale parameter
-
-      /// This function generates a gamma distribution random number.
-      ///
-      ///\param k shape parameter (<tt>k>0</tt>)
-      ///\param theta scale parameter
-      ///
-      double gamma(double k,double theta=1.0)
-      {
-        double xi,nu;
-        const double delta = k-std::floor(k);
-        const double v0=E/(E-delta);
-        do {
-          double V0=1.0-real<double>();
-          double V1=1.0-real<double>();
-          double V2=1.0-real<double>();
-          if(V2<=v0)
-            {
-              xi=std::pow(V1,1.0/delta);
-              nu=V0*std::pow(xi,delta-1.0);
-            }
-          else
-            {
-              xi=1.0-std::log(V1);
-              nu=V0*std::exp(-xi);
-            }
-        } while(nu>std::pow(xi,delta-1.0)*std::exp(-xi));
-        return theta*(xi+gamma(int(std::floor(k))));
-      }
-
-      /// Weibull distribution
-
-      /// This function generates a Weibull distribution random number.
-      ///
-      ///\param k shape parameter (<tt>k>0</tt>)
-      ///\param lambda scale parameter (<tt>lambda>0</tt>)
-      ///
-      double weibull(double k,double lambda)
-      {
-        return lambda*pow(-std::log(1.0-real<double>()),1.0/k);
-      }
-
-      /// Pareto distribution
-
-      /// This function generates a Pareto distribution random number.
-      ///
-      ///\param k shape parameter (<tt>k>0</tt>)
-      ///\param x_min location parameter (<tt>x_min>0</tt>)
-      ///
-      double pareto(double k,double x_min)
-      {
-        return exponential(gamma(k,1.0/x_min))+x_min;
-      }
-
-      /// Poisson distribution
-
-      /// This function generates a Poisson distribution random number with
-      /// parameter \c lambda.
-      ///
-      /// The probability mass function of this distribusion is
-      /// \f[ \frac{e^{-\lambda}\lambda^k}{k!} \f]
-      /// \note The algorithm is taken from the book of Donald E. Knuth titled
-      /// ''Seminumerical Algorithms'' (1969). Its running time is linear in the
-      /// return value.
-
-      int poisson(double lambda)
-      {
-        const double l = std::exp(-lambda);
-        int k=0;
-        double p = 1.0;
-        do {
-          k++;
-          p*=real<double>();
-        } while (p>=l);
-        return k-1;
-      }
-
-      ///@}
-
-      ///\name Two-Dimensional Distributions
-      ///
-      ///@{
-
-      /// Uniform distribution on the full unit circle
-
-      /// Uniform distribution on the full unit circle.
-      ///
-      dim2::Point<double> disc()
-      {
-        double V1,V2;
-        do {
-          V1=2*real<double>()-1;
-          V2=2*real<double>()-1;
-
-        } while(V1*V1+V2*V2>=1);
-        return dim2::Point<double>(V1,V2);
-      }
-      /// A kind of two-dimensional normal (Gauss) distribution
-
-      /// This function provides a turning symmetric two-dimensional distribution.
-      /// Both coordinates are of standard normal distribution, but they are not
-      /// independent.
-      ///
-      /// \note The coordinates are the two random variables provided by
-      /// the Box-Muller method.
-      dim2::Point<double> gauss2()
-      {
-        double V1,V2,S;
-        do {
-          V1=2*real<double>()-1;
-          V2=2*real<double>()-1;
-          S=V1*V1+V2*V2;
-        } while(S>=1);
-        double W=std::sqrt(-2*std::log(S)/S);
-        return dim2::Point<double>(W*V1,W*V2);
-      }
-      /// A kind of two-dimensional exponential distribution
-
-      /// This function provides a turning symmetric two-dimensional distribution.
-      /// The x-coordinate is of conditionally exponential distribution
-      /// with the condition that x is positive and y=0. If x is negative and
-      /// y=0 then, -x is of exponential distribution. The same is true for the
-      /// y-coordinate.
-      dim2::Point<double> exponential2()
-      {
-        double V1,V2,S;
-        do {
-          V1=2*real<double>()-1;
-          V2=2*real<double>()-1;
-          S=V1*V1+V2*V2;
-        } while(S>=1);
-        double W=-std::log(S)/S;
-        return dim2::Point<double>(W*V1,W*V2);
-      }
-
-      ///@}
-    };
-
-
-  };
+  }
 
   /// \ingroup misc
   ///
   /// \brief Mersenne Twister random number generator
   ///
-  /// This class implements either the 32-bit or the 64-bit version of
-  /// the Mersenne Twister random number generator algorithm
-  /// depending on the system architecture.
-  /// 
-  /// For the API description, see its base class
-  /// \ref _random_bits::Random.
+  /// The Mersenne Twister is a twisted generalized feedback
+  /// shift-register generator of Matsumoto and Nishimura. The period
+  /// of this generator is \f$ 2^{19937} - 1 \f$ and it is
+  /// equi-distributed in 623 dimensions for 32-bit numbers. The time
+  /// performance of this generator is comparable to the commonly used
+  /// generators.
   ///
-  /// \sa \ref _random_bits::Random
-  typedef _random_bits::Random<unsigned long> Random;
+  /// This implementation is specialized for both 32-bit and 64-bit
+  /// architectures. The generators differ sligthly in the
+  /// initialization and generation phase so they produce two
+  /// completly different sequences.
+  ///
+  /// The generator gives back random numbers of serveral types. To
+  /// get a random number from a range of a floating point type you
+  /// can use one form of the \c operator() or the \c real() member
+  /// function. If you want to get random number from the {0, 1, ...,
+  /// n-1} integer range use the \c operator[] or the \c integer()
+  /// method. And to get random number from the whole range of an
+  /// integer type you can use the argumentless \c integer() or \c
+  /// uinteger() functions. After all you can get random bool with
+  /// equal chance of true and false or given probability of true
+  /// result with the \c boolean() member functions.
+  ///
+  ///\code
+  /// // The commented code is identical to the other
+  /// double a = rnd();                     // [0.0, 1.0)
+  /// // double a = rnd.real();             // [0.0, 1.0)
+  /// double b = rnd(100.0);                // [0.0, 100.0)
+  /// // double b = rnd.real(100.0);        // [0.0, 100.0)
+  /// double c = rnd(1.0, 2.0);             // [1.0, 2.0)
+  /// // double c = rnd.real(1.0, 2.0);     // [1.0, 2.0)
+  /// int d = rnd[100000];                  // 0..99999
+  /// // int d = rnd.integer(100000);       // 0..99999
+  /// int e = rnd[6] + 1;                   // 1..6
+  /// // int e = rnd.integer(1, 1 + 6);     // 1..6
+  /// int b = rnd.uinteger<int>();          // 0 .. 2^31 - 1
+  /// int c = rnd.integer<int>();           // - 2^31 .. 2^31 - 1
+  /// bool g = rnd.boolean();               // P(g = true) = 0.5
+  /// bool h = rnd.boolean(0.8);            // P(h = true) = 0.8
+  ///\endcode
+  ///
+  /// LEMON provides a global instance of the random number
+  /// generator which name is \ref lemon::rnd "rnd". Usually it is a
+  /// good programming convenience to use this global generator to get
+  /// random numbers.
+  class Random {
+  private:
 
-  /// \ingroup misc
-  ///
-  /// \brief Mersenne Twister random number generator (32-bit version)
-  ///
-  /// This class implements the 32-bit version of the Mersenne Twister
-  /// random number generator algorithm. It is recommended to be used
-  /// when someone wants to make sure that the \e same pseudo random
-  /// sequence will be generated on every platfrom.
-  ///
-  /// For the API description, see its base class
-  /// \ref _random_bits::Random.
-  ///
-  /// \sa \ref _random_bits::Random
-  typedef _random_bits::Random<unsigned int> Random32;
+    // Architecture word
+    typedef unsigned long Word;
 
-  /// \ingroup misc
-  ///
-  /// \brief Mersenne Twister random number generator (64-bit version)
-  ///
-  /// This class implements the 64-bit version of the Mersenne Twister
-  /// random number generator algorithm. (Even though it runs
-  /// on 32-bit architectures, too.) It is recommended to be used when
-  /// someone wants to make sure that the \e same pseudo random sequence
-  /// will be generated on every platfrom.
-  ///
-  /// For the API description, see its base class
-  /// \ref _random_bits::Random.
-  ///
-  /// \sa \ref _random_bits::Random
-  typedef _random_bits::Random<unsigned long long> Random64;
+    _random_bits::RandomCore<Word> core;
+    _random_bits::BoolProducer<Word> bool_producer;
+
+
+  public:
+
+    ///\name Initialization
+    ///
+    /// @{
+
+    /// \brief Default constructor
+    ///
+    /// Constructor with constant seeding.
+    Random() { core.initState(); }
+
+    /// \brief Constructor with seed
+    ///
+    /// Constructor with seed. The current number type will be converted
+    /// to the architecture word type.
+    template <typename Number>
+    Random(Number seed) {
+      _random_bits::Initializer<Number, Word>::init(core, seed);
+    }
+
+    /// \brief Constructor with array seeding
+    ///
+    /// Constructor with array seeding. The given range should contain
+    /// any number type and the numbers will be converted to the
+    /// architecture word type.
+    template <typename Iterator>
+    Random(Iterator begin, Iterator end) {
+      typedef typename std::iterator_traits<Iterator>::value_type Number;
+      _random_bits::Initializer<Number, Word>::init(core, begin, end);
+    }
+
+    /// \brief Copy constructor
+    ///
+    /// Copy constructor. The generated sequence will be identical to
+    /// the other sequence. It can be used to save the current state
+    /// of the generator and later use it to generate the same
+    /// sequence.
+    Random(const Random& other) {
+      core.copyState(other.core);
+    }
+
+    /// \brief Assign operator
+    ///
+    /// Assign operator. The generated sequence will be identical to
+    /// the other sequence. It can be used to save the current state
+    /// of the generator and later use it to generate the same
+    /// sequence.
+    Random& operator=(const Random& other) {
+      if (&other != this) {
+        core.copyState(other.core);
+      }
+      return *this;
+    }
+
+    /// \brief Seeding random sequence
+    ///
+    /// Seeding the random sequence. The current number type will be
+    /// converted to the architecture word type.
+    template <typename Number>
+    void seed(Number seed) {
+      _random_bits::Initializer<Number, Word>::init(core, seed);
+    }
+
+    /// \brief Seeding random sequence
+    ///
+    /// Seeding the random sequence. The given range should contain
+    /// any number type and the numbers will be converted to the
+    /// architecture word type.
+    template <typename Iterator>
+    void seed(Iterator begin, Iterator end) {
+      typedef typename std::iterator_traits<Iterator>::value_type Number;
+      _random_bits::Initializer<Number, Word>::init(core, begin, end);
+    }
+
+    /// \brief Seeding from file or from process id and time
+    ///
+    /// By default, this function calls the \c seedFromFile() member
+    /// function with the <tt>/dev/urandom</tt> file. If it does not success,
+    /// it uses the \c seedFromTime().
+    /// \return Currently always \c true.
+    bool seed() {
+#ifndef WIN32
+      if (seedFromFile("/dev/urandom", 0)) return true;
+#endif
+      if (seedFromTime()) return true;
+      return false;
+    }
+
+    /// \brief Seeding from file
+    ///
+    /// Seeding the random sequence from file. The linux kernel has two
+    /// devices, <tt>/dev/random</tt> and <tt>/dev/urandom</tt> which
+    /// could give good seed values for pseudo random generators (The
+    /// difference between two devices is that the <tt>random</tt> may
+    /// block the reading operation while the kernel can give good
+    /// source of randomness, while the <tt>urandom</tt> does not
+    /// block the input, but it could give back bytes with worse
+    /// entropy).
+    /// \param file The source file
+    /// \param offset The offset, from the file read.
+    /// \return \c true when the seeding successes.
+#ifndef WIN32
+    bool seedFromFile(const std::string& file = "/dev/urandom", int offset = 0)
+#else
+    bool seedFromFile(const std::string& file = "", int offset = 0)
+#endif
+    {
+      std::ifstream rs(file.c_str());
+      const int size = 4;
+      Word buf[size];
+      if (offset != 0 && !rs.seekg(offset)) return false;
+      if (!rs.read(reinterpret_cast<char*>(buf), sizeof(buf))) return false;
+      seed(buf, buf + size);
+      return true;
+    }
+
+    /// \brief Seding from process id and time
+    ///
+    /// Seding from process id and time. This function uses the
+    /// current process id and the current time for initialize the
+    /// random sequence.
+    /// \return Currently always \c true.
+    bool seedFromTime() {
+#ifndef WIN32
+      timeval tv;
+      gettimeofday(&tv, 0);
+      seed(getpid() + tv.tv_sec + tv.tv_usec);
+#else
+      seed(bits::getWinRndSeed());
+#endif
+      return true;
+    }
+
+    /// @}
+
+    ///\name Uniform Distributions
+    ///
+    /// @{
+
+    /// \brief Returns a random real number from the range [0, 1)
+    ///
+    /// It returns a random real number from the range [0, 1). The
+    /// default Number type is \c double.
+    template <typename Number>
+    Number real() {
+      return _random_bits::RealConversion<Number, Word>::convert(core);
+    }
+
+    double real() {
+      return real<double>();
+    }
+
+    /// \brief Returns a random real number from the range [0, 1)
+    ///
+    /// It returns a random double from the range [0, 1).
+    double operator()() {
+      return real<double>();
+    }
+
+    /// \brief Returns a random real number from the range [0, b)
+    ///
+    /// It returns a random real number from the range [0, b).
+    double operator()(double b) {
+      return real<double>() * b;
+    }
+
+    /// \brief Returns a random real number from the range [a, b)
+    ///
+    /// It returns a random real number from the range [a, b).
+    double operator()(double a, double b) {
+      return real<double>() * (b - a) + a;
+    }
+
+    /// \brief Returns a random integer from a range
+    ///
+    /// It returns a random integer from the range {0, 1, ..., b - 1}.
+    template <typename Number>
+    Number integer(Number b) {
+      return _random_bits::Mapping<Number, Word>::map(core, b);
+    }
+
+    /// \brief Returns a random integer from a range
+    ///
+    /// It returns a random integer from the range {a, a + 1, ..., b - 1}.
+    template <typename Number>
+    Number integer(Number a, Number b) {
+      return _random_bits::Mapping<Number, Word>::map(core, b - a) + a;
+    }
+
+    /// \brief Returns a random integer from a range
+    ///
+    /// It returns a random integer from the range {0, 1, ..., b - 1}.
+    template <typename Number>
+    Number operator[](Number b) {
+      return _random_bits::Mapping<Number, Word>::map(core, b);
+    }
+
+    /// \brief Returns a random non-negative integer
+    ///
+    /// It returns a random non-negative integer uniformly from the
+    /// whole range of the current \c Number type. The default result
+    /// type of this function is <tt>unsigned int</tt>.
+    template <typename Number>
+    Number uinteger() {
+      return _random_bits::IntConversion<Number, Word>::convert(core);
+    }
+
+    unsigned int uinteger() {
+      return uinteger<unsigned int>();
+    }
+
+    /// \brief Returns a random integer
+    ///
+    /// It returns a random integer uniformly from the whole range of
+    /// the current \c Number type. The default result type of this
+    /// function is \c int.
+    template <typename Number>
+    Number integer() {
+      static const int nb = std::numeric_limits<Number>::digits +
+        (std::numeric_limits<Number>::is_signed ? 1 : 0);
+      return _random_bits::IntConversion<Number, Word, nb>::convert(core);
+    }
+
+    int integer() {
+      return integer<int>();
+    }
+
+    /// \brief Returns a random bool
+    ///
+    /// It returns a random bool. The generator holds a buffer for
+    /// random bits. Every time when it become empty the generator makes
+    /// a new random word and fill the buffer up.
+    bool boolean() {
+      return bool_producer.convert(core);
+    }
+
+    /// @}
+
+    ///\name Non-uniform Distributions
+    ///
+    ///@{
+
+    /// \brief Returns a random bool with given probability of true result.
+    ///
+    /// It returns a random bool with given probability of true result.
+    bool boolean(double p) {
+      return operator()() < p;
+    }
+
+    /// Standard normal (Gauss) distribution
+
+    /// Standard normal (Gauss) distribution.
+    /// \note The Cartesian form of the Box-Muller
+    /// transformation is used to generate a random normal distribution.
+    double gauss()
+    {
+      double V1,V2,S;
+      do {
+        V1=2*real<double>()-1;
+        V2=2*real<double>()-1;
+        S=V1*V1+V2*V2;
+      } while(S>=1);
+      return std::sqrt(-2*std::log(S)/S)*V1;
+    }
+    /// Normal (Gauss) distribution with given mean and standard deviation
+
+    /// Normal (Gauss) distribution with given mean and standard deviation.
+    /// \sa gauss()
+    double gauss(double mean,double std_dev)
+    {
+      return gauss()*std_dev+mean;
+    }
+
+    /// Lognormal distribution
+
+    /// Lognormal distribution. The parameters are the mean and the standard
+    /// deviation of <tt>exp(X)</tt>.
+    ///
+    double lognormal(double n_mean,double n_std_dev)
+    {
+      return std::exp(gauss(n_mean,n_std_dev));
+    }
+    /// Lognormal distribution
+
+    /// Lognormal distribution. The parameter is an <tt>std::pair</tt> of
+    /// the mean and the standard deviation of <tt>exp(X)</tt>.
+    ///
+    double lognormal(const std::pair<double,double> &params)
+    {
+      return std::exp(gauss(params.first,params.second));
+    }
+    /// Compute the lognormal parameters from mean and standard deviation
+
+    /// This function computes the lognormal parameters from mean and
+    /// standard deviation. The return value can direcly be passed to
+    /// lognormal().
+    std::pair<double,double> lognormalParamsFromMD(double mean,
+                                                   double std_dev)
+    {
+      double fr=std_dev/mean;
+      fr*=fr;
+      double lg=std::log(1+fr);
+      return std::pair<double,double>(std::log(mean)-lg/2.0,std::sqrt(lg));
+    }
+    /// Lognormal distribution with given mean and standard deviation
+
+    /// Lognormal distribution with given mean and standard deviation.
+    ///
+    double lognormalMD(double mean,double std_dev)
+    {
+      return lognormal(lognormalParamsFromMD(mean,std_dev));
+    }
+
+    /// Exponential distribution with given mean
+
+    /// This function generates an exponential distribution random number
+    /// with mean <tt>1/lambda</tt>.
+    ///
+    double exponential(double lambda=1.0)
+    {
+      return -std::log(1.0-real<double>())/lambda;
+    }
+
+    /// Gamma distribution with given integer shape
+
+    /// This function generates a gamma distribution random number.
+    ///
+    ///\param k shape parameter (<tt>k>0</tt> integer)
+    double gamma(int k)
+    {
+      double s = 0;
+      for(int i=0;i<k;i++) s-=std::log(1.0-real<double>());
+      return s;
+    }
+
+    /// Gamma distribution with given shape and scale parameter
+
+    /// This function generates a gamma distribution random number.
+    ///
+    ///\param k shape parameter (<tt>k>0</tt>)
+    ///\param theta scale parameter
+    ///
+    double gamma(double k,double theta=1.0)
+    {
+      double xi,nu;
+      const double delta = k-std::floor(k);
+      const double v0=E/(E-delta);
+      do {
+        double V0=1.0-real<double>();
+        double V1=1.0-real<double>();
+        double V2=1.0-real<double>();
+        if(V2<=v0)
+          {
+            xi=std::pow(V1,1.0/delta);
+            nu=V0*std::pow(xi,delta-1.0);
+          }
+        else
+          {
+            xi=1.0-std::log(V1);
+            nu=V0*std::exp(-xi);
+          }
+      } while(nu>std::pow(xi,delta-1.0)*std::exp(-xi));
+      return theta*(xi+gamma(int(std::floor(k))));
+    }
+
+    /// Weibull distribution
+
+    /// This function generates a Weibull distribution random number.
+    ///
+    ///\param k shape parameter (<tt>k>0</tt>)
+    ///\param lambda scale parameter (<tt>lambda>0</tt>)
+    ///
+    double weibull(double k,double lambda)
+    {
+      return lambda*pow(-std::log(1.0-real<double>()),1.0/k);
+    }
+
+    /// Pareto distribution
+
+    /// This function generates a Pareto distribution random number.
+    ///
+    ///\param k shape parameter (<tt>k>0</tt>)
+    ///\param x_min location parameter (<tt>x_min>0</tt>)
+    ///
+    double pareto(double k,double x_min)
+    {
+      return exponential(gamma(k,1.0/x_min))+x_min;
+    }
+
+    /// Poisson distribution
+
+    /// This function generates a Poisson distribution random number with
+    /// parameter \c lambda.
+    ///
+    /// The probability mass function of this distribusion is
+    /// \f[ \frac{e^{-\lambda}\lambda^k}{k!} \f]
+    /// \note The algorithm is taken from the book of Donald E. Knuth titled
+    /// ''Seminumerical Algorithms'' (1969). Its running time is linear in the
+    /// return value.
+
+    int poisson(double lambda)
+    {
+      const double l = std::exp(-lambda);
+      int k=0;
+      double p = 1.0;
+      do {
+        k++;
+        p*=real<double>();
+      } while (p>=l);
+      return k-1;
+    }
+
+    ///@}
+
+    ///\name Two Dimensional Distributions
+    ///
+    ///@{
+
+    /// Uniform distribution on the full unit circle
+
+    /// Uniform distribution on the full unit circle.
+    ///
+    dim2::Point<double> disc()
+    {
+      double V1,V2;
+      do {
+        V1=2*real<double>()-1;
+        V2=2*real<double>()-1;
+
+      } while(V1*V1+V2*V2>=1);
+      return dim2::Point<double>(V1,V2);
+    }
+    /// A kind of two dimensional normal (Gauss) distribution
+
+    /// This function provides a turning symmetric two-dimensional distribution.
+    /// Both coordinates are of standard normal distribution, but they are not
+    /// independent.
+    ///
+    /// \note The coordinates are the two random variables provided by
+    /// the Box-Muller method.
+    dim2::Point<double> gauss2()
+    {
+      double V1,V2,S;
+      do {
+        V1=2*real<double>()-1;
+        V2=2*real<double>()-1;
+        S=V1*V1+V2*V2;
+      } while(S>=1);
+      double W=std::sqrt(-2*std::log(S)/S);
+      return dim2::Point<double>(W*V1,W*V2);
+    }
+    /// A kind of two dimensional exponential distribution
+
+    /// This function provides a turning symmetric two-dimensional distribution.
+    /// The x-coordinate is of conditionally exponential distribution
+    /// with the condition that x is positive and y=0. If x is negative and
+    /// y=0 then, -x is of exponential distribution. The same is true for the
+    /// y-coordinate.
+    dim2::Point<double> exponential2()
+    {
+      double V1,V2,S;
+      do {
+        V1=2*real<double>()-1;
+        V2=2*real<double>()-1;
+        S=V1*V1+V2*V2;
+      } while(S>=1);
+      double W=-std::log(S)/S;
+      return dim2::Point<double>(W*V1,W*V2);
+    }
+
+    ///@}
+  };
+
 
   extern Random rnd;
-  
+
 }
 
 #endif

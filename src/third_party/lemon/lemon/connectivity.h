@@ -265,7 +265,6 @@ namespace lemon {
   bool stronglyConnected(const Digraph& digraph) {
     checkConcept<concepts::Digraph, Digraph>();
 
-    typedef typename Digraph::Node Node;
     typedef typename Digraph::NodeIt NodeIt;
 
     typename Digraph::Node source = NodeIt(digraph);
@@ -333,9 +332,7 @@ namespace lemon {
     using namespace _connectivity_bits;
 
     typedef typename Digraph::Node Node;
-    typedef typename Digraph::Arc Arc;
     typedef typename Digraph::NodeIt NodeIt;
-    typedef typename Digraph::ArcIt ArcIt;
 
     typedef std::vector<Node> Container;
     typedef typename Container::iterator Iterator;
@@ -1343,9 +1340,7 @@ namespace lemon {
     checkConcept<concepts::Digraph, Digraph>();
     checkConcept<concepts::WriteMap<typename Digraph::Node, int>, NodeMap>();
 
-    typedef typename Digraph::Node Node;
     typedef typename Digraph::NodeIt NodeIt;
-    typedef typename Digraph::Arc Arc;
 
     TopologicalSortVisitor<Digraph, NodeMap>
       visitor(order, countNodes(digraph));
@@ -1558,7 +1553,6 @@ namespace lemon {
     checkConcept<concepts::Graph, Graph>();
 
     typedef typename Graph::NodeIt NodeIt;
-    typedef typename Graph::ArcIt ArcIt;
 
     bool bipartite = true;
 
@@ -1603,9 +1597,7 @@ namespace lemon {
     checkConcept<concepts::Graph, Graph>();
     checkConcept<concepts::WriteMap<typename Graph::Node, bool>, NodeMap>();
 
-    typedef typename Graph::Node Node;
     typedef typename Graph::NodeIt NodeIt;
-    typedef typename Graph::ArcIt ArcIt;
 
     bool bipartite = true;
 

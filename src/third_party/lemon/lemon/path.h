@@ -30,7 +30,6 @@
 #include <lemon/error.h>
 #include <lemon/core.h>
 #include <lemon/concepts/path.h>
-#include <lemon/bits/stl_iterators.h>
 
 namespace lemon {
 
@@ -43,10 +42,10 @@ namespace lemon {
   /// A structure for representing directed path in a digraph.
   /// \tparam GR The digraph type in which the path is.
   ///
-  /// In a sense, a path can be treated as a list of arcs. The
-  /// LEMON path type simply stores this list. As a consequence, it
-  /// cannot enumerate the nodes in the path, and the source node of
-  /// a zero-length path is undefined.
+  /// In a sense, the path can be treated as a list of arcs. The
+  /// LEMON path type stores just this list. As a consequence, it
+  /// cannot enumerate the nodes of the path and the source node of
+  /// a zero length path is undefined.
   ///
   /// This implementation is a back and front insertable and erasable
   /// path type. It can be indexed in O(1) time. The front and back
@@ -141,23 +140,6 @@ namespace lemon {
       int idx;
     };
 
-    /// \brief Gets the collection of the arcs of the path.
-    ///
-    /// This function can be used for iterating on the
-    /// arcs of the path. It returns a wrapped
-    /// ArcIt, which looks like an STL container
-    /// (by having begin() and end()) which you can use in range-based
-    /// for loops, STL algorithms, etc.
-    /// For example you can write:
-    ///\code
-    /// for(auto a: p.arcs())
-    ///   doSomething(a);
-    ///\endcode
-    LemonRangeWrapper1<ArcIt, Path> arcs() const {
-      return LemonRangeWrapper1<ArcIt, Path>(*this);
-    }
-
-
     /// \brief Length of the path.
     int length() const { return head.size() + tail.size(); }
     /// \brief Return whether the path is empty.
@@ -168,8 +150,7 @@ namespace lemon {
 
     /// \brief The n-th arc.
     ///
-    /// Gives back the n-th arc. This function runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
+    /// \pre \c n is in the <tt>[0..length() - 1]</tt> range.
     const Arc& nth(int n) const {
       return n < int(head.size()) ? *(head.rbegin() + n) :
         *(tail.begin() + (n - head.size()));
@@ -180,15 +161,6 @@ namespace lemon {
     /// \pre \c n is in the <tt>[0..length() - 1]</tt> range.
     ArcIt nthIt(int n) const {
       return ArcIt(*this, n);
-    }
-
-    /// \brief The n-th arc.
-    ///
-    /// Gives back the n-th arc. This operator is just an alias for \ref nth(),
-    /// it runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
-    const Arc& operator[](int n) const {
-      return nth(n);
     }
 
     /// \brief The first arc of the path
@@ -271,15 +243,15 @@ namespace lemon {
   /// A structure for representing directed path in a digraph.
   /// \tparam GR The digraph type in which the path is.
   ///
-  /// In a sense, a path can be treated as a list of arcs. The
-  /// LEMON path type simply stores this list. As a consequence, it
-  /// cannot enumerate the nodes in the path, and the source node of
-  /// a zero-length path is undefined.
+  /// In a sense, the path can be treated as a list of arcs. The
+  /// LEMON path type stores just this list. As a consequence it
+  /// cannot enumerate the nodes in the path and the zero length paths
+  /// cannot store the source.
   ///
   /// This implementation is a just back insertable and erasable path
   /// type. It can be indexed in O(1) time. The back insertion and
   /// erasure is amortized O(1) time. This implementation is faster
-  /// than the \c Path type because it use just one vector for the
+  /// then the \c Path type because it use just one vector for the
   /// arcs.
   template <typename GR>
   class SimplePath {
@@ -373,23 +345,6 @@ namespace lemon {
       int idx;
     };
 
-    /// \brief Gets the collection of the arcs of the path.
-    ///
-    /// This function can be used for iterating on the
-    /// arcs of the path. It returns a wrapped
-    /// ArcIt, which looks like an STL container
-    /// (by having begin() and end()) which you can use in range-based
-    /// for loops, STL algorithms, etc.
-    /// For example you can write:
-    ///\code
-    /// for(auto a: p.arcs())
-    ///   doSomething(a);
-    ///\endcode
-    LemonRangeWrapper1<ArcIt, SimplePath> arcs() const {
-      return LemonRangeWrapper1<ArcIt, SimplePath>(*this);
-    }
-
-
     /// \brief Length of the path.
     int length() const { return data.size(); }
     /// \brief Return true if the path is empty.
@@ -400,8 +355,7 @@ namespace lemon {
 
     /// \brief The n-th arc.
     ///
-    /// Gives back the n-th arc. This function runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
+    /// \pre \c n is in the <tt>[0..length() - 1]</tt> range.
     const Arc& nth(int n) const {
       return data[n];
     }
@@ -409,15 +363,6 @@ namespace lemon {
     /// \brief  Initializes arc iterator to point to the n-th arc.
     ArcIt nthIt(int n) const {
       return ArcIt(*this, n);
-    }
-
-    /// \brief The n-th arc.
-    ///
-    /// Gives back the n-th arc. This operator is just an alias for \ref nth(),
-    /// it runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
-    const Arc& operator[](int n) const {
-      return data[n];
     }
 
     /// \brief The first arc of the path.
@@ -475,10 +420,10 @@ namespace lemon {
   /// A structure for representing directed path in a digraph.
   /// \tparam GR The digraph type in which the path is.
   ///
-  /// In a sense, a path can be treated as a list of arcs. The
-  /// LEMON path type simply stores this list. As a consequence, it
-  /// cannot enumerate the nodes in the path, and the source node of
-  /// a zero-length path is undefined.
+  /// In a sense, the path can be treated as a list of arcs. The
+  /// LEMON path type stores just this list. As a consequence it
+  /// cannot enumerate the nodes in the path and the zero length paths
+  /// cannot store the source.
   ///
   /// This implementation is a back and front insertable and erasable
   /// path type. It can be indexed in O(k) time, where k is the rank
@@ -598,27 +543,10 @@ namespace lemon {
       Node *node;
     };
 
-    /// \brief Gets the collection of the arcs of the path.
-    ///
-    /// This function can be used for iterating on the
-    /// arcs of the path. It returns a wrapped
-    /// ArcIt, which looks like an STL container
-    /// (by having begin() and end()) which you can use in range-based
-    /// for loops, STL algorithms, etc.
-    /// For example you can write:
-    ///\code
-    /// for(auto a: p.arcs())
-    ///   doSomething(a);
-    ///\endcode
-    LemonRangeWrapper1<ArcIt, ListPath> arcs() const {
-      return LemonRangeWrapper1<ArcIt, ListPath>(*this);
-    }
-
-
     /// \brief The n-th arc.
     ///
     /// This function looks for the n-th arc in O(n) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
+    /// \pre \c n is in the <tt>[0..length() - 1]</tt> range.
     const Arc& nth(int n) const {
       Node *node = first;
       for (int i = 0; i < n; ++i) {
@@ -634,15 +562,6 @@ namespace lemon {
         node = node->next;
       }
       return ArcIt(*this, node);
-    }
-
-    /// \brief The n-th arc.
-    ///
-    /// Looks for the n-th arc in O(n) time. This operator is just an alias
-    /// for \ref nth().
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
-    const Arc& operator[](int n) const {
-      return nth(n);
     }
 
     /// \brief Length of the path.
@@ -813,7 +732,7 @@ namespace lemon {
     /// starting with
     /// \c it will put into \c tpath. If \c tpath have arcs
     /// before the operation they are removed first.  The time
-    /// complexity of this function is O(1) plus the time of emtying
+    /// complexity of this function is O(1) plus the the time of emtying
     /// \c tpath. If \c it is \c INVALID then it just clears \c tpath
     void split(ArcIt it, ListPath& tpath) {
       tpath.clear();
@@ -854,17 +773,18 @@ namespace lemon {
   /// A structure for representing directed path in a digraph.
   /// \tparam GR The digraph type in which the path is.
   ///
-  /// In a sense, a path can be treated as a list of arcs. The
-  /// LEMON path type simply stores this list. As a consequence, it
-  /// cannot enumerate the nodes in the path, and the source node of
-  /// a zero-length path is undefined.
+  /// In a sense, the path can be treated as a list of arcs. The
+  /// LEMON path type stores just this list. As a consequence it
+  /// cannot enumerate the nodes in the path and the source node of
+  /// a zero length path is undefined.
   ///
   /// This implementation is completly static, i.e. it can be copy constucted
   /// or copy assigned from another path, but otherwise it cannot be
   /// modified.
   ///
-  /// Being the most memory-efficient path type in LEMON, it is
-  /// intented to be used when you want to store a large number of paths.
+  /// Being the the most memory efficient path type in LEMON,
+  /// it is intented to be
+  /// used when you want to store a large number of paths.
   template <typename GR>
   class StaticPath {
   public:
@@ -875,11 +795,11 @@ namespace lemon {
     /// \brief Default constructor
     ///
     /// Default constructor
-    StaticPath() : len(0), _arcs(0) {}
+    StaticPath() : len(0), arcs(0) {}
 
     /// \brief Copy constructor
     ///
-    StaticPath(const StaticPath& cpath) : _arcs(0) {
+    StaticPath(const StaticPath& cpath) : arcs(0) {
       pathCopy(cpath, *this);
     }
 
@@ -887,7 +807,7 @@ namespace lemon {
     ///
     /// This path can be initialized from any other path type.
     template <typename CPath>
-    StaticPath(const CPath& cpath) : _arcs(0) {
+    StaticPath(const CPath& cpath) : arcs(0) {
       pathCopy(cpath, *this);
     }
 
@@ -895,7 +815,7 @@ namespace lemon {
     ///
     /// Destructor of the path
     ~StaticPath() {
-      if (_arcs) delete[] _arcs;
+      if (arcs) delete[] arcs;
     }
 
     /// \brief Copy assignment
@@ -962,44 +882,17 @@ namespace lemon {
       const StaticPath *path;
       int idx;
     };
-    
-    /// \brief Gets the collection of the arcs of the path.
-    ///
-    /// This function can be used for iterating on the
-    /// arcs of the path. It returns a wrapped
-    /// ArcIt, which looks like an STL container
-    /// (by having begin() and end()) which you can use in range-based
-    /// for loops, STL algorithms, etc.
-    /// For example you can write:
-    ///\code
-    /// for(auto a: p.arcs())
-    ///   doSomething(a);
-    ///\endcode
-    LemonRangeWrapper1<ArcIt, StaticPath> arcs() const {
-      return LemonRangeWrapper1<ArcIt, StaticPath>(*this);
-    }
-    
 
     /// \brief The n-th arc.
     ///
-    /// Gives back the n-th arc. This function runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
+    /// \pre \c n is in the <tt>[0..length() - 1]</tt> range.
     const Arc& nth(int n) const {
-      return _arcs[n];
+      return arcs[n];
     }
 
     /// \brief The arc iterator pointing to the n-th arc.
     ArcIt nthIt(int n) const {
       return ArcIt(*this, n);
-    }
-
-    /// \brief The n-th arc.
-    ///
-    /// Gives back the n-th arc. This operator is just an alias for \ref nth(),
-    /// it runs in O(1) time.
-    /// \pre \c n is in the range <tt>[0..length() - 1]</tt>.
-    const Arc& operator[](int n) const {
-      return _arcs[n];
     }
 
     /// \brief The length of the path.
@@ -1008,21 +901,21 @@ namespace lemon {
     /// \brief Return true when the path is empty.
     int empty() const { return len == 0; }
 
-    /// \brief Reset the path to an empty one.
+    /// \brief Erase all arcs in the digraph.
     void clear() {
       len = 0;
-      if (_arcs) delete[] _arcs;
-      _arcs = 0;
+      if (arcs) delete[] arcs;
+      arcs = 0;
     }
 
     /// \brief The first arc of the path.
     const Arc& front() const {
-      return _arcs[0];
+      return arcs[0];
     }
 
     /// \brief The last arc of the path.
     const Arc& back() const {
-      return _arcs[len - 1];
+      return arcs[len - 1];
     }
 
 
@@ -1031,10 +924,10 @@ namespace lemon {
     template <typename CPath>
     void build(const CPath& path) {
       len = path.length();
-      _arcs = new Arc[len];
+      arcs = new Arc[len];
       int index = 0;
       for (typename CPath::ArcIt it(path); it != INVALID; ++it) {
-        _arcs[index] = it;
+        arcs[index] = it;
         ++index;
       }
     }
@@ -1042,17 +935,17 @@ namespace lemon {
     template <typename CPath>
     void buildRev(const CPath& path) {
       len = path.length();
-      _arcs = new Arc[len];
+      arcs = new Arc[len];
       int index = len;
       for (typename CPath::RevArcIt it(path); it != INVALID; ++it) {
         --index;
-        _arcs[index] = it;
+        arcs[index] = it;
       }
     }
 
   private:
     int len;
-    Arc* _arcs;
+    Arc* arcs;
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -1198,17 +1091,15 @@ namespace lemon {
     return path.empty() ? INVALID : digraph.target(path.back());
   }
 
-  /// \brief Class for iterating through the nodes of a path
+  /// \brief Class which helps to iterate through the nodes of a path
   ///
-  /// Class for iterating through the nodes of a path.
+  /// In a sense, the path can be treated as a list of arcs. The
+  /// LEMON path type stores only this list. As a consequence, it
+  /// cannot enumerate the nodes in the path and the zero length paths
+  /// cannot have a source node.
   ///
-  /// In a sense, a path can be treated as a list of arcs. The
-  /// LEMON path type simply stores this list. As a consequence, it
-  /// cannot enumerate the nodes in the path, and the source node of
-  /// a zero-length path is undefined.
-  ///
-  /// However, this class implements a node iterator for path structures.
-  /// To provide this feature, the underlying digraph should be passed to
+  /// This class implements the node iterator of a path structure. To
+  /// provide this feature, the underlying digraph should be passed to
   /// the constructor of the iterator.
   template <typename Path>
   class PathNodeIt {
@@ -1265,25 +1156,6 @@ namespace lemon {
     }
 
   };
-
-  /// \brief Gets the collection of the nodes of the path.
-  ///
-  /// This function can be used for iterating on the
-  /// nodes of the path. It returns a wrapped
-  /// PathNodeIt, which looks like an STL container
-  /// (by having begin() and end()) which you can use in range-based
-  /// for loops, STL algorithms, etc.
-  /// For example you can write:
-  ///\code
-  /// for(auto u: pathNodes(g,p))
-  ///   doSomething(u);
-  ///\endcode
-  template<typename Path>
-  LemonRangeWrapper2<PathNodeIt<Path>, typename Path::Digraph, Path>
-      pathNodes(const typename Path::Digraph &g, const Path &p) {
-    return
-        LemonRangeWrapper2<PathNodeIt<Path>, typename Path::Digraph, Path>(g,p);
-  }
 
   ///@}
 

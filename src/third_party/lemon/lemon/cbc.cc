@@ -111,11 +111,11 @@ namespace lemon {
   }
 
   void CbcMip::_eraseColId(int i) {
-    _cols.eraseIndex(i);
+    cols.eraseIndex(i);
   }
 
   void CbcMip::_eraseRowId(int i) {
-    _rows.eraseIndex(i);
+    rows.eraseIndex(i);
   }
 
   void CbcMip::_getColName(int c, std::string& name) const {

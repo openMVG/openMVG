@@ -181,7 +181,7 @@ namespace lemon {
     //Indicates if _processed is locally allocated (true) or not.
     bool local_processed;
 
-    std::vector<typename Digraph::Arc> _stack;
+    std::vector<typename Digraph::OutArcIt> _stack;
     int _stack_head;
 
     //Creates the maps if necessary.
@@ -457,8 +457,7 @@ namespace lemon {
         {
           _reached->set(s,true);
           _pred->set(s,INVALID);
-          Arc e;
-          G->firstOut(e,s);
+          OutArcIt e(*G,s);
           if(e!=INVALID) {
             _stack[++_stack_head]=e;
             _dist->set(s,_stack_head);
@@ -485,19 +484,19 @@ namespace lemon {
         _pred->set(m,e);
         _reached->set(m,true);
         ++_stack_head;
-        G->firstOut(_stack[_stack_head],m);
+        _stack[_stack_head] = OutArcIt(*G, m);
         _dist->set(m,_stack_head);
       }
       else {
         m=G->source(e);
-        G->nextOut(_stack[_stack_head]);
+        ++_stack[_stack_head];
       }
       while(_stack_head>=0 && _stack[_stack_head]==INVALID) {
         _processed->set(m,true);
         --_stack_head;
         if(_stack_head>=0) {
           m=G->source(_stack[_stack_head]);
-          G->nextOut(_stack[_stack_head]);
+          ++_stack[_stack_head];
         }
       }
       return e;
@@ -511,7 +510,7 @@ namespace lemon {
     ///is empty.
     OutArcIt nextArc() const
     {
-      return OutArcIt(*G,_stack_head>=0?_stack[_stack_head]:INVALID);
+      return _stack_head>=0?_stack[_stack_head]:INVALID;
     }
 
     ///Returns \c false if there are nodes to be processed.
@@ -1319,7 +1318,7 @@ namespace lemon {
     template <class T>
     struct SetReachedMapTraits : public Traits {
       typedef T ReachedMap;
-      static ReachedMap *createReachedMap(const Digraph &) {
+      static ReachedMap *createReachedMap(const Digraph &digraph) {
         LEMON_ASSERT(false, "ReachedMap is not initialized");
         return 0; // ignore warnings
       }

@@ -256,7 +256,7 @@ namespace lemon {
     int _root;
 
     // Parameters of the problem
-    bool _has_lower;
+    bool _have_lower;
     Value _sum_supply;
     int _sup_node_num;
 
@@ -372,9 +372,10 @@ namespace lemon {
     /// \return <tt>(*this)</tt>
     template <typename LowerMap>
     CostScaling& lowerMap(const LowerMap& map) {
-      _has_lower = true;
+      _have_lower = true;
       for (ArcIt a(_graph); a != INVALID; ++a) {
         _lower[_arc_idf[a]] = map[a];
+        _lower[_arc_idb[a]] = map[a];
       }
       return *this;
     }
@@ -567,7 +568,7 @@ namespace lemon {
         _scost[j] = 0;
         _scost[_reverse[j]] = 0;
       }
-      _has_lower = false;
+      _have_lower = false;
       return *this;
     }
 
@@ -779,7 +780,7 @@ namespace lemon {
       // Remove infinite upper bounds and check negative arcs
       const Value MAX = std::numeric_limits<Value>::max();
       int last_out;
-      if (_has_lower) {
+      if (_have_lower) {
         for (int i = 0; i != _root; ++i) {
           last_out = _first_out[i+1];
           for (int j = _first_out[i]; j != last_out; ++j) {
@@ -836,7 +837,7 @@ namespace lemon {
       for (NodeIt n(_graph); n != INVALID; ++n) {
         sup[n] = _supply[_node_id[n]];
       }
-      if (_has_lower) {
+      if (_have_lower) {
         for (ArcIt a(_graph); a != INVALID; ++a) {
           int j = _arc_idf[a];
           Value c = _lower[j];
@@ -906,11 +907,11 @@ namespace lemon {
       return OPTIMAL;
     }
 
-    // Check if the upper bound is greater than or equal to the lower bound
-    // on each forward arc.
+    // Check if the upper bound is greater or equal to the lower bound
+    // on each arc.
     bool checkBoundMaps() {
       for (int j = 0; j != _res_arc_num; ++j) {
-        if (_forward[j] && _upper[j] < _lower[j]) return false;
+        if (_upper[j] < _lower[j]) return false;
       }
       return true;
     }
@@ -990,10 +991,10 @@ namespace lemon {
       }
 
       // Handle non-zero lower bounds
-      if (_has_lower) {
+      if (_have_lower) {
         int limit = _first_out[_root];
         for (int j = 0; j != limit; ++j) {
-          if (_forward[j]) _res_cap[_reverse[j]] += _lower[j];
+          if (!_forward[j]) _res_cap[j] += _lower[j];
         }
       }
     }

@@ -82,13 +82,14 @@ namespace lemon {
     //
     // Graph initialized map constructor.
     explicit ArrayMap(const GraphType& graph) {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Parent::attach(graph.notifier(Item()));
       allocate_memory();
       Notifier* nf = Parent::notifier();
       Item it;
       for (nf->first(it); it != INVALID; nf->next(it)) {
         int id = nf->id(it);;
-        allocator.construct(&(values[id]), Value());
+        Allocator_traits_t::construct(allocator, &(values[id]), Value());
       }
     }
 
@@ -96,13 +97,14 @@ namespace lemon {
     //
     // It constructs a map and initialize all of the the map.
     ArrayMap(const GraphType& graph, const Value& value) {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Parent::attach(graph.notifier(Item()));
       allocate_memory();
       Notifier* nf = Parent::notifier();
       Item it;
       for (nf->first(it); it != INVALID; nf->next(it)) {
         int id = nf->id(it);;
-        allocator.construct(&(values[id]), value);
+        Allocator_traits_t::construct(allocator, &(values[id]), value);
       }
     }
 
@@ -111,6 +113,7 @@ namespace lemon {
     //
     // Constructor to copy a map of the same map type.
     ArrayMap(const ArrayMap& copy) : Parent() {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       if (copy.attached()) {
         attach(*copy.notifier());
       }
@@ -121,7 +124,7 @@ namespace lemon {
       Item it;
       for (nf->first(it); it != INVALID; nf->next(it)) {
         int id = nf->id(it);;
-        allocator.construct(&(values[id]), copy.values[id]);
+        Allocator_traits_t::construct(allocator, &(values[id]), copy.values[id]);
       }
     }
 
@@ -206,6 +209,7 @@ namespace lemon {
     // It adds a new key to the map. It is called by the observer notifier
     // and it overrides the add() member function of the observer base.
     virtual void add(const Key& key) {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Notifier* nf = Parent::notifier();
       int id = nf->id(key);
       if (id >= capacity) {
@@ -218,22 +222,23 @@ namespace lemon {
         for (nf->first(it); it != INVALID; nf->next(it)) {
           int jd = nf->id(it);;
           if (id != jd) {
-            allocator.construct(&(new_values[jd]), values[jd]);
-            allocator.destroy(&(values[jd]));
+            Allocator_traits_t::construct(allocator, &(new_values[jd]), values[jd]);
+            Allocator_traits_t::destroy(allocator, &(values[jd]));
           }
         }
         if (capacity != 0) allocator.deallocate(values, capacity);
         values = new_values;
         capacity = new_capacity;
       }
-      allocator.construct(&(values[id]), Value());
+      Allocator_traits_t::construct(allocator, &(values[id]), Value());
     }
 
     // \brief Adds more new keys to the map.
     //
     // It adds more new keys to the map. It is called by the observer notifier
     // and it overrides the add() member function of the observer base.
-    virtual void add(const std::vector<Key>& keys) {
+    virtual void add(const std::vector<Key>& keys) {\
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Notifier* nf = Parent::notifier();
       int max_id = -1;
       for (int i = 0; i < int(keys.size()); ++i) {
@@ -260,8 +265,8 @@ namespace lemon {
             }
           }
           if (found) continue;
-          allocator.construct(&(new_values[id]), values[id]);
-          allocator.destroy(&(values[id]));
+          Allocator_traits_t::construct(allocator, &(new_values[id]), values[id]);
+          Allocator_traits_t::destroy(allocator, &(values[id]));
         }
         if (capacity != 0) allocator.deallocate(values, capacity);
         values = new_values;
@@ -269,7 +274,7 @@ namespace lemon {
       }
       for (int i = 0; i < int(keys.size()); ++i) {
         int id = nf->id(keys[i]);
-        allocator.construct(&(values[id]), Value());
+         Allocator_traits_t::construct(allocator, &(values[id]), Value());
       }
     }
 
@@ -278,8 +283,9 @@ namespace lemon {
     // Erase a key from the map. It is called by the observer notifier
     // and it overrides the erase() member function of the observer base.
     virtual void erase(const Key& key) {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       int id = Parent::notifier()->id(key);
-      allocator.destroy(&(values[id]));
+      Allocator_traits_t::destroy(allocator, &(values[id]));
     }
 
     // \brief Erase more keys from the map.
@@ -287,9 +293,10 @@ namespace lemon {
     // Erase more keys from the map. It is called by the observer notifier
     // and it overrides the erase() member function of the observer base.
     virtual void erase(const std::vector<Key>& keys) {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       for (int i = 0; i < int(keys.size()); ++i) {
         int id = Parent::notifier()->id(keys[i]);
-        allocator.destroy(&(values[id]));
+        Allocator_traits_t::destroy(allocator, &(values[id]));
       }
     }
 
@@ -298,12 +305,13 @@ namespace lemon {
     // It builds the map. It is called by the observer notifier
     // and it overrides the build() member function of the observer base.
     virtual void build() {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Notifier* nf = Parent::notifier();
       allocate_memory();
       Item it;
       for (nf->first(it); it != INVALID; nf->next(it)) {
         int id = nf->id(it);;
-        allocator.construct(&(values[id]), Value());
+        Allocator_traits_t::construct(allocator, &(values[id]), Value());
       }
     }
 
@@ -312,14 +320,16 @@ namespace lemon {
     // It erase all items from the map. It is called by the observer notifier
     // and it overrides the clear() member function of the observer base.
     virtual void clear() {
+      using Allocator_traits_t = std::allocator_traits<decltype(allocator)>;
       Notifier* nf = Parent::notifier();
       if (capacity != 0) {
         Item it;
         for (nf->first(it); it != INVALID; nf->next(it)) {
           int id = nf->id(it);
-          allocator.destroy(&(values[id]));
+          Allocator_traits_t::destroy(allocator, &(values[id]));
+
         }
-        allocator.deallocate(values, capacity);
+        Allocator_traits_t::deallocate(allocator, values, capacity);
         capacity = 0;
       }
     }

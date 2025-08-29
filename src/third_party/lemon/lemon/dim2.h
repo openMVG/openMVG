@@ -20,7 +20,6 @@
 #define LEMON_DIM2_H
 
 #include <iostream>
-#include <algorithm>
 
 ///\ingroup geomdat
 ///\file
@@ -54,7 +53,7 @@ namespace lemon {
       T y;
 
       ///Default constructor
-      Point() : x(), y() {}
+      Point() {}
 
       ///Construct an instance from coordinates
       Point(T a, T b) : x(a), y(b) { }

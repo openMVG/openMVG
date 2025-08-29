@@ -48,13 +48,13 @@ namespace lemon {
       int next_in, next_out;
     };
 
-    std::vector<NodeT> _nodes;
+    std::vector<NodeT> nodes;
 
     int first_node;
 
     int first_free_node;
 
-    std::vector<ArcT> _arcs;
+    std::vector<ArcT> arcs;
 
     int first_free_arc;
 
@@ -97,15 +97,15 @@ namespace lemon {
 
 
     ListDigraphBase()
-      : _nodes(), first_node(-1),
-        first_free_node(-1), _arcs(), first_free_arc(-1) {}
+      : nodes(), first_node(-1),
+        first_free_node(-1), arcs(), first_free_arc(-1) {}
 
 
-    int maxNodeId() const { return _nodes.size()-1; }
-    int maxArcId() const { return _arcs.size()-1; }
+    int maxNodeId() const { return nodes.size()-1; }
+    int maxArcId() const { return arcs.size()-1; }
 
-    Node source(Arc e) const { return Node(_arcs[e.id].source); }
-    Node target(Arc e) const { return Node(_arcs[e.id].target); }
+    Node source(Arc e) const { return Node(arcs[e.id].source); }
+    Node target(Arc e) const { return Node(arcs[e.id].target); }
 
 
     void first(Node& node) const {
@@ -113,42 +113,42 @@ namespace lemon {
     }
 
     void next(Node& node) const {
-      node.id = _nodes[node.id].next;
+      node.id = nodes[node.id].next;
     }
 
 
     void first(Arc& arc) const {
       int n;
       for(n = first_node;
-          n != -1 && _nodes[n].first_out == -1;
-          n = _nodes[n].next) {}
-      arc.id = (n == -1) ? -1 : _nodes[n].first_out;
+          n != -1 && nodes[n].first_out == -1;
+          n = nodes[n].next) {}
+      arc.id = (n == -1) ? -1 : nodes[n].first_out;
     }
 
     void next(Arc& arc) const {
-      if (_arcs[arc.id].next_out != -1) {
-        arc.id = _arcs[arc.id].next_out;
+      if (arcs[arc.id].next_out != -1) {
+        arc.id = arcs[arc.id].next_out;
       } else {
         int n;
-        for(n = _nodes[_arcs[arc.id].source].next;
-            n != -1 && _nodes[n].first_out == -1;
-            n = _nodes[n].next) {}
-        arc.id = (n == -1) ? -1 : _nodes[n].first_out;
+        for(n = nodes[arcs[arc.id].source].next;
+            n != -1 && nodes[n].first_out == -1;
+            n = nodes[n].next) {}
+        arc.id = (n == -1) ? -1 : nodes[n].first_out;
       }
     }
 
     void firstOut(Arc &e, const Node& v) const {
-      e.id = _nodes[v.id].first_out;
+      e.id = nodes[v.id].first_out;
     }
     void nextOut(Arc &e) const {
-      e.id=_arcs[e.id].next_out;
+      e.id=arcs[e.id].next_out;
     }
 
     void firstIn(Arc &e, const Node& v) const {
-      e.id = _nodes[v.id].first_in;
+      e.id = nodes[v.id].first_in;
     }
     void nextIn(Arc &e) const {
-      e.id=_arcs[e.id].next_in;
+      e.id=arcs[e.id].next_in;
     }
 
 
@@ -159,32 +159,32 @@ namespace lemon {
     static Arc arcFromId(int id) { return Arc(id);}
 
     bool valid(Node n) const {
-      return n.id >= 0 && n.id < static_cast<int>(_nodes.size()) &&
-        _nodes[n.id].prev != -2;
+      return n.id >= 0 && n.id < static_cast<int>(nodes.size()) &&
+        nodes[n.id].prev != -2;
     }
 
     bool valid(Arc a) const {
-      return a.id >= 0 && a.id < static_cast<int>(_arcs.size()) &&
-        _arcs[a.id].prev_in != -2;
+      return a.id >= 0 && a.id < static_cast<int>(arcs.size()) &&
+        arcs[a.id].prev_in != -2;
     }
 
     Node addNode() {
       int n;
 
       if(first_free_node==-1) {
-        n = _nodes.size();
-        _nodes.push_back(NodeT());
+        n = nodes.size();
+        nodes.push_back(NodeT());
       } else {
         n = first_free_node;
-        first_free_node = _nodes[n].next;
+        first_free_node = nodes[n].next;
       }
 
-      _nodes[n].next = first_node;
-      if(first_node != -1) _nodes[first_node].prev = n;
+      nodes[n].next = first_node;
+      if(first_node != -1) nodes[first_node].prev = n;
       first_node = n;
-      _nodes[n].prev = -1;
+      nodes[n].prev = -1;
 
-      _nodes[n].first_in = _nodes[n].first_out = -1;
+      nodes[n].first_in = nodes[n].first_out = -1;
 
       return Node(n);
     }
@@ -193,29 +193,29 @@ namespace lemon {
       int n;
 
       if (first_free_arc == -1) {
-        n = _arcs.size();
-        _arcs.push_back(ArcT());
+        n = arcs.size();
+        arcs.push_back(ArcT());
       } else {
         n = first_free_arc;
-        first_free_arc = _arcs[n].next_in;
+        first_free_arc = arcs[n].next_in;
       }
 
-      _arcs[n].source = u.id;
-      _arcs[n].target = v.id;
+      arcs[n].source = u.id;
+      arcs[n].target = v.id;
 
-      _arcs[n].next_out = _nodes[u.id].first_out;
-      if(_nodes[u.id].first_out != -1) {
-        _arcs[_nodes[u.id].first_out].prev_out = n;
+      arcs[n].next_out = nodes[u.id].first_out;
+      if(nodes[u.id].first_out != -1) {
+        arcs[nodes[u.id].first_out].prev_out = n;
       }
 
-      _arcs[n].next_in = _nodes[v.id].first_in;
-      if(_nodes[v.id].first_in != -1) {
-        _arcs[_nodes[v.id].first_in].prev_in = n;
+      arcs[n].next_in = nodes[v.id].first_in;
+      if(nodes[v.id].first_in != -1) {
+        arcs[nodes[v.id].first_in].prev_in = n;
       }
 
-      _arcs[n].prev_in = _arcs[n].prev_out = -1;
+      arcs[n].prev_in = arcs[n].prev_out = -1;
 
-      _nodes[u.id].first_out = _nodes[v.id].first_in = n;
+      nodes[u.id].first_out = nodes[v.id].first_in = n;
 
       return Arc(n);
     }
@@ -223,87 +223,87 @@ namespace lemon {
     void erase(const Node& node) {
       int n = node.id;
 
-      if(_nodes[n].next != -1) {
-        _nodes[_nodes[n].next].prev = _nodes[n].prev;
+      if(nodes[n].next != -1) {
+        nodes[nodes[n].next].prev = nodes[n].prev;
       }
 
-      if(_nodes[n].prev != -1) {
-        _nodes[_nodes[n].prev].next = _nodes[n].next;
+      if(nodes[n].prev != -1) {
+        nodes[nodes[n].prev].next = nodes[n].next;
       } else {
-        first_node = _nodes[n].next;
+        first_node = nodes[n].next;
       }
 
-      _nodes[n].next = first_free_node;
+      nodes[n].next = first_free_node;
       first_free_node = n;
-      _nodes[n].prev = -2;
+      nodes[n].prev = -2;
 
     }
 
     void erase(const Arc& arc) {
       int n = arc.id;
 
-      if(_arcs[n].next_in!=-1) {
-        _arcs[_arcs[n].next_in].prev_in = _arcs[n].prev_in;
+      if(arcs[n].next_in!=-1) {
+        arcs[arcs[n].next_in].prev_in = arcs[n].prev_in;
       }
 
-      if(_arcs[n].prev_in!=-1) {
-        _arcs[_arcs[n].prev_in].next_in = _arcs[n].next_in;
+      if(arcs[n].prev_in!=-1) {
+        arcs[arcs[n].prev_in].next_in = arcs[n].next_in;
       } else {
-        _nodes[_arcs[n].target].first_in = _arcs[n].next_in;
+        nodes[arcs[n].target].first_in = arcs[n].next_in;
       }
 
 
-      if(_arcs[n].next_out!=-1) {
-        _arcs[_arcs[n].next_out].prev_out = _arcs[n].prev_out;
+      if(arcs[n].next_out!=-1) {
+        arcs[arcs[n].next_out].prev_out = arcs[n].prev_out;
       }
 
-      if(_arcs[n].prev_out!=-1) {
-        _arcs[_arcs[n].prev_out].next_out = _arcs[n].next_out;
+      if(arcs[n].prev_out!=-1) {
+        arcs[arcs[n].prev_out].next_out = arcs[n].next_out;
       } else {
-        _nodes[_arcs[n].source].first_out = _arcs[n].next_out;
+        nodes[arcs[n].source].first_out = arcs[n].next_out;
       }
 
-      _arcs[n].next_in = first_free_arc;
+      arcs[n].next_in = first_free_arc;
       first_free_arc = n;
-      _arcs[n].prev_in = -2;
+      arcs[n].prev_in = -2;
     }
 
     void clear() {
-      _arcs.clear();
-      _nodes.clear();
+      arcs.clear();
+      nodes.clear();
       first_node = first_free_node = first_free_arc = -1;
     }
 
   protected:
     void changeTarget(Arc e, Node n)
     {
-      if(_arcs[e.id].next_in != -1)
-        _arcs[_arcs[e.id].next_in].prev_in = _arcs[e.id].prev_in;
-      if(_arcs[e.id].prev_in != -1)
-        _arcs[_arcs[e.id].prev_in].next_in = _arcs[e.id].next_in;
-      else _nodes[_arcs[e.id].target].first_in = _arcs[e.id].next_in;
-      if (_nodes[n.id].first_in != -1) {
-        _arcs[_nodes[n.id].first_in].prev_in = e.id;
+      if(arcs[e.id].next_in != -1)
+        arcs[arcs[e.id].next_in].prev_in = arcs[e.id].prev_in;
+      if(arcs[e.id].prev_in != -1)
+        arcs[arcs[e.id].prev_in].next_in = arcs[e.id].next_in;
+      else nodes[arcs[e.id].target].first_in = arcs[e.id].next_in;
+      if (nodes[n.id].first_in != -1) {
+        arcs[nodes[n.id].first_in].prev_in = e.id;
       }
-      _arcs[e.id].target = n.id;
-      _arcs[e.id].prev_in = -1;
-      _arcs[e.id].next_in = _nodes[n.id].first_in;
-      _nodes[n.id].first_in = e.id;
+      arcs[e.id].target = n.id;
+      arcs[e.id].prev_in = -1;
+      arcs[e.id].next_in = nodes[n.id].first_in;
+      nodes[n.id].first_in = e.id;
     }
     void changeSource(Arc e, Node n)
     {
-      if(_arcs[e.id].next_out != -1)
-        _arcs[_arcs[e.id].next_out].prev_out = _arcs[e.id].prev_out;
-      if(_arcs[e.id].prev_out != -1)
-        _arcs[_arcs[e.id].prev_out].next_out = _arcs[e.id].next_out;
-      else _nodes[_arcs[e.id].source].first_out = _arcs[e.id].next_out;
-      if (_nodes[n.id].first_out != -1) {
-        _arcs[_nodes[n.id].first_out].prev_out = e.id;
+      if(arcs[e.id].next_out != -1)
+        arcs[arcs[e.id].next_out].prev_out = arcs[e.id].prev_out;
+      if(arcs[e.id].prev_out != -1)
+        arcs[arcs[e.id].prev_out].next_out = arcs[e.id].next_out;
+      else nodes[arcs[e.id].source].first_out = arcs[e.id].next_out;
+      if (nodes[n.id].first_out != -1) {
+        arcs[nodes[n.id].first_out].prev_out = e.id;
       }
-      _arcs[e.id].source = n.id;
-      _arcs[e.id].prev_out = -1;
-      _arcs[e.id].next_out = _nodes[n.id].first_out;
-      _nodes[n.id].first_out = e.id;
+      arcs[e.id].source = n.id;
+      arcs[e.id].prev_out = -1;
+      arcs[e.id].next_out = nodes[n.id].first_out;
+      nodes[n.id].first_out = e.id;
     }
 
   };
@@ -486,10 +486,10 @@ namespace lemon {
     ///Snapshot feature.
     Node split(Node n, bool connect = true) {
       Node b = addNode();
-      _nodes[b.id].first_out=_nodes[n.id].first_out;
-      _nodes[n.id].first_out=-1;
-      for(int i=_nodes[b.id].first_out; i!=-1; i=_arcs[i].next_out) {
-        _arcs[i].source=b.id;
+      nodes[b.id].first_out=nodes[n.id].first_out;
+      nodes[n.id].first_out=-1;
+      for(int i=nodes[b.id].first_out; i!=-1; i=arcs[i].next_out) {
+        arcs[i].source=b.id;
       }
       if (connect) addArc(n,b);
       return b;
@@ -532,7 +532,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the digraph.
     /// \sa reserveArc()
-    void reserveNode(int n) { _nodes.reserve(n); };
+    void reserveNode(int n) { nodes.reserve(n); };
 
     /// Reserve memory for arcs.
 
@@ -542,7 +542,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the digraph.
     /// \sa reserveNode()
-    void reserveArc(int m) { _arcs.reserve(m); };
+    void reserveArc(int m) { arcs.reserve(m); };
 
     /// \brief Class to make a snapshot of the digraph and restore
     /// it later.
@@ -803,13 +803,13 @@ namespace lemon {
       int prev_out, next_out;
     };
 
-    std::vector<NodeT> _nodes;
+    std::vector<NodeT> nodes;
 
     int first_node;
 
     int first_free_node;
 
-    std::vector<ArcT> _arcs;
+    std::vector<ArcT> arcs;
 
     int first_free_arc;
 
@@ -867,19 +867,19 @@ namespace lemon {
     };
 
     ListGraphBase()
-      : _nodes(), first_node(-1),
-        first_free_node(-1), _arcs(), first_free_arc(-1) {}
+      : nodes(), first_node(-1),
+        first_free_node(-1), arcs(), first_free_arc(-1) {}
 
 
-    int maxNodeId() const { return _nodes.size()-1; }
-    int maxEdgeId() const { return _arcs.size() / 2 - 1; }
-    int maxArcId() const { return _arcs.size()-1; }
+    int maxNodeId() const { return nodes.size()-1; }
+    int maxEdgeId() const { return arcs.size() / 2 - 1; }
+    int maxArcId() const { return arcs.size()-1; }
 
-    Node source(Arc e) const { return Node(_arcs[e.id ^ 1].target); }
-    Node target(Arc e) const { return Node(_arcs[e.id].target); }
+    Node source(Arc e) const { return Node(arcs[e.id ^ 1].target); }
+    Node target(Arc e) const { return Node(arcs[e.id].target); }
 
-    Node u(Edge e) const { return Node(_arcs[2 * e.id].target); }
-    Node v(Edge e) const { return Node(_arcs[2 * e.id + 1].target); }
+    Node u(Edge e) const { return Node(arcs[2 * e.id].target); }
+    Node v(Edge e) const { return Node(arcs[2 * e.id + 1].target); }
 
     static bool direction(Arc e) {
       return (e.id & 1) == 1;
@@ -894,88 +894,88 @@ namespace lemon {
     }
 
     void next(Node& node) const {
-      node.id = _nodes[node.id].next;
+      node.id = nodes[node.id].next;
     }
 
     void first(Arc& e) const {
       int n = first_node;
-      while (n != -1 && _nodes[n].first_out == -1) {
-        n = _nodes[n].next;
+      while (n != -1 && nodes[n].first_out == -1) {
+        n = nodes[n].next;
       }
-      e.id = (n == -1) ? -1 : _nodes[n].first_out;
+      e.id = (n == -1) ? -1 : nodes[n].first_out;
     }
 
     void next(Arc& e) const {
-      if (_arcs[e.id].next_out != -1) {
-        e.id = _arcs[e.id].next_out;
+      if (arcs[e.id].next_out != -1) {
+        e.id = arcs[e.id].next_out;
       } else {
-        int n = _nodes[_arcs[e.id ^ 1].target].next;
-        while(n != -1 && _nodes[n].first_out == -1) {
-          n = _nodes[n].next;
+        int n = nodes[arcs[e.id ^ 1].target].next;
+        while(n != -1 && nodes[n].first_out == -1) {
+          n = nodes[n].next;
         }
-        e.id = (n == -1) ? -1 : _nodes[n].first_out;
+        e.id = (n == -1) ? -1 : nodes[n].first_out;
       }
     }
 
     void first(Edge& e) const {
       int n = first_node;
       while (n != -1) {
-        e.id = _nodes[n].first_out;
+        e.id = nodes[n].first_out;
         while ((e.id & 1) != 1) {
-          e.id = _arcs[e.id].next_out;
+          e.id = arcs[e.id].next_out;
         }
         if (e.id != -1) {
           e.id /= 2;
           return;
         }
-        n = _nodes[n].next;
+        n = nodes[n].next;
       }
       e.id = -1;
     }
 
     void next(Edge& e) const {
-      int n = _arcs[e.id * 2].target;
-      e.id = _arcs[(e.id * 2) | 1].next_out;
+      int n = arcs[e.id * 2].target;
+      e.id = arcs[(e.id * 2) | 1].next_out;
       while ((e.id & 1) != 1) {
-        e.id = _arcs[e.id].next_out;
+        e.id = arcs[e.id].next_out;
       }
       if (e.id != -1) {
         e.id /= 2;
         return;
       }
-      n = _nodes[n].next;
+      n = nodes[n].next;
       while (n != -1) {
-        e.id = _nodes[n].first_out;
+        e.id = nodes[n].first_out;
         while ((e.id & 1) != 1) {
-          e.id = _arcs[e.id].next_out;
+          e.id = arcs[e.id].next_out;
         }
         if (e.id != -1) {
           e.id /= 2;
           return;
         }
-        n = _nodes[n].next;
+        n = nodes[n].next;
       }
       e.id = -1;
     }
 
     void firstOut(Arc &e, const Node& v) const {
-      e.id = _nodes[v.id].first_out;
+      e.id = nodes[v.id].first_out;
     }
     void nextOut(Arc &e) const {
-      e.id = _arcs[e.id].next_out;
+      e.id = arcs[e.id].next_out;
     }
 
     void firstIn(Arc &e, const Node& v) const {
-      e.id = ((_nodes[v.id].first_out) ^ 1);
+      e.id = ((nodes[v.id].first_out) ^ 1);
       if (e.id == -2) e.id = -1;
     }
     void nextIn(Arc &e) const {
-      e.id = ((_arcs[e.id ^ 1].next_out) ^ 1);
+      e.id = ((arcs[e.id ^ 1].next_out) ^ 1);
       if (e.id == -2) e.id = -1;
     }
 
     void firstInc(Edge &e, bool& d, const Node& v) const {
-      int a = _nodes[v.id].first_out;
+      int a = nodes[v.id].first_out;
       if (a != -1 ) {
         e.id = a / 2;
         d = ((a & 1) == 1);
@@ -985,7 +985,7 @@ namespace lemon {
       }
     }
     void nextInc(Edge &e, bool& d) const {
-      int a = (_arcs[(e.id * 2) | (d ? 1 : 0)].next_out);
+      int a = (arcs[(e.id * 2) | (d ? 1 : 0)].next_out);
       if (a != -1 ) {
         e.id = a / 2;
         d = ((a & 1) == 1);
@@ -1004,37 +1004,37 @@ namespace lemon {
     static Edge edgeFromId(int id) { return Edge(id);}
 
     bool valid(Node n) const {
-      return n.id >= 0 && n.id < static_cast<int>(_nodes.size()) &&
-        _nodes[n.id].prev != -2;
+      return n.id >= 0 && n.id < static_cast<int>(nodes.size()) &&
+        nodes[n.id].prev != -2;
     }
 
     bool valid(Arc a) const {
-      return a.id >= 0 && a.id < static_cast<int>(_arcs.size()) &&
-        _arcs[a.id].prev_out != -2;
+      return a.id >= 0 && a.id < static_cast<int>(arcs.size()) &&
+        arcs[a.id].prev_out != -2;
     }
 
     bool valid(Edge e) const {
-      return e.id >= 0 && 2 * e.id < static_cast<int>(_arcs.size()) &&
-        _arcs[2 * e.id].prev_out != -2;
+      return e.id >= 0 && 2 * e.id < static_cast<int>(arcs.size()) &&
+        arcs[2 * e.id].prev_out != -2;
     }
 
     Node addNode() {
       int n;
 
       if(first_free_node==-1) {
-        n = _nodes.size();
-        _nodes.push_back(NodeT());
+        n = nodes.size();
+        nodes.push_back(NodeT());
       } else {
         n = first_free_node;
-        first_free_node = _nodes[n].next;
+        first_free_node = nodes[n].next;
       }
 
-      _nodes[n].next = first_node;
-      if (first_node != -1) _nodes[first_node].prev = n;
+      nodes[n].next = first_node;
+      if (first_node != -1) nodes[first_node].prev = n;
       first_node = n;
-      _nodes[n].prev = -1;
+      nodes[n].prev = -1;
 
-      _nodes[n].first_out = -1;
+      nodes[n].first_out = -1;
 
       return Node(n);
     }
@@ -1043,30 +1043,30 @@ namespace lemon {
       int n;
 
       if (first_free_arc == -1) {
-        n = _arcs.size();
-        _arcs.push_back(ArcT());
-        _arcs.push_back(ArcT());
+        n = arcs.size();
+        arcs.push_back(ArcT());
+        arcs.push_back(ArcT());
       } else {
         n = first_free_arc;
-        first_free_arc = _arcs[n].next_out;
+        first_free_arc = arcs[n].next_out;
       }
 
-      _arcs[n].target = u.id;
-      _arcs[n | 1].target = v.id;
+      arcs[n].target = u.id;
+      arcs[n | 1].target = v.id;
 
-      _arcs[n].next_out = _nodes[v.id].first_out;
-      if (_nodes[v.id].first_out != -1) {
-        _arcs[_nodes[v.id].first_out].prev_out = n;
+      arcs[n].next_out = nodes[v.id].first_out;
+      if (nodes[v.id].first_out != -1) {
+        arcs[nodes[v.id].first_out].prev_out = n;
       }
-      _arcs[n].prev_out = -1;
-      _nodes[v.id].first_out = n;
+      arcs[n].prev_out = -1;
+      nodes[v.id].first_out = n;
 
-      _arcs[n | 1].next_out = _nodes[u.id].first_out;
-      if (_nodes[u.id].first_out != -1) {
-        _arcs[_nodes[u.id].first_out].prev_out = (n | 1);
+      arcs[n | 1].next_out = nodes[u.id].first_out;
+      if (nodes[u.id].first_out != -1) {
+        arcs[nodes[u.id].first_out].prev_out = (n | 1);
       }
-      _arcs[n | 1].prev_out = -1;
-      _nodes[u.id].first_out = (n | 1);
+      arcs[n | 1].prev_out = -1;
+      nodes[u.id].first_out = (n | 1);
 
       return Edge(n / 2);
     }
@@ -1074,100 +1074,100 @@ namespace lemon {
     void erase(const Node& node) {
       int n = node.id;
 
-      if(_nodes[n].next != -1) {
-        _nodes[_nodes[n].next].prev = _nodes[n].prev;
+      if(nodes[n].next != -1) {
+        nodes[nodes[n].next].prev = nodes[n].prev;
       }
 
-      if(_nodes[n].prev != -1) {
-        _nodes[_nodes[n].prev].next = _nodes[n].next;
+      if(nodes[n].prev != -1) {
+        nodes[nodes[n].prev].next = nodes[n].next;
       } else {
-        first_node = _nodes[n].next;
+        first_node = nodes[n].next;
       }
 
-      _nodes[n].next = first_free_node;
+      nodes[n].next = first_free_node;
       first_free_node = n;
-      _nodes[n].prev = -2;
+      nodes[n].prev = -2;
     }
 
     void erase(const Edge& edge) {
       int n = edge.id * 2;
 
-      if (_arcs[n].next_out != -1) {
-        _arcs[_arcs[n].next_out].prev_out = _arcs[n].prev_out;
+      if (arcs[n].next_out != -1) {
+        arcs[arcs[n].next_out].prev_out = arcs[n].prev_out;
       }
 
-      if (_arcs[n].prev_out != -1) {
-        _arcs[_arcs[n].prev_out].next_out = _arcs[n].next_out;
+      if (arcs[n].prev_out != -1) {
+        arcs[arcs[n].prev_out].next_out = arcs[n].next_out;
       } else {
-        _nodes[_arcs[n | 1].target].first_out = _arcs[n].next_out;
+        nodes[arcs[n | 1].target].first_out = arcs[n].next_out;
       }
 
-      if (_arcs[n | 1].next_out != -1) {
-        _arcs[_arcs[n | 1].next_out].prev_out = _arcs[n | 1].prev_out;
+      if (arcs[n | 1].next_out != -1) {
+        arcs[arcs[n | 1].next_out].prev_out = arcs[n | 1].prev_out;
       }
 
-      if (_arcs[n | 1].prev_out != -1) {
-        _arcs[_arcs[n | 1].prev_out].next_out = _arcs[n | 1].next_out;
+      if (arcs[n | 1].prev_out != -1) {
+        arcs[arcs[n | 1].prev_out].next_out = arcs[n | 1].next_out;
       } else {
-        _nodes[_arcs[n].target].first_out = _arcs[n | 1].next_out;
+        nodes[arcs[n].target].first_out = arcs[n | 1].next_out;
       }
 
-      _arcs[n].next_out = first_free_arc;
+      arcs[n].next_out = first_free_arc;
       first_free_arc = n;
-      _arcs[n].prev_out = -2;
-      _arcs[n | 1].prev_out = -2;
+      arcs[n].prev_out = -2;
+      arcs[n | 1].prev_out = -2;
 
     }
 
     void clear() {
-      _arcs.clear();
-      _nodes.clear();
+      arcs.clear();
+      nodes.clear();
       first_node = first_free_node = first_free_arc = -1;
     }
 
   protected:
 
     void changeV(Edge e, Node n) {
-      if(_arcs[2 * e.id].next_out != -1) {
-        _arcs[_arcs[2 * e.id].next_out].prev_out = _arcs[2 * e.id].prev_out;
+      if(arcs[2 * e.id].next_out != -1) {
+        arcs[arcs[2 * e.id].next_out].prev_out = arcs[2 * e.id].prev_out;
       }
-      if(_arcs[2 * e.id].prev_out != -1) {
-        _arcs[_arcs[2 * e.id].prev_out].next_out =
-          _arcs[2 * e.id].next_out;
+      if(arcs[2 * e.id].prev_out != -1) {
+        arcs[arcs[2 * e.id].prev_out].next_out =
+          arcs[2 * e.id].next_out;
       } else {
-        _nodes[_arcs[(2 * e.id) | 1].target].first_out =
-          _arcs[2 * e.id].next_out;
+        nodes[arcs[(2 * e.id) | 1].target].first_out =
+          arcs[2 * e.id].next_out;
       }
 
-      if (_nodes[n.id].first_out != -1) {
-        _arcs[_nodes[n.id].first_out].prev_out = 2 * e.id;
+      if (nodes[n.id].first_out != -1) {
+        arcs[nodes[n.id].first_out].prev_out = 2 * e.id;
       }
-      _arcs[(2 * e.id) | 1].target = n.id;
-      _arcs[2 * e.id].prev_out = -1;
-      _arcs[2 * e.id].next_out = _nodes[n.id].first_out;
-      _nodes[n.id].first_out = 2 * e.id;
+      arcs[(2 * e.id) | 1].target = n.id;
+      arcs[2 * e.id].prev_out = -1;
+      arcs[2 * e.id].next_out = nodes[n.id].first_out;
+      nodes[n.id].first_out = 2 * e.id;
     }
 
     void changeU(Edge e, Node n) {
-      if(_arcs[(2 * e.id) | 1].next_out != -1) {
-        _arcs[_arcs[(2 * e.id) | 1].next_out].prev_out =
-          _arcs[(2 * e.id) | 1].prev_out;
+      if(arcs[(2 * e.id) | 1].next_out != -1) {
+        arcs[arcs[(2 * e.id) | 1].next_out].prev_out =
+          arcs[(2 * e.id) | 1].prev_out;
       }
-      if(_arcs[(2 * e.id) | 1].prev_out != -1) {
-        _arcs[_arcs[(2 * e.id) | 1].prev_out].next_out =
-          _arcs[(2 * e.id) | 1].next_out;
+      if(arcs[(2 * e.id) | 1].prev_out != -1) {
+        arcs[arcs[(2 * e.id) | 1].prev_out].next_out =
+          arcs[(2 * e.id) | 1].next_out;
       } else {
-        _nodes[_arcs[2 * e.id].target].first_out =
-          _arcs[(2 * e.id) | 1].next_out;
+        nodes[arcs[2 * e.id].target].first_out =
+          arcs[(2 * e.id) | 1].next_out;
       }
 
-      if (_nodes[n.id].first_out != -1) {
-        _arcs[_nodes[n.id].first_out].prev_out = ((2 * e.id) | 1);
+      if (nodes[n.id].first_out != -1) {
+        arcs[nodes[n.id].first_out].prev_out = ((2 * e.id) | 1);
       }
-      _arcs[2 * e.id].target = n.id;
-      _arcs[(2 * e.id) | 1].prev_out = -1;
-      _arcs[(2 * e.id) | 1].next_out = _nodes[n.id].first_out;
-      _nodes[n.id].first_out = ((2 * e.id) | 1);
+      arcs[2 * e.id].target = n.id;
+      arcs[(2 * e.id) | 1].prev_out = -1;
+      arcs[(2 * e.id) | 1].next_out = nodes[n.id].first_out;
+      nodes[n.id].first_out = ((2 * e.id) | 1);
     }
 
   };
@@ -1209,7 +1209,7 @@ namespace lemon {
     ///
     ListGraph() {}
 
-    typedef Parent::IncEdgeIt IncEdgeIt;
+    typedef Parent::OutArcIt IncEdgeIt;
 
     /// \brief Add a new node to the graph.
     ///
@@ -1344,7 +1344,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveEdge()
-    void reserveNode(int n) { _nodes.reserve(n); };
+    void reserveNode(int n) { nodes.reserve(n); };
 
     /// Reserve memory for edges.
 
@@ -1354,7 +1354,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveNode()
-    void reserveEdge(int m) { _arcs.reserve(2 * m); };
+    void reserveEdge(int m) { arcs.reserve(2 * m); };
 
     /// \brief Class to make a snapshot of the graph and restore
     /// it later.
@@ -1617,14 +1617,14 @@ namespace lemon {
       int prev_out, next_out;
     };
 
-    std::vector<NodeT> _nodes;
+    std::vector<NodeT> nodes;
 
     int first_node, first_red, first_blue;
     int max_red, max_blue;
 
     int first_free_red, first_free_blue;
 
-    std::vector<ArcT> _arcs;
+    std::vector<ArcT> arcs;
 
     int first_free_arc;
 
@@ -1657,7 +1657,6 @@ namespace lemon {
       RedNode() {}
       RedNode(const RedNode& node) : Node(node) {}
       RedNode(Invalid) : Node(INVALID){}
-      const RedNode& operator=(const RedNode& node) { Node::operator=(node); return *this;}
     };
 
     class BlueNode : public Node {
@@ -1670,7 +1669,6 @@ namespace lemon {
       BlueNode() {}
       BlueNode(const BlueNode& node) : Node(node) {}
       BlueNode(Invalid) : Node(INVALID){}
-      const BlueNode& operator=(const BlueNode& node) { Node::operator=(node); return *this;}
     };
 
     class Edge {
@@ -1708,33 +1706,33 @@ namespace lemon {
     };
 
     ListBpGraphBase()
-      : _nodes(), first_node(-1),
+      : nodes(), first_node(-1),
         first_red(-1), first_blue(-1),
         max_red(-1), max_blue(-1),
         first_free_red(-1), first_free_blue(-1),
-        _arcs(), first_free_arc(-1) {}
+        arcs(), first_free_arc(-1) {}
 
 
-    bool red(Node n) const { return _nodes[n.id].red; }
-    bool blue(Node n) const { return !_nodes[n.id].red; }
+    bool red(Node n) const { return nodes[n.id].red; }
+    bool blue(Node n) const { return !nodes[n.id].red; }
 
     static RedNode asRedNodeUnsafe(Node n) { return RedNode(n.id); }
     static BlueNode asBlueNodeUnsafe(Node n) { return BlueNode(n.id); }
 
-    int maxNodeId() const { return _nodes.size()-1; }
+    int maxNodeId() const { return nodes.size()-1; }
     int maxRedId() const { return max_red; }
     int maxBlueId() const { return max_blue; }
-    int maxEdgeId() const { return _arcs.size() / 2 - 1; }
-    int maxArcId() const { return _arcs.size()-1; }
+    int maxEdgeId() const { return arcs.size() / 2 - 1; }
+    int maxArcId() const { return arcs.size()-1; }
 
-    Node source(Arc e) const { return Node(_arcs[e.id ^ 1].target); }
-    Node target(Arc e) const { return Node(_arcs[e.id].target); }
+    Node source(Arc e) const { return Node(arcs[e.id ^ 1].target); }
+    Node target(Arc e) const { return Node(arcs[e.id].target); }
 
     RedNode redNode(Edge e) const {
-      return RedNode(_arcs[2 * e.id].target);
+      return RedNode(arcs[2 * e.id].target);
     }
     BlueNode blueNode(Edge e) const {
-      return BlueNode(_arcs[2 * e.id + 1].target);
+      return BlueNode(arcs[2 * e.id + 1].target);
     }
 
     static bool direction(Arc e) {
@@ -1750,7 +1748,7 @@ namespace lemon {
     }
 
     void next(Node& node) const {
-      node.id = _nodes[node.id].next;
+      node.id = nodes[node.id].next;
     }
 
     void first(RedNode& node) const {
@@ -1758,7 +1756,7 @@ namespace lemon {
     }
 
     void next(RedNode& node) const {
-      node.id = _nodes[node.id].partition_next;
+      node.id = nodes[node.id].partition_next;
     }
 
     void first(BlueNode& node) const {
@@ -1766,88 +1764,88 @@ namespace lemon {
     }
 
     void next(BlueNode& node) const {
-      node.id = _nodes[node.id].partition_next;
+      node.id = nodes[node.id].partition_next;
     }
 
     void first(Arc& e) const {
       int n = first_node;
-      while (n != -1 && _nodes[n].first_out == -1) {
-        n = _nodes[n].next;
+      while (n != -1 && nodes[n].first_out == -1) {
+        n = nodes[n].next;
       }
-      e.id = (n == -1) ? -1 : _nodes[n].first_out;
+      e.id = (n == -1) ? -1 : nodes[n].first_out;
     }
 
     void next(Arc& e) const {
-      if (_arcs[e.id].next_out != -1) {
-        e.id = _arcs[e.id].next_out;
+      if (arcs[e.id].next_out != -1) {
+        e.id = arcs[e.id].next_out;
       } else {
-        int n = _nodes[_arcs[e.id ^ 1].target].next;
-        while(n != -1 && _nodes[n].first_out == -1) {
-          n = _nodes[n].next;
+        int n = nodes[arcs[e.id ^ 1].target].next;
+        while(n != -1 && nodes[n].first_out == -1) {
+          n = nodes[n].next;
         }
-        e.id = (n == -1) ? -1 : _nodes[n].first_out;
+        e.id = (n == -1) ? -1 : nodes[n].first_out;
       }
     }
 
     void first(Edge& e) const {
       int n = first_node;
       while (n != -1) {
-        e.id = _nodes[n].first_out;
+        e.id = nodes[n].first_out;
         while ((e.id & 1) != 1) {
-          e.id = _arcs[e.id].next_out;
+          e.id = arcs[e.id].next_out;
         }
         if (e.id != -1) {
           e.id /= 2;
           return;
         }
-        n = _nodes[n].next;
+        n = nodes[n].next;
       }
       e.id = -1;
     }
 
     void next(Edge& e) const {
-      int n = _arcs[e.id * 2].target;
-      e.id = _arcs[(e.id * 2) | 1].next_out;
+      int n = arcs[e.id * 2].target;
+      e.id = arcs[(e.id * 2) | 1].next_out;
       while ((e.id & 1) != 1) {
-        e.id = _arcs[e.id].next_out;
+        e.id = arcs[e.id].next_out;
       }
       if (e.id != -1) {
         e.id /= 2;
         return;
       }
-      n = _nodes[n].next;
+      n = nodes[n].next;
       while (n != -1) {
-        e.id = _nodes[n].first_out;
+        e.id = nodes[n].first_out;
         while ((e.id & 1) != 1) {
-          e.id = _arcs[e.id].next_out;
+          e.id = arcs[e.id].next_out;
         }
         if (e.id != -1) {
           e.id /= 2;
           return;
         }
-        n = _nodes[n].next;
+        n = nodes[n].next;
       }
       e.id = -1;
     }
 
     void firstOut(Arc &e, const Node& v) const {
-      e.id = _nodes[v.id].first_out;
+      e.id = nodes[v.id].first_out;
     }
     void nextOut(Arc &e) const {
-      e.id = _arcs[e.id].next_out;
+      e.id = arcs[e.id].next_out;
     }
 
     void firstIn(Arc &e, const Node& v) const {
-      e.id = ((_nodes[v.id].first_out) ^ 1);
+      e.id = ((nodes[v.id].first_out) ^ 1);
       if (e.id == -2) e.id = -1;
     }
     void nextIn(Arc &e) const {
-      e.id = ((_arcs[e.id ^ 1].next_out) ^ 1);
+      e.id = ((arcs[e.id ^ 1].next_out) ^ 1);
       if (e.id == -2) e.id = -1;
     }
 
     void firstInc(Edge &e, bool& d, const Node& v) const {
-      int a = _nodes[v.id].first_out;
+      int a = nodes[v.id].first_out;
       if (a != -1 ) {
         e.id = a / 2;
         d = ((a & 1) == 1);
@@ -1857,7 +1855,7 @@ namespace lemon {
       }
     }
     void nextInc(Edge &e, bool& d) const {
-      int a = (_arcs[(e.id * 2) | (d ? 1 : 0)].next_out);
+      int a = (arcs[(e.id * 2) | (d ? 1 : 0)].next_out);
       if (a != -1 ) {
         e.id = a / 2;
         d = ((a & 1) == 1);
@@ -1868,8 +1866,8 @@ namespace lemon {
     }
 
     static int id(Node v) { return v.id; }
-    int id(RedNode v) const { return _nodes[v.id].partition_index; }
-    int id(BlueNode v) const { return _nodes[v.id].partition_index; }
+    int id(RedNode v) const { return nodes[v.id].partition_index; }
+    int id(BlueNode v) const { return nodes[v.id].partition_index; }
     static int id(Arc e) { return e.id; }
     static int id(Edge e) { return e.id; }
 
@@ -1878,44 +1876,44 @@ namespace lemon {
     static Edge edgeFromId(int id) { return Edge(id);}
 
     bool valid(Node n) const {
-      return n.id >= 0 && n.id < static_cast<int>(_nodes.size()) &&
-        _nodes[n.id].prev != -2;
+      return n.id >= 0 && n.id < static_cast<int>(nodes.size()) &&
+        nodes[n.id].prev != -2;
     }
 
     bool valid(Arc a) const {
-      return a.id >= 0 && a.id < static_cast<int>(_arcs.size()) &&
-        _arcs[a.id].prev_out != -2;
+      return a.id >= 0 && a.id < static_cast<int>(arcs.size()) &&
+        arcs[a.id].prev_out != -2;
     }
 
     bool valid(Edge e) const {
-      return e.id >= 0 && 2 * e.id < static_cast<int>(_arcs.size()) &&
-        _arcs[2 * e.id].prev_out != -2;
+      return e.id >= 0 && 2 * e.id < static_cast<int>(arcs.size()) &&
+        arcs[2 * e.id].prev_out != -2;
     }
 
     RedNode addRedNode() {
       int n;
 
       if(first_free_red==-1) {
-        n = _nodes.size();
-        _nodes.push_back(NodeT());
-        _nodes[n].partition_index = ++max_red;
-        _nodes[n].red = true;
+        n = nodes.size();
+        nodes.push_back(NodeT());
+        nodes[n].partition_index = ++max_red;
+        nodes[n].red = true;
       } else {
         n = first_free_red;
-        first_free_red = _nodes[n].next;
+        first_free_red = nodes[n].next;
       }
 
-      _nodes[n].next = first_node;
-      if (first_node != -1) _nodes[first_node].prev = n;
+      nodes[n].next = first_node;
+      if (first_node != -1) nodes[first_node].prev = n;
       first_node = n;
-      _nodes[n].prev = -1;
+      nodes[n].prev = -1;
 
-      _nodes[n].partition_next = first_red;
-      if (first_red != -1) _nodes[first_red].partition_prev = n;
+      nodes[n].partition_next = first_red;
+      if (first_red != -1) nodes[first_red].partition_prev = n;
       first_red = n;
-      _nodes[n].partition_prev = -1;
+      nodes[n].partition_prev = -1;
 
-      _nodes[n].first_out = -1;
+      nodes[n].first_out = -1;
 
       return RedNode(n);
     }
@@ -1924,26 +1922,26 @@ namespace lemon {
       int n;
 
       if(first_free_blue==-1) {
-        n = _nodes.size();
-        _nodes.push_back(NodeT());
-        _nodes[n].partition_index = ++max_blue;
-        _nodes[n].red = false;
+        n = nodes.size();
+        nodes.push_back(NodeT());
+        nodes[n].partition_index = ++max_blue;
+        nodes[n].red = false;
       } else {
         n = first_free_blue;
-        first_free_blue = _nodes[n].next;
+        first_free_blue = nodes[n].next;
       }
 
-      _nodes[n].next = first_node;
-      if (first_node != -1) _nodes[first_node].prev = n;
+      nodes[n].next = first_node;
+      if (first_node != -1) nodes[first_node].prev = n;
       first_node = n;
-      _nodes[n].prev = -1;
+      nodes[n].prev = -1;
 
-      _nodes[n].partition_next = first_blue;
-      if (first_blue != -1) _nodes[first_blue].partition_prev = n;
+      nodes[n].partition_next = first_blue;
+      if (first_blue != -1) nodes[first_blue].partition_prev = n;
       first_blue = n;
-      _nodes[n].partition_prev = -1;
+      nodes[n].partition_prev = -1;
 
-      _nodes[n].first_out = -1;
+      nodes[n].first_out = -1;
 
       return BlueNode(n);
     }
@@ -1952,30 +1950,30 @@ namespace lemon {
       int n;
 
       if (first_free_arc == -1) {
-        n = _arcs.size();
-        _arcs.push_back(ArcT());
-        _arcs.push_back(ArcT());
+        n = arcs.size();
+        arcs.push_back(ArcT());
+        arcs.push_back(ArcT());
       } else {
         n = first_free_arc;
-        first_free_arc = _arcs[n].next_out;
+        first_free_arc = arcs[n].next_out;
       }
 
-      _arcs[n].target = u.id;
-      _arcs[n | 1].target = v.id;
+      arcs[n].target = u.id;
+      arcs[n | 1].target = v.id;
 
-      _arcs[n].next_out = _nodes[v.id].first_out;
-      if (_nodes[v.id].first_out != -1) {
-        _arcs[_nodes[v.id].first_out].prev_out = n;
+      arcs[n].next_out = nodes[v.id].first_out;
+      if (nodes[v.id].first_out != -1) {
+        arcs[nodes[v.id].first_out].prev_out = n;
       }
-      _arcs[n].prev_out = -1;
-      _nodes[v.id].first_out = n;
+      arcs[n].prev_out = -1;
+      nodes[v.id].first_out = n;
 
-      _arcs[n | 1].next_out = _nodes[u.id].first_out;
-      if (_nodes[u.id].first_out != -1) {
-        _arcs[_nodes[u.id].first_out].prev_out = (n | 1);
+      arcs[n | 1].next_out = nodes[u.id].first_out;
+      if (nodes[u.id].first_out != -1) {
+        arcs[nodes[u.id].first_out].prev_out = (n | 1);
       }
-      _arcs[n | 1].prev_out = -1;
-      _nodes[u.id].first_out = (n | 1);
+      arcs[n | 1].prev_out = -1;
+      nodes[u.id].first_out = (n | 1);
 
       return Edge(n / 2);
     }
@@ -1983,73 +1981,73 @@ namespace lemon {
     void erase(const Node& node) {
       int n = node.id;
 
-      if(_nodes[n].next != -1) {
-        _nodes[_nodes[n].next].prev = _nodes[n].prev;
+      if(nodes[n].next != -1) {
+        nodes[nodes[n].next].prev = nodes[n].prev;
       }
 
-      if(_nodes[n].prev != -1) {
-        _nodes[_nodes[n].prev].next = _nodes[n].next;
+      if(nodes[n].prev != -1) {
+        nodes[nodes[n].prev].next = nodes[n].next;
       } else {
-        first_node = _nodes[n].next;
+        first_node = nodes[n].next;
       }
 
-      if (_nodes[n].partition_next != -1) {
-        _nodes[_nodes[n].partition_next].partition_prev = _nodes[n].partition_prev;
+      if (nodes[n].partition_next != -1) {
+        nodes[nodes[n].partition_next].partition_prev = nodes[n].partition_prev;
       }
 
-      if (_nodes[n].partition_prev != -1) {
-        _nodes[_nodes[n].partition_prev].partition_next = _nodes[n].partition_next;
+      if (nodes[n].partition_prev != -1) {
+        nodes[nodes[n].partition_prev].partition_next = nodes[n].partition_next;
       } else {
-        if (_nodes[n].red) {
-          first_red = _nodes[n].partition_next;
+        if (nodes[n].red) {
+          first_red = nodes[n].partition_next;
         } else {
-          first_blue = _nodes[n].partition_next;
+          first_blue = nodes[n].partition_next;
         }
       }
 
-      if (_nodes[n].red) {
-        _nodes[n].next = first_free_red;
+      if (nodes[n].red) {
+        nodes[n].next = first_free_red;
         first_free_red = n;
       } else {
-        _nodes[n].next = first_free_blue;
+        nodes[n].next = first_free_blue;
         first_free_blue = n;
       }
-      _nodes[n].prev = -2;
+      nodes[n].prev = -2;
     }
 
     void erase(const Edge& edge) {
       int n = edge.id * 2;
 
-      if (_arcs[n].next_out != -1) {
-        _arcs[_arcs[n].next_out].prev_out = _arcs[n].prev_out;
+      if (arcs[n].next_out != -1) {
+        arcs[arcs[n].next_out].prev_out = arcs[n].prev_out;
       }
 
-      if (_arcs[n].prev_out != -1) {
-        _arcs[_arcs[n].prev_out].next_out = _arcs[n].next_out;
+      if (arcs[n].prev_out != -1) {
+        arcs[arcs[n].prev_out].next_out = arcs[n].next_out;
       } else {
-        _nodes[_arcs[n | 1].target].first_out = _arcs[n].next_out;
+        nodes[arcs[n | 1].target].first_out = arcs[n].next_out;
       }
 
-      if (_arcs[n | 1].next_out != -1) {
-        _arcs[_arcs[n | 1].next_out].prev_out = _arcs[n | 1].prev_out;
+      if (arcs[n | 1].next_out != -1) {
+        arcs[arcs[n | 1].next_out].prev_out = arcs[n | 1].prev_out;
       }
 
-      if (_arcs[n | 1].prev_out != -1) {
-        _arcs[_arcs[n | 1].prev_out].next_out = _arcs[n | 1].next_out;
+      if (arcs[n | 1].prev_out != -1) {
+        arcs[arcs[n | 1].prev_out].next_out = arcs[n | 1].next_out;
       } else {
-        _nodes[_arcs[n].target].first_out = _arcs[n | 1].next_out;
+        nodes[arcs[n].target].first_out = arcs[n | 1].next_out;
       }
 
-      _arcs[n].next_out = first_free_arc;
+      arcs[n].next_out = first_free_arc;
       first_free_arc = n;
-      _arcs[n].prev_out = -2;
-      _arcs[n | 1].prev_out = -2;
+      arcs[n].prev_out = -2;
+      arcs[n | 1].prev_out = -2;
 
     }
 
     void clear() {
-      _arcs.clear();
-      _nodes.clear();
+      arcs.clear();
+      nodes.clear();
       first_node = first_free_arc = first_red = first_blue =
         max_red = max_blue = first_free_red = first_free_blue = -1;
     }
@@ -2057,46 +2055,46 @@ namespace lemon {
   protected:
 
     void changeRed(Edge e, RedNode n) {
-      if(_arcs[(2 * e.id) | 1].next_out != -1) {
-        _arcs[_arcs[(2 * e.id) | 1].next_out].prev_out =
-          _arcs[(2 * e.id) | 1].prev_out;
+      if(arcs[(2 * e.id) | 1].next_out != -1) {
+        arcs[arcs[(2 * e.id) | 1].next_out].prev_out =
+          arcs[(2 * e.id) | 1].prev_out;
       }
-      if(_arcs[(2 * e.id) | 1].prev_out != -1) {
-        _arcs[_arcs[(2 * e.id) | 1].prev_out].next_out =
-          _arcs[(2 * e.id) | 1].next_out;
+      if(arcs[(2 * e.id) | 1].prev_out != -1) {
+        arcs[arcs[(2 * e.id) | 1].prev_out].next_out =
+          arcs[(2 * e.id) | 1].next_out;
       } else {
-        _nodes[_arcs[2 * e.id].target].first_out =
-          _arcs[(2 * e.id) | 1].next_out;
+        nodes[arcs[2 * e.id].target].first_out =
+          arcs[(2 * e.id) | 1].next_out;
       }
 
-      if (_nodes[n.id].first_out != -1) {
-        _arcs[_nodes[n.id].first_out].prev_out = ((2 * e.id) | 1);
+      if (nodes[n.id].first_out != -1) {
+        arcs[nodes[n.id].first_out].prev_out = ((2 * e.id) | 1);
       }
-      _arcs[2 * e.id].target = n.id;
-      _arcs[(2 * e.id) | 1].prev_out = -1;
-      _arcs[(2 * e.id) | 1].next_out = _nodes[n.id].first_out;
-      _nodes[n.id].first_out = ((2 * e.id) | 1);
+      arcs[2 * e.id].target = n.id;
+      arcs[(2 * e.id) | 1].prev_out = -1;
+      arcs[(2 * e.id) | 1].next_out = nodes[n.id].first_out;
+      nodes[n.id].first_out = ((2 * e.id) | 1);
     }
 
     void changeBlue(Edge e, BlueNode n) {
-       if(_arcs[2 * e.id].next_out != -1) {
-        _arcs[_arcs[2 * e.id].next_out].prev_out = _arcs[2 * e.id].prev_out;
+       if(arcs[2 * e.id].next_out != -1) {
+        arcs[arcs[2 * e.id].next_out].prev_out = arcs[2 * e.id].prev_out;
       }
-      if(_arcs[2 * e.id].prev_out != -1) {
-        _arcs[_arcs[2 * e.id].prev_out].next_out =
-          _arcs[2 * e.id].next_out;
+      if(arcs[2 * e.id].prev_out != -1) {
+        arcs[arcs[2 * e.id].prev_out].next_out =
+          arcs[2 * e.id].next_out;
       } else {
-        _nodes[_arcs[(2 * e.id) | 1].target].first_out =
-          _arcs[2 * e.id].next_out;
+        nodes[arcs[(2 * e.id) | 1].target].first_out =
+          arcs[2 * e.id].next_out;
       }
 
-      if (_nodes[n.id].first_out != -1) {
-        _arcs[_nodes[n.id].first_out].prev_out = 2 * e.id;
+      if (nodes[n.id].first_out != -1) {
+        arcs[nodes[n.id].first_out].prev_out = 2 * e.id;
       }
-      _arcs[(2 * e.id) | 1].target = n.id;
-      _arcs[2 * e.id].prev_out = -1;
-      _arcs[2 * e.id].next_out = _nodes[n.id].first_out;
-      _nodes[n.id].first_out = 2 * e.id;
+      arcs[(2 * e.id) | 1].target = n.id;
+      arcs[2 * e.id].prev_out = -1;
+      arcs[2 * e.id].next_out = nodes[n.id].first_out;
+      nodes[n.id].first_out = 2 * e.id;
     }
 
   };
@@ -2138,7 +2136,7 @@ namespace lemon {
     ///
     ListBpGraph() {}
 
-    typedef Parent::IncEdgeIt IncEdgeIt;
+    typedef Parent::OutArcIt IncEdgeIt;
 
     /// \brief Add a new red node to the graph.
     ///
@@ -2251,7 +2249,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveEdge()
-    void reserveNode(int n) { _nodes.reserve(n); };
+    void reserveNode(int n) { nodes.reserve(n); };
 
     /// Reserve memory for edges.
 
@@ -2261,7 +2259,7 @@ namespace lemon {
     /// then it is worth reserving space for this amount before starting
     /// to build the graph.
     /// \sa reserveNode()
-    void reserveEdge(int m) { _arcs.reserve(2 * m); };
+    void reserveEdge(int m) { arcs.reserve(2 * m); };
 
     /// \brief Class to make a snapshot of the graph and restore
     /// it later.

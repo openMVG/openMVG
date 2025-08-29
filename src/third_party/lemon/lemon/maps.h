@@ -25,7 +25,6 @@
 #include <map>
 
 #include <lemon/core.h>
-#include <lemon/bits/stl_iterators.h>
 
 ///\file
 ///\ingroup maps
@@ -294,12 +293,9 @@ namespace lemon {
 
   private:
 
-    // RangeMap& operator=(const RangeMap&);
+    RangeMap& operator=(const RangeMap&);
 
   public:
-
-    // ///\e
-    // RangeMap(const RangeMap&);
 
     ///\e
     Reference operator[](const Key &k) {
@@ -2585,16 +2581,6 @@ namespace lemon {
       const IterableBoolMap* _map;
     };
 
-    /// \brief STL style iterator for the keys mapped to \c true.
-    ///
-    /// This is an STL style wrapper for \ref TrueIt.
-    /// It can be used in range-based for loops, STL algorithms, etc.
-    LemonRangeWrapper1<TrueIt, IterableBoolMap>
-    trueKeys() {
-      return LemonRangeWrapper1<TrueIt, IterableBoolMap>(*this);
-    }
-
-
     /// \brief Iterator for the keys mapped to \c false.
     ///
     /// Iterator for the keys mapped to \c false. It works
@@ -2633,16 +2619,6 @@ namespace lemon {
     private:
       const IterableBoolMap* _map;
     };
-
-    /// \brief STL style iterator for the keys mapped to \c false.
-    ///
-    /// This is an STL style wrapper for \ref FalseIt.
-    /// It can be used in range-based for loops, STL algorithms, etc.
-    LemonRangeWrapper1<FalseIt, IterableBoolMap>
-    falseKeys() {
-      return LemonRangeWrapper1<FalseIt, IterableBoolMap>(*this);
-    }
-
 
     /// \brief Iterator for the keys mapped to a given value.
     ///
@@ -2687,15 +2663,6 @@ namespace lemon {
     private:
       const IterableBoolMap* _map;
     };
-
-    /// \brief STL style iterator for the keys mapped to a given value.
-    ///
-    /// This is an STL style wrapper for \ref ItemIt.
-    /// It can be used in range-based for loops, STL algorithms, etc.
-    LemonRangeWrapper2<ItemIt, IterableBoolMap, bool>
-    items(bool value) {
-      return LemonRangeWrapper2<ItemIt, IterableBoolMap, bool>(*this, value);
-    }
 
   protected:
 
@@ -3038,16 +3005,6 @@ namespace lemon {
       const IterableIntMap* _map;
     };
 
-    /// \brief STL style iterator for the keys with the same value.
-    ///
-    /// This is an STL style wrapper for \ref ItemIt.
-    /// It can be used in range-based for loops, STL algorithms, etc.
-    LemonRangeWrapper2<ItemIt, IterableIntMap, int>
-    items(int value) {
-      return LemonRangeWrapper2<ItemIt, IterableIntMap, int>(*this, value);
-    }
-
-
   protected:
 
     virtual void erase(const Key& key) {
@@ -3290,16 +3247,6 @@ namespace lemon {
     private:
       const IterableValueMap* _map;
     };
-
-    /// \brief STL style iterator for the keys with the same value.
-    ///
-    /// This is an STL style wrapper for \ref ItemIt.
-    /// It can be used in range-based for loops, STL algorithms, etc.
-    LemonRangeWrapper2<ItemIt, IterableValueMap, V>
-    items(const V& value) {
-      return LemonRangeWrapper2<ItemIt, IterableValueMap, V>(*this, value);
-    }
-
 
   protected:
 

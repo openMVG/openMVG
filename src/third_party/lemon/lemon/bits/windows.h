@@ -19,7 +19,6 @@
 #ifndef LEMON_BITS_WINDOWS_H
 #define LEMON_BITS_WINDOWS_H
 
-#include <lemon/config.h>
 #include <string>
 
 namespace lemon {
@@ -35,7 +34,7 @@ namespace lemon {
       WinLock();
       ~WinLock();
       void lock();
-      void unlock();\
+      void unlock();
     private:
       void *_repr;
     };

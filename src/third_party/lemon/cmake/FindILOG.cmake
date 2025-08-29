@@ -62,8 +62,6 @@ FIND_LIBRARY(ILOG_CPLEX_LIBRARY
   ${ILOG_CPLEX_ROOT_DIR}/lib/x86-64_sles10_4.1/static_pic
   ${ILOG_CPLEX_ROOT_DIR}/lib/x86_debian4.0_4.1/static_pic
   ${ILOG_CPLEX_ROOT_DIR}/lib/x86-64_debian4.0_4.1/static_pic
-  ${ILOG_CPLEX_ROOT_DIR}/lib/x86_linux/static_pic
-  ${ILOG_CPLEX_ROOT_DIR}/lib/x86-64_linux/static_pic
   ${ILOG_CPLEX_ROOT_DIR}/lib/${ILOG_WIN_COMPILER}/stat_mda
   NO_DEFAULT_PATH
   )
@@ -74,8 +72,6 @@ FIND_LIBRARY(ILOG_CONCERT_LIBRARY
   ${ILOG_CONCERT_ROOT_DIR}/lib/x86-64_sles10_4.1/static_pic
   ${ILOG_CONCERT_ROOT_DIR}/lib/x86_debian4.0_4.1/static_pic
   ${ILOG_CONCERT_ROOT_DIR}/lib/x86-64_debian4.0_4.1/static_pic
-  ${ILOG_CONCERT_ROOT_DIR}/lib/x86_linux/static_pic
-  ${ILOG_CONCERT_ROOT_DIR}/lib/x86-64_linux/static_pic
   ${ILOG_CONCERT_ROOT_DIR}/lib/${ILOG_WIN_COMPILER}/stat_mda
   NO_DEFAULT_PATH
   )
@@ -96,7 +92,7 @@ IF(ILOG_FOUND)
   SET(ILOG_LIBRARIES ${ILOG_CPLEX_LIBRARY} ${ILOG_CONCERT_LIBRARY})
   IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # SET(CPLEX_LIBRARIES "${CPLEX_LIBRARIES};m;pthread")
-    SET(ILOG_LIBRARIES ${ILOG_LIBRARIES} "m" "pthread" "dl")
+    SET(ILOG_LIBRARIES ${ILOG_LIBRARIES} "m" "pthread")
   ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 ENDIF(ILOG_FOUND)
 

@@ -103,7 +103,6 @@ namespace lemon {
           _GraphItem i1;
           i1=INVALID;
           _GraphItem i2 = i1;
-          ::lemon::ignore_unused_variable_warning(i2);
           _GraphItem i3 = INVALID;
 
           i1 = i2 = i3;
@@ -218,12 +217,6 @@ namespace lemon {
         ///
         /// Copy constructor.
         Edge(const Edge &) : Parent() {}
-
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const Edge &operator=(const Edge&) { return *this; }
 
         /// \brief Constructor for conversion from \c INVALID.
         ///
@@ -342,11 +335,6 @@ namespace lemon {
         ///
         /// Copy constructor.
         RedNode(const RedNode &) : Parent() {}
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const RedNode &operator=(const RedNode&) { return *this; }
 
         /// \brief Constructor for conversion from \c INVALID.
         ///
@@ -376,12 +364,6 @@ namespace lemon {
         ///
         /// Copy constructor.
         BlueNode(const BlueNode &) : Parent() {}
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const BlueNode &operator=(const BlueNode&) { return *this; }
-
 
         /// \brief Constructor for conversion from \c INVALID.
         ///
@@ -752,7 +734,6 @@ namespace lemon {
           ++(++it1);
 
           Item bi = it1;
-          ::lemon::ignore_unused_variable_warning(bi);
           bi = it2;
         }
         const GR& g;
@@ -843,7 +824,6 @@ namespace lemon {
           ++it2 = it1;
           ++(++it1);
           Item e = it1;
-          ::lemon::ignore_unused_variable_warning(e);
           e = it2;
         }
         const Base& node;

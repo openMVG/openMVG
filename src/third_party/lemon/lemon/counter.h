@@ -22,8 +22,6 @@
 #include <string>
 #include <iostream>
 
-#include <lemon/core.h>
-
 ///\ingroup timecount
 ///\file
 ///\brief Tools for counting steps and events

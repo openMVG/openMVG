@@ -187,7 +187,7 @@ namespace lemon {
     // It adds more new keys to the map. It is called by the observer notifier
     // and it overrides the add() member function of the observer base.
     virtual void add(const std::vector<Key>& keys) {
-      int max = container.size() - 1;
+      int max = int(container.size() - 1);
       for (int i = 0; i < int(keys.size()); ++i) {
         int id = Parent::notifier()->id(keys[i]);
         if (id >= max) {

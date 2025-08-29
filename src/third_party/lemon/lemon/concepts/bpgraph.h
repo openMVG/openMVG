@@ -27,7 +27,6 @@
 #include <lemon/concepts/maps.h>
 #include <lemon/concept_check.h>
 #include <lemon/core.h>
-#include <lemon/bits/stl_iterators.h>
 
 namespace lemon {
   namespace concepts {
@@ -95,11 +94,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         Node(const Node&) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const Node &operator=(const Node&) { return *this; }
 
         /// %Invalid constructor \& conversion.
 
@@ -148,11 +142,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         RedNode(const RedNode&) : Node() { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const RedNode &operator=(const RedNode&) { return *this; }
 
         /// %Invalid constructor \& conversion.
 
@@ -180,12 +169,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         BlueNode(const BlueNode&) : Node() { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const BlueNode &operator=(const BlueNode&) { return *this; }
-
 
         /// %Invalid constructor \& conversion.
 
@@ -216,11 +199,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         RedNodeIt(const RedNodeIt& n) : RedNode(n) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const RedNodeIt &operator=(const RedNodeIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -243,22 +221,6 @@ namespace lemon {
         RedNodeIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the red nodes of the graph.
-      ///
-      /// This function can be used for iterating on
-      /// the red nodes of the graph. It returns a wrapped RedNodeIt,
-      /// which looks like an STL container (by having begin() and end())
-      /// which you can use in range-based for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph, you can write:
-      ///\code
-      /// for(auto v: g.redNodes())
-      ///   doSomething(v);
-      ///\endcode
-      LemonRangeWrapper1<RedNodeIt, BpGraph> redNodes() const {
-        return LemonRangeWrapper1<RedNodeIt, BpGraph>(*this);
-      }
-
-
       /// Iterator class for the blue nodes.
 
       /// This iterator goes through each blue node of the graph.
@@ -280,11 +242,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         BlueNodeIt(const BlueNodeIt& n) : BlueNode(n) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const BlueNodeIt &operator=(const BlueNodeIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -307,22 +264,6 @@ namespace lemon {
         BlueNodeIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the blue nodes of the graph.
-      ///
-      /// This function can be used for iterating on
-      /// the blue nodes of the graph. It returns a wrapped BlueNodeIt,
-      /// which looks like an STL container (by having begin() and end())
-      /// which you can use in range-based for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph, you can write:
-      ///\code
-      /// for(auto v: g.blueNodes())
-      ///   doSomething(v);
-      ///\endcode
-      LemonRangeWrapper1<BlueNodeIt, BpGraph> blueNodes() const {
-        return LemonRangeWrapper1<BlueNodeIt, BpGraph>(*this);
-      }
-
-
       /// Iterator class for the nodes.
 
       /// This iterator goes through each node of the graph.
@@ -344,11 +285,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         NodeIt(const NodeIt& n) : Node(n) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const NodeIt &operator=(const NodeIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -371,22 +307,6 @@ namespace lemon {
         NodeIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the nodes of the graph.
-      ///
-      /// This function can be used for iterating on
-      /// the nodes of the graph. It returns a wrapped NodeIt,
-      /// which looks like an STL container (by having begin() and end())
-      /// which you can use in range-based for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph, you can write:
-      ///\code
-      /// for(auto v: g.nodes())
-      ///   doSomething(v);
-      ///\endcode
-      LemonRangeWrapper1<NodeIt, BpGraph> nodes() const {
-        return LemonRangeWrapper1<NodeIt, BpGraph>(*this);
-      }
-
-
 
       /// The edge type of the graph
 
@@ -405,11 +325,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         Edge(const Edge&) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const Edge &operator=(const Edge&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the object to be invalid.
@@ -458,11 +373,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         EdgeIt(const EdgeIt& e) : Edge(e) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const EdgeIt &operator=(const EdgeIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -484,23 +394,6 @@ namespace lemon {
         ///
         EdgeIt& operator++() { return *this; }
       };
-
-      /// \brief Gets the collection of the edges of the graph.
-      ///
-      /// This function can be used for iterating on the
-      /// edges of the graph. It returns a wrapped
-      /// EdgeIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph, you can write:
-      ///\code
-      /// for(auto e: g.edges())
-      ///   doSomething(e);
-      ///\endcode
-      LemonRangeWrapper1<EdgeIt, BpGraph> edges() const {
-        return LemonRangeWrapper1<EdgeIt, BpGraph>(*this);
-      }
-
 
       /// Iterator class for the incident edges of a node.
 
@@ -528,11 +421,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         IncEdgeIt(const IncEdgeIt& e) : Edge(e) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const IncEdgeIt &operator=(const IncEdgeIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -555,25 +443,6 @@ namespace lemon {
         IncEdgeIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the incident edges
-      ///  of a certain node of the graph.
-      ///
-      /// This function can be used for iterating on the
-      /// incident undirected edges of a certain node of the graph.
-      /// It returns a wrapped
-      /// IncEdgeIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph and u is a Node, you can write:
-      ///\code
-      /// for(auto e: g.incEdges(u))
-      ///   doSomething(e);
-      ///\endcode
-      LemonRangeWrapper2<IncEdgeIt, BpGraph, Node> incEdges(const Node& u) const {
-        return LemonRangeWrapper2<IncEdgeIt, BpGraph, Node>(*this, u);
-      }
-
-
       /// The arc type of the graph
 
       /// This class identifies a directed arc of the graph. It also serves
@@ -591,11 +460,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         Arc(const Arc&) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const Arc &operator=(const Arc&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the object to be invalid.
@@ -650,11 +514,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         ArcIt(const ArcIt& e) : Arc(e) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const ArcIt &operator=(const ArcIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -680,23 +539,6 @@ namespace lemon {
         ArcIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the directed arcs of the graph.
-      ///
-      /// This function can be used for iterating on the
-      /// arcs of the graph. It returns a wrapped
-      /// ArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph you can write:
-      ///\code
-      /// for(auto a: g.arcs())
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper1<ArcIt, BpGraph> arcs() const {
-        return LemonRangeWrapper1<ArcIt, BpGraph>(*this);
-      }
-
-
       /// Iterator class for the outgoing arcs of a node.
 
       /// This iterator goes trough the \e outgoing directed arcs of a
@@ -720,11 +562,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         OutArcIt(const OutArcIt& e) : Arc(e) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const OutArcIt &operator=(const OutArcIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -750,24 +587,6 @@ namespace lemon {
         OutArcIt& operator++() { return *this; }
       };
 
-      /// \brief Gets the collection of the outgoing directed arcs of a
-      /// certain node of the graph.
-      ///
-      /// This function can be used for iterating on the
-      /// outgoing arcs of a certain node of the graph. It returns a wrapped
-      /// OutArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph and u is a Node, you can write:
-      ///\code
-      /// for(auto a: g.outArcs(u))
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper2<OutArcIt, BpGraph, Node> outArcs(const Node& u) const {
-        return LemonRangeWrapper2<OutArcIt, BpGraph, Node>(*this, u);
-      }
-
-
       /// Iterator class for the incoming arcs of a node.
 
       /// This iterator goes trough the \e incoming directed arcs of a
@@ -791,11 +610,6 @@ namespace lemon {
         /// Copy constructor.
         ///
         InArcIt(const InArcIt& e) : Arc(e) { }
-        /// Assignment operator
-
-        /// Assignment operator.
-        ///
-        const InArcIt &operator=(const InArcIt&) { return *this; }
         /// %Invalid constructor \& conversion.
 
         /// Initializes the iterator to be invalid.
@@ -820,24 +634,6 @@ namespace lemon {
         /// incoming arc of the corresponding node.
         InArcIt& operator++() { return *this; }
       };
-
-      /// \brief Gets the collection of the incoming directed arcs of a
-      /// certain node of the graph.
-      ///
-      /// This function can be used for iterating on the
-      /// incoming arcs of a certain node of the graph. It returns a wrapped
-      /// InArcIt, which looks like an STL container
-      /// (by having begin() and end()) which you can use in range-based
-      /// for loops, stl algorithms, etc.
-      /// For example if g is a BpGraph and u is a Node, you can write:
-      ///\code
-      /// for(auto a: g.inArcs(u))
-      ///   doSomething(a);
-      ///\endcode
-      LemonRangeWrapper2<InArcIt, BpGraph, Node> inArcs(const Node& u) const {
-        return LemonRangeWrapper2<InArcIt, BpGraph, Node>(*this, u);
-      }
-
 
       /// \brief Standard graph map type for the nodes.
       ///
