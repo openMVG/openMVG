@@ -381,7 +381,8 @@ target_include_directories(openMVG_ceres PUBLIC ${CERES_LIBRARY_PUBLIC_DEPENDENC
 # Generate an export header for annotating symbols visibility
 include(GenerateExportHeader)
 generate_export_header(openMVG_ceres EXPORT_FILE_NAME
-  ${Ceres_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal/export.h)
+  ${Ceres_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal/export.h
+  EXPORT_MACRO_NAME ceres)
 
 # if (USE_CUDA)
 #   install(TARGETS ceres_cuda_kernels
