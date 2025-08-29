@@ -383,19 +383,19 @@ include(GenerateExportHeader)
 generate_export_header(ceres EXPORT_FILE_NAME
   ${Ceres_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal/export.h)
 
-if (USE_CUDA)
-  install(TARGETS ceres_cuda_kernels
-          EXPORT  CeresExport
-          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endif(USE_CUDA)
+# if (USE_CUDA)
+#   install(TARGETS ceres_cuda_kernels
+#           EXPORT  CeresExport
+#           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# endif(USE_CUDA)
 
-install(TARGETS ceres
-        EXPORT  CeresExport
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# install(TARGETS ceres
+#         EXPORT  CeresExport
+#         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 if (BUILD_TESTING AND GFLAGS)
   add_library(gtest STATIC gmock_gtest_all.cc gmock_main.cc)

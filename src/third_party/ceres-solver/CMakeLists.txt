@@ -115,9 +115,9 @@ enable_testing()
 include(CMakeDependentOption)
 include(PrettyPrintCMakeList)
 
-option(MINIGLOG "Use a stripped down version of glog." OFF)
-option(GFLAGS "Enable Google Flags." ON)
-option(SUITESPARSE "Enable SuiteSparse." ON)
+option(MINIGLOG "Use a stripped down version of glog." ON)
+option(GFLAGS "Enable Google Flags." OFF)
+option(SUITESPARSE "Enable SuiteSparse." OFF)
 if (APPLE)
   option(ACCELERATESPARSE
     "Enable use of sparse solvers in Apple's Accelerate framework." ON)
@@ -141,11 +141,11 @@ option(EIGENSPARSE "Enable Eigen as a sparse linear algebra library." ON)
 cmake_dependent_option(EIGENMETIS "Enable Eigen METIS support." ON EIGENSPARSE OFF)
 option(EXPORT_BUILD_DIR
   "Export build directory using CMake (enables external use without install)." OFF)
-option(BUILD_TESTING "Enable tests" ON)
+option(BUILD_TESTING "Enable tests" OFF)
 option(BUILD_DOCUMENTATION "Build User's Guide (html)" OFF)
-option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_BENCHMARKS "Build Ceres benchmarking suite" ON)
-option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
+option(BUILD_BENCHMARKS "Build Ceres benchmarking suite" OFF)
+# option(BUILD_SHARED_LIBS "Build Ceres as a shared library." OFF)
 option(PROVIDE_UNINSTALL_TARGET "Add a custom target to ease removal of installed targets" ON)
 set(SANITIZERS "" CACHE STRING "Semicolon-separated list of sanitizers to use (e.g address, memory, thread)")
 include(EnableSanitizer)
@@ -630,24 +630,24 @@ else (BUILD_EXAMPLES)
 endif (BUILD_EXAMPLES)
 
 # Setup installation of Ceres public headers.
-file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
-install(FILES ${CERES_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ceres)
+#file(GLOB CERES_HDRS ${Ceres_SOURCE_DIR}/include/ceres/*.h)
+#install(FILES ${CERES_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ceres)
 
-file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
-install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION
-  ${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal)
+#file(GLOB CERES_PUBLIC_INTERNAL_HDRS ${Ceres_SOURCE_DIR}/include/ceres/internal/*.h)
+#install(FILES ${CERES_PUBLIC_INTERNAL_HDRS} DESTINATION
+#  ${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal)
 
 # Also setup installation of Ceres config.h configured with the current
 # build options and export.h into the installed headers directory.
-install(DIRECTORY ${Ceres_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# install(DIRECTORY ${Ceres_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/
+#         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-if (MINIGLOG)
-  # Install miniglog header if being used as logging #includes appear in
-  # installed public Ceres headers.
-  install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal/miniglog/glog)
-endif (MINIGLOG)
+# if (MINIGLOG)
+#   # Install miniglog header if being used as logging #includes appear in
+#   # installed public Ceres headers.
+#   install(FILES ${Ceres_SOURCE_DIR}/internal/ceres/miniglog/glog/logging.h
+#           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ceres/internal/miniglog/glog)
+# endif (MINIGLOG)
 
 # Ceres supports two mechanisms by which it can be detected & imported into
 # client code which uses CMake via find_package(Ceres):
