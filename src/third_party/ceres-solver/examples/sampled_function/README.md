@@ -15,7 +15,7 @@ The one dimensional interpolation is based on the Cubic Hermite Spline. This
 interpolation method requires knowledge of the function derivatives at the
 control points, however we only know the function values. Consequently, we will
 use the data to estimate derivatives at the control points. The choice of how to
-compute the derivatives is not unique and Ceres uses the Catmull–Rom Spline
+compute the derivatives is not unique and Ceres uses the Catmull-Rom Spline
 variant which uses `0.5 * (p_{k+1} - p_{k-1})` as the derivative for control
 point `p_k.` This produces a first order differentiable interpolating
 function. The two dimensional interpolation scheme is a generalization of the
@@ -32,7 +32,7 @@ interpolation schemes by using a `SizedCostFunction` and defining the
 
 ```c++
 bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const {
-  if (jacobians == NULL || jacobians[0] == NULL)
+  if (jacobians == nullptr || jacobians[0] == nullptr)
     interpolator_.Evaluate(parameters[0][0], residuals);
   else
     interpolator_.Evaluate(parameters[0][0], residuals, jacobians[0]);

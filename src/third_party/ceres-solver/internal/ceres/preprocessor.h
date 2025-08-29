@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,15 @@
 #ifndef CERES_INTERNAL_PREPROCESSOR_H_
 #define CERES_INTERNAL_PREPROCESSOR_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "ceres/coordinate_descent_minimizer.h"
 #include "ceres/evaluator.h"
+#include "ceres/internal/disable_warnings.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/port.h"
-#include "ceres/internal/scoped_ptr.h"
+#include "ceres/internal/export.h"
 #include "ceres/iteration_callback.h"
 #include "ceres/linear_solver.h"
 #include "ceres/minimizer.h"
@@ -46,8 +47,7 @@
 #include "ceres/program.h"
 #include "ceres/solver.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 struct PreprocessedProblem;
 
@@ -67,10 +67,10 @@ struct PreprocessedProblem;
 //
 // The output of the Preprocessor is stored in a PreprocessedProblem
 // object.
-class Preprocessor {
+class CERES_NO_EXPORT Preprocessor {
  public:
   // Factory.
-  static Preprocessor* Create(MinimizerType minimizer_type);
+  static std::unique_ptr<Preprocessor> Create(MinimizerType minimizer_type);
   virtual ~Preprocessor();
   virtual bool Preprocess(const Solver::Options& options,
                           ProblemImpl* problem,
@@ -79,10 +79,8 @@ class Preprocessor {
 
 // A PreprocessedProblem is the result of running the Preprocessor on
 // a Problem and Solver::Options object.
-struct PreprocessedProblem {
-  PreprocessedProblem()
-      : fixed_cost(0.0) {
-  }
+struct CERES_NO_EXPORT PreprocessedProblem {
+  PreprocessedProblem() = default;
 
   std::string error;
   Solver::Options options;
@@ -91,32 +89,36 @@ struct PreprocessedProblem {
   Minimizer::Options minimizer_options;
 
   ProblemImpl* problem;
-  scoped_ptr<ProblemImpl> gradient_checking_problem;
-  scoped_ptr<Program> reduced_program;
-  scoped_ptr<LinearSolver> linear_solver;
-  scoped_ptr<IterationCallback> logging_callback;
-  scoped_ptr<IterationCallback> state_updating_callback;
+  std::unique_ptr<ProblemImpl> gradient_checking_problem;
+  std::unique_ptr<Program> reduced_program;
+  std::unique_ptr<LinearSolver> linear_solver;
+  std::unique_ptr<IterationCallback> logging_callback;
+  std::unique_ptr<IterationCallback> state_updating_callback;
 
-  shared_ptr<Evaluator> evaluator;
-  shared_ptr<CoordinateDescentMinimizer> inner_iteration_minimizer;
+  std::shared_ptr<Evaluator> evaluator;
+  std::shared_ptr<CoordinateDescentMinimizer> inner_iteration_minimizer;
 
   std::vector<double*> removed_parameter_blocks;
   Vector reduced_parameters;
-  double fixed_cost;
+  double fixed_cost{0.0};
 };
 
 // Common functions used by various preprocessors.
 
-// If OpenMP support is not available and user has requested more than
-// one thread, then set the *_num_threads options as needed to 1.
+// If the user has specified a num_threads > the maximum number of threads
+// available from the compiled threading model, bound the number of threads
+// to the maximum.
+CERES_NO_EXPORT
 void ChangeNumThreadsIfNeeded(Solver::Options* options);
 
 // Extract the effective parameter vector from the preprocessed
 // problem and setup bits of the Minimizer::Options object that are
 // common to all Preprocessors.
+CERES_NO_EXPORT
 void SetupCommonMinimizerOptions(PreprocessedProblem* pp);
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_PREPROCESSOR_H_

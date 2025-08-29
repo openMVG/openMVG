@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,48 +33,50 @@
 #ifndef CERES_INTERNAL_DENSE_JACOBIAN_WRITER_H_
 #define CERES_INTERNAL_DENSE_JACOBIAN_WRITER_H_
 
+#include <memory>
+
 #include "ceres/casts.h"
 #include "ceres/dense_sparse_matrix.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/export.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
 #include "ceres/residual_block.h"
 #include "ceres/scratch_evaluate_preparer.h"
-#include "ceres/internal/eigen.h"
 
 namespace ceres {
 namespace internal {
 
-class DenseJacobianWriter {
+class CERES_NO_EXPORT DenseJacobianWriter {
  public:
-  DenseJacobianWriter(Evaluator::Options /* ignored */,
-                      Program* program)
-    : program_(program) {
-  }
+  DenseJacobianWriter(Evaluator::Options /* ignored */, Program* program)
+      : program_(program) {}
 
   // JacobianWriter interface.
 
   // Since the dense matrix has different layout than that assumed by the cost
   // functions, use scratch space to store the jacobians temporarily then copy
   // them over to the larger jacobian later.
-  ScratchEvaluatePreparer* CreateEvaluatePreparers(int num_threads) {
+  std::unique_ptr<ScratchEvaluatePreparer[]> CreateEvaluatePreparers(
+      int num_threads) {
     return ScratchEvaluatePreparer::Create(*program_, num_threads);
   }
 
-  SparseMatrix* CreateJacobian() const {
-    return new DenseSparseMatrix(program_->NumResiduals(),
-                                 program_->NumEffectiveParameters(),
-                                 true);
+  std::unique_ptr<SparseMatrix> CreateJacobian() const {
+    return std::make_unique<DenseSparseMatrix>(
+        program_->NumResiduals(), program_->NumEffectiveParameters());
   }
 
   void Write(int residual_id,
              int residual_offset,
-             double **jacobians,
+             double** jacobians,
              SparseMatrix* jacobian) {
     DenseSparseMatrix* dense_jacobian = down_cast<DenseSparseMatrix*>(jacobian);
     const ResidualBlock* residual_block =
         program_->residual_blocks()[residual_id];
-    int num_parameter_blocks = residual_block->NumParameterBlocks();
-    int num_residuals = residual_block->NumResiduals();
+    const int num_parameter_blocks = residual_block->NumParameterBlocks();
+    const int num_residuals = residual_block->NumResiduals();
 
     // Now copy the jacobians for each parameter into the dense jacobian matrix.
     for (int j = 0; j < num_parameter_blocks; ++j) {
@@ -85,16 +87,15 @@ class DenseJacobianWriter {
         continue;
       }
 
-      const int parameter_block_size = parameter_block->LocalSize();
-      ConstMatrixRef parameter_jacobian(jacobians[j],
-                                        num_residuals,
-                                        parameter_block_size);
+      const int parameter_block_size = parameter_block->TangentSize();
+      ConstMatrixRef parameter_jacobian(
+          jacobians[j], num_residuals, parameter_block_size);
 
-      dense_jacobian->mutable_matrix().block(
-          residual_offset,
-          parameter_block->delta_offset(),
-          num_residuals,
-          parameter_block_size) = parameter_jacobian;
+      dense_jacobian->mutable_matrix()->block(residual_offset,
+                                              parameter_block->delta_offset(),
+                                              num_residuals,
+                                              parameter_block_size) =
+          parameter_jacobian;
     }
   }
 
@@ -104,5 +105,7 @@ class DenseJacobianWriter {
 
 }  // namespace internal
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_DENSE_JACOBIAN_WRITER_H_

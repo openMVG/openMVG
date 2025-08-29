@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,17 +31,17 @@
 
 #include "ceres/canonical_views_clustering.h"
 
-#include "ceres/collections_port.h"
+#include <unordered_map>
+
 #include "ceres/graph.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 const int kVertexIds[] = {0, 1, 2, 3};
 class CanonicalViewsTest : public ::testing::Test {
  protected:
-  virtual void SetUp() {
+  void SetUp() final {
     // The graph structure is as follows.
     //
     // Vertex weights:   0      2      2      0
@@ -74,7 +74,7 @@ class CanonicalViewsTest : public ::testing::Test {
 
   CanonicalViewsClusteringOptions options_;
   std::vector<int> centers_;
-  HashMap<int, int> membership_;
+  std::unordered_map<int, int> membership_;
 };
 
 TEST_F(CanonicalViewsTest, ComputeCanonicalViewsTest) {
@@ -110,7 +110,6 @@ TEST_F(CanonicalViewsTest, SizePenaltyTest) {
   EXPECT_EQ(centers_[0], kVertexIds[1]);
 }
 
-
 // Increases view score weight so vertex 2 will be chosen.
 TEST_F(CanonicalViewsTest, ViewScoreTest) {
   options_.min_views = 0;
@@ -139,5 +138,4 @@ TEST_F(CanonicalViewsTest, SimilarityPenaltyTest) {
   EXPECT_EQ(centers_[0], kVertexIds[1]);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

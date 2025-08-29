@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,36 +36,11 @@
 #include <string>
 #include <vector>
 
-#include "ceres/internal/port.h"
+#include "ceres/internal/export.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-using std::string;
-
-// va_copy() was defined in the C99 standard.  However, it did not appear in the
-// C++ standard until C++11.  This means that if Ceres is being compiled with a
-// strict pre-C++11 standard (e.g. -std=c++03), va_copy() will NOT be defined,
-// as we are using the C++ compiler (it would however be defined if we were
-// using the C compiler).  Note however that both GCC & Clang will in fact
-// define va_copy() when compiling for C++ if the C++ standard is not explicitly
-// specified (i.e. no -std=c++<XX> arg), even though it should not strictly be
-// defined unless -std=c++11 (or greater) was passed.
-#if !defined(va_copy)
-#if defined (__GNUC__)
-// On GCC/Clang, if va_copy() is not defined (C++ standard < C++11 explicitly
-// specified), use the internal __va_copy() version, which should be present
-// in even very old GCC versions.
-#define va_copy(d, s) __va_copy(d, s)
-#else
-// Some older versions of MSVC do not have va_copy(), in which case define it.
-// Although this is required for older MSVC versions, it should also work for
-// other non-GCC/Clang compilers which also do not defined va_copy().
-#define va_copy(d, s) ((d) = (s))
-#endif  // defined (__GNUC__)
-#endif  // !defined(va_copy)
-
-void StringAppendV(string* dst, const char* format, va_list ap) {
+void StringAppendV(std::string* dst, const char* format, va_list ap) {
   // First try with a small fixed size buffer
   char space[1024];
 
@@ -84,11 +59,11 @@ void StringAppendV(string* dst, const char* format, va_list ap) {
       return;
     }
 
-#if defined (_MSC_VER)
+#if defined(_MSC_VER)
     // Error or MSVC running out of space.  MSVC 8.0 and higher
     // can be asked about space needed with the special idiom below:
     va_copy(backup_ap, ap);
-    result = vsnprintf(NULL, 0, format, backup_ap);
+    result = vsnprintf(nullptr, 0, format, backup_ap);
     va_end(backup_ap);
 #endif
 
@@ -100,7 +75,7 @@ void StringAppendV(string* dst, const char* format, va_list ap) {
 
   // Increase the buffer size to the size requested by vsnprintf,
   // plus one for the closing \0.
-  int length = result+1;
+  int length = result + 1;
   char* buf = new char[length];
 
   // Restore the va_list before we use it again
@@ -115,17 +90,16 @@ void StringAppendV(string* dst, const char* format, va_list ap) {
   delete[] buf;
 }
 
-
-string StringPrintf(const char* format, ...) {
+std::string StringPrintf(const char* format, ...) {
   va_list ap;
   va_start(ap, format);
-  string result;
+  std::string result;
   StringAppendV(&result, format, ap);
   va_end(ap);
   return result;
 }
 
-const string& SStringPrintf(string* dst, const char* format, ...) {
+const std::string& SStringPrintf(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
   dst->clear();
@@ -134,12 +108,11 @@ const string& SStringPrintf(string* dst, const char* format, ...) {
   return *dst;
 }
 
-void StringAppendF(string* dst, const char* format, ...) {
+void StringAppendF(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
   StringAppendV(dst, format, ap);
   va_end(ap);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

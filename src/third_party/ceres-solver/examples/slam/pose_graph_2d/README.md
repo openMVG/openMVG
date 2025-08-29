@@ -33,11 +33,11 @@ pose_id x y yaw_radians
 where `pose_id` is the corresponding integer ID from the file definition. Note,
 the file will be sorted in ascending order for the `pose_id`.
 
-The executable `pose_graph_2d` expects the first argument to be the path to the
+The executable `pose_graph_2d` has one flag `--input` which is the path to the
 problem definition. To run the executable,
 
 ```
-/path/to/bin/pose_graph_2d /path/to/dataset/dataset.g2o
+/path/to/bin/pose_graph_2d --input /path/to/dataset/dataset.g2o
 ```
 
 A python script is provided to visualize the resulting output files.

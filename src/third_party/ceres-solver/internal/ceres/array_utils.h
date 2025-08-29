@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -43,32 +43,36 @@
 #ifndef CERES_INTERNAL_ARRAY_UTILS_H_
 #define CERES_INTERNAL_ARRAY_UTILS_H_
 
+#include <cstdint>
 #include <string>
-#include "ceres/internal/port.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 // Fill the array x with an impossible value that the user code is
 // never expected to compute.
-void InvalidateArray(int size, double* x);
+CERES_NO_EXPORT void InvalidateArray(const int64_t size, double* x);
 
 // Check if all the entries of the array x are valid, i.e. all the
 // values in the array should be finite and none of them should be
 // equal to the "impossible" value used by InvalidateArray.
-bool IsArrayValid(int size, const double* x);
+CERES_NO_EXPORT bool IsArrayValid(const int64_t size, const double* x);
 
 // If the array contains an invalid value, return the index for it,
 // otherwise return size.
-int FindInvalidValue(const int size, const double* x);
+CERES_NO_EXPORT int64_t FindInvalidValue(const int64_t size, const double* x);
 
 // Utility routine to print an array of doubles to a string. If the
-// array pointer is NULL, it is treated as an array of zeros.
-void AppendArrayToString(const int size, const double* x, std::string* result);
+// array pointer is nullptr, it is treated as an array of zeros.
+CERES_NO_EXPORT void AppendArrayToString(const int64_t size,
+                                         const double* x,
+                                         std::string* result);
 
 // This routine takes an array of integer values, sorts and uniques
 // them and then maps each value in the array to its position in the
-// sorted+uniqued array. By doing this, if there are are k unique
+// sorted+uniqued array. By doing this, if there are k unique
 // values in the array, each value is replaced by an integer in the
 // range [0, k-1], while preserving their relative order.
 //
@@ -79,9 +83,10 @@ void AppendArrayToString(const int size, const double* x, std::string* result);
 // gets mapped to
 //
 // [1 0 2 3 0 1 3]
-void MapValuesToContiguousRange(int size, int* array);
+CERES_NO_EXPORT void MapValuesToContiguousRange(const int64_t size, int* array);
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_ARRAY_UTILS_H_

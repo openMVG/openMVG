@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -29,36 +29,37 @@
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
 #include "ceres/line_search_direction.h"
+
+#include <memory>
+
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/export.h"
 #include "ceres/line_search_minimizer.h"
 #include "ceres/low_rank_inverse_hessian.h"
-#include "ceres/internal/eigen.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-class SteepestDescent : public LineSearchDirection {
+class CERES_NO_EXPORT SteepestDescent final : public LineSearchDirection {
  public:
-  virtual ~SteepestDescent() {}
-  bool NextDirection(const LineSearchMinimizer::State& previous,
+  bool NextDirection(const LineSearchMinimizer::State& /*previous*/,
                      const LineSearchMinimizer::State& current,
-                     Vector* search_direction) {
+                     Vector* search_direction) override {
     *search_direction = -current.gradient;
     return true;
   }
 };
 
-class NonlinearConjugateGradient : public LineSearchDirection {
+class CERES_NO_EXPORT NonlinearConjugateGradient final
+    : public LineSearchDirection {
  public:
   NonlinearConjugateGradient(const NonlinearConjugateGradientType type,
                              const double function_tolerance)
-      : type_(type),
-        function_tolerance_(function_tolerance) {
-  }
+      : type_(type), function_tolerance_(function_tolerance) {}
 
   bool NextDirection(const LineSearchMinimizer::State& previous,
                      const LineSearchMinimizer::State& current,
-                     Vector* search_direction) {
+                     Vector* search_direction) override {
     double beta = 0.0;
     Vector gradient_change;
     switch (type_) {
@@ -72,14 +73,14 @@ class NonlinearConjugateGradient : public LineSearchDirection {
         break;
       case HESTENES_STIEFEL:
         gradient_change = current.gradient - previous.gradient;
-        beta =  (current.gradient.dot(gradient_change) /
-                 previous.search_direction.dot(gradient_change));
+        beta = (current.gradient.dot(gradient_change) /
+                previous.search_direction.dot(gradient_change));
         break;
       default:
         LOG(FATAL) << "Unknown nonlinear conjugate gradient type: " << type_;
     }
 
-    *search_direction =  -current.gradient + beta * previous.search_direction;
+    *search_direction = -current.gradient + beta * previous.search_direction;
     const double directional_derivative =
         current.gradient.dot(*search_direction);
     if (directional_derivative > -function_tolerance_) {
@@ -96,7 +97,7 @@ class NonlinearConjugateGradient : public LineSearchDirection {
   const double function_tolerance_;
 };
 
-class LBFGS : public LineSearchDirection {
+class CERES_NO_EXPORT LBFGS final : public LineSearchDirection {
  public:
   LBFGS(const int num_parameters,
         const int max_lbfgs_rank,
@@ -106,11 +107,9 @@ class LBFGS : public LineSearchDirection {
                                   use_approximate_eigenvalue_bfgs_scaling),
         is_positive_definite_(true) {}
 
-  virtual ~LBFGS() {}
-
   bool NextDirection(const LineSearchMinimizer::State& previous,
                      const LineSearchMinimizer::State& current,
-                     Vector* search_direction) {
+                     Vector* search_direction) override {
     CHECK(is_positive_definite_)
         << "Ceres bug: NextDirection() called on L-BFGS after inverse Hessian "
         << "approximation has become indefinite, please contact the "
@@ -121,8 +120,8 @@ class LBFGS : public LineSearchDirection {
         current.gradient - previous.gradient);
 
     search_direction->setZero();
-    low_rank_inverse_hessian_.RightMultiply(current.gradient.data(),
-                                            search_direction->data());
+    low_rank_inverse_hessian_.RightMultiplyAndAccumulate(
+        current.gradient.data(), search_direction->data());
     *search_direction *= -1.0;
 
     if (search_direction->dot(current.gradient) >= 0.0) {
@@ -142,30 +141,29 @@ class LBFGS : public LineSearchDirection {
   bool is_positive_definite_;
 };
 
-class BFGS : public LineSearchDirection {
+class CERES_NO_EXPORT BFGS final : public LineSearchDirection {
  public:
-  BFGS(const int num_parameters,
-       const bool use_approximate_eigenvalue_scaling)
+  BFGS(const int num_parameters, const bool use_approximate_eigenvalue_scaling)
       : num_parameters_(num_parameters),
         use_approximate_eigenvalue_scaling_(use_approximate_eigenvalue_scaling),
         initialized_(false),
         is_positive_definite_(true) {
-    LOG_IF(WARNING, num_parameters_ >= 1e3)
-        << "BFGS line search being created with: " << num_parameters_
-        << " parameters, this will allocate a dense approximate inverse Hessian"
-        << " of size: " << num_parameters_ << " x " << num_parameters_
-        << ", consider using the L-BFGS memory-efficient line search direction "
-        << "instead.";
+    if (num_parameters_ >= 1000) {
+      LOG(WARNING) << "BFGS line search being created with: " << num_parameters_
+                   << " parameters, this will allocate a dense approximate "
+                   << "inverse Hessian of size: " << num_parameters_ << " x "
+                   << num_parameters_
+                   << ", consider using the L-BFGS memory-efficient line "
+                   << "search direction instead.";
+    }
     // Construct inverse_hessian_ after logging warning about size s.t. if the
     // allocation crashes us, the log will highlight what the issue likely was.
     inverse_hessian_ = Matrix::Identity(num_parameters, num_parameters);
   }
 
-  virtual ~BFGS() {}
-
   bool NextDirection(const LineSearchMinimizer::State& previous,
                      const LineSearchMinimizer::State& current,
-                     Vector* search_direction) {
+                     Vector* search_direction) override {
     CHECK(is_positive_definite_)
         << "Ceres bug: NextDirection() called on BFGS after inverse Hessian "
         << "approximation has become indefinite, please contact the "
@@ -212,8 +210,8 @@ class BFGS : public LineSearchDirection {
     if (delta_x_dot_delta_gradient <=
         kBFGSSecantConditionHessianUpdateTolerance) {
       VLOG(2) << "Skipping BFGS Update, delta_x_dot_delta_gradient too "
-              << "small: " << delta_x_dot_delta_gradient << ", tolerance: "
-              << kBFGSSecantConditionHessianUpdateTolerance
+              << "small: " << delta_x_dot_delta_gradient
+              << ", tolerance: " << kBFGSSecantConditionHessianUpdateTolerance
               << " (Secant condition).";
     } else {
       // Update dense inverse Hessian approximation.
@@ -243,7 +241,7 @@ class BFGS : public LineSearchDirection {
         //
         // The original origin of this rescaling trick is somewhat unclear, the
         // earliest reference appears to be Oren [1], however it is widely
-        // discussed without specific attributation in various texts including
+        // discussed without specific attribution in various texts including
         // [2] (p143).
         //
         // [1] Oren S.S., Self-scaling variable metric (SSVM) algorithms
@@ -300,13 +298,13 @@ class BFGS : public LineSearchDirection {
 
       // Calculate scalar: (1 + \rho_k * y_k' * H_k * y_k)
       const double delta_x_times_delta_x_transpose_scale_factor =
-          (1.0 + (rho_k * delta_gradient.transpose() *
-                  inverse_hessian_.selfadjointView<Eigen::Lower>() *
-                  delta_gradient));
+          (1.0 +
+           (rho_k * delta_gradient.transpose() *
+            inverse_hessian_.selfadjointView<Eigen::Lower>() * delta_gradient));
       // Calculate: B = (1 + \rho_k * y_k' * H_k * y_k) * s_k * s_k'
       Matrix B = Matrix::Zero(num_parameters_, num_parameters_);
-      B.selfadjointView<Eigen::Lower>().
-          rankUpdate(delta_x, delta_x_times_delta_x_transpose_scale_factor);
+      B.selfadjointView<Eigen::Lower>().rankUpdate(
+          delta_x, delta_x_times_delta_x_transpose_scale_factor);
 
       // Finally, update inverse Hessian approximation according to:
       // H_k = H_{k-1} + \rho_k * (B - (A + A')).  Note that (A + A') is
@@ -315,9 +313,8 @@ class BFGS : public LineSearchDirection {
           rho_k * (B - A - A.transpose());
     }
 
-    *search_direction =
-        inverse_hessian_.selfadjointView<Eigen::Lower>() *
-        (-1.0 * current.gradient);
+    *search_direction = inverse_hessian_.selfadjointView<Eigen::Lower>() *
+                        (-1.0 * current.gradient);
 
     if (search_direction->dot(current.gradient) >= 0.0) {
       LOG(WARNING) << "Numerical failure in BFGS update: inverse Hessian "
@@ -339,34 +336,34 @@ class BFGS : public LineSearchDirection {
   bool is_positive_definite_;
 };
 
-LineSearchDirection*
-LineSearchDirection::Create(const LineSearchDirection::Options& options) {
+LineSearchDirection::~LineSearchDirection() = default;
+
+std::unique_ptr<LineSearchDirection> LineSearchDirection::Create(
+    const LineSearchDirection::Options& options) {
   if (options.type == STEEPEST_DESCENT) {
-    return new SteepestDescent;
+    return std::make_unique<SteepestDescent>();
   }
 
   if (options.type == NONLINEAR_CONJUGATE_GRADIENT) {
-    return new NonlinearConjugateGradient(
-        options.nonlinear_conjugate_gradient_type,
-        options.function_tolerance);
+    return std::make_unique<NonlinearConjugateGradient>(
+        options.nonlinear_conjugate_gradient_type, options.function_tolerance);
   }
 
   if (options.type == ceres::LBFGS) {
-    return new ceres::internal::LBFGS(
+    return std::make_unique<ceres::internal::LBFGS>(
         options.num_parameters,
         options.max_lbfgs_rank,
         options.use_approximate_eigenvalue_bfgs_scaling);
   }
 
   if (options.type == ceres::BFGS) {
-    return new ceres::internal::BFGS(
+    return std::make_unique<ceres::internal::BFGS>(
         options.num_parameters,
         options.use_approximate_eigenvalue_bfgs_scaling);
   }
 
   LOG(ERROR) << "Unknown line search direction type: " << options.type;
-  return NULL;
+  return nullptr;
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

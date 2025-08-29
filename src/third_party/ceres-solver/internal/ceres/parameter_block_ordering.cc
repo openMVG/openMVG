@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,9 +30,14 @@
 
 #include "ceres/parameter_block_ordering.h"
 
+#include <map>
+#include <memory>
+#include <set>
+#include <unordered_set>
+#include <vector>
+
 #include "ceres/graph.h"
 #include "ceres/graph_algorithms.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/map_util.h"
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
@@ -40,25 +45,22 @@
 #include "ceres/wall_time.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
-
-using std::map;
-using std::set;
-using std::vector;
+namespace ceres::internal {
 
 int ComputeStableSchurOrdering(const Program& program,
-                         vector<ParameterBlock*>* ordering) {
-  CHECK_NOTNULL(ordering)->clear();
+                               std::vector<ParameterBlock*>* ordering) {
+  CHECK(ordering != nullptr);
+  ordering->clear();
   EventLogger event_logger("ComputeStableSchurOrdering");
-  scoped_ptr<Graph< ParameterBlock*> > graph(CreateHessianGraph(program));
+  auto graph = CreateHessianGraph(program);
   event_logger.AddEvent("CreateHessianGraph");
 
-  const vector<ParameterBlock*>& parameter_blocks = program.parameter_blocks();
-  const HashSet<ParameterBlock*>& vertices = graph->vertices();
-  for (int i = 0; i < parameter_blocks.size(); ++i) {
-    if (vertices.count(parameter_blocks[i]) > 0) {
-      ordering->push_back(parameter_blocks[i]);
+  const std::vector<ParameterBlock*>& parameter_blocks =
+      program.parameter_blocks();
+  const std::unordered_set<ParameterBlock*>& vertices = graph->vertices();
+  for (auto* parameter_block : parameter_blocks) {
+    if (vertices.count(parameter_block) > 0) {
+      ordering->push_back(parameter_block);
     }
   }
   event_logger.AddEvent("Preordering");
@@ -67,8 +69,7 @@ int ComputeStableSchurOrdering(const Program& program,
   event_logger.AddEvent("StableIndependentSet");
 
   // Add the excluded blocks to back of the ordering vector.
-  for (int i = 0; i < parameter_blocks.size(); ++i) {
-    ParameterBlock* parameter_block = parameter_blocks[i];
+  for (auto* parameter_block : parameter_blocks) {
     if (parameter_block->IsConstant()) {
       ordering->push_back(parameter_block);
     }
@@ -79,16 +80,17 @@ int ComputeStableSchurOrdering(const Program& program,
 }
 
 int ComputeSchurOrdering(const Program& program,
-                         vector<ParameterBlock*>* ordering) {
-  CHECK_NOTNULL(ordering)->clear();
+                         std::vector<ParameterBlock*>* ordering) {
+  CHECK(ordering != nullptr);
+  ordering->clear();
 
-  scoped_ptr<Graph< ParameterBlock*> > graph(CreateHessianGraph(program));
+  auto graph = CreateHessianGraph(program);
   int independent_set_size = IndependentSetOrdering(*graph, ordering);
-  const vector<ParameterBlock*>& parameter_blocks = program.parameter_blocks();
+  const std::vector<ParameterBlock*>& parameter_blocks =
+      program.parameter_blocks();
 
   // Add the excluded blocks to back of the ordering vector.
-  for (int i = 0; i < parameter_blocks.size(); ++i) {
-    ParameterBlock* parameter_block = parameter_blocks[i];
+  for (auto* parameter_block : parameter_blocks) {
     if (parameter_block->IsConstant()) {
       ordering->push_back(parameter_block);
     }
@@ -99,14 +101,16 @@ int ComputeSchurOrdering(const Program& program,
 
 void ComputeRecursiveIndependentSetOrdering(const Program& program,
                                             ParameterBlockOrdering* ordering) {
-  CHECK_NOTNULL(ordering)->Clear();
-  const vector<ParameterBlock*> parameter_blocks = program.parameter_blocks();
-  scoped_ptr<Graph< ParameterBlock*> > graph(CreateHessianGraph(program));
+  CHECK(ordering != nullptr);
+  ordering->Clear();
+  const std::vector<ParameterBlock*> parameter_blocks =
+      program.parameter_blocks();
+  auto graph = CreateHessianGraph(program);
 
   int num_covered = 0;
   int round = 0;
   while (num_covered < parameter_blocks.size()) {
-    vector<ParameterBlock*> independent_set_ordering;
+    std::vector<ParameterBlock*> independent_set_ordering;
     const int independent_set_size =
         IndependentSetOrdering(*graph, &independent_set_ordering);
     for (int i = 0; i < independent_set_size; ++i) {
@@ -119,19 +123,21 @@ void ComputeRecursiveIndependentSetOrdering(const Program& program,
   }
 }
 
-Graph<ParameterBlock*>* CreateHessianGraph(const Program& program) {
-  Graph<ParameterBlock*>* graph = CHECK_NOTNULL(new Graph<ParameterBlock*>);
-  const vector<ParameterBlock*>& parameter_blocks = program.parameter_blocks();
-  for (int i = 0; i < parameter_blocks.size(); ++i) {
-    ParameterBlock* parameter_block = parameter_blocks[i];
+std::unique_ptr<Graph<ParameterBlock*>> CreateHessianGraph(
+    const Program& program) {
+  auto graph = std::make_unique<Graph<ParameterBlock*>>();
+  CHECK(graph != nullptr);
+  const std::vector<ParameterBlock*>& parameter_blocks =
+      program.parameter_blocks();
+  for (auto* parameter_block : parameter_blocks) {
     if (!parameter_block->IsConstant()) {
       graph->AddVertex(parameter_block);
     }
   }
 
-  const vector<ResidualBlock*>& residual_blocks = program.residual_blocks();
-  for (int i = 0; i < residual_blocks.size(); ++i) {
-    const ResidualBlock* residual_block = residual_blocks[i];
+  const std::vector<ResidualBlock*>& residual_blocks =
+      program.residual_blocks();
+  for (auto* residual_block : residual_blocks) {
     const int num_parameter_blocks = residual_block->NumParameterBlocks();
     ParameterBlock* const* parameter_blocks =
         residual_block->parameter_blocks();
@@ -154,20 +160,20 @@ Graph<ParameterBlock*>* CreateHessianGraph(const Program& program) {
 }
 
 void OrderingToGroupSizes(const ParameterBlockOrdering* ordering,
-                          vector<int>* group_sizes) {
-  CHECK_NOTNULL(group_sizes)->clear();
-  if (ordering == NULL) {
+                          std::vector<int>* group_sizes) {
+  CHECK(group_sizes != nullptr);
+  group_sizes->clear();
+  if (ordering == nullptr) {
     return;
   }
 
-  const map<int, set<double*> >& group_to_elements =
+  // TODO(sameeragarwal): Investigate if this should be a set or an
+  // unordered_set.
+  const std::map<int, std::set<double*>>& group_to_elements =
       ordering->group_to_elements();
-  for (map<int, set<double*> >::const_iterator it = group_to_elements.begin();
-       it != group_to_elements.end();
-       ++it) {
-    group_sizes->push_back(it->second.size());
+  for (const auto& g_t_e : group_to_elements) {
+    group_sizes->push_back(g_t_e.second.size());
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

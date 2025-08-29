@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,43 +34,24 @@
 #define CERES_INTERNAL_SUITESPARSE_H_
 
 // This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
+#include "ceres/internal/config.h"
 
 #ifndef CERES_NO_SUITESPARSE
 
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
+
 #include "SuiteSparseQR.hpp"
+#include "ceres/block_structure.h"
+#include "ceres/internal/disable_warnings.h"
 #include "ceres/linear_solver.h"
 #include "ceres/sparse_cholesky.h"
 #include "cholmod.h"
 #include "glog/logging.h"
 
-// Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
-// if SuiteSparse was compiled with Metis support. This makes
-// calling and linking into cholmod_camd problematic even though it
-// has nothing to do with Metis. This has been fixed reliably in
-// 4.2.0.
-//
-// The fix was actually committed in 4.1.0, but there is
-// some confusion about a silent update to the tar ball, so we are
-// being conservative and choosing the next minor version where
-// things are stable.
-#if (SUITESPARSE_VERSION < 4002)
-#define CERES_NO_CAMD
-#endif
-
-// UF_long is deprecated but SuiteSparse_long is only available in
-// newer versions of SuiteSparse. So for older versions of
-// SuiteSparse, we define SuiteSparse_long to be the same as UF_long,
-// which is what recent versions of SuiteSparse do anyways.
-#ifndef SuiteSparse_long
-#define SuiteSparse_long UF_long
-#endif
-
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class CompressedRowSparseMatrix;
 class TripletSparseMatrix;
@@ -80,14 +61,14 @@ class TripletSparseMatrix;
 // provides the user with a simpler interface. The methods here cannot
 // be static as a cholmod_common object serves as a global variable
 // for all cholmod function calls.
-class SuiteSparse {
+class CERES_NO_EXPORT SuiteSparse {
  public:
   SuiteSparse();
   ~SuiteSparse();
 
   // Functions for building cholmod_sparse objects from sparse
   // matrices stored in triplet form. The matrix A is not
-  // modifed. Called owns the result.
+  // modified. Called owns the result.
   cholmod_sparse* CreateSparseMatrix(TripletSparseMatrix* A);
 
   // This function works like CreateSparseMatrix, except that the
@@ -99,8 +80,13 @@ class SuiteSparse {
   // use the SuiteSparse machinery to allocate memory.
   cholmod_sparse CreateSparseMatrixTransposeView(CompressedRowSparseMatrix* A);
 
+  // Create a cholmod_dense vector around the contents of the array x.
+  // This is a shallow object, which refers to the contents of x and
+  // does not use the SuiteSparse machinery to allocate memory.
+  cholmod_dense CreateDenseVectorView(const double* x, int size);
+
   // Given a vector x, build a cholmod_dense vector of size out_size
-  // with the first in_size entries copied from x. If x is NULL, then
+  // with the first in_size entries copied from x. If x is nullptr, then
   // an all zeros vector is returned. Caller owns the result.
   cholmod_dense* CreateDenseVector(const double* x, int in_size, int out_size);
 
@@ -111,31 +97,33 @@ class SuiteSparse {
   // for symmetric scaling which scales both the rows and the columns
   // - diag(scale) * A * diag(scale).
   void Scale(cholmod_dense* scale, int mode, cholmod_sparse* A) {
-     cholmod_scale(scale, mode, A, &cc_);
+    cholmod_scale(scale, mode, A, &cc_);
   }
 
   // Create and return a matrix m = A * A'. Caller owns the
   // result. The matrix A is not modified.
   cholmod_sparse* AATranspose(cholmod_sparse* A) {
-    cholmod_sparse*m =  cholmod_aat(A, NULL, A->nrow, 1, &cc_);
+    cholmod_sparse* m = cholmod_aat(A, nullptr, A->nrow, 1, &cc_);
     m->stype = 1;  // Pay attention to the upper triangular part.
     return m;
   }
 
   // y = alpha * A * x + beta * y. Only y is modified.
-  void SparseDenseMultiply(cholmod_sparse* A, double alpha, double beta,
-                           cholmod_dense* x, cholmod_dense* y) {
+  void SparseDenseMultiply(cholmod_sparse* A,
+                           double alpha,
+                           double beta,
+                           cholmod_dense* x,
+                           cholmod_dense* y) {
     double alpha_[2] = {alpha, 0};
     double beta_[2] = {beta, 0};
     cholmod_sdmult(A, 0, alpha_, beta_, x, y, &cc_);
   }
 
-  // Find an ordering of A or AA' (if A is unsymmetric) that minimizes
-  // the fill-in in the Cholesky factorization of the corresponding
-  // matrix. This is done by using the AMD algorithm.
-  //
-  // Using this ordering, the symbolic Cholesky factorization of A (or
-  // AA') is computed and returned.
+  // Compute a symbolic factorization for A or AA' (if A is
+  // unsymmetric). If ordering_type is NATURAL, then no fill reducing
+  // ordering is computed, otherwise depending on the value of
+  // ordering_type AMD or Nested Dissection is used to compute a fill
+  // reducing ordering before the symbolic factorization is computed.
   //
   // A is not modified, only the pattern of non-zeros of A is used,
   // the actual numerical values in A are of no consequence.
@@ -143,11 +131,15 @@ class SuiteSparse {
   // message contains an explanation of the failures if any.
   //
   // Caller owns the result.
-  cholmod_factor* AnalyzeCholesky(cholmod_sparse* A, std::string* message);
+  cholmod_factor* AnalyzeCholesky(cholmod_sparse* A,
+                                  OrderingType ordering_type,
+                                  std::string* message);
 
+  // Block oriented version of AnalyzeCholesky.
   cholmod_factor* BlockAnalyzeCholesky(cholmod_sparse* A,
-                                       const std::vector<int>& row_blocks,
-                                       const std::vector<int>& col_blocks,
+                                       OrderingType ordering_type,
+                                       const std::vector<Block>& row_blocks,
+                                       const std::vector<Block>& col_blocks,
                                        std::string* message);
 
   // If A is symmetric, then compute the symbolic Cholesky
@@ -161,19 +153,10 @@ class SuiteSparse {
   // message contains an explanation of the failures if any.
   //
   // Caller owns the result.
-  cholmod_factor* AnalyzeCholeskyWithUserOrdering(
+  cholmod_factor* AnalyzeCholeskyWithGivenOrdering(
       cholmod_sparse* A,
       const std::vector<int>& ordering,
       std::string* message);
-
-  // Perform a symbolic factorization of A without re-ordering A. No
-  // postordering of the elimination tree is performed. This ensures
-  // that the symbolic factor does not introduce an extra permutation
-  // on the matrix. See the documentation for CHOLMOD for more details.
-  //
-  // message contains an explanation of the failures if any.
-  cholmod_factor* AnalyzeCholeskyWithNaturalOrdering(cholmod_sparse* A,
-                                                     std::string* message);
 
   // Use the symbolic factorization in L, to find the numerical
   // factorization for the matrix A or AA^T. Return true if
@@ -187,57 +170,46 @@ class SuiteSparse {
 
   // Given a Cholesky factorization of a matrix A = LL^T, solve the
   // linear system Ax = b, and return the result. If the Solve fails
-  // NULL is returned. Caller owns the result.
+  // nullptr is returned. Caller owns the result.
   //
   // message contains an explanation of the failures if any.
-  cholmod_dense* Solve(cholmod_factor* L, cholmod_dense* b, std::string* message);
+  cholmod_dense* Solve(cholmod_factor* L,
+                       cholmod_dense* b,
+                       std::string* message);
 
+  // Find a fill reducing ordering. ordering is expected to be large
+  // enough to hold the ordering. ordering_type must be AMD or NESDIS.
+  bool Ordering(cholmod_sparse* matrix,
+                OrderingType ordering_type,
+                int* ordering);
+
+  // Find the block oriented fill reducing ordering of a matrix A,
+  // whose row and column blocks are given by row_blocks, and
+  // col_blocks respectively. The matrix may or may not be
+  // symmetric. The entries of col_blocks do not need to sum to the
+  // number of columns in A. If this is the case, only the first
+  // sum(col_blocks) are used to compute the ordering.
+  //
   // By virtue of the modeling layer in Ceres being block oriented,
   // all the matrices used by Ceres are also block oriented. When
   // doing sparse direct factorization of these matrices the
-  // fill-reducing ordering algorithms (in particular AMD) can either
-  // be run on the block or the scalar form of these matrices. The two
-  // SuiteSparse::AnalyzeCholesky methods allows the the client to
-  // compute the symbolic factorization of a matrix by either using
-  // AMD on the matrix or a user provided ordering of the rows.
-  //
-  // But since the underlying matrices are block oriented, it is worth
-  // running AMD on just the block structre of these matrices and then
-  // lifting these block orderings to a full scalar ordering. This
-  // preserves the block structure of the permuted matrix, and exposes
-  // more of the super-nodal structure of the matrix to the numerical
-  // factorization routines.
-  //
-  // Find the block oriented AMD ordering of a matrix A, whose row and
-  // column blocks are given by row_blocks, and col_blocks
-  // respectively. The matrix may or may not be symmetric. The entries
-  // of col_blocks do not need to sum to the number of columns in
-  // A. If this is the case, only the first sum(col_blocks) are used
-  // to compute the ordering.
-  bool BlockAMDOrdering(const cholmod_sparse* A,
-                        const std::vector<int>& row_blocks,
-                        const std::vector<int>& col_blocks,
-                        std::vector<int>* ordering);
+  // fill-reducing ordering algorithms can either be run on the block
+  // or the scalar form of these matrices. But since the underlying
+  // matrices are block oriented, it is worth running the fill
+  // reducing ordering on just the block structure of these matrices
+  // and then lifting these block orderings to a full scalar
+  // ordering. This preserves the block structure of the permuted
+  // matrix, and exposes more of the super-nodal structure of the
+  // matrix to the numerical factorization routines.
+  bool BlockOrdering(const cholmod_sparse* A,
+                     OrderingType ordering_type,
+                     const std::vector<Block>& row_blocks,
+                     const std::vector<Block>& col_blocks,
+                     std::vector<int>* ordering);
 
-  // Find a fill reducing approximate minimum degree
-  // ordering. ordering is expected to be large enough to hold the
-  // ordering.
-  bool ApproximateMinimumDegreeOrdering(cholmod_sparse* matrix, int* ordering);
-
-
-  // Before SuiteSparse version 4.2.0, cholmod_camd was only enabled
-  // if SuiteSparse was compiled with Metis support. This makes
-  // calling and linking into cholmod_camd problematic even though it
-  // has nothing to do with Metis. This has been fixed reliably in
-  // 4.2.0.
-  //
-  // The fix was actually committed in 4.1.0, but there is
-  // some confusion about a silent update to the tar ball, so we are
-  // being conservative and choosing the next minor version where
-  // things are stable.
-  static bool IsConstrainedApproximateMinimumDegreeOrderingAvailable() {
-    return (SUITESPARSE_VERSION > 4001);
-  }
+  // Nested dissection is only available if SuiteSparse is compiled
+  // with Metis support.
+  static bool IsNestedDissectionAvailable();
 
   // Find a fill reducing approximate minimum degree
   // ordering. constraints is an array which associates with each
@@ -249,15 +221,12 @@ class SuiteSparse {
   // Calling ApproximateMinimumDegreeOrdering is equivalent to calling
   // ConstrainedApproximateMinimumDegreeOrdering with a constraint
   // array that puts all columns in the same elimination group.
-  //
-  // If CERES_NO_CAMD is defined then calling this function will
-  // result in a crash.
   bool ConstrainedApproximateMinimumDegreeOrdering(cholmod_sparse* matrix,
                                                    int* constraints,
                                                    int* ordering);
 
   void Free(cholmod_sparse* m) { cholmod_free_sparse(&m, &cc_); }
-  void Free(cholmod_dense* m)  { cholmod_free_dense(&m, &cc_);  }
+  void Free(cholmod_dense* m) { cholmod_free_dense(&m, &cc_); }
   void Free(cholmod_factor* m) { cholmod_free_factor(&m, &cc_); }
 
   void Print(cholmod_sparse* m, const std::string& name) {
@@ -278,54 +247,52 @@ class SuiteSparse {
   cholmod_common cc_;
 };
 
-class SuiteSparseCholesky : public SparseCholesky {
+class CERES_NO_EXPORT SuiteSparseCholesky final : public SparseCholesky {
  public:
-  static SuiteSparseCholesky* Create(const OrderingType ordering_type);
+  static std::unique_ptr<SparseCholesky> Create(OrderingType ordering_type);
 
   // SparseCholesky interface.
-  virtual ~SuiteSparseCholesky();
-  virtual CompressedRowSparseMatrix::StorageType StorageType() const;
-  virtual LinearSolverTerminationType Factorize(
-      CompressedRowSparseMatrix* lhs, std::string* message);
-  virtual LinearSolverTerminationType Solve(const double* rhs,
-                                            double* solution,
-                                            std::string* message);
+  ~SuiteSparseCholesky() override;
+  CompressedRowSparseMatrix::StorageType StorageType() const final;
+  LinearSolverTerminationType Factorize(CompressedRowSparseMatrix* lhs,
+                                        std::string* message) final;
+  LinearSolverTerminationType Solve(const double* rhs,
+                                    double* solution,
+                                    std::string* message) final;
+
  private:
-  SuiteSparseCholesky(const OrderingType ordering_type);
+  explicit SuiteSparseCholesky(const OrderingType ordering_type);
 
   const OrderingType ordering_type_;
   SuiteSparse ss_;
   cholmod_factor* factor_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #else  // CERES_NO_SUITESPARSE
 
-typedef void cholmod_factor;
+using cholmod_factor = void;
+
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 namespace internal {
 
-class SuiteSparse {
+class CERES_NO_EXPORT SuiteSparse {
  public:
-  // Defining this static function even when SuiteSparse is not
-  // available, allows client code to check for the presence of CAMD
-  // without checking for the absence of the CERES_NO_CAMD symbol.
-  //
-  // This is safer because the symbol maybe missing due to a user
-  // accidently not including suitesparse.h in their code when
-  // checking for the symbol.
-  static bool IsConstrainedApproximateMinimumDegreeOrderingAvailable() {
-    return false;
-  }
-
-  void Free(void* arg) {}
+  // Nested dissection is only available if SuiteSparse is compiled
+  // with Metis support.
+  static bool IsNestedDissectionAvailable() { return false; }
+  void Free(void* /*arg*/) {}
 };
 
 }  // namespace internal
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_NO_SUITESPARSE
 

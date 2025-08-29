@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,12 +34,12 @@
 #ifndef CERES_PUBLIC_CONDITIONED_COST_FUNCTION_H_
 #define CERES_PUBLIC_CONDITIONED_COST_FUNCTION_H_
 
+#include <memory>
 #include <vector>
 
 #include "ceres/cost_function.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/types.h"
 #include "ceres/internal/disable_warnings.h"
+#include "ceres/types.h"
 
 namespace ceres {
 
@@ -71,23 +71,25 @@ namespace ceres {
 //   ccf_residual[i] = f_i(my_cost_function_residual[i])
 //
 // and the Jacobian will be affected appropriately.
-class CERES_EXPORT ConditionedCostFunction : public CostFunction {
+class CERES_EXPORT ConditionedCostFunction final : public CostFunction {
  public:
   // Builds a cost function based on a wrapped cost function, and a
   // per-residual conditioner. Takes ownership of all of the wrapped cost
   // functions, or not, depending on the ownership parameter. Conditioners
-  // may be NULL, in which case the corresponding residual is not modified.
+  // may be nullptr, in which case the corresponding residual is not modified.
+  //
+  // The conditioners can repeat.
   ConditionedCostFunction(CostFunction* wrapped_cost_function,
                           const std::vector<CostFunction*>& conditioners,
                           Ownership ownership);
-  virtual ~ConditionedCostFunction();
+  ~ConditionedCostFunction() override;
 
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const;
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const override;
 
  private:
-  internal::scoped_ptr<CostFunction> wrapped_cost_function_;
+  std::unique_ptr<CostFunction> wrapped_cost_function_;
   std::vector<CostFunction*> conditioners_;
   Ownership ownership_;
 };

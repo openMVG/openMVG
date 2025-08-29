@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,20 +31,24 @@
 #ifndef CERES_INTERNAL_TRIPLET_SPARSE_MATRIX_H_
 #define CERES_INTERNAL_TRIPLET_SPARSE_MATRIX_H_
 
+#include <memory>
+#include <random>
 #include <vector>
-#include "ceres/sparse_matrix.h"
+
+#include "ceres/crs_matrix.h"
+#include "ceres/internal/disable_warnings.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
+#include "ceres/internal/export.h"
+#include "ceres/sparse_matrix.h"
 #include "ceres/types.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 // An implementation of the SparseMatrix interface to store and
 // manipulate sparse matrices in triplet (i,j,s) form.  This object is
 // inspired by the design of the cholmod_triplet struct used in the
 // SuiteSparse package and is memory layout compatible with it.
-class TripletSparseMatrix : public SparseMatrix {
+class CERES_NO_EXPORT TripletSparseMatrix final : public SparseMatrix {
  public:
   TripletSparseMatrix();
   TripletSparseMatrix(int num_rows, int num_cols, int max_num_nonzeros);
@@ -54,26 +58,29 @@ class TripletSparseMatrix : public SparseMatrix {
                       const std::vector<int>& cols,
                       const std::vector<double>& values);
 
-  explicit TripletSparseMatrix(const TripletSparseMatrix& orig);
+  TripletSparseMatrix(const TripletSparseMatrix& orig);
 
   TripletSparseMatrix& operator=(const TripletSparseMatrix& rhs);
 
-  ~TripletSparseMatrix();
+  ~TripletSparseMatrix() override;
 
   // Implementation of the SparseMatrix interface.
-  virtual void SetZero();
-  virtual void RightMultiply(const double* x, double* y) const;
-  virtual void LeftMultiply(const double* x, double* y) const;
-  virtual void SquaredColumnNorm(double* x) const;
-  virtual void ScaleColumns(const double* scale);
-  virtual void ToDenseMatrix(Matrix* dense_matrix) const;
-  virtual void ToTextFile(FILE* file) const;
-  virtual int num_rows()        const { return num_rows_;     }
-  virtual int num_cols()        const { return num_cols_;     }
-  virtual int num_nonzeros()    const { return num_nonzeros_; }
-  virtual const double* values()  const { return values_.get(); }
-  virtual double* mutable_values()      { return values_.get(); }
-  virtual void set_num_nonzeros(int num_nonzeros);
+  void SetZero() final;
+  void RightMultiplyAndAccumulate(const double* x, double* y) const final;
+  void LeftMultiplyAndAccumulate(const double* x, double* y) const final;
+  void SquaredColumnNorm(double* x) const final;
+  void ScaleColumns(const double* scale) final;
+  void ToCRSMatrix(CRSMatrix* matrix) const;
+  void ToDenseMatrix(Matrix* dense_matrix) const final;
+  void ToTextFile(FILE* file) const final;
+  // clang-format off
+  int num_rows()        const final   { return num_rows_;     }
+  int num_cols()        const final   { return num_cols_;     }
+  int num_nonzeros()    const final   { return num_nonzeros_; }
+  const double* values()  const final { return values_.get(); }
+  double* mutable_values() final      { return values_.get(); }
+  // clang-format on
+  void set_num_nonzeros(int num_nonzeros);
 
   // Increase max_num_nonzeros and correspondingly increase the size
   // of rows_, cols_ and values_. If new_max_num_nonzeros is smaller
@@ -94,11 +101,13 @@ class TripletSparseMatrix : public SparseMatrix {
   // bounds are dropped and the num_non_zeros changed accordingly.
   void Resize(int new_num_rows, int new_num_cols);
 
+  // clang-format off
   int max_num_nonzeros() const { return max_num_nonzeros_; }
   const int* rows()      const { return rows_.get();       }
   const int* cols()      const { return cols_.get();       }
   int* mutable_rows()          { return rows_.get();       }
   int* mutable_cols()          { return cols_.get();       }
+  // clang-format on
 
   // Returns true if the entries of the matrix obey the row, column,
   // and column size bounds and false otherwise.
@@ -109,8 +118,8 @@ class TripletSparseMatrix : public SparseMatrix {
   // Build a sparse diagonal matrix of size num_rows x num_rows from
   // the array values. Entries of the values array are copied into the
   // sparse matrix.
-  static TripletSparseMatrix* CreateSparseDiagonalMatrix(const double* values,
-                                                         int num_rows);
+  static std::unique_ptr<TripletSparseMatrix> CreateSparseDiagonalMatrix(
+      const double* values, int num_rows);
 
   // Options struct to control the generation of random
   // TripletSparseMatrix objects.
@@ -126,10 +135,12 @@ class TripletSparseMatrix : public SparseMatrix {
   // Create a random CompressedRowSparseMatrix whose entries are
   // normally distributed and whose structure is determined by
   // RandomMatrixOptions.
-  //
-  // Caller owns the result.
-  static TripletSparseMatrix* CreateRandomMatrix(
-      const TripletSparseMatrix::RandomMatrixOptions& options);
+  static std::unique_ptr<TripletSparseMatrix> CreateRandomMatrix(
+      const TripletSparseMatrix::RandomMatrixOptions& options,
+      std::mt19937& prng);
+
+  // Load a triplet sparse matrix from a text file.
+  static std::unique_ptr<TripletSparseMatrix> CreateFromTextFile(FILE* file);
 
  private:
   void AllocateMemory();
@@ -144,12 +155,13 @@ class TripletSparseMatrix : public SparseMatrix {
   // stored at the location (rows_[i], cols_[i]). If the there are
   // multiple entries with the same (rows_[i], cols_[i]), the values_
   // entries corresponding to them are summed up.
-  scoped_array<int> rows_;
-  scoped_array<int> cols_;
-  scoped_array<double> values_;
+  std::unique_ptr<int[]> rows_;
+  std::unique_ptr<int[]> cols_;
+  std::unique_ptr<double[]> values_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_TRIPLET_SPARSE_MATRIX_H__

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,14 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/low_rank_inverse_hessian.h"
+
 #include <list>
 
 #include "ceres/internal/eigen.h"
-#include "ceres/low_rank_inverse_hessian.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
-
-using std::list;
+namespace ceres::internal {
 
 // The (L)BFGS algorithm explicitly requires that the secant equation:
 //
@@ -84,8 +82,7 @@ LowRankInverseHessian::LowRankInverseHessian(
       approximate_eigenvalue_scale_(1.0),
       delta_x_history_(num_parameters, max_num_corrections),
       delta_gradient_history_(num_parameters, max_num_corrections),
-      delta_x_dot_delta_gradient_(max_num_corrections) {
-}
+      delta_x_dot_delta_gradient_(max_num_corrections) {}
 
 bool LowRankInverseHessian::Update(const Vector& delta_x,
                                    const Vector& delta_gradient) {
@@ -93,12 +90,11 @@ bool LowRankInverseHessian::Update(const Vector& delta_x,
   if (delta_x_dot_delta_gradient <=
       kLBFGSSecantConditionHessianUpdateTolerance) {
     VLOG(2) << "Skipping L-BFGS Update, delta_x_dot_delta_gradient too "
-            << "small: " << delta_x_dot_delta_gradient << ", tolerance: "
-            << kLBFGSSecantConditionHessianUpdateTolerance
+            << "small: " << delta_x_dot_delta_gradient
+            << ", tolerance: " << kLBFGSSecantConditionHessianUpdateTolerance
             << " (Secant condition).";
     return false;
   }
-
 
   int next = indices_.size();
   // Once the size of the list reaches max_num_corrections_, simulate
@@ -118,8 +114,8 @@ bool LowRankInverseHessian::Update(const Vector& delta_x,
   return true;
 }
 
-void LowRankInverseHessian::RightMultiply(const double* x_ptr,
-                                          double* y_ptr) const {
+void LowRankInverseHessian::RightMultiplyAndAccumulate(const double* x_ptr,
+                                                       double* y_ptr) const {
   ConstVectorRef gradient(x_ptr, num_parameters_);
   VectorRef search_direction(y_ptr, num_parameters_);
 
@@ -128,11 +124,9 @@ void LowRankInverseHessian::RightMultiply(const double* x_ptr,
   const int num_corrections = indices_.size();
   Vector alpha(num_corrections);
 
-  for (list<int>::const_reverse_iterator it = indices_.rbegin();
-       it != indices_.rend();
-       ++it) {
+  for (auto it = indices_.rbegin(); it != indices_.rend(); ++it) {
     const double alpha_i = delta_x_history_.col(*it).dot(search_direction) /
-        delta_x_dot_delta_gradient_(*it);
+                           delta_x_dot_delta_gradient_(*it);
     search_direction -= alpha_i * delta_gradient_history_.col(*it);
     alpha(*it) = alpha_i;
   }
@@ -162,7 +156,7 @@ void LowRankInverseHessian::RightMultiply(const double* x_ptr,
     //
     // The original origin of this rescaling trick is somewhat unclear, the
     // earliest reference appears to be Oren [1], however it is widely discussed
-    // without specific attributation in various texts including [2] (p143/178).
+    // without specific attribution in various texts including [2] (p143/178).
     //
     // [1] Oren S.S., Self-scaling variable metric (SSVM) algorithms Part II:
     //     Implementation and experiments, Management Science,
@@ -175,14 +169,11 @@ void LowRankInverseHessian::RightMultiply(const double* x_ptr,
             << "approximation.";
   }
 
-  for (list<int>::const_iterator it = indices_.begin();
-       it != indices_.end();
-       ++it) {
-    const double beta = delta_gradient_history_.col(*it).dot(search_direction) /
-        delta_x_dot_delta_gradient_(*it);
-    search_direction += delta_x_history_.col(*it) * (alpha(*it) - beta);
+  for (const int i : indices_) {
+    const double beta = delta_gradient_history_.col(i).dot(search_direction) /
+                        delta_x_dot_delta_gradient_(i);
+    search_direction += delta_x_history_.col(i) * (alpha(i) - beta);
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

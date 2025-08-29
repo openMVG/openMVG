@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,23 +28,22 @@
 //
 // Author: strandmark@google.com (Petter Strandmark)
 //
-// Class for loading the data required for descibing a Fields of Experts (FoE)
+// Class for loading the data required for describing a Fields of Experts (FoE)
 // model.
 
 #include "fields_of_experts.h"
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
 
 #include "pgm_image.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
 FieldsOfExpertsCost::FieldsOfExpertsCost(const std::vector<double>& filter)
     : filter_(filter) {
   set_num_residuals(1);
-  for (int i = 0; i < filter_.size(); ++i) {
+  for (int64_t i = 0; i < filter_.size(); ++i) {
     mutable_parameter_block_sizes()->push_back(1);
   }
 }
@@ -54,15 +53,15 @@ FieldsOfExpertsCost::FieldsOfExpertsCost(const std::vector<double>& filter)
 bool FieldsOfExpertsCost::Evaluate(double const* const* parameters,
                                    double* residuals,
                                    double** jacobians) const {
-  int num_variables = filter_.size();
+  const int64_t num_variables = filter_.size();
   residuals[0] = 0;
-  for (int i = 0; i < num_variables; ++i) {
+  for (int64_t i = 0; i < num_variables; ++i) {
     residuals[0] += filter_[i] * parameters[i][0];
   }
 
-  if (jacobians != NULL) {
-    for (int i = 0; i < num_variables; ++i) {
-      if (jacobians[i] != NULL) {
+  if (jacobians != nullptr) {
+    for (int64_t i = 0; i < num_variables; ++i) {
+      if (jacobians[i] != nullptr) {
         jacobians[i][0] = filter_[i];
       }
     }
@@ -80,14 +79,12 @@ void FieldsOfExpertsLoss::Evaluate(double sq_norm, double rho[3]) const {
   const double sum = 1.0 + sq_norm * c;
   const double inv = 1.0 / sum;
   // 'sum' and 'inv' are always positive, assuming that 's' is.
-  rho[0] = alpha_ *  log(sum);
+  rho[0] = alpha_ * log(sum);
   rho[1] = alpha_ * c * inv;
-  rho[2] = - alpha_ * c * c * inv * inv;
+  rho[2] = -alpha_ * c * c * inv * inv;
 }
 
-FieldsOfExperts::FieldsOfExperts()
-    :  size_(0), num_filters_(0) {
-}
+FieldsOfExperts::FieldsOfExperts() : size_(0), num_filters_(0) {}
 
 bool FieldsOfExperts::LoadFromFile(const std::string& filename) {
   std::ifstream foe_file(filename.c_str());
@@ -147,6 +144,4 @@ ceres::LossFunction* FieldsOfExperts::NewLossFunction(int alpha_index) const {
   return new FieldsOfExpertsLoss(alpha_[alpha_index]);
 }
 
-
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples

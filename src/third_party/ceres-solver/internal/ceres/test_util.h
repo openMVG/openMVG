@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,17 @@
 //
 // Author: keir@google.com (Keir Mierle)
 
+#ifndef CERES_INTERNAL_TEST_UTIL_H_
+#define CERES_INTERNAL_TEST_UTIL_H_
+
 #include <string>
-#include "ceres/internal/port.h"
+
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/problem.h"
 #include "ceres/solver.h"
 #include "ceres/stringprintf.h"
 #include "gtest/gtest.h"
-
-
-#ifndef CERES_INTERNAL_TEST_UTIL_H_
-#define CERES_INTERNAL_TEST_UTIL_H_
 
 namespace ceres {
 namespace internal {
@@ -45,15 +46,19 @@ namespace internal {
 // Expects that x and y have a relative difference of no more than
 // max_abs_relative_difference. If either x or y is zero, then the relative
 // difference is interpreted as an absolute difference.
-bool ExpectClose(double x, double y, double max_abs_relative_difference);
+// If x and y have the same non-finite value (inf or nan) we treat them as being
+// close. In such a case no error is thrown and true is returned.
+CERES_NO_EXPORT bool ExpectClose(double x,
+                                 double y,
+                                 double max_abs_relative_difference);
 
 // Expects that for all i = 1,.., n - 1
 //
 //   |p[i] - q[i]| / max(|p[i]|, |q[i]|) < tolerance
-void ExpectArraysClose(int n,
-                       const double* p,
-                       const double* q,
-                       double tolerance);
+CERES_NO_EXPORT void ExpectArraysClose(int n,
+                                       const double* p,
+                                       const double* q,
+                                       double tolerance);
 
 // Expects that for all i = 1,.., n - 1
 //
@@ -61,68 +66,16 @@ void ExpectArraysClose(int n,
 //
 // where max_norm_p and max_norm_q are the max norms of the arrays p
 // and q respectively.
-void ExpectArraysCloseUptoScale(int n,
-                                const double* p,
-                                const double* q,
-                                double tolerance);
+CERES_NO_EXPORT void ExpectArraysCloseUptoScale(int n,
+                                                const double* p,
+                                                const double* q,
+                                                double tolerance);
 
 // Construct a fully qualified path for the test file depending on the
 // local build/testing environment.
-std::string TestFileAbsolutePath(const std::string& filename);
+CERES_NO_EXPORT std::string TestFileAbsolutePath(const std::string& filename);
 
-// Struct used for configuring the solver. Used by end-to-end tests.
-struct SolverConfig {
-  SolverConfig(
-      LinearSolverType linear_solver_type,
-      SparseLinearAlgebraLibraryType
-      sparse_linear_algebra_library_type = NO_SPARSE,
-      bool use_automatic_ordering = true,
-      PreconditionerType preconditioner_type = IDENTITY,
-      int num_threads = 1)
-      : linear_solver_type(linear_solver_type),
-        sparse_linear_algebra_library_type(sparse_linear_algebra_library_type),
-        use_automatic_ordering(use_automatic_ordering),
-        preconditioner_type(preconditioner_type),
-        num_threads(num_threads) {
-  }
-
-  std::string ToString() const {
-    return StringPrintf(
-        "(%s, %s, %s, %s, %d)",
-        LinearSolverTypeToString(linear_solver_type),
-        SparseLinearAlgebraLibraryTypeToString(
-            sparse_linear_algebra_library_type),
-        use_automatic_ordering ? "AUTOMATIC" : "USER",
-        PreconditionerTypeToString(preconditioner_type),
-        num_threads);
-  }
-
-  void UpdateOptions(Solver::Options* options) const {
-    options->linear_solver_type = linear_solver_type;
-    options->sparse_linear_algebra_library_type =
-        sparse_linear_algebra_library_type;
-    options->preconditioner_type = preconditioner_type;
-    options->num_threads = num_threads;
-    options->num_linear_solver_threads = num_threads;
-
-    if (use_automatic_ordering) {
-      options->linear_solver_ordering.reset();
-    }
-  }
-
-  LinearSolverType linear_solver_type;
-  SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type;
-  bool use_automatic_ordering;
-  PreconditionerType preconditioner_type;
-  int num_threads;
-};
-
-SolverConfig ThreadedSolverConfig(
-    LinearSolverType linear_solver_type,
-    SparseLinearAlgebraLibraryType
-    sparse_linear_algebra_library_type = NO_SPARSE,
-    bool use_automatic_ordering = true,
-    PreconditionerType preconditioner_type = IDENTITY);
+CERES_NO_EXPORT std::string ToString(const Solver::Options& options);
 
 // A templated test fixture, that is used for testing Ceres end to end
 // by computing a solution to the problem for a given solver
@@ -130,10 +83,10 @@ SolverConfig ThreadedSolverConfig(
 //
 // It is assumed that the SystemTestProblem has an Solver::Options
 // struct that contains the reference Solver configuration.
-template <class SystemTestProblem>
-class SystemTest : public::testing::Test {
+template <typename SystemTestProblem>
+class CERES_NO_EXPORT SystemTest : public ::testing::Test {
  protected:
-  virtual void SetUp() {
+  void SetUp() final {
     SystemTestProblem system_test_problem;
     SolveAndEvaluateFinalResiduals(
         *system_test_problem.mutable_solver_options(),
@@ -141,17 +94,10 @@ class SystemTest : public::testing::Test {
         &expected_final_residuals_);
   }
 
-  void RunSolverForConfigAndExpectResidualsMatch(const SolverConfig& config) {
-    LOG(INFO) << "Running solver configuration: "
-              << config.ToString();
-
-    SystemTestProblem system_test_problem;
-    config.UpdateOptions(system_test_problem.mutable_solver_options());
+  void RunSolverForConfigAndExpectResidualsMatch(const Solver::Options& options,
+                                                 Problem* problem) {
     std::vector<double> final_residuals;
-    SolveAndEvaluateFinalResiduals(
-        *system_test_problem.mutable_solver_options(),
-        system_test_problem.mutable_problem(),
-        &final_residuals);
+    SolveAndEvaluateFinalResiduals(options, problem, &final_residuals);
 
     // We compare solutions by comparing their residual vectors. We do
     // not compare parameter vectors because it is much more brittle
@@ -173,11 +119,8 @@ class SystemTest : public::testing::Test {
     Solver::Summary summary;
     Solve(options, problem, &summary);
     CHECK_NE(summary.termination_type, ceres::FAILURE);
-    problem->Evaluate(Problem::EvaluateOptions(),
-                      NULL,
-                      final_residuals,
-                      NULL,
-                      NULL);
+    problem->Evaluate(
+        Problem::EvaluateOptions(), nullptr, final_residuals, nullptr, nullptr);
   }
 
   std::vector<double> expected_final_residuals_;
@@ -185,5 +128,7 @@ class SystemTest : public::testing::Test {
 
 }  // namespace internal
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_TEST_UTIL_H_

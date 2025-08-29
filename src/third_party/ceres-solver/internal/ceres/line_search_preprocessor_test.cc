@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,16 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/line_search_preprocessor.h"
+
 #include <map>
 
 #include "ceres/problem_impl.h"
 #include "ceres/sized_cost_function.h"
 #include "ceres/solver.h"
-#include "ceres/line_search_preprocessor.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 TEST(LineSearchPreprocessor, ZeroProblem) {
   ProblemImpl problem;
@@ -76,7 +76,7 @@ class FailingCostFunction : public SizedCostFunction<1, 1> {
  public:
   bool Evaluate(double const* const* parameters,
                 double* residuals,
-                double** jacobians) const {
+                double** jacobians) const override {
     return false;
   }
 };
@@ -84,7 +84,7 @@ class FailingCostFunction : public SizedCostFunction<1, 1> {
 TEST(LineSearchPreprocessor, RemoveParameterBlocksFailed) {
   ProblemImpl problem;
   double x = 3.0;
-  problem.AddResidualBlock(new FailingCostFunction, NULL, &x);
+  problem.AddResidualBlock(new FailingCostFunction, nullptr, &x);
   problem.SetParameterBlockConstant(&x);
   Solver::Options options;
   options.minimizer_type = LINE_SEARCH;
@@ -99,17 +99,18 @@ TEST(LineSearchPreprocessor, RemoveParameterBlocksSucceeds) {
   problem.AddParameterBlock(&x, 1);
   Solver::Options options;
   options.minimizer_type = LINE_SEARCH;
+
   LineSearchPreprocessor preprocessor;
   PreprocessedProblem pp;
   EXPECT_TRUE(preprocessor.Preprocess(options, &problem, &pp));
 }
 
-template<int kNumResiduals, int N1 = 0, int N2 = 0, int N3 = 0>
-class DummyCostFunction : public SizedCostFunction<kNumResiduals, N1, N2, N3> {
+template <int kNumResiduals, int... Ns>
+class DummyCostFunction : public SizedCostFunction<kNumResiduals, Ns...> {
  public:
   bool Evaluate(double const* const* parameters,
                 double* residuals,
-                double** jacobians) const {
+                double** jacobians) const override {
     return true;
   }
 };
@@ -119,8 +120,8 @@ TEST(LineSearchPreprocessor, NormalOperation) {
   double x = 1.0;
   double y = 1.0;
   double z = 1.0;
-  problem.AddResidualBlock(new DummyCostFunction<1, 1, 1>, NULL, &x, &y);
-  problem.AddResidualBlock(new DummyCostFunction<1, 1, 1>, NULL, &y, &z);
+  problem.AddResidualBlock(new DummyCostFunction<1, 1, 1>, nullptr, &x, &y);
+  problem.AddResidualBlock(new DummyCostFunction<1, 1, 1>, nullptr, &y, &z);
 
   Solver::Options options;
   options.minimizer_type = LINE_SEARCH;
@@ -129,8 +130,7 @@ TEST(LineSearchPreprocessor, NormalOperation) {
   PreprocessedProblem pp;
   EXPECT_TRUE(preprocessor.Preprocess(options, &problem, &pp));
   EXPECT_EQ(pp.evaluator_options.linear_solver_type, CGNR);
-  EXPECT_TRUE(pp.evaluator.get() != NULL);
+  EXPECT_TRUE(pp.evaluator.get() != nullptr);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

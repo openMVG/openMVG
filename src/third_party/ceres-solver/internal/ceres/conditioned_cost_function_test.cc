@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ namespace ceres {
 namespace internal {
 
 // The size of the cost functions we build.
-static const int kTestCostFunctionSize = 3;
+static constexpr int kTestCostFunctionSize = 3;
 
 // A simple cost function: return ax + b.
 class LinearCostFunction : public CostFunction {
@@ -51,9 +51,9 @@ class LinearCostFunction : public CostFunction {
     mutable_parameter_block_sizes()->push_back(1);
   }
 
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     *residuals = **parameters * a_ + b_;
     if (jacobians && *jacobians) {
       **jacobians = a_;
@@ -67,7 +67,7 @@ class LinearCostFunction : public CostFunction {
 };
 
 // Tests that ConditionedCostFunction does what it's supposed to.
-TEST(CostFunctionTest, ConditionedCostFunction) {
+TEST(ConditionedCostFunction, NormalOperation) {
   double v1[kTestCostFunctionSize], v2[kTestCostFunctionSize],
       jac[kTestCostFunctionSize * kTestCostFunctionSize],
       result[kTestCostFunctionSize];
@@ -85,24 +85,23 @@ TEST(CostFunctionTest, ConditionedCostFunction) {
   VectorRef v2_vector(v2, kTestCostFunctionSize, 1);
   Matrix identity(kTestCostFunctionSize, kTestCostFunctionSize);
   identity.setIdentity();
-  NormalPrior* difference_cost_function = new NormalPrior(identity, v2_vector);
+  auto* difference_cost_function = new NormalPrior(identity, v2_vector);
 
   std::vector<CostFunction*> conditioners;
   for (int i = 0; i < kTestCostFunctionSize; i++) {
     conditioners.push_back(new LinearCostFunction(i + 2, i * 7));
   }
 
-  ConditionedCostFunction conditioned_cost_function(difference_cost_function,
-                                                    conditioners,
-                                                    TAKE_OWNERSHIP);
+  ConditionedCostFunction conditioned_cost_function(
+      difference_cost_function, conditioners, TAKE_OWNERSHIP);
   EXPECT_EQ(difference_cost_function->num_residuals(),
             conditioned_cost_function.num_residuals());
   EXPECT_EQ(difference_cost_function->parameter_block_sizes(),
             conditioned_cost_function.parameter_block_sizes());
 
-  double *parameters[1];
+  double* parameters[1];
   parameters[0] = v1;
-  double *jacs[1];
+  double* jacs[1];
   jacs[0] = jac;
 
   conditioned_cost_function.Evaluate(parameters, result, jacs);
@@ -120,6 +119,23 @@ TEST(CostFunctionTest, ConditionedCostFunction) {
       }
     }
   }
+}
+
+TEST(ConditionedCostFunction, SharedConditionersDoNotTriggerDoubleFree) {
+  // Make a cost function that computes x - v2
+  double v2[kTestCostFunctionSize];
+  VectorRef v2_vector(v2, kTestCostFunctionSize, 1);
+  Matrix identity =
+      Matrix::Identity(kTestCostFunctionSize, kTestCostFunctionSize);
+  auto* difference_cost_function = new NormalPrior(identity, v2_vector);
+  CostFunction* conditioner = new LinearCostFunction(2, 7);
+  std::vector<CostFunction*> conditioners;
+  for (int i = 0; i < kTestCostFunctionSize; i++) {
+    conditioners.push_back(conditioner);
+  }
+
+  ConditionedCostFunction conditioned_cost_function(
+      difference_cost_function, conditioners, TAKE_OWNERSHIP);
 }
 
 }  // namespace internal

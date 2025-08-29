@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,28 +32,27 @@
 #define CERES_INTERNAL_GRAPH_H_
 
 #include <limits>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
-#include "ceres/integral_types.h"
+
+#include "ceres/internal/export.h"
 #include "ceres/map_util.h"
-#include "ceres/collections_port.h"
-#include "ceres/internal/macros.h"
+#include "ceres/pair_hash.h"
 #include "ceres/types.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 // A unweighted undirected graph templated over the vertex ids. Vertex
 // should be hashable.
 template <typename Vertex>
-class Graph {
+class CERES_NO_EXPORT Graph {
  public:
-  Graph() {}
-
   // Add a vertex.
   void AddVertex(const Vertex& vertex) {
     if (vertices_.insert(vertex).second) {
-      edges_[vertex] = HashSet<Vertex>();
+      edges_[vertex] = std::unordered_set<Vertex>();
     }
   }
 
@@ -63,10 +62,9 @@ class Graph {
     }
 
     vertices_.erase(vertex);
-    const HashSet<Vertex>& sinks = edges_[vertex];
-    for (typename HashSet<Vertex>::const_iterator it = sinks.begin();
-         it != sinks.end(); ++it) {
-      edges_[*it].erase(vertex);
+    const std::unordered_set<Vertex>& sinks = edges_[vertex];
+    for (const Vertex& s : sinks) {
+      edges_[s].erase(vertex);
     }
 
     edges_.erase(vertex);
@@ -90,19 +88,15 @@ class Graph {
 
   // Calling Neighbors on a vertex not in the graph will result in
   // undefined behaviour.
-  const HashSet<Vertex>& Neighbors(const Vertex& vertex) const {
+  const std::unordered_set<Vertex>& Neighbors(const Vertex& vertex) const {
     return FindOrDie(edges_, vertex);
   }
 
-  const HashSet<Vertex>& vertices() const {
-    return vertices_;
-  }
+  const std::unordered_set<Vertex>& vertices() const { return vertices_; }
 
  private:
-  HashSet<Vertex> vertices_;
-  HashMap<Vertex, HashSet<Vertex> > edges_;
-
-  CERES_DISALLOW_COPY_AND_ASSIGN(Graph);
+  std::unordered_set<Vertex> vertices_;
+  std::unordered_map<Vertex, std::unordered_set<Vertex>> edges_;
 };
 
 // A weighted undirected graph templated over the vertex ids. Vertex
@@ -110,23 +104,19 @@ class Graph {
 template <typename Vertex>
 class WeightedGraph {
  public:
-  WeightedGraph() {}
-
   // Add a weighted vertex. If the vertex already exists in the graph,
   // its weight is set to the new weight.
   void AddVertex(const Vertex& vertex, double weight) {
     if (vertices_.find(vertex) == vertices_.end()) {
       vertices_.insert(vertex);
-      edges_[vertex] = HashSet<Vertex>();
+      edges_[vertex] = std::unordered_set<Vertex>();
     }
     vertex_weights_[vertex] = weight;
   }
 
   // Uses weight = 1.0. If vertex already exists, its weight is set to
   // 1.0.
-  void AddVertex(const Vertex& vertex) {
-    AddVertex(vertex, 1.0);
-  }
+  void AddVertex(const Vertex& vertex) { AddVertex(vertex, 1.0); }
 
   bool RemoveVertex(const Vertex& vertex) {
     if (vertices_.find(vertex) == vertices_.end()) {
@@ -135,15 +125,14 @@ class WeightedGraph {
 
     vertices_.erase(vertex);
     vertex_weights_.erase(vertex);
-    const HashSet<Vertex>& sinks = edges_[vertex];
-    for (typename HashSet<Vertex>::const_iterator it = sinks.begin();
-         it != sinks.end(); ++it) {
-      if (vertex < *it) {
-        edge_weights_.erase(std::make_pair(vertex, *it));
+    const std::unordered_set<Vertex>& sinks = edges_[vertex];
+    for (const Vertex& s : sinks) {
+      if (vertex < s) {
+        edge_weights_.erase(std::make_pair(vertex, s));
       } else {
-        edge_weights_.erase(std::make_pair(*it, vertex));
+        edge_weights_.erase(std::make_pair(s, vertex));
       }
-      edges_[*it].erase(vertex);
+      edges_[s].erase(vertex);
     }
 
     edges_.erase(vertex);
@@ -188,38 +177,34 @@ class WeightedGraph {
   // the edge weight is zero.
   double EdgeWeight(const Vertex& vertex1, const Vertex& vertex2) const {
     if (vertex1 < vertex2) {
-      return FindWithDefault(edge_weights_,
-                             std::make_pair(vertex1, vertex2), 0.0);
+      return FindWithDefault(
+          edge_weights_, std::make_pair(vertex1, vertex2), 0.0);
     } else {
-      return FindWithDefault(edge_weights_,
-                             std::make_pair(vertex2, vertex1), 0.0);
+      return FindWithDefault(
+          edge_weights_, std::make_pair(vertex2, vertex1), 0.0);
     }
   }
 
   // Calling Neighbors on a vertex not in the graph will result in
   // undefined behaviour.
-  const HashSet<Vertex>& Neighbors(const Vertex& vertex) const {
+  const std::unordered_set<Vertex>& Neighbors(const Vertex& vertex) const {
     return FindOrDie(edges_, vertex);
   }
 
-  const HashSet<Vertex>& vertices() const {
-    return vertices_;
-  }
+  const std::unordered_set<Vertex>& vertices() const { return vertices_; }
 
   static double InvalidWeight() {
     return std::numeric_limits<double>::quiet_NaN();
   }
 
  private:
-  HashSet<Vertex> vertices_;
-  HashMap<Vertex, double> vertex_weights_;
-  HashMap<Vertex, HashSet<Vertex> > edges_;
-  HashMap<std::pair<Vertex, Vertex>, double> edge_weights_;
-
-  CERES_DISALLOW_COPY_AND_ASSIGN(WeightedGraph);
+  std::unordered_set<Vertex> vertices_;
+  std::unordered_map<Vertex, double> vertex_weights_;
+  std::unordered_map<Vertex, std::unordered_set<Vertex>> edges_;
+  std::unordered_map<std::pair<Vertex, Vertex>, double, pair_hash>
+      edge_weights_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 
 #endif  // CERES_INTERNAL_GRAPH_H_

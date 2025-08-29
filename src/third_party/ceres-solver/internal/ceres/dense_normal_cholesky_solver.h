@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,14 @@
 #ifndef CERES_INTERNAL_DENSE_NORMAL_CHOLESKY_SOLVER_H_
 #define CERES_INTERNAL_DENSE_NORMAL_CHOLESKY_SOLVER_H_
 
-#include "ceres/linear_solver.h"
-#include "ceres/internal/macros.h"
+#include <memory>
 
-namespace ceres {
-namespace internal {
+#include "ceres/dense_cholesky.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
+#include "ceres/linear_solver.h"
+
+namespace ceres::internal {
 
 class DenseSparseMatrix;
 
@@ -74,34 +77,24 @@ class DenseSparseMatrix;
 // library. This solver always returns a solution, it is the user's
 // responsibility to judge if the solution is good enough for their
 // purposes.
-class DenseNormalCholeskySolver: public DenseSparseMatrixSolver {
+class CERES_NO_EXPORT DenseNormalCholeskySolver
+    : public DenseSparseMatrixSolver {
  public:
-  explicit DenseNormalCholeskySolver(const LinearSolver::Options& options);
+  explicit DenseNormalCholeskySolver(LinearSolver::Options options);
 
  private:
-  virtual LinearSolver::Summary SolveImpl(
+  LinearSolver::Summary SolveImpl(
       DenseSparseMatrix* A,
       const double* b,
       const LinearSolver::PerSolveOptions& per_solve_options,
-      double* x);
-
-  LinearSolver::Summary SolveUsingLAPACK(
-      DenseSparseMatrix* A,
-      const double* b,
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* x);
-
-  LinearSolver::Summary SolveUsingEigen(
-      DenseSparseMatrix* A,
-      const double* b,
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* x);
+      double* x) final;
 
   const LinearSolver::Options options_;
-  CERES_DISALLOW_COPY_AND_ASSIGN(DenseNormalCholeskySolver);
+  std::unique_ptr<DenseCholesky> cholesky_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_DENSE_NORMAL_CHOLESKY_SOLVER_H_

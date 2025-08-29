@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,10 @@
 
 #include <numeric>
 #include <string>
+#include <vector>
+
 #include "ceres/callbacks.h"
+#include "ceres/context_impl.h"
 #include "ceres/evaluator.h"
 #include "ceres/linear_solver.h"
 #include "ceres/minimizer.h"
@@ -46,21 +49,19 @@
 #include "ceres/trust_region_strategy.h"
 #include "ceres/wall_time.h"
 
-namespace ceres {
-namespace internal {
-
-using std::vector;
+namespace ceres::internal {
 
 namespace {
 
-ParameterBlockOrdering* CreateDefaultLinearSolverOrdering(
+std::shared_ptr<ParameterBlockOrdering> CreateDefaultLinearSolverOrdering(
     const Program& program) {
-  ParameterBlockOrdering* ordering = new ParameterBlockOrdering;
-  const vector<ParameterBlock*>& parameter_blocks =
+  std::shared_ptr<ParameterBlockOrdering> ordering =
+      std::make_shared<ParameterBlockOrdering>();
+  const std::vector<ParameterBlock*>& parameter_blocks =
       program.parameter_blocks();
-  for (int i = 0; i < parameter_blocks.size(); ++i) {
+  for (auto* parameter_block : parameter_blocks) {
     ordering->AddElementToGroup(
-        const_cast<double*>(parameter_blocks[i]->user_state()), 0);
+        const_cast<double*>(parameter_block->user_state()), 0);
   }
   return ordering;
 }
@@ -68,8 +69,7 @@ ParameterBlockOrdering* CreateDefaultLinearSolverOrdering(
 // Check if all the user supplied values in the parameter blocks are
 // sane or not, and if the program is feasible or not.
 bool IsProgramValid(const Program& program, std::string* error) {
-  return (program.ParameterBlocksAreFinite(error) &&
-          program.IsFeasible(error));
+  return (program.ParameterBlocksAreFinite(error) && program.IsFeasible(error));
 }
 
 void AlternateLinearSolverAndPreconditionerForSchurTypeLinearSolver(
@@ -81,52 +81,68 @@ void AlternateLinearSolverAndPreconditionerForSchurTypeLinearSolver(
   const LinearSolverType linear_solver_type_given = options->linear_solver_type;
   const PreconditionerType preconditioner_type_given =
       options->preconditioner_type;
-  options->linear_solver_type = LinearSolver::LinearSolverForZeroEBlocks(
-      linear_solver_type_given);
+  options->linear_solver_type =
+      LinearSolver::LinearSolverForZeroEBlocks(linear_solver_type_given);
 
   std::string message;
   if (linear_solver_type_given == ITERATIVE_SCHUR) {
-    options->preconditioner_type = Preconditioner::PreconditionerForZeroEBlocks(
-        preconditioner_type_given);
+    options->preconditioner_type =
+        Preconditioner::PreconditionerForZeroEBlocks(preconditioner_type_given);
 
     message =
-        StringPrintf(
-            "No E blocks. Switching from %s(%s) to %s(%s).",
-            LinearSolverTypeToString(linear_solver_type_given),
-            PreconditionerTypeToString(preconditioner_type_given),
-            LinearSolverTypeToString(options->linear_solver_type),
-            PreconditionerTypeToString(options->preconditioner_type));
+        StringPrintf("No E blocks. Switching from %s(%s) to %s(%s).",
+                     LinearSolverTypeToString(linear_solver_type_given),
+                     PreconditionerTypeToString(preconditioner_type_given),
+                     LinearSolverTypeToString(options->linear_solver_type),
+                     PreconditionerTypeToString(options->preconditioner_type));
   } else {
     message =
-        StringPrintf(
-            "No E blocks. Switching from %s to %s.",
-            LinearSolverTypeToString(linear_solver_type_given),
-            LinearSolverTypeToString(options->linear_solver_type));
+        StringPrintf("No E blocks. Switching from %s to %s.",
+                     LinearSolverTypeToString(linear_solver_type_given),
+                     LinearSolverTypeToString(options->linear_solver_type));
   }
-
-  VLOG_IF(1, options->logging_type != SILENT) << message;
+  if (options->logging_type != SILENT) {
+    VLOG(1) << message;
+  }
 }
 
-// For Schur type and SPARSE_NORMAL_CHOLESKY linear solvers, reorder
-// the program to reduce fill-in and increase cache coherency.
+// Reorder the program to reduce fill-in and increase cache coherency.
 bool ReorderProgram(PreprocessedProblem* pp) {
-  Solver::Options& options = pp->options;
+  const Solver::Options& options = pp->options;
   if (IsSchurType(options.linear_solver_type)) {
     return ReorderProgramForSchurTypeLinearSolver(
         options.linear_solver_type,
         options.sparse_linear_algebra_library_type,
+        options.linear_solver_ordering_type,
         pp->problem->parameter_map(),
         options.linear_solver_ordering.get(),
         pp->reduced_program.get(),
         &pp->error);
   }
 
-
   if (options.linear_solver_type == SPARSE_NORMAL_CHOLESKY &&
       !options.dynamic_sparsity) {
-    return ReorderProgramForSparseNormalCholesky(
+    return ReorderProgramForSparseCholesky(
         options.sparse_linear_algebra_library_type,
+        options.linear_solver_ordering_type,
         *options.linear_solver_ordering,
+        0, /* use all the rows of the jacobian */
+        pp->reduced_program.get(),
+        &pp->error);
+  }
+
+  if (options.linear_solver_type == CGNR &&
+      options.preconditioner_type == SUBSET) {
+    pp->linear_solver_options.subset_preconditioner_start_row_block =
+        ReorderResidualBlocksByPartition(
+            options.residual_blocks_for_subset_preconditioner,
+            pp->reduced_program.get());
+
+    return ReorderProgramForSparseCholesky(
+        options.sparse_linear_algebra_library_type,
+        options.linear_solver_ordering_type,
+        *options.linear_solver_ordering,
+        pp->linear_solver_options.subset_preconditioner_start_row_block,
         pp->reduced_program.get(),
         &pp->error);
   }
@@ -140,13 +156,15 @@ bool ReorderProgram(PreprocessedProblem* pp) {
 // too.
 bool SetupLinearSolver(PreprocessedProblem* pp) {
   Solver::Options& options = pp->options;
-  if (options.linear_solver_ordering.get() == NULL) {
+  pp->linear_solver_options = LinearSolver::Options();
+
+  if (!options.linear_solver_ordering) {
     // If the user has not supplied a linear solver ordering, then we
     // assume that they are giving all the freedom to us in choosing
     // the best possible ordering. This intent can be indicated by
     // putting all the parameter blocks in the same elimination group.
-    options.linear_solver_ordering.reset(
-        CreateDefaultLinearSolverOrdering(*pp->reduced_program));
+    options.linear_solver_ordering =
+        CreateDefaultLinearSolverOrdering(*pp->reduced_program);
   } else {
     // If the user supplied an ordering, then check if the first
     // elimination group is still non-empty after the reduced problem
@@ -164,8 +182,7 @@ bool SetupLinearSolver(PreprocessedProblem* pp) {
     ordering->Remove(pp->removed_parameter_blocks);
     if (IsSchurType(options.linear_solver_type) &&
         min_group_id != ordering->MinNonZeroGroup()) {
-      AlternateLinearSolverAndPreconditionerForSchurTypeLinearSolver(
-          &options);
+      AlternateLinearSolverAndPreconditionerForSchurTypeLinearSolver(&options);
     }
   }
 
@@ -176,24 +193,33 @@ bool SetupLinearSolver(PreprocessedProblem* pp) {
   }
 
   // Configure the linear solver.
-  pp->linear_solver_options = LinearSolver::Options();
   pp->linear_solver_options.min_num_iterations =
       options.min_linear_solver_iterations;
   pp->linear_solver_options.max_num_iterations =
       options.max_linear_solver_iterations;
   pp->linear_solver_options.type = options.linear_solver_type;
   pp->linear_solver_options.preconditioner_type = options.preconditioner_type;
+  pp->linear_solver_options.use_spse_initialization =
+      options.use_spse_initialization;
+  pp->linear_solver_options.spse_tolerance = options.spse_tolerance;
+  pp->linear_solver_options.max_num_spse_iterations =
+      options.max_num_spse_iterations;
   pp->linear_solver_options.visibility_clustering_type =
       options.visibility_clustering_type;
   pp->linear_solver_options.sparse_linear_algebra_library_type =
       options.sparse_linear_algebra_library_type;
+
   pp->linear_solver_options.dense_linear_algebra_library_type =
       options.dense_linear_algebra_library_type;
   pp->linear_solver_options.use_explicit_schur_complement =
       options.use_explicit_schur_complement;
   pp->linear_solver_options.dynamic_sparsity = options.dynamic_sparsity;
-  pp->linear_solver_options.num_threads = options.num_linear_solver_threads;
-  pp->linear_solver_options.use_postordering = options.use_postordering;
+  pp->linear_solver_options.use_mixed_precision_solves =
+      options.use_mixed_precision_solves;
+  pp->linear_solver_options.max_num_refinement_iterations =
+      options.max_num_refinement_iterations;
+  pp->linear_solver_options.num_threads = options.num_threads;
+  pp->linear_solver_options.context = pp->problem->context();
 
   if (IsSchurType(pp->linear_solver_options.type)) {
     OrderingToGroupSizes(options.linear_solver_ordering.get(),
@@ -206,31 +232,28 @@ bool SetupLinearSolver(PreprocessedProblem* pp) {
     if (pp->linear_solver_options.elimination_groups.size() == 1) {
       pp->linear_solver_options.elimination_groups.push_back(0);
     }
+  }
 
-    if (options.linear_solver_type == SPARSE_SCHUR) {
-      // When using SPARSE_SCHUR, we ignore the user's postordering
-      // preferences in certain cases.
-      //
-      // 1. SUITE_SPARSE is the sparse linear algebra library requested
-      //    but cholmod_camd is not available.
-      // 2. CX_SPARSE is the sparse linear algebra library requested.
-      //
-      // This ensures that the linear solver does not assume that a
-      // fill-reducing pre-ordering has been done.
-      //
-      // TODO(sameeragarwal): Implement the reordering of parameter
-      // blocks for CX_SPARSE.
-      if ((options.sparse_linear_algebra_library_type == SUITE_SPARSE &&
-           !SuiteSparse::
-           IsConstrainedApproximateMinimumDegreeOrderingAvailable()) ||
-          (options.sparse_linear_algebra_library_type == CX_SPARSE)) {
-        pp->linear_solver_options.use_postordering = true;
-      }
+  if (!options.dynamic_sparsity &&
+      AreJacobianColumnsOrdered(options.linear_solver_type,
+                                options.preconditioner_type,
+                                options.sparse_linear_algebra_library_type,
+                                options.linear_solver_ordering_type)) {
+    pp->linear_solver_options.ordering_type = OrderingType::NATURAL;
+  } else {
+    if (options.linear_solver_ordering_type == ceres::AMD) {
+      pp->linear_solver_options.ordering_type = OrderingType::AMD;
+    } else if (options.linear_solver_ordering_type == ceres::NESDIS) {
+      pp->linear_solver_options.ordering_type = OrderingType::NESDIS;
+    } else {
+      LOG(FATAL) << "Congratulations you have found a bug in Ceres Solver."
+                 << " Please report this to the maintainers. : "
+                 << options.linear_solver_ordering_type;
     }
   }
 
-  pp->linear_solver.reset(LinearSolver::Create(pp->linear_solver_options));
-  return (pp->linear_solver.get() != NULL);
+  pp->linear_solver = LinearSolver::Create(pp->linear_solver_options);
+  return (pp->linear_solver != nullptr);
 }
 
 // Configure and create the evaluator.
@@ -238,22 +261,25 @@ bool SetupEvaluator(PreprocessedProblem* pp) {
   const Solver::Options& options = pp->options;
   pp->evaluator_options = Evaluator::Options();
   pp->evaluator_options.linear_solver_type = options.linear_solver_type;
+  pp->evaluator_options.sparse_linear_algebra_library_type =
+      options.sparse_linear_algebra_library_type;
   pp->evaluator_options.num_eliminate_blocks = 0;
   if (IsSchurType(options.linear_solver_type)) {
     pp->evaluator_options.num_eliminate_blocks =
-        options
-        .linear_solver_ordering
-        ->group_to_elements().begin()
-        ->second.size();
+        options.linear_solver_ordering->group_to_elements()
+            .begin()
+            ->second.size();
   }
 
   pp->evaluator_options.num_threads = options.num_threads;
   pp->evaluator_options.dynamic_sparsity = options.dynamic_sparsity;
-  pp->evaluator.reset(Evaluator::Create(pp->evaluator_options,
-                                        pp->reduced_program.get(),
-                                        &pp->error));
+  pp->evaluator_options.context = pp->problem->context();
+  pp->evaluator_options.evaluation_callback =
+      pp->reduced_program->mutable_evaluation_callback();
+  pp->evaluator = Evaluator::Create(
+      pp->evaluator_options, pp->reduced_program.get(), &pp->error);
 
-  return (pp->evaluator.get() != NULL);
+  return (pp->evaluator != nullptr);
 }
 
 // If the user requested inner iterations, then find an inner
@@ -265,6 +291,11 @@ bool SetupInnerIterationMinimizer(PreprocessedProblem* pp) {
     return true;
   }
 
+  if (pp->reduced_program->mutable_evaluation_callback()) {
+    pp->error = "Inner iterations cannot be used with EvaluationCallbacks";
+    return false;
+  }
+
   // With just one parameter block, the outer iteration of the trust
   // region method and inner iterations are doing exactly the same
   // thing, and thus inner iterations are not needed.
@@ -274,7 +305,7 @@ bool SetupInnerIterationMinimizer(PreprocessedProblem* pp) {
     return true;
   }
 
-  if (options.inner_iteration_ordering.get() != NULL) {
+  if (options.inner_iteration_ordering != nullptr) {
     // If the user supplied an ordering, then remove the set of
     // inactive parameter blocks from it
     options.inner_iteration_ordering->Remove(pp->removed_parameter_blocks);
@@ -292,11 +323,12 @@ bool SetupInnerIterationMinimizer(PreprocessedProblem* pp) {
     }
   } else {
     // The user did not supply an ordering, so create one.
-    options.inner_iteration_ordering.reset(
-        CoordinateDescentMinimizer::CreateOrdering(*pp->reduced_program));
+    options.inner_iteration_ordering =
+        CoordinateDescentMinimizer::CreateOrdering(*pp->reduced_program);
   }
 
-  pp->inner_iteration_minimizer.reset(new CoordinateDescentMinimizer);
+  pp->inner_iteration_minimizer =
+      std::make_unique<CoordinateDescentMinimizer>(pp->problem->context());
   return pp->inner_iteration_minimizer->Init(*pp->reduced_program,
                                              pp->problem->parameter_map(),
                                              *options.inner_iteration_ordering,
@@ -304,39 +336,45 @@ bool SetupInnerIterationMinimizer(PreprocessedProblem* pp) {
 }
 
 // Configure and create a TrustRegionMinimizer object.
-void SetupMinimizerOptions(PreprocessedProblem* pp) {
+bool SetupMinimizerOptions(PreprocessedProblem* pp) {
   const Solver::Options& options = pp->options;
 
   SetupCommonMinimizerOptions(pp);
   pp->minimizer_options.is_constrained =
       pp->reduced_program->IsBoundsConstrained();
-  pp->minimizer_options.jacobian.reset(pp->evaluator->CreateJacobian());
+  pp->minimizer_options.jacobian = pp->evaluator->CreateJacobian();
+  if (pp->minimizer_options.jacobian == nullptr) {
+    pp->error =
+        "Unable to create Jacobian matrix. Likely because it is too large.";
+    return false;
+  }
+
   pp->minimizer_options.inner_iteration_minimizer =
       pp->inner_iteration_minimizer;
 
   TrustRegionStrategy::Options strategy_options;
   strategy_options.linear_solver = pp->linear_solver.get();
-  strategy_options.initial_radius =
-      options.initial_trust_region_radius;
+  strategy_options.initial_radius = options.initial_trust_region_radius;
   strategy_options.max_radius = options.max_trust_region_radius;
   strategy_options.min_lm_diagonal = options.min_lm_diagonal;
   strategy_options.max_lm_diagonal = options.max_lm_diagonal;
   strategy_options.trust_region_strategy_type =
       options.trust_region_strategy_type;
   strategy_options.dogleg_type = options.dogleg_type;
-  pp->minimizer_options.trust_region_strategy.reset(
-      CHECK_NOTNULL(TrustRegionStrategy::Create(strategy_options)));
+  strategy_options.context = pp->problem->context();
+  strategy_options.num_threads = options.num_threads;
+  pp->minimizer_options.trust_region_strategy =
+      TrustRegionStrategy::Create(strategy_options);
+  CHECK(pp->minimizer_options.trust_region_strategy != nullptr);
+  return true;
 }
 
 }  // namespace
 
-TrustRegionPreprocessor::~TrustRegionPreprocessor() {
-}
-
 bool TrustRegionPreprocessor::Preprocess(const Solver::Options& options,
                                          ProblemImpl* problem,
                                          PreprocessedProblem* pp) {
-  CHECK_NOTNULL(pp);
+  CHECK(pp != nullptr);
   pp->options = options;
   ChangeNumThreadsIfNeeded(&pp->options);
 
@@ -346,12 +384,10 @@ bool TrustRegionPreprocessor::Preprocess(const Solver::Options& options,
     return false;
   }
 
-  pp->reduced_program.reset(
-      program->CreateReducedProgram(&pp->removed_parameter_blocks,
-                                    &pp->fixed_cost,
-                                    &pp->error));
+  pp->reduced_program = program->CreateReducedProgram(
+      &pp->removed_parameter_blocks, &pp->fixed_cost, &pp->error);
 
-  if (pp->reduced_program.get() == NULL) {
+  if (pp->reduced_program.get() == nullptr) {
     return false;
   }
 
@@ -361,15 +397,12 @@ bool TrustRegionPreprocessor::Preprocess(const Solver::Options& options,
     return true;
   }
 
-  if (!SetupLinearSolver(pp) ||
-      !SetupEvaluator(pp) ||
+  if (!SetupLinearSolver(pp) || !SetupEvaluator(pp) ||
       !SetupInnerIterationMinimizer(pp)) {
     return false;
   }
 
-  SetupMinimizerOptions(pp);
-  return true;
+  return SetupMinimizerOptions(pp);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

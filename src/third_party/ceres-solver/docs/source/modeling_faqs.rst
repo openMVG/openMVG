@@ -37,24 +37,24 @@ Modeling
    automatic and numeric differentiation. See
    :class:`CostFunctionToFunctor`.
 
-#. When using Quaternions,  consider using :class:`QuaternionParameterization`.
+#. When using Quaternions,  consider using :class:`QuaternionManifold`.
 
    `Quaternions <https://en.wikipedia.org/wiki/Quaternion>`_ are a
    four dimensional parameterization of the space of three dimensional
    rotations :math:`SO(3)`.  However, the :math:`SO(3)` is a three
    dimensional set, and so is the tangent space of a
-   Quaternion. Therefore, it is sometimes (not always) benefecial to
+   Quaternion. Therefore, it is sometimes (not always) beneficial to
    associate a local parameterization with parameter blocks
    representing a Quaternion. Assuming that the order of entries in
    your parameter block is :math:`w,x,y,z`, you can use
-   :class:`QuaternionParameterization`.
+   :class:`QuaternionManifold`.
 
    .. NOTE::
 
      If you are using `Eigen's Quaternion
      <http://eigen.tuxfamily.org/dox/classEigen_1_1Quaternion.html>`_
      object, whose layout is :math:`x,y,z,w`, then you should use
-     :class:`EigenQuaternionParameterization`.
+     :class:`EigenQuaternionManifold`.
 
 
 #. How do I solve problems with general linear & non-linear
@@ -85,50 +85,4 @@ Modeling
 
 #. How do I set one or more components of a parameter block constant?
 
-   Using :class:`SubsetParameterization`.
-
-#. Putting `Inverse Function Theorem
-   <http://en.wikipedia.org/wiki/Inverse_function_theorem>`_ to use.
-
-   Every now and then we have to deal with functions which cannot be
-   evaluated analytically. Computing the Jacobian in such cases is
-   tricky. A particularly interesting case is where the inverse of the
-   function is easy to compute analytically. An example of such a
-   function is the Coordinate transformation between the `ECEF
-   <http://en.wikipedia.org/wiki/ECEF>`_ and the `WGS84
-   <http://en.wikipedia.org/wiki/World_Geodetic_System>`_ where the
-   conversion from WGS84 to ECEF is analytic, but the conversion
-   back to WGS84 uses an iterative algorithm. So how do you compute the
-   derivative of the ECEF to WGS84 transformation?
-
-   One obvious approach would be to numerically
-   differentiate the conversion function. This is not a good idea. For
-   one, it will be slow, but it will also be numerically quite
-   bad.
-
-   Turns out you can use the `Inverse Function Theorem
-   <http://en.wikipedia.org/wiki/Inverse_function_theorem>`_ in this
-   case to compute the derivatives more or less analytically.
-
-   The key result here is. If :math:`x = f^{-1}(y)`, and :math:`Df(x)`
-   is the invertible Jacobian of :math:`f` at :math:`x`. Then the
-   Jacobian :math:`Df^{-1}(y) = [Df(x)]^{-1}`, i.e., the Jacobian of
-   the :math:`f^{-1}` is the inverse of the Jacobian of :math:`f`.
-
-   Algorithmically this means that given :math:`y`, compute :math:`x =
-   f^{-1}(y)` by whatever means you can. Evaluate the Jacobian of
-   :math:`f` at :math:`x`. If the Jacobian matrix is invertible, then
-   its inverse is the Jacobian of :math:`f^{-1}(y)` at  :math:`y`.
-
-   One can put this into practice with the following code fragment.
-
-   .. code-block:: c++
-
-      Eigen::Vector3d ecef; // Fill some values
-      // Iterative computation.
-      Eigen::Vector3d lla = ECEFToLLA(ecef);
-      // Analytic derivatives
-      Eigen::Matrix3d lla_to_ecef_jacobian = LLAToECEFJacobian(lla);
-      bool invertible;
-      Eigen::Matrix3d ecef_to_lla_jacobian;
-      lla_to_ecef_jacobian.computeInverseWithCheck(ecef_to_lla_jacobian, invertible);
+   Using :class:`SubsetManifold`.

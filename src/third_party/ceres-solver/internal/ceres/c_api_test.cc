@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 // Duplicated from curve_fitting.cc.
 int num_observations = 67;
+// clang-format off
 double data[] = {
   0.000000e+00, 1.133898e+00,
   7.500000e-02, 1.334902e+00,
@@ -106,27 +107,28 @@ double data[] = {
   4.875000e+00, 4.727863e+00,
   4.950000e+00, 4.669206e+00,
 };
+// clang-format on
 
 // A test cost function, similar to the one in curve_fitting.c.
-int exponential_residual(void* user_data,
-                         double** parameters,
-                         double* residuals,
-                         double** jacobians) {
-  double* measurement = (double*) user_data;
+static int exponential_residual(void* user_data,
+                                double** parameters,
+                                double* residuals,
+                                double** jacobians) {
+  auto* measurement = static_cast<double*>(user_data);
   double x = measurement[0];
   double y = measurement[1];
   double m = parameters[0][0];
   double c = parameters[1][0];
 
   residuals[0] = y - exp(m * x + c);
-  if (jacobians == NULL) {
+  if (jacobians == nullptr) {
     return 1;
   }
-  if (jacobians[0] != NULL) {
-    jacobians[0][0] = - x * exp(m * x + c);  // dr/dm
+  if (jacobians[0] != nullptr) {
+    jacobians[0][0] = -x * exp(m * x + c);  // dr/dm
   }
-  if (jacobians[1] != NULL) {
-    jacobians[1][0] =     - exp(m * x + c);  // dr/dc
+  if (jacobians[1] != nullptr) {
+    jacobians[1][0] = -exp(m * x + c);  // dr/dc
   }
   return 1;
 }
@@ -137,8 +139,8 @@ namespace internal {
 TEST(C_API, SimpleEndToEndTest) {
   double m = 0.0;
   double c = 0.0;
-  double *parameter_pointers[] = { &m, &c };
-  int parameter_sizes[] = { 1, 1 };
+  double* parameter_pointers[] = {&m, &c};
+  int parameter_sizes[] = {1, 1};
 
   ceres_problem_t* problem = ceres_create_problem();
   for (int i = 0; i < num_observations; ++i) {
@@ -146,8 +148,8 @@ TEST(C_API, SimpleEndToEndTest) {
         problem,
         exponential_residual,  // Cost function
         &data[2 * i],          // Points to the (x,y) measurement
-        NULL,                  // Loss function
-        NULL,                  // Loss function user data
+        nullptr,               // Loss function
+        nullptr,               // Loss function user data
         1,                     // Number of residuals
         2,                     // Number of parameter blocks
         parameter_sizes,
@@ -162,16 +164,14 @@ TEST(C_API, SimpleEndToEndTest) {
   ceres_free_problem(problem);
 }
 
-template<typename T>
+template <typename T>
 class ScopedSetValue {
  public:
   ScopedSetValue(T* variable, T new_value)
       : variable_(variable), old_value_(*variable) {
     *variable = new_value;
   }
-  ~ScopedSetValue() {
-    *variable_ = old_value_;
-  }
+  ~ScopedSetValue() { *variable_ = old_value_; }
 
  private:
   T* variable_;
@@ -181,8 +181,8 @@ class ScopedSetValue {
 TEST(C_API, LossFunctions) {
   double m = 0.2;
   double c = 0.03;
-  double *parameter_pointers[] = { &m, &c };
-  int parameter_sizes[] = { 1, 1 };
+  double* parameter_pointers[] = {&m, &c};
+  int parameter_sizes[] = {1, 1};
 
   // Create two outliers, but be careful to leave the data intact.
   ScopedSetValue<double> outlier1x(&data[12], 2.5);
@@ -191,19 +191,18 @@ TEST(C_API, LossFunctions) {
   ScopedSetValue<double> outlier2y(&data[15], 30e3);
 
   // Create a cauchy cost function, and reuse it many times.
-  void* cauchy_loss_data =
-      ceres_create_cauchy_loss_function_data(5.0);
+  void* cauchy_loss_data = ceres_create_cauchy_loss_function_data(5.0);
 
   ceres_problem_t* problem = ceres_create_problem();
   for (int i = 0; i < num_observations; ++i) {
     ceres_problem_add_residual_block(
         problem,
-        exponential_residual,  // Cost function
-        &data[2 * i],          // Points to the (x,y) measurement
-        ceres_stock_loss_function,
-        cauchy_loss_data,      // Loss function user data
-        1,                     // Number of residuals
-        2,                     // Number of parameter blocks
+        exponential_residual,       // Cost function
+        &data[2 * i],               // Points to the (x,y) measurement
+        ceres_stock_loss_function,  //
+        cauchy_loss_data,           // Loss function user data
+        1,                          // Number of residuals
+        2,                          // Number of parameter blocks
         parameter_sizes,
         parameter_pointers);
   }

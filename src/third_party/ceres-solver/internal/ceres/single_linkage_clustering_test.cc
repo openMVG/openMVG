@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,12 @@
 
 #include "ceres/single_linkage_clustering.h"
 
-#include "ceres/collections_port.h"
+#include <unordered_map>
+
 #include "ceres/graph.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 TEST(SingleLinkageClustering, GraphHasTwoComponents) {
   WeightedGraph<int> graph;
@@ -52,7 +52,7 @@ TEST(SingleLinkageClustering, GraphHasTwoComponents) {
   graph.AddEdge(4, 5, 1.0);
 
   SingleLinkageClusteringOptions options;
-  HashMap<int, int> membership;
+  std::unordered_map<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -81,7 +81,7 @@ TEST(SingleLinkageClustering, ComponentWithWeakLink) {
   graph.AddEdge(4, 5, 0.5);
 
   SingleLinkageClusteringOptions options;
-  HashMap<int, int> membership;
+  std::unordered_map<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -111,7 +111,7 @@ TEST(SingleLinkageClustering, ComponentWithWeakLinkAndStrongLink) {
   graph.AddEdge(4, 5, 1.0);
 
   SingleLinkageClusteringOptions options;
-  HashMap<int, int> membership;
+  std::unordered_map<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -121,5 +121,4 @@ TEST(SingleLinkageClustering, ComponentWithWeakLinkAndStrongLink) {
   EXPECT_EQ(membership[4], membership[5]);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

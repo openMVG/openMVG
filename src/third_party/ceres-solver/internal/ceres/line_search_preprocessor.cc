@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,14 +32,16 @@
 
 #include <numeric>
 #include <string>
+
+#include "ceres/casts.h"
+#include "ceres/context_impl.h"
 #include "ceres/evaluator.h"
 #include "ceres/minimizer.h"
 #include "ceres/problem_impl.h"
 #include "ceres/program.h"
 #include "ceres/wall_time.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 namespace {
 
 bool IsProgramValid(const Program& program, std::string* error) {
@@ -57,21 +59,20 @@ bool SetupEvaluator(PreprocessedProblem* pp) {
   pp->evaluator_options.linear_solver_type = CGNR;
   pp->evaluator_options.num_eliminate_blocks = 0;
   pp->evaluator_options.num_threads = pp->options.num_threads;
-  pp->evaluator.reset(Evaluator::Create(pp->evaluator_options,
-                                        pp->reduced_program.get(),
-                                        &pp->error));
-  return (pp->evaluator.get() != NULL);
+  pp->evaluator_options.context = pp->problem->context();
+  pp->evaluator_options.evaluation_callback =
+      pp->reduced_program->mutable_evaluation_callback();
+  pp->evaluator = Evaluator::Create(
+      pp->evaluator_options, pp->reduced_program.get(), &pp->error);
+  return (pp->evaluator.get() != nullptr);
 }
 
 }  // namespace
 
-LineSearchPreprocessor::~LineSearchPreprocessor() {
-}
-
 bool LineSearchPreprocessor::Preprocess(const Solver::Options& options,
                                         ProblemImpl* problem,
                                         PreprocessedProblem* pp) {
-  CHECK_NOTNULL(pp);
+  CHECK(pp != nullptr);
   pp->options = options;
   ChangeNumThreadsIfNeeded(&pp->options);
 
@@ -81,12 +82,10 @@ bool LineSearchPreprocessor::Preprocess(const Solver::Options& options,
     return false;
   }
 
-  pp->reduced_program.reset(
-      program->CreateReducedProgram(&pp->removed_parameter_blocks,
-                                    &pp->fixed_cost,
-                                    &pp->error));
+  pp->reduced_program = program->CreateReducedProgram(
+      &pp->removed_parameter_blocks, &pp->fixed_cost, &pp->error);
 
-  if (pp->reduced_program.get() == NULL) {
+  if (pp->reduced_program.get() == nullptr) {
     return false;
   }
 
@@ -102,5 +101,4 @@ bool LineSearchPreprocessor::Preprocess(const Solver::Options& options,
   return true;
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

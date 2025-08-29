@@ -1,0 +1,261 @@
+name: Windows
+
+on: [push, pull_request]
+
+jobs:
+  build-mingw:
+    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+    strategy:
+      fail-fast: true
+      matrix:
+        build_type: [Release]
+        sys: [mingw32, mingw64]
+        lib: [shared, static]
+        include:
+          - sys: mingw32
+            env: i686
+          - sys: mingw64
+            env: x86_64
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        install: >-
+          mingw-w64-${{matrix.env}}-ccache
+          mingw-w64-${{matrix.env}}-cmake
+          mingw-w64-${{matrix.env}}-eigen3
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gflags
+          mingw-w64-${{matrix.env}}-glog
+          mingw-w64-${{matrix.env}}-metis
+          mingw-w64-${{matrix.env}}-ninja
+          mingw-w64-${{matrix.env}}-suitesparse
+
+    - name: Setup Environment
+      if: ${{matrix.build_type == 'Release'}}
+      run: |
+        echo 'CFLAGS=-flto' >> ~/.bash_profile
+        echo 'CXXFLAGS=-flto' >> ~/.bash_profile
+
+    - name: Cache Build
+      id: cache-build
+      uses: actions/cache@v3
+      with:
+        path: ${{env.CCACHE_DIR}}
+        key: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-ccache-${{github.run_id}}
+        restore-keys: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-ccache-
+
+    - name: Configure
+      run: |
+        cmake -S . -B build_${{matrix.build_type}}/ \
+              -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -G Ninja
+
+    - name: Build
+      run: |
+        cmake --build build_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}}
+
+    - name: Test
+      run: |
+        cd build_${{matrix.build_type}}/
+        ctest --config ${{matrix.build_type}} \
+              --output-on-failure \
+              -j$(nproc)
+
+    - name: Install
+      run: |
+        cmake --build build_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}} \
+              --target install
+
+  build-msvc:
+    name: ${{matrix.msvc}}-${{matrix.arch}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: powershell
+    env:
+      CL: /MP
+      CMAKE_GENERATOR: ${{matrix.generator}}
+      CMAKE_GENERATOR_PLATFORM: ${{matrix.arch}}
+    strategy:
+      fail-fast: true
+      matrix:
+        arch:
+          - x64
+        build_type:
+          - Release
+        msvc:
+          - VS-16-2019
+          - VS-17-2022
+        lib:
+          - shared
+        gpu:
+          - cuda
+          - no-cuda
+        include:
+          - msvc: VS-16-2019
+            os: windows-2019
+            generator: 'Visual Studio 16 2019'
+            marker: vc16
+          - msvc: VS-17-2022
+            os: windows-2022
+            generator: 'Visual Studio 17 2022'
+            marker: vc17
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download and install CUDA toolkit
+        if: matrix.gpu == 'cuda'
+        run: |
+          Invoke-WebRequest https://developer.download.nvidia.com/compute/cuda/12.2.1/network_installers/cuda_12.2.1_windows_network.exe -OutFile cuda_toolkit_windows.exe
+          Start-Process -Wait -FilePath .\cuda_toolkit_windows.exe -ArgumentList "-s cusolver_dev_12.2 cusparse_dev_12.2 cublas_dev_12.2 thrust_12.2 nvcc_12.2 cudart_12.2 nvrtc_dev_12.2 visual_studio_integration_12.2"
+          Remove-Item .\cuda_toolkit_windows.exe
+          $CUDA_PATH = "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.2"
+          echo "CUDA_PATH=$CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "CUDA_PATH_V12_2=$CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Cache gflags
+        id: cache-gflags
+        uses: actions/cache@v3
+        with:
+          path: gflags/
+          key: ${{matrix.msvc}}-gflags-2.2.2-${{matrix.arch}}-${{matrix.build_type}}-${{matrix.lib}}
+
+      - name: Download gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.zip", "v2.2.2.zip");
+          Expand-Archive -Path v2.2.2.zip -DestinationPath .;
+
+      - name: Setup gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          cmake -S gflags-2.2.2 -B build-gflags `
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+                -DBUILD_TESTING=OFF `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags
+          cmake --build build-gflags `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Cache glog
+        id: cache-glog
+        uses: actions/cache@v3
+        with:
+          path: glog/
+          key: ${{matrix.msvc}}-glog-0.6.0-${{matrix.arch}}-${{matrix.build_type}}-${{matrix.lib}}
+
+      - name: Download glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/google/glog/archive/refs/tags/v0.6.0.zip", "v0.6.0.zip");
+          Expand-Archive -Path v0.6.0.zip -DestinationPath .;
+
+      - name: Setup glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          cmake -S glog-0.6.0 -B build-glog `
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+                -DBUILD_TESTING=OFF `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/glog `
+                -DCMAKE_PREFIX_PATH=${{github.workspace}}/gflags
+          cmake --build build-glog `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Cache SuiteSparse
+        id: cache-suitesparse
+        uses: actions/cache@v3
+        with:
+          path: suitesparse/
+          key: ${{matrix.msvc}}-suitesparse-5.13.0-cmake.3-${{matrix.arch}}-${{matrix.build_type}}-${{matrix.lib}}
+
+      - name: Download SuiteSparse
+        if: steps.cache-suitesparse.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/sergiud/SuiteSparse/releases/download/5.13.0-cmake.3/SuiteSparse-5.13.0-cmake.3-${{matrix.marker}}-Win64-${{matrix.build_type}}-${{matrix.lib}}-gpl-metis.zip", "suitesparse.zip");
+          Expand-Archive -Path suitesparse.zip -DestinationPath ${{github.workspace}}/suitesparse;
+
+      - name: Cache Eigen
+        id: cache-eigen
+        uses: actions/cache@v3
+        with:
+          path: eigen/
+          key: ${{runner.os}}-eigen-3.4.0
+
+      - name: Download Eigen
+        if: steps.cache-eigen.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip", "eigen-3.4.0.zip");
+          Expand-Archive -Path eigen-3.4.0.zip -DestinationPath .;
+
+      - name: Setup Eigen
+        if: steps.cache-eigen.outputs.cache-hit != 'true'
+        run: |
+          cmake -S eigen-3.4.0 -B build-eigen `
+                -DBUILD_TESTING=OFF `
+                -DCMAKE_Fortran_COMPILER= `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/eigen `
+                -DEIGEN_BUILD_DOC=OFF
+          cmake --build build-eigen `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Setup Build Environment
+        run: |
+          echo "Eigen3_ROOT=${{github.workspace}}/eigen" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "gflags_ROOT=${{github.workspace}}/gflags" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "glog_ROOT=${{github.workspace}}/glog" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "CMAKE_PREFIX_PATH=${{github.workspace}}/suitesparse" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Setup Runtime Environment
+        run: |
+          echo '${{github.workspace}}\gflags\bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo '${{github.workspace}}\glog\bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo '${{github.workspace}}\suitesparse\bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Configure
+        run: |
+          cmake -S . -B build_${{matrix.build_type}}/ `
+                -DBLAS_blas_LIBRARY=${{github.workspace}}/suitesparse/lib/libblas.lib `
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+                -DCMAKE_CONFIGURATION_TYPES=${{matrix.build_type}} `
+                -DCMAKE_INSTALL_PREFIX:PATH=${{github.workspace}}/install `
+                -DLAPACK_lapack_LIBRARY=${{github.workspace}}/suitesparse/lib/liblapack.lib
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.build_type}}/ `
+                --config ${{matrix.build_type}}
+
+      - name: Test
+        if: matrix.gpu == 'no-cuda'
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: |
+          cmake --build build_${{matrix.build_type}}/ `
+                --config ${{matrix.build_type}} `
+                --target RUN_TESTS
+
+      - name: Install
+        run: |
+          cmake --build build_${{matrix.build_type}}/ `
+                --config ${{matrix.build_type}} `
+                --target INSTALL

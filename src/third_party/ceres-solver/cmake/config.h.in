@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2022 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -50,8 +50,18 @@
 // If defined, Ceres was compiled without SuiteSparse.
 @CERES_NO_SUITESPARSE@
 
-// If defined, Ceres was compiled without CXSparse.
-@CERES_NO_CXSPARSE@
+// If defined, Ceres was compiled without CUDA.
+@CERES_NO_CUDA@
+
+// If defined, Ceres was compiled without Apple's Accelerate framework solvers.
+@CERES_NO_ACCELERATE_SPARSE@
+
+#if defined(CERES_NO_SUITESPARSE) &&              \
+    defined(CERES_NO_ACCELERATE_SPARSE) &&        \
+    !defined(CERES_USE_EIGEN_SPARSE)  // NOLINT
+// If defined Ceres was compiled without any sparse linear algebra support.
+#define CERES_NO_SPARSE
+#endif
 
 // If defined, Ceres was compiled without Schur specializations.
 @CERES_RESTRICT_SCHUR_SPECIALIZATION@
@@ -60,37 +70,30 @@
 // routines.
 @CERES_NO_CUSTOM_BLAS@
 
-// If defined, Ceres was compiled with C++11.
-@CERES_USE_CXX11@
-
-// If defined, Ceres was compiled without multithreading support.
-@CERES_NO_THREADS@
-// If defined Ceres was compiled with OpenMP multithreading support.
-@CERES_USE_OPENMP@
-// Additionally defined on *nix if Ceres was compiled with OpenMP support,
-// as in this case pthreads is also required.
-@CERES_HAVE_PTHREAD@
-@CERES_HAVE_RWLOCK@
-
-// Which version of unordered map was used when Ceres was compiled. Exactly
-// one of these will be defined for any given build.
-@CERES_STD_UNORDERED_MAP@
-@CERES_STD_UNORDERED_MAP_IN_TR1_NAMESPACE@
-@CERES_TR1_UNORDERED_MAP@
-@CERES_NO_UNORDERED_MAP@
-
-// If defined, the memory header is in <tr1/memory>, otherwise <memory>.
-@CERES_TR1_MEMORY_HEADER@
-
-// If defined shared_ptr is in std::tr1 namespace, otherwise std.
-@CERES_TR1_SHARED_PTR@
-
-// If defined, Ceres was built as a shared library.
-@CERES_USING_SHARED_LIBRARY@
+// If defined, Ceres was compiled with a version of SuiteSparse/CHOLMOD without
+// the Partition module (requires METIS).
+@CERES_NO_CHOLMOD_PARTITION@
+// If defined Ceres was compiled without support for METIS via Eigen.
+@CERES_NO_EIGEN_METIS@
 
 // If defined, Ceres was compiled with a version MSVC >= 2005 which
 // deprecated the standard POSIX names for bessel functions, replacing them
 // with underscore prefixed versions (e.g. j0() -> _j0()).
 @CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS@
+
+// CERES_NO_SPARSE should be automatically defined by config.h if Ceres was
+// compiled without any sparse back-end.  Verify that it has not subsequently
+// been inconsistently redefined.
+#if defined(CERES_NO_SPARSE)
+#if !defined(CERES_NO_SUITESPARSE)
+#error CERES_NO_SPARSE requires CERES_NO_SUITESPARSE.
+#endif
+#if !defined(CERES_NO_ACCELERATE_SPARSE)
+#error CERES_NO_SPARSE requires CERES_NO_ACCELERATE_SPARSE
+#endif
+#if defined(CERES_USE_EIGEN_SPARSE)
+#error CERES_NO_SPARSE requires !CERES_USE_EIGEN_SPARSE
+#endif
+#endif
 
 #endif  // CERES_PUBLIC_INTERNAL_CONFIG_H_

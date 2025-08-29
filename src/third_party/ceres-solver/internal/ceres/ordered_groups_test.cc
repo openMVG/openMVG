@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,11 +32,10 @@
 
 #include <cstddef>
 #include <vector>
-#include "gtest/gtest.h"
-#include "ceres/collections_port.h"
 
-namespace ceres {
-namespace internal {
+#include "gtest/gtest.h"
+
+namespace ceres::internal {
 
 TEST(OrderedGroups, EmptyOrderedGroupBehavesCorrectly) {
   ParameterBlockOrdering ordering;
@@ -229,5 +228,4 @@ TEST(OrderedGroups, MinNonZeroGroup) {
   // No non-zero groups left.
   EXPECT_DEATH_IF_SUPPORTED(ordering.MinNonZeroGroup(), "NumGroups");
 }
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,18 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include <algorithm>
-#include <string>
+#ifndef CERES_INTERNAL_SOLVER_UTILS_H_
+#define CERES_INTERNAL_SOLVER_UTILS_H_
 
+#include <algorithm>
+#include <string_view>
+
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/iteration_callback.h"
 #include "ceres/types.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 template <typename SummaryType>
 bool IsSolutionUsable(const SummaryType& summary) {
@@ -55,7 +59,11 @@ void SetSummaryFinalCost(SummaryType* summary) {
   }
 }
 
-std::string VersionString();
+CERES_NO_EXPORT
+std::string_view VersionString() noexcept;
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
+
+#endif  // CERES_INTERNAL_SOLVER_UTILS_H_

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,12 @@
 #define CERES_INTERNAL_FUNCTION_SAMPLE_H_
 
 #include <string>
-#include "ceres/internal/eigen.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 // FunctionSample is used by the line search routines to store and
 // communicate the value and (optionally) the gradient of the function
@@ -45,7 +47,7 @@ namespace internal {
 // line/direction. FunctionSample contains the information in two
 // ways. Information in the ambient space and information along the
 // direction of search.
-struct FunctionSample {
+struct CERES_NO_EXPORT FunctionSample {
   FunctionSample();
   FunctionSample(double x, double value);
   FunctionSample(double x, double value, double gradient);
@@ -80,15 +82,13 @@ struct FunctionSample {
   //
   // where d is the search direction.
   double gradient;
-  // True if the evaluation of the gradient was sucessful and the
+  // True if the evaluation of the gradient was successful and the
   // value is a finite number.
   bool gradient_is_valid;
 };
 
+}  // namespace ceres::internal
 
-
-
-}  // namespace internal
-}  // namespace ceres
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_FUNCTION_SAMPLE_H_

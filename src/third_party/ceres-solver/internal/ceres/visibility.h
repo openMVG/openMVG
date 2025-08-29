@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,15 @@
 #ifndef CERES_INTERNAL_VISIBILITY_H_
 #define CERES_INTERNAL_VISIBILITY_H_
 
+#include <memory>
 #include <set>
 #include <vector>
-#include "ceres/graph.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/graph.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 struct CompressedRowBlockStructure;
 
@@ -52,13 +55,14 @@ struct CompressedRowBlockStructure;
 //
 // In a structure from motion problem, e_blocks correspond to 3D
 // points and f_blocks correspond to cameras.
-void ComputeVisibility(const CompressedRowBlockStructure& block_structure,
-                       int num_eliminate_blocks,
-                       std::vector<std::set<int> >* visibility);
+CERES_NO_EXPORT void ComputeVisibility(
+    const CompressedRowBlockStructure& block_structure,
+    int num_eliminate_blocks,
+    std::vector<std::set<int>>* visibility);
 
 // Given f_block visibility as computed by the ComputeVisibility
 // function above, construct and return a graph whose vertices are
-// f_blocks and an edge connects two vertices if they have atleast one
+// f_blocks and an edge connects two vertices if they have at least one
 // e_block in common. The weight of this edge is normalized dot
 // product between the visibility vectors of the two
 // vertices/f_blocks.
@@ -69,10 +73,11 @@ void ComputeVisibility(const CompressedRowBlockStructure& block_structure,
 //
 // Caller acquires ownership of the returned WeightedGraph pointer
 // (heap-allocated).
-WeightedGraph<int>* CreateSchurComplementGraph(
-    const std::vector<std::set<int> >& visibility);
+CERES_NO_EXPORT std::unique_ptr<WeightedGraph<int>> CreateSchurComplementGraph(
+    const std::vector<std::set<int>>& visibility);
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_VISIBILITY_H_

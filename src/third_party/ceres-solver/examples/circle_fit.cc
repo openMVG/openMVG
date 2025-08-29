@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
 // consider instead of using this one. If you already have a decent guess, Ceres
 // can squeeze down the last bit of error.
 //
-//   [1] http://www.mathworks.com/matlabcentral/fileexchange/5557-circle-fit/content/circfit.m
+//   [1] http://www.mathworks.com/matlabcentral/fileexchange/5557-circle-fit/content/circfit.m  // NOLINT
 
 #include <cstdio>
 #include <vector>
@@ -57,16 +57,10 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-using ceres::AutoDiffCostFunction;
-using ceres::CauchyLoss;
-using ceres::CostFunction;
-using ceres::LossFunction;
-using ceres::Problem;
-using ceres::Solve;
-using ceres::Solver;
-
-DEFINE_double(robust_threshold, 0.0, "Robust loss parameter. Set to 0 for "
-              "normal squared error (no robustification).");
+DEFINE_double(robust_threshold,
+              0.0,
+              "Robust loss parameter. Set to 0 for normal squared error (no "
+              "robustification).");
 
 // The cost for a single sample. The returned residual is related to the
 // distance of the point from the circle (passed in as x, y, m parameters).
@@ -76,10 +70,11 @@ DEFINE_double(robust_threshold, 0.0, "Robust loss parameter. Set to 0 for "
 class DistanceFromCircleCost {
  public:
   DistanceFromCircleCost(double xx, double yy) : xx_(xx), yy_(yy) {}
-  template <typename T> bool operator()(const T* const x,
-                                        const T* const y,
-                                        const T* const m,  // r = m^2
-                                        T* residual) const {
+  template <typename T>
+  bool operator()(const T* const x,
+                  const T* const y,
+                  const T* const m,  // r = m^2
+                  T* residual) const {
     // Since the radius is parameterized as m^2, unpack m to get r.
     T r = *m * *m;
 
@@ -97,7 +92,7 @@ class DistanceFromCircleCost {
     // distance in the metric sense (it has units distance^2) it produces more
     // robust fits when there are outliers. This is because the cost surface is
     // more convex.
-    residual[0] = r*r - xp*xp - yp*yp;
+    residual[0] = r * r - xp * xp - yp * yp;
     return true;
   }
 
@@ -107,7 +102,7 @@ class DistanceFromCircleCost {
 };
 
 int main(int argc, char** argv) {
-  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
   double x, y, r;
@@ -125,20 +120,20 @@ int main(int argc, char** argv) {
   // Parameterize r as m^2 so that it can't be negative.
   double m = sqrt(r);
 
-  Problem problem;
+  ceres::Problem problem;
 
   // Configure the loss function.
-  LossFunction* loss = NULL;
-  if (FLAGS_robust_threshold) {
-    loss = new CauchyLoss(FLAGS_robust_threshold);
+  ceres::LossFunction* loss = nullptr;
+  if (CERES_GET_FLAG(FLAGS_robust_threshold)) {
+    loss = new ceres::CauchyLoss(CERES_GET_FLAG(FLAGS_robust_threshold));
   }
 
   // Add the residuals.
   double xx, yy;
   int num_points = 0;
   while (scanf("%lf %lf\n", &xx, &yy) == 2) {
-    CostFunction *cost =
-        new AutoDiffCostFunction<DistanceFromCircleCost, 1, 1, 1, 1>(
+    ceres::CostFunction* cost =
+        new ceres::AutoDiffCostFunction<DistanceFromCircleCost, 1, 1, 1, 1>(
             new DistanceFromCircleCost(xx, yy));
     problem.AddResidualBlock(cost, loss, &x, &y, &m);
     num_points++;
@@ -147,11 +142,11 @@ int main(int argc, char** argv) {
   std::cout << "Got " << num_points << " points.\n";
 
   // Build and solve the problem.
-  Solver::Options options;
+  ceres::Solver::Options options;
   options.max_num_iterations = 500;
   options.linear_solver_type = ceres::DENSE_QR;
-  Solver::Summary summary;
-  Solve(options, &problem, &summary);
+  ceres::Solver::Summary summary;
+  ceres::Solve(options, &problem, &summary);
 
   // Recover r from m.
   r = m * m;

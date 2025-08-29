@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -44,13 +44,15 @@
 #include <vector>
 
 #include "ceres/compressed_row_sparse_matrix.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-class DynamicCompressedRowSparseMatrix : public CompressedRowSparseMatrix {
+class CERES_NO_EXPORT DynamicCompressedRowSparseMatrix final
+    : public CompressedRowSparseMatrix {
  public:
-  // Set the number of rows and columns for the underlyig
+  // Set the number of rows and columns for the underlying
   // `CompressedRowSparseMatrix` and set the initial number of maximum non-zero
   // entries. Note that following the insertion of entries, when `Finalize`
   // is called the number of non-zeros is determined and all internal
@@ -71,7 +73,7 @@ class DynamicCompressedRowSparseMatrix : public CompressedRowSparseMatrix {
 
   // Insert an entry at a given row and column position. This method is
   // thread-safe across rows i.e. different threads can insert values
-  // simultaneously into different rows. It should be emphasised that this
+  // simultaneously into different rows. It should be emphasized that this
   // method always inserts a new entry and does not check for existing
   // entries at the specified row and column position. Duplicate entries
   // for a given row and column position will result in undefined
@@ -91,11 +93,12 @@ class DynamicCompressedRowSparseMatrix : public CompressedRowSparseMatrix {
   void Finalize(int num_additional_elements);
 
  private:
-  std::vector<std::vector<int> > dynamic_cols_;
-  std::vector<std::vector<double> > dynamic_values_;
+  std::vector<std::vector<int>> dynamic_cols_;
+  std::vector<std::vector<double>> dynamic_values_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_DYNAMIC_COMPRESSED_ROW_SPARSE_MATRIX_H_

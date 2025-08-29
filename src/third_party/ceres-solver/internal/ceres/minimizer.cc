@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,30 +28,31 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include "ceres/line_search_minimizer.h"
 #include "ceres/minimizer.h"
+
+#include <memory>
+
+#include "ceres/line_search_minimizer.h"
 #include "ceres/trust_region_minimizer.h"
 #include "ceres/types.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-Minimizer* Minimizer::Create(MinimizerType minimizer_type) {
+std::unique_ptr<Minimizer> Minimizer::Create(MinimizerType minimizer_type) {
   if (minimizer_type == TRUST_REGION) {
-    return new TrustRegionMinimizer;
+    return std::make_unique<TrustRegionMinimizer>();
   }
 
   if (minimizer_type == LINE_SEARCH) {
-    return new LineSearchMinimizer;
+    return std::make_unique<LineSearchMinimizer>();
   }
 
   LOG(FATAL) << "Unknown minimizer_type: " << minimizer_type;
-  return NULL;
+  return nullptr;
 }
 
-
-Minimizer::~Minimizer() {}
+Minimizer::~Minimizer() = default;
 
 bool Minimizer::RunCallbacks(const Minimizer::Options& options,
                              const IterationSummary& iteration_summary,
@@ -70,12 +71,16 @@ bool Minimizer::RunCallbacks(const Minimizer::Options& options,
       summary->termination_type = USER_SUCCESS;
       summary->message =
           "User callback returned SOLVER_TERMINATE_SUCCESSFULLY.";
-      VLOG_IF(1, is_not_silent) << "Terminating: " << summary->message;
+      if (is_not_silent) {
+        VLOG(1) << "Terminating: " << summary->message;
+      }
       return false;
     case SOLVER_ABORT:
       summary->termination_type = USER_FAILURE;
       summary->message = "User callback returned SOLVER_ABORT.";
-      VLOG_IF(1, is_not_silent) << "Terminating: " << summary->message;
+      if (is_not_silent) {
+        VLOG(1) << "Terminating: " << summary->message;
+      }
       return false;
     default:
       LOG(FATAL) << "Unknown type of user callback status";
@@ -83,5 +88,4 @@ bool Minimizer::RunCallbacks(const Minimizer::Options& options,
   return false;
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

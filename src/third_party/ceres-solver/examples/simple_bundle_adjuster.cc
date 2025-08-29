@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -52,10 +52,10 @@ class BALProblem {
     delete[] parameters_;
   }
 
-  int num_observations()       const { return num_observations_;               }
-  const double* observations() const { return observations_;                   }
-  double* mutable_cameras()          { return parameters_;                     }
-  double* mutable_points()           { return parameters_  + 9 * num_cameras_; }
+  int num_observations() const { return num_observations_; }
+  const double* observations() const { return observations_; }
+  double* mutable_cameras() { return parameters_; }
+  double* mutable_points() { return parameters_ + 9 * num_cameras_; }
 
   double* mutable_camera_for_observation(int i) {
     return mutable_cameras() + camera_index_[i] * 9;
@@ -66,7 +66,7 @@ class BALProblem {
 
   bool LoadFile(const char* filename) {
     FILE* fptr = fopen(filename, "r");
-    if (fptr == NULL) {
+    if (fptr == nullptr) {
       return false;
     };
 
@@ -85,7 +85,7 @@ class BALProblem {
       FscanfOrDie(fptr, "%d", camera_index_ + i);
       FscanfOrDie(fptr, "%d", point_index_ + i);
       for (int j = 0; j < 2; ++j) {
-        FscanfOrDie(fptr, "%lf", observations_ + 2*i + j);
+        FscanfOrDie(fptr, "%lf", observations_ + 2 * i + j);
       }
     }
 
@@ -96,8 +96,8 @@ class BALProblem {
   }
 
  private:
-  template<typename T>
-  void FscanfOrDie(FILE *fptr, const char *format, T *value) {
+  template <typename T>
+  void FscanfOrDie(FILE* fptr, const char* format, T* value) {
     int num_scanned = fscanf(fptr, format, value);
     if (num_scanned != 1) {
       LOG(FATAL) << "Invalid UW data file.";
@@ -139,14 +139,14 @@ struct SnavelyReprojectionError {
     // Compute the center of distortion. The sign change comes from
     // the camera model that Noah Snavely's Bundler assumes, whereby
     // the camera coordinate system has a negative z axis.
-    T xp = - p[0] / p[2];
-    T yp = - p[1] / p[2];
+    T xp = -p[0] / p[2];
+    T yp = -p[1] / p[2];
 
     // Apply second and fourth order radial distortion.
     const T& l1 = camera[7];
     const T& l2 = camera[8];
-    T r2 = xp*xp + yp*yp;
-    T distortion = 1.0 + r2  * (l1 + l2  * r2);
+    T r2 = xp * xp + yp * yp;
+    T distortion = 1.0 + r2 * (l1 + l2 * r2);
 
     // Compute final projected point position.
     const T& focal = camera[6];
@@ -165,7 +165,7 @@ struct SnavelyReprojectionError {
   static ceres::CostFunction* Create(const double observed_x,
                                      const double observed_y) {
     return (new ceres::AutoDiffCostFunction<SnavelyReprojectionError, 2, 9, 3>(
-                new SnavelyReprojectionError(observed_x, observed_y)));
+        new SnavelyReprojectionError(observed_x, observed_y)));
   }
 
   double observed_x;
@@ -195,11 +195,10 @@ int main(int argc, char** argv) {
     // dimensional residual. Internally, the cost function stores the observed
     // image location and compares the reprojection against the observation.
 
-    ceres::CostFunction* cost_function =
-        SnavelyReprojectionError::Create(observations[2 * i + 0],
-                                         observations[2 * i + 1]);
+    ceres::CostFunction* cost_function = SnavelyReprojectionError::Create(
+        observations[2 * i + 0], observations[2 * i + 1]);
     problem.AddResidualBlock(cost_function,
-                             NULL /* squared loss */,
+                             nullptr /* squared loss */,
                              bal_problem.mutable_camera_for_observation(i),
                              bal_problem.mutable_point_for_observation(i));
   }

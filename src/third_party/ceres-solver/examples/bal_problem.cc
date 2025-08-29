@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,23 +30,24 @@
 
 #include "bal_problem.h"
 
+#include <algorithm>
 #include <cstdio>
-#include <cstdlib>
 #include <fstream>
+#include <functional>
+#include <random>
 #include <string>
 #include <vector>
+
 #include "Eigen/Core"
 #include "ceres/rotation.h"
 #include "glog/logging.h"
-#include "random.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 namespace {
-typedef Eigen::Map<Eigen::VectorXd> VectorRef;
-typedef Eigen::Map<const Eigen::VectorXd> ConstVectorRef;
+using VectorRef = Eigen::Map<Eigen::VectorXd>;
+using ConstVectorRef = Eigen::Map<const Eigen::VectorXd>;
 
-template<typename T>
+template <typename T>
 void FscanfOrDie(FILE* fptr, const char* format, T* value) {
   int num_scanned = fscanf(fptr, format, value);
   if (num_scanned != 1) {
@@ -54,15 +55,14 @@ void FscanfOrDie(FILE* fptr, const char* format, T* value) {
   }
 }
 
-void PerturbPoint3(const double sigma, double* point) {
+void PerturbPoint3(std::function<double()> dist, double* point) {
   for (int i = 0; i < 3; ++i) {
-    point[i] += RandNormal() * sigma;
+    point[i] += dist();
   }
 }
 
 double Median(std::vector<double>* data) {
-  int n = data->size();
-  std::vector<double>::iterator mid_point = data->begin() + n / 2;
+  auto mid_point = data->begin() + data->size() / 2;
   std::nth_element(data->begin(), mid_point, data->end());
   return *mid_point;
 }
@@ -72,19 +72,18 @@ double Median(std::vector<double>* data) {
 BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
   FILE* fptr = fopen(filename.c_str(), "r");
 
-  if (fptr == NULL) {
+  if (fptr == nullptr) {
     LOG(FATAL) << "Error: unable to open file " << filename;
     return;
   };
 
-  // This wil die horribly on invalid files. Them's the breaks.
+  // This will die horribly on invalid files. Them's the breaks.
   FscanfOrDie(fptr, "%d", &num_cameras_);
   FscanfOrDie(fptr, "%d", &num_points_);
   FscanfOrDie(fptr, "%d", &num_observations_);
 
-  VLOG(1) << "Header: " << num_cameras_
-          << " " << num_points_
-          << " " << num_observations_;
+  VLOG(1) << "Header: " << num_cameras_ << " " << num_points_ << " "
+          << num_observations_;
 
   point_index_ = new int[num_observations_];
   camera_index_ = new int[num_observations_];
@@ -97,7 +96,7 @@ BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
     FscanfOrDie(fptr, "%d", camera_index_ + i);
     FscanfOrDie(fptr, "%d", point_index_ + i);
     for (int j = 0; j < 2; ++j) {
-      FscanfOrDie(fptr, "%lf", observations_ + 2*i + j);
+      FscanfOrDie(fptr, "%lf", observations_ + 2 * i + j);
     }
   }
 
@@ -111,7 +110,7 @@ BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
   if (use_quaternions) {
     // Switch the angle-axis rotations to quaternions.
     num_parameters_ = 10 * num_cameras_ + 3 * num_points_;
-    double* quaternion_parameters = new double[num_parameters_];
+    auto* quaternion_parameters = new double[num_parameters_];
     double* original_cursor = parameters_;
     double* quaternion_cursor = quaternion_parameters;
     for (int i = 0; i < num_cameras_; ++i) {
@@ -119,7 +118,7 @@ BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
       quaternion_cursor += 4;
       original_cursor += 3;
       for (int j = 4; j < 10; ++j) {
-       *quaternion_cursor++ = *original_cursor++;
+        *quaternion_cursor++ = *original_cursor++;
       }
     }
     // Copy the rest of the points.
@@ -127,7 +126,7 @@ BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
       *quaternion_cursor++ = *original_cursor++;
     }
     // Swap in the quaternion parameters.
-    delete []parameters_;
+    delete[] parameters_;
     parameters_ = quaternion_parameters;
   }
 }
@@ -137,7 +136,7 @@ BALProblem::BALProblem(const std::string& filename, bool use_quaternions) {
 void BALProblem::WriteToFile(const std::string& filename) const {
   FILE* fptr = fopen(filename.c_str(), "w");
 
-  if (fptr == NULL) {
+  if (fptr == nullptr) {
     LOG(FATAL) << "Error: unable to open file " << filename;
     return;
   };
@@ -161,8 +160,8 @@ void BALProblem::WriteToFile(const std::string& filename) const {
     } else {
       memcpy(angleaxis, parameters_ + 9 * i, 9 * sizeof(double));
     }
-    for (int j = 0; j < 9; ++j) {
-      fprintf(fptr, "%.16g\n", angleaxis[j]);
+    for (double coeff : angleaxis) {
+      fprintf(fptr, "%.16g\n", coeff);
     }
   }
 
@@ -181,25 +180,25 @@ void BALProblem::WriteToFile(const std::string& filename) const {
 void BALProblem::WriteToPLYFile(const std::string& filename) const {
   std::ofstream of(filename.c_str());
 
-  of << "ply"
-     << '\n' << "format ascii 1.0"
-     << '\n' << "element vertex " << num_cameras_ + num_points_
-     << '\n' << "property float x"
-     << '\n' << "property float y"
-     << '\n' << "property float z"
-     << '\n' << "property uchar red"
-     << '\n' << "property uchar green"
-     << '\n' << "property uchar blue"
-     << '\n' << "end_header" << std::endl;
+  of << "ply" << '\n'
+     << "format ascii 1.0" << '\n'
+     << "element vertex " << num_cameras_ + num_points_ << '\n'
+     << "property float x" << '\n'
+     << "property float y" << '\n'
+     << "property float z" << '\n'
+     << "property uchar red" << '\n'
+     << "property uchar green" << '\n'
+     << "property uchar blue" << '\n'
+     << "end_header" << std::endl;
 
   // Export extrinsic data (i.e. camera centers) as green points.
   double angle_axis[3];
   double center[3];
-  for (int i = 0; i < num_cameras(); ++i)  {
+  for (int i = 0; i < num_cameras(); ++i) {
     const double* camera = cameras() + camera_block_size() * i;
     CameraToAngleAxisAndCenter(camera, angle_axis, center);
-    of << center[0] << ' ' << center[1] << ' ' << center[2]
-       << " 0 255 0" << '\n';
+    of << center[0] << ' ' << center[1] << ' ' << center[2] << " 0 255 0"
+       << '\n';
   }
 
   // Export the structure (i.e. 3D Points) as white points.
@@ -226,9 +225,8 @@ void BALProblem::CameraToAngleAxisAndCenter(const double* camera,
 
   // c = -R't
   Eigen::VectorXd inverse_rotation = -angle_axis_ref;
-  AngleAxisRotatePoint(inverse_rotation.data(),
-                       camera + camera_block_size() - 6,
-                       center);
+  AngleAxisRotatePoint(
+      inverse_rotation.data(), camera + camera_block_size() - 6, center);
   VectorRef(center, 3) *= -1.0;
 }
 
@@ -243,12 +241,9 @@ void BALProblem::AngleAxisAndCenterToCamera(const double* angle_axis,
   }
 
   // t = -R * c
-  AngleAxisRotatePoint(angle_axis,
-                       center,
-                       camera + camera_block_size() - 6);
+  AngleAxisRotatePoint(angle_axis, center, camera + camera_block_size() - 6);
   VectorRef(camera + camera_block_size() - 6, 3) *= -1.0;
 }
-
 
 void BALProblem::Normalize() {
   // Compute the marginal median of the geometry.
@@ -301,14 +296,20 @@ void BALProblem::Perturb(const double rotation_sigma,
   CHECK_GE(point_sigma, 0.0);
   CHECK_GE(rotation_sigma, 0.0);
   CHECK_GE(translation_sigma, 0.0);
-
+  std::mt19937 prng;
+  std::normal_distribution<double> point_noise_distribution(0.0, point_sigma);
   double* points = mutable_points();
   if (point_sigma > 0) {
     for (int i = 0; i < num_points_; ++i) {
-      PerturbPoint3(point_sigma, points + 3 * i);
+      PerturbPoint3(std::bind(point_noise_distribution, std::ref(prng)),
+                    points + 3 * i);
     }
   }
 
+  std::normal_distribution<double> rotation_noise_distribution(0.0,
+                                                               point_sigma);
+  std::normal_distribution<double> translation_noise_distribution(
+      0.0, translation_sigma);
   for (int i = 0; i < num_cameras_; ++i) {
     double* camera = mutable_cameras() + camera_block_size() * i;
 
@@ -318,22 +319,23 @@ void BALProblem::Perturb(const double rotation_sigma,
     // representation.
     CameraToAngleAxisAndCenter(camera, angle_axis, center);
     if (rotation_sigma > 0.0) {
-      PerturbPoint3(rotation_sigma, angle_axis);
+      PerturbPoint3(std::bind(rotation_noise_distribution, std::ref(prng)),
+                    angle_axis);
     }
     AngleAxisAndCenterToCamera(angle_axis, center, camera);
 
     if (translation_sigma > 0.0) {
-      PerturbPoint3(translation_sigma, camera + camera_block_size() - 6);
+      PerturbPoint3(std::bind(translation_noise_distribution, std::ref(prng)),
+                    camera + camera_block_size() - 6);
     }
   }
 }
 
 BALProblem::~BALProblem() {
-  delete []point_index_;
-  delete []camera_index_;
-  delete []observations_;
-  delete []parameters_;
+  delete[] point_index_;
+  delete[] camera_index_;
+  delete[] observations_;
+  delete[] parameters_;
 }
 
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples
