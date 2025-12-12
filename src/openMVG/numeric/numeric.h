@@ -138,12 +138,13 @@ inline double R2D( double radian )
 }
 
 /**
-* @brief Compute mean rotation magnitude of the given rotation matrix
-* @param R2 Input rotation matrix
-* @return magnitude of the rotation (in radian)
-* @note Assuming R2 is a correct rotation matrix
-* @note Mean is computed using the matrix column dot products to an Identity matrix
-*/
+ * @brief Compute the rotation magnitute of the given rotation matrix
+ * @param R2 Input rotation matrix
+ * @return magnitude of the rotation (in radian)
+ * @note Assuming R2 is a correct rotation matrix
+ * @note Magnitude is calculated the same way as converting to angle-axis
+ * representation and taking the angle part.
+ */
 double  getRotationMagnitude( const Mat3 & R2 );
 
 /**

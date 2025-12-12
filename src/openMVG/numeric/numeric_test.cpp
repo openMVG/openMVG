@@ -94,6 +94,34 @@ TEST ( TinyMatrix, product )
   EXPECT_MATRIX_NEAR( expected_resBxA, resBxA, 1e-8);
 }
 
+TEST(Numeric, getRotationMagnitude) {
+
+  {
+    Mat3 R = Mat3::Identity();
+    EXPECT_NEAR(0.0, getRotationMagnitude(R), 1e-8);
+  }
+
+  {
+    Mat3 R = RotationAroundX(M_PI / 2);
+    EXPECT_NEAR(M_PI / 2, getRotationMagnitude(R), 1e-8);
+  }
+
+  {
+    Mat3 R = RotationAroundY(M_PI / 2);
+    EXPECT_NEAR(M_PI / 2, getRotationMagnitude(R), 1e-8);
+  }
+
+  {
+    Mat3 R = RotationAroundZ(M_PI);
+    EXPECT_NEAR(M_PI, getRotationMagnitude(R), 1e-8);
+  }
+
+  {
+    Mat3 R = RotationAroundZ(2 * M_PI);
+    EXPECT_NEAR(0, getRotationMagnitude(R), 1e-8);
+  }
+}
+
 TEST(TinyMatrix, LookAt) {
   // Simple orthogonality check.
   Vec3 e; e[0]= 1; e[1] = 2; e[2] = 3;
