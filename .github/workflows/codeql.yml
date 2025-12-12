@@ -30,7 +30,7 @@ jobs:
     - name: Git submodule
       run: |
         mkdir ./build
-        git submodule update -i
+        git submodule update --init
 
     - name: Configure CMake
       working-directory: ./build

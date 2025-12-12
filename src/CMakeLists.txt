@@ -119,7 +119,7 @@ endif()
 if (NOT EXISTS ${PROJECT_SOURCE_DIR}/dependencies/cereal/include)
   message(FATAL_ERROR
     "\n submodule(s) are missing, please update your repository:\n"
-    "  > git submodule update -i\n")
+    "  > git submodule update --init\n")
 endif()
 
 # ==============================================================================
