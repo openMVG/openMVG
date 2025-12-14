@@ -113,6 +113,15 @@ target_link_libraries( openMVG_main_openMVGSpherical2Cubic
   openMVG_sfm
   ${STLPLUS_LIBRARY} )
 
+# - Export a SfM openMVG scene to NerfStudio format
+add_executable(openMVG_main_openMVG2NerfStudio main_openMVG2NerfStudio.cpp)
+target_link_libraries(openMVG_main_openMVG2NerfStudio
+  openMVG_system
+  openMVG_image
+  openMVG_features
+  openMVG_sfm
+  ${STLPLUS_LIBRARY} )
+
 # installation rules
 set_property(TARGET openMVG_main_openMVG2PMVS PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVG2PMVS DESTINATION bin/)
@@ -134,6 +143,8 @@ set_property(TARGET openMVG_main_openMVG2Colmap PROPERTY FOLDER OpenMVG/software
 install(TARGETS openMVG_main_openMVG2Colmap DESTINATION bin/)
 set_property(TARGET openMVG_main_openMVGSpherical2Cubic PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_openMVGSpherical2Cubic DESTINATION bin/)
+set_property(TARGET openMVG_main_openMVG2NerfStudio PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_openMVG2NerfStudio DESTINATION bin/)
 
 ###
 # SfM tools to visualize feature tracking data
