@@ -19,7 +19,7 @@ jobs:
       - name: Git submodule
         run: |
           mkdir ./build
-          git submodule update -i
+          git submodule update --init
 
       - name: 3rd Party libs
         run: |
