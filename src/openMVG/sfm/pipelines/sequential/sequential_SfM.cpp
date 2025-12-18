@@ -19,12 +19,14 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_io_rerun.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/logger.hpp"
 #include "openMVG/system/loggerprogress.hpp"
 
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
+#include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <ceres/types.h>
 #include <functional>
@@ -209,6 +211,13 @@ bool SequentialSfMReconstructionEngine::Process() {
       }
       while (badTrackRejector(4.0, 50));
       eraseUnstablePosesAndObservations(sfm_data_);
+
+      // Export for visual inspection/monitoring
+      if (rerun_recording_stream_)
+      {
+        rerun_recording_stream_->set_time_sequence("pose_count", sfm_data_.GetPoses().size());
+        Save_Rerun(*rerun_recording_stream_, sfm_data_, ESfM_Data(EXTRINSICS | STRUCTURE));
+      }
     }
     ++resectionGroupIndex;
   }
@@ -963,6 +972,14 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
       << resection_data.vec_inliers.size()/static_cast<float>(vec_featIdForResection.size()) << "<br>"
       << "-------------------------------" << "<br>";
     html_doc_stream_->pushInfo(os.str());
+  }
+
+  if (rerun_recording_stream_)
+  {
+    rerun_recording_stream_->log("a_contrario_resection/threshold", rerun::TimeSeriesScalar(resection_data.error_max));
+    rerun_recording_stream_->log(
+      "a_contrario_resection/inlier_ratio",
+      rerun::TimeSeriesScalar(100.f * resection_data.vec_inliers.size()/static_cast<float>(vec_featIdForResection.size())));
   }
 
   if (!bResection)

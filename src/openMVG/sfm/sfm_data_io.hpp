@@ -27,7 +27,9 @@ enum ESfM_Data
   INTRINSICS      =  4,
   STRUCTURE       =  8,
   CONTROL_POINTS  = 16,
-  ALL = VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE | CONTROL_POINTS
+  STRUCTURE_PER_VIEW = 32,
+  ALL = VIEWS | EXTRINSICS | INTRINSICS | STRUCTURE | CONTROL_POINTS,
+
 };
 
 ///Check that each pose have a valid intrinsic and pose id in the existing View ids

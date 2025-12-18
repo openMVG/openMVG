@@ -172,6 +172,7 @@ target_link_libraries(openMVG_main_SfM
     openMVG_features
     openMVG_sfm
     ${STLPLUS_LIBRARY}
+    rerun_sdk
 )
 
 add_executable(openMVG_main_ConvertSfM_DataFormat main_ConvertSfM_DataFormat.cpp)

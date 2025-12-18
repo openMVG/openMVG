@@ -36,6 +36,7 @@ target_link_libraries(openMVG_sfm
     openMVG_system
     ${CERES_LIBRARIES}
     ${STLPLUS_LIBRARY}
+    rerun_sdk
 )
 target_include_directories(openMVG_sfm
   PRIVATE
