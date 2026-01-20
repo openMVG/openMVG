@@ -216,6 +216,16 @@ target_link_libraries(openMVG_main_ComputeSfM_DataColor
     ${STLPLUS_LIBRARY}
 )
 
+add_executable(openMVG_main_ReportGSD main_ReportGSD.cpp)
+target_link_libraries(openMVG_main_ReportGSD
+  PRIVATE
+    openMVG_system
+    openMVG_sfm
+    ${STLPLUS_LIBRARY}
+)
+
+
+
 add_executable(openMVG_main_PointsFiltering main_PointsFiltering.cpp)
 target_link_libraries(openMVG_main_PointsFiltering
   PRIVATE
