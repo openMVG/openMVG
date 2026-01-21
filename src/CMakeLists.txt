@@ -18,7 +18,7 @@ endif()
 include(GNUInstallDirs)
 
 # guard against in-source builds
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if (${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed.")
 endif()
 
@@ -248,7 +248,7 @@ MACRO(UNIT_TEST NAMESPACE NAME EXTRA_LIBS)
     set_property(TARGET ${NAMESPACE}_test_${NAME} PROPERTY FOLDER OpenMVG/test)
     target_include_directories(${NAMESPACE}_test_${NAME}
                                PRIVATE
-                               ${CMAKE_SOURCE_DIR}/third_party)
+                               ${PROJECT_SOURCE_DIR}/third_party)
     target_link_libraries(${NAMESPACE}_test_${NAME}
                           ${EXTRA_LIBS} # Extra libs MUST be first.
                           CppUnitLite)
@@ -617,7 +617,7 @@ endforeach()
 # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
 # find_package() automatically. We configure that file so that we can put any
 # information we want in it, e.g. version numbers, include directories, etc.
-configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
+configure_file("${PROJECT_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
                "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
