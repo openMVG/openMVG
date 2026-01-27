@@ -77,12 +77,8 @@ void ImageCollectionGeometricFilter::Robust_model_estimation
   my_progress_bar->Restart( putative_matches.size(), "- Geometric filtering -" );
 
   // Cache iterators to avoid O(n^2) std::map traversal with advance().
-  std::vector<PairWiseMatches::const_iterator> match_iters;
-  match_iters.reserve(putative_matches.size());
-  for (auto it = putative_matches.cbegin(); it != putative_matches.cend(); ++it)
-  {
-    match_iters.push_back(it);
-  }
+  std::vector<PairWiseMatches::const_iterator> match_iters(
+    putative_matches.cbegin(), putative_matches.cend());
 
 #ifdef OPENMVG_USE_OPENMP
 #pragma omp parallel for schedule(dynamic)
