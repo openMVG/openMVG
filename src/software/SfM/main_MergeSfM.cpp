@@ -142,7 +142,6 @@ int main(int argc, char **argv)
     if (argc == 1) throw std::string("Invalid parameter.");
     cmd.process(argc, argv);
   } catch (const std::string& s) {
-
     OPENMVG_LOG_INFO << "Usage: " << argv[0] << '\n'
       << "[Required]\n"
       << "[-i|--main_sfm_file] path to the parent first_sfm_scene scene\n"
