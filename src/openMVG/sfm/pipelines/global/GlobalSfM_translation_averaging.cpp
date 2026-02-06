@@ -458,10 +458,18 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
     system::LoggerProgress my_progress_bar(vec_edges.size(),
       "Relative translations computation (edge coverage algorithm)");
 
+    // Initialize vector inside parallel region to get actual thread count
+    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates;
 #  ifdef OPENMVG_USE_OPENMP
-    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(omp_get_max_threads());
+    #pragma omp parallel
+    {
+      #pragma omp single
+      {
+        initial_estimates.resize(omp_get_num_threads());
+      }
+    }
 #  else
-    std::vector<std::vector<RelativeInfo_Vec>> initial_estimates(1);
+    initial_estimates.resize(1);
 #  endif
 
     #ifdef OPENMVG_USE_OPENMP
@@ -569,6 +577,14 @@ void GlobalSfM_Translation_AveragingSolver::ComputePutativeTranslation_EdgesCove
               #else
                 const int thread_id = 0;
               #endif
+
+              // Safety check to prevent out-of-bounds access
+              if (thread_id >= static_cast<int>(initial_estimates.size()))
+              {
+                OPENMVG_LOG_ERROR << "Thread ID " << thread_id
+                                  << " exceeds initial_estimates size " << initial_estimates.size();
+                continue;
+              }
 
               RelativeInfo_Vec triplet_relative_motion;
               triplet_relative_motion.push_back(
