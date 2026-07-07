@@ -1,5 +1,5 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2015 Google Inc. All rights reserved.
+# Copyright 2023 Google Inc. All rights reserved.
 # http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -109,6 +109,16 @@ macro(GLOG_REPORT_NOT_FOUND REASON_MSG)
   return()
 endmacro(GLOG_REPORT_NOT_FOUND)
 
+# glog_message([mode] "message text")
+#
+# Wraps the standard cmake 'message' command, but suppresses output
+# if the QUIET flag was passed to the find_package(Glog ...) call.
+function(GLOG_MESSAGE)
+  if (NOT Glog_FIND_QUIETLY)
+    message(${ARGN})
+  endif()
+endfunction()
+
 # Protect against any alternative find_package scripts for this library having
 # been called previously (in a client project) which set GLOG_FOUND, but not
 # the other variables we require / set here which could cause the search logic
@@ -123,11 +133,32 @@ unset(GLOG_FOUND)
 if (NOT DEFINED GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION
     AND NOT GLOG_INCLUDE_DIR_HINTS
     AND NOT GLOG_LIBRARY_DIR_HINTS)
-  message(STATUS "No preference for use of exported glog CMake configuration "
-    "set, and no hints for include/library directories provided. "
+  glog_message(STATUS "No preference for use of exported glog CMake "
+    "configuration set, and no hints for include/library directories provided. "
     "Defaulting to preferring an installed/exported glog CMake configuration "
     "if available.")
   set(GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION TRUE)
+endif()
+
+# On macOS, add the Homebrew prefix (with appropriate suffixes) to the
+# respective HINTS directories (after any user-specified locations).  This
+# handles Homebrew installations into non-standard locations (not /usr/local).
+# We do not use CMAKE_PREFIX_PATH for this as given the search ordering of
+# find_xxx(), doing so would override any user-specified HINTS locations with
+# the Homebrew version if it exists.
+if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  find_program(HOMEBREW_EXECUTABLE brew)
+  mark_as_advanced(FORCE HOMEBREW_EXECUTABLE)
+  if (HOMEBREW_EXECUTABLE)
+    # Detected a Homebrew install, query for its install prefix.
+    execute_process(COMMAND ${HOMEBREW_EXECUTABLE} --prefix
+      OUTPUT_VARIABLE HOMEBREW_INSTALL_PREFIX
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    glog_message(STATUS "Detected Homebrew with install prefix: "
+      "${HOMEBREW_INSTALL_PREFIX}, adding to CMake search paths.")
+    list(APPEND GLOG_INCLUDE_DIR_HINTS "${HOMEBREW_INSTALL_PREFIX}/include")
+    list(APPEND GLOG_LIBRARY_DIR_HINTS "${HOMEBREW_INSTALL_PREFIX}/lib")
+  endif()
 endif()
 
 if (GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION)
@@ -176,15 +207,16 @@ if (GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION)
   # [1] http://www.cmake.org/cmake/help/v2.8.11/cmake.html#command:find_package
   find_package(glog QUIET
                     NAMES google-glog glog
+                    HINTS ${glog_DIR} ${HOMEBREW_INSTALL_PREFIX}
                     NO_MODULE
                     NO_CMAKE_PACKAGE_REGISTRY
                     NO_CMAKE_BUILDS_PATH)
   if (glog_FOUND)
-    message(STATUS "Found installed version of glog: ${glog_DIR}")
+    glog_message(STATUS "Found installed version of glog: ${glog_DIR}")
   else()
     # Failed to find an installed version of glog, repeat search allowing
     # exported build directories.
-    message(STATUS "Failed to find installed glog CMake configuration, "
+    glog_message(STATUS "Failed to find installed glog CMake configuration, "
       "searching for glog build directories exported with CMake.")
     # Again pass NO_CMAKE_BUILDS_PATH, as we know that glog is exported and
     # do not want to treat projects built with the CMake GUI preferentially.
@@ -193,21 +225,22 @@ if (GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION)
                       NO_MODULE
                       NO_CMAKE_BUILDS_PATH)
     if (glog_FOUND)
-      message(STATUS "Found exported glog build directory: ${glog_DIR}")
+      glog_message(STATUS "Found exported glog build directory: ${glog_DIR}")
     endif(glog_FOUND)
   endif(glog_FOUND)
 
   set(FOUND_INSTALLED_GLOG_CMAKE_CONFIGURATION ${glog_FOUND})
 
   if (FOUND_INSTALLED_GLOG_CMAKE_CONFIGURATION)
-    message(STATUS "Detected glog version: ${glog_VERSION}")
+    glog_message(STATUS "Detected glog version: ${glog_VERSION}")
     set(GLOG_FOUND ${glog_FOUND})
     # glog wraps the include directories into the exported glog::glog target.
     set(GLOG_INCLUDE_DIR "")
     set(GLOG_LIBRARY glog::glog)
   else (FOUND_INSTALLED_GLOG_CMAKE_CONFIGURATION)
-    message(STATUS "Failed to find an installed/exported CMake configuration "
-      "for glog, will perform search for installed glog components.")
+    glog_message(STATUS "Failed to find an installed/exported CMake "
+      "configuration for glog, will perform search for installed glog "
+      "components.")
   endif (FOUND_INSTALLED_GLOG_CMAKE_CONFIGURATION)
 endif(GLOG_PREFER_EXPORTED_GLOG_CMAKE_CONFIGURATION)
 
@@ -311,6 +344,11 @@ if (NOT GLOG_FOUND)
       "${GLOG_LIBRARY} does not match glog.")
   endif (GLOG_LIBRARY AND
     NOT "${LOWERCASE_GLOG_LIBRARY}" MATCHES ".*glog[^/]*")
+
+  # add glog::glog target
+  add_library(glog::glog INTERFACE IMPORTED)
+  target_include_directories(glog::glog INTERFACE ${GLOG_INCLUDE_DIRS})
+  target_link_libraries(glog::glog INTERFACE ${GLOG_LIBRARY})
 
   glog_reset_find_library_prefix()
 

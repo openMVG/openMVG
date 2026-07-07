@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,45 +31,74 @@
 #ifndef CERES_INTERNAL_BLOCK_JACOBI_PRECONDITIONER_H_
 #define CERES_INTERNAL_BLOCK_JACOBI_PRECONDITIONER_H_
 
+#include <memory>
+
 #include "ceres/block_random_access_diagonal_matrix.h"
-#include "ceres/internal/scoped_ptr.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/preconditioner.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class BlockSparseMatrix;
-struct CompressedRowBlockStructure;
+class CompressedRowSparseMatrix;
 
 // A block Jacobi preconditioner. This is intended for use with
-// conjugate gradients, or other iterative symmetric solvers. To use
-// the preconditioner, create one by passing a BlockSparseMatrix "A"
-// to the constructor. This fixes the sparsity pattern to the pattern
-// of the matrix A^TA.
+// conjugate gradients, or other iterative symmetric solvers.
+
+// This version of the preconditioner is for use with BlockSparseMatrix
+// Jacobians.
 //
-// Before each use of the preconditioner in a solve with conjugate gradients,
-// update the matrix by running Update(A, D). The values of the matrix A are
-// inspected to construct the preconditioner. The vector D is applied as the
-// D^TD diagonal term.
-class BlockJacobiPreconditioner : public BlockSparseMatrixPreconditioner {
+// TODO(https://github.com/ceres-solver/ceres-solver/issues/936):
+// BlockSparseJacobiPreconditioner::RightMultiply will benefit from
+// multithreading
+class CERES_NO_EXPORT BlockSparseJacobiPreconditioner
+    : public BlockSparseMatrixPreconditioner {
  public:
   // A must remain valid while the BlockJacobiPreconditioner is.
-  explicit BlockJacobiPreconditioner(const BlockSparseMatrix& A);
-  virtual ~BlockJacobiPreconditioner();
-
-  // Preconditioner interface
-  virtual void RightMultiply(const double* x, double* y) const;
-  virtual int num_rows() const { return m_->num_rows(); }
-  virtual int num_cols() const { return m_->num_rows(); }
+  explicit BlockSparseJacobiPreconditioner(Preconditioner::Options,
+                                           const BlockSparseMatrix& A);
+  ~BlockSparseJacobiPreconditioner() override;
+  void RightMultiplyAndAccumulate(const double* x, double* y) const final {
+    return m_->RightMultiplyAndAccumulate(x, y);
+  }
+  int num_rows() const final { return m_->num_rows(); }
+  int num_cols() const final { return m_->num_rows(); }
   const BlockRandomAccessDiagonalMatrix& matrix() const { return *m_; }
 
  private:
-  virtual bool UpdateImpl(const BlockSparseMatrix& A, const double* D);
+  bool UpdateImpl(const BlockSparseMatrix& A, const double* D) final;
 
-  scoped_ptr<BlockRandomAccessDiagonalMatrix> m_;
+  Preconditioner::Options options_;
+  std::unique_ptr<BlockRandomAccessDiagonalMatrix> m_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+// This version of the preconditioner is for use with CompressedRowSparseMatrix
+// Jacobians.
+class CERES_NO_EXPORT BlockCRSJacobiPreconditioner
+    : public CompressedRowSparseMatrixPreconditioner {
+ public:
+  // A must remain valid while the BlockJacobiPreconditioner is.
+  explicit BlockCRSJacobiPreconditioner(Preconditioner::Options options,
+                                        const CompressedRowSparseMatrix& A);
+  ~BlockCRSJacobiPreconditioner() override;
+  void RightMultiplyAndAccumulate(const double* x, double* y) const final {
+    m_->RightMultiplyAndAccumulate(x, y);
+  }
+  int num_rows() const final { return m_->num_rows(); }
+  int num_cols() const final { return m_->num_rows(); }
+  const CompressedRowSparseMatrix& matrix() const { return *m_; }
+
+ private:
+  bool UpdateImpl(const CompressedRowSparseMatrix& A, const double* D) final;
+
+  Preconditioner::Options options_;
+  std::vector<std::mutex> locks_;
+  std::unique_ptr<CompressedRowSparseMatrix> m_;
+};
+
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_BLOCK_JACOBI_PRECONDITIONER_H_

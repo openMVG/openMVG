@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,14 @@
 #include "ceres/block_evaluate_preparer.h"
 
 #include <vector>
+
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/casts.h"
 #include "ceres/parameter_block.h"
 #include "ceres/residual_block.h"
 #include "ceres/sparse_matrix.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 void BlockEvaluatePreparer::Init(int const* const* jacobian_layout,
                                  int max_derivatives_per_residual_block) {
@@ -52,11 +52,9 @@ void BlockEvaluatePreparer::Prepare(const ResidualBlock* residual_block,
                                     SparseMatrix* jacobian,
                                     double** jacobians) {
   // If the overall jacobian is not available, use the scratch space.
-  if (jacobian == NULL) {
-    scratch_evaluate_preparer_.Prepare(residual_block,
-                                       residual_block_index,
-                                       jacobian,
-                                       jacobians);
+  if (jacobian == nullptr) {
+    scratch_evaluate_preparer_.Prepare(
+        residual_block, residual_block_index, jacobian, jacobians);
     return;
   }
 
@@ -74,10 +72,9 @@ void BlockEvaluatePreparer::Prepare(const ResidualBlock* residual_block,
       // parameters. Instead, bump the pointer for active parameters only.
       jacobian_block_offset++;
     } else {
-      jacobians[j] = NULL;
+      jacobians[j] = nullptr;
     }
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

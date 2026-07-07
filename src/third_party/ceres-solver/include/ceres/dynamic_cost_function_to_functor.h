@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,15 @@
 #ifndef CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
 #define CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_
 
+#include <memory>
 #include <numeric>
 #include <vector>
 
 #include "ceres/dynamic_cost_function.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/internal/fixed_array.h"
-#include "ceres/internal/port.h"
-#include "ceres/internal/scoped_ptr.h"
+#include "glog/logging.h"
 
 namespace ceres {
 
@@ -53,9 +55,9 @@ namespace ceres {
 //  class IntrinsicProjection : public CostFunction {
 //    public:
 //      IntrinsicProjection(const double* observation);
-//      virtual bool Evaluate(double const* const* parameters,
-//                            double* residuals,
-//                            double** jacobians) const;
+//      bool Evaluate(double const* const* parameters,
+//                    double* residuals,
+//                    double** jacobians) const override;
 //  };
 //
 // is a cost function that implements the projection of a point in its
@@ -100,27 +102,27 @@ namespace ceres {
 //  private:
 //   DynamicCostFunctionToFunctor intrinsic_projection_;
 // };
-class DynamicCostFunctionToFunctor {
+class CERES_EXPORT DynamicCostFunctionToFunctor {
  public:
   // Takes ownership of cost_function.
   explicit DynamicCostFunctionToFunctor(CostFunction* cost_function)
       : cost_function_(cost_function) {
-    CHECK_NOTNULL(cost_function);
+    CHECK(cost_function != nullptr);
   }
 
   bool operator()(double const* const* parameters, double* residuals) const {
-    return cost_function_->Evaluate(parameters, residuals, NULL);
+    return cost_function_->Evaluate(parameters, residuals, nullptr);
   }
 
   template <typename JetT>
   bool operator()(JetT const* const* inputs, JetT* output) const {
-    const std::vector<int32>& parameter_block_sizes =
+    const std::vector<int32_t>& parameter_block_sizes =
         cost_function_->parameter_block_sizes();
     const int num_parameter_blocks =
         static_cast<int>(parameter_block_sizes.size());
     const int num_residuals = cost_function_->num_residuals();
-    const int num_parameters = std::accumulate(parameter_block_sizes.begin(),
-                                               parameter_block_sizes.end(), 0);
+    const int num_parameters = std::accumulate(
+        parameter_block_sizes.begin(), parameter_block_sizes.end(), 0);
 
     internal::FixedArray<double> parameters(num_parameters);
     internal::FixedArray<double*> parameter_blocks(num_parameter_blocks);
@@ -130,8 +132,8 @@ class DynamicCostFunctionToFunctor {
 
     // Build a set of arrays to get the residuals and jacobians from
     // the CostFunction wrapped by this functor.
-    double* parameter_ptr = parameters.get();
-    double* jacobian_ptr = jacobians.get();
+    double* parameter_ptr = parameters.data();
+    double* jacobian_ptr = jacobians.data();
     for (int i = 0; i < num_parameter_blocks; ++i) {
       parameter_blocks[i] = parameter_ptr;
       jacobian_blocks[i] = jacobian_ptr;
@@ -141,9 +143,9 @@ class DynamicCostFunctionToFunctor {
       jacobian_ptr += num_residuals * parameter_block_sizes[i];
     }
 
-    if (!cost_function_->Evaluate(parameter_blocks.get(),
-                                  residuals.get(),
-                                  jacobian_blocks.get())) {
+    if (!cost_function_->Evaluate(parameter_blocks.data(),
+                                  residuals.data(),
+                                  jacobian_blocks.data())) {
       return false;
     }
 
@@ -170,7 +172,7 @@ class DynamicCostFunctionToFunctor {
       output[i].v.setZero();
 
       for (int j = 0; j < num_parameter_blocks; ++j) {
-        const int32 block_size = parameter_block_sizes[j];
+        const int32_t block_size = parameter_block_sizes[j];
         for (int k = 0; k < parameter_block_sizes[j]; ++k) {
           output[i].v +=
               jacobian_blocks[j][i * block_size + k] * inputs[j][k].v;
@@ -182,9 +184,11 @@ class DynamicCostFunctionToFunctor {
   }
 
  private:
-  internal::scoped_ptr<CostFunction> cost_function_;
+  std::unique_ptr<CostFunction> cost_function_;
 };
 
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_DYNAMIC_COST_FUNCTION_TO_FUNCTOR_H_

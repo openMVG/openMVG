@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,56 +28,53 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/residual_block_utils.h"
+
 #include <cmath>
 #include <limits>
-#include "gtest/gtest.h"
+#include <memory>
+
+#include "ceres/cost_function.h"
 #include "ceres/parameter_block.h"
 #include "ceres/residual_block.h"
-#include "ceres/residual_block_utils.h"
-#include "ceres/cost_function.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/sized_cost_function.h"
+#include "gtest/gtest.h"
 
 namespace ceres {
 namespace internal {
 
 // Routine to check if ResidualBlock::Evaluate for unary CostFunction
 // with one residual succeeds with true or dies.
-void CheckEvaluation(const CostFunction& cost_function, bool is_good) {
+static void CheckEvaluation(const CostFunction& cost_function, bool is_good) {
   double x = 1.0;
   ParameterBlock parameter_block(&x, 1, -1);
   std::vector<ParameterBlock*> parameter_blocks;
   parameter_blocks.push_back(&parameter_block);
 
-  ResidualBlock residual_block(&cost_function,
-                               NULL,
-                               parameter_blocks,
-                               -1);
+  ResidualBlock residual_block(&cost_function, nullptr, parameter_blocks, -1);
 
-  scoped_array<double> scratch(
+  std::unique_ptr<double[]> scratch(
       new double[residual_block.NumScratchDoublesForEvaluate()]);
 
   double cost;
   double residuals;
   double jacobian;
-  double* jacobians[] = { &jacobian };
+  double* jacobians[] = {&jacobian};
 
-  EXPECT_EQ(residual_block.Evaluate(true,
-                                    &cost,
-                                    &residuals,
-                                    jacobians,
-                                    scratch.get()), is_good);
+  EXPECT_EQ(residual_block.Evaluate(
+                true, &cost, &residuals, jacobians, scratch.get()),
+            is_good);
 }
 
-// A CostFunction that behaves normaly, i.e., it computes numerically
+// A CostFunction that behaves normally, i.e., it computes numerically
 // valid residuals and jacobians.
-class GoodCostFunction: public SizedCostFunction<1, 1> {
+class GoodCostFunction : public SizedCostFunction<1, 1> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     residuals[0] = 1;
-    if (jacobians != NULL && jacobians[0] != NULL) {
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
       jacobians[0][0] = 0.0;
     }
     return true;
@@ -86,27 +83,27 @@ class GoodCostFunction: public SizedCostFunction<1, 1> {
 
 // The following four CostFunctions simulate the different ways in
 // which user code can cause ResidualBlock::Evaluate to fail.
-class NoResidualUpdateCostFunction: public SizedCostFunction<1, 1> {
+class NoResidualUpdateCostFunction : public SizedCostFunction<1, 1> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     // Forget to update the residuals.
     // residuals[0] = 1;
-    if (jacobians != NULL && jacobians[0] != NULL) {
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
       jacobians[0][0] = 0.0;
     }
     return true;
   }
 };
 
-class NoJacobianUpdateCostFunction: public SizedCostFunction<1, 1> {
+class NoJacobianUpdateCostFunction : public SizedCostFunction<1, 1> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     residuals[0] = 1;
-    if (jacobians != NULL && jacobians[0] != NULL) {
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
       // Forget to update the jacobians.
       // jacobians[0][0] = 0.0;
     }
@@ -114,26 +111,26 @@ class NoJacobianUpdateCostFunction: public SizedCostFunction<1, 1> {
   }
 };
 
-class BadResidualCostFunction: public SizedCostFunction<1, 1> {
+class BadResidualCostFunction : public SizedCostFunction<1, 1> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     residuals[0] = std::numeric_limits<double>::infinity();
-    if (jacobians != NULL && jacobians[0] != NULL) {
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
       jacobians[0][0] = 0.0;
     }
     return true;
   }
 };
 
-class BadJacobianCostFunction: public SizedCostFunction<1, 1> {
+class BadJacobianCostFunction : public SizedCostFunction<1, 1> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     residuals[0] = 1.0;
-    if (jacobians != NULL && jacobians[0] != NULL) {
+    if (jacobians != nullptr && jacobians[0] != nullptr) {
       jacobians[0][0] = std::numeric_limits<double>::quiet_NaN();
     }
     return true;

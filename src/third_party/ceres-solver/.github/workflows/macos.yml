@@ -1,0 +1,108 @@
+name: macOS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.target}}
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash -e -o pipefail {0}
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+      CMAKE_GENERATOR: Ninja
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-11
+          - macos-12
+          - macos-13
+        build_type:
+          - Release
+        lib:
+          - shared
+          - static
+        target:
+          - host
+          - ios
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Dependencies (iOS)
+        if: matrix.target == 'ios'
+        run: |
+          brew install \
+            ccache \
+            eigen \
+            ninja
+
+      - name: Setup Dependencies (Host)
+        if: matrix.target == 'host'
+        run: |
+          brew install \
+            ccache \
+            eigen \
+            gflags \
+            glog \
+            google-benchmark \
+            metis \
+            ninja \
+            suite-sparse
+
+      - name: Cache Build
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.target}}-${{github.run_id}}
+          restore-keys: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.target}}-
+
+      - name: Setup Environment
+        if: matrix.build_type == 'Release'
+        run: |
+          echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
+      - name: Configure (iOS)
+        if: matrix.target == 'ios'
+        run: |
+          cmake -S . -B build_${{matrix.build_type}} \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/cmake/iOS.cmake \
+                -DEigen3_DIR=/usr/local/share/eigen3/cmake \
+                -DIOS_PLATFORM=OS \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
+
+      - name: Configure (Host)
+        if: matrix.target == 'host'
+        run: |
+          cmake -S . -B build_${{matrix.build_type}} \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.build_type}} \
+                --config ${{matrix.build_type}}
+
+      - name: Test
+        if: matrix.target == 'host'
+        run: |
+          ctest --test-dir build_${{matrix.build_type}} \
+                --config ${{matrix.build_type}} \
+                --output-on-failure \
+                -j$(sysctl -n hw.ncpu)
+
+      - name: Install
+        run: |
+          cmake --build build_${{matrix.build_type}}/ \
+                --config ${{matrix.build_type}} \
+                --target install

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,24 +31,22 @@
 
 #include "ceres/canonical_views_clustering.h"
 
-#include "ceres/collections_port.h"
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 #include "ceres/graph.h"
-#include "ceres/internal/macros.h"
+#include "ceres/internal/export.h"
 #include "ceres/map_util.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-using std::vector;
+using IntMap = std::unordered_map<int, int>;
+using IntSet = std::unordered_set<int>;
 
-typedef HashMap<int, int> IntMap;
-typedef HashSet<int> IntSet;
-
-class CanonicalViewsClustering {
+class CERES_NO_EXPORT CanonicalViewsClustering {
  public:
-  CanonicalViewsClustering() {}
-
   // Compute the canonical views clustering of the vertices of the
   // graph. centers will contain the vertices that are the identified
   // as the canonical views/cluster centers, and membership is a map
@@ -59,15 +57,15 @@ class CanonicalViewsClustering {
   // are assigned to a cluster with id = kInvalidClusterId.
   void ComputeClustering(const CanonicalViewsClusteringOptions& options,
                          const WeightedGraph<int>& graph,
-                         vector<int>* centers,
+                         std::vector<int>* centers,
                          IntMap* membership);
 
  private:
   void FindValidViews(IntSet* valid_views) const;
-  double ComputeClusteringQualityDifference(const int candidate,
-                                            const vector<int>& centers) const;
+  double ComputeClusteringQualityDifference(
+      int candidate, const std::vector<int>& centers) const;
   void UpdateCanonicalViewAssignments(const int canonical_view);
-  void ComputeClusterMembership(const vector<int>& centers,
+  void ComputeClusterMembership(const std::vector<int>& centers,
                                 IntMap* membership) const;
 
   CanonicalViewsClusteringOptions options_;
@@ -76,49 +74,48 @@ class CanonicalViewsClustering {
   // center).
   IntMap view_to_canonical_view_;
   // Maps a view to its similarity to its current cluster center.
-  HashMap<int, double> view_to_canonical_view_similarity_;
-  CERES_DISALLOW_COPY_AND_ASSIGN(CanonicalViewsClustering);
+  std::unordered_map<int, double> view_to_canonical_view_similarity_;
 };
 
 void ComputeCanonicalViewsClustering(
     const CanonicalViewsClusteringOptions& options,
     const WeightedGraph<int>& graph,
-    vector<int>* centers,
+    std::vector<int>* centers,
     IntMap* membership) {
-  time_t start_time = time(NULL);
+  time_t start_time = time(nullptr);
   CanonicalViewsClustering cv;
   cv.ComputeClustering(options, graph, centers, membership);
   VLOG(2) << "Canonical views clustering time (secs): "
-          << time(NULL) - start_time;
+          << time(nullptr) - start_time;
 }
 
 // Implementation of CanonicalViewsClustering
 void CanonicalViewsClustering::ComputeClustering(
     const CanonicalViewsClusteringOptions& options,
     const WeightedGraph<int>& graph,
-    vector<int>* centers,
+    std::vector<int>* centers,
     IntMap* membership) {
   options_ = options;
-  CHECK_NOTNULL(centers)->clear();
-  CHECK_NOTNULL(membership)->clear();
+  CHECK(centers != nullptr);
+  CHECK(membership != nullptr);
+  centers->clear();
+  membership->clear();
   graph_ = &graph;
 
   IntSet valid_views;
   FindValidViews(&valid_views);
-  while (valid_views.size() > 0) {
+  while (!valid_views.empty()) {
     // Find the next best canonical view.
     double best_difference = -std::numeric_limits<double>::max();
     int best_view = 0;
 
     // TODO(sameeragarwal): Make this loop multi-threaded.
-    for (IntSet::const_iterator view = valid_views.begin();
-         view != valid_views.end();
-         ++view) {
+    for (const auto& view : valid_views) {
       const double difference =
-          ComputeClusteringQualityDifference(*view, *centers);
+          ComputeClusteringQualityDifference(view, *centers);
       if (difference > best_difference) {
         best_difference = difference;
-        best_view = *view;
+        best_view = view;
       }
     }
 
@@ -126,8 +123,7 @@ void CanonicalViewsClustering::ComputeClustering(
 
     // Add canonical view if quality improves, or if minimum is not
     // yet met, otherwise break.
-    if ((best_difference <= 0) &&
-        (centers->size() >= options_.min_views)) {
+    if ((best_difference <= 0) && (centers->size() >= options_.min_views)) {
       break;
     }
 
@@ -141,14 +137,11 @@ void CanonicalViewsClustering::ComputeClustering(
 
 // Return the set of vertices of the graph which have valid vertex
 // weights.
-void CanonicalViewsClustering::FindValidViews(
-    IntSet* valid_views) const {
+void CanonicalViewsClustering::FindValidViews(IntSet* valid_views) const {
   const IntSet& views = graph_->vertices();
-  for (IntSet::const_iterator view = views.begin();
-       view != views.end();
-       ++view) {
-    if (graph_->VertexWeight(*view) != WeightedGraph<int>::InvalidWeight()) {
-      valid_views->insert(*view);
+  for (const auto& view : views) {
+    if (graph_->VertexWeight(view) != WeightedGraph<int>::InvalidWeight()) {
+      valid_views->insert(view);
     }
   }
 }
@@ -156,8 +149,7 @@ void CanonicalViewsClustering::FindValidViews(
 // Computes the difference in the quality score if 'candidate' were
 // added to the set of canonical views.
 double CanonicalViewsClustering::ComputeClusteringQualityDifference(
-    const int candidate,
-    const vector<int>& centers) const {
+    const int candidate, const std::vector<int>& centers) const {
   // View score.
   double difference =
       options_.view_score_weight * graph_->VertexWeight(candidate);
@@ -166,12 +158,10 @@ double CanonicalViewsClustering::ComputeClusteringQualityDifference(
   // was added to the list of canonical views and its nearest
   // neighbors became members of its cluster.
   const IntSet& neighbors = graph_->Neighbors(candidate);
-  for (IntSet::const_iterator neighbor = neighbors.begin();
-       neighbor != neighbors.end();
-       ++neighbor) {
+  for (const auto& neighbor : neighbors) {
     const double old_similarity =
-        FindWithDefault(view_to_canonical_view_similarity_, *neighbor, 0.0);
-    const double new_similarity = graph_->EdgeWeight(*neighbor, candidate);
+        FindWithDefault(view_to_canonical_view_similarity_, neighbor, 0.0);
+    const double new_similarity = graph_->EdgeWeight(neighbor, candidate);
     if (new_similarity > old_similarity) {
       difference += new_similarity - old_similarity;
     }
@@ -181,9 +171,9 @@ double CanonicalViewsClustering::ComputeClusteringQualityDifference(
   difference -= options_.size_penalty_weight;
 
   // Orthogonality.
-  for (int i = 0; i < centers.size(); ++i) {
+  for (int center : centers) {
     difference -= options_.similarity_penalty_weight *
-        graph_->EdgeWeight(centers[i], candidate);
+                  graph_->EdgeWeight(center, candidate);
   }
 
   return difference;
@@ -193,25 +183,22 @@ double CanonicalViewsClustering::ComputeClusteringQualityDifference(
 void CanonicalViewsClustering::UpdateCanonicalViewAssignments(
     const int canonical_view) {
   const IntSet& neighbors = graph_->Neighbors(canonical_view);
-  for (IntSet::const_iterator neighbor = neighbors.begin();
-       neighbor != neighbors.end();
-       ++neighbor) {
+  for (const auto& neighbor : neighbors) {
     const double old_similarity =
-        FindWithDefault(view_to_canonical_view_similarity_, *neighbor, 0.0);
-    const double new_similarity =
-        graph_->EdgeWeight(*neighbor, canonical_view);
+        FindWithDefault(view_to_canonical_view_similarity_, neighbor, 0.0);
+    const double new_similarity = graph_->EdgeWeight(neighbor, canonical_view);
     if (new_similarity > old_similarity) {
-      view_to_canonical_view_[*neighbor] = canonical_view;
-      view_to_canonical_view_similarity_[*neighbor] = new_similarity;
+      view_to_canonical_view_[neighbor] = canonical_view;
+      view_to_canonical_view_similarity_[neighbor] = new_similarity;
     }
   }
 }
 
 // Assign a cluster id to each view.
 void CanonicalViewsClustering::ComputeClusterMembership(
-    const vector<int>& centers,
-    IntMap* membership) const {
-  CHECK_NOTNULL(membership)->clear();
+    const std::vector<int>& centers, IntMap* membership) const {
+  CHECK(membership != nullptr);
+  membership->clear();
 
   // The i^th cluster has cluster id i.
   IntMap center_to_cluster_id;
@@ -219,22 +206,18 @@ void CanonicalViewsClustering::ComputeClusterMembership(
     center_to_cluster_id[centers[i]] = i;
   }
 
-  static const int kInvalidClusterId = -1;
+  static constexpr int kInvalidClusterId = -1;
 
   const IntSet& views = graph_->vertices();
-  for (IntSet::const_iterator view = views.begin();
-       view != views.end();
-       ++view) {
-    IntMap::const_iterator it =
-        view_to_canonical_view_.find(*view);
+  for (const auto& view : views) {
+    auto it = view_to_canonical_view_.find(view);
     int cluster_id = kInvalidClusterId;
     if (it != view_to_canonical_view_.end()) {
       cluster_id = FindOrDie(center_to_cluster_id, it->second);
     }
 
-    InsertOrDie(membership, *view, cluster_id);
+    InsertOrDie(membership, view, cluster_id);
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

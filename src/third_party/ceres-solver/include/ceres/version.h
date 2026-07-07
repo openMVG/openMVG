@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
 #ifndef CERES_PUBLIC_VERSION_H_
 #define CERES_PUBLIC_VERSION_H_
 
-#define CERES_VERSION_MAJOR 1
-#define CERES_VERSION_MINOR 13
+#define CERES_VERSION_MAJOR 2
+#define CERES_VERSION_MINOR 2
 #define CERES_VERSION_REVISION 0
 
 // Classic CPP stringifcation; the extra level of indirection allows the
@@ -41,8 +41,9 @@
 #define CERES_TO_STRING(x) CERES_TO_STRING_HELPER(x)
 
 // The Ceres version as a string; for example "1.9.0".
-#define CERES_VERSION_STRING CERES_TO_STRING(CERES_VERSION_MAJOR) "." \
-                             CERES_TO_STRING(CERES_VERSION_MINOR) "." \
-                             CERES_TO_STRING(CERES_VERSION_REVISION)
+#define CERES_VERSION_STRING                                    \
+  CERES_TO_STRING(CERES_VERSION_MAJOR)                          \
+  "." CERES_TO_STRING(CERES_VERSION_MINOR) "." CERES_TO_STRING( \
+      CERES_VERSION_REVISION)
 
 #endif  // CERES_PUBLIC_VERSION_H_

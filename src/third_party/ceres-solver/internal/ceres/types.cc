@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,23 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/types.h"
+
 #include <algorithm>
 #include <cctype>
 #include <string>
-#include "ceres/types.h"
+
+#include "ceres/internal/config.h"
 #include "glog/logging.h"
 
 namespace ceres {
 
-using std::string;
-
+// clang-format off
 #define CASESTR(x) case x: return #x
-#define STRENUM(x) if (value == #x) { *type = x; return true;}
+#define STRENUM(x) if (value == #x) { *type = x; return true; }
+// clang-format on
 
-static void UpperCase(string* input) {
+static void UpperCase(std::string* input) {
   std::transform(input->begin(), input->end(), input->begin(), ::toupper);
 }
 
@@ -59,7 +62,7 @@ const char* LinearSolverTypeToString(LinearSolverType type) {
   }
 }
 
-bool StringToLinearSolverType(string value, LinearSolverType* type) {
+bool StringToLinearSolverType(std::string value, LinearSolverType* type) {
   UpperCase(&value);
   STRENUM(DENSE_NORMAL_CHOLESKY);
   STRENUM(DENSE_QR);
@@ -76,20 +79,24 @@ const char* PreconditionerTypeToString(PreconditionerType type) {
     CASESTR(IDENTITY);
     CASESTR(JACOBI);
     CASESTR(SCHUR_JACOBI);
+    CASESTR(SCHUR_POWER_SERIES_EXPANSION);
     CASESTR(CLUSTER_JACOBI);
     CASESTR(CLUSTER_TRIDIAGONAL);
+    CASESTR(SUBSET);
     default:
       return "UNKNOWN";
   }
 }
 
-bool StringToPreconditionerType(string value, PreconditionerType* type) {
+bool StringToPreconditionerType(std::string value, PreconditionerType* type) {
   UpperCase(&value);
   STRENUM(IDENTITY);
   STRENUM(JACOBI);
   STRENUM(SCHUR_JACOBI);
+  STRENUM(SCHUR_POWER_SERIES_EXPANSION);
   STRENUM(CLUSTER_JACOBI);
   STRENUM(CLUSTER_TRIDIAGONAL);
+  STRENUM(SUBSET);
   return false;
 }
 
@@ -97,8 +104,9 @@ const char* SparseLinearAlgebraLibraryTypeToString(
     SparseLinearAlgebraLibraryType type) {
   switch (type) {
     CASESTR(SUITE_SPARSE);
-    CASESTR(CX_SPARSE);
     CASESTR(EIGEN_SPARSE);
+    CASESTR(ACCELERATE_SPARSE);
+    CASESTR(CUDA_SPARSE);
     CASESTR(NO_SPARSE);
     default:
       return "UNKNOWN";
@@ -106,13 +114,30 @@ const char* SparseLinearAlgebraLibraryTypeToString(
 }
 
 bool StringToSparseLinearAlgebraLibraryType(
-    string value,
-    SparseLinearAlgebraLibraryType* type) {
+    std::string value, SparseLinearAlgebraLibraryType* type) {
   UpperCase(&value);
   STRENUM(SUITE_SPARSE);
-  STRENUM(CX_SPARSE);
   STRENUM(EIGEN_SPARSE);
+  STRENUM(ACCELERATE_SPARSE);
+  STRENUM(CUDA_SPARSE);
   STRENUM(NO_SPARSE);
+  return false;
+}
+
+const char* LinearSolverOrderingTypeToString(LinearSolverOrderingType type) {
+  switch (type) {
+    CASESTR(AMD);
+    CASESTR(NESDIS);
+    default:
+      return "UNKNOWN";
+  }
+}
+
+bool StringToLinearSolverOrderingType(std::string value,
+                                      LinearSolverOrderingType* type) {
+  UpperCase(&value);
+  STRENUM(AMD);
+  STRENUM(NESDIS);
   return false;
 }
 
@@ -121,17 +146,18 @@ const char* DenseLinearAlgebraLibraryTypeToString(
   switch (type) {
     CASESTR(EIGEN);
     CASESTR(LAPACK);
+    CASESTR(CUDA);
     default:
       return "UNKNOWN";
   }
 }
 
 bool StringToDenseLinearAlgebraLibraryType(
-    string value,
-    DenseLinearAlgebraLibraryType* type) {
+    std::string value, DenseLinearAlgebraLibraryType* type) {
   UpperCase(&value);
   STRENUM(EIGEN);
   STRENUM(LAPACK);
+  STRENUM(CUDA);
   return false;
 }
 
@@ -144,7 +170,7 @@ const char* TrustRegionStrategyTypeToString(TrustRegionStrategyType type) {
   }
 }
 
-bool StringToTrustRegionStrategyType(string value,
+bool StringToTrustRegionStrategyType(std::string value,
                                      TrustRegionStrategyType* type) {
   UpperCase(&value);
   STRENUM(LEVENBERG_MARQUARDT);
@@ -161,7 +187,7 @@ const char* DoglegTypeToString(DoglegType type) {
   }
 }
 
-bool StringToDoglegType(string value, DoglegType* type) {
+bool StringToDoglegType(std::string value, DoglegType* type) {
   UpperCase(&value);
   STRENUM(TRADITIONAL_DOGLEG);
   STRENUM(SUBSPACE_DOGLEG);
@@ -177,7 +203,7 @@ const char* MinimizerTypeToString(MinimizerType type) {
   }
 }
 
-bool StringToMinimizerType(string value, MinimizerType* type) {
+bool StringToMinimizerType(std::string value, MinimizerType* type) {
   UpperCase(&value);
   STRENUM(TRUST_REGION);
   STRENUM(LINE_SEARCH);
@@ -195,7 +221,7 @@ const char* LineSearchDirectionTypeToString(LineSearchDirectionType type) {
   }
 }
 
-bool StringToLineSearchDirectionType(string value,
+bool StringToLineSearchDirectionType(std::string value,
                                      LineSearchDirectionType* type) {
   UpperCase(&value);
   STRENUM(STEEPEST_DESCENT);
@@ -214,7 +240,7 @@ const char* LineSearchTypeToString(LineSearchType type) {
   }
 }
 
-bool StringToLineSearchType(string value, LineSearchType* type) {
+bool StringToLineSearchType(std::string value, LineSearchType* type) {
   UpperCase(&value);
   STRENUM(ARMIJO);
   STRENUM(WOLFE);
@@ -232,9 +258,8 @@ const char* LineSearchInterpolationTypeToString(
   }
 }
 
-bool StringToLineSearchInterpolationType(
-    string value,
-    LineSearchInterpolationType* type) {
+bool StringToLineSearchInterpolationType(std::string value,
+                                         LineSearchInterpolationType* type) {
   UpperCase(&value);
   STRENUM(BISECTION);
   STRENUM(QUADRATIC);
@@ -254,8 +279,7 @@ const char* NonlinearConjugateGradientTypeToString(
 }
 
 bool StringToNonlinearConjugateGradientType(
-    string value,
-    NonlinearConjugateGradientType* type) {
+    std::string value, NonlinearConjugateGradientType* type) {
   UpperCase(&value);
   STRENUM(FLETCHER_REEVES);
   STRENUM(POLAK_RIBIERE);
@@ -263,8 +287,7 @@ bool StringToNonlinearConjugateGradientType(
   return false;
 }
 
-const char* CovarianceAlgorithmTypeToString(
-    CovarianceAlgorithmType type) {
+const char* CovarianceAlgorithmTypeToString(CovarianceAlgorithmType type) {
   switch (type) {
     CASESTR(DENSE_SVD);
     CASESTR(SPARSE_QR);
@@ -273,17 +296,15 @@ const char* CovarianceAlgorithmTypeToString(
   }
 }
 
-bool StringToCovarianceAlgorithmType(
-    string value,
-    CovarianceAlgorithmType* type) {
+bool StringToCovarianceAlgorithmType(std::string value,
+                                     CovarianceAlgorithmType* type) {
   UpperCase(&value);
   STRENUM(DENSE_SVD);
   STRENUM(SPARSE_QR);
   return false;
 }
 
-const char* NumericDiffMethodTypeToString(
-    NumericDiffMethodType type) {
+const char* NumericDiffMethodTypeToString(NumericDiffMethodType type) {
   switch (type) {
     CASESTR(CENTRAL);
     CASESTR(FORWARD);
@@ -293,9 +314,8 @@ const char* NumericDiffMethodTypeToString(
   }
 }
 
-bool StringToNumericDiffMethodType(
-    string value,
-    NumericDiffMethodType* type) {
+bool StringToNumericDiffMethodType(std::string value,
+                                   NumericDiffMethodType* type) {
   UpperCase(&value);
   STRENUM(CENTRAL);
   STRENUM(FORWARD);
@@ -303,8 +323,7 @@ bool StringToNumericDiffMethodType(
   return false;
 }
 
-const char* VisibilityClusteringTypeToString(
-    VisibilityClusteringType type) {
+const char* VisibilityClusteringTypeToString(VisibilityClusteringType type) {
   switch (type) {
     CASESTR(CANONICAL_VIEWS);
     CASESTR(SINGLE_LINKAGE);
@@ -313,9 +332,8 @@ const char* VisibilityClusteringTypeToString(
   }
 }
 
-bool StringToVisibilityClusteringType(
-    string value,
-    VisibilityClusteringType* type) {
+bool StringToVisibilityClusteringType(std::string value,
+                                      VisibilityClusteringType* type) {
   UpperCase(&value);
   STRENUM(CANONICAL_VIEWS);
   STRENUM(SINGLE_LINKAGE);
@@ -334,13 +352,47 @@ const char* TerminationTypeToString(TerminationType type) {
   }
 }
 
+const char* LoggingTypeToString(LoggingType type) {
+  switch (type) {
+    CASESTR(SILENT);
+    CASESTR(PER_MINIMIZER_ITERATION);
+    default:
+      return "UNKNOWN";
+  }
+}
+
+bool StringtoLoggingType(std::string value, LoggingType* type) {
+  UpperCase(&value);
+  STRENUM(SILENT);
+  STRENUM(PER_MINIMIZER_ITERATION);
+  return false;
+}
+
+const char* DumpFormatTypeToString(DumpFormatType type) {
+  switch (type) {
+    CASESTR(CONSOLE);
+    CASESTR(TEXTFILE);
+    default:
+      return "UNKNOWN";
+  }
+}
+
+bool StringtoDumpFormatType(std::string value, DumpFormatType* type) {
+  UpperCase(&value);
+  STRENUM(CONSOLE);
+  STRENUM(TEXTFILE);
+  return false;
+}
+
 #undef CASESTR
 #undef STRENUM
 
 bool IsSchurType(LinearSolverType type) {
+  // clang-format off
   return ((type == SPARSE_SCHUR) ||
           (type == DENSE_SCHUR)  ||
           (type == ITERATIVE_SCHUR));
+  // clang-format on
 }
 
 bool IsSparseLinearAlgebraLibraryTypeAvailable(
@@ -353,8 +405,8 @@ bool IsSparseLinearAlgebraLibraryTypeAvailable(
 #endif
   }
 
-  if (type == CX_SPARSE) {
-#ifdef CERES_NO_CXSPARSE
+  if (type == ACCELERATE_SPARSE) {
+#ifdef CERES_NO_ACCELERATE_SPARSE
     return false;
 #else
     return true;
@@ -369,6 +421,18 @@ bool IsSparseLinearAlgebraLibraryTypeAvailable(
 #endif
   }
 
+  if (type == CUDA_SPARSE) {
+#ifdef CERES_NO_CUDA
+    return false;
+#else
+    return true;
+#endif
+  }
+
+  if (type == NO_SPARSE) {
+    return true;
+  }
+
   LOG(WARNING) << "Unknown sparse linear algebra library " << type;
   return false;
 }
@@ -378,8 +442,17 @@ bool IsDenseLinearAlgebraLibraryTypeAvailable(
   if (type == EIGEN) {
     return true;
   }
+
   if (type == LAPACK) {
 #ifdef CERES_NO_LAPACK
+    return false;
+#else
+    return true;
+#endif
+  }
+
+  if (type == CUDA) {
+#ifdef CERES_NO_CUDA
     return false;
 #else
     return true;

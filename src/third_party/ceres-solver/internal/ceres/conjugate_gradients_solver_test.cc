@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,21 +31,23 @@
 // TODO(sameeragarwal): More comprehensive testing with larger and
 // more badly conditioned problem.
 
-#include "gtest/gtest.h"
 #include "ceres/conjugate_gradients_solver.h"
-#include "ceres/linear_solver.h"
-#include "ceres/triplet_sparse_matrix.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/types.h"
 
-namespace ceres {
-namespace internal {
+#include <memory>
+
+#include "ceres/internal/eigen.h"
+#include "ceres/linear_solver.h"
+#include "ceres/preconditioner.h"
+#include "ceres/triplet_sparse_matrix.h"
+#include "ceres/types.h"
+#include "gtest/gtest.h"
+
+namespace ceres::internal {
 
 TEST(ConjugateGradientTest, Solves3x3IdentitySystem) {
-  double diagonal[] = { 1.0, 1.0, 1.0 };
-  scoped_ptr<TripletSparseMatrix>
-      A(TripletSparseMatrix::CreateSparseDiagonalMatrix(diagonal, 3));
+  double diagonal[] = {1.0, 1.0, 1.0};
+  std::unique_ptr<TripletSparseMatrix> A(
+      TripletSparseMatrix::CreateSparseDiagonalMatrix(diagonal, 3));
   Vector b(3);
   Vector x(3);
 
@@ -57,17 +59,27 @@ TEST(ConjugateGradientTest, Solves3x3IdentitySystem) {
   x(1) = 1;
   x(2) = 1;
 
-  LinearSolver::Options options;
-  options.max_num_iterations = 10;
+  ConjugateGradientsSolverOptions cg_options;
+  cg_options.min_num_iterations = 1;
+  cg_options.max_num_iterations = 10;
+  cg_options.residual_reset_period = 20;
+  cg_options.q_tolerance = 0.0;
+  cg_options.r_tolerance = 1e-9;
 
-  LinearSolver::PerSolveOptions per_solve_options;
-  per_solve_options.r_tolerance = 1e-9;
+  Vector scratch[4];
+  for (int i = 0; i < 4; ++i) {
+    scratch[i] = Vector::Zero(A->num_cols());
+  }
 
-  ConjugateGradientsSolver solver(options);
-  LinearSolver::Summary summary =
-      solver.Solve(A.get(), b.data(), per_solve_options, x.data());
+  IdentityPreconditioner identity(A->num_cols());
+  LinearOperatorAdapter lhs(*A);
+  LinearOperatorAdapter preconditioner(identity);
+  Vector* scratch_array[4] = {
+      &scratch[0], &scratch[1], &scratch[2], &scratch[3]};
+  auto summary = ConjugateGradientsSolver(
+      cg_options, lhs, b, preconditioner, scratch_array, x);
 
-  EXPECT_EQ(summary.termination_type, LINEAR_SOLVER_SUCCESS);
+  EXPECT_EQ(summary.termination_type, LinearSolverTerminationType::SUCCESS);
   ASSERT_EQ(summary.num_iterations, 1);
 
   ASSERT_DOUBLE_EQ(1, x(0));
@@ -75,9 +87,8 @@ TEST(ConjugateGradientTest, Solves3x3IdentitySystem) {
   ASSERT_DOUBLE_EQ(3, x(2));
 }
 
-
 TEST(ConjuateGradientTest, Solves3x3SymmetricSystem) {
-  scoped_ptr<TripletSparseMatrix> A(new TripletSparseMatrix(3, 3, 9));
+  std::unique_ptr<TripletSparseMatrix> A(new TripletSparseMatrix(3, 3, 9));
   Vector b(3);
   Vector x(3);
 
@@ -114,22 +125,31 @@ TEST(ConjuateGradientTest, Solves3x3SymmetricSystem) {
   x(1) = 1;
   x(2) = 1;
 
-  LinearSolver::Options options;
-  options.max_num_iterations = 10;
+  ConjugateGradientsSolverOptions cg_options;
+  cg_options.min_num_iterations = 1;
+  cg_options.max_num_iterations = 10;
+  cg_options.residual_reset_period = 20;
+  cg_options.q_tolerance = 0.0;
+  cg_options.r_tolerance = 1e-9;
 
-  LinearSolver::PerSolveOptions per_solve_options;
-  per_solve_options.r_tolerance = 1e-9;
+  Vector scratch[4];
+  for (int i = 0; i < 4; ++i) {
+    scratch[i] = Vector::Zero(A->num_cols());
+  }
+  Vector* scratch_array[4] = {
+      &scratch[0], &scratch[1], &scratch[2], &scratch[3]};
+  IdentityPreconditioner identity(A->num_cols());
+  LinearOperatorAdapter lhs(*A);
+  LinearOperatorAdapter preconditioner(identity);
 
-  ConjugateGradientsSolver solver(options);
-  LinearSolver::Summary summary =
-      solver.Solve(A.get(), b.data(), per_solve_options, x.data());
+  auto summary = ConjugateGradientsSolver(
+      cg_options, lhs, b, preconditioner, scratch_array, x);
 
-  EXPECT_EQ(summary.termination_type, LINEAR_SOLVER_SUCCESS);
+  EXPECT_EQ(summary.termination_type, LinearSolverTerminationType::SUCCESS);
 
   ASSERT_DOUBLE_EQ(0, x(0));
   ASSERT_DOUBLE_EQ(1, x(1));
   ASSERT_DOUBLE_EQ(2, x(2));
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -29,11 +29,6 @@
 # Author: arnaudgelas@gmail.com (Arnaud Gelas)
 #         alexs.mac@gmail.com (Alex Stewart)
 
-if (COMMAND cmake_policy)
-  # Ignore empty elements in LIST() commands.
-  cmake_policy(SET CMP0007 OLD)
-endif (COMMAND cmake_policy)
-
 if (NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
   message(FATAL_ERROR "Cannot find install manifest: "
                       "\"@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt\"")

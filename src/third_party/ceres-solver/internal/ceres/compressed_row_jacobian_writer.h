@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,25 +33,25 @@
 #ifndef CERES_INTERNAL_COMPRESSED_ROW_JACOBIAN_WRITER_H_
 #define CERES_INTERNAL_COMPRESSED_ROW_JACOBIAN_WRITER_H_
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "ceres/evaluator.h"
+#include "ceres/internal/export.h"
 #include "ceres/scratch_evaluate_preparer.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class CompressedRowSparseMatrix;
 class Program;
 class SparseMatrix;
 
-class CompressedRowJacobianWriter {
+class CERES_NO_EXPORT CompressedRowJacobianWriter {
  public:
   CompressedRowJacobianWriter(Evaluator::Options /* ignored */,
                               Program* program)
-    : program_(program) {
-  }
+      : program_(program) {}
 
   // PopulateJacobianRowAndColumnBlockVectors sets col_blocks and
   // row_blocks for a CompressedRowSparseMatrix, based on the
@@ -64,8 +64,7 @@ class CompressedRowJacobianWriter {
   // (Jacobian writers do not fall under any type hierarchy; they only
   // have to provide an interface as specified in program_evaluator.h).
   static void PopulateJacobianRowAndColumnBlockVectors(
-      const Program* program,
-      CompressedRowSparseMatrix* jacobian);
+      const Program* program, CompressedRowSparseMatrix* jacobian);
 
   // It is necessary to determine the order of the jacobian blocks
   // before copying them into a CompressedRowSparseMatrix (or derived
@@ -83,7 +82,7 @@ class CompressedRowJacobianWriter {
   static void GetOrderedParameterBlocks(
       const Program* program,
       int residual_id,
-      std::vector<std::pair<int, int> >* evaluated_jacobian_blocks);
+      std::vector<std::pair<int, int>>* evaluated_jacobian_blocks);
 
   // JacobianWriter interface.
 
@@ -91,22 +90,22 @@ class CompressedRowJacobianWriter {
   // assumed by the cost functions, use scratch space to store the
   // jacobians temporarily then copy them over to the larger jacobian
   // in the Write() function.
-  ScratchEvaluatePreparer* CreateEvaluatePreparers(int num_threads) {
+  std::unique_ptr<ScratchEvaluatePreparer[]> CreateEvaluatePreparers(
+      int num_threads) {
     return ScratchEvaluatePreparer::Create(*program_, num_threads);
   }
 
-  SparseMatrix* CreateJacobian() const;
+  std::unique_ptr<SparseMatrix> CreateJacobian() const;
 
   void Write(int residual_id,
              int residual_offset,
-             double **jacobians,
+             double** jacobians,
              SparseMatrix* base_jacobian);
 
  private:
   Program* program_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 
 #endif  // CERES_INTERNAL_COMPRESSED_ROW_JACOBIAN_WRITER_H_

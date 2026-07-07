@@ -45,7 +45,7 @@ Notice that compared to numeric differentiation, the only difference
 when defining the functor for use with automatic differentiation is
 the signature of the ``operator()``.
 
-In the case of numeric differentition it was
+In the case of numeric differentiation it was
 
 .. code-block:: c++
 
@@ -152,7 +152,7 @@ The summation notation gets tedious, so we will also just write
 .. math::
    x = a + \mathbf{v}.
 
-where the :math:`\epsilon_i`'s are implict. Then, using the same
+where the :math:`\epsilon_i`'s are implicit. Then, using the same
 Taylor series expansion used above, we can see that:
 
 .. math::
@@ -266,7 +266,6 @@ the Jacobian as follows:
 
 Indeed, this is essentially how :class:`AutoDiffCostFunction` works.
 
-
 Pitfalls
 ========
 
@@ -299,7 +298,7 @@ we find that it is an indeterminate form at :math:`x_0 = 0, x_1 =
 
 There is no single solution to this problem. In some cases one needs
 to reason explicitly about the points where indeterminacy may occur
-and use alternate expressions using `L'Hopital's rule
+and use alternate expressions using `L'Hôpital's rule
 <https://en.wikipedia.org/wiki/L'H%C3%B4pital's_rule>`_ (see for
 example some of the conversion routines in `rotation.h
 <https://github.com/ceres-solver/ceres-solver/blob/master/include/ceres/rotation.h>`_. In

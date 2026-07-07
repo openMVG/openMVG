@@ -39,12 +39,12 @@ pose_id x y z q_x q_y q_z q_w
 ...
 ```
 where `pose_id` is the corresponding integer ID from the file definition. Note,
-the file will be sorted in ascending order for the ```pose_id```.
+the file will be sorted in ascending order for the `pose_id`.
 
-The executable `pose_graph_3d` expects the first argument to be the path to the
+The executable `pose_graph_3d` has one flag `--input` which is the path to the
 problem definition. To run the executable,
 ```
-/path/to/bin/pose_graph_3d /path/to/dataset/dataset.g2o
+/path/to/bin/pose_graph_3d --input /path/to/dataset/dataset.g2o
 ```
 
 A script is provided to visualize the resulting output files. There is also an

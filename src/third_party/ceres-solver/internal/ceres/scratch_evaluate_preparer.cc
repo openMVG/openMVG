@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,28 +30,28 @@
 
 #include "ceres/scratch_evaluate_preparer.h"
 
+#include <memory>
+
 #include "ceres/parameter_block.h"
 #include "ceres/program.h"
 #include "ceres/residual_block.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-ScratchEvaluatePreparer* ScratchEvaluatePreparer::Create(
-    const Program &program,
-    int num_threads) {
-  ScratchEvaluatePreparer* preparers = new ScratchEvaluatePreparer[num_threads];
+std::unique_ptr<ScratchEvaluatePreparer[]> ScratchEvaluatePreparer::Create(
+    const Program& program, unsigned num_threads) {
+  auto preparers = std::make_unique<ScratchEvaluatePreparer[]>(num_threads);
   int max_derivatives_per_residual_block =
       program.MaxDerivativesPerResidualBlock();
-  for (int i = 0; i < num_threads; i++) {
+  for (unsigned i = 0; i < num_threads; i++) {
     preparers[i].Init(max_derivatives_per_residual_block);
   }
   return preparers;
 }
 
 void ScratchEvaluatePreparer::Init(int max_derivatives_per_residual_block) {
-  jacobian_scratch_.reset(
-      new double[max_derivatives_per_residual_block]);
+  jacobian_scratch_ = std::make_unique<double[]>(
+      static_cast<std::size_t>(max_derivatives_per_residual_block));
 }
 
 // Point the jacobian blocks into the scratch area of this evaluate preparer.
@@ -66,13 +66,12 @@ void ScratchEvaluatePreparer::Prepare(const ResidualBlock* residual_block,
     const ParameterBlock* parameter_block =
         residual_block->parameter_blocks()[j];
     if (parameter_block->IsConstant()) {
-      jacobians[j] = NULL;
+      jacobians[j] = nullptr;
     } else {
       jacobians[j] = jacobian_block_cursor;
-      jacobian_block_cursor += num_residuals * parameter_block->LocalSize();
+      jacobian_block_cursor += num_residuals * parameter_block->TangentSize();
     }
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

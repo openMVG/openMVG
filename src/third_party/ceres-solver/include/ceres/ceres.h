@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,26 +34,42 @@
 #ifndef CERES_PUBLIC_CERES_H_
 #define CERES_PUBLIC_CERES_H_
 
+// IWYU pragma: begin_exports
 #include "ceres/autodiff_cost_function.h"
-#include "ceres/autodiff_local_parameterization.h"
+#include "ceres/autodiff_first_order_function.h"
+#include "ceres/autodiff_manifold.h"
+#include "ceres/conditioned_cost_function.h"
+#include "ceres/constants.h"
+#include "ceres/context.h"
 #include "ceres/cost_function.h"
 #include "ceres/cost_function_to_functor.h"
 #include "ceres/covariance.h"
 #include "ceres/crs_matrix.h"
 #include "ceres/dynamic_autodiff_cost_function.h"
+#include "ceres/dynamic_cost_function.h"
+#include "ceres/dynamic_cost_function_to_functor.h"
 #include "ceres/dynamic_numeric_diff_cost_function.h"
+#include "ceres/evaluation_callback.h"
+#include "ceres/first_order_function.h"
+#include "ceres/gradient_checker.h"
 #include "ceres/gradient_problem.h"
 #include "ceres/gradient_problem_solver.h"
 #include "ceres/iteration_callback.h"
 #include "ceres/jet.h"
-#include "ceres/local_parameterization.h"
+#include "ceres/line_manifold.h"
 #include "ceres/loss_function.h"
+#include "ceres/manifold.h"
 #include "ceres/numeric_diff_cost_function.h"
+#include "ceres/numeric_diff_first_order_function.h"
+#include "ceres/numeric_diff_options.h"
 #include "ceres/ordered_groups.h"
 #include "ceres/problem.h"
+#include "ceres/product_manifold.h"
 #include "ceres/sized_cost_function.h"
 #include "ceres/solver.h"
+#include "ceres/sphere_manifold.h"
 #include "ceres/types.h"
 #include "ceres/version.h"
+// IWYU pragma: end_exports
 
 #endif  // CERES_PUBLIC_CERES_H_

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,14 @@
 #include "ceres/iterative_schur_complement_solver.h"
 
 #include <cstddef>
+#include <memory>
+
 #include "Eigen/Dense"
 #include "ceres/block_random_access_dense_matrix.h"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/casts.h"
+#include "ceres/context_impl.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_least_squares_problems.h"
 #include "ceres/linear_solver.h"
 #include "ceres/schur_eliminator.h"
@@ -57,32 +59,35 @@ using testing::AssertionResult;
 const double kEpsilon = 1e-14;
 
 class IterativeSchurComplementSolverTest : public ::testing::Test {
- protected :
+ protected:
   void SetUpProblem(int problem_id) {
-    scoped_ptr<LinearLeastSquaresProblem> problem(
-        CreateLinearLeastSquaresProblemFromId(problem_id));
+    std::unique_ptr<LinearLeastSquaresProblem> problem =
+        CreateLinearLeastSquaresProblemFromId(problem_id);
 
-    CHECK_NOTNULL(problem.get());
+    CHECK(problem != nullptr);
     A_.reset(down_cast<BlockSparseMatrix*>(problem->A.release()));
-    b_.reset(problem->b.release());
-    D_.reset(problem->D.release());
+    b_ = std::move(problem->b);
+    D_ = std::move(problem->D);
 
     num_cols_ = A_->num_cols();
     num_rows_ = A_->num_rows();
     num_eliminate_blocks_ = problem->num_eliminate_blocks;
   }
 
-  AssertionResult TestSolver(double* D) {
-    TripletSparseMatrix triplet_A(A_->num_rows(),
-                                  A_->num_cols(),
-                                  A_->num_nonzeros());
+  AssertionResult TestSolver(double* D,
+                             PreconditionerType preconditioner_type,
+                             bool use_spse_initialization) {
+    TripletSparseMatrix triplet_A(
+        A_->num_rows(), A_->num_cols(), A_->num_nonzeros());
     A_->ToTripletSparseMatrix(&triplet_A);
 
     DenseSparseMatrix dense_A(triplet_A);
 
     LinearSolver::Options options;
     options.type = DENSE_QR;
-    scoped_ptr<LinearSolver> qr(LinearSolver::Create(options));
+    ContextImpl context;
+    options.context = &context;
+    std::unique_ptr<LinearSolver> qr(LinearSolver::Create(options));
 
     LinearSolver::PerSolveOptions per_solve_options;
     per_solve_options.D = D;
@@ -92,40 +97,56 @@ class IterativeSchurComplementSolverTest : public ::testing::Test {
     options.elimination_groups.push_back(num_eliminate_blocks_);
     options.elimination_groups.push_back(0);
     options.max_num_iterations = num_cols_;
-    options.preconditioner_type = SCHUR_JACOBI;
+    options.max_num_spse_iterations = 1;
+    options.use_spse_initialization = use_spse_initialization;
+    options.preconditioner_type = preconditioner_type;
     IterativeSchurComplementSolver isc(options);
 
     Vector isc_sol(num_cols_);
-    per_solve_options.r_tolerance  = 1e-12;
+    per_solve_options.r_tolerance = 1e-12;
     isc.Solve(A_.get(), b_.get(), per_solve_options, isc_sol.data());
     double diff = (isc_sol - reference_solution).norm();
     if (diff < kEpsilon) {
       return testing::AssertionSuccess();
     } else {
       return testing::AssertionFailure()
-          << "The reference solution differs from the ITERATIVE_SCHUR"
-          << " solution by " << diff << " which is more than " << kEpsilon;
+             << "The reference solution differs from the ITERATIVE_SCHUR"
+             << " solution by " << diff << " which is more than " << kEpsilon;
     }
   }
 
   int num_rows_;
   int num_cols_;
   int num_eliminate_blocks_;
-  scoped_ptr<BlockSparseMatrix> A_;
-  scoped_array<double> b_;
-  scoped_array<double> D_;
+  std::unique_ptr<BlockSparseMatrix> A_;
+  std::unique_ptr<double[]> b_;
+  std::unique_ptr<double[]> D_;
 };
 
-TEST_F(IterativeSchurComplementSolverTest, NormalProblem) {
+TEST_F(IterativeSchurComplementSolverTest, NormalProblemSchurJacobi) {
   SetUpProblem(2);
-  EXPECT_TRUE(TestSolver(NULL));
-  EXPECT_TRUE(TestSolver(D_.get()));
+  EXPECT_TRUE(TestSolver(nullptr, SCHUR_JACOBI, false));
+  EXPECT_TRUE(TestSolver(D_.get(), SCHUR_JACOBI, false));
+}
+
+TEST_F(IterativeSchurComplementSolverTest,
+       NormalProblemSchurJacobiWithPowerSeriesExpansionInitialization) {
+  SetUpProblem(2);
+  EXPECT_TRUE(TestSolver(nullptr, SCHUR_JACOBI, true));
+  EXPECT_TRUE(TestSolver(D_.get(), SCHUR_JACOBI, true));
+}
+
+TEST_F(IterativeSchurComplementSolverTest,
+       NormalProblemPowerSeriesExpansionPreconditioner) {
+  SetUpProblem(5);
+  EXPECT_TRUE(TestSolver(nullptr, SCHUR_POWER_SERIES_EXPANSION, false));
+  EXPECT_TRUE(TestSolver(D_.get(), SCHUR_POWER_SERIES_EXPANSION, false));
 }
 
 TEST_F(IterativeSchurComplementSolverTest, ProblemWithNoFBlocks) {
   SetUpProblem(3);
-  EXPECT_TRUE(TestSolver(NULL));
-  EXPECT_TRUE(TestSolver(D_.get()));
+  EXPECT_TRUE(TestSolver(nullptr, SCHUR_JACOBI, false));
+  EXPECT_TRUE(TestSolver(D_.get(), SCHUR_JACOBI, false));
 }
 
 }  // namespace internal

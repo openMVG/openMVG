@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,14 +30,16 @@
 
 #include "ceres/internal/autodiff.h"
 
+#include <algorithm>
+#include <iterator>
+#include <random>
+
 #include "gtest/gtest.h"
-#include "ceres/random.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-template <typename T> inline
-T &RowMajorAccess(T *base, int rows, int cols, int i, int j) {
+template <typename T>
+inline T& RowMajorAccess(T* base, int rows, int cols, int i, int j) {
   return base[cols * i + j];
 }
 
@@ -49,12 +51,12 @@ T &RowMajorAccess(T *base, int rows, int cols, int i, int j) {
 //   bool operator()(T const *, T *) const;
 //
 // which maps a vector of parameters to a vector of outputs.
-template <typename B, typename T, int M, int N> inline
-bool SymmetricDiff(const B& b,
-                   const T par[N],
-                   T del,           // step size.
-                   T fun[M],
-                   T jac[M * N]) {  // row-major.
+template <typename B, typename T, int M, int N>
+inline bool SymmetricDiff(const B& b,
+                          const T par[N],
+                          T del,  // step size.
+                          T fun[M],
+                          T jac[M * N]) {  // row-major.
   if (!b(par, fun)) {
     return false;
   }
@@ -97,8 +99,8 @@ bool SymmetricDiff(const B& b,
   return true;
 }
 
-template <typename A> inline
-void QuaternionToScaledRotation(A const q[4], A R[3 * 3]) {
+template <typename A>
+inline void QuaternionToScaledRotation(A const q[4], A R[3 * 3]) {
   // Make convenient names for elements of q.
   A a = q[0];
   A b = q[1];
@@ -106,20 +108,26 @@ void QuaternionToScaledRotation(A const q[4], A R[3 * 3]) {
   A d = q[3];
   // This is not to eliminate common sub-expression, but to
   // make the lines shorter so that they fit in 80 columns!
-  A aa = a*a;
-  A ab = a*b;
-  A ac = a*c;
-  A ad = a*d;
-  A bb = b*b;
-  A bc = b*c;
-  A bd = b*d;
-  A cc = c*c;
-  A cd = c*d;
-  A dd = d*d;
+  A aa = a * a;
+  A ab = a * b;
+  A ac = a * c;
+  A ad = a * d;
+  A bb = b * b;
+  A bc = b * c;
+  A bd = b * d;
+  A cc = c * c;
+  A cd = c * d;
+  A dd = d * d;
 #define R(i, j) RowMajorAccess(R, 3, 3, (i), (j))
-  R(0, 0) =  aa+bb-cc-dd; R(0, 1) = A(2)*(bc-ad); R(0, 2) = A(2)*(ac+bd);  // NOLINT
-  R(1, 0) = A(2)*(ad+bc); R(1, 1) =  aa-bb+cc-dd; R(1, 2) = A(2)*(cd-ab);  // NOLINT
-  R(2, 0) = A(2)*(bd-ac); R(2, 1) = A(2)*(ab+cd); R(2, 2) =  aa-bb-cc+dd;  // NOLINT
+  R(0, 0) = aa + bb - cc - dd;
+  R(0, 1) = A(2) * (bc - ad);
+  R(0, 2) = A(2) * (ac + bd);  // NOLINT
+  R(1, 0) = A(2) * (ad + bc);
+  R(1, 1) = aa - bb + cc - dd;
+  R(1, 2) = A(2) * (cd - ab);  // NOLINT
+  R(2, 0) = A(2) * (bd - ac);
+  R(2, 1) = A(2) * (ab + cd);
+  R(2, 2) = aa - bb - cc + dd;  // NOLINT
 #undef R
 }
 
@@ -157,22 +165,23 @@ struct Projective {
 
 // Test projective camera model projector.
 TEST(AutoDiff, ProjectiveCameraModel) {
-  srand(5);
   double const tol = 1e-10;  // floating-point tolerance.
   double const del = 1e-4;   // finite-difference step.
   double const err = 1e-6;   // finite-difference tolerance.
 
   Projective b;
+  std::mt19937 prng;
+  std::uniform_real_distribution<double> uniform01(0.0, 1.0);
 
   // Make random P and X, in a single vector.
   double PX[12 + 4];
-  for (int i = 0; i < 12 + 4; ++i) {
-    PX[i] = RandDouble();
-  }
+  std::generate(std::begin(PX), std::end(PX), [&prng, &uniform01] {
+    return uniform01(prng);
+  });
 
   // Handy names for the P and X parts.
-  double *P = PX + 0;
-  double *X = PX + 12;
+  double* P = PX + 0;
+  double* X = PX + 12;
 
   // Apply the mapping, to get image point b_x.
   double b_x[2];
@@ -181,8 +190,8 @@ TEST(AutoDiff, ProjectiveCameraModel) {
   // Use finite differencing to estimate the Jacobian.
   double fd_x[2];
   double fd_J[2 * (12 + 4)];
-  ASSERT_TRUE((SymmetricDiff<Projective, double, 2, 12 + 4>(b, PX, del,
-                                                            fd_x, fd_J)));
+  ASSERT_TRUE(
+      (SymmetricDiff<Projective, double, 2, 12 + 4>(b, PX, del, fd_x, fd_J)));
 
   for (int i = 0; i < 2; ++i) {
     ASSERT_NEAR(fd_x[i], b_x[i], tol);
@@ -192,9 +201,9 @@ TEST(AutoDiff, ProjectiveCameraModel) {
   double ad_x1[2];
   double J_PX[2 * (12 + 4)];
   {
-    double *parameters[] = { PX };
-    double *jacobians[] = { J_PX };
-    ASSERT_TRUE((AutoDiff<Projective, double, 12 + 4>::Differentiate(
+    double* parameters[] = {PX};
+    double* jacobians[] = {J_PX};
+    ASSERT_TRUE((AutoDifferentiate<2, StaticParameterDims<12 + 4>>(
         b, parameters, 2, ad_x1, jacobians)));
 
     for (int i = 0; i < 2; ++i) {
@@ -207,9 +216,9 @@ TEST(AutoDiff, ProjectiveCameraModel) {
     double ad_x2[2];
     double J_P[2 * 12];
     double J_X[2 * 4];
-    double *parameters[] = { P, X };
-    double *jacobians[] = { J_P, J_X };
-    ASSERT_TRUE((AutoDiff<Projective, double, 12, 4>::Differentiate(
+    double* parameters[] = {P, X};
+    double* jacobians[] = {J_P, J_X};
+    ASSERT_TRUE((AutoDifferentiate<2, StaticParameterDims<12, 4>>(
         b, parameters, 2, ad_x2, jacobians)));
 
     for (int i = 0; i < 2; ++i) {
@@ -258,13 +267,12 @@ struct Metric {
 
     // Set P(:, 4) = - R c
     for (int i = 0; i < 3; ++i) {
-      RowMajorAccess(P, 3, 4, i, 3) =
-        - (RowMajorAccess(R, 3, 3, i, 0) * c[0] +
-           RowMajorAccess(R, 3, 3, i, 1) * c[1] +
-           RowMajorAccess(R, 3, 3, i, 2) * c[2]);
+      RowMajorAccess(P, 3, 4, i, 3) = -(RowMajorAccess(R, 3, 3, i, 0) * c[0] +
+                                        RowMajorAccess(R, 3, 3, i, 1) * c[1] +
+                                        RowMajorAccess(R, 3, 3, i, 2) * c[2]);
     }
 
-    A X1[4] = { X[0], X[1], X[2], A(1) };
+    A X1[4] = {X[0], X[1], X[2], A(1)};
     Projective p;
     return p(P, X1, x);
   }
@@ -278,22 +286,25 @@ struct Metric {
 
 // This test is similar in structure to the previous one.
 TEST(AutoDiff, Metric) {
-  srand(5);
   double const tol = 1e-10;  // floating-point tolerance.
   double const del = 1e-4;   // finite-difference step.
-  double const err = 1e-5;   // finite-difference tolerance.
+  double const err = 2e-5;   // finite-difference tolerance.
 
   Metric b;
 
   // Make random parameter vector.
   double qcX[4 + 3 + 3];
-  for (int i = 0; i < 4 + 3 + 3; ++i)
-    qcX[i] = RandDouble();
+  std::mt19937 prng;
+  std::uniform_real_distribution<double> uniform01(0.0, 1.0);
+
+  std::generate(std::begin(qcX), std::end(qcX), [&prng, &uniform01] {
+    return uniform01(prng);
+  });
 
   // Handy names.
-  double *q = qcX;
-  double *c = qcX + 4;
-  double *X = qcX + 4 + 3;
+  double* q = qcX;
+  double* c = qcX + 4;
+  double* X = qcX + 4 + 3;
 
   // Compute projection, b_x.
   double b_x[2];
@@ -302,8 +313,8 @@ TEST(AutoDiff, Metric) {
   // Finite differencing estimate of Jacobian.
   double fd_x[2];
   double fd_J[2 * (4 + 3 + 3)];
-  ASSERT_TRUE((SymmetricDiff<Metric, double, 2, 4 + 3 + 3>(b, qcX, del,
-                                                           fd_x, fd_J)));
+  ASSERT_TRUE(
+      (SymmetricDiff<Metric, double, 2, 4 + 3 + 3>(b, qcX, del, fd_x, fd_J)));
 
   for (int i = 0; i < 2; ++i) {
     ASSERT_NEAR(fd_x[i], b_x[i], tol);
@@ -314,9 +325,9 @@ TEST(AutoDiff, Metric) {
   double J_q[2 * 4];
   double J_c[2 * 3];
   double J_X[2 * 3];
-  double *parameters[] = { q, c, X };
-  double *jacobians[] = { J_q, J_c, J_X };
-  ASSERT_TRUE((AutoDiff<Metric, double, 4, 3, 3>::Differentiate(
+  double* parameters[] = {q, c, X};
+  double* jacobians[] = {J_q, J_c, J_X};
+  ASSERT_TRUE((AutoDifferentiate<2, StaticParameterDims<4, 3, 3>>(
       b, parameters, 2, ad_x, jacobians)));
 
   for (int i = 0; i < 2; ++i) {
@@ -350,12 +361,12 @@ struct VaryingResidualFunctor {
 };
 
 TEST(AutoDiff, VaryingNumberOfResidualsForOneCostFunctorType) {
-  double x[2] = { 1.0, 5.5 };
-  double *parameters[] = { x };
+  double x[2] = {1.0, 5.5};
+  double* parameters[] = {x};
   const int kMaxResiduals = 10;
   double J_x[2 * kMaxResiduals];
   double residuals[kMaxResiduals];
-  double *jacobians[] = { J_x };
+  double* jacobians[] = {J_x};
 
   // Use a single functor, but tweak it to produce different numbers of
   // residuals.
@@ -366,7 +377,7 @@ TEST(AutoDiff, VaryingNumberOfResidualsForOneCostFunctorType) {
     functor.num_residuals = num_residuals;
 
     // Run autodiff with the new number of residuals.
-    ASSERT_TRUE((AutoDiff<VaryingResidualFunctor, double, 2>::Differentiate(
+    ASSERT_TRUE((AutoDifferentiate<DYNAMIC, StaticParameterDims<2>>(
         functor, parameters, num_residuals, residuals, jacobians)));
 
     const double kTolerance = 1e-14;
@@ -404,11 +415,8 @@ struct Residual3Param {
 
 struct Residual4Param {
   template <typename T>
-  bool operator()(const T* x0,
-                  const T* x1,
-                  const T* x2,
-                  const T* x3,
-                  T* y) const {
+  bool operator()(
+      const T* x0, const T* x1, const T* x2, const T* x3, T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4);
     return true;
   }
@@ -437,7 +445,7 @@ struct Residual6Param {
                   const T* x5,
                   T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4) + pow(*x4, 5) +
-        pow(*x5, 6);
+           pow(*x5, 6);
     return true;
   }
 };
@@ -453,7 +461,7 @@ struct Residual7Param {
                   const T* x6,
                   T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4) + pow(*x4, 5) +
-        pow(*x5, 6) + pow(*x6, 7);
+           pow(*x5, 6) + pow(*x6, 7);
     return true;
   }
 };
@@ -470,7 +478,7 @@ struct Residual8Param {
                   const T* x7,
                   T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4) + pow(*x4, 5) +
-        pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8);
+           pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8);
     return true;
   }
 };
@@ -488,7 +496,7 @@ struct Residual9Param {
                   const T* x8,
                   T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4) + pow(*x4, 5) +
-        pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8) + pow(*x8, 9);
+           pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8) + pow(*x8, 9);
     return true;
   }
 };
@@ -507,7 +515,7 @@ struct Residual10Param {
                   const T* x9,
                   T* y) const {
     y[0] = *x0 + pow(*x1, 2) + pow(*x2, 3) + pow(*x3, 4) + pow(*x4, 5) +
-        pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8) + pow(*x8, 9) + pow(*x9, 10);
+           pow(*x5, 6) + pow(*x6, 7) + pow(*x7, 8) + pow(*x8, 9) + pow(*x9, 10);
     return true;
   }
 };
@@ -528,8 +536,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual1Param functor;
     int num_variables = 1;
-    EXPECT_TRUE((AutoDiff<Residual1Param, double, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -539,8 +547,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual2Param functor;
     int num_variables = 2;
-    EXPECT_TRUE((AutoDiff<Residual2Param, double, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -550,8 +558,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual3Param functor;
     int num_variables = 3;
-    EXPECT_TRUE((AutoDiff<Residual3Param, double, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -561,8 +569,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual4Param functor;
     int num_variables = 4;
-    EXPECT_TRUE((AutoDiff<Residual4Param, double, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -572,8 +580,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual5Param functor;
     int num_variables = 5;
-    EXPECT_TRUE((AutoDiff<Residual5Param, double, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -583,10 +591,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual6Param functor;
     int num_variables = 6;
-    EXPECT_TRUE((AutoDiff<Residual6Param,
-                 double,
-                 1, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -596,10 +602,8 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual7Param functor;
     int num_variables = 7;
-    EXPECT_TRUE((AutoDiff<Residual7Param,
-                 double,
-                 1, 1, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1, 1, 1>>(
+        functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -609,10 +613,9 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual8Param functor;
     int num_variables = 8;
-    EXPECT_TRUE((AutoDiff<
-                 Residual8Param,
-                 double, 1, 1, 1, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE(
+        (AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1, 1, 1, 1>>(
+            functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -622,11 +625,9 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual9Param functor;
     int num_variables = 9;
-    EXPECT_TRUE((AutoDiff<
-                 Residual9Param,
-                 double,
-                 1, 1, 1, 1, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE(
+        (AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1, 1, 1, 1, 1>>(
+            functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -636,11 +637,9 @@ TEST(AutoDiff, VariadicAutoDiff) {
   {
     Residual10Param functor;
     int num_variables = 10;
-    EXPECT_TRUE((AutoDiff<
-                 Residual10Param,
-                 double,
-                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1>::Differentiate(
-                     functor, parameters, 1, &residual, jacobians)));
+    EXPECT_TRUE((
+        AutoDifferentiate<1, StaticParameterDims<1, 1, 1, 1, 1, 1, 1, 1, 1, 1>>(
+            functor, parameters, 1, &residual, jacobians)));
     EXPECT_EQ(residual, pow(2, num_variables + 1) - 2);
     for (int i = 0; i < num_variables; ++i) {
       EXPECT_EQ(jacobian_values[i], (i + 1) * pow(2, i));
@@ -666,12 +665,11 @@ TEST(AutoDiff, AlignedAllocationTest) {
   // this function.
   y += 1;
 
-  typedef Jet<double, 2> JetT;
+  using JetT = Jet<double, 2>;
   FixedArray<JetT, (256 * 7) / sizeof(JetT)> x(3);
 
   // Need this to makes sure that x does not get optimized out.
   x[0] = x[0] + JetT(1.0);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

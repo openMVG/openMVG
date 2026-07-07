@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,18 +31,17 @@
 
 #include "ceres/polynomial.h"
 
-#include <limits>
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <algorithm>
-#include "gtest/gtest.h"
+#include <limits>
+#include <vector>
+
 #include "ceres/function_sample.h"
 #include "ceres/test_util.h"
+#include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
-
-using std::vector;
+namespace ceres::internal {
 
 namespace {
 
@@ -74,7 +73,7 @@ Vector AddComplexRootPair(const Vector& poly, double real, double imag) {
   // Multiply poly by x^2 - 2real + abs(real,imag)^2
   poly2.head(poly.size()) += poly;
   poly2.segment(1, poly.size()) -= 2 * real * poly;
-  poly2.tail(poly.size()) += (real*real + imag*imag) * poly;
+  poly2.tail(poly.size()) += (real * real + imag * imag) * poly;
   return poly2;
 }
 
@@ -87,10 +86,10 @@ Vector SortVector(const Vector& in) {
 }
 
 // Run a test with the polynomial defined by the N real roots in roots_real.
-// If use_real is false, NULL is passed as the real argument to
-// FindPolynomialRoots. If use_imaginary is false, NULL is passed as the
+// If use_real is false, nullptr is passed as the real argument to
+// FindPolynomialRoots. If use_imaginary is false, nullptr is passed as the
 // imaginary argument to FindPolynomialRoots.
-template<int N>
+template <int N>
 void RunPolynomialTestRealRoots(const double (&real_roots)[N],
                                 bool use_real,
                                 bool use_imaginary,
@@ -101,8 +100,8 @@ void RunPolynomialTestRealRoots(const double (&real_roots)[N],
   for (int i = 0; i < N; ++i) {
     poly = AddRealRoot(poly, real_roots[i]);
   }
-  Vector* const real_ptr = use_real ? &real : NULL;
-  Vector* const imaginary_ptr = use_imaginary ? &imaginary : NULL;
+  Vector* const real_ptr = use_real ? &real : nullptr;
+  Vector* const imaginary_ptr = use_imaginary ? &imaginary : nullptr;
   bool success = FindPolynomialRoots(poly, real_ptr, imaginary_ptr);
 
   EXPECT_EQ(success, true);
@@ -142,32 +141,32 @@ TEST(Polynomial, ConstantPolynomialReturnsNoRoots) {
 }
 
 TEST(Polynomial, LinearPolynomialWithPositiveRootWorks) {
-  const double roots[1] = { 42.42 };
+  const double roots[1] = {42.42};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, LinearPolynomialWithNegativeRootWorks) {
-  const double roots[1] = { -42.42 };
+  const double roots[1] = {-42.42};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, QuadraticPolynomialWithPositiveRootsWorks) {
-  const double roots[2] = { 1.0, 42.42 };
+  const double roots[2] = {1.0, 42.42};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, QuadraticPolynomialWithOneNegativeRootWorks) {
-  const double roots[2] = { -42.42, 1.0 };
+  const double roots[2] = {-42.42, 1.0};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, QuadraticPolynomialWithTwoNegativeRootsWorks) {
-  const double roots[2] = { -42.42, -1.0 };
+  const double roots[2] = {-42.42, -1.0};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, QuadraticPolynomialWithCloseRootsWorks) {
-  const double roots[2] = { 42.42, 42.43 };
+  const double roots[2] = {42.42, 42.43};
   RunPolynomialTestRealRoots(roots, true, false, kEpsilonLoose);
 }
 
@@ -190,37 +189,37 @@ TEST(Polynomial, QuadraticPolynomialWithComplexRootsWorks) {
 }
 
 TEST(Polynomial, QuarticPolynomialWorks) {
-  const double roots[4] = { 1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5 };
+  const double roots[4] = {1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, QuarticPolynomialWithTwoClustersOfCloseRootsWorks) {
-  const double roots[4] = { 1.23e-1, 2.46e-1, 1.23e+5, 2.46e+5 };
+  const double roots[4] = {1.23e-1, 2.46e-1, 1.23e+5, 2.46e+5};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilonLoose);
 }
 
 TEST(Polynomial, QuarticPolynomialWithTwoZeroRootsWorks) {
-  const double roots[4] = { -42.42, 0.0, 0.0, 42.42 };
+  const double roots[4] = {-42.42, 0.0, 0.0, 42.42};
   RunPolynomialTestRealRoots(roots, true, true, 2 * kEpsilonLoose);
 }
 
 TEST(Polynomial, QuarticMonomialWorks) {
-  const double roots[4] = { 0.0, 0.0, 0.0, 0.0 };
+  const double roots[4] = {0.0, 0.0, 0.0, 0.0};
   RunPolynomialTestRealRoots(roots, true, true, kEpsilon);
 }
 
 TEST(Polynomial, NullPointerAsImaginaryPartWorks) {
-  const double roots[4] = { 1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5 };
+  const double roots[4] = {1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5};
   RunPolynomialTestRealRoots(roots, true, false, kEpsilon);
 }
 
 TEST(Polynomial, NullPointerAsRealPartWorks) {
-  const double roots[4] = { 1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5 };
+  const double roots[4] = {1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5};
   RunPolynomialTestRealRoots(roots, false, true, kEpsilon);
 }
 
 TEST(Polynomial, BothOutputArgumentsNullWorks) {
-  const double roots[4] = { 1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5 };
+  const double roots[4] = {1.23e-4, 1.23e-1, 1.23e+2, 1.23e+5};
   RunPolynomialTestRealRoots(roots, false, false, kEpsilon);
 }
 
@@ -279,7 +278,6 @@ TEST(Polynomial, MinimizeLinearPolynomial) {
   EXPECT_EQ(optimal_value, 2.0);
 }
 
-
 TEST(Polynomial, MinimizeQuadraticPolynomial) {
   // p(x) = x^2 - 3 x + 2
   // min_x = 3/2
@@ -294,8 +292,8 @@ TEST(Polynomial, MinimizeQuadraticPolynomial) {
   double min_x = -2.0;
   double max_x = 2.0;
   MinimizePolynomial(polynomial, min_x, max_x, &optimal_x, &optimal_value);
-  EXPECT_EQ(optimal_x, 3.0/2.0);
-  EXPECT_EQ(optimal_value, -1.0/4.0);
+  EXPECT_EQ(optimal_x, 3.0 / 2.0);
+  EXPECT_EQ(optimal_value, -1.0 / 4.0);
 
   min_x = -2.0;
   max_x = 1.0;
@@ -315,7 +313,7 @@ TEST(Polymomial, ConstantInterpolatingPolynomial) {
   Vector true_polynomial(1);
   true_polynomial << 1.0;
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   FunctionSample sample;
   sample.x = 1.0;
   sample.value = 1.0;
@@ -331,7 +329,7 @@ TEST(Polynomial, LinearInterpolatingPolynomial) {
   Vector true_polynomial(2);
   true_polynomial << 2.0, -1.0;
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   FunctionSample sample;
   sample.x = 1.0;
   sample.value = 1.0;
@@ -349,7 +347,7 @@ TEST(Polynomial, QuadraticInterpolatingPolynomial) {
   Vector true_polynomial(3);
   true_polynomial << 2.0, 3.0, 2.0;
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   {
     FunctionSample sample;
     sample.x = 1.0;
@@ -377,7 +375,7 @@ TEST(Polynomial, DeficientCubicInterpolatingPolynomial) {
   Vector true_polynomial(4);
   true_polynomial << 0.0, 2.0, 3.0, 2.0;
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   {
     FunctionSample sample;
     sample.x = 1.0;
@@ -402,13 +400,12 @@ TEST(Polynomial, DeficientCubicInterpolatingPolynomial) {
   EXPECT_NEAR((true_polynomial - polynomial).norm(), 0.0, 1e-14);
 }
 
-
 TEST(Polynomial, CubicInterpolatingPolynomialFromValues) {
   // p(x) = x^3 + 2x^2 + 3x + 2
   Vector true_polynomial(4);
   true_polynomial << 1.0, 2.0, 3.0, 2.0;
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   {
     FunctionSample sample;
     sample.x = 1.0;
@@ -451,7 +448,7 @@ TEST(Polynomial, CubicInterpolatingPolynomialFromValuesAndOneGradient) {
   true_polynomial << 1.0, 2.0, 3.0, 2.0;
   Vector true_gradient_polynomial = DifferentiatePolynomial(true_polynomial);
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   {
     FunctionSample sample;
     sample.x = 1.0;
@@ -488,7 +485,7 @@ TEST(Polynomial, CubicInterpolatingPolynomialFromValuesAndGradients) {
   true_polynomial << 1.0, 2.0, 3.0, 2.0;
   Vector true_gradient_polynomial = DifferentiatePolynomial(true_polynomial);
 
-  vector<FunctionSample> samples;
+  std::vector<FunctionSample> samples;
   {
     FunctionSample sample;
     sample.x = -3.0;
@@ -513,5 +510,4 @@ TEST(Polynomial, CubicInterpolatingPolynomialFromValuesAndGradients) {
   EXPECT_NEAR((true_polynomial - polynomial).norm(), 0.0, 1e-14);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -1,0 +1,127 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2013
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+/*!
+
+\page coding_style LEMON Coding Style
+
+\section naming_conv Naming Conventions
+
+In order to make development easier we have made some conventions
+according to coding style. These include names of types, classes,
+functions, variables, constants and exceptions. If these conventions
+are met in one's code then it is easier to read and maintain
+it. Please comply with these conventions if you want to contribute
+developing LEMON library.
+
+\note When the coding style requires the capitalization of an abbreviation,
+only the first letter should be upper case.
+
+\code
+XmlReader
+\endcode
+
+
+\warning In some cases we diverge from these rules.
+This is primary done because STL uses different naming convention and
+in certain cases
+it is beneficial to provide STL compatible interface.
+
+\subsection cs-files File Names
+
+The header file names should look like the following.
+
+\code
+header_file.h
+\endcode
+
+Note that all standard LEMON headers are located in the \c lemon subdirectory,
+so you should include them from C++ source like this:
+
+\code
+#include <lemon/header_file.h>
+\endcode
+
+The source code files use the same style and they have '.cc' extension.
+
+\code
+source_code.cc
+\endcode
+
+\subsection cs-class Classes and other types
+
+The name of a class or any type should look like the following.
+
+\code
+AllWordsCapitalizedWithoutUnderscores
+\endcode
+
+\subsection cs-func Methods and other functions
+
+The name of a function should look like the following.
+
+\code
+firstWordLowerCaseRestCapitalizedWithoutUnderscores
+\endcode
+
+\subsection cs-funcs Constants, Macros
+
+The names of constants and macros should look like the following.
+
+\code
+ALL_UPPER_CASE_WITH_UNDERSCORES
+\endcode
+
+\subsection cs-loc-var Class and instance member variables, auto variables
+
+The names of class and instance member variables and auto variables
+(=variables used locally in methods) should look like the following.
+
+\code
+all_lower_case_with_underscores
+\endcode
+
+\subsection pri-loc-var Private member variables
+
+Private member variables should start with underscore.
+
+\code
+_start_with_underscore
+\endcode
+
+\subsection cs-excep Exceptions
+
+When writing exceptions please comply the following naming conventions.
+
+\code
+ClassNameEndsWithException
+\endcode
+
+or
+
+\code
+ClassNameEndsWithError
+\endcode
+
+\section header-template Template Header File
+
+Each LEMON header file should look like this:
+
+\include template.h
+
+*/

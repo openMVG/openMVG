@@ -64,6 +64,6 @@ GTEST_API_ int main(int argc, char** argv) {
   // gflags, InitGoogleTest() (called by InitGoogleMock()) must be called
   // before ParseCommandLineFlags() to handle & remove them before gflags
   // parses the remaining flags.
-  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   return RUN_ALL_TESTS();
 }

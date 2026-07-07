@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,12 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+#include "ceres/detect_structure.h"
+
 #include "Eigen/Core"
+#include "ceres/block_structure.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
-#include "ceres/block_structure.h"
-#include "ceres/detect_structure.h"
 
 namespace ceres {
 namespace internal {
@@ -44,45 +45,42 @@ TEST(DetectStructure, EverythingStatic) {
 
   CompressedRowBlockStructure bs;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 0;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 3;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 7;
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 0;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(1, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(1, 0);
   }
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 2;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   int row_block_size = 0;
   int e_block_size = 0;
   int f_block_size = 0;
   const int num_eliminate_blocks = 1;
-  DetectStructure(bs,
-                  num_eliminate_blocks,
-                  &row_block_size,
-                  &e_block_size,
-                  &f_block_size);
+  DetectStructure(
+      bs, num_eliminate_blocks, &row_block_size, &e_block_size, &f_block_size);
 
   EXPECT_EQ(row_block_size, expected_row_block_size);
   EXPECT_EQ(e_block_size, expected_e_block_size);
@@ -96,45 +94,42 @@ TEST(DetectStructure, DynamicRow) {
 
   CompressedRowBlockStructure bs;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 0;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 3;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 7;
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 0;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(1, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(1, 0);
   }
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 1;
     row.block.position = 2;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   int row_block_size = 0;
   int e_block_size = 0;
   int f_block_size = 0;
   const int num_eliminate_blocks = 1;
-  DetectStructure(bs,
-                  num_eliminate_blocks,
-                  &row_block_size,
-                  &e_block_size,
-                  &f_block_size);
+  DetectStructure(
+      bs, num_eliminate_blocks, &row_block_size, &e_block_size, &f_block_size);
 
   EXPECT_EQ(row_block_size, expected_row_block_size);
   EXPECT_EQ(e_block_size, expected_e_block_size);
@@ -146,48 +141,44 @@ TEST(DetectStructure, DynamicFBlockDifferentRows) {
   const int expected_e_block_size = 3;
   const int expected_f_block_size = Eigen::Dynamic;
 
-
   CompressedRowBlockStructure bs;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 0;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 3;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 7;
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 0;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(1, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(1, 0);
   }
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 2;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   int row_block_size = 0;
   int e_block_size = 0;
   int f_block_size = 0;
   const int num_eliminate_blocks = 1;
-  DetectStructure(bs,
-                  num_eliminate_blocks,
-                  &row_block_size,
-                  &e_block_size,
-                  &f_block_size);
+  DetectStructure(
+      bs, num_eliminate_blocks, &row_block_size, &e_block_size, &f_block_size);
 
   EXPECT_EQ(row_block_size, expected_row_block_size);
   EXPECT_EQ(e_block_size, expected_e_block_size);
@@ -201,45 +192,42 @@ TEST(DetectStructure, DynamicEBlock) {
 
   CompressedRowBlockStructure bs;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 0;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 3;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 7;
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 0;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 2;
-    row.cells.push_back(Cell(1, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(1, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   int row_block_size = 0;
   int e_block_size = 0;
   int f_block_size = 0;
   const int num_eliminate_blocks = 2;
-  DetectStructure(bs,
-                  num_eliminate_blocks,
-                  &row_block_size,
-                  &e_block_size,
-                  &f_block_size);
+  DetectStructure(
+      bs, num_eliminate_blocks, &row_block_size, &e_block_size, &f_block_size);
 
   EXPECT_EQ(row_block_size, expected_row_block_size);
   EXPECT_EQ(e_block_size, expected_e_block_size);
@@ -253,37 +241,34 @@ TEST(DetectStructure, DynamicFBlockSameRow) {
 
   CompressedRowBlockStructure bs;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 0;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 4;
   bs.cols.back().position = 3;
 
-  bs.cols.push_back(Block());
+  bs.cols.emplace_back();
   bs.cols.back().size = 3;
   bs.cols.back().position = 7;
 
   {
-    bs.rows.push_back(CompressedRow());
+    bs.rows.emplace_back();
     CompressedRow& row = bs.rows.back();
     row.block.size = 2;
     row.block.position = 0;
-    row.cells.push_back(Cell(0, 0));
-    row.cells.push_back(Cell(1, 0));
-    row.cells.push_back(Cell(2, 0));
+    row.cells.emplace_back(0, 0);
+    row.cells.emplace_back(1, 0);
+    row.cells.emplace_back(2, 0);
   }
 
   int row_block_size = 0;
   int e_block_size = 0;
   int f_block_size = 0;
   const int num_eliminate_blocks = 1;
-  DetectStructure(bs,
-                  num_eliminate_blocks,
-                  &row_block_size,
-                  &e_block_size,
-                  &f_block_size);
+  DetectStructure(
+      bs, num_eliminate_blocks, &row_block_size, &e_block_size, &f_block_size);
 
   EXPECT_EQ(row_block_size, expected_row_block_size);
   EXPECT_EQ(e_block_size, expected_e_block_size);

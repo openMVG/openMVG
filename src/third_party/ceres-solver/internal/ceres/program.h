@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,18 +31,22 @@
 #ifndef CERES_INTERNAL_PROGRAM_H_
 #define CERES_INTERNAL_PROGRAM_H_
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
-#include "ceres/internal/port.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/evaluation_callback.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 class ParameterBlock;
 class ProblemImpl;
 class ResidualBlock;
 class TripletSparseMatrix;
+class ContextImpl;
 
 // A nonlinear least squares optimization problem. This is different from the
 // similarly-named "Problem" object, which offers a mutation interface for
@@ -54,38 +58,38 @@ class TripletSparseMatrix;
 // another; for example, the first stage of solving involves stripping all
 // constant parameters and residuals. This is in contrast with Problem, which is
 // not built for transformation.
-class Program {
+class CERES_NO_EXPORT Program {
  public:
-  Program();
-  explicit Program(const Program& program);
-
   // The ordered parameter and residual blocks for the program.
   const std::vector<ParameterBlock*>& parameter_blocks() const;
   const std::vector<ResidualBlock*>& residual_blocks() const;
   std::vector<ParameterBlock*>* mutable_parameter_blocks();
   std::vector<ResidualBlock*>* mutable_residual_blocks();
+  EvaluationCallback* mutable_evaluation_callback();
 
   // Serialize to/from the program and update states.
   //
   // NOTE: Setting the state of a parameter block can trigger the
-  // computation of the Jacobian of its local parameterization. If
-  // this computation fails for some reason, then this method returns
-  // false and the state of the parameter blocks cannot be trusted.
-  bool StateVectorToParameterBlocks(const double *state);
-  void ParameterBlocksToStateVector(double *state) const;
+  // computation of the Jacobian of its manifold. If this computation fails for
+  // some reason, then this method returns false and the state of the parameter
+  // blocks cannot be trusted.
+  bool StateVectorToParameterBlocks(const double* state);
+  void ParameterBlocksToStateVector(double* state) const;
 
   // Copy internal state to the user's parameters.
   void CopyParameterBlockStateToUserState();
 
   // Set the parameter block pointers to the user pointers. Since this
-  // runs parameter block set state internally, which may call local
-  // parameterizations, this can fail. False is returned on failure.
+  // runs parameter block set state internally, which may call manifold, this
+  // can fail. False is returned on failure.
   bool SetParameterBlockStatePtrsToUserStatePtrs();
 
   // Update a state vector for the program given a delta.
   bool Plus(const double* state,
             const double* delta,
-            double* state_plus_delta) const;
+            double* state_plus_delta,
+            ContextImpl* context,
+            int num_threads) const;
 
   // Set the parameter indices and offsets. This permits mapping backward
   // from a ParameterBlock* to an index in the parameter_blocks() vector. For
@@ -127,8 +131,10 @@ class Program {
   // structure corresponding to the block sparsity of the transpose of
   // the Jacobian matrix.
   //
-  // Caller owns the result.
-  TripletSparseMatrix* CreateJacobianBlockSparsityTranspose() const;
+  // start_residual_block which allows the user to ignore the first
+  // start_residual_block residuals.
+  std::unique_ptr<TripletSparseMatrix> CreateJacobianBlockSparsityTranspose(
+      int start_residual_block = 0) const;
 
   // Create a copy of this program and removes constant parameter
   // blocks and residual blocks with no varying parameter blocks while
@@ -140,12 +146,13 @@ class Program {
   // fixed_cost will be equal to the sum of the costs of the residual
   // blocks that were removed.
   //
-  // If there was a problem, then the function will return a NULL
+  // If there was a problem, then the function will return a nullptr
   // pointer and error will contain a human readable description of
   // the problem.
-  Program* CreateReducedProgram(std::vector<double*>* removed_parameter_blocks,
-                                double* fixed_cost,
-                                std::string* error) const;
+  std::unique_ptr<Program> CreateReducedProgram(
+      std::vector<double*>* removed_parameter_blocks,
+      double* fixed_cost,
+      std::string* error) const;
 
   // See problem.h for what these do.
   int NumParameterBlocks() const;
@@ -182,11 +189,13 @@ class Program {
   // The Program does not own the ParameterBlock or ResidualBlock objects.
   std::vector<ParameterBlock*> parameter_blocks_;
   std::vector<ResidualBlock*> residual_blocks_;
+  EvaluationCallback* evaluation_callback_ = nullptr;
 
   friend class ProblemImpl;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_PROGRAM_H_

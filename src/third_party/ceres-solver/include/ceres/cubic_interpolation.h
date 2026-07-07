@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
 #ifndef CERES_PUBLIC_CUBIC_INTERPOLATION_H_
 #define CERES_PUBLIC_CUBIC_INTERPOLATION_H_
 
-#include "ceres/internal/port.h"
 #include "Eigen/Core"
+#include "ceres/internal/export.h"
 #include "glog/logging.h"
 
 namespace ceres {
@@ -52,15 +52,15 @@ namespace ceres {
 //
 // "Cubic convolution interpolation for digital image processing".
 // IEEE Transactions on Acoustics, Speech, and Signal Processing
-// 29 (6): 1153–1160.
+// 29 (6): 1153-1160.
 //
 // For more details see
 //
 // http://en.wikipedia.org/wiki/Cubic_Hermite_spline
 // http://en.wikipedia.org/wiki/Bicubic_interpolation
 //
-// f if not NULL will contain the interpolated function values.
-// dfdx if not NULL will contain the interpolated derivative values.
+// f if not nullptr will contain the interpolated function values.
+// dfdx if not nullptr will contain the interpolated derivative values.
 template <int kDataDimension>
 void CubicHermiteSpline(const Eigen::Matrix<double, kDataDimension, 1>& p0,
                         const Eigen::Matrix<double, kDataDimension, 1>& p1,
@@ -69,7 +69,7 @@ void CubicHermiteSpline(const Eigen::Matrix<double, kDataDimension, 1>& p0,
                         const double x,
                         double* f,
                         double* dfdx) {
-  typedef Eigen::Matrix<double, kDataDimension, 1> VType;
+  using VType = Eigen::Matrix<double, kDataDimension, 1>;
   const VType a = 0.5 * (-p0 + 3.0 * p1 - 3.0 * p2 + p3);
   const VType b = 0.5 * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3);
   const VType c = 0.5 * (-p0 + p2);
@@ -79,12 +79,12 @@ void CubicHermiteSpline(const Eigen::Matrix<double, kDataDimension, 1>& p0,
   // derivative.
 
   // f = ax^3 + bx^2 + cx + d
-  if (f != NULL) {
+  if (f != nullptr) {
     Eigen::Map<VType>(f, kDataDimension) = d + x * (c + x * (b + x * a));
   }
 
   // dfdx = 3ax^2 + 2bx + c
-  if (dfdx != NULL) {
+  if (dfdx != nullptr) {
     Eigen::Map<VType>(dfdx, kDataDimension) = c + x * (2.0 * b + 3.0 * a * x);
   }
 }
@@ -116,15 +116,14 @@ void CubicHermiteSpline(const Eigen::Matrix<double, kDataDimension, 1>& p0,
 // Example usage:
 //
 //  const double data[] = {1.0, 2.0, 5.0, 6.0};
-//  Grid1D<double, 1> grid(x, 0, 4);
-//  CubicInterpolator<Grid1D<double, 1> > interpolator(grid);
+//  Grid1D<double, 1> grid(data, 0, 4);
+//  CubicInterpolator<Grid1D<double, 1>> interpolator(grid);
 //  double f, dfdx;
 //  interpolator.Evaluator(1.5, &f, &dfdx);
-template<typename Grid>
+template <typename Grid>
 class CubicInterpolator {
  public:
-  explicit CubicInterpolator(const Grid& grid)
-      : grid_(grid) {
+  explicit CubicInterpolator(const Grid& grid) : grid_(grid) {
     // The + casts the enum into an int before doing the
     // comparison. It is needed to prevent
     // "-Wunnamed-type-template-args" related errors.
@@ -135,7 +134,7 @@ class CubicInterpolator {
     const int n = std::floor(x);
     Eigen::Matrix<double, Grid::DATA_DIMENSION, 1> p0, p1, p2, p3;
     grid_.GetValue(n - 1, p0.data());
-    grid_.GetValue(n,     p1.data());
+    grid_.GetValue(n, p1.data());
     grid_.GetValue(n + 1, p2.data());
     grid_.GetValue(n + 2, p3.data());
     CubicHermiteSpline<Grid::DATA_DIMENSION>(p0, p1, p2, p3, x - n, f, dfdx);
@@ -144,11 +143,10 @@ class CubicInterpolator {
   // The following two Evaluate overloads are needed for interfacing
   // with automatic differentiation. The first is for when a scalar
   // evaluation is done, and the second one is for when Jets are used.
-  void Evaluate(const double& x, double* f) const {
-    Evaluate(x, f, NULL);
-  }
+  void Evaluate(const double& x, double* f) const { Evaluate(x, f, nullptr); }
 
-  template<typename JetT> void Evaluate(const JetT& x, JetT* f) const {
+  template <typename JetT>
+  void Evaluate(const JetT& x, JetT* f) const {
     double fx[Grid::DATA_DIMENSION], dfdx[Grid::DATA_DIMENSION];
     Evaluate(x.a, fx, dfdx);
     for (int i = 0; i < Grid::DATA_DIMENSION; ++i) {
@@ -182,9 +180,7 @@ class CubicInterpolator {
 //
 //  f01, f11, .. fn1, f02, f12, .. , fn2
 //
-template <typename T,
-          int kDataDimension = 1,
-          bool kInterleaved = true>
+template <typename T, int kDataDimension = 1, bool kInterleaved = true>
 struct Grid1D {
  public:
   enum { DATA_DIMENSION = kDataDimension };
@@ -195,7 +191,7 @@ struct Grid1D {
   }
 
   EIGEN_STRONG_INLINE void GetValue(const int n, double* f) const {
-    const int idx = std::min(std::max(begin_, n), end_ - 1) - begin_;
+    const int idx = (std::min)((std::max)(begin_, n), end_ - 1) - begin_;
     if (kInterleaved) {
       for (int i = 0; i < kDataDimension; ++i) {
         f[i] = static_cast<double>(data_[kDataDimension * idx + i]);
@@ -237,7 +233,7 @@ struct Grid1D {
 //
 // "Cubic convolution interpolation for digital image processing".
 // Robert G. Keys, IEEE Trans. on Acoustics, Speech, and Signal
-// Processing 29 (6): 1153–1160, 1981.
+// Processing 29 (6): 1153-1160, 1981.
 //
 // http://en.wikipedia.org/wiki/Cubic_Hermite_spline
 // http://en.wikipedia.org/wiki/Bicubic_interpolation
@@ -248,15 +244,14 @@ struct Grid1D {
 //                         3.6, 2.1,  4.2, 2.0,
 //                        2.0, 1.0,  3.1, 5.2};
 //  Grid2D<double, 1>  grid(data, 3, 4);
-//  BiCubicInterpolator<Grid2D<double, 1> > interpolator(grid);
+//  BiCubicInterpolator<Grid2D<double, 1>> interpolator(grid);
 //  double f, dfdr, dfdc;
 //  interpolator.Evaluate(1.2, 2.5, &f, &dfdr, &dfdc);
 
-template<typename Grid>
+template <typename Grid>
 class BiCubicInterpolator {
  public:
-  explicit BiCubicInterpolator(const Grid& grid)
-      : grid_(grid) {
+  explicit BiCubicInterpolator(const Grid& grid) : grid_(grid) {
     // The + casts the enum into an int before doing the
     // comparison. It is needed to prevent
     // "-Wunnamed-type-template-args" related errors.
@@ -264,9 +259,10 @@ class BiCubicInterpolator {
   }
 
   // Evaluate the interpolated function value and/or its
-  // derivative. Returns false if r or c is out of bounds.
-  void Evaluate(double r, double c,
-                double* f, double* dfdr, double* dfdc) const {
+  // derivative. Uses the nearest point on the grid boundary if r or
+  // c is out of bounds.
+  void Evaluate(
+      double r, double c, double* f, double* dfdr, double* dfdc) const {
     // BiCubic interpolation requires 16 values around the point being
     // evaluated.  We will use pij, to indicate the elements of the
     // 4x4 grid of values.
@@ -291,40 +287,40 @@ class BiCubicInterpolator {
     Eigen::Matrix<double, Grid::DATA_DIMENSION, 1> df0dc, df1dc, df2dc, df3dc;
 
     grid_.GetValue(row - 1, col - 1, p0.data());
-    grid_.GetValue(row - 1, col    , p1.data());
+    grid_.GetValue(row - 1, col, p1.data());
     grid_.GetValue(row - 1, col + 1, p2.data());
     grid_.GetValue(row - 1, col + 2, p3.data());
-    CubicHermiteSpline<Grid::DATA_DIMENSION>(p0, p1, p2, p3, c - col,
-                                             f0.data(), df0dc.data());
+    CubicHermiteSpline<Grid::DATA_DIMENSION>(
+        p0, p1, p2, p3, c - col, f0.data(), df0dc.data());
 
     grid_.GetValue(row, col - 1, p0.data());
-    grid_.GetValue(row, col    , p1.data());
+    grid_.GetValue(row, col, p1.data());
     grid_.GetValue(row, col + 1, p2.data());
     grid_.GetValue(row, col + 2, p3.data());
-    CubicHermiteSpline<Grid::DATA_DIMENSION>(p0, p1, p2, p3, c - col,
-                                             f1.data(), df1dc.data());
+    CubicHermiteSpline<Grid::DATA_DIMENSION>(
+        p0, p1, p2, p3, c - col, f1.data(), df1dc.data());
 
     grid_.GetValue(row + 1, col - 1, p0.data());
-    grid_.GetValue(row + 1, col    , p1.data());
+    grid_.GetValue(row + 1, col, p1.data());
     grid_.GetValue(row + 1, col + 1, p2.data());
     grid_.GetValue(row + 1, col + 2, p3.data());
-    CubicHermiteSpline<Grid::DATA_DIMENSION>(p0, p1, p2, p3, c - col,
-                                             f2.data(), df2dc.data());
+    CubicHermiteSpline<Grid::DATA_DIMENSION>(
+        p0, p1, p2, p3, c - col, f2.data(), df2dc.data());
 
     grid_.GetValue(row + 2, col - 1, p0.data());
-    grid_.GetValue(row + 2, col    , p1.data());
+    grid_.GetValue(row + 2, col, p1.data());
     grid_.GetValue(row + 2, col + 1, p2.data());
     grid_.GetValue(row + 2, col + 2, p3.data());
-    CubicHermiteSpline<Grid::DATA_DIMENSION>(p0, p1, p2, p3, c - col,
-                                             f3.data(), df3dc.data());
+    CubicHermiteSpline<Grid::DATA_DIMENSION>(
+        p0, p1, p2, p3, c - col, f3.data(), df3dc.data());
 
     // Interpolate vertically the interpolated value from each row and
     // compute the derivative along the columns.
     CubicHermiteSpline<Grid::DATA_DIMENSION>(f0, f1, f2, f3, r - row, f, dfdr);
-    if (dfdc != NULL) {
+    if (dfdc != nullptr) {
       // Interpolate vertically the derivative along the columns.
-      CubicHermiteSpline<Grid::DATA_DIMENSION>(df0dc, df1dc, df2dc, df3dc,
-                                               r - row, dfdc, NULL);
+      CubicHermiteSpline<Grid::DATA_DIMENSION>(
+          df0dc, df1dc, df2dc, df3dc, r - row, dfdc, nullptr);
     }
   }
 
@@ -332,12 +328,11 @@ class BiCubicInterpolator {
   // with automatic differentiation. The first is for when a scalar
   // evaluation is done, and the second one is for when Jets are used.
   void Evaluate(const double& r, const double& c, double* f) const {
-    Evaluate(r, c, f, NULL, NULL);
+    Evaluate(r, c, f, nullptr, nullptr);
   }
 
-  template<typename JetT> void Evaluate(const JetT& r,
-                                        const JetT& c,
-                                        JetT* f) const {
+  template <typename JetT>
+  void Evaluate(const JetT& r, const JetT& c, JetT* f) const {
     double frc[Grid::DATA_DIMENSION];
     double dfdr[Grid::DATA_DIMENSION];
     double dfdc[Grid::DATA_DIMENSION];
@@ -373,7 +368,7 @@ class BiCubicInterpolator {
 //
 //   f001, f002, f011, f012, ...
 //
-// A commonly occuring example are color images (RGB) where the three
+// A commonly occurring example are color images (RGB) where the three
 // channels are stored interleaved.
 //
 // If kInterleaved = false, then it is stored as
@@ -388,12 +383,17 @@ struct Grid2D {
   enum { DATA_DIMENSION = kDataDimension };
 
   Grid2D(const T* data,
-         const int row_begin, const int row_end,
-         const int col_begin, const int col_end)
+         const int row_begin,
+         const int row_end,
+         const int col_begin,
+         const int col_end)
       : data_(data),
-        row_begin_(row_begin), row_end_(row_end),
-        col_begin_(col_begin), col_end_(col_end),
-        num_rows_(row_end - row_begin), num_cols_(col_end - col_begin),
+        row_begin_(row_begin),
+        row_end_(row_end),
+        col_begin_(col_begin),
+        col_end_(col_end),
+        num_rows_(row_end - row_begin),
+        num_cols_(col_end - col_begin),
         num_values_(num_rows_ * num_cols_) {
     CHECK_GE(kDataDimension, 1);
     CHECK_LT(row_begin, row_end);
@@ -402,15 +402,12 @@ struct Grid2D {
 
   EIGEN_STRONG_INLINE void GetValue(const int r, const int c, double* f) const {
     const int row_idx =
-        std::min(std::max(row_begin_, r), row_end_ - 1) - row_begin_;
+        (std::min)((std::max)(row_begin_, r), row_end_ - 1) - row_begin_;
     const int col_idx =
-        std::min(std::max(col_begin_, c), col_end_ - 1) - col_begin_;
+        (std::min)((std::max)(col_begin_, c), col_end_ - 1) - col_begin_;
 
-    const int n =
-        (kRowMajor)
-        ? num_cols_ * row_idx + col_idx
-        : num_rows_ * col_idx + row_idx;
-
+    const int n = (kRowMajor) ? num_cols_ * row_idx + col_idx
+                              : num_rows_ * col_idx + row_idx;
 
     if (kInterleaved) {
       for (int i = 0; i < kDataDimension; ++i) {

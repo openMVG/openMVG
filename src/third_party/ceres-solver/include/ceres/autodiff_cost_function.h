@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 //
 // Create CostFunctions as needed by the least squares framework, with
 // Jacobians computed via automatic differentiation. For more
-// information on automatic differentation, see the wikipedia article
+// information on automatic differentiation, see the wikipedia article
 // at http://en.wikipedia.org/wiki/Automatic_differentiation
 //
 // To get an auto differentiated cost function, you must define a class with a
@@ -54,7 +54,7 @@
 // for a series of measurements, where there is an instance of the cost function
 // for each measurement k.
 //
-// The actual cost added to the total problem is e^2, or (k - x'k)^2; however,
+// The actual cost added to the total problem is e^2, or (k - x'y)^2; however,
 // the squaring is implicitly done by the optimization framework.
 //
 // To write an auto-differentiable cost function for the above model, first
@@ -90,7 +90,7 @@
 //                            Dimension of x ---------------+  |
 //                            Dimension of y ------------------+
 //
-// In this example, there is usually an instance for each measumerent of k.
+// In this example, there is usually an instance for each measurement of k.
 //
 // In the instantiation above, the template parameters following
 // "MyScalarCostFunctor", "1, 2, 2", describe the functor as computing a
@@ -110,12 +110,8 @@
 //             Dimension of x ------------------------------------+  |
 //             Dimension of y ---------------------------------------+
 //
-// The framework can currently accommodate cost functions of up to 10
-// independent variables, and there is no limit on the dimensionality
-// of each of them.
-//
 // WARNING #1: Since the functor will get instantiated with different types for
-// T, you must to convert from other numeric types to T before mixing
+// T, you must convert from other numeric types to T before mixing
 // computations with other variables of type T. In the example above, this is
 // seen where instead of using k_ directly, k_ is wrapped with T(k_).
 //
@@ -129,8 +125,9 @@
 #ifndef CERES_PUBLIC_AUTODIFF_COST_FUNCTION_H_
 #define CERES_PUBLIC_AUTODIFF_COST_FUNCTION_H_
 
+#include <memory>
+
 #include "ceres/internal/autodiff.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/sized_cost_function.h"
 #include "ceres/types.h"
 #include "glog/logging.h"
@@ -138,7 +135,7 @@
 namespace ceres {
 
 // A cost function which computes the derivative of the cost with respect to
-// the parameters (a.k.a. the jacobian) using an autodifferentiation framework.
+// the parameters (a.k.a. the jacobian) using an auto differentiation framework.
 // The first template argument is the functor object, described in the header
 // comment. The second argument is the dimension of the residual (or
 // ceres::DYNAMIC to indicate it will be set at runtime), and subsequent
@@ -153,73 +150,77 @@ namespace ceres {
 // of residuals for a single autodiff cost function at runtime.
 template <typename CostFunctor,
           int kNumResiduals,  // Number of residuals, or ceres::DYNAMIC.
-          int N0,       // Number of parameters in block 0.
-          int N1 = 0,   // Number of parameters in block 1.
-          int N2 = 0,   // Number of parameters in block 2.
-          int N3 = 0,   // Number of parameters in block 3.
-          int N4 = 0,   // Number of parameters in block 4.
-          int N5 = 0,   // Number of parameters in block 5.
-          int N6 = 0,   // Number of parameters in block 6.
-          int N7 = 0,   // Number of parameters in block 7.
-          int N8 = 0,   // Number of parameters in block 8.
-          int N9 = 0>   // Number of parameters in block 9.
-class AutoDiffCostFunction : public SizedCostFunction<kNumResiduals,
-                                                      N0, N1, N2, N3, N4,
-                                                      N5, N6, N7, N8, N9> {
+          int... Ns>          // Number of parameters in each parameter block.
+class AutoDiffCostFunction final
+    : public SizedCostFunction<kNumResiduals, Ns...> {
  public:
-  // Takes ownership of functor. Uses the template-provided value for the
-  // number of residuals ("kNumResiduals").
-  explicit AutoDiffCostFunction(CostFunctor* functor)
-      : functor_(functor) {
-    CHECK_NE(kNumResiduals, DYNAMIC)
-        << "Can't run the fixed-size constructor if the "
-        << "number of residuals is set to ceres::DYNAMIC.";
+  // Takes ownership of functor by default. Uses the template-provided
+  // value for the number of residuals ("kNumResiduals").
+  explicit AutoDiffCostFunction(CostFunctor* functor,
+                                Ownership ownership = TAKE_OWNERSHIP)
+      : functor_(functor), ownership_(ownership) {
+    static_assert(kNumResiduals != DYNAMIC,
+                  "Can't run the fixed-size constructor if the number of "
+                  "residuals is set to ceres::DYNAMIC.");
   }
 
-  // Takes ownership of functor. Ignores the template-provided
+  // Takes ownership of functor by default. Ignores the template-provided
   // kNumResiduals in favor of the "num_residuals" argument provided.
   //
   // This allows for having autodiff cost functions which return varying
   // numbers of residuals at runtime.
-  AutoDiffCostFunction(CostFunctor* functor, int num_residuals)
-      : functor_(functor) {
-    CHECK_EQ(kNumResiduals, DYNAMIC)
-        << "Can't run the dynamic-size constructor if the "
-        << "number of residuals is not ceres::DYNAMIC.";
-    SizedCostFunction<kNumResiduals,
-                      N0, N1, N2, N3, N4,
-                      N5, N6, N7, N8, N9>
-        ::set_num_residuals(num_residuals);
+  AutoDiffCostFunction(CostFunctor* functor,
+                       int num_residuals,
+                       Ownership ownership = TAKE_OWNERSHIP)
+      : functor_(functor), ownership_(ownership) {
+    static_assert(kNumResiduals == DYNAMIC,
+                  "Can't run the dynamic-size constructor if the number of "
+                  "residuals is not ceres::DYNAMIC.");
+    SizedCostFunction<kNumResiduals, Ns...>::set_num_residuals(num_residuals);
   }
 
-  virtual ~AutoDiffCostFunction() {}
+  AutoDiffCostFunction(AutoDiffCostFunction&& other)
+      : functor_(std::move(other.functor_)), ownership_(other.ownership_) {}
+
+  virtual ~AutoDiffCostFunction() {
+    // Manually release pointer if configured to not take ownership rather than
+    // deleting only if ownership is taken.
+    // This is to stay maximally compatible to old user code which may have
+    // forgotten to implement a virtual destructor, from when the
+    // AutoDiffCostFunction always took ownership.
+    if (ownership_ == DO_NOT_TAKE_OWNERSHIP) {
+      functor_.release();
+    }
+  }
 
   // Implementation details follow; clients of the autodiff cost function should
   // not have to examine below here.
   //
-  // To handle varardic cost functions, some template magic is needed. It's
+  // To handle variadic cost functions, some template magic is needed. It's
   // mostly hidden inside autodiff.h.
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const override {
+    using ParameterDims =
+        typename SizedCostFunction<kNumResiduals, Ns...>::ParameterDims;
+
     if (!jacobians) {
-      return internal::VariadicEvaluate<
-          CostFunctor, double, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9>
-          ::Call(*functor_, parameters, residuals);
+      return internal::VariadicEvaluate<ParameterDims>(
+          *functor_, parameters, residuals);
     }
-    return internal::AutoDiff<CostFunctor, double,
-           N0, N1, N2, N3, N4, N5, N6, N7, N8, N9>::Differentiate(
-               *functor_,
-               parameters,
-               SizedCostFunction<kNumResiduals,
-                                 N0, N1, N2, N3, N4,
-                                 N5, N6, N7, N8, N9>::num_residuals(),
-               residuals,
-               jacobians);
-  }
+    return internal::AutoDifferentiate<kNumResiduals, ParameterDims>(
+        *functor_,
+        parameters,
+        SizedCostFunction<kNumResiduals, Ns...>::num_residuals(),
+        residuals,
+        jacobians);
+  };
+
+  const CostFunctor& functor() const { return *functor_; }
 
  private:
-  internal::scoped_ptr<CostFunctor> functor_;
+  std::unique_ptr<CostFunctor> functor_;
+  Ownership ownership_;
 };
 
 }  // namespace ceres

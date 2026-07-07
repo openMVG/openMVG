@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,32 +32,31 @@
 
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class QuadraticTestFunction : public ceres::FirstOrderFunction {
  public:
-  explicit QuadraticTestFunction(bool* flag_to_set_on_destruction = NULL)
+  explicit QuadraticTestFunction(bool* flag_to_set_on_destruction = nullptr)
       : flag_to_set_on_destruction_(flag_to_set_on_destruction) {}
 
-  virtual ~QuadraticTestFunction() {
+  ~QuadraticTestFunction() override {
     if (flag_to_set_on_destruction_) {
       *flag_to_set_on_destruction_ = true;
     }
   }
 
-  virtual bool Evaluate(const double* parameters,
-                        double* cost,
-                        double* gradient) const {
+  bool Evaluate(const double* parameters,
+                double* cost,
+                double* gradient) const final {
     const double x = parameters[0];
     cost[0] = x * x;
-    if (gradient != NULL) {
+    if (gradient != nullptr) {
       gradient[0] = 2.0 * x;
     }
     return true;
   }
 
-  virtual int NumParameters() const { return 1; }
+  int NumParameters() const final { return 1; }
 
  private:
   bool* flag_to_set_on_destruction_;
@@ -65,30 +64,20 @@ class QuadraticTestFunction : public ceres::FirstOrderFunction {
 
 TEST(GradientProblem, TakesOwnershipOfFirstOrderFunction) {
   bool is_destructed = false;
-  {
-    ceres::GradientProblem problem(new QuadraticTestFunction(&is_destructed));
-  }
+  { ceres::GradientProblem problem(new QuadraticTestFunction(&is_destructed)); }
   EXPECT_TRUE(is_destructed);
 }
 
-TEST(GradientProblem, EvaluationWithoutParameterizationOrGradient) {
-  ceres::GradientProblem problem(new QuadraticTestFunction());
-  double x = 7.0;
-  double cost = 0;
-  problem.Evaluate(&x, &cost, NULL);
-  EXPECT_EQ(x * x, cost);
-}
-
-TEST(GradientProblem, EvalutaionWithParameterizationAndNoGradient) {
+TEST(GradientProblem, EvaluationWithManifoldAndNoGradient) {
   ceres::GradientProblem problem(new QuadraticTestFunction(),
-                                 new IdentityParameterization(1));
+                                 new EuclideanManifold<1>);
   double x = 7.0;
   double cost = 0;
-  problem.Evaluate(&x, &cost, NULL);
+  problem.Evaluate(&x, &cost, nullptr);
   EXPECT_EQ(x * x, cost);
 }
 
-TEST(GradientProblem, EvaluationWithoutParameterizationAndWithGradient) {
+TEST(GradientProblem, EvaluationWithoutManifoldAndWithGradient) {
   ceres::GradientProblem problem(new QuadraticTestFunction());
   double x = 7.0;
   double cost = 0;
@@ -97,9 +86,9 @@ TEST(GradientProblem, EvaluationWithoutParameterizationAndWithGradient) {
   EXPECT_EQ(2.0 * x, gradient);
 }
 
-TEST(GradientProblem, EvaluationWithParameterizationAndWithGradient) {
+TEST(GradientProblem, EvaluationWithManifoldAndWithGradient) {
   ceres::GradientProblem problem(new QuadraticTestFunction(),
-                                 new IdentityParameterization(1));
+                                 new EuclideanManifold<1>);
   double x = 7.0;
   double cost = 0;
   double gradient = 0;
@@ -107,5 +96,4 @@ TEST(GradientProblem, EvaluationWithParameterizationAndWithGradient) {
   EXPECT_EQ(2.0 * x, gradient);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://code.google.com/p/ceres-solver/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,21 +28,25 @@
 //
 // Author: vitus@google.com (Michael Vitus)
 
-#include "ceres/householder_vector.h"
+#include "ceres/internal/householder_vector.h"
+
 #include "ceres/internal/eigen.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-void HouseholderTestHelper(const Vector& x) {
+static void HouseholderTestHelper(const Vector& x) {
   const double kTolerance = 1e-14;
 
   // Check to ensure that H * x = ||x|| * [0 ... 0 1]'.
   Vector v(x.rows());
   double beta;
-  ComputeHouseholderVector(x, &v, &beta);
+
+  // NOTE: The explicit template arguments are needed here because
+  // ComputeHouseholderVector is templated and some versions of MSVC
+  // have trouble deducing the type of v automatically.
+  ComputeHouseholderVector<Vector, double, Eigen::Dynamic>(x, &v, &beta);
   Vector result = x - beta * v * (v.transpose() * x);
 
   Vector expected_result(x.rows());
@@ -111,5 +115,4 @@ TEST(HouseholderVector, LastElementZero) {
   HouseholderTestHelper(x);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

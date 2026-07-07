@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -38,30 +38,42 @@
 #ifndef CERES_INTERNAL_BLOCK_JACOBIAN_WRITER_H_
 #define CERES_INTERNAL_BLOCK_JACOBIAN_WRITER_H_
 
+#include <memory>
 #include <vector>
-#include "ceres/evaluator.h"
-#include "ceres/internal/port.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/evaluator.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 class BlockEvaluatePreparer;
 class Program;
 class SparseMatrix;
 
-// TODO(sameeragarwal): This class needs documemtation.
-class BlockJacobianWriter {
+// TODO(sameeragarwal): This class needs documentation.
+class CERES_NO_EXPORT BlockJacobianWriter {
  public:
-  BlockJacobianWriter(const Evaluator::Options& options,
-                      Program* program);
+  // Pre-computes positions of cells in block-sparse jacobian.
+  // Two possible memory layouts are implemented:
+  //  - Non-partitioned case
+  //  - Partitioned case (for Schur type linear solver)
+  //
+  // In non-partitioned case, cells are stored sequentially in the
+  // lexicographic order of (row block id, column block id).
+  //
+  // In the case of partitoned matrix, cells of each sub-matrix (E and F) are
+  // stored sequentially in the lexicographic order of (row block id, column
+  // block id) and cells from E sub-matrix precede cells from F sub-matrix.
+  BlockJacobianWriter(const Evaluator::Options& options, Program* program);
 
   // JacobianWriter interface.
 
   // Create evaluate prepareres that point directly into the final jacobian.
   // This makes the final Write() a nop.
-  BlockEvaluatePreparer* CreateEvaluatePreparers(int num_threads);
+  std::unique_ptr<BlockEvaluatePreparer[]> CreateEvaluatePreparers(
+      unsigned num_threads);
 
-  SparseMatrix* CreateJacobian() const;
+  std::unique_ptr<SparseMatrix> CreateJacobian() const;
 
   void Write(int /* residual_id */,
              int /* residual_offset */,
@@ -73,12 +85,13 @@ class BlockJacobianWriter {
   }
 
  private:
+  Evaluator::Options options_;
   Program* program_;
 
   // Stores the position of each residual / parameter jacobian.
   //
   // The block sparse matrix that this writer writes to is stored as a set of
-  // contiguos dense blocks, one after each other; see BlockSparseMatrix. The
+  // contiguous dense blocks, one after each other; see BlockSparseMatrix. The
   // "double* values_" member of the block sparse matrix contains all of these
   // blocks. Given a pointer to the first element of a block and the size of
   // that block, it's possible to write to it.
@@ -120,9 +133,14 @@ class BlockJacobianWriter {
 
   // The pointers in jacobian_layout_ point directly into this vector.
   std::vector<int> jacobian_layout_storage_;
+
+  // The constructor computes the layout of the Jacobian, and this bool keeps
+  // track of whether the computation of the layout completed successfully or
+  // not, if it is false, then jacobian_layout and jacobian_layout_storage are
+  // both in an invalid state.
+  bool jacobian_layout_is_valid_ = false;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 
 #endif  // CERES_INTERNAL_BLOCK_JACOBIAN_WRITER_H_

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,35 +34,77 @@
 #define CERES_INTERNAL_EIGENSPARSE_H_
 
 // This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
+#include "ceres/internal/config.h"
 
 #ifdef CERES_USE_EIGEN_SPARSE
 
+#include <memory>
 #include <string>
+
 #include "Eigen/SparseCore"
+#include "ceres/internal/export.h"
 #include "ceres/linear_solver.h"
 #include "ceres/sparse_cholesky.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-class EigenSparseCholesky : public SparseCholesky {
+class EigenSparse {
  public:
-  // Factory
-  static EigenSparseCholesky* Create(const OrderingType ordering_type);
-
-  // SparseCholesky interface.
-  virtual ~EigenSparseCholesky();
-  virtual CompressedRowSparseMatrix::StorageType StorageType() const = 0;
-  virtual LinearSolverTerminationType Factorize(
-      const Eigen::SparseMatrix<double>& lhs, std::string* message) = 0;
-  virtual LinearSolverTerminationType Solve(const double* rhs,
-                                            double* solution,
-                                            std::string* message) = 0;
+  static constexpr bool IsNestedDissectionAvailable() noexcept {
+#ifdef CERES_NO_EIGEN_METIS
+    return false;
+#else
+    return true;
+#endif
+  }
 };
 
-}  // namespace internal
-}  // namespace ceres
+class CERES_NO_EXPORT EigenSparseCholesky : public SparseCholesky {
+ public:
+  // Factory
+  static std::unique_ptr<SparseCholesky> Create(
+      const OrderingType ordering_type);
+
+  // SparseCholesky interface.
+  ~EigenSparseCholesky() override;
+  LinearSolverTerminationType Factorize(CompressedRowSparseMatrix* lhs,
+                                        std::string* message) override = 0;
+  CompressedRowSparseMatrix::StorageType StorageType() const override = 0;
+  LinearSolverTerminationType Solve(const double* rhs,
+                                    double* solution,
+                                    std::string* message) override = 0;
+};
+
+// Even though the input is double precision linear system, this class
+// solves it by computing a single precision Cholesky factorization.
+class CERES_NO_EXPORT FloatEigenSparseCholesky : public SparseCholesky {
+ public:
+  // Factory
+  static std::unique_ptr<SparseCholesky> Create(
+      const OrderingType ordering_type);
+
+  // SparseCholesky interface.
+  ~FloatEigenSparseCholesky() override;
+  LinearSolverTerminationType Factorize(CompressedRowSparseMatrix* lhs,
+                                        std::string* message) override = 0;
+  CompressedRowSparseMatrix::StorageType StorageType() const override = 0;
+  LinearSolverTerminationType Solve(const double* rhs,
+                                    double* solution,
+                                    std::string* message) override = 0;
+};
+
+}  // namespace ceres::internal
+
+#else
+
+namespace ceres::internal {
+
+class EigenSparse {
+ public:
+  static constexpr bool IsNestedDissectionAvailable() noexcept { return false; }
+};
+
+}  // namespace ceres::internal
 
 #endif  // CERES_USE_EIGEN_SPARSE
 
