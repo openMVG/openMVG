@@ -14,12 +14,12 @@ Here the list of things to check for contribution:
   - Develop store the WIP for the next release candidate. Please submit any new features to the develop branch.
 
 2. Consider adding unit test:
- 
+
   - Add unit tests for all newly added code.
   - It helps to check accuracy of your code implementation and show how to use the API. It helps also any future maintenance.
 
 2. Consider adding documentation:
- 
+
   - Please use doxygen documentation.
 
      - You can also consider extending the exiting Sphinx documentation (see ``./docs/sphinx``)
@@ -30,6 +30,6 @@ Here the list of things to check for contribution:
   - please check the status of the continuous integration tools:
       -  Compilation (travis, appveyor),
       -  Code quality and style (codacity).
-      
+
 If you want to learn more about OpenSource we refer you to this:
 https://opensource.guide/

@@ -4,7 +4,7 @@ cameras
 
 This module provides different camera models.
 
-Pinhole camera model 
+Pinhole camera model
 =====================
 
 A camera could be approximated by a projective model, often called pinhole projection.
@@ -13,7 +13,7 @@ The simplest representation of a camera is a light sensible surface (sensor): an
 
 .. figure:: pinholeCamera.png
    :align: center
-   
+
    The pinhole camera model. An oriented central projective camera.
 
 The pinhole camera geometry models the projective camera with two sub-parametrizations,
@@ -22,7 +22,7 @@ Intrinsic parameters model the optic component (without distortion) and extrinsi
 This projection of the camera is described as:
 
 .. math::
-  P_{3 \times 4} = K [R|t] = 
+  P_{3 \times 4} = K [R|t] =
   \begin{bmatrix}
   f*k_u &  & c_u \\
    & f*k_v & c_v \\
@@ -35,7 +35,7 @@ This projection of the camera is described as:
   \end{bmatrix}
 
 
-- Intrinsic parameters :math:`[f; cu; cv]:` 
+- Intrinsic parameters :math:`[f; cu; cv]:`
 
   * :math:`ku, kv :` scale factor relating pixels to distance (often equal to 1),
   * :math:`f :` the focal distance (distance between focal and image plane),
@@ -79,7 +79,7 @@ OpenMVG Pinhole camera models
 
 * Pinhole intrinsic
 
-  * :class:`Pinhole_Intrinsic : public IntrinsicBase` 
+  * :class:`Pinhole_Intrinsic : public IntrinsicBase`
 
     * classic pinhole camera (Focal + principal point and image size).
 
@@ -106,7 +106,7 @@ OpenMVG Pinhole camera models
 
 * Simple pinhole camera models (intrinsic + extrinsic(pose))
 
-.. code-block:: c++ 
+.. code-block:: c++
 
   // Setup a simple pinhole camera at origin
   // Pinhole camera P = K[R|t], t = -RC
@@ -119,6 +119,6 @@ OpenMVG Pinhole camera models
 OpenMVG Spherical camera models
 -------------------------------
 
-* :class:`Intrinsic_Spherical : public IntrinsicBase` 
+* :class:`Intrinsic_Spherical : public IntrinsicBase`
 
     * a camera model for equirectangular panorama (360x180 degree). No focal is required, the camera is modelized as a unit sphere.

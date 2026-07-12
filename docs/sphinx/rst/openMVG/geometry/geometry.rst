@@ -28,7 +28,7 @@ Define a camera Frustum from Pose3 and intrinsic parameters as:
 This structure is used for testing frustum intersection (see if two camera can share some visual content).
 
 .. code-block:: c++
-  
+
   // Build two truncated frustum and test their intersection
   Frustum frustum1(somedata, minDepth, maxDepth);
   Frustum frustum2(somedata, minDepth, maxDepth);
@@ -44,7 +44,7 @@ This structure is used for testing frustum intersection (see if two camera can s
 
 Find the rigid registration between point set using a scale, rotation and translation model.
 
-.. code-block:: c++ 
+.. code-block:: c++
 
   // Simulate two point set, apply a known transformation and estimate it back:
   const int nbPoints = 10;
@@ -81,5 +81,5 @@ Find the rigid registration between point set using a scale, rotation and transl
     << "Rot \n" << rot << "\n"
     << "t " << t.transpose();
 
-  
+
 

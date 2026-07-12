@@ -6,7 +6,7 @@ openMVG provide a collection of tiny libraries that allow to solve computer visi
 
 .. toctree::
   :maxdepth: 2
-  
+
   image/image.rst
   numeric/numeric.rst
   features/features.rst

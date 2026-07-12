@@ -4,6 +4,6 @@ FAQ
 
 .. toctree::
    :maxdepth: 1
-  
+
    questions
 
