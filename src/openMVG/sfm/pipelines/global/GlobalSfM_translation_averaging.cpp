@@ -827,7 +827,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 #endif
 
   // Keep the model iff it has a sufficient inlier count
-  const bool bTest = ( vec_inliers.size() > 30 && 0.33 * tracks.size() );
+  const bool bTest = ( vec_inliers.size() > 30 && vec_inliers.size() > 0.33 * tracks.size() );
 
 #ifdef DEBUG_TRIPLET
   {

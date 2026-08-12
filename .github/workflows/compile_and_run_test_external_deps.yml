@@ -14,12 +14,12 @@ jobs:
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Git submodule
         run: |
           mkdir ./build
-          git submodule update -i
+          git submodule update --init
 
       - name: 3rd Party libs
         run: |

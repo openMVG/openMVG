@@ -13,7 +13,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata; 
   git \
   coinor-libclp-dev \
   libceres-dev \
-  libflann-dev \
   libjpeg-dev \
   liblemon-dev \
   libpng-dev \

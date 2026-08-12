@@ -142,7 +142,6 @@ int main(int argc, char **argv)
     "brute_force_l2",
     "hnsw_l1",
     "hnsw_l2",
-    "ann_l2",
     "cascade_l2",
     "fast_cascade_l2"
   };
@@ -170,8 +169,6 @@ int main(int argc, char **argv)
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L1));
     else if (method == "hnsw_l2")
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_L2));
-    else if (method == "ann_l2")
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, ANN_L2));
     else if (method == "cascade_l2")
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, CASCADE_HASHING_L2));
     else if (method == "fast_cascade_l2")

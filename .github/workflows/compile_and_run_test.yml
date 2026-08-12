@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop, develop_keypoint_orientation_sfm]
+    branches: [master, develop, develop_keypoint_orientation_sfm]
   pull_request:
-    branches: [main, master, develop, develop_keypoint_orientation_sfm]
+    branches: [master, develop, develop_keypoint_orientation_sfm]
 
  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -15,16 +15,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,  macOS-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macOS-latest, windows-latest]
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Git submodule
         run: |
           mkdir ./build
-          git submodule update -i
+          git submodule update --init
 
       - name: Configure CMake
         working-directory: ./build

@@ -24,7 +24,6 @@ add_library(openMVG_matching
 target_compile_features(openMVG_matching INTERFACE ${CXX11_FEATURES})
 target_include_directories(openMVG_matching
   PUBLIC
-    $<BUILD_INTERFACE:${FLANN_INCLUDE_DIRS}>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )
@@ -37,12 +36,6 @@ target_link_libraries(openMVG_matching
     Threads::Threads
     ${cereal_TARGET}
 )
-if (NOT DEFINED OpenMVG_USE_INTERNAL_FLANN)
-target_link_libraries(openMVG_matching
-  PUBLIC
-    ${FLANN_LIBRARIES}
-)
-endif()
 set_target_properties(openMVG_matching PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR} VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 set_property(TARGET openMVG_matching PROPERTY FOLDER OpenMVG/OpenMVG)
 

@@ -36,12 +36,6 @@ Eigen is used for:
  - sparse matrix container.
 
 ===========
-flann
-===========
-
-[FLANN]_ is a library for performing fast approximate nearest neighbor searches in high dimensional spaces.
-
-===========
 histogram
 ===========
 

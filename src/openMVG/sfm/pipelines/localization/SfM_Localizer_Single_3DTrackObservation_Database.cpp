@@ -60,7 +60,7 @@ namespace sfm {
     OPENMVG_LOG_INFO << "Init retrieval database ... ";
     // Initialize the matching interface
     matching_interface_ =
-      RegionMatcherFactory(matching::ANN_L2, *landmark_observations_descriptors_);
+      RegionMatcherFactory(matching::HNSW_L2, *landmark_observations_descriptors_);
     if (!matching_interface_)
       return false;
 

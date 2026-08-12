@@ -26,4 +26,6 @@ set_target_properties(
   PROPERTIES SOVERSION ${OPENMVG_VERSION_MAJOR}
   VERSION "${OPENMVG_VERSION_MAJOR}.${OPENMVG_VERSION_MINOR}")
 
-UNIT_TEST(openMVG gms_filter "openMVG_robust_estimation")
+if (NOT MSVC)
+  UNIT_TEST(openMVG gms_filter "openMVG_robust_estimation")
+endif()

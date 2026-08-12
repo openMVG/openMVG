@@ -67,9 +67,6 @@ Bibliography
 .. [Schoeneberger2016] **Pixelwise View Selection for Unstructured Multi-View Stereo.**
     J. Schoeneberger, E. Zheng, M. Pollefeys, and. J. Frahm, ECCV 2016.
 
-.. [FLANN] **Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration.**
-    Muja, Marius, and David G. Lowe.  VISAPP (1). 2009.
-
 .. [LinfNorm] **L infinity Minimization in Geometric Reconstruction Problems.**
     Richard I. Hartley, Frederik Schaffalitzky. CVPR 2004.
 

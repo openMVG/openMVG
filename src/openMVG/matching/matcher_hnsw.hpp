@@ -19,6 +19,7 @@
 #include "openMVG/matching/matching_interface.hpp"
 #include "openMVG/matching/metric.hpp"
 #include "openMVG/matching/metric_hnsw.hpp"
+#include "openMVG/system/logger.hpp"
 
 #include "third_party/hnswlib/hnswlib.h"
 

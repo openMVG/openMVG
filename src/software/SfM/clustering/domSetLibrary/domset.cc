@@ -18,7 +18,7 @@
 
 #define for_parallel(i, nIters) for (int i = 0; i < static_cast<int>(nIters); ++i)
 
-#include "openMVG/matching/matcher_kdtree_flann.hpp"
+#include "openMVG/matching/matcher_hnsw.hpp"
 using namespace openMVG::matching;
 #include "openMVG/system/logger.hpp"
 
@@ -39,7 +39,8 @@ void Domset::normalizePointCloud()
   for (const auto & point_it : points)
     points_cpy.push_back(point_it.pos);
 
-  ArrayMatcher_Kdtree_Flann<float> matcher;
+  HNSWMatcher<float> matcher;
+  
   matcher.Build(points_cpy[0].data(), points_cpy.size(), 3);
 
   const size_t numPoints( points.size() );

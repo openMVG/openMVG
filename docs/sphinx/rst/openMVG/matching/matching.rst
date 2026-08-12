@@ -13,7 +13,6 @@ We provide a generic interface to perform:
 Three implementations are available:
 
 * a Brute force,
-* an Approximate Nearest Neighbor [FLANN]_,
 * a Cascade hashing Nearest Neighbor [CASCADEHASHING]_.
 * an approximate nearest neighbor search using Hierarchical Navigable Small World graphs [HNSW]_.
 

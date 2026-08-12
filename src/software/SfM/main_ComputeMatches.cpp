@@ -92,7 +92,6 @@ int main( int argc, char** argv )
       << "    HNSWL2: L2 Approximate Matching with Hierarchical Navigable Small World graphs,\n"
       << "    HNSWL1: L1 Approximate Matching with Hierarchical Navigable Small World graphs\n"
       << "      tailored for quantized and histogram based descriptors (e.g uint8 RootSIFT)\n"
-      << "    ANNL2: L2 Approximate Nearest Neighbor matching,\n"
       << "    CASCADEHASHINGL2: L2 Cascade Hashing matching.\n"
       << "    FASTCASCADEHASHINGL2: (default)\n"
       << "      L2 Cascade Hashing with precomputed hashed regions\n"
@@ -272,12 +271,6 @@ int main( int argc, char** argv )
     {
       OPENMVG_LOG_INFO << "Using HNSWHAMMING matcher";
       collectionMatcher.reset(new Matcher_Regions(fDistRatio, HNSW_HAMMING));
-    }
-    else
-    if (sNearestMatchingMethod == "ANNL2")
-    {
-      OPENMVG_LOG_INFO << "Using ANN_L2 matcher";
-      collectionMatcher.reset(new Matcher_Regions(fDistRatio, ANN_L2));
     }
     else
     if (sNearestMatchingMethod == "CASCADEHASHINGL2")

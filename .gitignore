@@ -15,3 +15,5 @@ docs/openmvg.pdf
 # Pixi related
 build
 .pixi
+# Vscode
+.vscode
