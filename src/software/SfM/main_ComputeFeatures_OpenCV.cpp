@@ -22,7 +22,8 @@
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/eigen.hpp"
 #ifdef USE_OCVSIFT
-#include "opencv2/features2d.hpp"
+#include "opencv2/features.hpp"
+#include "opencv2/xfeatures2d.hpp"
 #endif
 
 #include <cstdlib>
@@ -64,7 +65,7 @@ public:
   cv::Ptr<cv::Feature2D> extractor;
 
   AKAZE_OCV_Image_describer():Image_describer(){
-    extractor = cv::AKAZE::create(cv::AKAZE::DESCRIPTOR_KAZE);
+    extractor = cv::xfeatures2d::AKAZE::create(cv::xfeatures2d::AKAZE::DESCRIPTOR_KAZE);
   }
 
   bool Set_configuration_preset(EDESCRIBER_PRESET preset) override

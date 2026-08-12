@@ -8,6 +8,8 @@
 
 #include "openMVG/sfm/sfm_data_merge.hpp"
 
+#include <numeric>
+
 namespace openMVG {
 namespace sfm {
 
@@ -28,31 +30,33 @@ std::shared_ptr<cameras::IntrinsicBase> findBestIntrinsic(const SfM_Data& sfm_da
          && intrinsicA->hashValue() == intrinsicB->hashValue())){
     return std::shared_ptr<cameras::IntrinsicBase>(intrinsicA->clone());
   }
-    
 
   double RMSE_A(0.0), RMSE_B(0.0);
   int n_totalResiduals(0);
-  for (const auto & sfm_data : {sfm_data_A, sfm_data_B})
+  // iterate by pointer: {sfm_data_A, sfm_data_B} would otherwise build a temporary
+  // std::initializer_list<SfM_Data>, deep-copying both entire scenes (views, poses,
+  // structure, intrinsics) just to read them.
+  for (const SfM_Data * sfm_data : {&sfm_data_A, &sfm_data_B})
   {
-    for (const auto & landmark : sfm_data.GetLandmarks())
+    for (const auto & landmark : sfm_data->GetLandmarks())
     {
       const Observations & observations = landmark.second.obs;
       for (const auto & obs: observations)
       {
         // we have to do the following check because observations of common landmarks are not pruned out when
         // clustering a submap in two...which makes it simpler to merge back together
-        const auto & view = sfm_data.GetViews().find(obs.first);
-        if (view == sfm_data.GetViews().end()){
+        const auto & view = sfm_data->GetViews().find(obs.first);
+        if (view == sfm_data->GetViews().end()){
           continue;
         }
 
-        const IndexT & intrinsic_id = sfm_data.GetViews().at(obs.first)->id_intrinsic;
+        const IndexT & intrinsic_id = sfm_data->GetViews().at(obs.first)->id_intrinsic;
         if (intrinsic_id != cam_id){
           continue;
         }
 
-        const IndexT & pose_id = sfm_data.GetViews().at(obs.first)->id_pose;
-        const auto & pose = sfm_data.GetPoses().at(pose_id);
+        const IndexT & pose_id = sfm_data->GetViews().at(obs.first)->id_pose;
+        const auto & pose = sfm_data->GetPoses().at(pose_id);
         const Vec3 X = pose(landmark.second.X);
         const Vec2 residualA = intrinsicA->residual(X, obs.second.x);
         const Vec2 residualB = intrinsicB->residual(X, obs.second.x);
@@ -111,10 +115,50 @@ std::set<IndexT> getCommonCameraIds(const SfM_Data& sfm_data_1, const SfM_Data& 
   return common_cam_ids;
 }
 
-std::vector<std::string> newUniqueImages(const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes){
+/**
+* @brief Merge every camera intrinsic from second_sfm_data into sfm_data
+* @note intrinsic ids present in both scenes are assumed to be the same physical camera:
+*       the better of the two (by findBestIntrinsic RMSE) is kept under that id.
+*       intrinsic ids only present in second_sfm_data are copied in under a fresh id.
+* @return map from second_sfm_data intrinsic id -> merged (sfm_data) intrinsic id
+*/
+std::unordered_map<IndexT, IndexT> mergeIntrinsics(SfM_Data& sfm_data, const SfM_Data& second_sfm_data)
+{
+  std::unordered_map<IndexT, IndexT> intrinsic_id_remap;
+
+  IndexT next_intrinsic_id = 0;
+  for (const auto & intrinsic : sfm_data.GetIntrinsics())
+  {
+    next_intrinsic_id = std::max(next_intrinsic_id, intrinsic.first + 1);
+  }
+
+  for (const auto & second_intrinsic : second_sfm_data.GetIntrinsics())
+  {
+    const IndexT second_id = second_intrinsic.first;
+
+    if (sfm_data.intrinsics.find(second_id) != sfm_data.intrinsics.end())
+    {
+      // Both scenes define an intrinsic under this id: treat them as the same physical
+      // camera and keep whichever one better explains the observed residuals.
+      sfm_data.intrinsics[second_id] = findBestIntrinsic(sfm_data, second_sfm_data, second_id);
+      intrinsic_id_remap[second_id] = second_id;
+    }
+    else
+    {
+      // A camera only present in the second scene: bring it in under a fresh id.
+      const IndexT new_id = next_intrinsic_id++;
+      sfm_data.intrinsics[new_id] = std::shared_ptr<cameras::IntrinsicBase>(second_intrinsic.second->clone());
+      intrinsic_id_remap[second_id] = new_id;
+    }
+  }
+
+  return intrinsic_id_remap;
+}
+
+std::vector<std::string> newUniqueImages(const OverlapMap& sfm_filenames_indexes){
     std::vector<std::string> new_filenames;
-    for(auto p: sfm_filenames_indexes){
-        std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
+    for(const auto & p: sfm_filenames_indexes){
+        const std::pair<bool,std::vector<IndexT>> & info = p.second;
         if(info.first){new_filenames.push_back(p.first);}
     }
     return new_filenames;
@@ -125,10 +169,10 @@ std::vector<std::string> newUniqueImages(const std::map< std::string, std::pair<
 * @return returns a single IndexT value, 0 for no Overlapping, >0 for overlap
 * @note returns the indexes of the valid intrinsics
 */
-openMVG::IndexT getNumberOverlapping(const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes){
+openMVG::IndexT getNumberOverlapping(const OverlapMap& sfm_filenames_indexes){
     openMVG::IndexT counter = 0;
-    for(auto p: sfm_filenames_indexes){
-        std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
+    for(const auto & p: sfm_filenames_indexes){
+        const std::pair<bool,std::vector<IndexT>> & info = p.second;
         if(info.second.size() > 1){counter++;}
     }
     return counter;
@@ -139,12 +183,11 @@ openMVG::IndexT getNumberOverlapping(const std::map< std::string, std::pair<bool
 * @return returns a single IndexT value, 0 for no Overlapping, >0 for overlap
 * @note returns the indexes of the valid intrinsics
 */
-std::string printOverlapInformation(const std::map< std::string, 
-  std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes){
+std::string printOverlapInformation(const OverlapMap& sfm_filenames_indexes){
     std::string result = "Name, Size, New Image, Indexes\n";
-    
-    for(auto p: sfm_filenames_indexes){
-        std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
+
+    for(const auto & p: sfm_filenames_indexes){
+        const std::pair<bool,std::vector<IndexT>> & info = p.second;
 
         result += p.first+","+std::to_string(info.second.size())+",";
         std::string indexes = " ";
@@ -161,8 +204,8 @@ std::string printOverlapInformation(const std::map< std::string,
 * @return return a map of std::string and std::vector, filename key, vector contains indexes in 1 and 2
 * @note returns the indexes of the valid intrinsics
 */
-bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second, 
-    std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes){
+bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sfm::SfM_Data& second,
+    OverlapMap& sfm_filenames_indexes){
   // the index and strings will all be different is the thinking here
 
   IndexT duplicates = 0;
@@ -180,9 +223,10 @@ bool getOverlappingImages(const openMVG::sfm::SfM_Data& first, const openMVG::sf
       const openMVG::sfm::View * view = iterViews->second.get();
       std::string filename = view->s_Img_path;
       IndexT index = view->id_view;
-      
-      if(sfm_filenames_indexes.count(filename) > 0){
-        sfm_filenames_indexes[filename].second.push_back(index);
+
+      auto it = sfm_filenames_indexes.find(filename);
+      if(it != sfm_filenames_indexes.end()){
+        it->second.second.push_back(index);
         duplicates++;
       }else{
         sfm_filenames_indexes.insert( std::make_pair(filename, std::make_pair(false, std::vector<IndexT>{index})) );
@@ -214,42 +258,44 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first,
   const openMVG::sfm::SfM_Data& second,
   std::vector<openMVG::Vec3> *first_vecs,
   std::vector<openMVG::Vec3> *second_vecs,
-  std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
+  OverlapMap& sfm_filenames_indexes)
 {
   IndexT counter=0;
   std::vector<Pair> unused_cameras;
 
-  for(auto p: sfm_filenames_indexes){
-    std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = p.second;
+  for(const auto & p: sfm_filenames_indexes){
+    const std::pair<bool,std::vector<IndexT>> & info = p.second;
     // lets make sure we have index in each SfM scene
     if(info.second.size()<2){continue;}
-    
+
     IndexT p1 = info.second[0];
     IndexT p2 = info.second[1];
 
     //OPENMVG_LOG_INFO << p1 << "," << p2;
 
-    try{
-      const View * view1 = first.views.at(p1).get();
-      const View * view2 = second.views.at(p2).get();
-
-      if(!first.IsPoseAndIntrinsicDefined(view1)){
-        OPENMVG_LOG_INFO << view1->id_view << " has no pose associated in first";
-        unused_cameras.push_back(std::make_pair(p1,p2));
-      }
-      else if(!second.IsPoseAndIntrinsicDefined(view2)){
-        OPENMVG_LOG_INFO << view2->id_view << " has no pose associated in second";
-        unused_cameras.push_back(std::make_pair(p1,p2));
-      }
-      else{
-        first_vecs -> push_back(first.poses.at(view1->id_pose).center());
-        second_vecs -> push_back( second.poses.at(view2->id_pose).center() );
-        counter++;
-      }
-    }
-    catch(...){
-      //OPENMVG_LOG_WARNING << "Views not used in final reconstructions" ;
+    const auto it1 = first.views.find(p1);
+    const auto it2 = second.views.find(p2);
+    if (it1 == first.views.end() || it2 == second.views.end()){
+      // view id referenced by the overlap map no longer exists in this scene
       unused_cameras.push_back(std::make_pair(p1,p2));
+      continue;
+    }
+
+    const View * view1 = it1->second.get();
+    const View * view2 = it2->second.get();
+
+    if(!first.IsPoseAndIntrinsicDefined(view1)){
+      OPENMVG_LOG_INFO << view1->id_view << " has no pose associated in first";
+      unused_cameras.push_back(std::make_pair(p1,p2));
+    }
+    else if(!second.IsPoseAndIntrinsicDefined(view2)){
+      OPENMVG_LOG_INFO << view2->id_view << " has no pose associated in second";
+      unused_cameras.push_back(std::make_pair(p1,p2));
+    }
+    else{
+      first_vecs -> push_back(first.poses.at(view1->id_pose).center());
+      second_vecs -> push_back( second.poses.at(view2->id_pose).center() );
+      counter++;
     }
   }
 
@@ -261,6 +307,9 @@ bool getVecs2Align(const openMVG::sfm::SfM_Data& first,
 }
 
 /// Compute a 7DOF rigid transform between the two camera trajectories
+/// Uses an iterative trimmed fit: fit, drop the worst-residual correspondences,
+/// refit, so that a handful of mis-registered overlapping views don't skew the
+/// whole alignment.
 bool computeSimilarity(
   const std::vector<openMVG::Vec3> & vec_camPosGT,
   const std::vector<openMVG::Vec3> & vec_camPosComputed,
@@ -271,29 +320,67 @@ bool computeSimilarity(
     OPENMVG_LOG_ERROR << "Cannot perform registration, vector sizes are different";
     return false;
   }
-
-  // Move input point in appropriate container
-  openMVG::Mat x1(3, vec_camPosGT.size());
-  openMVG::Mat x2(3, vec_camPosGT.size());
-  for (size_t i = 0; i  < vec_camPosGT.size(); ++i) {
-    x1.col(i) = vec_camPosComputed[i];
-    x2.col(i) = vec_camPosGT[i];
+  if (vec_camPosGT.size() < 4) {
+    OPENMVG_LOG_ERROR << "Not enough correspondences to compute a similarity transform";
+    return false;
   }
-  // Compute rigid transformation p'i = S R pi + t
 
-  double S;
-  Vec3 t;
-  Mat3 R;
-  openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
-  //OPENMVG_LOG_INFO << "Non linear refinement" ;
-  openMVG::geometry::Refine_RTS(x1,x2,&S,&t,&R);
+  std::vector<size_t> inlier_indices(vec_camPosGT.size());
+  std::iota(inlier_indices.begin(), inlier_indices.end(), 0);
+
+  double S = 1.0;
+  Vec3 t = Vec3::Zero();
+  Mat3 R = Mat3::Identity();
+
+  constexpr int kMaxIterations = 5;
+  constexpr double kKeepRatio = 0.8; // keep the best 80% of correspondences each round
+  constexpr size_t kMinCorrespondences = 4;
+
+  for (int iteration = 0; iteration < kMaxIterations; ++iteration)
+  {
+    // Move input point in appropriate container
+    openMVG::Mat x1(3, inlier_indices.size());
+    openMVG::Mat x2(3, inlier_indices.size());
+    for (size_t i = 0; i < inlier_indices.size(); ++i) {
+      x1.col(i) = vec_camPosComputed[inlier_indices[i]];
+      x2.col(i) = vec_camPosGT[inlier_indices[i]];
+    }
+    // Compute rigid transformation p'i = S R pi + t
+    openMVG::geometry::FindRTS(x1, x2, &S, &t, &R);
+    openMVG::geometry::Refine_RTS(x1, x2, &S, &t, &R);
+
+    if (iteration + 1 == kMaxIterations || inlier_indices.size() <= kMinCorrespondences)
+      break;
+
+    // Rank correspondences by how well they agree with the current transform and
+    // keep only the best kKeepRatio of them for the next round.
+    std::vector<std::pair<double,size_t>> residuals;
+    residuals.reserve(inlier_indices.size());
+    for (const size_t idx : inlier_indices) {
+      const Vec3 predicted = S * R * vec_camPosComputed[idx] + t;
+      residuals.emplace_back((predicted - vec_camPosGT[idx]).norm(), idx);
+    }
+    std::sort(residuals.begin(), residuals.end());
+
+    const size_t keep_count = std::max(kMinCorrespondences,
+      static_cast<size_t>(residuals.size() * kKeepRatio));
+    if (keep_count >= inlier_indices.size()) break; // nothing left to trim
+
+    inlier_indices.clear();
+    inlier_indices.reserve(keep_count);
+    for (size_t i = 0; i < keep_count; ++i) {
+      inlier_indices.push_back(residuals[i].second);
+    }
+  }
 
   vec_camPosComputed_T.resize(vec_camPosGT.size());
   for (size_t i = 0; i  < vec_camPosGT.size(); ++i)
   {
-    const Vec3 newPos = S * R * ( vec_camPosComputed[i]) + t;
-    vec_camPosComputed_T[i] = newPos;
+    vec_camPosComputed_T[i] = S * R * ( vec_camPosComputed[i]) + t;
   }
+
+  OPENMVG_LOG_INFO << "Similarity transform used " << inlier_indices.size() << "/"
+    << vec_camPosGT.size() << " correspondences after trimming";
 
   *Sout = S;
   *Rout = R;
@@ -301,24 +388,34 @@ bool computeSimilarity(
   return true;
 }
 
-bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& second_sfm_data, 
+bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& second_sfm_data,
    const double S, const openMVG::Mat3 R, const openMVG::Vec3 T,
-   const std::map< std::string, std::pair<bool,std::vector<IndexT>> >& sfm_filenames_indexes)
+   const OverlapMap& sfm_filenames_indexes,
+   const std::unordered_map<IndexT, IndexT>& intrinsic_id_remap,
+   double landmark_fusion_pixel_tolerance)
 {
     std::set<Pair> common_ids;
     std::set<openMVG::IndexT> second_overlap_ids;
-    for(auto pair: sfm_filenames_indexes){
-        std::pair<openMVG::IndexT, std::vector<openMVG::IndexT>> info = pair.second;
+    for(const auto & pair: sfm_filenames_indexes){
+        const std::pair<bool,std::vector<IndexT>> & info = pair.second;
         // lets make sure we have index in each SfM scene
         if(info.second.size()<2){continue;}
-        
+
         IndexT p1 = info.second[0];
         IndexT p2 = info.second[1];
 
         common_ids.insert( Pair(p1,p2) );
         second_overlap_ids.insert(p2);
     }
-    
+
+    // O(1) remaps built once, instead of scanning common_ids / new_view_pairings
+    // per-observation (which is what made merging large scenes slow).
+    std::unordered_map<IndexT, IndexT> second_to_first_overlap; // second view id -> first view id
+    second_to_first_overlap.reserve(common_ids.size());
+    for (const auto & p : common_ids){
+        second_to_first_overlap[p.second] = p.first;
+    }
+
     // references
     Views & first_views = sfm_data.views;
     Poses & first_poses = sfm_data.poses;
@@ -330,8 +427,8 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
 
     std::set<IndexT> remove_track_ids = std::set<IndexT>();
 
-    std::set<Pair> new_view_pairings;
-  
+    std::unordered_map<IndexT, IndexT> new_view_pairings; // second view id -> new first view id
+
     // This is where we add the poses from the second scene
 
     for(auto & iterV : second_views){
@@ -339,31 +436,27 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
         IndexT id_view = prior->id_view;
         IndexT id_pose = prior->id_pose;
 
-        // if the pose for the first scene exists then we skip, if the pose doesn't we use 
+        // if the pose for the first scene exists then we skip, if the pose doesn't we use
         // the second scenes pose and update the firsts
         if(second_overlap_ids.find(id_view) != second_overlap_ids.end()){
-          for(auto p: common_ids){
-              if(p.second!=id_view){continue;}
-              const View * view1 = sfm_data.views.at(p.first).get();
-              const View * view2 = second_sfm_data.views.at(p.second).get();
+          const IndexT first_id = second_to_first_overlap.at(id_view);
+          const View * view1 = sfm_data.views.at(first_id).get();
+          const View * view2 = second_sfm_data.views.at(id_view).get();
 
-              if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && second_sfm_data.IsPoseAndIntrinsicDefined(view2)){
-                  OPENMVG_LOG_INFO << "Pose reinstiated from second sfm scene " ;
+          if(!sfm_data.IsPoseAndIntrinsicDefined(view1) && second_sfm_data.IsPoseAndIntrinsicDefined(view2)){
+              OPENMVG_LOG_INFO << "Pose reinstiated from second sfm scene " ;
 
-                  Pose3 pose = second_poses.at(view2->id_pose);
-                  Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
-                  Pose3 npose = Pose3(pose.rotation(),nloc);
+              Pose3 pose = second_poses.at(view2->id_pose);
+              Vec3 nloc = S * R * ( pose.center() ) + T; // update the camera position to the reference scene
+              Pose3 npose = Pose3(pose.rotation(),nloc);
 
-                  first_poses[view1->id_pose] = npose;
-
-                  break;
-              }
+              first_poses[view1->id_pose] = npose;
           }
           continue;
         }
 
         // need to store the new view id to modify the observation ids
-        new_view_pairings.insert(Pair(id_view,first_views_size));
+        new_view_pairings[id_view] = first_views_size;
 
         // if there's a pose then modify the pose position
         if (second_sfm_data.IsPoseAndIntrinsicDefined(prior)){
@@ -381,6 +474,12 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
 
         prior->id_view = first_views_size;// new view id
         prior->id_pose = first_views_size;// new pose id
+        // remap the intrinsic id into the merged scene's intrinsic id-space so this
+        // view keeps pointing at the correct (possibly renumbered) camera
+        const auto intrinsic_it = intrinsic_id_remap.find(prior->id_intrinsic);
+        if (intrinsic_it != intrinsic_id_remap.end()){
+            prior->id_intrinsic = intrinsic_it->second;
+        }
 
         first_views[first_views_size] = std::make_shared<ViewPriors>(*prior);
 
@@ -389,49 +488,83 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
 
     OPENMVG_LOG_INFO << "Views with no poses: " << remove_track_ids.size();
 
-    Landmarks second_tracks = second_sfm_data.GetLandmarks();
+    // Index the merged scene's existing (first scene) landmarks that are observed
+    // by an overlap view, keyed by that view id, so incoming second-scene tracks
+    // that observe the same physical image can be fused into the existing landmark
+    // instead of being inserted as duplicate 3D points.
+    std::unordered_set<IndexT> overlap_first_view_ids;
+    overlap_first_view_ids.reserve(common_ids.size());
+    for (const auto & p : common_ids){
+        overlap_first_view_ids.insert(p.first);
+    }
+
+    std::unordered_map<IndexT, std::vector<std::pair<Vec2, IndexT>>> overlap_view_observations;
+    if (!overlap_first_view_ids.empty()){
+        for (const auto & track : sfm_data.GetLandmarks()){
+            for (const auto & obs : track.second.obs){
+                if (overlap_first_view_ids.find(obs.first) != overlap_first_view_ids.end()){
+                    overlap_view_observations[obs.first].emplace_back(obs.second.x, track.first);
+                }
+            }
+        }
+    }
+    const double sq_tolerance = landmark_fusion_pixel_tolerance * landmark_fusion_pixel_tolerance;
+
+    const Landmarks & second_tracks = second_sfm_data.GetLandmarks();
 
     IndexT new_track_counter = sfm_data.structure.size();
     IndexT original_track_num = sfm_data.structure.size();
+    IndexT fused_track_count = 0;
 
     // first update the landmarks in the second scene to the reference frame of the first
-    for (auto& track: second_tracks)
+    for (const auto& track: second_tracks)
     {
-        IndexT track_id = track.first;
-        Landmark landmark = track.second;
-    
+        const Landmark & landmark = track.second;
+
         Observations new_observations;
-        for (auto& iterOb: landmark.obs)
+        IndexT fusion_target = UndefinedIndexT;
+
+        for (const auto& iterOb: landmark.obs)
         {
             IndexT id_view = iterOb.first;
             // need to update the view_id to the most up to date
             if(second_overlap_ids.find(id_view) != second_overlap_ids.end()){
                 // check if the second view has any new information
-                auto it = std::find_if(common_ids.begin(), common_ids.end(),
-                [&](const Pair& val) -> bool {
-                    return val.second == id_view;
-                });
-                id_view = it->first;
+                const auto it = second_to_first_overlap.find(id_view);
+                if (it == second_to_first_overlap.end()){ continue; }
+                const IndexT first_view_id = it->second;
+
+                // does an existing landmark already observe this same physical image at
+                // (approximately) the same pixel location? if so this is the same 3D point.
+                if (fusion_target == UndefinedIndexT){
+                    const auto view_obs_it = overlap_view_observations.find(first_view_id);
+                    if (view_obs_it != overlap_view_observations.end()){
+                        for (const auto & candidate : view_obs_it->second){
+                            if ((candidate.first - iterOb.second.x).squaredNorm() <= sq_tolerance){
+                                fusion_target = candidate.second;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                id_view = first_view_id;
             }else{
                 // else we want to use the first views pose if present
-                auto it = std::find_if(new_view_pairings.begin(), new_view_pairings.end(),
-                [&](const Pair& val) -> bool {
-                    return val.first == id_view;
-                });
+                const auto it = new_view_pairings.find(id_view);
+                if (it == new_view_pairings.end()){ continue; }
                 id_view = it->second;
             }
 
-            try{
-                const View * view = sfm_data.views.at(id_view).get();
-                if(!sfm_data.IsPoseAndIntrinsicDefined(view)){
-                    OPENMVG_LOG_WARNING << "Pose not defined for view " << id_view;
-                    continue;
-                }
-            }catch(...){
+            const auto view_it = sfm_data.views.find(id_view);
+            if (view_it == sfm_data.views.end()){
                 OPENMVG_LOG_WARNING << "View id does not exist " << id_view;
                 continue;
             }
-        
+            if(!sfm_data.IsPoseAndIntrinsicDefined(view_it->second.get())){
+                OPENMVG_LOG_WARNING << "Pose not defined for view " << id_view;
+                continue;
+            }
 
             // view id will have been updated by now, just have to insert it
             // iterOb.second.id_feat
@@ -439,12 +572,33 @@ bool mergeSfMScenes(openMVG::sfm::SfM_Data& sfm_data, openMVG::sfm::SfM_Data& se
             // new observations will have been added
         }
 
+        if (new_observations.empty()){
+            continue;
+        }
+
+        const Vec3 new_position = S * R * ( landmark.X ) + T;
+
+        if (fusion_target != UndefinedIndexT){
+            // fuse into the existing landmark rather than creating a duplicate 3D point:
+            // keep the existing point position, only add observations for views it
+            // didn't already have.
+            Landmark & target = sfm_data.structure.at(fusion_target);
+            for (const auto & obs : new_observations){
+                target.obs.emplace(obs.first, obs.second);
+            }
+            ++fused_track_count;
+            continue;
+        }
+
         Landmark new_landmark;
-        new_landmark.X = S * R * ( landmark.X ) + T;
-        new_landmark.obs = new_observations;
+        new_landmark.X = new_position;
+        new_landmark.obs = std::move(new_observations);
 
         sfm_data.structure[new_track_counter++] = std::move( new_landmark );
     }
+
+    OPENMVG_LOG_INFO << "Landmarks fused into existing overlap points: " << fused_track_count
+      << ", new landmarks added: " << (new_track_counter - original_track_num);
 
     return true;
 }

@@ -36,6 +36,7 @@
 #include <string>
 #include <utility>
 #include <algorithm>
+#include <unordered_map>
 #include <unordered_set>
 #include <filesystem>
 
@@ -285,16 +286,16 @@ int main(int argc, char **argv)
   std::cout << "#Main SfM Views:" << start_views  << " #Secondary SfM Views:" << second_sfm_scene.views.size() << std::endl;
 
   openMVG::system::Timer timer;
-  
-  std::set<IndexT> first_scene_intrinsics = GetValidIntrinsicsIds(first_sfm_scene);
-  std::set<IndexT> second_scene_intrinsics = GetValidIntrinsicsIds(second_sfm_scene);
 
-  std::shared_ptr<cameras::IntrinsicBase> best_camera = findBestIntrinsic(first_sfm_scene,second_sfm_scene,0);
+  // Merge every camera intrinsic present in either scene (not just camera 0): ids shared
+  // by both scenes are assumed to be the same physical camera and the better of the two
+  // is kept, ids only present in the second scene are brought in under a fresh id.
+  const std::unordered_map<IndexT, IndexT> intrinsic_id_remap = mergeIntrinsics(first_sfm_scene, second_sfm_scene);
 
-  std::cout << "Best camera : " << best_camera << std::endl;
+  std::cout << "Cameras merged: " << intrinsic_id_remap.size() << std::endl;
 
   // this contains the name of the file, whether it's new for the first scene and the indexes it occurs in each SfM scene
-  std::map< std::string, std::pair<bool,std::vector<IndexT>> > sfm_filenames_indexes;
+  OverlapMap sfm_filenames_indexes;
 
   // we'll read in the filenames and id's within the SfM scenes
   bool has_overlap = getOverlappingImages(first_sfm_scene, second_sfm_scene, sfm_filenames_indexes);
@@ -352,7 +353,7 @@ int main(int argc, char **argv)
 
   OPENMVG_LOG_INFO << "Beginning the SRT transforms of views in scene two";
 
-  bool merge_success = mergeSfMScenes(first_sfm_scene, second_sfm_scene, S, R, T, sfm_filenames_indexes);
+  bool merge_success = mergeSfMScenes(first_sfm_scene, second_sfm_scene, S, R, T, sfm_filenames_indexes, intrinsic_id_remap);
 
   if(!merge_success){
     OPENMVG_LOG_ERROR << " Merging the scenes failed";
@@ -365,9 +366,7 @@ int main(int argc, char **argv)
 
   //first_sfm_scene.s_root_path = stlplus::create_filespec(root_directory, "Originals");
 
-  // use the best camera for the scene
-  first_sfm_scene.intrinsics[0] = best_camera;
-  // group the shared intrinsics
+  // group any intrinsics that ended up identical after the merge
   GroupSharedIntrinsics(first_sfm_scene);
 
   if(preform_final_ba){
@@ -404,20 +403,27 @@ int main(int argc, char **argv)
       b_use_motion_priors // Use motion priors
     );
 
+    // final polish pass: now that the scene has been cleaned of outliers, also let
+    // intrinsics adjust so systematic focal/distortion error picked up by the merge
+    // (e.g. two scenes shot with slightly different settings) gets corrected
+    Optimize_Options ba_refine3_options(
+      Intrinsic_Parameter_Type::ADJUST_ALL,
+      Extrinsic_Parameter_Type::ADJUST_ALL,
+      Structure_Parameter_Type::ADJUST_ALL,
+      Control_Point_Parameter(),
+      b_use_motion_priors // Use motion priors
+    );
+
     // note : parameters copied from sequential sfm
     const double requiredPixelResidualError = 4.0;
     const double angle_error = 2.0;
     const size_t outlierNumberThreshold = 100;
 
-    
+
     if(engine_name=="GLOBAL"){
       // do the initial adjustment with no changes to intrinsic to remove excess noise
       bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine1_options);
 
-      bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine2_options);
-      
-
-      /*
       const size_t pointcount_initial = first_sfm_scene.structure.size();
       RemoveOutliers_PixelResidualError(first_sfm_scene, requiredPixelResidualError);
       const size_t pointcount_pixelresidual_filter = first_sfm_scene.structure.size();
@@ -432,9 +438,15 @@ int main(int argc, char **argv)
         // TODO: must ensure that track graph is producing a single connected component
         const size_t pointcount_cleaning = first_sfm_scene.structure.size();
         OPENMVG_LOG_INFO << "Point_cloud cleaning:\n"
-          << "\t #3DPoints: " << pointcount_cleaning << "\n";
+          << "\t #3DPoints: " << pointcount_initial << " -> " << pointcount_pixelresidual_filter
+          << " -> " << pointcount_angular_filter << " -> " << pointcount_cleaning << "\n";
       }
-      */
+
+      // refine structure again now that outliers/unstable poses have been removed
+      bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine2_options);
+
+      // final pass with intrinsics unlocked
+      bundle_adjustment_obj.Adjust(first_sfm_scene,ba_refine3_options);
     }
     else if(engine_name=="STELLAR"){
       OPENMVG_LOG_WARNING << "INCREMENTALV2 not implemented yet";
