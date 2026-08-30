@@ -49,8 +49,6 @@ bool Features2SVG
  * @param[in] image_size Image size {width,height}.
  * @param[in] features image features.
  * @param[in] svg_filename Path to the output SVG file.
- * @param[in] feature_circle_radius Radius of the circle used to represent
- * the features.
  * @param[in] stroke_size Stroke size used to display the line between the
  * corresponding features.
  */
@@ -60,7 +58,6 @@ bool Features2SVG
   const std::pair<size_t,size_t> & image_size,
   const features::SIOPointFeatures & features,
   const std::string & svg_filename,
-  const double feature_circle_radius = 4.0,
   const double stroke_size = 2.0
 );
 
