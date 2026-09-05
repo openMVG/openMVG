@@ -11,8 +11,8 @@ repository = "https://github.com/openMVG/openMVG"
 clean = "rm -rf build "
 print-env = "echo $PATH"
 configure = "cmake -B build -S ./src -DOpenMVG_BUILD_TESTS:BOOL=ON"
-build = { cmd = "cmake --build build -j 4", depends_on = ["configure"] }
-test = { cmd = "cd build; ctest -j", depends_on = ["build"] }
+build = { cmd = "cmake --build build -j 4", depends-on = ["configure"] }
+test = { cmd = "cd build; ctest -j", depends-on = ["build"] }
 
 [target.win-64.tasks]
 #

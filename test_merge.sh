@@ -1,0 +1,1 @@
+./Linux-x86_64-Release/openMVG_main_MergeSfM --main_sfm_file /media/evanokeeffe/Processing/4thAve/cluster1/reconstruction/reconstruction_global/sfm_data.json --second_sfm_file /media/evanokeeffe/Processing/4thAve/cluster2/reconstruction/reconstruction_global/sfm_data.json --output ~/Modelling/openmvg_merge/build/ -P -B -s GLOBAL
