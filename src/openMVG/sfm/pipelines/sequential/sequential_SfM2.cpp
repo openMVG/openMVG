@@ -16,6 +16,7 @@
 #include "openMVG/sfm/sfm_data_BA_ceres.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 #include "openMVG/sfm/sfm_data_io.hpp"
+#include "openMVG/sfm/sfm_data_io_rerun.hpp"
 #include "openMVG/sfm/sfm_data_triangulation.hpp"
 #include "openMVG/stl/stl.hpp"
 #include "openMVG/system/logger.hpp"
@@ -171,6 +172,13 @@ bool SequentialSfMReconstructionEngine2::Process() {
       os << std::setw(8) << std::setfill('0') << resection_round << "_Resection";
       Save(sfm_data_, stlplus::create_filespec(sOut_directory_, os.str(), ".ply"), ESfM_Data(ALL));
       ++resection_round;
+
+      // Export for visual inspection/monitoring
+      if (rerun_recording_stream_)
+      {
+        rerun_recording_stream_->set_time_sequence("pose_count", sfm_data_.GetPoses().size());
+        Save_Rerun(*rerun_recording_stream_, sfm_data_, ESfM_Data(EXTRINSICS | STRUCTURE));
+      }
 
       // Stop if no cameras have been added
       // Note: some cameras could have been removed due to instable camera positions.
@@ -422,6 +430,11 @@ bool SequentialSfMReconstructionEngine2::AddingMissingView
         // Refine the pose of the found camera pose by using a BA and fix 3D points.
         if (bResection && inlier_ratio > 0.5)
         {
+          if (rerun_recording_stream_)
+          {
+            rerun_recording_stream_->log("a_contrario_resection/threshold", rerun::TimeSeriesScalar(resection_data.error_max));
+            rerun_recording_stream_->log("a_contrario_resection/inlier_ratio", rerun::TimeSeriesScalar(inlier_ratio * 100.0f));
+          }
           // A valid pose has been found (try to refine it):
           // If no valid intrinsic as input:
           //  init a new one from the projection matrix decomposition

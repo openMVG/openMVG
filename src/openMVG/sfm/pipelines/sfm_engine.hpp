@@ -15,6 +15,8 @@
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_BA.hpp"
 
+#include <rerun.hpp>
+
 namespace openMVG {
 namespace sfm {
 
@@ -75,6 +77,11 @@ public:
     b_use_motion_prior_ = rhs;
   }
 
+  void Set_Rerun_Recording_Stream(std::shared_ptr<const rerun::RecordingStream> rec)
+  {
+    rerun_recording_stream_ = rec;
+  }
+
   const SfM_Data & Get_SfM_Data() const {return sfm_data_;}
 
 protected:
@@ -91,6 +98,11 @@ protected:
   cameras::Intrinsic_Parameter_Type intrinsic_refinement_options_;
   sfm::Extrinsic_Parameter_Type extrinsic_refinement_options_;
   bool b_use_motion_prior_;
+
+  //-----
+  //-- Rerun export
+  //-----
+   std::shared_ptr<const rerun::RecordingStream> rerun_recording_stream_;
 };
 
 } // namespace sfm

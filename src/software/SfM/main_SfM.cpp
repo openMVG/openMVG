@@ -31,6 +31,8 @@
 #include "third_party/cmdLine/cmdLine.h"
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
+#include <rerun.hpp>
+
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -166,7 +168,8 @@ int main(int argc, char **argv)
       directory_match,
       filename_match,
       directory_output,
-      engine_name = "INCREMENTAL";
+      engine_name = "INCREMENTAL",
+      rerun_mode = "WINDOW";
 
   // Bundle adjustment options:
   std::string sIntrinsic_refinement_options = "ADJUST_ALL";
@@ -218,6 +221,9 @@ int main(int argc, char **argv)
   int graph_simplification_value = 5;
   cmd.add( make_option('G', graph_simplification, "graph_simplification") );
   cmd.add( make_option('g', graph_simplification_value, "graph_simplification_value") );
+
+  // Rerun logging options
+  cmd.add( make_option('l', rerun_mode, "rerun_logging") );
 
   try {
     if (argc == 1) throw std::string("Invalid parameter.");
@@ -321,7 +327,13 @@ int main(int argc, char **argv)
       << "\t\t -> MST_X\n"
       << "\t\t -> STAR_X\n"
       << "\t[-g|--graph_simplification_value]\n"
-      << "\t\t -> Number (default: " << graph_simplification_value << ")";
+      << "\t\t -> Number (default: " << graph_simplification_value << ")"
+      << "\n\n"
+      << "[Rerun logging]\n"
+      << "\t[-l|--rerun_logging]\n"
+      << "\t\t FILE -> rerun log to file\n"
+      << "\t\t WINDOW -> rerun log to window (default)\n"
+      << "\t\t NONE -> disblae rerun logging.\n";
 
 
     OPENMVG_LOG_ERROR << s;
@@ -499,7 +511,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-
   std::unique_ptr<ReconstructionEngine> sfm_engine;
   switch (sfm_engine_type)
   {
@@ -606,6 +617,28 @@ int main(int argc, char **argv)
   sfm_engine->Set_Intrinsics_Refinement_Type(intrinsic_refinement_options);
   sfm_engine->Set_Extrinsics_Refinement_Type(extrinsic_refinement_options);
   sfm_engine->Set_Use_Motion_Prior(b_use_motion_priors);
+
+  // rerun export
+  std::shared_ptr<const rerun::RecordingStream> rerun_recording_stream =
+    rerun_mode == "NONE"
+      ? std::shared_ptr<const rerun::RecordingStream>()
+      : std::make_shared<const rerun::RecordingStream>("rerun_openMVG");
+  if (rerun_mode == "WINDOW")
+  {
+    rerun_recording_stream->spawn().exit_on_failure();
+  } else if (rerun_mode == "FILE")
+  {
+    const auto rerun_file = stlplus::create_filespec(directory_output, "sfm_data.rrd");
+    stlplus::file_delete(rerun_file);
+    rerun_recording_stream->save(rerun_file.c_str()).exit_on_failure();
+  }
+  else if (rerun_mode != "NONE")
+  {
+    OPENMVG_LOG_ERROR << "Invalid rerun_mode option: " <<  rerun_mode;
+    return EXIT_FAILURE;
+  }
+
+  sfm_engine->Set_Rerun_Recording_Stream(rerun_recording_stream);
 
   //---------------------------------------
   // Sequential reconstruction process
