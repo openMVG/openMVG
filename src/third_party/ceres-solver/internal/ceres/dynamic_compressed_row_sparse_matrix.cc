@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,18 @@
 //
 // Author: richie.stebbing@gmail.com (Richard Stebbing)
 
-#include <cstring>
 #include "ceres/dynamic_compressed_row_sparse_matrix.h"
 
-namespace ceres {
-namespace internal {
+#include <cstring>
+
+namespace ceres::internal {
 
 DynamicCompressedRowSparseMatrix::DynamicCompressedRowSparseMatrix(
-  int num_rows,
-  int num_cols,
-  int initial_max_num_nonzeros)
-    : CompressedRowSparseMatrix(num_rows,
-                                num_cols,
-                                initial_max_num_nonzeros) {
-    dynamic_cols_.resize(num_rows);
-    dynamic_values_.resize(num_rows);
-  }
+    int num_rows, int num_cols, int initial_max_num_nonzeros)
+    : CompressedRowSparseMatrix(num_rows, num_cols, initial_max_num_nonzeros) {
+  dynamic_cols_.resize(num_rows);
+  dynamic_values_.resize(num_rows);
+}
 
 void DynamicCompressedRowSparseMatrix::InsertEntry(int row,
                                                    int col,
@@ -56,8 +52,7 @@ void DynamicCompressedRowSparseMatrix::InsertEntry(int row,
   dynamic_values_[row].push_back(value);
 }
 
-void DynamicCompressedRowSparseMatrix::ClearRows(int row_start,
-                                                 int num_rows) {
+void DynamicCompressedRowSparseMatrix::ClearRows(int row_start, int num_rows) {
   for (int r = 0; r < num_rows; ++r) {
     const int i = row_start + r;
     CHECK_GE(i, 0);
@@ -74,8 +69,8 @@ void DynamicCompressedRowSparseMatrix::Finalize(int num_additional_elements) {
 
   // Count the number of non-zeros and resize `cols_` and `values_`.
   int num_jacobian_nonzeros = 0;
-  for (int i = 0; i < dynamic_cols_.size(); ++i) {
-    num_jacobian_nonzeros += dynamic_cols_[i].size();
+  for (const auto& dynamic_col : dynamic_cols_) {
+    num_jacobian_nonzeros += dynamic_col.size();
   }
 
   SetMaxNumNonZeros(num_jacobian_nonzeros + num_additional_elements);
@@ -99,9 +94,8 @@ void DynamicCompressedRowSparseMatrix::Finalize(int num_additional_elements) {
   mutable_rows()[num_rows()] = index_into_values_and_cols;
 
   CHECK_EQ(index_into_values_and_cols, num_jacobian_nonzeros)
-    << "Ceres bug: final index into values_ and cols_ should be equal to "
-    << "the number of jacobian nonzeros. Please contact the developers!";
+      << "Ceres bug: final index into values_ and cols_ should be equal to "
+      << "the number of jacobian nonzeros. Please contact the developers!";
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

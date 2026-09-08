@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -39,14 +39,10 @@
 
 #include <string>
 
-#include "ceres/internal/port.h"
 #include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 
 namespace ceres {
-
-// Basic integer types. These typedefs are in the Ceres namespace to avoid
-// conflicts with other packages having similar typedefs.
-typedef int   int32;
 
 // Argument type used in interfaces that can optionally take ownership
 // of a passed in argument. If TAKE_OWNERSHIP is passed, the called
@@ -54,7 +50,7 @@ typedef int   int32;
 // delete on it upon completion.
 enum Ownership {
   DO_NOT_TAKE_OWNERSHIP,
-  TAKE_OWNERSHIP
+  TAKE_OWNERSHIP,
 };
 
 // TODO(keir): Considerably expand the explanations of each solver type.
@@ -71,8 +67,7 @@ enum LinearSolverType {
   // Eigen.
   DENSE_QR,
 
-  // Solve the normal equations using a sparse cholesky solver; requires
-  // SuiteSparse or CXSparse.
+  // Solve the normal equations using a sparse cholesky solver;
   SPARSE_NORMAL_CHOLESKY,
 
   // Specialized solvers, specific to problems with a generalized
@@ -102,7 +97,7 @@ enum PreconditionerType {
   // Block diagonal of the Gauss-Newton Hessian.
   JACOBI,
 
-  // Note: The following three preconditioners can only be used with
+  // Note: The following four preconditioners can only be used with
   // the ITERATIVE_SCHUR solver. They are well suited for Structure
   // from Motion problems.
 
@@ -110,16 +105,39 @@ enum PreconditionerType {
   // only be used with the ITERATIVE_SCHUR solver.
   SCHUR_JACOBI,
 
+  // Use power series expansion to approximate the inversion of Schur complement
+  // as a preconditioner.
+  SCHUR_POWER_SERIES_EXPANSION,
+
   // Visibility clustering based preconditioners.
   //
   // The following two preconditioners use the visibility structure of
   // the scene to determine the sparsity structure of the
   // preconditioner. This is done using a clustering algorithm. The
   // available visibility clustering algorithms are described below.
-  //
-  // Note: Requires SuiteSparse.
   CLUSTER_JACOBI,
-  CLUSTER_TRIDIAGONAL
+  CLUSTER_TRIDIAGONAL,
+
+  // Subset preconditioner is a general purpose preconditioner
+  // linear least squares problems. Given a set of residual blocks,
+  // it uses the corresponding subset of the rows of the Jacobian to
+  // construct a preconditioner.
+  //
+  // Suppose the Jacobian J has been horizontally partitioned as
+  //
+  // J = [P]
+  //     [Q]
+  //
+  // Where, Q is the set of rows corresponding to the residual
+  // blocks in residual_blocks_for_subset_preconditioner.
+  //
+  // The preconditioner is the inverse of the matrix Q'Q.
+  //
+  // Obviously, the efficacy of the preconditioner depends on how
+  // well the matrix Q approximates J'J, or how well the chosen
+  // residual blocks approximate the non-linear least squares
+  // problem.
+  SUBSET
 };
 
 enum VisibilityClusteringType {
@@ -150,14 +168,15 @@ enum SparseLinearAlgebraLibraryType {
   // minimum degree ordering.
   SUITE_SPARSE,
 
-  // A lightweight replacment for SuiteSparse, which does not require
-  // a LAPACK/BLAS implementation. Consequently, its performance is
-  // also a bit lower than SuiteSparse.
-  CX_SPARSE,
-
   // Eigen's sparse linear algebra routines. In particular Ceres uses
   // the Simplicial LDLT routines.
   EIGEN_SPARSE,
+
+  // Apple's Accelerate framework sparse linear algebra routines.
+  ACCELERATE_SPARSE,
+
+  // Nvidia's cuSPARSE library.
+  CUDA_SPARSE,
 
   // No sparse linear solver should be used.  This does not necessarily
   // imply that Ceres was built without any sparse library, although that
@@ -165,21 +184,46 @@ enum SparseLinearAlgebraLibraryType {
   NO_SPARSE
 };
 
+// The order in which variables are eliminated in a linear solver
+// can have a significant of impact on the efficiency and accuracy
+// of the method. e.g., when doing sparse Cholesky factorization,
+// there are matrices for which a good ordering will give a
+// Cholesky factor with O(n) storage, where as a bad ordering will
+// result in an completely dense factor.
+//
+// So sparse direct solvers like SPARSE_NORMAL_CHOLESKY and
+// SPARSE_SCHUR and preconditioners like SUBSET, CLUSTER_JACOBI &
+// CLUSTER_TRIDIAGONAL use a fill reducing ordering of the columns and
+// rows of the matrix being factorized before actually the numeric
+// factorization.
+//
+// This enum controls the class of algorithm used to compute this
+// fill reducing ordering. There is no single algorithm that works
+// on all matrices, so determining which algorithm works better is a
+// matter of empirical experimentation.
+enum LinearSolverOrderingType {
+  // Approximate Minimum Degree.
+  AMD,
+  // Nested Dissection.
+  NESDIS
+};
+
 enum DenseLinearAlgebraLibraryType {
   EIGEN,
-  LAPACK
+  LAPACK,
+  CUDA,
 };
 
 // Logging options
 // The options get progressively noisier.
 enum LoggingType {
   SILENT,
-  PER_MINIMIZER_ITERATION
+  PER_MINIMIZER_ITERATION,
 };
 
 enum MinimizerType {
   LINE_SEARCH,
-  TRUST_REGION
+  TRUST_REGION,
 };
 
 enum LineSearchDirectionType {
@@ -202,7 +246,7 @@ enum LineSearchDirectionType {
   // symmetric matrix but only N conditions are specified by the Secant
   // equation. The requirement that the Hessian approximation be positive
   // definite imposes another N additional constraints, but that still leaves
-  // remaining degrees-of-freedom.  (L)BFGS methods uniquely deteremine the
+  // remaining degrees-of-freedom.  (L)BFGS methods uniquely determine the
   // approximate Hessian by imposing the additional constraints that the
   // approximation at the next iteration must be the 'closest' to the current
   // approximation (the nature of how this proximity is measured is actually
@@ -222,26 +266,26 @@ enum LineSearchDirectionType {
   // For more details on BFGS see:
   //
   // Broyden, C.G., "The Convergence of a Class of Double-rank Minimization
-  // Algorithms,"; J. Inst. Maths. Applics., Vol. 6, pp 76–90, 1970.
+  // Algorithms,"; J. Inst. Maths. Applics., Vol. 6, pp 76-90, 1970.
   //
   // Fletcher, R., "A New Approach to Variable Metric Algorithms,"
-  // Computer Journal, Vol. 13, pp 317–322, 1970.
+  // Computer Journal, Vol. 13, pp 317-322, 1970.
   //
   // Goldfarb, D., "A Family of Variable Metric Updates Derived by Variational
-  // Means," Mathematics of Computing, Vol. 24, pp 23–26, 1970.
+  // Means," Mathematics of Computing, Vol. 24, pp 23-26, 1970.
   //
   // Shanno, D.F., "Conditioning of Quasi-Newton Methods for Function
-  // Minimization," Mathematics of Computing, Vol. 24, pp 647–656, 1970.
+  // Minimization," Mathematics of Computing, Vol. 24, pp 647-656, 1970.
   //
   // For more details on L-BFGS see:
   //
   // Nocedal, J. (1980). "Updating Quasi-Newton Matrices with Limited
-  // Storage". Mathematics of Computation 35 (151): 773–782.
+  // Storage". Mathematics of Computation 35 (151): 773-782.
   //
   // Byrd, R. H.; Nocedal, J.; Schnabel, R. B. (1994).
   // "Representations of Quasi-Newton Matrices and their use in
   // Limited Memory Methods". Mathematical Programming 63 (4):
-  // 129–156.
+  // 129-156.
   //
   // A general reference for both methods:
   //
@@ -250,7 +294,7 @@ enum LineSearchDirectionType {
   BFGS,
 };
 
-// Nonliner conjugate gradient methods are a generalization of the
+// Nonlinear conjugate gradient methods are a generalization of the
 // method of Conjugate Gradients for linear systems. The
 // generalization can be carried out in a number of different ways
 // leading to number of different rules for computing the search
@@ -394,7 +438,7 @@ enum DumpFormatType {
 // specified for the number of residuals. If specified, then the
 // number of residuas for that cost function can vary at runtime.
 enum DimensionType {
-  DYNAMIC = -1
+  DYNAMIC = -1,
 };
 
 // The differentiation method used to compute numerical derivatives in
@@ -415,7 +459,7 @@ enum NumericDiffMethodType {
 enum LineSearchInterpolationType {
   BISECTION,
   QUADRATIC,
-  CUBIC
+  CUBIC,
 };
 
 enum CovarianceAlgorithmType {
@@ -430,8 +474,7 @@ enum CovarianceAlgorithmType {
 // did not write to that memory location.
 const double kImpossibleValue = 1e302;
 
-CERES_EXPORT const char* LinearSolverTypeToString(
-    LinearSolverType type);
+CERES_EXPORT const char* LinearSolverTypeToString(LinearSolverType type);
 CERES_EXPORT bool StringToLinearSolverType(std::string value,
                                            LinearSolverType* type);
 
@@ -441,25 +484,28 @@ CERES_EXPORT bool StringToPreconditionerType(std::string value,
 
 CERES_EXPORT const char* VisibilityClusteringTypeToString(
     VisibilityClusteringType type);
-CERES_EXPORT bool StringToVisibilityClusteringType(std::string value,
-                                      VisibilityClusteringType* type);
+CERES_EXPORT bool StringToVisibilityClusteringType(
+    std::string value, VisibilityClusteringType* type);
 
 CERES_EXPORT const char* SparseLinearAlgebraLibraryTypeToString(
     SparseLinearAlgebraLibraryType type);
 CERES_EXPORT bool StringToSparseLinearAlgebraLibraryType(
-    std::string value,
-    SparseLinearAlgebraLibraryType* type);
+    std::string value, SparseLinearAlgebraLibraryType* type);
+
+CERES_EXPORT const char* LinearSolverOrderingTypeToString(
+    LinearSolverOrderingType type);
+CERES_EXPORT bool StringToLinearSolverOrderingType(
+    std::string value, LinearSolverOrderingType* type);
 
 CERES_EXPORT const char* DenseLinearAlgebraLibraryTypeToString(
     DenseLinearAlgebraLibraryType type);
 CERES_EXPORT bool StringToDenseLinearAlgebraLibraryType(
-    std::string value,
-    DenseLinearAlgebraLibraryType* type);
+    std::string value, DenseLinearAlgebraLibraryType* type);
 
 CERES_EXPORT const char* TrustRegionStrategyTypeToString(
     TrustRegionStrategyType type);
-CERES_EXPORT bool StringToTrustRegionStrategyType(std::string value,
-                                     TrustRegionStrategyType* type);
+CERES_EXPORT bool StringToTrustRegionStrategyType(
+    std::string value, TrustRegionStrategyType* type);
 
 CERES_EXPORT const char* DoglegTypeToString(DoglegType type);
 CERES_EXPORT bool StringToDoglegType(std::string value, DoglegType* type);
@@ -469,35 +515,40 @@ CERES_EXPORT bool StringToMinimizerType(std::string value, MinimizerType* type);
 
 CERES_EXPORT const char* LineSearchDirectionTypeToString(
     LineSearchDirectionType type);
-CERES_EXPORT bool StringToLineSearchDirectionType(std::string value,
-                                     LineSearchDirectionType* type);
+CERES_EXPORT bool StringToLineSearchDirectionType(
+    std::string value, LineSearchDirectionType* type);
 
 CERES_EXPORT const char* LineSearchTypeToString(LineSearchType type);
-CERES_EXPORT bool StringToLineSearchType(std::string value, LineSearchType* type);
+CERES_EXPORT bool StringToLineSearchType(std::string value,
+                                         LineSearchType* type);
 
 CERES_EXPORT const char* NonlinearConjugateGradientTypeToString(
     NonlinearConjugateGradientType type);
 CERES_EXPORT bool StringToNonlinearConjugateGradientType(
-    std::string value,
-    NonlinearConjugateGradientType* type);
+    std::string value, NonlinearConjugateGradientType* type);
 
 CERES_EXPORT const char* LineSearchInterpolationTypeToString(
     LineSearchInterpolationType type);
 CERES_EXPORT bool StringToLineSearchInterpolationType(
-    std::string value,
-    LineSearchInterpolationType* type);
+    std::string value, LineSearchInterpolationType* type);
 
 CERES_EXPORT const char* CovarianceAlgorithmTypeToString(
     CovarianceAlgorithmType type);
 CERES_EXPORT bool StringToCovarianceAlgorithmType(
-    std::string value,
-    CovarianceAlgorithmType* type);
+    std::string value, CovarianceAlgorithmType* type);
 
 CERES_EXPORT const char* NumericDiffMethodTypeToString(
     NumericDiffMethodType type);
-CERES_EXPORT bool StringToNumericDiffMethodType(
-    std::string value,
-    NumericDiffMethodType* type);
+CERES_EXPORT bool StringToNumericDiffMethodType(std::string value,
+                                                NumericDiffMethodType* type);
+
+CERES_EXPORT const char* LoggingTypeToString(LoggingType type);
+CERES_EXPORT bool StringtoLoggingType(std::string value, LoggingType* type);
+
+CERES_EXPORT const char* DumpFormatTypeToString(DumpFormatType type);
+CERES_EXPORT bool StringtoDumpFormatType(std::string value,
+                                         DumpFormatType* type);
+CERES_EXPORT bool StringtoDumpFormatType(std::string value, LoggingType* type);
 
 CERES_EXPORT const char* TerminationTypeToString(TerminationType type);
 

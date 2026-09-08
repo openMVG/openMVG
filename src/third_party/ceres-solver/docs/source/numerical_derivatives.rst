@@ -125,7 +125,7 @@ like the following:
        }
 
      private:
-       scoped_ptr<Rat43Functor> functor_;
+       std::unique_ptr<Rat43Functor> functor_;
    };
 
 
@@ -248,7 +248,7 @@ Let us recall, the error in the central differences formula.
    \end{align}
 
 The key thing to note here is that the terms :math:`K_2, K_4, ...`
-are indepdendent of :math:`h` and only depend on :math:`x`.
+are independent of :math:`h` and only depend on :math:`x`.
 
 Let us now define:
 
@@ -326,7 +326,7 @@ starting with a fairly large step size :math:`h = 0.01`, we get:
 Compared to the *correct* value :math:`Df(1.0) = 140.73773557129658`,
 :math:`A(5, 1)` has a relative error of :math:`10^{-13}`. For
 comparison, the relative error for the central difference formula with
-the same stepsize (:math:`0.01/2^4 = 0.000625`) is :math:`10^{-5}`.
+the same step size (:math:`0.01/2^4 = 0.000625`) is :math:`10^{-5}`.
 
 The above tableau is the basis of Ridders' method for numeric
 differentiation. The full implementation is an adaptive scheme that
@@ -380,7 +380,7 @@ Recommendations
 ===============
 
 Numeric differentiation should be used when you cannot compute the
-derivatives either analytically or using automatic differention. This
+derivatives either analytically or using automatic differentiation. This
 is usually the case when you are calling an external library or
 function whose analytic form you do not know or even if you do, you
 are not in a position to re-write it in a manner required to use

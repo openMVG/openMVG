@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,17 @@
 #ifndef CERES_INTERNAL_COORDINATE_DESCENT_MINIMIZER_H_
 #define CERES_INTERNAL_COORDINATE_DESCENT_MINIMIZER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "ceres/context_impl.h"
 #include "ceres/evaluator.h"
 #include "ceres/minimizer.h"
 #include "ceres/problem_impl.h"
 #include "ceres/solver.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class Program;
 class LinearSolver;
@@ -55,18 +56,21 @@ class LinearSolver;
 //
 // The minimizer assumes that none of the parameter blocks in the
 // program are constant.
-class CoordinateDescentMinimizer : public Minimizer {
+class CERES_NO_EXPORT CoordinateDescentMinimizer final : public Minimizer {
  public:
+  explicit CoordinateDescentMinimizer(ContextImpl* context);
+
   bool Init(const Program& program,
             const ProblemImpl::ParameterMap& parameter_map,
             const ParameterBlockOrdering& ordering,
             std::string* error);
 
   // Minimizer interface.
-  virtual ~CoordinateDescentMinimizer();
-  virtual void Minimize(const Minimizer::Options& options,
-                        double* parameters,
-                        Solver::Summary* summary);
+  ~CoordinateDescentMinimizer() override;
+
+  void Minimize(const Minimizer::Options& options,
+                double* parameters,
+                Solver::Summary* summary) final;
 
   // Verify that each group in the ordering forms an independent set.
   static bool IsOrderingValid(const Program& program,
@@ -77,7 +81,8 @@ class CoordinateDescentMinimizer : public Minimizer {
   // of independent sets of decreasing size and invert it. This
   // seems to work better in practice, i.e., Cameras before
   // points.
-  static ParameterBlockOrdering* CreateOrdering(const Program& program);
+  static std::shared_ptr<ParameterBlockOrdering> CreateOrdering(
+      const Program& program);
 
  private:
   void Solve(Program* program,
@@ -86,7 +91,7 @@ class CoordinateDescentMinimizer : public Minimizer {
              Solver::Summary* summary);
 
   std::vector<ParameterBlock*> parameter_blocks_;
-  std::vector<std::vector<ResidualBlock*> > residual_blocks_;
+  std::vector<std::vector<ResidualBlock*>> residual_blocks_;
   // The optimization is performed in rounds. In each round all the
   // parameter blocks that form one independent set are optimized in
   // parallel. This array, marks the boundaries of the independent
@@ -94,9 +99,10 @@ class CoordinateDescentMinimizer : public Minimizer {
   std::vector<int> independent_set_offsets_;
 
   Evaluator::Options evaluator_options_;
+
+  ContextImpl* context_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 
 #endif  // CERES_INTERNAL_COORDINATE_DESCENT_MINIMIZER_H_

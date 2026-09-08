@@ -1,0 +1,145 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2009
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+namespace lemon {
+/*!
+
+\page migration Migration from the 0.x Series
+
+This guide gives an in depth description on what has changed compared
+to the 0.x release series.
+
+Many of these changes adjusted automatically by the
+<tt>lemon-0.x-to-1.x.sh</tt> tool. Those requiring manual
+update are typeset <b>boldface</b>.
+
+\section migration-graph Graph Related Name Changes
+
+- \ref concepts::Digraph "Directed graphs" are called \c Digraph and
+  they have <tt>Arc</tt>s (instead of <tt>Edge</tt>s), while
+  \ref concepts::Graph "undirected graphs" are called \c Graph
+  (instead of \c UGraph) and they have <tt>Edge</tt>s (instead of
+  <tt>UEdge</tt>s). These changes reflected thoroughly everywhere in
+  the library. Namely,
+  - \c Graph -> \c Digraph
+    - \c %ListGraph -> \c ListDigraph, \c %SmartGraph -> \c SmartDigraph etc.
+  - \c UGraph -> \c Graph
+    - \c ListUGraph -> \c ListGraph, \c SmartUGraph -> \c SmartGraph etc.
+  - \c Edge -> \c Arc, \c UEdge -> \c Edge
+  - \c EdgeMap -> \c ArcMap, \c UEdgeMap -> \c EdgeMap
+  - \c EdgeIt -> \c ArcIt, \c UEdgeIt -> \c EdgeIt
+  - Class names and function names containing the words \c graph,
+    \c ugraph, \e edge or \e arc should also be updated.
+- <b>The two endpoints of an (\e undirected) \c Edge can be obtained by the
+  <tt>u()</tt> and <tt>v()</tt> member function of the graph
+  (instead of <tt>source()</tt> and <tt>target()</tt>). This change
+  must be done by hand.</b>
+  \n Of course, you can still use <tt>source()</tt> and <tt>target()</tt>
+  for <tt>Arc</tt>s (directed edges).
+
+\warning
+<b>The <tt>lemon-0.x-to-1.x.sh</tt> script replaces the words \c graph,
+\c ugraph, \c edge and \c uedge in your own identifiers and in
+strings, comments etc. as well as in all LEMON specific identifiers.
+So use the script carefully and make a backup copy of your source files
+before applying the script to them.</b>
+
+\section migration-lgf LGF tools
+ - The \ref lgf-format "LGF file format" has changed,
+   <tt>\@nodeset</tt> has changed to <tt>\@nodes</tt>,
+   <tt>\@edgeset</tt> and <tt>\@uedgeset</tt> to <tt>\@arcs</tt> or
+   <tt>\@edges</tt>, which become completely equivalents. The
+   <tt>\@nodes</tt>, <tt>\@edges</tt> and <tt>\@uedges</tt> sections are
+   removed from the format, the content of them should be
+   the part of <tt>\@attributes</tt> section. The data fields in
+   the sections must follow a strict format, they must be either character
+   sequences without whitespaces or quoted strings.
+ - The <tt>LemonReader</tt> and <tt>LemonWriter</tt> core interfaces
+   are no longer available.
+ - The implementation of the general section readers and writers has changed
+   they are simple functors now. Beside the old
+   stream based section handling, currently line oriented section
+   reading and writing are also supported. In the
+   section readers the lines must be counted manually. The sections
+   should be read and written with the SectionWriter and SectionReader
+   classes.
+ - Instead of the item readers and writers, item converters should be
+   used. The converters are functors, which map the type to
+   std::string or std::string to the type. The converters for standard
+   containers hasn't yet been implemented in the new LEMON. The converters
+   can return strings in any format, because if it is necessary, the LGF
+   writer and reader will quote and unquote the given value.
+ - The DigraphReader and DigraphWriter can used similarly to the
+   0.x series, however the <tt>read</tt> or <tt>write</tt> prefix of
+   the member functions are removed.
+ - The new LEMON supports the function like interface, the \c
+   digraphReader and \c digraphWriter functions are more convenient than
+   using the classes directly.
+
+\section migration-search BFS, DFS and Dijkstra
+- <b>Using the function interface of BFS, DFS and %Dijkstra both source and
+  target nodes can be given as parameters of the <tt>run()</tt> function
+  (instead of \c bfs(), \c dfs() or \c dijkstra() itself).</b>
+- \ref named-templ-param "Named class template parameters" of \c Bfs,
+  \c Dfs, \c Dijkstra, \c BfsVisit, \c DfsVisit are renamed to start
+  with "Set" instead of "Def". Namely,
+  - \c DefPredMap -> \c SetPredMap
+  - \c DefDistMap -> \c SetDistMap
+  - \c DefReachedMap -> \c SetReachedMap
+  - \c DefProcessedMap -> \c SetProcessedMap
+  - \c DefHeap -> \c SetHeap
+  - \c DefStandardHeap -> \c SetStandardHeap
+  - \c DefOperationTraits -> \c SetOperationTraits
+  - \c DefProcessedMapToBeDefaultMap -> \c SetStandardProcessedMap
+
+\section migration-error Exceptions and Debug tools
+
+<b>The class hierarchy of exceptions has largely been simplified. Now,
+only the i/o related tools may throw exceptions. All other exceptions
+have been replaced with either the \c LEMON_ASSERT or the \c LEMON_DEBUG
+macros.</b>
+
+<b>On the other hand, the parameter order of constructors of the
+exceptions has been changed. See \ref IoError and \ref FormatError for
+more details.</b>
+
+\section migration-other Others
+- <b>The contents of <tt>graph_utils.h</tt> are moved to <tt>core.h</tt>
+  and <tt>maps.h</tt>. <tt>core.h</tt> is included by all graph types,
+  therefore it usually do not have to be included directly.</b>
+- <b><tt>path_utils.h</tt> is merged to \c path.h.</b>
+- <b>The semantic of the assignment operations and copy constructors of maps
+  are still under discussion. So, you must copy them by hand (i.e. copy
+  each entry one-by-one)</b>
+- <b>The parameters of the graph copying tools (i.e. \c GraphCopy,
+  \c DigraphCopy) have to be given in the from-to order.</b>
+- \c copyDigraph() and \c copyGraph() are renamed to \c digraphCopy()
+  and \c graphCopy(), respectively.
+- <b>The interface of \ref DynArcLookUp has changed. It is now the same as
+  of \ref ArcLookUp and \ref AllArcLookUp</b>
+- Some map types should also been renamed. Namely,
+  - \c IntegerMap -> \c RangeMap
+  - \c StdMap -> \c SparseMap
+  - \c FunctorMap -> \c FunctorToMap
+  - \c MapFunctor -> \c MapToFunctor
+  - \c ForkWriteMap -> \c ForkMap
+  - \c StoreBoolMap -> \c LoggerBoolMap
+- \c dim2::BoundingBox -> \c dim2::Box
+
+*/
+}

@@ -1,0 +1,855 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2013
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+namespace lemon {
+
+/**
+@defgroup datas Data Structures
+This group contains the several data structures implemented in LEMON.
+*/
+
+/**
+@defgroup graphs Graph Structures
+@ingroup datas
+\brief Graph structures implemented in LEMON.
+
+The implementation of combinatorial algorithms heavily relies on
+efficient graph implementations. LEMON offers data structures which are
+planned to be easily used in an experimental phase of implementation studies,
+and thereafter the program code can be made efficient by small modifications.
+
+The most efficient implementation of diverse applications require the
+usage of different physical graph implementations. These differences
+appear in the size of graph we require to handle, memory or time usage
+limitations or in the set of operations through which the graph can be
+accessed.  LEMON provides several physical graph structures to meet
+the diverging requirements of the possible users.  In order to save on
+running time or on memory usage, some structures may fail to provide
+some graph features like arc/edge or node deletion.
+
+Alteration of standard containers need a very limited number of
+operations, these together satisfy the everyday requirements.
+In the case of graph structures, different operations are needed which do
+not alter the physical graph, but gives another view. If some nodes or
+arcs have to be hidden or the reverse oriented graph have to be used, then
+this is the case. It also may happen that in a flow implementation
+the residual graph can be accessed by another algorithm, or a node-set
+is to be shrunk for another algorithm.
+LEMON also provides a variety of graphs for these requirements called
+\ref graph_adaptors "graph adaptors". Adaptors cannot be used alone but only
+in conjunction with other graph representations.
+
+You are free to use the graph structure that fit your requirements
+the best, most graph algorithms and auxiliary data structures can be used
+with any graph structure.
+
+<b>See also:</b> \ref graph_concepts "Graph Structure Concepts".
+*/
+
+/**
+@defgroup graph_adaptors Adaptor Classes for Graphs
+@ingroup graphs
+\brief Adaptor classes for digraphs and graphs
+
+This group contains several useful adaptor classes for digraphs and graphs.
+
+The main parts of LEMON are the different graph structures, generic
+graph algorithms, graph concepts, which couple them, and graph
+adaptors. While the previous notions are more or less clear, the
+latter one needs further explanation. Graph adaptors are graph classes
+which serve for considering graph structures in different ways.
+
+A short example makes this much clearer.  Suppose that we have an
+instance \c g of a directed graph type, say ListDigraph and an algorithm
+\code
+template <typename Digraph>
+int algorithm(const Digraph&);
+\endcode
+is needed to run on the reverse oriented graph.  It may be expensive
+(in time or in memory usage) to copy \c g with the reversed
+arcs.  In this case, an adaptor class is used, which (according
+to LEMON \ref concepts::Digraph "digraph concepts") works as a digraph.
+The adaptor uses the original digraph structure and digraph operations when
+methods of the reversed oriented graph are called.  This means that the adaptor
+have minor memory usage, and do not perform sophisticated algorithmic
+actions.  The purpose of it is to give a tool for the cases when a
+graph have to be used in a specific alteration.  If this alteration is
+obtained by a usual construction like filtering the node or the arc set or
+considering a new orientation, then an adaptor is worthwhile to use.
+To come back to the reverse oriented graph, in this situation
+\code
+template<typename Digraph> class ReverseDigraph;
+\endcode
+template class can be used. The code looks as follows
+\code
+ListDigraph g;
+ReverseDigraph<ListDigraph> rg(g);
+int result = algorithm(rg);
+\endcode
+During running the algorithm, the original digraph \c g is untouched.
+This techniques give rise to an elegant code, and based on stable
+graph adaptors, complex algorithms can be implemented easily.
+
+In flow, circulation and matching problems, the residual
+graph is of particular importance. Combining an adaptor implementing
+this with shortest path algorithms or minimum mean cycle algorithms,
+a range of weighted and cardinality optimization algorithms can be
+obtained. For other examples, the interested user is referred to the
+detailed documentation of particular adaptors.
+
+Since the adaptor classes conform to the \ref graph_concepts "graph concepts",
+an adaptor can even be applied to another one.
+The following image illustrates a situation when a \ref SubDigraph adaptor
+is applied on a digraph and \ref Undirector is applied on the subgraph.
+
+\image html adaptors2.png
+\image latex adaptors2.eps "Using graph adaptors" width=\textwidth
+
+The behavior of graph adaptors can be very different. Some of them keep
+capabilities of the original graph while in other cases this would be
+meaningless. This means that the concepts that they meet depend
+on the graph adaptor, and the wrapped graph.
+For example, if an arc of a reversed digraph is deleted, this is carried
+out by deleting the corresponding arc of the original digraph, thus the
+adaptor modifies the original digraph.
+However in case of a residual digraph, this operation has no sense.
+
+Let us stand one more example here to simplify your work.
+ReverseDigraph has constructor
+\code
+ReverseDigraph(Digraph& digraph);
+\endcode
+This means that in a situation, when a <tt>const %ListDigraph&</tt>
+reference to a graph is given, then it have to be instantiated with
+<tt>Digraph=const %ListDigraph</tt>.
+\code
+int algorithm1(const ListDigraph& g) {
+  ReverseDigraph<const ListDigraph> rg(g);
+  return algorithm2(rg);
+}
+\endcode
+*/
+
+/**
+@defgroup maps Maps
+@ingroup datas
+\brief Map structures implemented in LEMON.
+
+This group contains the map structures implemented in LEMON.
+
+LEMON provides several special purpose maps and map adaptors that e.g. combine
+new maps from existing ones.
+
+<b>See also:</b> \ref map_concepts "Map Concepts".
+*/
+
+/**
+@defgroup graph_maps Graph Maps
+@ingroup maps
+\brief Special graph-related maps.
+
+This group contains maps that are specifically designed to assign
+values to the nodes and arcs/edges of graphs.
+
+If you are looking for the standard graph maps (\c NodeMap, \c ArcMap,
+\c EdgeMap), see the \ref graph_concepts "Graph Structure Concepts".
+*/
+
+/**
+\defgroup map_adaptors Map Adaptors
+\ingroup maps
+\brief Tools to create new maps from existing ones
+
+This group contains map adaptors that are used to create "implicit"
+maps from other maps.
+
+Most of them are \ref concepts::ReadMap "read-only maps".
+They can make arithmetic and logical operations between one or two maps
+(negation, shifting, addition, multiplication, logical 'and', 'or',
+'not' etc.) or e.g. convert a map to another one of different Value type.
+
+The typical usage of this classes is passing implicit maps to
+algorithms.  If a function type algorithm is called then the function
+type map adaptors can be used comfortable. For example let's see the
+usage of map adaptors with the \c graphToEps() function.
+\code
+  Color nodeColor(int deg) {
+    if (deg >= 2) {
+      return Color(0.5, 0.0, 0.5);
+    } else if (deg == 1) {
+      return Color(1.0, 0.5, 1.0);
+    } else {
+      return Color(0.0, 0.0, 0.0);
+    }
+  }
+
+  Digraph::NodeMap<int> degree_map(graph);
+
+  graphToEps(graph, "graph.eps")
+    .coords(coords).scaleToA4().undirected()
+    .nodeColors(composeMap(functorToMap(nodeColor), degree_map))
+    .run();
+\endcode
+The \c functorToMap() function makes an \c int to \c Color map from the
+\c nodeColor() function. The \c composeMap() compose the \c degree_map
+and the previously created map. The composed map is a proper function to
+get the color of each node.
+
+The usage with class type algorithms is little bit harder. In this
+case the function type map adaptors can not be used, because the
+function map adaptors give back temporary objects.
+\code
+  Digraph graph;
+
+  typedef Digraph::ArcMap<double> DoubleArcMap;
+  DoubleArcMap length(graph);
+  DoubleArcMap speed(graph);
+
+  typedef DivMap<DoubleArcMap, DoubleArcMap> TimeMap;
+  TimeMap time(length, speed);
+
+  Dijkstra<Digraph, TimeMap> dijkstra(graph, time);
+  dijkstra.run(source, target);
+\endcode
+We have a length map and a maximum speed map on the arcs of a digraph.
+The minimum time to pass the arc can be calculated as the division of
+the two maps which can be done implicitly with the \c DivMap template
+class. We use the implicit minimum time map as the length map of the
+\c Dijkstra algorithm.
+*/
+
+/**
+@defgroup paths Path Structures
+@ingroup datas
+\brief %Path structures implemented in LEMON.
+
+This group contains the path structures implemented in LEMON.
+
+LEMON provides flexible data structures to work with paths.
+All of them have similar interfaces and they can be copied easily with
+assignment operators and copy constructors. This makes it easy and
+efficient to have e.g. the Dijkstra algorithm to store its result in
+any kind of path structure.
+
+\sa \ref concepts::Path "Path concept"
+*/
+
+/**
+@defgroup heaps Heap Structures
+@ingroup datas
+\brief %Heap structures implemented in LEMON.
+
+This group contains the heap structures implemented in LEMON.
+
+LEMON provides several heap classes. They are efficient implementations
+of the abstract data type \e priority \e queue. They store items with
+specified values called \e priorities in such a way that finding and
+removing the item with minimum priority are efficient.
+The basic operations are adding and erasing items, changing the priority
+of an item, etc.
+
+Heaps are crucial in several algorithms, such as Dijkstra and Prim.
+The heap implementations have the same interface, thus any of them can be
+used easily in such algorithms.
+
+\sa \ref concepts::Heap "Heap concept"
+*/
+
+/**
+@defgroup auxdat Auxiliary Data Structures
+@ingroup datas
+\brief Auxiliary data structures implemented in LEMON.
+
+This group contains some data structures implemented in LEMON in
+order to make it easier to implement combinatorial algorithms.
+*/
+
+/**
+@defgroup geomdat Geometric Data Structures
+@ingroup auxdat
+\brief Geometric data structures implemented in LEMON.
+
+This group contains geometric data structures implemented in LEMON.
+
+ - \ref lemon::dim2::Point "dim2::Point" implements a two dimensional
+   vector with the usual operations.
+ - \ref lemon::dim2::Box "dim2::Box" can be used to determine the
+   rectangular bounding box of a set of \ref lemon::dim2::Point
+   "dim2::Point"'s.
+*/
+
+/**
+@defgroup matrices Matrices
+@ingroup auxdat
+\brief Two dimensional data storages implemented in LEMON.
+
+This group contains two dimensional data storages implemented in LEMON.
+*/
+
+/**
+@defgroup algs Algorithms
+\brief This group contains the several algorithms
+implemented in LEMON.
+
+This group contains the several algorithms
+implemented in LEMON.
+*/
+
+/**
+@defgroup search Graph Search
+@ingroup algs
+\brief Common graph search algorithms.
+
+This group contains the common graph search algorithms, namely
+\e breadth-first \e search (BFS) and \e depth-first \e search (DFS)
+\cite clrs01algorithms.
+*/
+
+/**
+@defgroup shortest_path Shortest Path Algorithms
+@ingroup algs
+\brief Algorithms for finding shortest paths.
+
+This group contains the algorithms for finding shortest paths in digraphs
+\cite clrs01algorithms.
+
+ - \ref Dijkstra algorithm for finding shortest paths from a source node
+   when all arc lengths are non-negative.
+ - \ref BellmanFord "Bellman-Ford" algorithm for finding shortest paths
+   from a source node when arc lenghts can be either positive or negative,
+   but the digraph should not contain directed cycles with negative total
+   length.
+ - \ref FloydWarshall "Floyd-Warshall" and \ref Johnson "Johnson" algorithms
+   for solving the \e all-pairs \e shortest \e paths \e problem when arc
+   lenghts can be either positive or negative, but the digraph should
+   not contain directed cycles with negative total length.
+ - \ref Suurballe A successive shortest path algorithm for finding
+   arc-disjoint paths between two nodes having minimum total length.
+*/
+
+/**
+@defgroup spantree Minimum Spanning Tree Algorithms
+@ingroup algs
+\brief Algorithms for finding minimum cost spanning trees and arborescences.
+
+This group contains the algorithms for finding minimum cost spanning
+trees and arborescences \cite clrs01algorithms.
+*/
+
+/**
+@defgroup max_flow Maximum Flow Algorithms
+@ingroup algs
+\brief Algorithms for finding maximum flows.
+
+This group contains the algorithms for finding maximum flows and
+feasible circulations \cite clrs01algorithms, \cite amo93networkflows.
+
+The \e maximum \e flow \e problem is to find a flow of maximum value between
+a single source and a single target. Formally, there is a \f$G=(V,A)\f$
+digraph, a \f$cap: A\rightarrow\mathbf{R}^+_0\f$ capacity function and
+\f$s, t \in V\f$ source and target nodes.
+A maximum flow is an \f$f: A\rightarrow\mathbf{R}^+_0\f$ solution of the
+following optimization problem.
+
+\f[ \max\sum_{sv\in A} f(sv) - \sum_{vs\in A} f(vs) \f]
+\f[ \sum_{uv\in A} f(uv) = \sum_{vu\in A} f(vu)
+    \quad \forall u\in V\setminus\{s,t\} \f]
+\f[ 0 \leq f(uv) \leq cap(uv) \quad \forall uv\in A \f]
+
+LEMON contains several algorithms for solving maximum flow problems:
+- \ref EdmondsKarp Edmonds-Karp algorithm
+  \cite edmondskarp72theoretical.
+- \ref Preflow Goldberg-Tarjan's preflow push-relabel algorithm
+  \cite goldberg88newapproach.
+- \ref DinitzSleatorTarjan Dinitz's blocking flow algorithm with dynamic trees
+  \cite dinic70algorithm, \cite sleator83dynamic.
+- \ref GoldbergTarjan !Preflow push-relabel algorithm with dynamic trees
+  \cite goldberg88newapproach, \cite sleator83dynamic.
+
+In most cases the \ref Preflow algorithm provides the
+fastest method for computing a maximum flow. All implementations
+also provide functions to query the minimum cut, which is the dual
+problem of maximum flow.
+
+\ref Circulation is a preflow push-relabel algorithm implemented directly
+for finding feasible circulations, which is a somewhat different problem,
+but it is strongly related to maximum flow.
+For more information, see \ref Circulation.
+*/
+
+/**
+@defgroup min_cost_flow_algs Minimum Cost Flow Algorithms
+@ingroup algs
+
+\brief Algorithms for finding minimum cost flows and circulations.
+
+This group contains the algorithms for finding minimum cost flows and
+circulations \cite amo93networkflows. For more information about this
+problem and its dual solution, see: \ref min_cost_flow
+"Minimum Cost Flow Problem".
+
+LEMON contains several algorithms for this problem.
+ - \ref NetworkSimplex Primal Network Simplex algorithm with various
+   pivot strategies \cite dantzig63linearprog, \cite kellyoneill91netsimplex.
+ - \ref CostScaling Cost Scaling algorithm based on push/augment and
+   relabel operations \cite goldberg90approximation, \cite goldberg97efficient,
+   \cite bunnagel98efficient.
+ - \ref CapacityScaling Capacity Scaling algorithm based on the successive
+   shortest path method \cite edmondskarp72theoretical.
+ - \ref CycleCanceling Cycle-Canceling algorithms, two of which are
+   strongly polynomial \cite klein67primal, \cite goldberg89cyclecanceling.
+
+In general, \ref NetworkSimplex and \ref CostScaling are the most efficient
+implementations.
+\ref NetworkSimplex is usually the fastest on relatively small graphs (up to
+several thousands of nodes) and on dense graphs, while \ref CostScaling is
+typically more efficient on large graphs (e.g. hundreds of thousands of
+nodes or above), especially if they are sparse.
+However, other algorithms could be faster in special cases.
+For example, if the total supply and/or capacities are rather small,
+\ref CapacityScaling is usually the fastest algorithm
+(without effective scaling).
+
+These classes are intended to be used with integer-valued input data
+(capacities, supply values, and costs), except for \ref CapacityScaling,
+which is capable of handling real-valued arc costs (other numerical
+data are required to be integer).
+
+For more details about these implementations and for a comprehensive
+experimental study, see the paper \cite KiralyKovacs12MCF.
+It also compares these codes to other publicly available
+minimum cost flow solvers.
+*/
+
+/**
+@defgroup min_cut Minimum Cut Algorithms
+@ingroup algs
+
+\brief Algorithms for finding minimum cut in graphs.
+
+This group contains the algorithms for finding minimum cut in graphs.
+
+The \e minimum \e cut \e problem is to find a non-empty and non-complete
+\f$X\f$ subset of the nodes with minimum overall capacity on
+outgoing arcs. Formally, there is a \f$G=(V,A)\f$ digraph, a
+\f$cap: A\rightarrow\mathbf{R}^+_0\f$ capacity function. The minimum
+cut is the \f$X\f$ solution of the next optimization problem:
+
+\f[ \min_{X \subset V, X\not\in \{\emptyset, V\}}
+    \sum_{uv\in A: u\in X, v\not\in X}cap(uv) \f]
+
+LEMON contains several algorithms related to minimum cut problems:
+
+- \ref HaoOrlin "Hao-Orlin algorithm" for calculating minimum cut
+  in directed graphs.
+- \ref NagamochiIbaraki "Nagamochi-Ibaraki algorithm" for
+  calculating minimum cut in undirected graphs.
+- \ref GomoryHu "Gomory-Hu tree computation" for calculating
+  all-pairs minimum cut in undirected graphs.
+
+If you want to find minimum cut just between two distinict nodes,
+see the \ref max_flow "maximum flow problem".
+*/
+
+/**
+@defgroup min_mean_cycle Minimum Mean Cycle Algorithms
+@ingroup algs
+\brief Algorithms for finding minimum mean cycles.
+
+This group contains the algorithms for finding minimum mean cycles
+\cite amo93networkflows, \cite karp78characterization.
+
+The \e minimum \e mean \e cycle \e problem is to find a directed cycle
+of minimum mean length (cost) in a digraph.
+The mean length of a cycle is the average length of its arcs, i.e. the
+ratio between the total length of the cycle and the number of arcs on it.
+
+This problem has an important connection to \e conservative \e length
+\e functions, too. A length function on the arcs of a digraph is called
+conservative if and only if there is no directed cycle of negative total
+length. For an arbitrary length function, the negative of the minimum
+cycle mean is the smallest \f$\epsilon\f$ value so that increasing the
+arc lengths uniformly by \f$\epsilon\f$ results in a conservative length
+function.
+
+LEMON contains three algorithms for solving the minimum mean cycle problem:
+- \ref KarpMmc Karp's original algorithm \cite karp78characterization.
+- \ref HartmannOrlinMmc Hartmann-Orlin's algorithm, which is an improved
+  version of Karp's algorithm \cite hartmann93finding.
+- \ref HowardMmc Howard's policy iteration algorithm
+  \cite dasdan98minmeancycle, \cite dasdan04experimental.
+
+In practice, the \ref HowardMmc "Howard" algorithm turned out to be by far the
+most efficient one, though the best known theoretical bound on its running
+time is exponential.
+Both \ref KarpMmc "Karp" and \ref HartmannOrlinMmc "Hartmann-Orlin" algorithms
+run in time O(nm) and use space O(n<sup>2</sup>+m).
+*/
+
+/**
+@defgroup matching Matching Algorithms
+@ingroup algs
+\brief Algorithms for finding matchings in graphs and bipartite graphs.
+
+This group contains the algorithms for calculating
+matchings in graphs and bipartite graphs. The general matching problem is
+finding a subset of the edges for which each node has at most one incident
+edge.
+
+There are several different algorithms for calculate matchings in
+graphs.  The matching problems in bipartite graphs are generally
+easier than in general graphs. The goal of the matching optimization
+can be finding maximum cardinality, maximum weight or minimum cost
+matching. The search can be constrained to find perfect or
+maximum cardinality matching.
+
+The matching algorithms implemented in LEMON:
+- \ref MaxBipartiteMatching Hopcroft-Karp augmenting path algorithm
+  for calculating maximum cardinality matching in bipartite graphs.
+- \ref PrBipartiteMatching Push-relabel algorithm
+  for calculating maximum cardinality matching in bipartite graphs.
+- \ref MaxWeightedBipartiteMatching
+  Successive shortest path algorithm for calculating maximum weighted
+  matching and maximum weighted bipartite matching in bipartite graphs.
+- \ref MinCostMaxBipartiteMatching
+  Successive shortest path algorithm for calculating minimum cost maximum
+  matching in bipartite graphs.
+- \ref MaxMatching Edmond's blossom shrinking algorithm for calculating
+  maximum cardinality matching in general graphs.
+- \ref MaxWeightedMatching Edmond's blossom shrinking algorithm for calculating
+  maximum weighted matching in general graphs.
+- \ref MaxWeightedPerfectMatching
+  Edmond's blossom shrinking algorithm for calculating maximum weighted
+  perfect matching in general graphs.
+- \ref MaxFractionalMatching Push-relabel algorithm for calculating
+  maximum cardinality fractional matching in general graphs.
+- \ref MaxWeightedFractionalMatching Augmenting path algorithm for calculating
+  maximum weighted fractional matching in general graphs.
+- \ref MaxWeightedPerfectFractionalMatching
+  Augmenting path algorithm for calculating maximum weighted
+  perfect fractional matching in general graphs.
+
+\image html matching.png
+\image latex matching.eps "Min Cost Perfect Matching" width=\textwidth
+*/
+
+/**
+@defgroup graph_properties Connectivity and Other Graph Properties
+@ingroup algs
+\brief Algorithms for discovering the graph properties
+
+This group contains the algorithms for discovering the graph properties
+like connectivity, bipartiteness, euler property, simplicity etc.
+
+\image html connected_components.png
+\image latex connected_components.eps "Connected components" width=\textwidth
+*/
+
+/**
+@defgroup graph_isomorphism Graph Isomorphism
+@ingroup algs
+\brief Algorithms for testing (sub)graph isomorphism
+
+This group contains algorithms for finding isomorph copies of a
+given graph in another one, or simply check whether two graphs are isomorphic.
+
+The formal definition of subgraph isomorphism is as follows.
+
+We are given two graphs, \f$G_1=(V_1,E_1)\f$ and \f$G_2=(V_2,E_2)\f$. A
+function \f$f:V_1\longrightarrow V_2\f$ is called \e mapping or \e
+embedding if \f$f(u)\neq f(v)\f$ whenever \f$u\neq v\f$.
+
+The standard <em>Subgraph Isomorphism Problem (SIP)</em> looks for a
+mapping with the property that whenever \f$(u,v)\in E_1\f$, then
+\f$(f(u),f(v))\in E_2\f$.
+
+In case of <em>Induced Subgraph Isomorphism Problem (ISIP)</em> one
+also requires that if \f$(u,v)\not\in E_1\f$, then \f$(f(u),f(v))\not\in
+E_2\f$
+
+In addition, the graph nodes may be \e labeled, i.e. we are given two
+node labelings \f$l_1:V_1\longrightarrow L\f$ and \f$l_2:V_2\longrightarrow
+L\f$ and we require that \f$l_1(u)=l_2(f(u))\f$ holds for all nodes \f$u \in
+G_1\f$.
+
+*/
+
+/**
+@defgroup planar Planar Embedding and Drawing
+@ingroup algs
+\brief Algorithms for planarity checking, embedding and drawing
+
+This group contains the algorithms for planarity checking,
+embedding and drawing.
+
+\image html planar.png
+\image latex planar.eps "Plane graph" width=\textwidth
+*/
+
+/**
+@defgroup tsp Traveling Salesman Problem
+@ingroup algs
+\brief Algorithms for the symmetric traveling salesman problem
+
+This group contains basic heuristic algorithms for the the symmetric
+\e traveling \e salesman \e problem (TSP).
+Given an \ref FullGraph "undirected full graph" with a cost map on its edges,
+the problem is to find a shortest possible tour that visits each node exactly
+once (i.e. the minimum cost Hamiltonian cycle).
+
+These TSP algorithms are intended to be used with a \e metric \e cost
+\e function, i.e. the edge costs should satisfy the triangle inequality.
+Otherwise the algorithms could yield worse results.
+
+LEMON provides five well-known heuristics for solving symmetric TSP:
+ - \ref NearestNeighborTsp Neareast neighbor algorithm
+ - \ref GreedyTsp Greedy algorithm
+ - \ref InsertionTsp Insertion heuristic (with four selection methods)
+ - \ref ChristofidesTsp Christofides algorithm
+ - \ref Opt2Tsp 2-opt algorithm
+
+\ref NearestNeighborTsp, \ref GreedyTsp, and \ref InsertionTsp are the fastest
+solution methods. Furthermore, \ref InsertionTsp is usually quite effective.
+
+\ref ChristofidesTsp is somewhat slower, but it has the best guaranteed
+approximation factor: 3/2.
+
+\ref Opt2Tsp usually provides the best results in practice, but
+it is the slowest method. It can also be used to improve given tours,
+for example, the results of other algorithms.
+
+\image html tsp.png
+\image latex tsp.eps "Traveling salesman problem" width=\textwidth
+*/
+
+/**
+@defgroup approx_algs Approximation Algorithms
+@ingroup algs
+\brief Approximation algorithms.
+
+This group contains the approximation and heuristic algorithms
+implemented in LEMON.
+
+<b>Maximum Clique Problem</b>
+  - \ref GrossoLocatelliPullanMc An efficient heuristic algorithm of
+    Grosso, Locatelli, and Pullan.
+*/
+
+/**
+@defgroup auxalg Auxiliary Algorithms
+@ingroup algs
+\brief Auxiliary algorithms implemented in LEMON.
+
+This group contains some algorithms implemented in LEMON
+in order to make it easier to implement complex algorithms.
+*/
+
+/**
+@defgroup gen_opt_group General Optimization Tools
+\brief This group contains some general optimization frameworks
+implemented in LEMON.
+
+This group contains some general optimization frameworks
+implemented in LEMON.
+*/
+
+/**
+@defgroup lp_group LP and MIP Solvers
+@ingroup gen_opt_group
+\brief LP and MIP solver interfaces for LEMON.
+
+This group contains LP and MIP solver interfaces for LEMON.
+Various LP solvers could be used in the same manner with this
+high-level interface.
+
+The currently supported solvers are \cite glpk, \cite clp, \cite cbc,
+\cite cplex, \cite soplex.
+*/
+
+/**
+@defgroup lp_utils Tools for Lp and Mip Solvers
+@ingroup lp_group
+\brief Helper tools to the Lp and Mip solvers.
+
+This group adds some helper tools to general optimization framework
+implemented in LEMON.
+*/
+
+/**
+@defgroup metah Metaheuristics
+@ingroup gen_opt_group
+\brief Metaheuristics for LEMON library.
+
+This group contains some metaheuristic optimization tools.
+*/
+
+/**
+@defgroup utils Tools and Utilities
+\brief Tools and utilities for programming in LEMON
+
+Tools and utilities for programming in LEMON.
+*/
+
+/**
+@defgroup gutils Basic Graph Utilities
+@ingroup utils
+\brief Simple basic graph utilities.
+
+This group contains some simple basic graph utilities.
+*/
+
+/**
+@defgroup misc Miscellaneous Tools
+@ingroup utils
+\brief Tools for development, debugging and testing.
+
+This group contains several useful tools for development,
+debugging and testing.
+*/
+
+/**
+@defgroup timecount Time Measuring and Counting
+@ingroup misc
+\brief Simple tools for measuring the performance of algorithms.
+
+This group contains simple tools for measuring the performance
+of algorithms.
+*/
+
+/**
+@defgroup exceptions Exceptions
+@ingroup utils
+\brief Exceptions defined in LEMON.
+
+This group contains the exceptions defined in LEMON.
+*/
+
+/**
+@defgroup io_group Input-Output
+\brief Graph Input-Output methods
+
+This group contains the tools for importing and exporting graphs
+and graph related data. Now it supports the \ref lgf-format
+"LEMON Graph Format", the \c DIMACS format and the encapsulated
+postscript (EPS) format.
+*/
+
+/**
+@defgroup lemon_io LEMON Graph Format
+@ingroup io_group
+\brief Reading and writing LEMON Graph Format.
+
+This group contains methods for reading and writing
+\ref lgf-format "LEMON Graph Format".
+*/
+
+/**
+@defgroup eps_io Postscript Exporting
+@ingroup io_group
+\brief General \c EPS drawer and graph exporter
+
+This group contains general \c EPS drawing methods and special
+graph exporting tools.
+
+\image html graph_to_eps.png
+*/
+
+/**
+@defgroup dimacs_group DIMACS Format
+@ingroup io_group
+\brief Read and write files in DIMACS format
+
+Tools to read a digraph from or write it to a file in DIMACS format data.
+*/
+
+/**
+@defgroup nauty_group NAUTY Format
+@ingroup io_group
+\brief Read \e Nauty format
+
+Tool to read graphs from \e Nauty format data.
+*/
+
+/**
+@defgroup concept Concepts
+\brief Skeleton classes and concept checking classes
+
+This group contains the data/algorithm skeletons and concept checking
+classes implemented in LEMON.
+
+The purpose of the classes in this group is fourfold.
+
+- These classes contain the documentations of the %concepts. In order
+  to avoid document multiplications, an implementation of a concept
+  simply refers to the corresponding concept class.
+
+- These classes declare every functions, <tt>typedef</tt>s etc. an
+  implementation of the %concepts should provide, however completely
+  without implementations and real data structures behind the
+  interface. On the other hand they should provide nothing else. All
+  the algorithms working on a data structure meeting a certain concept
+  should compile with these classes. (Though it will not run properly,
+  of course.) In this way it is easily to check if an algorithm
+  doesn't use any extra feature of a certain implementation.
+
+- The concept descriptor classes also provide a <em>checker class</em>
+  that makes it possible to check whether a certain implementation of a
+  concept indeed provides all the required features.
+
+- Finally, They can serve as a skeleton of a new implementation of a concept.
+*/
+
+/**
+@defgroup graph_concepts Graph Structure Concepts
+@ingroup concept
+\brief Skeleton and concept checking classes for graph structures
+
+This group contains the skeletons and concept checking classes of
+graph structures.
+*/
+
+/**
+@defgroup map_concepts Map Concepts
+@ingroup concept
+\brief Skeleton and concept checking classes for maps
+
+This group contains the skeletons and concept checking classes of maps.
+*/
+
+/**
+@defgroup tools Standalone Utility Applications
+
+Some utility applications are listed here.
+
+The standard compilation procedure (<tt>./configure;make</tt>) will compile
+them, as well.
+*/
+
+/**
+\anchor demoprograms
+
+@defgroup demos Demo Programs
+
+Some demo programs are listed here. Their full source codes can be found in
+the \c demo subdirectory of the source tree.
+
+In order to compile them, use the <tt>make demo</tt> or the
+<tt>make check</tt> commands.
+*/
+
+}

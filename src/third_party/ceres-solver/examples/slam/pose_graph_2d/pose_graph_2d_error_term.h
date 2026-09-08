@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2016 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -59,24 +59,29 @@ Eigen::Matrix<T, 2, 2> RotationMatrix2D(T yaw_radians) {
 // [-pi, pi).
 class PoseGraph2dErrorTerm {
  public:
-  PoseGraph2dErrorTerm(double x_ab, double y_ab, double yaw_ab_radians,
+  PoseGraph2dErrorTerm(double x_ab,
+                       double y_ab,
+                       double yaw_ab_radians,
                        const Eigen::Matrix3d& sqrt_information)
       : p_ab_(x_ab, y_ab),
         yaw_ab_radians_(yaw_ab_radians),
         sqrt_information_(sqrt_information) {}
 
   template <typename T>
-  bool operator()(const T* const x_a, const T* const y_a, const T* const yaw_a,
-                  const T* const x_b, const T* const y_b, const T* const yaw_b,
+  bool operator()(const T* const x_a,
+                  const T* const y_a,
+                  const T* const yaw_a,
+                  const T* const x_b,
+                  const T* const y_b,
+                  const T* const yaw_b,
                   T* residuals_ptr) const {
     const Eigen::Matrix<T, 2, 1> p_a(*x_a, *y_a);
     const Eigen::Matrix<T, 2, 1> p_b(*x_b, *y_b);
 
-    Eigen::Map<Eigen::Matrix<T, 3, 1> > residuals_map(residuals_ptr);
+    Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_map(residuals_ptr);
 
     residuals_map.template head<2>() =
-        RotationMatrix2D(*yaw_a).transpose() * (p_b - p_a) -
-        p_ab_.cast<T>();
+        RotationMatrix2D(*yaw_a).transpose() * (p_b - p_a) - p_ab_.cast<T>();
     residuals_map(2) = ceres::examples::NormalizeAngle(
         (*yaw_b - *yaw_a) - static_cast<T>(yaw_ab_radians_));
 
@@ -87,12 +92,14 @@ class PoseGraph2dErrorTerm {
     return true;
   }
 
-  static ceres::CostFunction* Create(double x_ab, double y_ab,
+  static ceres::CostFunction* Create(double x_ab,
+                                     double y_ab,
                                      double yaw_ab_radians,
                                      const Eigen::Matrix3d& sqrt_information) {
-    return (new ceres::AutoDiffCostFunction<PoseGraph2dErrorTerm, 3, 1, 1, 1, 1,
-                                            1, 1>(new PoseGraph2dErrorTerm(
-        x_ab, y_ab, yaw_ab_radians, sqrt_information)));
+    return (new ceres::
+                AutoDiffCostFunction<PoseGraph2dErrorTerm, 3, 1, 1, 1, 1, 1, 1>(
+                    new PoseGraph2dErrorTerm(
+                        x_ab, y_ab, yaw_ab_radians, sqrt_information)));
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

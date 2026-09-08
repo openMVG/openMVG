@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,11 @@
 
 #include "ceres/graph.h"
 
-#include "gtest/gtest.h"
-#include "ceres/collections_port.h"
-#include "ceres/internal/scoped_ptr.h"
+#include <unordered_set>
 
-namespace ceres {
-namespace internal {
+#include "gtest/gtest.h"
+
+namespace ceres::internal {
 
 TEST(Graph, EmptyGraph) {
   Graph<int> graph;
@@ -48,7 +47,7 @@ TEST(Graph, AddVertexAndEdge) {
   graph.AddVertex(1);
   graph.AddEdge(0, 1);
 
-  const HashSet<int>& vertices = graph.vertices();
+  const std::unordered_set<int>& vertices = graph.vertices();
   EXPECT_EQ(vertices.size(), 2);
   EXPECT_EQ(graph.Neighbors(0).size(), 1);
   EXPECT_EQ(graph.Neighbors(1).size(), 1);
@@ -60,7 +59,7 @@ TEST(Graph, AddVertexIdempotence) {
   graph.AddVertex(1);
   graph.AddEdge(0, 1);
 
-  const HashSet<int>& vertices = graph.vertices();
+  const std::unordered_set<int>& vertices = graph.vertices();
 
   EXPECT_EQ(vertices.size(), 2);
 
@@ -93,7 +92,7 @@ TEST(WeightedGraph, AddVertexAndEdge) {
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
 
-  const HashSet<int>& vertices = graph.vertices();
+  const std::unordered_set<int>& vertices = graph.vertices();
   EXPECT_EQ(vertices.size(), 2);
   EXPECT_EQ(graph.VertexWeight(0), 1.0);
   EXPECT_EQ(graph.VertexWeight(1), 2.0);
@@ -109,7 +108,7 @@ TEST(WeightedGraph, AddVertexIdempotence) {
   graph.AddVertex(1, 2.0);
   graph.AddEdge(0, 1, 0.5);
 
-  const HashSet<int>& vertices = graph.vertices();
+  const std::unordered_set<int>& vertices = graph.vertices();
 
   EXPECT_EQ(vertices.size(), 2);
 
@@ -148,5 +147,4 @@ TEST(WeightedGraph, NonExistentEdge) {
   EXPECT_EQ(graph.EdgeWeight(2, 3), 0);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

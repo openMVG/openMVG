@@ -23,16 +23,13 @@ Solving
 
    2. For general sparse problems (i.e., the Jacobian matrix has a
       substantial number of zeros) use
-      ``SPARSE_NORMAL_CHOLESKY``. This requires that you have
-      ``SuiteSparse`` or ``CXSparse`` installed.
+      ``SPARSE_NORMAL_CHOLESKY``.
 
    3. For bundle adjustment problems with up to a hundred or so
       cameras, use ``DENSE_SCHUR``.
 
    4. For larger bundle adjustment problems with sparse Schur
-      Complement/Reduced camera matrices use ``SPARSE_SCHUR``. This
-      requires that you build Ceres with support for ``SuiteSparse``,
-      ``CXSparse`` or Eigen's sparse linear algebra libraries.
+      Complement/Reduced camera matrices use ``SPARSE_SCHUR``.
 
       If you do not have access to these libraries for whatever
       reason, ``ITERATIVE_SCHUR`` with ``SCHUR_JACOBI`` is an

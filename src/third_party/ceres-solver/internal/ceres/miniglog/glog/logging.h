@@ -69,7 +69,7 @@
 // The following CHECK macros are defined:
 //
 //   CHECK(condition)        - fails if condition is false and logs condition.
-//   CHECK_NOTNULL(variable) - fails if the variable is NULL.
+//   CHECK_NOTNULL(variable) - fails if the variable is nullptr.
 //
 // The following binary check macros are also defined :
 //
@@ -93,7 +93,7 @@
 #define CERCES_INTERNAL_MINIGLOG_GLOG_LOGGING_H_
 
 #ifdef ANDROID
-#  include <android/log.h>
+#include <android/log.h>
 #endif  // ANDROID
 
 #include <algorithm>
@@ -105,28 +105,28 @@
 #include <string>
 #include <vector>
 
-// For appropriate definition of CERES_EXPORT macro.
-#include "ceres/internal/port.h"
 #include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 
 // Log severity level constants.
+// clang-format off
 const int FATAL   = -3;
 const int ERROR   = -2;
 const int WARNING = -1;
 const int INFO    =  0;
-
-// define a default LOG severity
-#define MAX_LOG_LEVEL (ERROR) // openMVG
+// clang-format on
 
 // ------------------------- Glog compatibility ------------------------------
 
 namespace google {
 
-typedef int LogSeverity;
+using LogSeverity = int;
+// clang-format off
 const int INFO    = ::INFO;
 const int WARNING = ::WARNING;
 const int ERROR   = ::ERROR;
 const int FATAL   = ::FATAL;
+// clang-format on
 
 // Sink class used for integration with mock and test functions. If sinks are
 // added, all log output is also sent to each sink through the send function.
@@ -134,7 +134,7 @@ const int FATAL   = ::FATAL;
 // This implementation is not thread safe.
 class CERES_EXPORT LogSink {
  public:
-  virtual ~LogSink() {}
+  virtual ~LogSink() = default;
   virtual void send(LogSeverity severity,
                     const char* full_filename,
                     const char* base_filename,
@@ -146,20 +146,18 @@ class CERES_EXPORT LogSink {
 };
 
 // Global set of log sinks. The actual object is defined in logging.cc.
-extern CERES_EXPORT std::set<LogSink *> log_sinks_global;
+extern CERES_EXPORT std::set<LogSink*> log_sinks_global;
 
-inline void InitGoogleLogging(char *argv) {
+inline void InitGoogleLogging(const char* /* argv */) {
   // Do nothing; this is ignored.
 }
 
 // Note: the Log sink functions are not thread safe.
-inline void AddLogSink(LogSink *sink) {
+inline void AddLogSink(LogSink* sink) {
   // TODO(settinger): Add locks for thread safety.
   log_sinks_global.insert(sink);
 }
-inline void RemoveLogSink(LogSink *sink) {
-  log_sinks_global.erase(sink);
-}
+inline void RemoveLogSink(LogSink* sink) { log_sinks_global.erase(sink); }
 
 }  // namespace google
 
@@ -173,8 +171,8 @@ inline void RemoveLogSink(LogSink *sink) {
 // use of the log macros LG, LOG, or VLOG.
 class CERES_EXPORT MessageLogger {
  public:
-  MessageLogger(const char *file, int line, const char *tag, int severity)
-    : file_(file), line_(line), tag_(tag), severity_(severity) {
+  MessageLogger(const char* file, int line, const char* tag, int severity)
+      : file_(file), line_(line), tag_(tag), severity_(severity) {
     // Pre-pend the stream with the file and line number.
     StripBasename(std::string(file), &filename_only_);
     stream_ << filename_only_ << ":" << line << " ";
@@ -196,8 +194,8 @@ class CERES_EXPORT MessageLogger {
 
     // Bound the logging level.
     const int kMaxVerboseLevel = 2;
-    int android_level_index = std::min(std::max(FATAL, severity_),
-                                       kMaxVerboseLevel) - FATAL;
+    int android_level_index =
+        std::min(std::max(FATAL, severity_), kMaxVerboseLevel) - FATAL;
     int android_log_level = android_log_levels[android_level_index];
 
     // Output the log string the Android log at the appropriate level.
@@ -205,9 +203,7 @@ class CERES_EXPORT MessageLogger {
 
     // Indicate termination if needed.
     if (severity_ == FATAL) {
-      __android_log_write(ANDROID_LOG_FATAL,
-                          tag_.c_str(),
-                          "terminating.\n");
+      __android_log_write(ANDROID_LOG_FATAL, tag_.c_str(), "terminating.\n");
     }
 #else
     // If not building on Android, log all output to std::cerr.
@@ -225,12 +221,12 @@ class CERES_EXPORT MessageLogger {
   }
 
   // Return the stream associated with the logger object.
-  std::stringstream &stream() { return stream_; }
+  std::stringstream& stream() { return stream_; }
 
  private:
   void LogToSinks(int severity) {
     time_t rawtime;
-    time (&rawtime);
+    time(&rawtime);
 
     struct tm timeinfo;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
@@ -244,24 +240,31 @@ class CERES_EXPORT MessageLogger {
     std::set<google::LogSink*>::iterator iter;
     // Send the log message to all sinks.
     for (iter = google::log_sinks_global.begin();
-         iter != google::log_sinks_global.end(); ++iter) {
-      (*iter)->send(severity, file_.c_str(), filename_only_.c_str(), line_,
-                    &timeinfo, stream_.str().c_str(), stream_.str().size());
+         iter != google::log_sinks_global.end();
+         ++iter) {
+      (*iter)->send(severity,
+                    file_.c_str(),
+                    filename_only_.c_str(),
+                    line_,
+                    &timeinfo,
+                    stream_.str().c_str(),
+                    stream_.str().size());
     }
   }
 
   void WaitForSinks() {
     // TODO(settinger): Add locks for thread safety.
-    std::set<google::LogSink *>::iterator iter;
+    std::set<google::LogSink*>::iterator iter;
 
     // Call WaitTillSent() for all sinks.
     for (iter = google::log_sinks_global.begin();
-         iter != google::log_sinks_global.end(); ++iter) {
+         iter != google::log_sinks_global.end();
+         ++iter) {
       (*iter)->WaitTillSent();
     }
   }
 
-  void StripBasename(const std::string &full_path, std::string *filename) {
+  void StripBasename(const std::string& full_path, std::string* filename) {
     // TODO(settinger): Add support for OSs with different path separators.
     const char kSeparator = '/';
     size_t pos = full_path.rfind(kSeparator);
@@ -287,16 +290,17 @@ class CERES_EXPORT MessageLogger {
 // is not used" and "statement has no effect".
 class CERES_EXPORT LoggerVoidify {
  public:
-  LoggerVoidify() { }
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(const std::ostream &s) { }
+  void operator&(const std::ostream& s) {}
 };
 
 // Log only if condition is met.  Otherwise evaluates to void.
+// clang-format off
 #define LOG_IF(severity, condition) \
     !(condition) ? (void) 0 : LoggerVoidify() & \
       MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
+// clang-format on
 
 // Log only if condition is NOT met.  Otherwise evaluates to void.
 #define LOG_IF_FALSE(severity, condition) LOG_IF(severity, !(condition))
@@ -304,6 +308,7 @@ class CERES_EXPORT LoggerVoidify {
 // LG is a convenient shortcut for LOG(INFO). Its use is in new
 // google3 code is discouraged and the following shortcut exists for
 // backward compatibility with existing code.
+// clang-format off
 #ifdef MAX_LOG_LEVEL
 #  define LOG(n)  LOG_IF(n, n <= MAX_LOG_LEVEL)
 #  define VLOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
@@ -329,37 +334,39 @@ class CERES_EXPORT LoggerVoidify {
 #  define DLOG(severity) true ? (void) 0 : LoggerVoidify() & \
       MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
 #endif
-
+// clang-format on
 
 // Log a message and terminate.
-template<class T>
-void LogMessageFatal(const char *file, int line, const T &message) {
-  MessageLogger((char *)__FILE__, __LINE__, "native", FATAL).stream()
-      << message;
+template <class T>
+void LogMessageFatal(const char* file, int line, const T& message) {
+  MessageLogger((char*)__FILE__, __LINE__, "native", FATAL).stream() << message;
 }
 
 // ---------------------------- CHECK macros ---------------------------------
 
 // Check for a given boolean condition.
-#define CHECK(condition) LOG_IF_FALSE(FATAL, condition) \
-        << "Check failed: " #condition " "
+#define CHECK(condition) \
+  LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
 
 #ifndef NDEBUG
 // Debug only version of CHECK
-#  define DCHECK(condition) LOG_IF_FALSE(FATAL, condition) \
-          << "Check failed: " #condition " "
+#define DCHECK(condition) \
+  LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
 #else
 // Optimized version - generates no code.
-#  define DCHECK(condition) if (false) LOG_IF_FALSE(FATAL, condition) \
-          << "Check failed: " #condition " "
+#define DCHECK(condition) \
+  if (false) LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
 #endif  // NDEBUG
 
 // ------------------------- CHECK_OP macros ---------------------------------
 
 // Generic binary operator check macro. This should not be directly invoked,
 // instead use the binary comparison macros defined below.
-#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, ((val1) op (val2))) \
-  << "Check failed: " #val1 " " #op " " #val2 " "
+#define CHECK_OP(val1, val2, op)        \
+  LOG_IF_FALSE(FATAL, ((val1)op(val2))) \
+      << "Check failed: " #val1 " " #op " " #val2 " "
+
+// clang-format off
 
 // Check_op macro definitions
 #define CHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
@@ -387,40 +394,43 @@ void LogMessageFatal(const char *file, int line, const T &message) {
 #  define DCHECK_GT(val1, val2) if (false) CHECK_OP(val1, val2, >)
 #endif  // NDEBUG
 
+// clang-format on
+
 // ---------------------------CHECK_NOTNULL macros ---------------------------
 
 // Helpers for CHECK_NOTNULL(). Two are necessary to support both raw pointers
 // and smart pointers.
 template <typename T>
-T& CheckNotNullCommon(const char *file, int line, const char *names, T& t) {
-  if (t == NULL) {
+T& CheckNotNullCommon(const char* file, int line, const char* names, T& t) {
+  if (t == nullptr) {
     LogMessageFatal(file, line, std::string(names));
   }
   return t;
 }
 
 template <typename T>
-T* CheckNotNull(const char *file, int line, const char *names, T* t) {
+T* CheckNotNull(const char* file, int line, const char* names, T* t) {
   return CheckNotNullCommon(file, line, names, t);
 }
 
 template <typename T>
-T& CheckNotNull(const char *file, int line, const char *names, T& t) {
+T& CheckNotNull(const char* file, int line, const char* names, T& t) {
   return CheckNotNullCommon(file, line, names, t);
 }
 
 // Check that a pointer is not null.
 #define CHECK_NOTNULL(val) \
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non nullptr", (val))
 
 #ifndef NDEBUG
 // Debug only version of CHECK_NOTNULL
 #define DCHECK_NOTNULL(val) \
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non nullptr", (val))
 #else
 // Optimized version - generates no code.
-#define DCHECK_NOTNULL(val) if (false)\
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+#define DCHECK_NOTNULL(val) \
+  if (false)                \
+  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non nullptr", (val))
 #endif  // NDEBUG
 
 #include "ceres/internal/reenable_warnings.h"

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -43,10 +43,9 @@
 
 #include "glog/logging.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
-template<typename Real>
+template <typename Real>
 class PGMImage {
  public:
   // Create an empty image
@@ -63,9 +62,9 @@ class PGMImage {
 
   // Get individual pixels
   Real* MutablePixel(int x, int y);
-  Real  Pixel(int x, int y) const;
+  Real Pixel(int x, int y) const;
   Real* MutablePixelFromLinearIndex(int index);
-  Real  PixelFromLinearIndex(int index) const;
+  Real PixelFromLinearIndex(int index) const;
   int LinearIndex(int x, int y) const;
 
   // Adds an image to another
@@ -90,52 +89,51 @@ class PGMImage {
 
 // --- IMPLEMENTATION
 
-template<typename Real>
+template <typename Real>
 PGMImage<Real>::PGMImage(int width, int height)
-  : height_(height), width_(width), data_(width*height, 0.0) {
-}
+    : height_(height), width_(width), data_(width * height, 0.0) {}
 
-template<typename Real>
+template <typename Real>
 PGMImage<Real>::PGMImage(std::string filename) {
   if (!ReadFromFile(filename)) {
     height_ = 0;
-    width_  = 0;
+    width_ = 0;
   }
 }
 
-template<typename Real>
+template <typename Real>
 void PGMImage<Real>::Set(double constant) {
   for (int i = 0; i < data_.size(); ++i) {
     data_[i] = constant;
   }
 }
 
-template<typename Real>
+template <typename Real>
 int PGMImage<Real>::width() const {
   return width_;
 }
 
-template<typename Real>
+template <typename Real>
 int PGMImage<Real>::height() const {
   return height_;
 }
 
-template<typename Real>
+template <typename Real>
 int PGMImage<Real>::NumPixels() const {
   return width_ * height_;
 }
 
-template<typename Real>
+template <typename Real>
 Real* PGMImage<Real>::MutablePixel(int x, int y) {
   return MutablePixelFromLinearIndex(LinearIndex(x, y));
 }
 
-template<typename Real>
+template <typename Real>
 Real PGMImage<Real>::Pixel(int x, int y) const {
   return PixelFromLinearIndex(LinearIndex(x, y));
 }
 
-template<typename Real>
+template <typename Real>
 Real* PGMImage<Real>::MutablePixelFromLinearIndex(int index) {
   CHECK(index >= 0);
   CHECK(index < width_ * height_);
@@ -143,22 +141,22 @@ Real* PGMImage<Real>::MutablePixelFromLinearIndex(int index) {
   return &data_[index];
 }
 
-template<typename Real>
-Real  PGMImage<Real>::PixelFromLinearIndex(int index) const {
+template <typename Real>
+Real PGMImage<Real>::PixelFromLinearIndex(int index) const {
   CHECK(index >= 0);
   CHECK(index < width_ * height_);
   CHECK(index < data_.size());
   return data_[index];
 }
 
-template<typename Real>
+template <typename Real>
 int PGMImage<Real>::LinearIndex(int x, int y) const {
-  return x + width_*y;
+  return x + width_ * y;
 }
 
 // Adds an image to another
-template<typename Real>
-void PGMImage<Real>::operator+= (const PGMImage<Real>& image) {
+template <typename Real>
+void PGMImage<Real>::operator+=(const PGMImage<Real>& image) {
   CHECK(data_.size() == image.data_.size());
   for (int i = 0; i < data_.size(); ++i) {
     data_[i] += image.data_[i];
@@ -166,22 +164,22 @@ void PGMImage<Real>::operator+= (const PGMImage<Real>& image) {
 }
 
 // Adds a constant to an image
-template<typename Real>
-void PGMImage<Real>::operator+= (Real a) {
+template <typename Real>
+void PGMImage<Real>::operator+=(Real a) {
   for (int i = 0; i < data_.size(); ++i) {
     data_[i] += a;
   }
 }
 
 // Multiplies an image by a constant
-template<typename Real>
-void PGMImage<Real>::operator*= (Real a) {
+template <typename Real>
+void PGMImage<Real>::operator*=(Real a) {
   for (int i = 0; i < data_.size(); ++i) {
     data_[i] *= a;
   }
 }
 
-template<typename Real>
+template <typename Real>
 bool PGMImage<Real>::WriteToFile(std::string filename) const {
   std::ofstream outputfile(filename.c_str());
   outputfile << "P2" << std::endl;
@@ -191,7 +189,7 @@ bool PGMImage<Real>::WriteToFile(std::string filename) const {
   outputfile << width_ << ' ' << height_ << " 255 " << std::endl;
 
   // Write data
-  int num_pixels = width_*height_;
+  int num_pixels = width_ * height_;
   for (int i = 0; i < num_pixels; ++i) {
     // Convert to integer by rounding when writing file
     outputfile << static_cast<int>(data_[i] + 0.5) << ' ';
@@ -200,10 +198,10 @@ bool PGMImage<Real>::WriteToFile(std::string filename) const {
   return bool(outputfile);  // Returns true/false
 }
 
-namespace  {
+namespace {
 
 // Helper function to read data from a text file, ignoring "#" comments.
-template<typename T>
+template <typename T>
 bool GetIgnoreComment(std::istream* in, T& t) {
   std::string word;
   bool ok;
@@ -229,7 +227,7 @@ bool GetIgnoreComment(std::istream* in, T& t) {
 }
 }  // namespace
 
-template<typename Real>
+template <typename Real>
 bool PGMImage<Real>::ReadFromFile(std::string filename) {
   std::ifstream inputfile(filename.c_str());
 
@@ -242,9 +240,9 @@ bool PGMImage<Real>::ReadFromFile(std::string filename) {
 
   // Read the image header
   int two_fifty_five;
-  if (!GetIgnoreComment(&inputfile, width_)  ||
+  if (!GetIgnoreComment(&inputfile, width_) ||
       !GetIgnoreComment(&inputfile, height_) ||
-      !GetIgnoreComment(&inputfile, two_fifty_five) ) {
+      !GetIgnoreComment(&inputfile, two_fifty_five)) {
     return false;
   }
   // Assert that the number of grey levels is 255.
@@ -253,7 +251,7 @@ bool PGMImage<Real>::ReadFromFile(std::string filename) {
   }
 
   // Now read the data
-  int num_pixels = width_*height_;
+  int num_pixels = width_ * height_;
   data_.resize(num_pixels);
   if (ch2 == '2') {
     // Ascii file
@@ -297,7 +295,7 @@ bool PGMImage<Real>::ReadFromFile(std::string filename) {
   return true;
 }
 
-template<typename Real>
+template <typename Real>
 bool PGMImage<Real>::SetData(const std::vector<Real>& new_data) {
   // This function cannot change the dimensions
   if (new_data.size() != data_.size()) {
@@ -307,13 +305,11 @@ bool PGMImage<Real>::SetData(const std::vector<Real>& new_data) {
   return true;
 }
 
-template<typename Real>
+template <typename Real>
 const std::vector<Real>& PGMImage<Real>::data() const {
   return data_;
 }
 
-}  // namespace examples
-}  // namespace ceres
-
+}  // namespace ceres::examples
 
 #endif  // CERES_EXAMPLES_PGM_IMAGE_H_

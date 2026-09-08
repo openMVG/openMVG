@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 //
 // Author: strandmark@google.com (Petter Strandmark)
 //
-// Class for loading the data required for descibing a Fields of Experts (FoE)
+// Class for loading the data required for describing a Fields of Experts (FoE)
 // model. The Fields of Experts regularization consists of terms of the type
 //
 //   alpha * log(1 + (1/2)*sum(F .* X)^2),
@@ -47,14 +47,12 @@
 #include <iostream>
 #include <vector>
 
-#include "ceres/loss_function.h"
 #include "ceres/cost_function.h"
+#include "ceres/loss_function.h"
 #include "ceres/sized_cost_function.h"
-
 #include "pgm_image.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
 // One sum in the FoE regularizer. This is a dot product between a filter and an
 // image patch. It simply calculates the dot product between the filter
@@ -64,9 +62,9 @@ class FieldsOfExpertsCost : public ceres::CostFunction {
   explicit FieldsOfExpertsCost(const std::vector<double>& filter);
   // The number of scalar parameters passed to Evaluate must equal the number of
   // filter coefficients passed to the constructor.
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const;
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const override;
 
  private:
   const std::vector<double>& filter_;
@@ -78,8 +76,8 @@ class FieldsOfExpertsCost : public ceres::CostFunction {
 //
 class FieldsOfExpertsLoss : public ceres::LossFunction {
  public:
-  explicit FieldsOfExpertsLoss(double alpha) : alpha_(alpha) { }
-  virtual void Evaluate(double, double*) const;
+  explicit FieldsOfExpertsLoss(double alpha) : alpha_(alpha) {}
+  void Evaluate(double, double*) const override;
 
  private:
   const double alpha_;
@@ -97,19 +95,13 @@ class FieldsOfExperts {
   bool LoadFromFile(const std::string& filename);
 
   // Side length of a square filter in this FoE. They are all of the same size.
-  int Size() const {
-    return size_;
-  }
+  int Size() const { return size_; }
 
   // Total number of pixels the filter covers.
-  int NumVariables() const {
-    return size_ * size_;
-  }
+  int NumVariables() const { return size_ * size_; }
 
   // Number of filters used by the FoE.
-  int NumFilters() const {
-    return num_filters_;
-  }
+  int NumFilters() const { return num_filters_; }
 
   // Creates a new cost function. The caller is responsible for deallocating the
   // memory. alpha_index specifies which filter is used in the cost function.
@@ -119,12 +111,8 @@ class FieldsOfExperts {
   ceres::LossFunction* NewLossFunction(int alpha_index) const;
 
   // Gets the delta pixel indices for all pixels in a patch.
-  const std::vector<int>& GetXDeltaIndices() const {
-    return x_delta_indices_;
-  }
-  const std::vector<int>& GetYDeltaIndices() const {
-    return y_delta_indices_;
-  }
+  const std::vector<int>& GetXDeltaIndices() const { return x_delta_indices_; }
+  const std::vector<int>& GetYDeltaIndices() const { return y_delta_indices_; }
 
  private:
   // The side length of a square filter.
@@ -136,10 +124,9 @@ class FieldsOfExperts {
   // The coefficients in front of each term.
   std::vector<double> alpha_;
   // The filters used for the dot product with image patches.
-  std::vector<std::vector<double> > filters_;
+  std::vector<std::vector<double>> filters_;
 };
 
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples
 
 #endif  // CERES_EXAMPLES_FIELDS_OF_EXPERTS_H_

@@ -1,10 +1,9 @@
-
 /* pngwio.c - functions for data output
  *
- * Last changed in libpng 1.6.0 [February 14, 2013]
- * Copyright (c) 1998-2013 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 2018-2025 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2014,2016,2018 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -26,16 +25,16 @@
  * writes to a file pointer.  Note that this routine sometimes gets called
  * with very small lengths, so you should implement some kind of simple
  * buffering if you are using unbuffered writes.  This should never be asked
- * to write more than 64K on a 16 bit machine.
+ * to write more than 64K on a 16-bit machine.
  */
 
 void /* PRIVATE */
-png_write_data(png_structrp png_ptr, png_const_bytep data, png_size_t length)
+png_write_data(png_structrp png_ptr, png_const_bytep data, size_t length)
 {
    /* NOTE: write_data_fn must not change the buffer! */
    if (png_ptr->write_data_fn != NULL )
       (*(png_ptr->write_data_fn))(png_ptr, png_constcast(png_bytep,data),
-         length);
+          length);
 
    else
       png_error(png_ptr, "Call to NULL write function");
@@ -48,14 +47,14 @@ png_write_data(png_structrp png_ptr, png_const_bytep data, png_size_t length)
  * than changing the library.
  */
 void PNGCBAPI
-png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
+png_default_write_data(png_structp png_ptr, png_bytep data, size_t length)
 {
-   png_size_t check;
+   size_t check;
 
    if (png_ptr == NULL)
       return;
 
-   check = fwrite(data, 1, length, (png_FILE_p)(png_ptr->io_ptr));
+   check = fwrite(data, 1, length, (FILE *)png_ptr->io_ptr);
 
    if (check != length)
       png_error(png_ptr, "Write Error");
@@ -78,12 +77,12 @@ png_flush(png_structrp png_ptr)
 void PNGCBAPI
 png_default_flush(png_structp png_ptr)
 {
-   png_FILE_p io_ptr;
+   FILE *io_ptr;
 
    if (png_ptr == NULL)
       return;
 
-   io_ptr = png_voidcast(png_FILE_p, (png_ptr->io_ptr));
+   io_ptr = png_voidcast(FILE *, png_ptr->io_ptr);
    fflush(io_ptr);
 }
 #  endif
@@ -149,8 +148,11 @@ png_set_write_fn(png_structrp png_ptr, png_voidp io_ptr,
 #  else
    png_ptr->output_flush_fn = output_flush_fn;
 #  endif
-#endif /* PNG_WRITE_FLUSH_SUPPORTED */
+#else
+   PNG_UNUSED(output_flush_fn)
+#endif /* WRITE_FLUSH */
 
+#ifdef PNG_READ_SUPPORTED
    /* It is an error to read while writing a png file */
    if (png_ptr->read_data_fn != NULL)
    {
@@ -160,5 +162,6 @@ png_set_write_fn(png_structrp png_ptr, png_voidp io_ptr,
           "Can't set both read_data_fn and write_data_fn in the"
           " same structure");
    }
+#endif
 }
-#endif /* PNG_WRITE_SUPPORTED */
+#endif /* WRITE */

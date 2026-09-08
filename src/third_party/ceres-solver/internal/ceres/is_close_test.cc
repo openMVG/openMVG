@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,10 @@
 // This file contains tests for the IsClose function.
 
 #include "ceres/is_close.h"
+
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 const double kTolerance = 1e-9;
 
@@ -173,5 +173,4 @@ TEST(IsClose, BothParametersZero) {
   EXPECT_NEAR(relative_error, 0.0, kTolerance);
   EXPECT_NEAR(absolute_error, 0.0, kTolerance);
 }
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

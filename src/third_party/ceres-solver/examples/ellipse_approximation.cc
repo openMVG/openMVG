@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,9 @@
 // dense but dynamically sparse.
 
 #include <cmath>
+#include <utility>
 #include <vector>
+
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
@@ -53,6 +55,7 @@
 
 const int kYRows = 212;
 const int kYCols = 2;
+// clang-format off
 const double kYData[kYRows * kYCols] = {
   +3.871364e+00, +9.916027e-01,
   +3.864003e+00, +1.034148e+00,
@@ -267,13 +270,14 @@ const double kYData[kYRows * kYCols] = {
   +3.870542e+00, +9.996121e-01,
   +3.865424e+00, +1.028474e+00
 };
+// clang-format on
 ceres::ConstMatrixRef kY(kYData, kYRows, kYCols);
 
 class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
  public:
   PointToLineSegmentContourCostFunction(const int num_segments,
-                                        const Eigen::Vector2d& y)
-      : num_segments_(num_segments), y_(y) {
+                                        Eigen::Vector2d y)
+      : num_segments_(num_segments), y_(std::move(y)) {
     // The first parameter is the preimage position.
     mutable_parameter_block_sizes()->push_back(1);
     // The next parameters are the control points for the line segment contour.
@@ -283,9 +287,9 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
     set_num_residuals(2);
   }
 
-  virtual bool Evaluate(const double* const* x,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(const double* const* x,
+                double* residuals,
+                double** jacobians) const override {
     // Convert the preimage position `t` into a segment index `i0` and the
     // line segment interpolation parameter `u`. `i1` is the index of the next
     // control point.
@@ -299,16 +303,16 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
     residuals[0] = y_[0] - ((1.0 - u) * x[1 + i0][0] + u * x[1 + i1][0]);
     residuals[1] = y_[1] - ((1.0 - u) * x[1 + i0][1] + u * x[1 + i1][1]);
 
-    if (jacobians == NULL) {
+    if (jacobians == nullptr) {
       return true;
     }
 
-    if (jacobians[0] != NULL) {
+    if (jacobians[0] != nullptr) {
       jacobians[0][0] = x[1 + i0][0] - x[1 + i1][0];
       jacobians[0][1] = x[1 + i0][1] - x[1 + i1][1];
     }
     for (int i = 0; i < num_segments_; ++i) {
-      if (jacobians[i + 1] != NULL) {
+      if (jacobians[i + 1] != nullptr) {
         ceres::MatrixRef(jacobians[i + 1], 2, 2).setZero();
         if (i == i0) {
           jacobians[i + 1][0] = -(1.0 - u);
@@ -357,9 +361,9 @@ class EuclideanDistanceFunctor {
   const double sqrt_weight_;
 };
 
-bool SolveWithFullReport(ceres::Solver::Options options,
-                         ceres::Problem* problem,
-                         bool dynamic_sparsity) {
+static bool SolveWithFullReport(ceres::Solver::Options options,
+                                ceres::Problem* problem,
+                                bool dynamic_sparsity) {
   options.dynamic_sparsity = dynamic_sparsity;
 
   ceres::Solver::Summary summary;
@@ -382,9 +386,8 @@ int main(int argc, char** argv) {
 
   // Eigen::MatrixXd is column major so we define our own MatrixXd which is
   // row major. Eigen::VectorXd can be used directly.
-  typedef Eigen::Matrix<double,
-                        Eigen::Dynamic, Eigen::Dynamic,
-                        Eigen::RowMajor> MatrixXd;
+  using MatrixXd =
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   using Eigen::VectorXd;
 
   // `X` is the matrix of control points which make up the contour of line
@@ -393,7 +396,7 @@ int main(int argc, char** argv) {
   //
   // Initialize `X` to points on the unit circle.
   VectorXd w(num_segments + 1);
-  w.setLinSpaced(num_segments + 1, 0.0, 2.0 * M_PI);
+  w.setLinSpaced(num_segments + 1, 0.0, 2.0 * ceres::constants::pi);
   w.conservativeResize(num_segments);
   MatrixXd X(num_segments, 2);
   X.col(0) = w.array().cos();
@@ -402,9 +405,9 @@ int main(int argc, char** argv) {
   // Each data point has an associated preimage position on the line segment
   // contour. For each data point we initialize the preimage positions to
   // the index of the closest control point.
-  const int num_observations = kY.rows();
+  const int64_t num_observations = kY.rows();
   VectorXd t(num_observations);
-  for (int i = 0; i < num_observations; ++i) {
+  for (int64_t i = 0; i < num_observations; ++i) {
     (X.rowwise() - kY.row(i)).rowwise().squaredNorm().minCoeff(&t[i]);
   }
 
@@ -413,25 +416,25 @@ int main(int argc, char** argv) {
   // For each data point add a residual which measures its distance to its
   // corresponding position on the line segment contour.
   std::vector<double*> parameter_blocks(1 + num_segments);
-  parameter_blocks[0] = NULL;
+  parameter_blocks[0] = nullptr;
   for (int i = 0; i < num_segments; ++i) {
     parameter_blocks[i + 1] = X.data() + 2 * i;
   }
   for (int i = 0; i < num_observations; ++i) {
     parameter_blocks[0] = &t[i];
     problem.AddResidualBlock(
-      PointToLineSegmentContourCostFunction::Create(num_segments, kY.row(i)),
-      NULL,
-      parameter_blocks);
+        PointToLineSegmentContourCostFunction::Create(num_segments, kY.row(i)),
+        nullptr,
+        parameter_blocks);
   }
 
   // Add regularization to minimize the length of the line segment contour.
   for (int i = 0; i < num_segments; ++i) {
     problem.AddResidualBlock(
-      EuclideanDistanceFunctor::Create(sqrt(regularization_weight)),
-      NULL,
-      X.data() + 2 * i,
-      X.data() + 2 * ((i + 1) % num_segments));
+        EuclideanDistanceFunctor::Create(sqrt(regularization_weight)),
+        nullptr,
+        X.data() + 2 * i,
+        X.data() + 2 * ((i + 1) % num_segments));
   }
 
   ceres::Solver::Options options;

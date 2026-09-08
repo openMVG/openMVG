@@ -1,0 +1,171 @@
+name: Android
+
+on: [push, pull_request]
+
+jobs:
+  build-android:
+    name: NDK-${{matrix.abi}}-${{matrix.build_type}}-${{matrix.lib}}
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash -e -o pipefail {0}
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+      CMAKE_GENERATOR: Ninja
+      DEBIAN_FRONTEND: noninteractive
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-20.04
+        abi:
+          - arm64-v8a
+          - armeabi-v7a
+          - x86
+          - x86_64
+        build_type:
+          - Release
+        lib:
+          - shared
+          - static
+        android_api_level:
+          - '28'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ccache \
+            ninja-build
+
+      # Ensure the declared NDK version is always installed even if it's removed
+      # from the virtual environment.
+      - name: Setup NDK
+        env:
+          ANDROID_NDK_VERSION: 23.2.8568313
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+        run: |
+          echo 'y' | ${{env.ANDROID_SDK_ROOT}}/cmdline-tools/latest/bin/sdkmanager --install 'ndk;${{env.ANDROID_NDK_VERSION}}'
+          echo "ANDROID_NDK_ROOT=${{env.ANDROID_SDK_ROOT}}/ndk/${{env.ANDROID_NDK_VERSION}}" >> $GITHUB_ENV
+
+      - name: Cache Eigen
+        id: cache-eigen
+        uses: actions/cache@v3
+        with:
+          path: eigen/
+          key: NDK-${{matrix.os}}-eigen-3.4.0-${{matrix.abi}}
+
+      - name: Download Eigen
+        if: steps.cache-eigen.outputs.cache-hit != 'true'
+        run: |
+          wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip
+          unzip eigen-3.4.0.zip
+
+      - name: Setup Eigen
+        if: steps.cache-eigen.outputs.cache-hit != 'true'
+        run: |
+          cmake -S eigen-3.4.0 -B build-eigen \
+                -DBUILD_TESTING=OFF \
+                -DCMAKE_ANDROID_API=${{matrix.android_api_level}} \
+                -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+                -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+                -DCMAKE_Fortran_COMPILER= \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/eigen \
+                -DCMAKE_SYSTEM_NAME=Android \
+                -DEIGEN_BUILD_DOC=OFF
+          cmake --build build-eigen \
+                --config ${{matrix.build_type}} \
+                --target install
+
+      - name: Cache gflags
+        id: cache-gflags
+        uses: actions/cache@v3
+        with:
+          path: gflags/
+          key: NDK-${{matrix.os}}-gflags-2.2.2-${{matrix.abi}}-${{matrix.build_type}}-${{matrix.lib}}
+
+      - name: Download gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.zip
+          unzip v2.2.2.zip
+
+      - name: Setup gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          cmake -S gflags-2.2.2 -B build-gflags \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DBUILD_TESTING=OFF \
+                -DCMAKE_ANDROID_API=${{matrix.android_api_level}} \
+                -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+                -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags \
+                -DCMAKE_SYSTEM_NAME=Android
+          cmake --build build-gflags \
+                --config ${{matrix.build_type}} \
+                --target install
+
+      - name: Cache glog
+        id: cache-glog
+        uses: actions/cache@v3
+        with:
+          path: glog/
+          key: NDK-${{matrix.os}}-glog-0.5-${{matrix.abi}}-${{matrix.build_type}}-${{matrix.lib}}
+
+      - name: Download glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          wget https://github.com/google/glog/archive/refs/tags/v0.5.0.zip
+          unzip v0.5.0.zip
+
+      - name: Setup glog
+        if: steps.cache-glog.outputs.cache-hit != 'true'
+        run: |
+          cmake -S glog-0.5.0 -B build-glog \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DBUILD_TESTING=OFF \
+                -DCMAKE_ANDROID_API=${{matrix.android_api_level}} \
+                -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+                -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_FIND_ROOT_PATH=${{github.workspace}}/gflags \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/glog \
+                -DCMAKE_SYSTEM_NAME=Android
+          cmake --build build-glog \
+                --config ${{matrix.build_type}} \
+                --target install
+
+      - name: Cache Build
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: NDK-${{matrix.os}}-ccache-${{matrix.abi}}-${{matrix.build_type}}-${{matrix.lib}}-${{github.run_id}}
+          restore-keys: NDK-${{matrix.os}}-ccache-${{matrix.abi}}-${{matrix.build_type}}-${{matrix.lib}}-
+
+      - name: Setup Environment
+        if: matrix.build_type == 'Release'
+        run: |
+          echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          cmake -S . -B build_${{matrix.abi}} \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DCMAKE_ANDROID_API=${{matrix.android_api_level}} \
+                -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+                -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_FIND_ROOT_PATH="${{github.workspace}}/eigen;${{github.workspace}}/gflags;${{github.workspace}}/glog" \
+                -DCMAKE_SYSTEM_NAME=Android
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.abi}} \
+                --config ${{matrix.build_type}}

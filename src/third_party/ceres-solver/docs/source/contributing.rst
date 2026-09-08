@@ -16,7 +16,7 @@ please let us know about your interest and skills and we will be happy
 to make a suggestion or three.
 
 We follow Google's `C++ Style Guide
-<http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml>`_ and
+<https://google.github.io/styleguide/cppguide.html>`_ and
 use `git <http://git-scm.com/>`_ for version control. We use the
 `Gerrit <https://ceres-solver-review.googlesource.com/>`_ to collaborate and
 review changes to Ceres. Gerrit enables pre-commit reviews so that
@@ -38,10 +38,11 @@ Setting up your Environment
      `Cygwin <http://www.cygwin.com/>`_ install.
 
 2. Sign up for `Gerrit
-   <https://ceres-solver-review.googlesource.com/>`_. You will also
-   need to sign the Contributor License Agreement (CLA) with Google,
-   which gives Google a royalty-free unlimited license to use your
-   contributions. You retain copyright.
+   <https://ceres-solver-review.googlesource.com/>`_. You will also need to
+   `sign the Contributor License Agreement (CLA)
+   <https://opensource.google.com/docs/cla/#sign>`_ with Google, which gives
+   Google a royalty-free unlimited license to use your contributions. You
+   retain copyright.
 
 3. Clone the Ceres Solver ``git`` repository from Gerrit.
 
@@ -55,7 +56,7 @@ Setting up your Environment
 
    On Mac and Linux, the ``CMake`` build will download and enable
    the Gerrit pre-commit hook automatically. This pre-submit hook
-   creates `Change-Id: ...` lines in your commits.
+   creates ``Change-Id: ...`` lines in your commits.
 
    If this does not work OR you are on Windows, execute the
    following in the root directory of the local ``git`` repository:
@@ -71,7 +72,7 @@ Setting up your Environment
    * Sign into `http://ceres-solver-review.googlesource.com
      <http://ceres-solver-review.googlesource.com>`_.
 
-   * Click ``Settings -> HTTP Password -> Obtain Password``.
+   * Click ``Settings -> HTTP Credentials -> Obtain Password``.
 
    * (maybe) Select an account for multi-login. This should be the
      same as your Gerrit login.
@@ -85,12 +86,26 @@ Setting up your Environment
      a recent `Git for Windows <https://git-scm.com/download/win>`_ install to
      enable automatic lookup in the ``%USERPROFILE%\.gitcookies``.
 
+6. Install ``clang-format``.
+
+   * Mac ``brew install clang-format``.
+   * Linux ``sudo apt-get install clang-format``.
+   * Windows. You can get clang-format with `clang or stand-alone via
+     npm <https://superuser.com/a/1505297/1141693>`_.
+
+   You can ensure all sources files are correctly formatted before
+   committing by manually running ``clang-format -i FILENAME``, by
+   running the script ``./scripts/format_all.sh``, or by configuring
+   your editor to format upon saving.
+
 Submitting a change
 ===================
 
 1. Make your changes against master or whatever branch you
-   like. Commit your changes as one patch. When you commit, the Gerrit
-   hook will add a `Change-Id:` line as the last line of the commit.
+   like. Ensure that the changes are formatted according to
+   ``clang-format``. Commit your changes as one patch. When you
+   commit, the Gerrit hook will add a ``Change-Id:`` line as the last
+   line of the commit.
 
    Make sure that your commit message is formatted in the `50/72 style
    <http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html>`_.
@@ -103,8 +118,8 @@ Submitting a change
 
    When the push succeeds, the console will display a URL showing the
    address of the review. Go to the URL and add at least one of the
-   maintainers (Sameer Agarwal, Keir Mierle, Alex Stewart or William
-   Rucklidge) as reviewers.
+   maintainers (Sameer Agarwal, Keir Mierle, Alex Stewart, William
+   Rucklidge or Sergiu Deitsch) as reviewers.
 
 3. Wait for a review.
 

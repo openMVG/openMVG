@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,9 @@
 
 #include <algorithm>
 #include <ctime>
+#include <memory>
 #include <set>
+#include <utility>
 #include <vector>
 
 #include "Eigen/Dense"
@@ -45,77 +47,55 @@
 #include "ceres/conjugate_gradients_solver.h"
 #include "ceres/detect_structure.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/lapack.h"
 #include "ceres/linear_solver.h"
 #include "ceres/sparse_cholesky.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "ceres/types.h"
 #include "ceres/wall_time.h"
 
-namespace ceres {
-namespace internal {
-
-using std::make_pair;
-using std::pair;
-using std::set;
-using std::vector;
-
+namespace ceres::internal {
 namespace {
 
-class BlockRandomAccessSparseMatrixAdapter : public LinearOperator {
+class BlockRandomAccessSparseMatrixAdapter final
+    : public ConjugateGradientsLinearOperator<Vector> {
  public:
   explicit BlockRandomAccessSparseMatrixAdapter(
       const BlockRandomAccessSparseMatrix& m)
-      : m_(m) {
+      : m_(m) {}
+
+  void RightMultiplyAndAccumulate(const Vector& x, Vector& y) final {
+    m_.SymmetricRightMultiplyAndAccumulate(x.data(), y.data());
   }
-
-  virtual ~BlockRandomAccessSparseMatrixAdapter() {}
-
-  // y = y + Ax;
-  virtual void RightMultiply(const double* x, double* y) const {
-    m_.SymmetricRightMultiply(x, y);
-  }
-
-  // y = y + A'x;
-  virtual void LeftMultiply(const double* x, double* y) const {
-    m_.SymmetricRightMultiply(x, y);
-  }
-
-  virtual int num_rows() const { return m_.num_rows(); }
-  virtual int num_cols() const { return m_.num_rows(); }
 
  private:
   const BlockRandomAccessSparseMatrix& m_;
 };
 
-class BlockRandomAccessDiagonalMatrixAdapter : public LinearOperator {
+class BlockRandomAccessDiagonalMatrixAdapter final
+    : public ConjugateGradientsLinearOperator<Vector> {
  public:
   explicit BlockRandomAccessDiagonalMatrixAdapter(
       const BlockRandomAccessDiagonalMatrix& m)
-      : m_(m) {
-  }
-
-  virtual ~BlockRandomAccessDiagonalMatrixAdapter() {}
+      : m_(m) {}
 
   // y = y + Ax;
-  virtual void RightMultiply(const double* x, double* y) const {
-    m_.RightMultiply(x, y);
+  void RightMultiplyAndAccumulate(const Vector& x, Vector& y) final {
+    m_.RightMultiplyAndAccumulate(x.data(), y.data());
   }
-
-  // y = y + A'x;
-  virtual void LeftMultiply(const double* x, double* y) const {
-    m_.RightMultiply(x, y);
-  }
-
-  virtual int num_rows() const { return m_.num_rows(); }
-  virtual int num_cols() const { return m_.num_rows(); }
 
  private:
   const BlockRandomAccessDiagonalMatrix& m_;
 };
 
-} // namespace
+}  // namespace
+
+SchurComplementSolver::SchurComplementSolver(
+    const LinearSolver::Options& options)
+    : options_(options) {
+  CHECK_GT(options.elimination_groups.size(), 1);
+  CHECK_GT(options.elimination_groups[0], 0);
+  CHECK(options.context != nullptr);
+}
 
 LinearSolver::Summary SchurComplementSolver::SolveImpl(
     BlockSparseMatrix* A,
@@ -124,23 +104,43 @@ LinearSolver::Summary SchurComplementSolver::SolveImpl(
     double* x) {
   EventLogger event_logger("SchurComplementSolver::Solve");
 
-  if (eliminator_.get() == NULL) {
-    InitStorage(A->block_structure());
-    DetectStructure(*A->block_structure(),
-                    options_.elimination_groups[0],
+  const CompressedRowBlockStructure* bs = A->block_structure();
+  if (eliminator_ == nullptr) {
+    const int num_eliminate_blocks = options_.elimination_groups[0];
+    const int num_f_blocks = bs->cols.size() - num_eliminate_blocks;
+
+    InitStorage(bs);
+    DetectStructure(*bs,
+                    num_eliminate_blocks,
                     &options_.row_block_size,
                     &options_.e_block_size,
                     &options_.f_block_size);
-    eliminator_.reset(CHECK_NOTNULL(SchurEliminatorBase::Create(options_)));
+
+    // For the special case of the static structure <2,3,6> with
+    // exactly one f block use the SchurEliminatorForOneFBlock.
+    //
+    // TODO(sameeragarwal): A more scalable template specialization
+    // mechanism that does not cause binary bloat.
+    if (options_.row_block_size == 2 && options_.e_block_size == 3 &&
+        options_.f_block_size == 6 && num_f_blocks == 1) {
+      eliminator_ = std::make_unique<SchurEliminatorForOneFBlock<2, 3, 6>>();
+    } else {
+      eliminator_ = SchurEliminatorBase::Create(options_);
+    }
+
+    CHECK(eliminator_);
     const bool kFullRankETE = true;
-    eliminator_->Init(
-        options_.elimination_groups[0], kFullRankETE, A->block_structure());
-  };
+    eliminator_->Init(num_eliminate_blocks, kFullRankETE, bs);
+  }
 
   std::fill(x, x + A->num_cols(), 0.0);
   event_logger.AddEvent("Setup");
 
-  eliminator_->Eliminate(A, b, per_solve_options.D, lhs_.get(), rhs_.get());
+  eliminator_->Eliminate(BlockSparseMatrixData(*A),
+                         b,
+                         per_solve_options.D,
+                         lhs_.get(),
+                         rhs_.data());
   event_logger.AddEvent("Eliminate");
 
   double* reduced_solution = x + A->num_cols() - lhs_->num_cols();
@@ -148,13 +148,20 @@ LinearSolver::Summary SchurComplementSolver::SolveImpl(
       SolveReducedLinearSystem(per_solve_options, reduced_solution);
   event_logger.AddEvent("ReducedSolve");
 
-  if (summary.termination_type == LINEAR_SOLVER_SUCCESS) {
-    eliminator_->BackSubstitute(A, b, per_solve_options.D, reduced_solution, x);
+  if (summary.termination_type == LinearSolverTerminationType::SUCCESS) {
+    eliminator_->BackSubstitute(
+        BlockSparseMatrixData(*A), b, per_solve_options.D, reduced_solution, x);
     event_logger.AddEvent("BackSubstitute");
   }
 
   return summary;
 }
+DenseSchurComplementSolver::DenseSchurComplementSolver(
+    const LinearSolver::Options& options)
+    : SchurComplementSolver(options),
+      cholesky_(DenseCholesky::Create(options)) {}
+
+DenseSchurComplementSolver::~DenseSchurComplementSolver() = default;
 
 // Initialize a BlockRandomAccessDenseMatrix to store the Schur
 // complement.
@@ -162,32 +169,24 @@ void DenseSchurComplementSolver::InitStorage(
     const CompressedRowBlockStructure* bs) {
   const int num_eliminate_blocks = options().elimination_groups[0];
   const int num_col_blocks = bs->cols.size();
-
-  vector<int> blocks(num_col_blocks - num_eliminate_blocks, 0);
-  for (int i = num_eliminate_blocks, j = 0;
-       i < num_col_blocks;
-       ++i, ++j) {
-    blocks[j] = bs->cols[i].size;
-  }
-
-  set_lhs(new BlockRandomAccessDenseMatrix(blocks));
-  set_rhs(new double[lhs()->num_rows()]);
+  auto blocks = Tail(bs->cols, num_col_blocks - num_eliminate_blocks);
+  set_lhs(std::make_unique<BlockRandomAccessDenseMatrix>(
+      blocks, options().context, options().num_threads));
+  ResizeRhs(lhs()->num_rows());
 }
 
 // Solve the system Sx = r, assuming that the matrix S is stored in a
 // BlockRandomAccessDenseMatrix. The linear system is solved using
 // Eigen's Cholesky factorization.
-LinearSolver::Summary
-DenseSchurComplementSolver::SolveReducedLinearSystem(
-    const LinearSolver::PerSolveOptions& per_solve_options,
+LinearSolver::Summary DenseSchurComplementSolver::SolveReducedLinearSystem(
+    const LinearSolver::PerSolveOptions& /*per_solve_options*/,
     double* solution) {
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_SUCCESS;
+  summary.termination_type = LinearSolverTerminationType::SUCCESS;
   summary.message = "Success.";
 
-  const BlockRandomAccessDenseMatrix* m =
-      down_cast<const BlockRandomAccessDenseMatrix*>(lhs());
+  auto* m = down_cast<BlockRandomAccessDenseMatrix*>(mutable_lhs());
   const int num_rows = m->num_rows();
 
   // The case where there are no f blocks, and the system is block
@@ -197,29 +196,8 @@ DenseSchurComplementSolver::SolveReducedLinearSystem(
   }
 
   summary.num_iterations = 1;
-
-  if (options().dense_linear_algebra_library_type == EIGEN) {
-    Eigen::LLT<Matrix, Eigen::Upper> llt =
-        ConstMatrixRef(m->values(), num_rows, num_rows)
-        .selfadjointView<Eigen::Upper>()
-        .llt();
-    if (llt.info() != Eigen::Success) {
-      summary.termination_type = LINEAR_SOLVER_FAILURE;
-      summary.message =
-          "Eigen failure. Unable to perform dense Cholesky factorization.";
-      return summary;
-    }
-
-    VectorRef(solution, num_rows) = llt.solve(ConstVectorRef(rhs(), num_rows));
-  } else {
-    VectorRef(solution, num_rows) = ConstVectorRef(rhs(), num_rows);
-    summary.termination_type =
-        LAPACK::SolveInPlaceUsingCholesky(num_rows,
-                                          m->values(),
-                                          solution,
-                                          &summary.message);
-  }
-
+  summary.termination_type = cholesky_->FactorAndSolve(
+      num_rows, m->mutable_values(), rhs().data(), solution, &summary.message);
   return summary;
 }
 
@@ -227,13 +205,17 @@ SparseSchurComplementSolver::SparseSchurComplementSolver(
     const LinearSolver::Options& options)
     : SchurComplementSolver(options) {
   if (options.type != ITERATIVE_SCHUR) {
-    sparse_cholesky_.reset(
-        SparseCholesky::Create(options.sparse_linear_algebra_library_type,
-                               options.use_postordering ? AMD : NATURAL));
+    sparse_cholesky_ = SparseCholesky::Create(options);
   }
 }
 
 SparseSchurComplementSolver::~SparseSchurComplementSolver() {
+  for (int i = 0; i < 4; ++i) {
+    if (scratch_[i]) {
+      delete scratch_[i];
+      scratch_[i] = nullptr;
+    }
+  }
 }
 
 // Determine the non-zero blocks in the Schur Complement matrix, and
@@ -244,14 +226,11 @@ void SparseSchurComplementSolver::InitStorage(
   const int num_col_blocks = bs->cols.size();
   const int num_row_blocks = bs->rows.size();
 
-  blocks_.resize(num_col_blocks - num_eliminate_blocks, 0);
-  for (int i = num_eliminate_blocks; i < num_col_blocks; ++i) {
-    blocks_[i - num_eliminate_blocks] = bs->cols[i].size;
-  }
+  blocks_ = Tail(bs->cols, num_col_blocks - num_eliminate_blocks);
 
-  set<pair<int, int> > block_pairs;
+  std::set<std::pair<int, int>> block_pairs;
   for (int i = 0; i < blocks_.size(); ++i) {
-    block_pairs.insert(make_pair(i, i));
+    block_pairs.emplace(i, i);
   }
 
   int r = 0;
@@ -260,7 +239,7 @@ void SparseSchurComplementSolver::InitStorage(
     if (e_block_id >= num_eliminate_blocks) {
       break;
     }
-    vector<int> f_blocks;
+    std::vector<int> f_blocks;
 
     // Add to the chunk until the first block in the row is
     // different than the one in the first row for the chunk.
@@ -282,29 +261,30 @@ void SparseSchurComplementSolver::InitStorage(
     f_blocks.erase(unique(f_blocks.begin(), f_blocks.end()), f_blocks.end());
     for (int i = 0; i < f_blocks.size(); ++i) {
       for (int j = i + 1; j < f_blocks.size(); ++j) {
-        block_pairs.insert(make_pair(f_blocks[i], f_blocks[j]));
+        block_pairs.emplace(f_blocks[i], f_blocks[j]);
       }
     }
   }
 
-  // Remaing rows do not contribute to the chunks and directly go
+  // Remaining rows do not contribute to the chunks and directly go
   // into the schur complement via an outer product.
   for (; r < num_row_blocks; ++r) {
     const CompressedRow& row = bs->rows[r];
     CHECK_GE(row.cells.front().block_id, num_eliminate_blocks);
     for (int i = 0; i < row.cells.size(); ++i) {
       int r_block1_id = row.cells[i].block_id - num_eliminate_blocks;
-      for (int j = 0; j < row.cells.size(); ++j) {
-        int r_block2_id = row.cells[j].block_id - num_eliminate_blocks;
+      for (const auto& cell : row.cells) {
+        int r_block2_id = cell.block_id - num_eliminate_blocks;
         if (r_block1_id <= r_block2_id) {
-          block_pairs.insert(make_pair(r_block1_id, r_block2_id));
+          block_pairs.emplace(r_block1_id, r_block2_id);
         }
       }
     }
   }
 
-  set_lhs(new BlockRandomAccessSparseMatrix(blocks_, block_pairs));
-  set_rhs(new double[lhs()->num_rows()]);
+  set_lhs(std::make_unique<BlockRandomAccessSparseMatrix>(
+      blocks_, block_pairs, options().context, options().num_threads));
+  ResizeRhs(lhs()->num_rows());
 }
 
 LinearSolver::Summary SparseSchurComplementSolver::SolveReducedLinearSystem(
@@ -316,40 +296,45 @@ LinearSolver::Summary SparseSchurComplementSolver::SolveReducedLinearSystem(
 
   LinearSolver::Summary summary;
   summary.num_iterations = 0;
-  summary.termination_type = LINEAR_SOLVER_SUCCESS;
+  summary.termination_type = LinearSolverTerminationType::SUCCESS;
   summary.message = "Success.";
 
-  const TripletSparseMatrix* tsm =
+  const BlockSparseMatrix* bsm =
       down_cast<const BlockRandomAccessSparseMatrix*>(lhs())->matrix();
-  if (tsm->num_rows() == 0) {
+  if (bsm->num_rows() == 0) {
     return summary;
   }
 
-  scoped_ptr<CompressedRowSparseMatrix> lhs;
   const CompressedRowSparseMatrix::StorageType storage_type =
       sparse_cholesky_->StorageType();
-  if (storage_type == CompressedRowSparseMatrix::UPPER_TRIANGULAR) {
-    lhs.reset(CompressedRowSparseMatrix::FromTripletSparseMatrix(*tsm));
-    lhs->set_storage_type(CompressedRowSparseMatrix::UPPER_TRIANGULAR);
+  if (storage_type ==
+      CompressedRowSparseMatrix::StorageType::UPPER_TRIANGULAR) {
+    if (!crs_lhs_) {
+      crs_lhs_ = bsm->ToCompressedRowSparseMatrix();
+      crs_lhs_->set_storage_type(
+          CompressedRowSparseMatrix::StorageType::UPPER_TRIANGULAR);
+    } else {
+      bsm->UpdateCompressedRowSparseMatrix(crs_lhs_.get());
+    }
   } else {
-    lhs.reset(
-        CompressedRowSparseMatrix::FromTripletSparseMatrixTransposed(*tsm));
-    lhs->set_storage_type(CompressedRowSparseMatrix::LOWER_TRIANGULAR);
+    if (!crs_lhs_) {
+      crs_lhs_ = bsm->ToCompressedRowSparseMatrixTranspose();
+      crs_lhs_->set_storage_type(
+          CompressedRowSparseMatrix::StorageType::LOWER_TRIANGULAR);
+    } else {
+      bsm->UpdateCompressedRowSparseMatrixTranspose(crs_lhs_.get());
+    }
   }
-
-  *lhs->mutable_col_blocks() = blocks_;
-  *lhs->mutable_row_blocks() = blocks_;
 
   summary.num_iterations = 1;
   summary.termination_type = sparse_cholesky_->FactorAndSolve(
-      lhs.get(), rhs(), solution, &summary.message);
+      crs_lhs_.get(), rhs().data(), solution, &summary.message);
   return summary;
 }
 
 LinearSolver::Summary
 SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
-    const LinearSolver::PerSolveOptions& per_solve_options,
-    double* solution) {
+    const LinearSolver::PerSolveOptions& per_solve_options, double* solution) {
   CHECK(options().use_explicit_schur_complement);
   const int num_rows = lhs()->num_rows();
   // The case where there are no f blocks, and the system is block
@@ -357,7 +342,7 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
   if (num_rows == 0) {
     LinearSolver::Summary summary;
     summary.num_iterations = 0;
-    summary.termination_type = LINEAR_SOLVER_SUCCESS;
+    summary.termination_type = LinearSolverTerminationType::SUCCESS;
     summary.message = "Success.";
     return summary;
   }
@@ -365,31 +350,28 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
   // Only SCHUR_JACOBI is supported over here right now.
   CHECK_EQ(options().preconditioner_type, SCHUR_JACOBI);
 
-  if (preconditioner_.get() == NULL) {
-    preconditioner_.reset(new BlockRandomAccessDiagonalMatrix(blocks_));
+  if (preconditioner_ == nullptr) {
+    preconditioner_ = std::make_unique<BlockRandomAccessDiagonalMatrix>(
+        blocks_, options().context, options().num_threads);
   }
 
-  BlockRandomAccessSparseMatrix* sc =
-      down_cast<BlockRandomAccessSparseMatrix*>(
-          const_cast<BlockRandomAccessMatrix*>(lhs()));
+  auto* sc = down_cast<BlockRandomAccessSparseMatrix*>(mutable_lhs());
 
   // Extract block diagonal from the Schur complement to construct the
   // schur_jacobi preconditioner.
-  for (int i = 0; i  < blocks_.size(); ++i) {
-    const int block_size = blocks_[i];
+  for (int i = 0; i < blocks_.size(); ++i) {
+    const int block_size = blocks_[i].size;
 
     int sc_r, sc_c, sc_row_stride, sc_col_stride;
     CellInfo* sc_cell_info =
-        CHECK_NOTNULL(sc->GetCell(i, i,
-                                  &sc_r, &sc_c,
-                                  &sc_row_stride, &sc_col_stride));
+        sc->GetCell(i, i, &sc_r, &sc_c, &sc_row_stride, &sc_col_stride);
+    CHECK(sc_cell_info != nullptr);
     MatrixRef sc_m(sc_cell_info->values, sc_row_stride, sc_col_stride);
 
     int pre_r, pre_c, pre_row_stride, pre_col_stride;
-    CellInfo* pre_cell_info = CHECK_NOTNULL(
-        preconditioner_->GetCell(i, i,
-                                 &pre_r, &pre_c,
-                                 &pre_row_stride, &pre_col_stride));
+    CellInfo* pre_cell_info = preconditioner_->GetCell(
+        i, i, &pre_r, &pre_c, &pre_row_stride, &pre_col_stride);
+    CHECK(pre_cell_info != nullptr);
     MatrixRef pre_m(pre_cell_info->values, pre_row_stride, pre_col_stride);
 
     pre_m.block(pre_r, pre_c, block_size, block_size) =
@@ -399,27 +381,28 @@ SparseSchurComplementSolver::SolveReducedLinearSystemUsingConjugateGradients(
 
   VectorRef(solution, num_rows).setZero();
 
-  scoped_ptr<LinearOperator> lhs_adapter(
-      new BlockRandomAccessSparseMatrixAdapter(*sc));
-  scoped_ptr<LinearOperator> preconditioner_adapter(
-      new BlockRandomAccessDiagonalMatrixAdapter(*preconditioner_));
+  auto lhs = std::make_unique<BlockRandomAccessSparseMatrixAdapter>(*sc);
+  auto preconditioner =
+      std::make_unique<BlockRandomAccessDiagonalMatrixAdapter>(
+          *preconditioner_);
 
-
-  LinearSolver::Options cg_options;
+  ConjugateGradientsSolverOptions cg_options;
   cg_options.min_num_iterations = options().min_num_iterations;
   cg_options.max_num_iterations = options().max_num_iterations;
-  ConjugateGradientsSolver cg_solver(cg_options);
+  cg_options.residual_reset_period = options().residual_reset_period;
+  cg_options.q_tolerance = per_solve_options.q_tolerance;
+  cg_options.r_tolerance = per_solve_options.r_tolerance;
 
-  LinearSolver::PerSolveOptions cg_per_solve_options;
-  cg_per_solve_options.r_tolerance = per_solve_options.r_tolerance;
-  cg_per_solve_options.q_tolerance = per_solve_options.q_tolerance;
-  cg_per_solve_options.preconditioner = preconditioner_adapter.get();
-
-  return cg_solver.Solve(lhs_adapter.get(),
-                         rhs(),
-                         cg_per_solve_options,
-                         solution);
+  cg_solution_ = Vector::Zero(sc->num_rows());
+  for (int i = 0; i < 4; ++i) {
+    if (scratch_[i] == nullptr) {
+      scratch_[i] = new Vector(sc->num_rows());
+    }
+  }
+  auto summary = ConjugateGradientsSolver<Vector>(
+      cg_options, *lhs, rhs(), *preconditioner, scratch_, cg_solution_);
+  VectorRef(solution, sc->num_rows()) = cg_solution_;
+  return summary;
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

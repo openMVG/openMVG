@@ -2,6 +2,8 @@
 
 .. default-domain:: cpp
 
+.. cpp:namespace:: ceres
+
 .. _chapter-nnls_tutorial:
 
 ========================
@@ -54,7 +56,7 @@ the more familiar `non-linear least squares problem
 <http://en.wikipedia.org/wiki/Non-linear_least_squares>`_.
 
 .. math:: \frac{1}{2}\sum_{i} \left\|f_i\left(x_{i_1}, ... ,x_{i_k}\right)\right\|^2.
-   :label: ceresproblem2
+   :label: ceresproblemnonrobust
 
 .. _section-hello-world:
 
@@ -78,7 +80,7 @@ function :math:`f(x) = 10 - x`:
    struct CostFunctor {
       template <typename T>
       bool operator()(const T* const x, T* residual) const {
-        residual[0] = T(10.0) - x[0];
+        residual[0] = 10.0 - x[0];
         return true;
       }
    };
@@ -111,7 +113,7 @@ Ceres solve it.
      // auto-differentiation to obtain the derivative (jacobian).
      CostFunction* cost_function =
          new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
-     problem.AddResidualBlock(cost_function, NULL, &x);
+     problem.AddResidualBlock(cost_function, nullptr, &x);
 
      // Run the solver!
      Solver::Options options;
@@ -212,7 +214,7 @@ Which is added to the :class:`Problem` as:
   CostFunction* cost_function =
     new NumericDiffCostFunction<NumericDiffCostFunctor, ceres::CENTRAL, 1, 1>(
         new NumericDiffCostFunctor);
-  problem.AddResidualBlock(cost_function, NULL, &x);
+  problem.AddResidualBlock(cost_function, nullptr, &x);
 
 Notice the parallel from when we were using automatic differentiation
 
@@ -220,7 +222,7 @@ Notice the parallel from when we were using automatic differentiation
 
   CostFunction* cost_function =
       new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
-  problem.AddResidualBlock(cost_function, NULL, &x);
+  problem.AddResidualBlock(cost_function, nullptr, &x);
 
 The construction looks almost identical to the one used for automatic
 differentiation, except for an extra template parameter that indicates
@@ -261,7 +263,7 @@ x`.
       residuals[0] = 10 - x;
 
       // Compute the Jacobian if asked for.
-      if (jacobians != NULL && jacobians[0] != NULL) {
+      if (jacobians != nullptr && jacobians[0] != nullptr) {
         jacobians[0][0] = -1;
       }
       return true;
@@ -338,7 +340,7 @@ in the objective functor. Here is the code for evaluating
  struct F4 {
    template <typename T>
    bool operator()(const T* const x1, const T* const x4, T* residual) const {
-     residual[0] = T(sqrt(10.0)) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
+     residual[0] = sqrt(10.0) * (x1[0] - x4[0]) * (x1[0] - x4[0]);
      return true;
    }
  };
@@ -355,16 +357,16 @@ respectively. Using these, the problem can be constructed as follows:
 
   Problem problem;
 
-  // Add residual terms to the problem using the using the autodiff
+  // Add residual terms to the problem using the autodiff
   // wrapper to get the derivatives automatically.
   problem.AddResidualBlock(
-    new AutoDiffCostFunction<F1, 1, 1, 1>(new F1), NULL, &x1, &x2);
+    new AutoDiffCostFunction<F1, 1, 1, 1>(new F1), nullptr, &x1, &x2);
   problem.AddResidualBlock(
-    new AutoDiffCostFunction<F2, 1, 1, 1>(new F2), NULL, &x3, &x4);
+    new AutoDiffCostFunction<F2, 1, 1, 1>(new F2), nullptr, &x3, &x4);
   problem.AddResidualBlock(
-    new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), NULL, &x2, &x3)
+    new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), nullptr, &x2, &x3);
   problem.AddResidualBlock(
-    new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), NULL, &x1, &x4);
+    new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), nullptr, &x1, &x4);
 
 
 Note that each ``ResidualBlock`` only depends on the two parameters
@@ -377,62 +379,65 @@ gives us:
 
     Initial x1 = 3, x2 = -1, x3 = 0, x4 = 1
     iter      cost      cost_change  |gradient|   |step|    tr_ratio  tr_radius  ls_iter  iter_time  total_time
-       0  1.075000e+02    0.00e+00    1.55e+02   0.00e+00   0.00e+00  1.00e+04       0    4.95e-04    2.30e-03
-       1  5.036190e+00    1.02e+02    2.00e+01   2.16e+00   9.53e-01  3.00e+04       1    4.39e-05    2.40e-03
-       2  3.148168e-01    4.72e+00    2.50e+00   6.23e-01   9.37e-01  9.00e+04       1    9.06e-06    2.43e-03
-       3  1.967760e-02    2.95e-01    3.13e-01   3.08e-01   9.37e-01  2.70e+05       1    8.11e-06    2.45e-03
-       4  1.229900e-03    1.84e-02    3.91e-02   1.54e-01   9.37e-01  8.10e+05       1    6.91e-06    2.48e-03
-       5  7.687123e-05    1.15e-03    4.89e-03   7.69e-02   9.37e-01  2.43e+06       1    7.87e-06    2.50e-03
-       6  4.804625e-06    7.21e-05    6.11e-04   3.85e-02   9.37e-01  7.29e+06       1    5.96e-06    2.52e-03
-       7  3.003028e-07    4.50e-06    7.64e-05   1.92e-02   9.37e-01  2.19e+07       1    5.96e-06    2.55e-03
-       8  1.877006e-08    2.82e-07    9.54e-06   9.62e-03   9.37e-01  6.56e+07       1    5.96e-06    2.57e-03
-       9  1.173223e-09    1.76e-08    1.19e-06   4.81e-03   9.37e-01  1.97e+08       1    7.87e-06    2.60e-03
-      10  7.333425e-11    1.10e-09    1.49e-07   2.40e-03   9.37e-01  5.90e+08       1    6.20e-06    2.63e-03
-      11  4.584044e-12    6.88e-11    1.86e-08   1.20e-03   9.37e-01  1.77e+09       1    6.91e-06    2.65e-03
-      12  2.865573e-13    4.30e-12    2.33e-09   6.02e-04   9.37e-01  5.31e+09       1    5.96e-06    2.67e-03
-      13  1.791438e-14    2.69e-13    2.91e-10   3.01e-04   9.37e-01  1.59e+10       1    7.15e-06    2.69e-03
+       0  1.075000e+02    0.00e+00    1.55e+02   0.00e+00   0.00e+00  1.00e+04        0    2.91e-05    3.40e-04
+       1  5.036190e+00    1.02e+02    2.00e+01   0.00e+00   9.53e-01  3.00e+04        1    4.98e-05    3.99e-04
+       2  3.148168e-01    4.72e+00    2.50e+00   6.23e-01   9.37e-01  9.00e+04        1    2.15e-06    4.06e-04
+       3  1.967760e-02    2.95e-01    3.13e-01   3.08e-01   9.37e-01  2.70e+05        1    9.54e-07    4.10e-04
+       4  1.229900e-03    1.84e-02    3.91e-02   1.54e-01   9.37e-01  8.10e+05        1    1.91e-06    4.14e-04
+       5  7.687123e-05    1.15e-03    4.89e-03   7.69e-02   9.37e-01  2.43e+06        1    1.91e-06    4.18e-04
+       6  4.804625e-06    7.21e-05    6.11e-04   3.85e-02   9.37e-01  7.29e+06        1    1.19e-06    4.21e-04
+       7  3.003028e-07    4.50e-06    7.64e-05   1.92e-02   9.37e-01  2.19e+07        1    1.91e-06    4.25e-04
+       8  1.877006e-08    2.82e-07    9.54e-06   9.62e-03   9.37e-01  6.56e+07        1    9.54e-07    4.28e-04
+       9  1.173223e-09    1.76e-08    1.19e-06   4.81e-03   9.37e-01  1.97e+08        1    9.54e-07    4.32e-04
+      10  7.333425e-11    1.10e-09    1.49e-07   2.40e-03   9.37e-01  5.90e+08        1    9.54e-07    4.35e-04
+      11  4.584044e-12    6.88e-11    1.86e-08   1.20e-03   9.37e-01  1.77e+09        1    9.54e-07    4.38e-04
+      12  2.865573e-13    4.30e-12    2.33e-09   6.02e-04   9.37e-01  5.31e+09        1    2.15e-06    4.42e-04
+      13  1.791438e-14    2.69e-13    2.91e-10   3.01e-04   9.37e-01  1.59e+10        1    1.91e-06    4.45e-04
+      14  1.120029e-15    1.68e-14    3.64e-11   1.51e-04   9.37e-01  4.78e+10        1    2.15e-06    4.48e-04
 
-    Ceres Solver v1.12.0 Solve Report
-    ----------------------------------
+    Solver Summary (v 2.2.0-eigen-(3.4.0)-lapack-suitesparse-(7.1.0)-metis-(5.1.0)-acceleratesparse-eigensparse)
+
                                          Original                  Reduced
     Parameter blocks                            4                        4
     Parameters                                  4                        4
     Residual blocks                             4                        4
-    Residual                                    4                        4
+    Residuals                                   4                        4
 
     Minimizer                        TRUST_REGION
 
     Dense linear algebra library            EIGEN
     Trust region strategy     LEVENBERG_MARQUARDT
-
                                             Given                     Used
     Linear solver                        DENSE_QR                 DENSE_QR
     Threads                                     1                        1
-    Linear solver threads                       1                        1
+    Linear solver ordering              AUTOMATIC                        4
 
     Cost:
     Initial                          1.075000e+02
-    Final                            1.791438e-14
+    Final                            1.120029e-15
     Change                           1.075000e+02
 
-    Minimizer iterations                       14
-    Successful steps                           14
+    Minimizer iterations                       15
+    Successful steps                           15
     Unsuccessful steps                          0
 
     Time (in seconds):
-    Preprocessor                            0.002
+    Preprocessor                         0.000311
 
-      Residual evaluation                   0.000
-      Jacobian evaluation                   0.000
-      Linear solver                         0.000
-    Minimizer                               0.001
+      Residual only evaluation           0.000002 (14)
+      Jacobian & residual evaluation     0.000023 (15)
+      Linear solver                      0.000043 (14)
+    Minimizer                            0.000163
 
-    Postprocessor                           0.000
-    Total                                   0.005
+    Postprocessor                        0.000012
+    Total                                0.000486
 
     Termination:                      CONVERGENCE (Gradient tolerance reached. Gradient max norm: 3.642190e-11 <= 1.000000e-10)
 
-    Final x1 = 0.000292189, x2 = -2.92189e-05, x3 = 4.79511e-05, x4 = 4.79511e-05
+    Final x1 = 0.000146222, x2 = -1.46222e-05, x3 = 2.40957e-05, x4 = 2.40957e-05
+
+
+
 
 It is easy to see that the optimal solution to this problem is at
 :math:`x_1=0, x_2=0, x_3=0, x_4=0` with an objective function value of
@@ -471,7 +476,7 @@ residual. There will be a residual for each observation.
 
    template <typename T>
    bool operator()(const T* const m, const T* const c, T* residual) const {
-     residual[0] = T(y_) - exp(m[0] * T(x_) + c[0]);
+     residual[0] = y_ - exp(m[0] * x_ + c[0]);
      return true;
    }
 
@@ -496,7 +501,7 @@ Assuming the observations are in a :math:`2n` sized array called
    CostFunction* cost_function =
         new AutoDiffCostFunction<ExponentialResidual, 1, 1, 1>(
             new ExponentialResidual(data[2 * i], data[2 * i + 1]));
-   problem.AddResidualBlock(cost_function, NULL, &m, &c);
+   problem.AddResidualBlock(cost_function, nullptr, &m, &c);
  }
 
 Compiling and running `examples/curve_fitting.cc
@@ -568,7 +573,7 @@ outliers. To associate a loss function with a residual block, we change
 
 .. code-block:: c++
 
-   problem.AddResidualBlock(cost_function, NULL , &m, &c);
+   problem.AddResidualBlock(cost_function, nullptr , &m, &c);
 
 to
 
@@ -621,7 +626,7 @@ instance of this object responsible for each image observation.
 
 Each residual in a BAL problem depends on a three dimensional point
 and a nine parameter camera. The nine parameters defining the camera
-are: three for rotation as a Rodriques' axis-angle vector, three
+are: three for rotation as a Rodrigues' axis-angle vector, three
 for translation, one for focal length and two for radial distortion.
 The details of this camera model can be found the `Bundler homepage
 <http://phototour.cs.washington.edu/bundler/>`_ and the `BAL homepage
@@ -653,7 +658,7 @@ The details of this camera model can be found the `Bundler homepage
      const T& l1 = camera[7];
      const T& l2 = camera[8];
      T r2 = xp*xp + yp*yp;
-     T distortion = T(1.0) + r2  * (l1 + l2  * r2);
+     T distortion = 1.0 + r2  * (l1 + l2  * r2);
 
      // Compute final projected point position.
      const T& focal = camera[6];
@@ -697,7 +702,7 @@ as follows:
             bal_problem.observations()[2 * i + 0],
             bal_problem.observations()[2 * i + 1]);
    problem.AddResidualBlock(cost_function,
-                            NULL /* squared loss */,
+                            nullptr /* squared loss */,
                             bal_problem.mutable_camera_for_observation(i),
                             bal_problem.mutable_point_for_observation(i));
  }
@@ -710,7 +715,7 @@ objective function per observation.
 Since this is a large sparse problem (well large for ``DENSE_QR``
 anyways), one way to solve this problem is to set
 :member:`Solver::Options::linear_solver_type` to
-``SPARSE_NORMAL_CHOLESKY`` and call :member:`Solve`. And while this is
+``SPARSE_NORMAL_CHOLESKY`` and call :func:`Solve`. And while this is
 a reasonable thing to do, bundle adjustment problems have a special
 sparsity structure that can be exploited to solve them much more
 efficiently. Ceres provides three specialized solvers (collectively
@@ -728,7 +733,7 @@ simplest of them ``DENSE_SCHUR``.
 
 For a more sophisticated bundle adjustment example which demonstrates
 the use of Ceres' more advanced features including its various linear
-solvers, robust loss functions and local parameterizations see
+solvers, robust loss functions and manifolds see
 `examples/bundle_adjuster.cc
 <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/bundle_adjuster.cc>`_
 
@@ -773,7 +778,7 @@ directory contains a number of other examples:
 #. `nist.cc
    <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/nist.cc>`_
    implements and attempts to solves the `NIST
-   <http://www.itl.nist.gov/div898/strd/nls/nls_main.shtm>`_
+   <http://www.itl.nist.gov/div898/strd/nls/nls_main.shtml>`_
    non-linear regression problems.
 
 #. `more_garbow_hillstrom.cc
@@ -862,23 +867,23 @@ directory contains a number of other examples:
    measurement and the predicted measurement is:
 
    .. math:: r_{ab} =
-	     \left[
-	     \begin{array}{c}
-	       R_a^T\left(p_b - p_a\right) - \hat{p}_{ab} \\
-	       \mathrm{Normalize}\left(\psi_b - \psi_a - \hat{\psi}_{ab}\right)
-	     \end{array}
-	     \right]
+             \left[
+             \begin{array}{c}
+               R_a^T\left(p_b - p_a\right) - \hat{p}_{ab} \\
+               \mathrm{Normalize}\left(\psi_b - \psi_a - \hat{\psi}_{ab}\right)
+             \end{array}
+             \right]
 
    where the function :math:`\mathrm{Normalize}()` normalizes the angle in the range
    :math:`[-\pi,\pi)`, and :math:`R` is the rotation matrix given by
 
    .. math:: R_a =
-	     \left[
-	     \begin{array}{cc}
-	       \cos \psi_a & -\sin \psi_a \\
-	       \sin \psi_a & \cos \psi_a \\
-	     \end{array}
-	     \right]
+             \left[
+             \begin{array}{cc}
+               \cos \psi_a & -\sin \psi_a \\
+               \sin \psi_a & \cos \psi_a \\
+             \end{array}
+             \right]
 
    To finish the cost function, we need to weight the residual by the
    uncertainty of the measurement. Hence, we pre-multiply the residual by the
@@ -886,10 +891,12 @@ directory contains a number of other examples:
    i.e. :math:`\Sigma_{ab}^{-\frac{1}{2}} r_{ab}` where :math:`\Sigma_{ab}` is
    the covariance.
 
-   Lastly, we use a local parameterization to normalize the orientation in the
-   range which is normalized between :math:`[-\pi,\pi)`.  Specially, we define
-   the :member:`AngleLocalParameterization::operator()` function to be:
-   :math:`\mathrm{Normalize}(\psi + \delta \psi)`.
+   Lastly, we use a manifold to normalize the orientation in the range
+   :math:`[-\pi,\pi)`.  Specially, we define the
+   :member:`AngleManifold::Plus()` function to be:
+   :math:`\mathrm{Normalize}(\psi + \Delta)` and
+   :member:`AngleManifold::Minus()` function to be
+   :math:`\mathrm{Normalize}(y) - \mathrm{Normalize}(x)`.
 
    This package includes an executable :member:`pose_graph_2d` that will read a
    problem definition file. This executable can work with any 2D problem
@@ -941,11 +948,11 @@ directory contains a number of other examples:
 
    .. [#f9] Giorgio Grisetti, Rainer Kummerle, Cyrill Stachniss, Wolfram
       Burgard. A Tutorial on Graph-Based SLAM. IEEE Intelligent Transportation
-      Systems Magazine, 52(3):199–222, 2010.
+      Systems Magazine, 52(3):199-222, 2010.
 
    .. [#f10] E. Olson, J. Leonard, and S. Teller, “Fast iterative optimization of
       pose graphs with poor initial estimates,” in Robotics and Automation
-      (ICRA), IEEE International Conference on, 2006, pp. 2262–2269.
+      (ICRA), IEEE International Conference on, 2006, pp. 2262-2269.
 
 #. `slam/pose_graph_3d/pose_graph_3d.cc
    <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/slam/pose_graph_3d/pose_graph_3d.cc>`_
@@ -980,17 +987,18 @@ directory contains a number of other examples:
    i.e. :math:`\Sigma_{ab}^{-\frac{1}{2}} r_{ab}` where :math:`\Sigma_{ab}` is
    the covariance.
 
-   Given that we are using a quaternion to represent the orientation, we need to
-   use a local parameterization (:class:`EigenQuaternionParameterization`) to
+   Given that we are using a quaternion to represent the orientation,
+   we need to use a manifold (:class:`EigenQuaternionManifold`) to
    only apply updates orthogonal to the 4-vector defining the
-   quaternion. Eigen's quaternion uses a different internal memory layout for
-   the elements of the quaternion than what is commonly used. Specifically,
-   Eigen stores the elements in memory as :math:`[x, y, z, w]` where the real
-   part is last whereas it is typically stored first. Note, when creating an
-   Eigen quaternion through the constructor the elements are accepted in
-   :math:`w`, :math:`x`, :math:`y`, :math:`z` order. Since Ceres operates on
-   parameter blocks which are raw double pointers this difference is important
-   and requires a different parameterization.
+   quaternion. Eigen's quaternion uses a different internal memory
+   layout for the elements of the quaternion than what is commonly
+   used. Specifically, Eigen stores the elements in memory as
+   :math:`[x, y, z, w]` where the real part is last whereas it is
+   typically stored first. Note, when creating an Eigen quaternion
+   through the constructor the elements are accepted in :math:`w`,
+   :math:`x`, :math:`y`, :math:`z` order. Since Ceres operates on
+   parameter blocks which are raw double pointers this difference is
+   important and requires a different parameterization.
 
    This package includes an executable :member:`pose_graph_3d` that will read a
    problem definition file. This executable can work with any 3D problem

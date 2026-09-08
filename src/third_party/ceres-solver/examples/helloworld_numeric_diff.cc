@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,13 +34,6 @@
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
-using ceres::NumericDiffCostFunction;
-using ceres::CENTRAL;
-using ceres::CostFunction;
-using ceres::Problem;
-using ceres::Solver;
-using ceres::Solve;
-
 // A cost functor that implements the residual r = 10 - x.
 struct CostFunctor {
   bool operator()(const double* const x, double* residual) const {
@@ -58,22 +51,22 @@ int main(int argc, char** argv) {
   const double initial_x = x;
 
   // Build the problem.
-  Problem problem;
+  ceres::Problem problem;
 
   // Set up the only cost function (also known as residual). This uses
   // numeric differentiation to obtain the derivative (jacobian).
-  CostFunction* cost_function =
-      new NumericDiffCostFunction<CostFunctor, CENTRAL, 1, 1> (new CostFunctor);
-  problem.AddResidualBlock(cost_function, NULL, &x);
+  ceres::CostFunction* cost_function =
+      new ceres::NumericDiffCostFunction<CostFunctor, ceres::CENTRAL, 1, 1>(
+          new CostFunctor);
+  problem.AddResidualBlock(cost_function, nullptr, &x);
 
   // Run the solver!
-  Solver::Options options;
+  ceres::Solver::Options options;
   options.minimizer_progress_to_stdout = true;
-  Solver::Summary summary;
-  Solve(options, &problem, &summary);
+  ceres::Solver::Summary summary;
+  ceres::Solve(options, &problem, &summary);
 
   std::cout << summary.BriefReport() << "\n";
-  std::cout << "x : " << initial_x
-            << " -> " << x << "\n";
+  std::cout << "x : " << initial_x << " -> " << x << "\n";
   return 0;
 }

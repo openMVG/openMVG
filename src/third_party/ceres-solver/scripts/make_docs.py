@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # encoding: utf-8
 #
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2015 Google Inc. All rights reserved.
+# Copyright 2023 Google Inc. All rights reserved.
 # http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,46 +60,13 @@ elif N == 4:
   sphinx_exe = sys.argv[3]
 
 # Run Sphinx to build the documentation.
-os.system('%s -b html -d %s %s %s' %(sphinx_exe, cache_dir, src_dir, html_dir))
+os.system('%s -n -b html -d %s %s %s' %(sphinx_exe, cache_dir, src_dir, html_dir))
 
 replacements = [
-  # By default MathJax uses does not use TeX fonts. This simple search
-  # and replace fixes that.
-  ('''config=TeX-AMS-MML_HTMLorMML"></script>''',
-   '''config=TeX-AMS_HTML">
-      MathJax.Hub.Config({
-          "HTML-CSS": {
-            availableFonts: ["TeX"]
-          }
-        });
-      </script>'''),
-
   # The title for the homepage is not ideal, so change it.
   ('<title>Ceres Solver &mdash; Ceres Solver</title>',
    '<title>Ceres Solver &mdash; A Large Scale Non-linear Optimization Library</title>')
 ]
-
-# This is a nasty hack to strip the breadcrumb navigation. A better strategy is
-# to fork the upstream template, but that is no fun either. Whitespace matters!
-# This doesn't use regular expressions since the escaping makes it untenable.
-breadcrumb_start_other = \
-'''<div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-
-    <li>'''
-
-# The index page has a slightly different breadcrumb.
-breadcrumb_start_index = breadcrumb_start_other.replace('index.html', '#')
-
-breadcrumb_end = \
-'''</li>
-      <li class="wy-breadcrumbs-aside">
-
-      </li>
-  </ul>
-  <hr/>
-</div>'''
 
 for name in glob.glob('%s/*.html' % html_dir):
   print('Postprocessing: ', name)
@@ -108,17 +75,6 @@ for name in glob.glob('%s/*.html' % html_dir):
 
   for input_pattern, output_pattern in replacements:
     out = out.replace(input_pattern, output_pattern)
-
-  try:
-    breadcrumb_start = breadcrumb_start_index \
-                       if name.endswith('index.html') \
-                       else breadcrumb_start_other
-    pre_breadcrumb_start, post_breadcrumb_start = out.split(breadcrumb_start)
-    title, post_breadcrumb_end = post_breadcrumb_start.split(breadcrumb_end)
-    print('Stripping breadcrumb for -', title)
-    out = pre_breadcrumb_start + post_breadcrumb_end
-  except ValueError:
-    print('Skipping breadcrumb strip for', name)
 
   with io.open(name, 'w', encoding="utf-8") as fptr:
     fptr.write(out)

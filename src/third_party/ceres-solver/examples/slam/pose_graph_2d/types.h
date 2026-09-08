@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2016 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,8 +40,7 @@
 #include "Eigen/Core"
 #include "normalize_angle.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
 // The state for each vertex in the pose graph.
 struct Pose2d {
@@ -50,12 +49,10 @@ struct Pose2d {
   double yaw_radians;
 
   // The name of the data type in the g2o file format.
-  static std::string name() {
-    return "VERTEX_SE2";
-  }
+  static std::string name() { return "VERTEX_SE2"; }
 };
 
-std::istream& operator>>(std::istream& input, Pose2d& pose) {
+inline std::istream& operator>>(std::istream& input, Pose2d& pose) {
   input >> pose.x >> pose.y >> pose.yaw_radians;
   // Normalize the angle between -pi to pi.
   pose.yaw_radians = NormalizeAngle(pose.yaw_radians);
@@ -77,17 +74,15 @@ struct Constraint2d {
   Eigen::Matrix3d information;
 
   // The name of the data type in the g2o file format.
-  static std::string name() {
-    return "EDGE_SE2";
-  }
+  static std::string name() { return "EDGE_SE2"; }
 };
 
-std::istream& operator>>(std::istream& input, Constraint2d& constraint) {
+inline std::istream& operator>>(std::istream& input, Constraint2d& constraint) {
   input >> constraint.id_begin >> constraint.id_end >> constraint.x >>
-      constraint.y >> constraint.yaw_radians >>
-      constraint.information(0, 0) >> constraint.information(0, 1) >>
-      constraint.information(0, 2) >> constraint.information(1, 1) >>
-      constraint.information(1, 2) >> constraint.information(2, 2);
+      constraint.y >> constraint.yaw_radians >> constraint.information(0, 0) >>
+      constraint.information(0, 1) >> constraint.information(0, 2) >>
+      constraint.information(1, 1) >> constraint.information(1, 2) >>
+      constraint.information(2, 2);
 
   // Set the lower triangular part of the information matrix.
   constraint.information(1, 0) = constraint.information(0, 1);
@@ -99,7 +94,6 @@ std::istream& operator>>(std::istream& input, Constraint2d& constraint) {
   return input;
 }
 
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples
 
 #endif  // CERES_EXAMPLES_POSE_GRAPH_2D_TYPES_H_

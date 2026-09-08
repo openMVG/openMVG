@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,42 +30,42 @@
 
 #include "ceres/residual_block.h"
 
-#include "gtest/gtest.h"
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "ceres/internal/eigen.h"
+#include "ceres/manifold.h"
 #include "ceres/parameter_block.h"
 #include "ceres/sized_cost_function.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/local_parameterization.h"
+#include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
-
-using std::vector;
+namespace ceres::internal {
 
 // Trivial cost function that accepts three arguments.
-class TernaryCostFunction: public CostFunction {
+class TernaryCostFunction : public CostFunction {
  public:
   TernaryCostFunction(int num_residuals,
-                      int32 parameter_block1_size,
-                      int32 parameter_block2_size,
-                      int32 parameter_block3_size) {
+                      int32_t parameter_block1_size,
+                      int32_t parameter_block2_size,
+                      int32_t parameter_block3_size) {
     set_num_residuals(num_residuals);
     mutable_parameter_block_sizes()->push_back(parameter_block1_size);
     mutable_parameter_block_sizes()->push_back(parameter_block2_size);
     mutable_parameter_block_sizes()->push_back(parameter_block3_size);
   }
 
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     for (int i = 0; i < num_residuals(); ++i) {
       residuals[i] = i;
     }
     if (jacobians) {
       for (int k = 0; k < 3; ++k) {
-        if (jacobians[k] != NULL) {
-          MatrixRef jacobian(jacobians[k],
-                             num_residuals(),
-                             parameter_block_sizes()[k]);
+        if (jacobians[k] != nullptr) {
+          MatrixRef jacobian(
+              jacobians[k], num_residuals(), parameter_block_sizes()[k]);
           jacobian.setConstant(k);
         }
       }
@@ -74,7 +74,7 @@ class TernaryCostFunction: public CostFunction {
   }
 };
 
-TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
+TEST(ResidualBlock, EvaluateWithNoLossFunctionOrManifolds) {
   double scratch[64];
 
   // Prepare the parameter blocks.
@@ -87,7 +87,7 @@ TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
   double values_z[4];
   ParameterBlock z(values_z, 4, -1);
 
-  vector<ParameterBlock*> parameters;
+  std::vector<ParameterBlock*> parameters;
   parameters.push_back(&x);
   parameters.push_back(&y);
   parameters.push_back(&z);
@@ -95,11 +95,11 @@ TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
   TernaryCostFunction cost_function(3, 2, 3, 4);
 
   // Create the object under tests.
-  ResidualBlock residual_block(&cost_function, NULL, parameters, -1);
+  ResidualBlock residual_block(&cost_function, nullptr, parameters, -1);
 
   // Verify getters.
   EXPECT_EQ(&cost_function, residual_block.cost_function());
-  EXPECT_EQ(NULL, residual_block.loss_function());
+  EXPECT_EQ(nullptr, residual_block.loss_function());
   EXPECT_EQ(parameters[0], residual_block.parameter_blocks()[0]);
   EXPECT_EQ(parameters[1], residual_block.parameter_blocks()[1]);
   EXPECT_EQ(parameters[2], residual_block.parameter_blocks()[2]);
@@ -107,13 +107,13 @@ TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
 
   // Verify cost-only evaluation.
   double cost;
-  residual_block.Evaluate(true, &cost, NULL, NULL, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  residual_block.Evaluate(true, &cost, nullptr, nullptr, scratch);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
 
   // Verify cost and residual evaluation.
   double residuals[3];
-  residual_block.Evaluate(true, &cost, residuals, NULL, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  residual_block.Evaluate(true, &cost, residuals, nullptr, scratch);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
@@ -130,14 +130,11 @@ TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
   jacobian_ry.setConstant(-1.0);
   jacobian_rz.setConstant(-1.0);
 
-  double *jacobian_ptrs[3] = {
-    jacobian_rx.data(),
-    jacobian_ry.data(),
-    jacobian_rz.data()
-  };
+  double* jacobian_ptrs[3] = {
+      jacobian_rx.data(), jacobian_ry.data(), jacobian_rz.data()};
 
   residual_block.Evaluate(true, &cost, residuals, jacobian_ptrs, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
@@ -153,44 +150,45 @@ TEST(ResidualBlock, EvaluteWithNoLossFunctionOrLocalParameterizations) {
   jacobian_ry.setConstant(-1.0);
   jacobian_rz.setConstant(-1.0);
 
-  jacobian_ptrs[1] = NULL;  // Don't compute the jacobian for y.
+  jacobian_ptrs[1] = nullptr;  // Don't compute the jacobian for y.
 
   residual_block.Evaluate(true, &cost, residuals, jacobian_ptrs, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
 
+  // clang-format off
   EXPECT_TRUE((jacobian_rx.array() ==  0.0).all()) << "\n" << jacobian_rx;
   EXPECT_TRUE((jacobian_ry.array() == -1.0).all()) << "\n" << jacobian_ry;
   EXPECT_TRUE((jacobian_rz.array() ==  2.0).all()) << "\n" << jacobian_rz;
+  // clang-format on
 }
 
 // Trivial cost function that accepts three arguments.
-class LocallyParameterizedCostFunction: public SizedCostFunction<3, 2, 3, 4> {
+class LocallyParameterizedCostFunction : public SizedCostFunction<3, 2, 3, 4> {
  public:
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const final {
     for (int i = 0; i < num_residuals(); ++i) {
       residuals[i] = i;
     }
     if (jacobians) {
       for (int k = 0; k < 3; ++k) {
         // The jacobians here are full sized, but they are transformed in the
-        // evaluator into the "local" jacobian. In the tests, the "subset
-        // constant" parameterization is used, which should pick out columns
-        // from these jacobians. Put values in the jacobian that make this
-        // obvious; in particular, make the jacobians like this:
+        // evaluator into the "local" jacobian. In the tests, the
+        // "SubsetManifold" is used, which should pick out columns from these
+        // jacobians. Put values in the jacobian that make this obvious; in
+        // particular, make the jacobians like this:
         //
         //   0 1 2 3 4 ...
         //   0 1 2 3 4 ...
         //   0 1 2 3 4 ...
         //
-        if (jacobians[k] != NULL) {
-          MatrixRef jacobian(jacobians[k],
-                             num_residuals(),
-                             parameter_block_sizes()[k]);
+        if (jacobians[k] != nullptr) {
+          MatrixRef jacobian(
+              jacobians[k], num_residuals(), parameter_block_sizes()[k]);
           for (int j = 0; j < k + 2; ++j) {
             jacobian.col(j).setConstant(j);
           }
@@ -201,7 +199,7 @@ class LocallyParameterizedCostFunction: public SizedCostFunction<3, 2, 3, 4> {
   }
 };
 
-TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
+TEST(ResidualBlock, EvaluateWithManifolds) {
   double scratch[64];
 
   // Prepare the parameter blocks.
@@ -214,45 +212,45 @@ TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
   double values_z[4];
   ParameterBlock z(values_z, 4, -1);
 
-  vector<ParameterBlock*> parameters;
+  std::vector<ParameterBlock*> parameters;
   parameters.push_back(&x);
   parameters.push_back(&y);
   parameters.push_back(&z);
 
   // Make x have the first component fixed.
-  vector<int> x_fixed;
+  std::vector<int> x_fixed;
   x_fixed.push_back(0);
-  SubsetParameterization x_parameterization(2, x_fixed);
-  x.SetParameterization(&x_parameterization);
+  SubsetManifold x_manifold(2, x_fixed);
+  x.SetManifold(&x_manifold);
 
   // Make z have the last and last component fixed.
-  vector<int> z_fixed;
+  std::vector<int> z_fixed;
   z_fixed.push_back(2);
-  SubsetParameterization z_parameterization(4, z_fixed);
-  z.SetParameterization(&z_parameterization);
+  SubsetManifold z_manifold(4, z_fixed);
+  z.SetManifold(&z_manifold);
 
   LocallyParameterizedCostFunction cost_function;
 
   // Create the object under tests.
-  ResidualBlock residual_block(&cost_function, NULL, parameters, -1);
+  ResidualBlock residual_block(&cost_function, nullptr, parameters, -1);
 
   // Verify getters.
   EXPECT_EQ(&cost_function, residual_block.cost_function());
-  EXPECT_EQ(NULL, residual_block.loss_function());
+  EXPECT_EQ(nullptr, residual_block.loss_function());
   EXPECT_EQ(parameters[0], residual_block.parameter_blocks()[0]);
   EXPECT_EQ(parameters[1], residual_block.parameter_blocks()[1]);
   EXPECT_EQ(parameters[2], residual_block.parameter_blocks()[2]);
-  EXPECT_EQ(3*(2 + 4) + 3, residual_block.NumScratchDoublesForEvaluate());
+  EXPECT_EQ(3 * (2 + 4) + 3, residual_block.NumScratchDoublesForEvaluate());
 
   // Verify cost-only evaluation.
   double cost;
-  residual_block.Evaluate(true, &cost, NULL, NULL, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  residual_block.Evaluate(true, &cost, nullptr, nullptr, scratch);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
 
   // Verify cost and residual evaluation.
   double residuals[3];
-  residual_block.Evaluate(true, &cost, residuals, NULL, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  residual_block.Evaluate(true, &cost, residuals, nullptr, scratch);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
@@ -269,17 +267,16 @@ TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
   jacobian_ry.setConstant(-1.0);
   jacobian_rz.setConstant(-1.0);
 
-  double *jacobian_ptrs[3] = {
-    jacobian_rx.data(),
-    jacobian_ry.data(),
-    jacobian_rz.data()
-  };
+  double* jacobian_ptrs[3] = {
+      jacobian_rx.data(), jacobian_ry.data(), jacobian_rz.data()};
 
   residual_block.Evaluate(true, &cost, residuals, jacobian_ptrs, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
+
+  // clang-format off
 
   Matrix expected_jacobian_rx(3, 1);
   expected_jacobian_rx << 1.0, 1.0, 1.0;
@@ -304,6 +301,8 @@ TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
       << "\nExpected:\n " << expected_jacobian_rz
       << "\nActual:\n"   << jacobian_rz;
 
+  // clang-format on
+
   // Verify cost, residual, and partial jacobian evaluation.
   cost = 0.0;
   VectorRef(residuals, 3).setConstant(0.0);
@@ -311,10 +310,10 @@ TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
   jacobian_ry.setConstant(-1.0);
   jacobian_rz.setConstant(-1.0);
 
-  jacobian_ptrs[1] = NULL;  // Don't compute the jacobian for y.
+  jacobian_ptrs[1] = nullptr;  // Don't compute the jacobian for y.
 
   residual_block.Evaluate(true, &cost, residuals, jacobian_ptrs, scratch);
-  EXPECT_EQ(0.5 * (0*0 + 1*1 + 2*2), cost);
+  EXPECT_EQ(0.5 * (0 * 0 + 1 * 1 + 2 * 2), cost);
   EXPECT_EQ(0.0, residuals[0]);
   EXPECT_EQ(1.0, residuals[1]);
   EXPECT_EQ(2.0, residuals[2]);
@@ -324,5 +323,4 @@ TEST(ResidualBlock, EvaluteWithLocalParameterizations) {
   EXPECT_EQ(expected_jacobian_rz, jacobian_rz);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

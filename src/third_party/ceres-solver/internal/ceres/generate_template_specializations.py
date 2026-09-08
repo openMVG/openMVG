@@ -1,5 +1,5 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2015 Google Inc. All rights reserved.
+# Copyright 2023 Google Inc. All rights reserved.
 # http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -63,10 +63,12 @@ SPECIALIZATIONS = [(2, 2, 2),
                    (2, 3, "Eigen::Dynamic"),
                    (2, 4, 3),
                    (2, 4, 4),
+                   (2, 4, 6),
                    (2, 4, 8),
                    (2, 4, 9),
                    (2, 4, "Eigen::Dynamic"),
                    (2, "Eigen::Dynamic", "Eigen::Dynamic"),
+                   (3, 3, 3),
                    (4, 4, 2),
                    (4, 4, 3),
                    (4, 4, 4),
@@ -83,9 +85,9 @@ def SuffixForSize(size):
   return str(size)
 
 def SpecializationFilename(prefix, row_block_size, e_block_size, f_block_size):
-  return "_".join([prefix] + map(SuffixForSize, (row_block_size,
+  return "_".join([prefix] + list(map(SuffixForSize, (row_block_size,
                                                  e_block_size,
-                                                 f_block_size)))
+                                                 f_block_size))))
 
 def GenerateFactoryConditional(row_block_size, e_block_size, f_block_size):
   conditionals = []
@@ -99,9 +101,9 @@ def GenerateFactoryConditional(row_block_size, e_block_size, f_block_size):
     return "%s"
 
   if (len(conditionals) == 1):
-    return " if " + conditionals[0] + "{\n  %s\n }\n"
+    return "  if " + conditionals[0] + " {\n  %s\n  }\n"
 
-  return " if (" + " &&\n     ".join(conditionals) + ") {\n  %s\n }\n"
+  return "  if (" + " &&\n     ".join(conditionals) + ") {\n  %s\n  }\n"
 
 def Specialize(name, data):
   """
@@ -142,7 +144,7 @@ def Specialize(name, data):
     f.write(data["FACTORY_FOOTER"])
 
 QUERY_HEADER = """// Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -212,10 +214,10 @@ QUERY_FOOTER = """
 }  // namespace ceres
 """
 
-QUERY_ACTION = """ *row_block_size = %s;
-   *e_block_size = %s;
-   *f_block_size = %s;
-  return;"""
+QUERY_ACTION = """  *row_block_size = %s;
+    *e_block_size = %s;
+    *f_block_size = %s;
+    return;"""
 
 def GenerateQueryFile():
   """

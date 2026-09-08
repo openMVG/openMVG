@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,247 +31,187 @@
 
 #include "ceres/problem.h"
 
+#include <memory>
 #include <vector>
+
 #include "ceres/crs_matrix.h"
 #include "ceres/problem_impl.h"
 
 namespace ceres {
 
-using std::vector;
-
-Problem::Problem() : problem_impl_(new internal::ProblemImpl) {}
+Problem::Problem() : impl_(new internal::ProblemImpl) {}
 Problem::Problem(const Problem::Options& options)
-    : problem_impl_(new internal::ProblemImpl(options)) {}
-Problem::~Problem() {}
+    : impl_(new internal::ProblemImpl(options)) {}
+// Not inline defaulted in declaration due to use of std::unique_ptr.
+Problem::Problem(Problem&&) = default;
+Problem& Problem::operator=(Problem&&) = default;
+Problem::~Problem() = default;
 
 ResidualBlockId Problem::AddResidualBlock(
     CostFunction* cost_function,
     LossFunction* loss_function,
-    const vector<double*>& parameter_blocks) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         parameter_blocks);
+    const std::vector<double*>& parameter_blocks) {
+  return impl_->AddResidualBlock(cost_function,
+                                 loss_function,
+                                 parameter_blocks.data(),
+                                 static_cast<int>(parameter_blocks.size()));
 }
 
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4, double* x5) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4, x5);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4, double* x5,
-    double* x6) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4, x5, x6);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4, double* x5,
-    double* x6, double* x7) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4, x5, x6, x7);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4, double* x5,
-    double* x6, double* x7, double* x8) {
-  return problem_impl_->AddResidualBlock(cost_function,
-                                         loss_function,
-                                         x0, x1, x2, x3, x4, x5, x6, x7, x8);
-}
-
-ResidualBlockId Problem::AddResidualBlock(
-    CostFunction* cost_function,
-    LossFunction* loss_function,
-    double* x0, double* x1, double* x2, double* x3, double* x4, double* x5,
-    double* x6, double* x7, double* x8, double* x9) {
-  return problem_impl_->AddResidualBlock(
-      cost_function,
-      loss_function,
-      x0, x1, x2, x3, x4, x5, x6, x7, x8, x9);
+ResidualBlockId Problem::AddResidualBlock(CostFunction* cost_function,
+                                          LossFunction* loss_function,
+                                          double* const* const parameter_blocks,
+                                          int num_parameter_blocks) {
+  return impl_->AddResidualBlock(
+      cost_function, loss_function, parameter_blocks, num_parameter_blocks);
 }
 
 void Problem::AddParameterBlock(double* values, int size) {
-  problem_impl_->AddParameterBlock(values, size);
+  impl_->AddParameterBlock(values, size);
 }
 
-void Problem::AddParameterBlock(double* values,
-                                int size,
-                                LocalParameterization* local_parameterization) {
-  problem_impl_->AddParameterBlock(values, size, local_parameterization);
+void Problem::AddParameterBlock(double* values, int size, Manifold* manifold) {
+  impl_->AddParameterBlock(values, size, manifold);
 }
 
 void Problem::RemoveResidualBlock(ResidualBlockId residual_block) {
-  problem_impl_->RemoveResidualBlock(residual_block);
+  impl_->RemoveResidualBlock(residual_block);
 }
 
-void Problem::RemoveParameterBlock(double* values) {
-  problem_impl_->RemoveParameterBlock(values);
+void Problem::RemoveParameterBlock(const double* values) {
+  impl_->RemoveParameterBlock(values);
 }
 
-void Problem::SetParameterBlockConstant(double* values) {
-  problem_impl_->SetParameterBlockConstant(values);
+void Problem::SetParameterBlockConstant(const double* values) {
+  impl_->SetParameterBlockConstant(values);
 }
 
 void Problem::SetParameterBlockVariable(double* values) {
-  problem_impl_->SetParameterBlockVariable(values);
+  impl_->SetParameterBlockVariable(values);
 }
 
-bool Problem::IsParameterBlockConstant(double* values) const {
-  return problem_impl_->IsParameterBlockConstant(values);
+bool Problem::IsParameterBlockConstant(const double* values) const {
+  return impl_->IsParameterBlockConstant(values);
 }
 
-void Problem::SetParameterization(
-    double* values,
-    LocalParameterization* local_parameterization) {
-  problem_impl_->SetParameterization(values, local_parameterization);
+void Problem::SetManifold(double* values, Manifold* manifold) {
+  impl_->SetManifold(values, manifold);
 }
 
-const LocalParameterization* Problem::GetParameterization(
-    double* values) const {
-  return problem_impl_->GetParameterization(values);
+const Manifold* Problem::GetManifold(const double* values) const {
+  return impl_->GetManifold(values);
+}
+
+bool Problem::HasManifold(const double* values) const {
+  return impl_->HasManifold(values);
 }
 
 void Problem::SetParameterLowerBound(double* values,
                                      int index,
                                      double lower_bound) {
-  problem_impl_->SetParameterLowerBound(values, index, lower_bound);
+  impl_->SetParameterLowerBound(values, index, lower_bound);
 }
 
 void Problem::SetParameterUpperBound(double* values,
                                      int index,
                                      double upper_bound) {
-  problem_impl_->SetParameterUpperBound(values, index, upper_bound);
+  impl_->SetParameterUpperBound(values, index, upper_bound);
+}
+
+double Problem::GetParameterUpperBound(const double* values, int index) const {
+  return impl_->GetParameterUpperBound(values, index);
+}
+
+double Problem::GetParameterLowerBound(const double* values, int index) const {
+  return impl_->GetParameterLowerBound(values, index);
 }
 
 bool Problem::Evaluate(const EvaluateOptions& evaluate_options,
                        double* cost,
-                       vector<double>* residuals,
-                       vector<double>* gradient,
+                       std::vector<double>* residuals,
+                       std::vector<double>* gradient,
                        CRSMatrix* jacobian) {
-  return problem_impl_->Evaluate(evaluate_options,
-                                 cost,
-                                 residuals,
-                                 gradient,
-                                 jacobian);
+  return impl_->Evaluate(evaluate_options, cost, residuals, gradient, jacobian);
 }
 
-int Problem::NumParameterBlocks() const {
-  return problem_impl_->NumParameterBlocks();
+bool Problem::EvaluateResidualBlock(ResidualBlockId residual_block_id,
+                                    bool apply_loss_function,
+                                    double* cost,
+                                    double* residuals,
+                                    double** jacobians) const {
+  return impl_->EvaluateResidualBlock(residual_block_id,
+                                      apply_loss_function,
+                                      /* new_point = */ true,
+                                      cost,
+                                      residuals,
+                                      jacobians);
 }
 
-int Problem::NumParameters() const {
-  return problem_impl_->NumParameters();
+bool Problem::EvaluateResidualBlockAssumingParametersUnchanged(
+    ResidualBlockId residual_block_id,
+    bool apply_loss_function,
+    double* cost,
+    double* residuals,
+    double** jacobians) const {
+  return impl_->EvaluateResidualBlock(residual_block_id,
+                                      apply_loss_function,
+                                      /* new_point = */ false,
+                                      cost,
+                                      residuals,
+                                      jacobians);
 }
 
-int Problem::NumResidualBlocks() const {
-  return problem_impl_->NumResidualBlocks();
+int Problem::NumParameterBlocks() const { return impl_->NumParameterBlocks(); }
+
+int Problem::NumParameters() const { return impl_->NumParameters(); }
+
+int Problem::NumResidualBlocks() const { return impl_->NumResidualBlocks(); }
+
+int Problem::NumResiduals() const { return impl_->NumResiduals(); }
+
+int Problem::ParameterBlockSize(const double* values) const {
+  return impl_->ParameterBlockSize(values);
 }
 
-int Problem::NumResiduals() const {
-  return problem_impl_->NumResiduals();
-}
-
-int Problem::ParameterBlockSize(const double* parameter_block) const {
-  return problem_impl_->ParameterBlockSize(parameter_block);
-}
-
-int Problem::ParameterBlockLocalSize(const double* parameter_block) const {
-  return problem_impl_->ParameterBlockLocalSize(parameter_block);
+int Problem::ParameterBlockTangentSize(const double* values) const {
+  return impl_->ParameterBlockTangentSize(values);
 }
 
 bool Problem::HasParameterBlock(const double* values) const {
-  return problem_impl_->HasParameterBlock(values);
+  return impl_->HasParameterBlock(values);
 }
 
-void Problem::GetParameterBlocks(vector<double*>* parameter_blocks) const {
-  problem_impl_->GetParameterBlocks(parameter_blocks);
+void Problem::GetParameterBlocks(std::vector<double*>* parameter_blocks) const {
+  impl_->GetParameterBlocks(parameter_blocks);
 }
 
 void Problem::GetResidualBlocks(
-    vector<ResidualBlockId>* residual_blocks) const {
-  problem_impl_->GetResidualBlocks(residual_blocks);
+    std::vector<ResidualBlockId>* residual_blocks) const {
+  impl_->GetResidualBlocks(residual_blocks);
 }
 
 void Problem::GetParameterBlocksForResidualBlock(
     const ResidualBlockId residual_block,
-    vector<double*>* parameter_blocks) const {
-  problem_impl_->GetParameterBlocksForResidualBlock(residual_block,
-                                                    parameter_blocks);
+    std::vector<double*>* parameter_blocks) const {
+  impl_->GetParameterBlocksForResidualBlock(residual_block, parameter_blocks);
 }
 
 const CostFunction* Problem::GetCostFunctionForResidualBlock(
     const ResidualBlockId residual_block) const {
-  return problem_impl_->GetCostFunctionForResidualBlock(residual_block);
+  return impl_->GetCostFunctionForResidualBlock(residual_block);
 }
 
 const LossFunction* Problem::GetLossFunctionForResidualBlock(
     const ResidualBlockId residual_block) const {
-  return problem_impl_->GetLossFunctionForResidualBlock(residual_block);
+  return impl_->GetLossFunctionForResidualBlock(residual_block);
 }
 
 void Problem::GetResidualBlocksForParameterBlock(
-    const double* values,
-    vector<ResidualBlockId>* residual_blocks) const {
-  problem_impl_->GetResidualBlocksForParameterBlock(values,
-                                                    residual_blocks);
+    const double* values, std::vector<ResidualBlockId>* residual_blocks) const {
+  impl_->GetResidualBlocksForParameterBlock(values, residual_blocks);
 }
+
+const Problem::Options& Problem::options() const { return impl_->options(); }
+
+internal::ProblemImpl* Problem::mutable_impl() { return impl_.get(); }
 
 }  // namespace ceres

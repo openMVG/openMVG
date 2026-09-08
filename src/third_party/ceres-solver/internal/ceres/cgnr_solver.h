@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,11 +31,15 @@
 #ifndef CERES_INTERNAL_CGNR_SOLVER_H_
 #define CERES_INTERNAL_CGNR_SOLVER_H_
 
-#include "ceres/internal/scoped_ptr.h"
+#include <memory>
+
+#include "ceres/conjugate_gradients_solver.h"
+#include "ceres/cuda_sparse_matrix.h"
+#include "ceres/cuda_vector.h"
+#include "ceres/internal/export.h"
 #include "ceres/linear_solver.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class Preconditioner;
 
@@ -48,22 +52,65 @@ class BlockJacobiPreconditioner;
 //
 // as required for solving for x in the least squares sense. Currently only
 // block diagonal preconditioning is supported.
-class CgnrSolver : public BlockSparseMatrixSolver {
+class CERES_NO_EXPORT CgnrSolver final : public BlockSparseMatrixSolver {
  public:
-  explicit CgnrSolver(const LinearSolver::Options& options);
-  virtual Summary SolveImpl(
-      BlockSparseMatrix* A,
-      const double* b,
-      const LinearSolver::PerSolveOptions& per_solve_options,
-      double* x);
+  explicit CgnrSolver(LinearSolver::Options options);
+  CgnrSolver(const CgnrSolver&) = delete;
+  void operator=(const CgnrSolver&) = delete;
+  ~CgnrSolver() override;
+
+  Summary SolveImpl(BlockSparseMatrix* A,
+                    const double* b,
+                    const LinearSolver::PerSolveOptions& per_solve_options,
+                    double* x) final;
 
  private:
   const LinearSolver::Options options_;
-  scoped_ptr<Preconditioner> preconditioner_;
-  CERES_DISALLOW_COPY_AND_ASSIGN(CgnrSolver);
+  std::unique_ptr<Preconditioner> preconditioner_;
+  Vector cg_solution_;
+  Vector* scratch_[4] = {nullptr, nullptr, nullptr, nullptr};
 };
 
-}  // namespace internal
-}  // namespace ceres
+#ifndef CERES_NO_CUDA
+class CudaPreconditioner : public ConjugateGradientsLinearOperator<CudaVector> {
+ public:
+  virtual void Update(const CompressedRowSparseMatrix& A, const double* D) = 0;
+  virtual ~CudaPreconditioner() = default;
+};
+
+// A Cuda-accelerated version of CgnrSolver.
+// This solver assumes that the sparsity structure of A remains constant for its
+// lifetime.
+class CERES_NO_EXPORT CudaCgnrSolver final
+    : public CompressedRowSparseMatrixSolver {
+ public:
+  explicit CudaCgnrSolver(LinearSolver::Options options);
+  static std::unique_ptr<CudaCgnrSolver> Create(LinearSolver::Options options,
+                                                std::string* error);
+  ~CudaCgnrSolver() override;
+
+  Summary SolveImpl(CompressedRowSparseMatrix* A,
+                    const double* b,
+                    const LinearSolver::PerSolveOptions& per_solve_options,
+                    double* x) final;
+
+ private:
+  void CpuToGpuTransfer(const CompressedRowSparseMatrix& A,
+                        const double* b,
+                        const double* D);
+
+  LinearSolver::Options options_;
+  std::unique_ptr<CudaSparseMatrix> A_;
+  std::unique_ptr<CudaVector> b_;
+  std::unique_ptr<CudaVector> x_;
+  std::unique_ptr<CudaVector> Atb_;
+  std::unique_ptr<CudaVector> Ax_;
+  std::unique_ptr<CudaVector> D_;
+  std::unique_ptr<CudaPreconditioner> preconditioner_;
+  CudaVector* scratch_[4] = {nullptr, nullptr, nullptr, nullptr};
+};
+#endif  // CERES_NO_CUDA
+
+}  // namespace ceres::internal
 
 #endif  // CERES_INTERNAL_CGNR_SOLVER_H_

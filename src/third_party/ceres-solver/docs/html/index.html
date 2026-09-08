@@ -1,86 +1,48 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ceres Solver &mdash; A Large Scale Non-linear Optimization Library</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-    <link rel="top" title="Ceres Solver" href="#"/>
-        <link rel="next" title="Why?" href="features.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Why?" href="features.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
+        <div class="wy-side-nav-search" >
 
           
-            <a href="#" class="icon icon-home"> Ceres Solver
           
-
-          
+          <a href="#" class="icon icon-home">
+            Ceres Solver
           </a>
-
-          
-            
-            
               <div class="version">
-                1.13
+                2.2
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-                <ul>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Why?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
@@ -97,49 +59,32 @@
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="#">Ceres Solver</a>
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Ceres Solver</a>
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
- 
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="#">Docs</a> &raquo;</li>
-      
-    <li>Ceres Solver</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Ceres Solver</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
-        
       </li>
   </ul>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="ceres-solver">
-<h1>Ceres Solver<a class="headerlink" href="#ceres-solver" title="Permalink to this headline">¶</a></h1>
-<p>Ceres Solver <a class="footnote-reference" href="#f1" id="id1">[1]</a> is an open source C++ library for modeling and
+             
+  <section id="ceres-solver">
+<h1>Ceres Solver<a class="headerlink" href="#ceres-solver" title="Link to this heading">¶</a></h1>
+<p>Ceres Solver <a class="footnote-reference brackets" href="#f1" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> is an open source C++ library for modeling and
 solving large, complicated optimization problems. It can be used to
 solve <a class="reference external" href="http://en.wikipedia.org/wiki/Non-linear_least_squares">Non-linear Least Squares</a> problems with bounds constraints and
 general unconstrained optimization problems. It is a mature, feature
@@ -151,105 +96,64 @@ the place for discussions and questions about Ceres Solver. We use the
 reports and feature requests.</p>
 <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="cite-us">
-<h2>Cite Us<a class="headerlink" href="#cite-us" title="Permalink to this headline">¶</a></h2>
+<section id="cite-us">
+<h2>Cite Us<a class="headerlink" href="#cite-us" title="Link to this heading">¶</a></h2>
 <p>If you use Ceres Solver for a publication, please cite it as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@misc</span><span class="p">{</span><span class="n">ceres</span><span class="o">-</span><span class="n">solver</span><span class="p">,</span>
-  <span class="n">author</span> <span class="o">=</span> <span class="s2">&quot;Sameer Agarwal and Keir Mierle and Others&quot;</span><span class="p">,</span>
-  <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Ceres Solver&quot;</span><span class="p">,</span>
-  <span class="n">howpublished</span> <span class="o">=</span> <span class="s2">&quot;\url{http://ceres-solver.org}&quot;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@software</span><span class="p">{</span><span class="n">Agarwal_Ceres_Solver_2022</span><span class="p">,</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Agarwal</span><span class="p">,</span> <span class="n">Sameer</span> <span class="ow">and</span> <span class="n">Mierle</span><span class="p">,</span> <span class="n">Keir</span> <span class="ow">and</span> <span class="n">The</span> <span class="n">Ceres</span> <span class="n">Solver</span> <span class="n">Team</span><span class="p">},</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="p">{{</span><span class="n">Ceres</span> <span class="n">Solver</span><span class="p">}},</span>
+  <span class="n">license</span> <span class="o">=</span> <span class="p">{</span><span class="n">Apache</span><span class="o">-</span><span class="mf">2.0</span><span class="p">},</span>
+  <span class="n">url</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">ceres</span><span class="o">-</span><span class="n">solver</span><span class="o">/</span><span class="n">ceres</span><span class="o">-</span><span class="n">solver</span><span class="p">},</span>
+  <span class="n">version</span> <span class="o">=</span> <span class="p">{</span><span class="mf">2.2</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
+  <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f1" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>While there is some debate as to who invented the method of
-Least Squares <a class="reference internal" href="bibliography.html#stigler" id="id2">[Stigler]</a>, there is no questioning the fact
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="f1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>While there is some debate as to who invented the method of
+Least Squares <a class="reference internal" href="bibliography.html#stigler" id="id2"><span>[Stigler]</span></a>, there is no questioning the fact
 that it was <a class="reference external" href="http://www-groups.dcs.st-and.ac.uk/~history/Biographies/Gauss.html">Carl Friedrich Gauss</a>
 who brought it to the attention of the world. Using just 22
 observations of the newly discovered asteroid <a class="reference external" href="http://en.wikipedia.org/wiki/Ceres_(dwarf_planet)">Ceres</a>, Gauss
 used the method of least squares to correctly predict when
 and where the asteroid will emerge from behind the Sun
-<a class="reference internal" href="bibliography.html#tenenbaumdirector" id="id3">[TenenbaumDirector]</a>. We named our solver after Ceres to
+<a class="reference internal" href="bibliography.html#tenenbaumdirector" id="id3"><span>[TenenbaumDirector]</span></a>. We named our solver after Ceres to
 celebrate this seminal event in the history of astronomy,
-statistics and optimization.</td></tr>
-</tbody>
-</table>
-</div>
-</div>
+statistics and optimization.</p>
+</aside>
+</aside>
+</section>
+</section>
 
 
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="features.html" class="btn btn-neutral float-right" title="Why?" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="features.html" class="btn btn-neutral float-right" title="Why?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2016 Google Inc.
+    <p>&#169; Copyright 2023 Google Inc.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.13.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-      MathJax.Hub.Config({
-          "HTML-CSS": {
-            availableFonts: ["TeX"]
-          }
-        });
-      </script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-  
  
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

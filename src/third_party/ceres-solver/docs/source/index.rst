@@ -44,12 +44,15 @@ Cite Us
 
 If you use Ceres Solver for a publication, please cite it as::
 
-    @misc{ceres-solver,
-      author = "Sameer Agarwal and Keir Mierle and Others",
-      title = "Ceres Solver",
-      howpublished = "\url{http://ceres-solver.org}",
-    }
-
+  @software{Agarwal_Ceres_Solver_2022,
+    author = {Agarwal, Sameer and Mierle, Keir and The Ceres Solver Team},
+    title = {{Ceres Solver}},
+    license = {Apache-2.0},
+    url = {https://github.com/ceres-solver/ceres-solver},
+    version = {2.2},
+    year = {2023},
+    month = {10}
+  }
 
 .. rubric:: Footnotes
 

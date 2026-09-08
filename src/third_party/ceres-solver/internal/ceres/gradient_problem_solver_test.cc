@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,34 +28,31 @@
 //
 // Author: strandmark@google.com (Petter Strandmark)
 
-#include "ceres/gradient_problem.h"
 #include "ceres/gradient_problem_solver.h"
 
+#include "ceres/gradient_problem.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 // Rosenbrock function; see http://en.wikipedia.org/wiki/Rosenbrock_function .
 class Rosenbrock : public ceres::FirstOrderFunction {
  public:
-  virtual ~Rosenbrock() {}
-
-  virtual bool Evaluate(const double* parameters,
-                        double* cost,
-                        double* gradient) const {
+  bool Evaluate(const double* parameters,
+                double* cost,
+                double* gradient) const final {
     const double x = parameters[0];
     const double y = parameters[1];
 
     cost[0] = (1.0 - x) * (1.0 - x) + 100.0 * (y - x * x) * (y - x * x);
-    if (gradient != NULL) {
+    if (gradient != nullptr) {
       gradient[0] = -2.0 * (1.0 - x) - 200.0 * (y - x * x) * 2.0 * x;
       gradient[1] = 200.0 * (y - x * x);
     }
     return true;
   }
 
-  virtual int NumParameters() const { return 2; }
+  int NumParameters() const final { return 2; }
 };
 
 TEST(GradientProblemSolver, SolvesRosenbrockWithDefaultOptions) {
@@ -72,5 +69,61 @@ TEST(GradientProblemSolver, SolvesRosenbrockWithDefaultOptions) {
   EXPECT_NEAR(1.0, parameters[1], expected_tolerance);
 }
 
-}  // namespace internal
-}  // namespace ceres
+class QuadraticFunction : public ceres::FirstOrderFunction {
+  bool Evaluate(const double* parameters,
+                double* cost,
+                double* gradient) const final {
+    const double x = parameters[0];
+    *cost = 0.5 * (5.0 - x) * (5.0 - x);
+    if (gradient != nullptr) {
+      gradient[0] = x - 5.0;
+    }
+
+    return true;
+  }
+  int NumParameters() const final { return 1; }
+};
+
+struct RememberingCallback : public IterationCallback {
+  explicit RememberingCallback(double* x) : calls(0), x(x) {}
+  CallbackReturnType operator()(const IterationSummary& summary) final {
+    x_values.push_back(*x);
+    return SOLVER_CONTINUE;
+  }
+  int calls;
+  double* x;
+  std::vector<double> x_values;
+};
+
+TEST(Solver, UpdateStateEveryIterationOption) {
+  double x = 50.0;
+  const double original_x = x;
+
+  ceres::GradientProblem problem(new QuadraticFunction);
+  ceres::GradientProblemSolver::Options options;
+  RememberingCallback callback(&x);
+  options.callbacks.push_back(&callback);
+  ceres::GradientProblemSolver::Summary summary;
+
+  int num_iterations;
+
+  // First try: no updating.
+  ceres::Solve(options, problem, &x, &summary);
+  num_iterations = summary.iterations.size() - 1;
+  EXPECT_GT(num_iterations, 1);
+  for (double value : callback.x_values) {
+    EXPECT_EQ(50.0, value);
+  }
+
+  // Second try: with updating
+  x = 50.0;
+  options.update_state_every_iteration = true;
+  callback.x_values.clear();
+  ceres::Solve(options, problem, &x, &summary);
+  num_iterations = summary.iterations.size() - 1;
+  EXPECT_GT(num_iterations, 1);
+  EXPECT_EQ(original_x, callback.x_values[0]);
+  EXPECT_NE(original_x, callback.x_values[1]);
+}
+
+}  // namespace ceres::internal

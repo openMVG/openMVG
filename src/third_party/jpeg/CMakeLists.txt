@@ -1,5 +1,5 @@
 PROJECT(jpeg C)
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8...4.3)
 
 include(CheckIncludeFile)
 check_include_file (stddef.h HAVE_STDDEF_H)

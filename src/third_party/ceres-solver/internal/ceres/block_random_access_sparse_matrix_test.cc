@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,84 +28,80 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include <limits>
-#include <vector>
 #include "ceres/block_random_access_sparse_matrix.h"
+
+#include <limits>
+#include <memory>
+#include <set>
+#include <utility>
+#include <vector>
+
 #include "ceres/internal/eigen.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
-
-using std::make_pair;
-using std::pair;
-using std::set;
-using std::vector;
+namespace ceres::internal {
 
 TEST(BlockRandomAccessSparseMatrix, GetCell) {
-  vector<int> blocks;
-  blocks.push_back(3);
-  blocks.push_back(4);
-  blocks.push_back(5);
-  const int num_rows = 3 + 4 + 5;
+  ContextImpl context;
+  constexpr int num_threads = 1;
+  std::vector<Block> blocks;
+  blocks.emplace_back(3, 0);
+  blocks.emplace_back(4, 3);
+  blocks.emplace_back(5, 7);
+  constexpr int num_rows = 3 + 4 + 5;
 
-  set< pair<int, int> > block_pairs;
+  std::set<std::pair<int, int>> block_pairs;
   int num_nonzeros = 0;
-  block_pairs.insert(make_pair(0, 0));
-  num_nonzeros += blocks[0] * blocks[0];
+  block_pairs.emplace(0, 0);
+  num_nonzeros += blocks[0].size * blocks[0].size;
 
-  block_pairs.insert(make_pair(1, 1));
-  num_nonzeros += blocks[1] * blocks[1];
+  block_pairs.emplace(1, 1);
+  num_nonzeros += blocks[1].size * blocks[1].size;
 
-  block_pairs.insert(make_pair(1, 2));
-  num_nonzeros += blocks[1] * blocks[2];
+  block_pairs.emplace(1, 2);
+  num_nonzeros += blocks[1].size * blocks[2].size;
 
-  block_pairs.insert(make_pair(0, 2));
-  num_nonzeros += blocks[2] * blocks[0];
+  block_pairs.emplace(0, 2);
+  num_nonzeros += blocks[2].size * blocks[0].size;
 
-  BlockRandomAccessSparseMatrix m(blocks, block_pairs);
+  BlockRandomAccessSparseMatrix m(blocks, block_pairs, &context, num_threads);
   EXPECT_EQ(m.num_rows(), num_rows);
   EXPECT_EQ(m.num_cols(), num_rows);
 
-  for (set<pair<int, int> >::const_iterator it = block_pairs.begin();
-       it != block_pairs.end();
-       ++it) {
-    const int row_block_id = it->first;
-    const int col_block_id = it->second;
+  for (const auto& block_pair : block_pairs) {
+    const int row_block_id = block_pair.first;
+    const int col_block_id = block_pair.second;
     int row;
     int col;
     int row_stride;
     int col_stride;
-    CellInfo* cell =  m.GetCell(row_block_id, col_block_id,
-                                &row, &col,
-                                &row_stride, &col_stride);
-    EXPECT_TRUE(cell != NULL);
+    CellInfo* cell = m.GetCell(
+        row_block_id, col_block_id, &row, &col, &row_stride, &col_stride);
+    EXPECT_TRUE(cell != nullptr);
     EXPECT_EQ(row, 0);
     EXPECT_EQ(col, 0);
-    EXPECT_EQ(row_stride, blocks[row_block_id]);
-    EXPECT_EQ(col_stride, blocks[col_block_id]);
+    EXPECT_EQ(row_stride, blocks[row_block_id].size);
+    EXPECT_EQ(col_stride, blocks[col_block_id].size);
 
     // Write into the block
-    MatrixRef(cell->values, row_stride, col_stride).block(
-        row, col, blocks[row_block_id], blocks[col_block_id]) =
-        (row_block_id + 1) * (col_block_id +1) *
-        Matrix::Ones(blocks[row_block_id], blocks[col_block_id]);
+    MatrixRef(cell->values, row_stride, col_stride)
+        .block(row, col, blocks[row_block_id].size, blocks[col_block_id].size) =
+        (row_block_id + 1) * (col_block_id + 1) *
+        Matrix::Ones(blocks[row_block_id].size, blocks[col_block_id].size);
   }
 
-  const TripletSparseMatrix* tsm = m.matrix();
-  EXPECT_EQ(tsm->num_nonzeros(), num_nonzeros);
-  EXPECT_EQ(tsm->max_num_nonzeros(), num_nonzeros);
+  const BlockSparseMatrix* bsm = m.matrix();
+  EXPECT_EQ(bsm->num_nonzeros(), num_nonzeros);
 
   Matrix dense;
-  tsm->ToDenseMatrix(&dense);
+  bsm->ToDenseMatrix(&dense);
 
   double kTolerance = 1e-14;
 
   // (0, 0)
-  EXPECT_NEAR((dense.block(0, 0, 3, 3) - Matrix::Ones(3, 3)).norm(),
-              0.0,
-              kTolerance);
+  EXPECT_NEAR(
+      (dense.block(0, 0, 3, 3) - Matrix::Ones(3, 3)).norm(), 0.0, kTolerance);
   // (1, 1)
   EXPECT_NEAR((dense.block(3, 3, 4, 4) - 2 * 2 * Matrix::Ones(4, 4)).norm(),
               0.0,
@@ -120,49 +116,48 @@ TEST(BlockRandomAccessSparseMatrix, GetCell) {
               kTolerance);
 
   // There is nothing else in the matrix besides these four blocks.
-  EXPECT_NEAR(dense.norm(), sqrt(9. + 16. * 16. + 36. * 20. + 9. * 15.),
-              kTolerance);
+  EXPECT_NEAR(
+      dense.norm(), sqrt(9. + 16. * 16. + 36. * 20. + 9. * 15.), kTolerance);
 
   Vector x = Vector::Ones(dense.rows());
   Vector actual_y = Vector::Zero(dense.rows());
   Vector expected_y = Vector::Zero(dense.rows());
 
   expected_y += dense.selfadjointView<Eigen::Upper>() * x;
-  m.SymmetricRightMultiply(x.data(), actual_y.data());
+  m.SymmetricRightMultiplyAndAccumulate(x.data(), actual_y.data());
   EXPECT_NEAR((expected_y - actual_y).norm(), 0.0, kTolerance)
       << "actual: " << actual_y.transpose() << "\n"
-      << "expected: " << expected_y.transpose()
-      << "matrix: \n " << dense;
+      << "expected: " << expected_y.transpose() << "matrix: \n " << dense;
 }
 
-// IntPairToLong is private, thus this fixture is needed to access and
+// IntPairToInt64 is private, thus this fixture is needed to access and
 // test it.
 class BlockRandomAccessSparseMatrixTest : public ::testing::Test {
  public:
-  virtual void SetUp() {
-    vector<int> blocks;
-    blocks.push_back(1);
-    set< pair<int, int> > block_pairs;
-    block_pairs.insert(make_pair(0, 0));
-    m_.reset(new BlockRandomAccessSparseMatrix(blocks, block_pairs));
+  void SetUp() final {
+    std::vector<Block> blocks;
+    blocks.emplace_back(1, 0);
+    std::set<std::pair<int, int>> block_pairs;
+    block_pairs.emplace(0, 0);
+    m_ = std::make_unique<BlockRandomAccessSparseMatrix>(
+        blocks, block_pairs, &context_, 1);
   }
 
-  void CheckIntPairToLong(int a, int b) {
-    int64 value = m_->IntPairToLong(a, b);
+  void CheckIntPairToInt64(int a, int b) {
+    int64_t value = m_->IntPairToInt64(a, b);
     EXPECT_GT(value, 0) << "Overflow a = " << a << " b = " << b;
     EXPECT_GT(value, a) << "Overflow a = " << a << " b = " << b;
     EXPECT_GT(value, b) << "Overflow a = " << a << " b = " << b;
   }
 
-  void CheckLongToIntPair() {
-    uint64 max_rows =  m_->kMaxRowBlocks;
+  void CheckInt64ToIntPair() {
+    uint64_t max_rows = m_->kRowShift;
     for (int row = max_rows - 10; row < max_rows; ++row) {
       for (int col = 0; col < 10; ++col) {
         int row_computed;
         int col_computed;
-        m_->LongToIntPair(m_->IntPairToLong(row, col),
-                          &row_computed,
-                          &col_computed);
+        m_->Int64ToIntPair(
+            m_->IntPairToInt64(row, col), &row_computed, &col_computed);
         EXPECT_EQ(row, row_computed);
         EXPECT_EQ(col, col_computed);
       }
@@ -170,17 +165,17 @@ class BlockRandomAccessSparseMatrixTest : public ::testing::Test {
   }
 
  private:
-  scoped_ptr<BlockRandomAccessSparseMatrix> m_;
+  ContextImpl context_;
+  std::unique_ptr<BlockRandomAccessSparseMatrix> m_;
 };
 
-TEST_F(BlockRandomAccessSparseMatrixTest, IntPairToLongOverflow) {
-  CheckIntPairToLong(std::numeric_limits<int>::max(),
-                     std::numeric_limits<int>::max());
+TEST_F(BlockRandomAccessSparseMatrixTest, IntPairToInt64Overflow) {
+  CheckIntPairToInt64(std::numeric_limits<int32_t>::max(),
+                      std::numeric_limits<int32_t>::max());
 }
 
-TEST_F(BlockRandomAccessSparseMatrixTest, LongToIntPair) {
-  CheckLongToIntPair();
+TEST_F(BlockRandomAccessSparseMatrixTest, Int64ToIntPair) {
+  CheckInt64ToIntPair();
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

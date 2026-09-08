@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,11 +31,12 @@
 //
 // Test utils used for evaluation testing.
 
-namespace ceres {
-namespace internal {
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 // Fixed sized struct for storing an evaluation.
-struct ExpectedEvaluation {
+struct CERES_NO_EXPORT ExpectedEvaluation {
   int num_rows;
   int num_cols;
   double cost;
@@ -45,16 +46,15 @@ struct ExpectedEvaluation {
 };
 
 // Compare two evaluations.
-void CompareEvaluations(int expected_num_rows,
-                        int expected_num_cols,
-                        double expected_cost,
-                        const double* expected_residuals,
-                        const double* expected_gradient,
-                        const double* expected_jacobian,
-                        const double actual_cost,
-                        const double* actual_residuals,
-                        const double* actual_gradient,
-                        const double* actual_jacobian);
+CERES_NO_EXPORT void CompareEvaluations(int expected_num_rows,
+                                        int expected_num_cols,
+                                        double expected_cost,
+                                        const double* expected_residuals,
+                                        const double* expected_gradient,
+                                        const double* expected_jacobian,
+                                        const double actual_cost,
+                                        const double* actual_residuals,
+                                        const double* actual_gradient,
+                                        const double* actual_jacobian);
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

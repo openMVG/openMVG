@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
 #include "ceres/function_sample.h"
+
 #include "ceres/stringprintf.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 FunctionSample::FunctionSample()
     : x(0.0),
@@ -64,10 +64,14 @@ FunctionSample::FunctionSample(const double x,
       gradient_is_valid(true) {}
 
 std::string FunctionSample::ToDebugString() const {
-  return StringPrintf("[x: %.8e, value: %.8e, gradient: %.8e, "
-                      "value_is_valid: %d, gradient_is_valid: %d]",
-                      x, value, gradient, value_is_valid, gradient_is_valid);
+  return StringPrintf(
+      "[x: %.8e, value: %.8e, gradient: %.8e, "
+      "value_is_valid: %d, gradient_is_valid: %d]",
+      x,
+      value,
+      gradient,
+      value_is_valid,
+      gradient_is_valid);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,15 +34,17 @@
 #ifndef CERES_INTERNAL_IMPLICIT_SCHUR_COMPLEMENT_H_
 #define CERES_INTERNAL_IMPLICIT_SCHUR_COMPLEMENT_H_
 
+#include <memory>
+
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/export.h"
 #include "ceres/linear_operator.h"
 #include "ceres/linear_solver.h"
 #include "ceres/partitioned_matrix_view.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "ceres/types.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 class BlockSparseMatrix;
 
@@ -79,14 +81,14 @@ class BlockSparseMatrix;
 // (which for our purposes is an easily inverted block diagonal
 // matrix), it can be done in terms of matrix vector products with E,
 // F and (E'E)^-1. This class implements this functionality and other
-// auxilliary bits needed to implement a CG solver on the Schur
+// auxiliary bits needed to implement a CG solver on the Schur
 // complement using the PartitionedMatrixView object.
 //
-// THREAD SAFETY: This class is nqot thread safe. In particular, the
-// RightMultiply (and the LeftMultiply) methods are not thread safe as
-// they depend on mutable arrays used for the temporaries needed to
-// compute the product y += Sx;
-class ImplicitSchurComplement : public LinearOperator {
+// THREAD SAFETY: This class is not thread safe. In particular, the
+// RightMultiplyAndAccumulate (and the LeftMultiplyAndAccumulate) methods are
+// not thread safe as they depend on mutable arrays used for the temporaries
+// needed to compute the product y += Sx;
+class CERES_NO_EXPORT ImplicitSchurComplement final : public LinearOperator {
  public:
   // num_eliminate_blocks is the number of E blocks in the matrix
   // A.
@@ -98,7 +100,6 @@ class ImplicitSchurComplement : public LinearOperator {
   // TODO(sameeragarwal): Get rid of the two bools below and replace
   // them with enums.
   explicit ImplicitSchurComplement(const LinearSolver::Options& options);
-  virtual ~ImplicitSchurComplement();
 
   // Initialize the Schur complement for a linear least squares
   // problem of the form
@@ -113,13 +114,19 @@ class ImplicitSchurComplement : public LinearOperator {
   void Init(const BlockSparseMatrix& A, const double* D, const double* b);
 
   // y += Sx, where S is the Schur complement.
-  virtual void RightMultiply(const double* x, double* y) const;
+  void RightMultiplyAndAccumulate(const double* x, double* y) const final;
 
   // The Schur complement is a symmetric positive definite matrix,
   // thus the left and right multiply operators are the same.
-  virtual void LeftMultiply(const double* x, double* y) const {
-    RightMultiply(x, y);
+  void LeftMultiplyAndAccumulate(const double* x, double* y) const final {
+    RightMultiplyAndAccumulate(x, y);
   }
+
+  // Following is useful for approximation of S^-1 via power series expansion.
+  // Z = (F'F)^-1 F'E (E'E)^-1 E'F
+  // y += Zx
+  void InversePowerSeriesOperatorRightMultiplyAccumulate(const double* x,
+                                                         double* y) const;
 
   // y = (E'E)^-1 (E'b - E'F x). Given an estimate of the solution to
   // the Schur complement system, this method computes the value of
@@ -127,15 +134,16 @@ class ImplicitSchurComplement : public LinearOperator {
   // complement.
   void BackSubstitute(const double* x, double* y);
 
-  virtual int num_rows() const { return A_->num_cols_f(); }
-  virtual int num_cols() const { return A_->num_cols_f(); }
-  const Vector& rhs()    const { return rhs_;             }
+  int num_rows() const final { return A_->num_cols_f(); }
+  int num_cols() const final { return A_->num_cols_f(); }
+  const Vector& rhs() const { return rhs_; }
 
   const BlockSparseMatrix* block_diagonal_EtE_inverse() const {
     return block_diagonal_EtE_inverse_.get();
   }
 
   const BlockSparseMatrix* block_diagonal_FtF_inverse() const {
+    CHECK(compute_ftf_inverse_);
     return block_diagonal_FtF_inverse_.get();
   }
 
@@ -144,24 +152,25 @@ class ImplicitSchurComplement : public LinearOperator {
   void UpdateRhs();
 
   const LinearSolver::Options& options_;
+  bool compute_ftf_inverse_ = false;
+  std::unique_ptr<PartitionedMatrixViewBase> A_;
+  const double* D_ = nullptr;
+  const double* b_ = nullptr;
 
-  scoped_ptr<PartitionedMatrixViewBase> A_;
-  const double* D_;
-  const double* b_;
-
-  scoped_ptr<BlockSparseMatrix> block_diagonal_EtE_inverse_;
-  scoped_ptr<BlockSparseMatrix> block_diagonal_FtF_inverse_;
+  std::unique_ptr<BlockSparseMatrix> block_diagonal_EtE_inverse_;
+  std::unique_ptr<BlockSparseMatrix> block_diagonal_FtF_inverse_;
 
   Vector rhs_;
 
-  // Temporary storage vectors used to implement RightMultiply.
+  // Temporary storage vectors used to implement RightMultiplyAndAccumulate.
   mutable Vector tmp_rows_;
   mutable Vector tmp_e_cols_;
   mutable Vector tmp_e_cols_2_;
   mutable Vector tmp_f_cols_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_IMPLICIT_SCHUR_COMPLEMENT_H_

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,11 +32,14 @@
 
 #include "ceres/loss_function.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 
 namespace ceres {
+
+LossFunction::~LossFunction() = default;
 
 void TrivialLoss::Evaluate(double s, double rho[3]) const {
   rho[0] = s;
@@ -51,7 +54,7 @@ void HuberLoss::Evaluate(double s, double rho[3]) const {
     const double r = sqrt(s);
     rho[0] = 2.0 * a_ * r - b_;
     rho[1] = std::max(std::numeric_limits<double>::min(), a_ / r);
-    rho[2] = - rho[1] / (2.0 * s);
+    rho[2] = -rho[1] / (2.0 * s);
   } else {
     // Inlier region.
     rho[0] = s;
@@ -66,7 +69,7 @@ void SoftLOneLoss::Evaluate(double s, double rho[3]) const {
   // 'sum' and 'tmp' are always positive, assuming that 's' is.
   rho[0] = 2.0 * b_ * (tmp - 1.0);
   rho[1] = std::max(std::numeric_limits<double>::min(), 1.0 / tmp);
-  rho[2] = - (c_ * rho[1]) / (2.0 * sum);
+  rho[2] = -(c_ * rho[1]) / (2.0 * sum);
 }
 
 void CauchyLoss::Evaluate(double s, double rho[3]) const {
@@ -75,7 +78,7 @@ void CauchyLoss::Evaluate(double s, double rho[3]) const {
   // 'sum' and 'inv' are always positive, assuming that 's' is.
   rho[0] = b_ * log(sum);
   rho[1] = std::max(std::numeric_limits<double>::min(), inv);
-  rho[2] = - c_ * (inv * inv);
+  rho[2] = -c_ * (inv * inv);
 }
 
 void ArctanLoss::Evaluate(double s, double rho[3]) const {
@@ -88,9 +91,7 @@ void ArctanLoss::Evaluate(double s, double rho[3]) const {
 }
 
 TolerantLoss::TolerantLoss(double a, double b)
-    : a_(a),
-      b_(b),
-      c_(b * log(1.0 + exp(-a / b))) {
+    : a_(a), b_(b), c_(b * log(1.0 + exp(-a / b))) {
   CHECK_GE(a, 0.0);
   CHECK_GT(b, 0.0);
 }
@@ -101,7 +102,9 @@ void TolerantLoss::Evaluate(double s, double rho[3]) const {
   // large, it will overflow.  Since numerically 1 + e^x == e^x when the
   // x is greater than about ln(2^53) for doubles, beyond this threshold
   // we substitute x for ln(1 + e^x) as a numerically equivalent approximation.
-  static const double kLog2Pow53 = 36.7;  // ln(MathLimits<double>::kEpsilon).
+
+  // ln(MathLimits<double>::kEpsilon).
+  static constexpr double kLog2Pow53 = 36.7;
   if (x > kLog2Pow53) {
     rho[0] = s - a_ - c_;
     rho[1] = 1.0;
@@ -119,23 +122,24 @@ void TukeyLoss::Evaluate(double s, double* rho) const {
     // Inlier region.
     const double value = 1.0 - s / a_squared_;
     const double value_sq = value * value;
-    rho[0] = a_squared_ / 6.0 * (1.0 - value_sq * value);
-    rho[1] = 0.5 * value_sq;
-    rho[2] = -1.0 / a_squared_ * value;
+    rho[0] = a_squared_ / 3.0 * (1.0 - value_sq * value);
+    rho[1] = value_sq;
+    rho[2] = -2.0 / a_squared_ * value;
   } else {
     // Outlier region.
-    rho[0] = a_squared_ / 6.0;
+    rho[0] = a_squared_ / 3.0;
     rho[1] = 0.0;
     rho[2] = 0.0;
   }
 }
 
-ComposedLoss::ComposedLoss(const LossFunction* f, Ownership ownership_f,
-                           const LossFunction* g, Ownership ownership_g)
-    : f_(CHECK_NOTNULL(f)),
-      g_(CHECK_NOTNULL(g)),
-      ownership_f_(ownership_f),
-      ownership_g_(ownership_g) {
+ComposedLoss::ComposedLoss(const LossFunction* f,
+                           Ownership ownership_f,
+                           const LossFunction* g,
+                           Ownership ownership_g)
+    : f_(f), g_(g), ownership_f_(ownership_f), ownership_g_(ownership_g) {
+  CHECK(f_ != nullptr);
+  CHECK(g_ != nullptr);
 }
 
 ComposedLoss::~ComposedLoss() {
@@ -159,7 +163,7 @@ void ComposedLoss::Evaluate(double s, double rho[3]) const {
 }
 
 void ScaledLoss::Evaluate(double s, double rho[3]) const {
-  if (rho_.get() == NULL) {
+  if (rho_.get() == nullptr) {
     rho[0] = a_ * s;
     rho[1] = a_;
     rho[2] = 0.0;

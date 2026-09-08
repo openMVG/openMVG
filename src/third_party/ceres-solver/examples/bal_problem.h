@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,7 @@
 
 #include <string>
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
 class BALProblem {
  public:
@@ -65,6 +64,7 @@ class BALProblem {
                const double translation_sigma,
                const double point_sigma);
 
+  // clang-format off
   int camera_block_size()      const { return use_quaternions_ ? 10 : 9; }
   int point_block_size()       const { return 3;                         }
   int num_cameras()            const { return num_cameras_;              }
@@ -77,8 +77,9 @@ class BALProblem {
   const double* parameters()   const { return parameters_;               }
   const double* cameras()      const { return parameters_;               }
   double* mutable_cameras()          { return parameters_;               }
+  // clang-format on
   double* mutable_points() {
-    return parameters_  + camera_block_size() * num_cameras_;
+    return parameters_ + camera_block_size() * num_cameras_;
   }
 
  private:
@@ -103,7 +104,6 @@ class BALProblem {
   double* parameters_;
 };
 
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples
 
 #endif  // CERES_EXAMPLES_BAL_PROBLEM_H_

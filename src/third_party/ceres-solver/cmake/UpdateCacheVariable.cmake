@@ -1,5 +1,5 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2015 Google Inc. All rights reserved.
+# Copyright 2023 Google Inc. All rights reserved.
 # http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,11 @@
 # for the cache variable to update, then reinitialising it with the new
 # value, but with the original help string.
 function(UPDATE_CACHE_VARIABLE VAR_NAME VALUE)
+  get_property(IS_DEFINED_IN_CACHE CACHE ${VAR_NAME} PROPERTY VALUE SET)
+  if (NOT IS_DEFINED_IN_CACHE)
+    message(FATAL_ERROR "Specified variable to update in cache: "
+      "${VAR_NAME} has not been set in the cache.")
+  endif()
   get_property(HELP_STRING CACHE ${VAR_NAME} PROPERTY HELPSTRING)
   get_property(VAR_TYPE CACHE ${VAR_NAME} PROPERTY TYPE)
   set(${VAR_NAME} ${VALUE} CACHE ${VAR_TYPE} "${HELP_STRING}" FORCE)

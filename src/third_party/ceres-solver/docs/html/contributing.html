@@ -1,87 +1,49 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contributing &mdash; Ceres Solver</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-    <link rel="top" title="Ceres Solver" href="index.html"/>
-        <link rel="next" title="Version History" href="version_history.html"/>
-        <link rel="prev" title="Users" href="users.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Version History" href="version_history.html" />
+    <link rel="prev" title="Users" href="users.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
-
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
+        <div class="wy-side-nav-search" >
 
           
-            <a href="index.html" class="icon icon-home"> Ceres Solver
           
-
-          
+          <a href="index.html" class="icon icon-home">
+            Ceres Solver
           </a>
-
-          
-            
-            
               <div class="version">
-                1.13
+                2.2
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-                <ul class="current">
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Why?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
@@ -102,48 +64,31 @@
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 
-            
-          
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">Ceres Solver</a>
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Ceres Solver</a>
       </nav>
 
-
-      
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
- 
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Contributing</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Contributing</li>
       <li class="wy-breadcrumbs-aside">
-        
-          
-        
       </li>
   </ul>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="contributing">
-<span id="chapter-contributing"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+             
+  <section id="contributing">
+<span id="chapter-contributing"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h1>
 <p>We welcome contributions to Ceres, whether they are new features, bug
 fixes or tests. The Ceres <a class="reference external" href="http://groups.google.com/group/ceres-solver">mailing</a> list is the best place
 for all development related discussions. Please consider joining
@@ -153,7 +98,7 @@ development. We may have suggestions that will save effort when trying
 to merge your work into the main branch. If you are looking for ideas,
 please let us know about your interest and skills and we will be happy
 to make a suggestion or three.</p>
-<p>We follow Google&#8217;s <a class="reference external" href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">C++ Style Guide</a> and
+<p>We follow Google’s <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">C++ Style Guide</a> and
 use <a class="reference external" href="http://git-scm.com/">git</a> for version control. We use the
 <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a> to collaborate and
 review changes to Ceres. Gerrit enables pre-commit reviews so that
@@ -161,170 +106,136 @@ Ceres can maintain a linear history with clean, reviewed commits, and
 no merges.</p>
 <p>We now describe how to set up your development environment and submit
 a change list for review via Gerrit.</p>
-<div class="section" id="setting-up-your-environment">
-<h2>Setting up your Environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this headline">¶</a></h2>
+<section id="setting-up-your-environment">
+<h2>Setting up your Environment<a class="headerlink" href="#setting-up-your-environment" title="Link to this heading">¶</a></h2>
 <ol class="arabic">
-<li><p class="first">Download and configure <code class="docutils literal"><span class="pre">git</span></code>.</p>
+<li><p>Download and configure <code class="docutils literal notranslate"><span class="pre">git</span></code>.</p>
 <ul class="simple">
-<li>Mac <code class="docutils literal"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">git</span></code>.</li>
-<li>Linux <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">git</span></code>.</li>
-<li>Windows. Download <a class="reference external" href="https://code.google.com/p/msysgit/">msysgit</a>, which includes a minimal
-<a class="reference external" href="http://www.cygwin.com/">Cygwin</a> install.</li>
+<li><p>Mac <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">git</span></code>.</p></li>
+<li><p>Linux <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">git</span></code>.</p></li>
+<li><p>Windows. Download <a class="reference external" href="https://code.google.com/p/msysgit/">msysgit</a>, which includes a minimal
+<a class="reference external" href="http://www.cygwin.com/">Cygwin</a> install.</p></li>
 </ul>
 </li>
-<li><p class="first">Sign up for <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a>. You will also
-need to sign the Contributor License Agreement (CLA) with Google,
-which gives Google a royalty-free unlimited license to use your
-contributions. You retain copyright.</p>
-</li>
-<li><p class="first">Clone the Ceres Solver <code class="docutils literal"><span class="pre">git</span></code> repository from Gerrit.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git clone https://ceres-solver.googlesource.com/ceres-solver
+<li><p>Sign up for <a class="reference external" href="https://ceres-solver-review.googlesource.com/">Gerrit</a>. You will also need to
+<a class="reference external" href="https://opensource.google.com/docs/cla/#sign">sign the Contributor License Agreement (CLA)</a> with Google, which gives
+Google a royalty-free unlimited license to use your contributions. You
+retain copyright.</p></li>
+<li><p>Clone the Ceres Solver <code class="docutils literal notranslate"><span class="pre">git</span></code> repository from Gerrit.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://ceres-solver.googlesource.com/ceres-solver
 </pre></div>
 </div>
 </li>
-<li><p class="first">Build Ceres, following the instructions in
+<li><p>Build Ceres, following the instructions in
 <a class="reference internal" href="installation.html#chapter-installation"><span class="std std-ref">Installation</span></a>.</p>
-<p>On Mac and Linux, the <code class="docutils literal"><span class="pre">CMake</span></code> build will download and enable
+<p>On Mac and Linux, the <code class="docutils literal notranslate"><span class="pre">CMake</span></code> build will download and enable
 the Gerrit pre-commit hook automatically. This pre-submit hook
-creates <cite>Change-Id: ...</cite> lines in your commits.</p>
+creates <code class="docutils literal notranslate"><span class="pre">Change-Id:</span> <span class="pre">...</span></code> lines in your commits.</p>
 <p>If this does not work OR you are on Windows, execute the
-following in the root directory of the local <code class="docutils literal"><span class="pre">git</span></code> repository:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>curl -o .git/hooks/commit-msg https://ceres-solver-review.googlesource.com/tools/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
+following in the root directory of the local <code class="docutils literal notranslate"><span class="pre">git</span></code> repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-o<span class="w"> </span>.git/hooks/commit-msg<span class="w"> </span>https://ceres-solver-review.googlesource.com/tools/hooks/commit-msg
+chmod<span class="w"> </span>+x<span class="w"> </span>.git/hooks/commit-msg
 </pre></div>
 </div>
 </li>
-<li><p class="first">Configure your Gerrit password with a <code class="docutils literal"><span class="pre">.gitcookies</span></code> which allows pushing
+<li><p>Configure your Gerrit password with a <code class="docutils literal notranslate"><span class="pre">.gitcookies</span></code> which allows pushing
 to Gerrit without having to enter a very long random password every time:</p>
 <ul class="simple">
-<li>Sign into <a class="reference external" href="http://ceres-solver-review.googlesource.com">http://ceres-solver-review.googlesource.com</a>.</li>
-<li>Click <code class="docutils literal"><span class="pre">Settings</span> <span class="pre">-&gt;</span> <span class="pre">HTTP</span> <span class="pre">Password</span> <span class="pre">-&gt;</span> <span class="pre">Obtain</span> <span class="pre">Password</span></code>.</li>
-<li>(maybe) Select an account for multi-login. This should be the
-same as your Gerrit login.</li>
-<li>Click <code class="docutils literal"><span class="pre">Allow</span> <span class="pre">access</span></code> when the page requests access to your
-<code class="docutils literal"><span class="pre">git</span></code> repositories.</li>
-<li>Follow the instructions from Gerrit to create a <code class="docutils literal"><span class="pre">.gitcookies</span></code> file on
-your system, either in <code class="docutils literal"><span class="pre">$HOME/.gitcookies</span></code> (Mac and Linux) or
-<code class="docutils literal"><span class="pre">%USERPROFILE%\.gitcookies</span></code> (Windows). Note that for Windows, please get
+<li><p>Sign into <a class="reference external" href="http://ceres-solver-review.googlesource.com">http://ceres-solver-review.googlesource.com</a>.</p></li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">Settings</span> <span class="pre">-&gt;</span> <span class="pre">HTTP</span> <span class="pre">Credentials</span> <span class="pre">-&gt;</span> <span class="pre">Obtain</span> <span class="pre">Password</span></code>.</p></li>
+<li><p>(maybe) Select an account for multi-login. This should be the
+same as your Gerrit login.</p></li>
+<li><p>Click <code class="docutils literal notranslate"><span class="pre">Allow</span> <span class="pre">access</span></code> when the page requests access to your
+<code class="docutils literal notranslate"><span class="pre">git</span></code> repositories.</p></li>
+<li><p>Follow the instructions from Gerrit to create a <code class="docutils literal notranslate"><span class="pre">.gitcookies</span></code> file on
+your system, either in <code class="docutils literal notranslate"><span class="pre">$HOME/.gitcookies</span></code> (Mac and Linux) or
+<code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\.gitcookies</span></code> (Windows). Note that for Windows, please get
 a recent <a class="reference external" href="https://git-scm.com/download/win">Git for Windows</a> install to
-enable automatic lookup in the <code class="docutils literal"><span class="pre">%USERPROFILE%\.gitcookies</span></code>.</li>
+enable automatic lookup in the <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\.gitcookies</span></code>.</p></li>
 </ul>
 </li>
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">clang-format</span></code>.</p>
+<ul class="simple">
+<li><p>Mac <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">clang-format</span></code>.</p></li>
+<li><p>Linux <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">clang-format</span></code>.</p></li>
+<li><p>Windows. You can get clang-format with <a class="reference external" href="https://superuser.com/a/1505297/1141693">clang or stand-alone via
+npm</a>.</p></li>
+</ul>
+<p>You can ensure all sources files are correctly formatted before
+committing by manually running <code class="docutils literal notranslate"><span class="pre">clang-format</span> <span class="pre">-i</span> <span class="pre">FILENAME</span></code>, by
+running the script <code class="docutils literal notranslate"><span class="pre">./scripts/format_all.sh</span></code>, or by configuring
+your editor to format upon saving.</p>
+</li>
 </ol>
-</div>
-<div class="section" id="submitting-a-change">
-<h2>Submitting a change<a class="headerlink" href="#submitting-a-change" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="submitting-a-change">
+<h2>Submitting a change<a class="headerlink" href="#submitting-a-change" title="Link to this heading">¶</a></h2>
 <ol class="arabic">
-<li><p class="first">Make your changes against master or whatever branch you
-like. Commit your changes as one patch. When you commit, the Gerrit
-hook will add a <cite>Change-Id:</cite> line as the last line of the commit.</p>
+<li><p>Make your changes against master or whatever branch you
+like. Ensure that the changes are formatted according to
+<code class="docutils literal notranslate"><span class="pre">clang-format</span></code>. Commit your changes as one patch. When you
+commit, the Gerrit hook will add a <code class="docutils literal notranslate"><span class="pre">Change-Id:</span></code> line as the last
+line of the commit.</p>
 <p>Make sure that your commit message is formatted in the <a class="reference external" href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">50/72 style</a>.</p>
 </li>
-<li><p class="first">Push your changes to the Ceres Gerrit instance:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git push origin HEAD:refs/for/master
+<li><p>Push your changes to the Ceres Gerrit instance:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>HEAD:refs/for/master
 </pre></div>
 </div>
 <p>When the push succeeds, the console will display a URL showing the
 address of the review. Go to the URL and add at least one of the
-maintainers (Sameer Agarwal, Keir Mierle, Alex Stewart or William
-Rucklidge) as reviewers.</p>
+maintainers (Sameer Agarwal, Keir Mierle, Alex Stewart, William
+Rucklidge or Sergiu Deitsch) as reviewers.</p>
 </li>
-<li><p class="first">Wait for a review.</p>
-</li>
-<li><p class="first">Once review comments come in, address them. Please reply to each
+<li><p>Wait for a review.</p></li>
+<li><p>Once review comments come in, address them. Please reply to each
 comment in Gerrit, which makes the re-review process easier. After
-modifying the code in your <code class="docutils literal"><span class="pre">git</span></code> instance, <em>don&#8217;t make a new
+modifying the code in your <code class="docutils literal notranslate"><span class="pre">git</span></code> instance, <em>don’t make a new
 commit</em>. Instead, update the last commit using a command like the
 following:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git commit --amend -a
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>--amend<span class="w"> </span>-a
 </pre></div>
 </div>
 <p>This will update the last commit, so that it has both the original
 patch and your updates as a single commit. You will have a chance
 to edit the commit message as well. Push the new commit to Gerrit
 as before.</p>
-<p>Gerrit will use the <code class="docutils literal"><span class="pre">Change-Id:</span></code> to match the previous commit
+<p>Gerrit will use the <code class="docutils literal notranslate"><span class="pre">Change-Id:</span></code> to match the previous commit
 with the new one. The review interface retains your original patch,
 but also shows the new patch.</p>
 <p>Publish your responses to the comments, and wait for a new round
 of reviews.</p>
 </li>
 </ol>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="version_history.html" class="btn btn-neutral float-right" title="Version History" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="users.html" class="btn btn-neutral" title="Users" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="users.html" class="btn btn-neutral float-left" title="Users" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="version_history.html" class="btn btn-neutral float-right" title="Version History" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2016 Google Inc.
+    <p>&#169; Copyright 2023 Google Inc.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.13.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
-      MathJax.Hub.Config({
-          "HTML-CSS": {
-            availableFonts: ["TeX"]
-          }
-        });
-      </script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-  
  
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

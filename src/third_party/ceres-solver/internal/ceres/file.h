@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,20 +34,25 @@
 #define CERES_INTERNAL_FILE_H_
 
 #include <string>
-#include "ceres/internal/port.h"
 
-namespace ceres {
-namespace internal {
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 
-void WriteStringToFileOrDie(const std::string &data,
-                            const std::string &filename);
-void ReadFileToStringOrDie(const std::string &filename, std::string *data);
+namespace ceres::internal {
+
+CERES_NO_EXPORT
+void WriteStringToFileOrDie(const std::string& data,
+                            const std::string& filename);
+CERES_NO_EXPORT
+void ReadFileToStringOrDie(const std::string& filename, std::string* data);
 
 // Join two path components, adding a slash if necessary.  If basename is an
 // absolute path then JoinPath ignores dirname and simply returns basename.
+CERES_NO_EXPORT
 std::string JoinPath(const std::string& dirname, const std::string& basename);
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_FILE_H_

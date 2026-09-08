@@ -2,6 +2,8 @@
 
 .. default-domain:: cpp
 
+.. cpp:namespace:: ceres
+
 .. _chapter-gradient_problem_solver:
 
 ==================================
@@ -33,10 +35,10 @@ Modeling
 .. function:: bool FirstOrderFunction::Evaluate(const double* const parameters, double* cost, double* gradient) const
 
    Evaluate the cost/value of the function. If ``gradient`` is not
-   ``NULL`` then evaluate the gradient too. If evaluation is
+   ``nullptr`` then evaluate the gradient too. If evaluation is
    successful return, ``true`` else return ``false``.
 
-   ``cost`` guaranteed to be never ``NULL``, ``gradient`` can be ``NULL``.
+   ``cost`` guaranteed to be never ``nullptr``, ``gradient`` can be ``nullptr``.
 
 .. function:: int FirstOrderFunction::NumParameters() const
 
@@ -54,9 +56,9 @@ Modeling
    public:
     explicit GradientProblem(FirstOrderFunction* function);
     GradientProblem(FirstOrderFunction* function,
-                    LocalParameterization* parameterization);
+                    Manifold* manifold);
     int NumParameters() const;
-    int NumLocalParameters() const;
+    int NumTangentParameters() const;
     bool Evaluate(const double* parameters, double* cost, double* gradient) const;
     bool Plus(const double* x, const double* delta, double* x_plus_delta) const;
   };
@@ -69,20 +71,18 @@ problems, instances of :class:`GradientProblem` not restricted in the
 form of the objective function.
 
 Structurally :class:`GradientProblem` is a composition of a
-:class:`FirstOrderFunction` and optionally a
-:class:`LocalParameterization`.
+:class:`FirstOrderFunction` and optionally a :class:`Manifold`.
 
 The :class:`FirstOrderFunction` is responsible for evaluating the cost
 and gradient of the objective function.
 
-The :class:`LocalParameterization` is responsible for going back and
-forth between the ambient space and the local tangent space. When a
-:class:`LocalParameterization` is not provided, then the tangent space
-is assumed to coincide with the ambient Euclidean space that the
-gradient vector lives in.
+The :class:`Manifold` is responsible for going back and forth between the
+ambient space and the local tangent space. When a :class:`Manifold` is not
+provided, then the tangent space is assumed to coincide with the ambient
+Euclidean space that the gradient vector lives in.
 
 The constructor takes ownership of the :class:`FirstOrderFunction` and
-:class:`LocalParamterization` objects passed to it.
+:class:`Manifold` objects passed to it.
 
 
 .. function:: void Solve(const GradientProblemSolver::Options& options, const GradientProblem& problem, double* parameters, GradientProblemSolver::Summary* summary)
@@ -103,7 +103,7 @@ Solving
    behavior of the solver. We list the various settings and their
    default values below.
 
-.. function:: bool GradientProblemSolver::Options::IsValid(string* error) const
+.. function:: bool GradientProblemSolver::Options::IsValid(std::string* error) const
 
    Validate the values in the options struct and returns true on
    success. If there is a problem, the method returns false with
@@ -123,7 +123,7 @@ Solving
    Choices are ``ARMIJO`` and ``WOLFE`` (strong Wolfe conditions).
    Note that in order for the assumptions underlying the ``BFGS`` and
    ``LBFGS`` line search direction algorithms to be guaranteed to be
-   satisifed, the ``WOLFE`` line search should be used.
+   satisfied, the ``WOLFE`` line search should be used.
 
 .. member:: NonlinearConjugateGradientType GradientProblemSolver::Options::nonlinear_conjugate_gradient_type
 
@@ -192,7 +192,7 @@ Solving
   low-sensitivity parameters. It can also reduce the robustness of the
   solution to errors in the Jacobians.
 
-.. member:: LineSearchIterpolationType GradientProblemSolver::Options::line_search_interpolation_type
+.. member:: LineSearchInterpolationType GradientProblemSolver::Options::line_search_interpolation_type
 
    Default: ``CUBIC``
 
@@ -342,8 +342,8 @@ Solving
 
    where :math:`\|\cdot\|_\infty` refers to the max norm, :math:`\Pi`
    is projection onto the bounds constraints and :math:`\boxplus` is
-   Plus operation for the overall local parameterization associated
-   with the parameter vector.
+   Plus operation for the manifold associated with the parameter
+   vector.
 
 .. member:: double GradientProblemSolver::Options::parameter_tolerance
 
@@ -388,15 +388,30 @@ Solving
    #. ``it`` is the time take by the current iteration.
    #. ``tt`` is the total time taken by the minimizer.
 
-.. member:: vector<IterationCallback> GradientProblemSolver::Options::callbacks
+.. member:: std::vector<IterationCallback> GradientProblemSolver::Options::callbacks
 
    Callbacks that are executed at the end of each iteration of the
    :class:`Minimizer`. They are executed in the order that they are
-   specified in this vector. See the documentation for
-   :class:`IterationCallback` for more details.
+   specified in this vector. By default, parameter blocks are updated
+   only at the end of the optimization, i.e., when the
+   :class:`Minimizer` terminates. This behavior is controlled by
+   :member:`GradientProblemSolver::Options::update_state_every_iteration`. If
+   the user wishes to have access to the update parameter blocks when
+   his/her callbacks are executed, then set
+   :member:`GradientProblemSolver::Options::update_state_every_iteration`
+   to true.
 
    The solver does NOT take ownership of these pointers.
 
+
+.. member:: bool GradientProblemSolver::Options::update_state_every_iteration
+
+   Default: ``false``
+
+   Normally the parameter vector is only updated when the solver
+   terminates. Setting this to true updates it every iteration. This
+   setting is useful when building an interactive application using
+   Ceres and using an :class:`IterationCallback`.
 
 :class:`GradientProblemSolver::Summary`
 ---------------------------------------
@@ -405,12 +420,12 @@ Solving
 
    Summary of the various stages of the solver after termination.
 
-.. function:: string GradientProblemSolver::Summary::BriefReport() const
+.. function:: std::string GradientProblemSolver::Summary::BriefReport() const
 
    A brief one line description of the state of the solver after
    termination.
 
-.. function:: string GradientProblemSolver::Summary::FullReport() const
+.. function:: std::string GradientProblemSolver::Summary::FullReport() const
 
    A full multiline description of the state of the solver after
    termination.
@@ -429,7 +444,7 @@ Solving
 
    The cause of the minimizer terminating.
 
-.. member:: string GradientProblemSolver::Summary::message
+.. member:: std::string GradientProblemSolver::Summary::message
 
    Reason why the solver terminated.
 
@@ -443,7 +458,7 @@ Solving
    Cost of the problem (value of the objective function) after the
    optimization.
 
-.. member:: vector<IterationSummary> GradientProblemSolver::Summary::iterations
+.. member:: std::vector<IterationSummary> GradientProblemSolver::Summary::iterations
 
    :class:`IterationSummary` for each minimizer iteration in order.
 
@@ -471,11 +486,11 @@ Solving
 
    Number of parameters in the problem.
 
-.. member:: int GradientProblemSolver::Summary::num_local_parameters
+.. member:: int GradientProblemSolver::Summary::num_tangent_parameters
 
    Dimension of the tangent space of the problem. This is different
    from :member:`GradientProblemSolver::Summary::num_parameters` if a
-   :class:`LocalParameterization` object is used.
+   :class:`Manifold` object is used.
 
 .. member:: LineSearchDirectionType GradientProblemSolver::Summary::line_search_direction_type
 

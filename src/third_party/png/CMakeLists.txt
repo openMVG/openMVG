@@ -6,14 +6,14 @@
 # For conditions of distribution and use, see the disclaimer
 # and license in png.h
 
-cmake_minimum_required(VERSION 2.4.4)
+cmake_minimum_required(VERSION 2.4.4...4.3)
 
 project(libpng C)
 enable_testing()
 
 set(PNGLIB_MAJOR 1)
 set(PNGLIB_MINOR 6)
-set(PNGLIB_RELEASE 6)
+set(PNGLIB_RELEASE 58)
 set(PNGLIB_NAME libpng${PNGLIB_MAJOR}${PNGLIB_MINOR})
 set(PNGLIB_VERSION ${PNGLIB_MAJOR}.${PNGLIB_MINOR}.${PNGLIB_RELEASE})
 
@@ -64,6 +64,10 @@ if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
 endif(MSVC)
 add_library(openMVG_png STATIC ${libpng_sources})
+# Disable the ARM NEON code paths. They are enabled by default whenever the
+# target defines __ARM_NEON, which makes the core sources reference symbols
+# that live in libpng's arm/*.c files (not vendored here) and fail to link.
+target_compile_definitions(openMVG_png PRIVATE PNG_ARM_NEON_OPT=0)
 target_link_libraries(openMVG_png PUBLIC openMVG_zlib ${M_LIBRARY})
 set_property(TARGET openMVG_png PROPERTY FOLDER OpenMVG/3rdParty)
 

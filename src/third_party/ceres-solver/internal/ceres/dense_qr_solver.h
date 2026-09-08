@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,15 @@
 #ifndef CERES_INTERNAL_DENSE_QR_SOLVER_H_
 #define CERES_INTERNAL_DENSE_QR_SOLVER_H_
 
-#include "ceres/linear_solver.h"
-#include "ceres/internal/eigen.h"
-#include "ceres/internal/macros.h"
+#include <memory>
 
-namespace ceres {
-namespace internal {
+#include "ceres/dense_qr.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/export.h"
+#include "ceres/linear_solver.h"
+
+namespace ceres::internal {
 
 class DenseSparseMatrix;
 
@@ -79,16 +82,16 @@ class DenseSparseMatrix;
 // library. This solver always returns a solution, it is the user's
 // responsibility to judge if the solution is good enough for their
 // purposes.
-class DenseQRSolver: public DenseSparseMatrixSolver {
+class CERES_NO_EXPORT DenseQRSolver final : public DenseSparseMatrixSolver {
  public:
   explicit DenseQRSolver(const LinearSolver::Options& options);
 
  private:
-  virtual LinearSolver::Summary SolveImpl(
+  LinearSolver::Summary SolveImpl(
       DenseSparseMatrix* A,
       const double* b,
       const LinearSolver::PerSolveOptions& per_solve_options,
-      double* x);
+      double* x) final;
 
   LinearSolver::Summary SolveUsingEigen(
       DenseSparseMatrix* A,
@@ -105,11 +108,11 @@ class DenseQRSolver: public DenseSparseMatrixSolver {
   const LinearSolver::Options options_;
   ColMajorMatrix lhs_;
   Vector rhs_;
-  Vector work_;
-  CERES_DISALLOW_COPY_AND_ASSIGN(DenseQRSolver);
+  std::unique_ptr<DenseQR> dense_qr_;
 };
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_DENSE_QR_SOLVER_H_

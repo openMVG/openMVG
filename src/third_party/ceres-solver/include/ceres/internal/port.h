@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,68 +31,61 @@
 #ifndef CERES_PUBLIC_INTERNAL_PORT_H_
 #define CERES_PUBLIC_INTERNAL_PORT_H_
 
-// This file needs to compile as c code.
-#ifdef __cplusplus
-#include <cstddef>
-#include "ceres/internal/config.h"
-#if defined(CERES_TR1_MEMORY_HEADER)
-#include <tr1/memory>
+// A macro to mark a function/variable/class as deprecated.
+// We use compiler specific attributes rather than the c++
+// attribute because they do not mix well with each other.
+#if defined(_MSC_VER)
+#define CERES_DEPRECATED_WITH_MSG(message) __declspec(deprecated(message))
+#elif defined(__GNUC__)
+#define CERES_DEPRECATED_WITH_MSG(message) __attribute__((deprecated(message)))
 #else
-#include <memory>
+// In the worst case fall back to c++ attribute.
+#define CERES_DEPRECATED_WITH_MSG(message) [[deprecated(message)]]
 #endif
 
-namespace ceres {
-
-#if defined(CERES_TR1_SHARED_PTR)
-using std::tr1::shared_ptr;
-#else
-using std::shared_ptr;
+#ifndef CERES_GET_FLAG
+#define CERES_GET_FLAG(X) X
 #endif
 
-// We allocate some Eigen objects on the stack and other places they
-// might not be aligned to X(=16 [SSE], 32 [AVX] etc)-byte boundaries.  If we
-// have C++11, we can specify their alignment (which is desirable, as it means
-// we can safely enable vectorisation on matrices).  However, the standard gives
-// wide lattitude as to what alignments are legal.  It must be the case that
-// alignments up to alignof(std::max_align_t) are valid, but this might be < 16
-// on some platforms, in which case even if using C++11, on these platforms
-// we should not attempt to align to X-byte boundaries.  If using < C++11,
-// we cannot specify the alignment.
-#ifdef CERES_USE_CXX11
-namespace port_constants {
-static constexpr size_t kMaxAlignBytes =
-    // Work around a GCC 4.8 bug
-    // (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56019) where
-    // std::max_align_t is misplaced.
-#if defined (__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8
-    alignof(::max_align_t);
-#else
-    alignof(std::max_align_t);
-#endif
-}  // namespace port_constants
-#endif
+// Indicates whether C++20 is currently active
+#ifndef CERES_HAS_CPP20
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#define CERES_HAS_CPP20
+#endif  // __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >=
+        // 202002L)
+#endif  // !defined(CERES_HAS_CPP20)
 
-}  // namespace ceres
-
-#endif  // __cplusplus
-
-// A macro to signal which functions and classes are exported when
-// building a DLL with MSVC.
+// Prevents symbols from being substituted by the corresponding macro definition
+// under the same name. For instance, min and max are defined as macros on
+// Windows (unless NOMINMAX is defined) which causes compilation errors when
+// defining or referencing symbols under the same name.
 //
-// Note that the ordering here is important, CERES_BUILDING_SHARED_LIBRARY
-// is only defined locally when Ceres is compiled, it is never exported to
-// users.  However, in order that we do not have to configure config.h
-// separately for building vs installing, if we are using MSVC and building
-// a shared library, then both CERES_BUILDING_SHARED_LIBRARY and
-// CERES_USING_SHARED_LIBRARY will be defined when Ceres is compiled.
-// Hence it is important that the check for CERES_BUILDING_SHARED_LIBRARY
-// happens first.
-#if defined(_MSC_VER) && defined(CERES_BUILDING_SHARED_LIBRARY)
-# define CERES_EXPORT __declspec(dllexport)
-#elif defined(_MSC_VER) && defined(CERES_USING_SHARED_LIBRARY)
-# define CERES_EXPORT __declspec(dllimport)
-#else
-# define CERES_EXPORT
-#endif
+// To be robust in all cases particularly when NOMINMAX cannot be used, use this
+// macro to annotate min/max declarations/definitions. Examples:
+//
+//   int max CERES_PREVENT_MACRO_SUBSTITUTION();
+//   min CERES_PREVENT_MACRO_SUBSTITUTION(a, b);
+//   max CERES_PREVENT_MACRO_SUBSTITUTION(a, b);
+//
+// NOTE: In case the symbols for which the substitution must be prevented are
+// used within another macro, the substitution must be inhibited using parens as
+//
+//   (std::numerical_limits<double>::max)()
+//
+// since the helper macro will not work here. Do not use this technique in
+// general case, because it will prevent argument-dependent lookup (ADL).
+//
+#define CERES_PREVENT_MACRO_SUBSTITUTION  // Yes, it's empty
+
+// CERES_DISABLE_DEPRECATED_WARNING and CERES_RESTORE_DEPRECATED_WARNING allow
+// to temporarily disable deprecation warnings
+#if defined(_MSC_VER)
+#define CERES_DISABLE_DEPRECATED_WARNING \
+  _Pragma("warning(push)") _Pragma("warning(disable : 4996)")
+#define CERES_RESTORE_DEPRECATED_WARNING _Pragma("warning(pop)")
+#else  // defined(_MSC_VER)
+#define CERES_DISABLE_DEPRECATED_WARNING
+#define CERES_RESTORE_DEPRECATED_WARNING
+#endif  // defined(_MSC_VER)
 
 #endif  // CERES_PUBLIC_INTERNAL_PORT_H_

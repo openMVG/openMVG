@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,14 @@
 #define CERES_PUBLIC_DYNAMIC_AUTODIFF_COST_FUNCTION_H_
 
 #include <cmath>
+#include <memory>
 #include <numeric>
 #include <vector>
 
 #include "ceres/dynamic_cost_function.h"
-#include "ceres/internal/scoped_ptr.h"
+#include "ceres/internal/fixed_array.h"
 #include "ceres/jet.h"
+#include "ceres/types.h"
 #include "glog/logging.h"
 
 namespace ceres {
@@ -57,7 +59,7 @@ namespace ceres {
 //     bool operator()(T const* const* parameters, T* residuals) const {
 //       // Use parameters[i] to access the i'th parameter block.
 //     }
-//   }
+//   };
 //
 // Since the sizing of the parameters is done at runtime, you must
 // also specify the sizes after creating the dynamic autodiff cost
@@ -75,21 +77,35 @@ namespace ceres {
 // pass. There is a tradeoff with the size of the passes; you may want
 // to experiment with the stride.
 template <typename CostFunctor, int Stride = 4>
-class DynamicAutoDiffCostFunction : public DynamicCostFunction {
+class DynamicAutoDiffCostFunction final : public DynamicCostFunction {
  public:
-  explicit DynamicAutoDiffCostFunction(CostFunctor* functor)
-    : functor_(functor) {}
+  // Takes ownership by default.
+  explicit DynamicAutoDiffCostFunction(CostFunctor* functor,
+                                       Ownership ownership = TAKE_OWNERSHIP)
+      : functor_(functor), ownership_(ownership) {}
 
-  virtual ~DynamicAutoDiffCostFunction() {}
+  DynamicAutoDiffCostFunction(DynamicAutoDiffCostFunction&& other)
+      : functor_(std::move(other.functor_)), ownership_(other.ownership_) {}
 
-  virtual bool Evaluate(double const* const* parameters,
-                        double* residuals,
-                        double** jacobians) const {
+  ~DynamicAutoDiffCostFunction() override {
+    // Manually release pointer if configured to not take ownership
+    // rather than deleting only if ownership is taken.  This is to
+    // stay maximally compatible to old user code which may have
+    // forgotten to implement a virtual destructor, from when the
+    // AutoDiffCostFunction always took ownership.
+    if (ownership_ == DO_NOT_TAKE_OWNERSHIP) {
+      functor_.release();
+    }
+  }
+
+  bool Evaluate(double const* const* parameters,
+                double* residuals,
+                double** jacobians) const override {
     CHECK_GT(num_residuals(), 0)
         << "You must call DynamicAutoDiffCostFunction::SetNumResiduals() "
         << "before DynamicAutoDiffCostFunction::Evaluate().";
 
-    if (jacobians == NULL) {
+    if (jacobians == nullptr) {
       return (*functor_)(parameters, residuals);
     }
 
@@ -103,20 +119,23 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
     // depends on.
     //
     // To work around this issue, the solution here is to evaluate the
-    // jacobians in a series of passes, each one computing Stripe *
+    // jacobians in a series of passes, each one computing Stride *
     // num_residuals() derivatives. This is done with small, fixed-size jets.
-    const int num_parameter_blocks = parameter_block_sizes().size();
-    const int num_parameters = std::accumulate(parameter_block_sizes().begin(),
-                                               parameter_block_sizes().end(),
-                                               0);
+    const int num_parameter_blocks =
+        static_cast<int>(parameter_block_sizes().size());
+    const int num_parameters = std::accumulate(
+        parameter_block_sizes().begin(), parameter_block_sizes().end(), 0);
 
     // Allocate scratch space for the strided evaluation.
-    std::vector<Jet<double, Stride> > input_jets(num_parameters);
-    std::vector<Jet<double, Stride> > output_jets(num_residuals());
+    using JetT = Jet<double, Stride>;
+    internal::FixedArray<JetT, (256 * 7) / sizeof(JetT)> input_jets(
+        num_parameters);
+    internal::FixedArray<JetT, (256 * 7) / sizeof(JetT)> output_jets(
+        num_residuals());
 
     // Make the parameter pack that is sent to the functor (reused).
-    std::vector<Jet<double, Stride>* > jet_parameters(num_parameter_blocks,
-        static_cast<Jet<double, Stride>* >(NULL));
+    internal::FixedArray<Jet<double, Stride>*> jet_parameters(
+        num_parameter_blocks, nullptr);
     int num_active_parameters = 0;
 
     // To handle constant parameters between non-constant parameter blocks, the
@@ -131,7 +150,7 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
       jet_parameters[i] = &input_jets[parameter_cursor];
 
       const int parameter_block_size = parameter_block_sizes()[i];
-      if (jacobians[i] != NULL) {
+      if (jacobians[i] != nullptr) {
         if (!in_derivative_section) {
           start_derivative_section.push_back(parameter_cursor);
           in_derivative_section = true;
@@ -147,6 +166,9 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
       }
     }
 
+    if (num_active_parameters == 0) {
+      return (*functor_)(parameters, residuals);
+    }
     // When `num_active_parameters % Stride != 0` then it can be the case
     // that `active_parameter_count < Stride` while parameter_cursor is less
     // than the total number of parameters and with no remaining non-constant
@@ -163,8 +185,8 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
     // Evaluate all of the strides. Each stride is a chunk of the derivative to
     // evaluate, typically some size proportional to the size of the SIMD
     // registers of the CPU.
-    int num_strides = static_cast<int>(ceil(num_active_parameters /
-                                            static_cast<float>(Stride)));
+    int num_strides = static_cast<int>(
+        ceil(num_active_parameters / static_cast<float>(Stride)));
 
     int current_derivative_section = 0;
     int current_derivative_section_cursor = 0;
@@ -174,7 +196,7 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
       // non-constant #Stride parameters.
       const int initial_derivative_section = current_derivative_section;
       const int initial_derivative_section_cursor =
-        current_derivative_section_cursor;
+          current_derivative_section_cursor;
 
       int active_parameter_count = 0;
       parameter_cursor = 0;
@@ -184,10 +206,10 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
              ++j, parameter_cursor++) {
           input_jets[parameter_cursor].v.setZero();
           if (active_parameter_count < Stride &&
-              parameter_cursor >= (
-                start_derivative_section[current_derivative_section] +
-                current_derivative_section_cursor)) {
-            if (jacobians[i] != NULL) {
+              parameter_cursor >=
+                  (start_derivative_section[current_derivative_section] +
+                   current_derivative_section_cursor)) {
+            if (jacobians[i] != nullptr) {
               input_jets[parameter_cursor].v[active_parameter_count] = 1.0;
               ++active_parameter_count;
               ++current_derivative_section_cursor;
@@ -213,10 +235,10 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
         for (int j = 0; j < parameter_block_sizes()[i];
              ++j, parameter_cursor++) {
           if (active_parameter_count < Stride &&
-              parameter_cursor >= (
-                start_derivative_section[current_derivative_section] +
-                current_derivative_section_cursor)) {
-            if (jacobians[i] != NULL) {
+              parameter_cursor >=
+                  (start_derivative_section[current_derivative_section] +
+                   current_derivative_section_cursor)) {
+            if (jacobians[i] != nullptr) {
               for (int k = 0; k < num_residuals(); ++k) {
                 jacobians[i][k * parameter_block_sizes()[i] + j] =
                     output_jets[k].v[active_parameter_count];
@@ -242,9 +264,22 @@ class DynamicAutoDiffCostFunction : public DynamicCostFunction {
     return true;
   }
 
+  const CostFunctor& functor() const { return *functor_; }
+
  private:
-  internal::scoped_ptr<CostFunctor> functor_;
+  std::unique_ptr<CostFunctor> functor_;
+  Ownership ownership_;
 };
+
+// Deduction guide that allows the user to avoid explicitly specifying the
+// template parameter of DynamicAutoDiffCostFunction. The class can instead be
+// instantiated as follows:
+//
+//   new DynamicAutoDiffCostFunction{new MyCostFunctor{}};
+//
+template <typename CostFunctor>
+DynamicAutoDiffCostFunction(CostFunctor* functor, Ownership ownership)
+    -> DynamicAutoDiffCostFunction<CostFunctor>;
 
 }  // namespace ceres
 

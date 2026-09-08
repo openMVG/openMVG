@@ -1,16 +1,18 @@
-
-/* pngdebug.h - Debugging macros for libpng, also used in pngtest.c
+/* pngdebug.h - internal debugging macros for libpng
  *
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
- *
- * Last changed in libpng 1.5.0 [January 6, 2011]
+ * Copyright (c) 2018-2025 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2013 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
  * and license in png.h
  */
+
+#ifndef PNGPRIV_H
+#  error This file must not be included by applications; please include <png.h>
+#endif
 
 /* Define PNG_DEBUG at compile time for debugging information.  Higher
  * numbers for PNG_DEBUG mean more debugging information.  This has
@@ -25,7 +27,7 @@
  *   (actually ((void)0)).
  *
  *   level: level of detail of message, starting at 0.  A level 'n'
- *          message is preceded by 'n' tab characters (not implemented
+ *          message is preceded by 'n' 3-space indentations (not implemented
  *          on Microsoft compilers unless PNG_DEBUG_FILE is also
  *          defined, to allow debug DLL compilation with no standard IO).
  *   message: a printf(3) style text string.  A trailing '\n' is added
@@ -36,9 +38,6 @@
 #define PNGDEBUG_H
 /* These settings control the formatting of messages in png.c and pngerror.c */
 /* Moved to pngdebug.h at 1.5.0 */
-#  ifndef PNG_LITERAL_SHARP
-#    define PNG_LITERAL_SHARP 0x23
-#  endif
 #  ifndef PNG_LITERAL_LEFT_SQUARE_BRACKET
 #    define PNG_LITERAL_LEFT_SQUARE_BRACKET 0x5b
 #  endif
@@ -77,32 +76,29 @@
 #      endif /* PNG_DEBUG_FILE */
 
 #      if (PNG_DEBUG > 1)
-/* Note: ["%s"m PNG_STRING_NEWLINE] probably does not work on
- * non-ISO compilers
- */
 #        ifdef __STDC__
 #          ifndef png_debug
 #            define png_debug(l,m) \
        do { \
        int num_tabs=l; \
-       fprintf(PNG_DEBUG_FILE,"%s"m PNG_STRING_NEWLINE,(num_tabs==1 ? "\t" : \
-         (num_tabs==2 ? "\t\t":(num_tabs>2 ? "\t\t\t":"")))); \
+       fprintf(PNG_DEBUG_FILE,"%s" m PNG_STRING_NEWLINE,(num_tabs==1 ? "   " : \
+         (num_tabs==2 ? "      " : (num_tabs>2 ? "         " : "")))); \
        } while (0)
 #          endif
 #          ifndef png_debug1
 #            define png_debug1(l,m,p1) \
        do { \
        int num_tabs=l; \
-       fprintf(PNG_DEBUG_FILE,"%s"m PNG_STRING_NEWLINE,(num_tabs==1 ? "\t" : \
-         (num_tabs==2 ? "\t\t":(num_tabs>2 ? "\t\t\t":""))),p1); \
+       fprintf(PNG_DEBUG_FILE,"%s" m PNG_STRING_NEWLINE,(num_tabs==1 ? "   " : \
+         (num_tabs==2 ? "      " : (num_tabs>2 ? "         " : ""))),p1); \
        } while (0)
 #          endif
 #          ifndef png_debug2
 #            define png_debug2(l,m,p1,p2) \
        do { \
        int num_tabs=l; \
-       fprintf(PNG_DEBUG_FILE,"%s"m PNG_STRING_NEWLINE,(num_tabs==1 ? "\t" : \
-         (num_tabs==2 ? "\t\t":(num_tabs>2 ? "\t\t\t":""))),p1,p2); \
+       fprintf(PNG_DEBUG_FILE,"%s" m PNG_STRING_NEWLINE,(num_tabs==1 ? "   " : \
+         (num_tabs==2 ? "      " : (num_tabs>2 ? "         " : ""))),p1,p2);\
        } while (0)
 #          endif
 #        else /* __STDC __ */

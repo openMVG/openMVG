@@ -1,0 +1,90 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2013
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+/**
+\dir demo
+\brief A collection of demo applications.
+
+This directory contains several simple demo applications, mainly
+for educational purposes.
+*/
+
+/**
+\dir doc
+\brief Auxiliary (and the whole generated) documentation.
+
+This directory contains some auxiliary pages and the whole generated
+documentation.
+*/
+
+/**
+\dir contrib
+\brief Directory for user contributed source codes.
+
+You can place your own C++ code using LEMON into this directory, which
+will compile to an executable along with LEMON when you build the
+library. This is probably the easiest way of compiling short to medium
+codes, for this does require neither a LEMON installed system-wide nor
+adding several paths to the compiler.
+
+Please have a look at <tt>contrib/CMakeLists.txt</tt> for
+instruction on how to add your own files into the build process.  */
+
+/**
+\dir test
+\brief Test programs.
+
+This directory contains several test programs that check the consistency
+of the code.
+*/
+
+/**
+\dir tools
+\brief Some useful executables.
+
+This directory contains the sources of some useful complete executables.
+*/
+
+/**
+\dir lemon
+\brief Base include directory of LEMON.
+
+This is the base directory of LEMON includes, so each include file must be
+prefixed with this, e.g.
+\code
+#include<lemon/list_graph.h>
+#include<lemon/dijkstra.h>
+\endcode
+*/
+
+/**
+\dir concepts
+\brief Concept descriptors and checking classes.
+
+This directory contains the concept descriptors and concept checking tools.
+For more information see the \ref concept "Concepts" module.
+*/
+
+/**
+\dir bits
+\brief Auxiliary tools for implementation.
+
+This directory contains some auxiliary classes for implementing graphs,
+maps and some other classes.
+As a user you typically don't have to deal with these files.
+*/

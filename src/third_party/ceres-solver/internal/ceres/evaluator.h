@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,20 @@
 #define CERES_INTERNAL_EVALUATOR_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "ceres/context_impl.h"
 #include "ceres/execution_summary.h"
-#include "ceres/internal/port.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/types.h"
 
 namespace ceres {
 
 struct CRSMatrix;
+class EvaluationCallback;
 
 namespace internal {
 
@@ -52,52 +56,25 @@ class SparseMatrix;
 // The Evaluator interface offers a way to interact with a least squares cost
 // function that is useful for an optimizer that wants to minimize the least
 // squares objective. This insulates the optimizer from issues like Jacobian
-// storage, parameterization, etc.
-class Evaluator {
+// storage, manifolds, etc.
+class CERES_NO_EXPORT Evaluator {
  public:
   virtual ~Evaluator();
 
   struct Options {
-    Options()
-        : num_threads(1),
-          num_eliminate_blocks(-1),
-          linear_solver_type(DENSE_QR),
-          dynamic_sparsity(false) {}
-
-    int num_threads;
-    int num_eliminate_blocks;
-    LinearSolverType linear_solver_type;
-    bool dynamic_sparsity;
+    int num_threads = 1;
+    int num_eliminate_blocks = -1;
+    LinearSolverType linear_solver_type = DENSE_QR;
+    SparseLinearAlgebraLibraryType sparse_linear_algebra_library_type =
+        NO_SPARSE;
+    bool dynamic_sparsity = false;
+    ContextImpl* context = nullptr;
+    EvaluationCallback* evaluation_callback = nullptr;
   };
 
-  static Evaluator* Create(const Options& options,
-                           Program* program,
-                           std::string* error);
-
-  // This is used for computing the cost, residual and Jacobian for
-  // returning to the user. For actually solving the optimization
-  // problem, the optimization algorithm uses the ProgramEvaluator
-  // objects directly.
-  //
-  // The residual, gradients and jacobian pointers can be NULL, in
-  // which case they will not be evaluated. cost cannot be NULL.
-  //
-  // The parallelism of the evaluator is controlled by num_threads; it
-  // should be at least 1.
-  //
-  // Note: That this function does not take a parameter vector as
-  // input. The parameter blocks are evaluated on the values contained
-  // in the arrays pointed to by their user_state pointers.
-  //
-  // Also worth noting is that this function mutates program by
-  // calling Program::SetParameterOffsetsAndIndex() on it so that an
-  // evaluator object can be constructed.
-  static bool Evaluate(Program* program,
-                       int num_threads,
-                       double* cost,
-                       std::vector<double>* residuals,
-                       std::vector<double>* gradient,
-                       CRSMatrix* jacobian);
+  static std::unique_ptr<Evaluator> Create(const Options& options,
+                                           Program* program,
+                                           std::string* error);
 
   // Build and return a sparse matrix for storing and working with the Jacobian
   // of the objective function. The jacobian has dimensions
@@ -115,26 +92,24 @@ class Evaluator {
   // the jacobian for use with CHOLMOD, where as BlockOptimizationProblem
   // creates a BlockSparseMatrix representation of the jacobian for use in the
   // Schur complement based methods.
-  virtual SparseMatrix* CreateJacobian() const = 0;
-
+  virtual std::unique_ptr<SparseMatrix> CreateJacobian() const = 0;
 
   // Options struct to control Evaluator::Evaluate;
   struct EvaluateOptions {
-    EvaluateOptions()
-        : apply_loss_function(true) {
-    }
-
     // If false, the loss function correction is not applied to the
     // residual blocks.
-    bool apply_loss_function;
+    bool apply_loss_function = true;
+
+    // If false, this evaluation point is the same as the last one.
+    bool new_evaluation_point = true;
   };
 
   // Evaluate the cost function for the given state. Returns the cost,
   // residuals, and jacobian in the corresponding arguments. Both residuals and
-  // jacobian are optional; to avoid computing them, pass NULL.
+  // jacobian are optional; to avoid computing them, pass nullptr.
   //
-  // If non-NULL, the Jacobian must have a suitable sparsity pattern; only the
-  // values array of the jacobian is modified.
+  // If non-nullptr, the Jacobian must have a suitable sparsity pattern; only
+  // the values array of the jacobian is modified.
   //
   // state is an array of size NumParameters(), cost is a pointer to a single
   // double, and residuals is an array of doubles of size NumResiduals().
@@ -153,24 +128,20 @@ class Evaluator {
                 double* residuals,
                 double* gradient,
                 SparseMatrix* jacobian) {
-    return Evaluate(EvaluateOptions(),
-                    state,
-                    cost,
-                    residuals,
-                    gradient,
-                    jacobian);
+    return Evaluate(
+        EvaluateOptions(), state, cost, residuals, gradient, jacobian);
   }
 
   // Make a change delta (of size NumEffectiveParameters()) to state (of size
   // NumParameters()) and store the result in state_plus_delta.
   //
-  // In the case that there are no parameterizations used, this is equivalent to
+  // In the case that there are no manifolds used, this is equivalent to
   //
   //   state_plus_delta[i] = state[i] + delta[i] ;
   //
-  // however, the mapping is more complicated in the case of parameterizations
+  // however, the mapping is more complicated in the case of manifolds
   // like quaternions. This is the same as the "Plus()" operation in
-  // local_parameterization.h, but operating over the entire state vector for a
+  // manifold.h, but operating over the entire state vector for a
   // problem.
   virtual bool Plus(const double* state,
                     const double* delta,
@@ -180,8 +151,8 @@ class Evaluator {
   virtual int NumParameters() const = 0;
 
   // This is the effective number of parameters that the optimizer may adjust.
-  // This applies when there are parameterizations on some of the parameters.
-  virtual int NumEffectiveParameters()  const = 0;
+  // This applies when there are manifolds on some of the parameters.
+  virtual int NumEffectiveParameters() const = 0;
 
   // The number of residuals in the optimization problem.
   virtual int NumResiduals() const = 0;
@@ -190,16 +161,14 @@ class Evaluator {
   // that the base class implementation does not have to worry about
   // life time issues. Further, these calls are not expected to be
   // frequent or performance sensitive.
-  virtual std::map<std::string, int> CallStatistics() const {
-    return std::map<std::string, int>();
-  }
-
-  virtual std::map<std::string, double> TimeStatistics() const {
-    return std::map<std::string, double>();
+  virtual std::map<std::string, CallStatistics> Statistics() const {
+    return {};
   }
 };
 
 }  // namespace internal
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_EVALUATOR_H_

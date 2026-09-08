@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2016 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #define CERES_PUBLIC_DYNAMIC_COST_FUNCTION_H_
 
 #include "ceres/cost_function.h"
+#include "ceres/internal/disable_warnings.h"
 
 namespace ceres {
 
@@ -40,8 +41,6 @@ namespace ceres {
 // parameter blocks and set the number of residuals at run time.
 class CERES_EXPORT DynamicCostFunction : public CostFunction {
  public:
-  ~DynamicCostFunction() {}
-
   virtual void AddParameterBlock(int size) {
     mutable_parameter_block_sizes()->push_back(size);
   }
@@ -52,5 +51,7 @@ class CERES_EXPORT DynamicCostFunction : public CostFunction {
 };
 
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_DYNAMIC_COST_FUNCTION_H_

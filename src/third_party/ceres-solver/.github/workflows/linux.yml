@@ -1,0 +1,113 @@
+name: Linux
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
+    runs-on: ubuntu-latest
+    container: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash -e -o pipefail {0}
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+      CMAKE_GENERATOR: Ninja
+      DEBIAN_FRONTEND: noninteractive
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu:20.04
+          - ubuntu:22.04
+        build_type:
+          - Release
+        lib:
+          - shared
+          - static
+        gpu:
+          - cuda
+          - no-cuda
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential \
+            ccache \
+            cmake \
+            libbenchmark-dev \
+            libblas-dev \
+            libeigen3-dev \
+            libgflags-dev \
+            libgoogle-glog-dev \
+            liblapack-dev \
+            libmetis-dev \
+            libsuitesparse-dev \
+            ninja-build \
+            wget
+      # nvidia cuda toolkit shipped with 20.04 LTS does not support stream-ordered allocations
+      - name: Setup CUDA toolkit repositories (20.04)
+        if: matrix.gpu == 'cuda' && matrix.os == 'ubuntu:20.04'
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
+          dpkg -i cuda-keyring_1.0-1_all.deb
+      # nvidia cuda toolkit + gcc combo shipped with 22.04LTS is broken
+      # and is not able to compile code that uses thrust
+      # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1006962
+      - name: Setup CUDA toolkit repositories (22.04)
+        if: matrix.gpu == 'cuda' && matrix.os == 'ubuntu:22.04'
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
+          dpkg -i cuda-keyring_1.0-1_all.deb
+      - name: Setup CUDA toolkit
+        if: matrix.gpu == 'cuda'
+        run: |
+          apt-get update
+          apt-get install -y cuda
+          echo "CUDACXX=/usr/local/cuda/bin/nvcc" >> $GITHUB_ENV
+
+      - name: Cache Build
+        id: cache-build
+        uses: actions/cache@v3
+        with:
+          path: ${{env.CCACHE_DIR}}
+          key: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}-${{github.run_id}}
+          restore-keys: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}-
+
+      - name: Setup Environment
+        if: matrix.build_type == 'Release'
+        run: |
+          echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
+      - name: Configure
+        run: |
+          cmake -S . -B build_${{matrix.build_type}} \
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+                -DUSE_CUDA=${{matrix.gpu == 'cuda'}} \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.build_type}} \
+                --config ${{matrix.build_type}}
+
+      - name: Test
+        if: matrix.gpu == 'no-cuda'
+        run: |
+          cd build_${{matrix.build_type}}/
+          ctest --config ${{matrix.build_type}} \
+                --output-on-failure \
+                -j$(nproc)
+
+      - name: Install
+        run: |
+          cmake --build build_${{matrix.build_type}}/ \
+                --config ${{matrix.build_type}} \
+                --target install

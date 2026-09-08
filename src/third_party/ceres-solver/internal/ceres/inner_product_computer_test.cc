@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,58 +30,58 @@
 
 #include "ceres/inner_product_computer.h"
 
+#include <memory>
 #include <numeric>
+#include <random>
+
+#include "Eigen/SparseCore"
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/internal/eigen.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/random.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-#include "Eigen/SparseCore"
-
 namespace ceres {
 namespace internal {
 
-#define COMPUTE_AND_COMPARE                                                  \
-  {                                                                          \
-    inner_product_computer->Compute();                                       \
-    CompressedRowSparseMatrix* actual_product_crsm =                         \
-        inner_product_computer->mutable_result();                            \
-    Matrix actual_inner_product =                                            \
-        Eigen::MappedSparseMatrix<double, Eigen::ColMajor>(                  \
-            actual_product_crsm->num_rows(),                                 \
-            actual_product_crsm->num_rows(),                                 \
-            actual_product_crsm->num_nonzeros(),                             \
-            actual_product_crsm->mutable_rows(),                             \
-            actual_product_crsm->mutable_cols(),                             \
-            actual_product_crsm->mutable_values());                          \
-    EXPECT_EQ(actual_inner_product.rows(), actual_inner_product.cols());     \
-    EXPECT_EQ(expected_inner_product.rows(), expected_inner_product.cols()); \
-    EXPECT_EQ(actual_inner_product.rows(), expected_inner_product.rows());   \
-    Matrix expected_t, actual_t;                                             \
-    if (actual_product_crsm->storage_type() ==                               \
-        CompressedRowSparseMatrix::LOWER_TRIANGULAR) {                       \
-      expected_t = expected_inner_product.triangularView<Eigen::Upper>();    \
-      actual_t = actual_inner_product.triangularView<Eigen::Upper>();        \
-    } else {                                                                 \
-      expected_t = expected_inner_product.triangularView<Eigen::Lower>();    \
-      actual_t = actual_inner_product.triangularView<Eigen::Lower>();        \
-    }                                                                        \
-    EXPECT_LE((expected_t - actual_t).norm() / actual_t.norm(),              \
-              100 * std::numeric_limits<double>::epsilon())                  \
-        << "expected: \n"                                                    \
-        << expected_t << "\nactual: \n"                                      \
-        << actual_t;                                                         \
+#define COMPUTE_AND_COMPARE                                                   \
+  {                                                                           \
+    inner_product_computer->Compute();                                        \
+    CompressedRowSparseMatrix* actual_product_crsm =                          \
+        inner_product_computer->mutable_result();                             \
+    Matrix actual_inner_product =                                             \
+        Eigen::Map<Eigen::SparseMatrix<double, Eigen::ColMajor>>(             \
+            actual_product_crsm->num_rows(),                                  \
+            actual_product_crsm->num_rows(),                                  \
+            actual_product_crsm->num_nonzeros(),                              \
+            actual_product_crsm->mutable_rows(),                              \
+            actual_product_crsm->mutable_cols(),                              \
+            actual_product_crsm->mutable_values());                           \
+    EXPECT_EQ(actual_inner_product.rows(), actual_inner_product.cols());      \
+    EXPECT_EQ(expected_inner_product.rows(), expected_inner_product.cols());  \
+    EXPECT_EQ(actual_inner_product.rows(), expected_inner_product.rows());    \
+    Matrix expected_t, actual_t;                                              \
+    if (actual_product_crsm->storage_type() ==                                \
+        CompressedRowSparseMatrix::StorageType::LOWER_TRIANGULAR) {           \
+      expected_t = expected_inner_product.triangularView<Eigen::Upper>();     \
+      actual_t = actual_inner_product.triangularView<Eigen::Upper>();         \
+    } else {                                                                  \
+      expected_t = expected_inner_product.triangularView<Eigen::Lower>();     \
+      actual_t = actual_inner_product.triangularView<Eigen::Lower>();         \
+    }                                                                         \
+    EXPECT_LE((expected_t - actual_t).norm(),                                 \
+              100 * std::numeric_limits<double>::epsilon() * actual_t.norm()) \
+        << "expected: \n"                                                     \
+        << expected_t << "\nactual: \n"                                       \
+        << actual_t;                                                          \
   }
 
 TEST(InnerProductComputer, NormalOperation) {
-  // "Randomly generated seed."
-  SetRandomState(29823);
   const int kMaxNumRowBlocks = 10;
   const int kMaxNumColBlocks = 10;
   const int kNumTrials = 10;
+  std::mt19937 prng;
+  std::uniform_real_distribution<double> distribution(0.01, 1.0);
 
   // Create a random matrix, compute its outer product using Eigen and
   // ComputeOuterProduct. Convert both matrices to dense matrices and
@@ -98,7 +98,7 @@ TEST(InnerProductComputer, NormalOperation) {
         options.max_row_block_size = 5;
         options.min_col_block_size = 1;
         options.max_col_block_size = 10;
-        options.block_density = std::max(0.1, RandDouble());
+        options.block_density = distribution(prng);
 
         VLOG(2) << "num row blocks: " << options.num_row_blocks;
         VLOG(2) << "num col blocks: " << options.num_col_blocks;
@@ -108,17 +108,16 @@ TEST(InnerProductComputer, NormalOperation) {
         VLOG(2) << "max col block size: " << options.max_col_block_size;
         VLOG(2) << "block density: " << options.block_density;
 
-        scoped_ptr<BlockSparseMatrix> random_matrix(
-            BlockSparseMatrix::CreateRandomMatrix(options));
+        std::unique_ptr<BlockSparseMatrix> random_matrix(
+            BlockSparseMatrix::CreateRandomMatrix(options, prng));
 
         TripletSparseMatrix tsm(random_matrix->num_rows(),
                                 random_matrix->num_cols(),
                                 random_matrix->num_nonzeros());
         random_matrix->ToTripletSparseMatrix(&tsm);
-        std::vector<Eigen::Triplet<double> > triplets;
+        std::vector<Eigen::Triplet<double>> triplets;
         for (int i = 0; i < tsm.num_nonzeros(); ++i) {
-          triplets.push_back(Eigen::Triplet<double>(
-              tsm.rows()[i], tsm.cols()[i], tsm.values()[i]));
+          triplets.emplace_back(tsm.rows()[i], tsm.cols()[i], tsm.values()[i]);
         }
         Eigen::SparseMatrix<double> eigen_random_matrix(
             random_matrix->num_rows(), random_matrix->num_cols());
@@ -126,27 +125,27 @@ TEST(InnerProductComputer, NormalOperation) {
         Matrix expected_inner_product =
             eigen_random_matrix.transpose() * eigen_random_matrix;
 
-        scoped_ptr<InnerProductComputer> inner_product_computer;
+        std::unique_ptr<InnerProductComputer> inner_product_computer;
 
-        inner_product_computer.reset(InnerProductComputer::Create(
-            *random_matrix, CompressedRowSparseMatrix::LOWER_TRIANGULAR));
+        inner_product_computer = InnerProductComputer::Create(
+            *random_matrix,
+            CompressedRowSparseMatrix::StorageType::LOWER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-        inner_product_computer.reset(InnerProductComputer::Create(
-            *random_matrix, CompressedRowSparseMatrix::UPPER_TRIANGULAR));
+        inner_product_computer = InnerProductComputer::Create(
+            *random_matrix,
+            CompressedRowSparseMatrix::StorageType::UPPER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-
       }
     }
   }
 }
 
-
 TEST(InnerProductComputer, SubMatrix) {
-  // "Randomly generated seed."
-  SetRandomState(29823);
   const int kNumRowBlocks = 10;
   const int kNumColBlocks = 20;
   const int kNumTrials = 5;
+  std::mt19937 prng;
+  std::uniform_real_distribution<double> distribution(0.01, 1.0);
 
   // Create a random matrix, compute its outer product using Eigen and
   // ComputeInnerProductComputer. Convert both matrices to dense matrices and
@@ -159,7 +158,7 @@ TEST(InnerProductComputer, SubMatrix) {
     options.max_row_block_size = 5;
     options.min_col_block_size = 1;
     options.max_col_block_size = 10;
-    options.block_density = std::max(0.1, RandDouble());
+    options.block_density = distribution(prng);
 
     VLOG(2) << "num row blocks: " << options.num_row_blocks;
     VLOG(2) << "num col blocks: " << options.num_col_blocks;
@@ -169,8 +168,8 @@ TEST(InnerProductComputer, SubMatrix) {
     VLOG(2) << "max col block size: " << options.max_col_block_size;
     VLOG(2) << "block density: " << options.block_density;
 
-    scoped_ptr<BlockSparseMatrix> random_matrix(
-        BlockSparseMatrix::CreateRandomMatrix(options));
+    std::unique_ptr<BlockSparseMatrix> random_matrix(
+        BlockSparseMatrix::CreateRandomMatrix(options, prng));
 
     const std::vector<CompressedRow>& row_blocks =
         random_matrix->block_structure()->rows;
@@ -188,11 +187,11 @@ TEST(InnerProductComputer, SubMatrix) {
                                 random_matrix->num_cols(),
                                 random_matrix->num_nonzeros());
         random_matrix->ToTripletSparseMatrix(&tsm);
-        std::vector<Eigen::Triplet<double> > triplets;
+        std::vector<Eigen::Triplet<double>> triplets;
         for (int i = 0; i < tsm.num_nonzeros(); ++i) {
           if (tsm.rows()[i] >= start_row && tsm.rows()[i] < end_row) {
-            triplets.push_back(Eigen::Triplet<double>(
-                tsm.rows()[i], tsm.cols()[i], tsm.values()[i]));
+            triplets.emplace_back(
+                tsm.rows()[i], tsm.cols()[i], tsm.values()[i]);
           }
         }
 
@@ -203,26 +202,24 @@ TEST(InnerProductComputer, SubMatrix) {
         Matrix expected_inner_product =
             eigen_random_matrix.transpose() * eigen_random_matrix;
 
-        scoped_ptr<InnerProductComputer> inner_product_computer;
-        inner_product_computer.reset(InnerProductComputer::Create(
+        std::unique_ptr<InnerProductComputer> inner_product_computer;
+        inner_product_computer = InnerProductComputer::Create(
             *random_matrix,
             start_row_block,
             end_row_block,
-            CompressedRowSparseMatrix::LOWER_TRIANGULAR));
+            CompressedRowSparseMatrix::StorageType::LOWER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-        inner_product_computer.reset(InnerProductComputer::Create(
+        inner_product_computer = InnerProductComputer::Create(
             *random_matrix,
             start_row_block,
             end_row_block,
-            CompressedRowSparseMatrix::UPPER_TRIANGULAR));
+            CompressedRowSparseMatrix::StorageType::UPPER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-
       }
     }
   }
 }
 
 #undef COMPUTE_AND_COMPARE
-
 }  // namespace internal
 }  // namespace ceres

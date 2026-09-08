@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -39,21 +39,26 @@
 #ifndef CERES_PUBLIC_PROBLEM_IMPL_H_
 #define CERES_PUBLIC_PROBLEM_IMPL_H_
 
+#include <array>
 #include <map>
+#include <memory>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#include "ceres/internal/macros.h"
+#include "ceres/context_impl.h"
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
 #include "ceres/internal/port.h"
-#include "ceres/internal/scoped_ptr.h"
-#include "ceres/collections_port.h"
+#include "ceres/manifold.h"
 #include "ceres/problem.h"
 #include "ceres/types.h"
 
 namespace ceres {
 
 class CostFunction;
+class EvaluationCallback;
 class LossFunction;
-class LocalParameterization;
 struct CRSMatrix;
 
 namespace internal {
@@ -61,81 +66,56 @@ namespace internal {
 class Program;
 class ResidualBlock;
 
-class ProblemImpl {
+class CERES_NO_EXPORT ProblemImpl {
  public:
-  typedef std::map<double*, ParameterBlock*> ParameterMap;
-  typedef HashSet<ResidualBlock*> ResidualBlockSet;
+  using ParameterMap = std::map<double*, ParameterBlock*>;
+  using ResidualBlockSet = std::unordered_set<ResidualBlock*>;
+  using CostFunctionRefCount = std::map<CostFunction*, int>;
+  using LossFunctionRefCount = std::map<LossFunction*, int>;
 
   ProblemImpl();
   explicit ProblemImpl(const Problem::Options& options);
+  ProblemImpl(const ProblemImpl&) = delete;
+  void operator=(const ProblemImpl&) = delete;
 
   ~ProblemImpl();
 
   // See the public problem.h file for description of these methods.
-  ResidualBlockId AddResidualBlock(
-      CostFunction* cost_function,
-      LossFunction* loss_function,
-      const std::vector<double*>& parameter_blocks);
   ResidualBlockId AddResidualBlock(CostFunction* cost_function,
                                    LossFunction* loss_function,
-                                   double* x0);
+                                   double* const* const parameter_blocks,
+                                   int num_parameter_blocks);
+
+  template <typename... Ts>
   ResidualBlockId AddResidualBlock(CostFunction* cost_function,
                                    LossFunction* loss_function,
-                                   double* x0, double* x1);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4, double* x5);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4, double* x5,
-                                   double* x6);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4, double* x5,
-                                   double* x6, double* x7);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4, double* x5,
-                                   double* x6, double* x7, double* x8);
-  ResidualBlockId AddResidualBlock(CostFunction* cost_function,
-                                   LossFunction* loss_function,
-                                   double* x0, double* x1, double* x2,
-                                   double* x3, double* x4, double* x5,
-                                   double* x6, double* x7, double* x8,
-                                   double* x9);
+                                   double* x0,
+                                   Ts*... xs) {
+    const std::array<double*, sizeof...(Ts) + 1> parameter_blocks{{x0, xs...}};
+    return AddResidualBlock(cost_function,
+                            loss_function,
+                            parameter_blocks.data(),
+                            static_cast<int>(parameter_blocks.size()));
+  }
+
   void AddParameterBlock(double* values, int size);
-  void AddParameterBlock(double* values,
-                         int size,
-                         LocalParameterization* local_parameterization);
+  void AddParameterBlock(double* values, int size, Manifold* manifold);
 
   void RemoveResidualBlock(ResidualBlock* residual_block);
-  void RemoveParameterBlock(double* values);
+  void RemoveParameterBlock(const double* values);
 
-  void SetParameterBlockConstant(double* values);
+  void SetParameterBlockConstant(const double* values);
   void SetParameterBlockVariable(double* values);
-  bool IsParameterBlockConstant(double* values) const;
+  bool IsParameterBlockConstant(const double* values) const;
 
-  void SetParameterization(double* values,
-                           LocalParameterization* local_parameterization);
-  const LocalParameterization* GetParameterization(double* values) const;
+  void SetManifold(double* values, Manifold* manifold);
+  const Manifold* GetManifold(const double* values) const;
+  bool HasManifold(const double* values) const;
 
   void SetParameterLowerBound(double* values, int index, double lower_bound);
   void SetParameterUpperBound(double* values, int index, double upper_bound);
+  double GetParameterLowerBound(const double* values, int index) const;
+  double GetParameterUpperBound(const double* values, int index) const;
 
   bool Evaluate(const Problem::EvaluateOptions& options,
                 double* cost,
@@ -143,15 +123,22 @@ class ProblemImpl {
                 std::vector<double>* gradient,
                 CRSMatrix* jacobian);
 
+  bool EvaluateResidualBlock(ResidualBlock* residual_block,
+                             bool apply_loss_function,
+                             bool new_point,
+                             double* cost,
+                             double* residuals,
+                             double** jacobians) const;
+
   int NumParameterBlocks() const;
   int NumParameters() const;
   int NumResidualBlocks() const;
   int NumResiduals() const;
 
-  int ParameterBlockSize(const double* parameter_block) const;
-  int ParameterBlockLocalSize(const double* parameter_block) const;
+  int ParameterBlockSize(const double* values) const;
+  int ParameterBlockTangentSize(const double* values) const;
 
-  bool HasParameterBlock(const double* parameter_block) const;
+  bool HasParameterBlock(const double* values) const;
 
   void GetParameterBlocks(std::vector<double*>* parameter_blocks) const;
   void GetResidualBlocks(std::vector<ResidualBlockId>* residual_blocks) const;
@@ -179,20 +166,22 @@ class ProblemImpl {
     return residual_block_set_;
   }
 
+  const Problem::Options& options() const { return options_; }
+
+  ContextImpl* context() { return context_impl_; }
+
  private:
   ParameterBlock* InternalAddParameterBlock(double* values, int size);
-  void InternalRemoveResidualBlock(ResidualBlock* residual_block);
+  void InternalSetManifold(double* values,
+                           ParameterBlock* parameter_block,
+                           Manifold* manifold);
 
-  bool InternalEvaluate(Program* program,
-                        double* cost,
-                        std::vector<double>* residuals,
-                        std::vector<double>* gradient,
-                        CRSMatrix* jacobian);
+  void InternalRemoveResidualBlock(ResidualBlock* residual_block);
 
   // Delete the arguments in question. These differ from the Remove* functions
   // in that they do not clean up references to the block to delete; they
   // merely delete them.
-  template<typename Block>
+  template <typename Block>
   void DeleteBlockInVector(std::vector<Block*>* mutable_blocks,
                            Block* block_to_remove);
   void DeleteBlock(ResidualBlock* residual_block);
@@ -200,29 +189,39 @@ class ProblemImpl {
 
   const Problem::Options options_;
 
+  bool context_impl_owned_;
+  ContextImpl* context_impl_;
+
   // The mapping from user pointers to parameter blocks.
-  std::map<double*, ParameterBlock*> parameter_block_map_;
+  ParameterMap parameter_block_map_;
 
   // Iff enable_fast_removal is enabled, contains the current residual blocks.
   ResidualBlockSet residual_block_set_;
 
   // The actual parameter and residual blocks.
-  internal::scoped_ptr<internal::Program> program_;
+  std::unique_ptr<internal::Program> program_;
 
-  // When removing residual and parameter blocks, cost/loss functions and
-  // parameterizations have ambiguous ownership. Instead of scanning the entire
-  // problem to see if the cost/loss/parameterization is shared with other
-  // residual or parameter blocks, buffer them until destruction.
-  //
-  // TODO(keir): See if it makes sense to use sets instead.
-  std::vector<CostFunction*> cost_functions_to_delete_;
-  std::vector<LossFunction*> loss_functions_to_delete_;
-  std::vector<LocalParameterization*> local_parameterizations_to_delete_;
+  // TODO(sameeragarwal): Unify the shared object handling across object types.
+  // Right now we are using vectors for Manifold objects and reference counting
+  // for CostFunctions and LossFunctions. Ideally this should be done uniformly.
 
-  CERES_DISALLOW_COPY_AND_ASSIGN(ProblemImpl);
+  // When removing parameter blocks, manifolds have ambiguous
+  // ownership. Instead of scanning the entire problem to see if the
+  // manifold is shared with other parameter blocks, buffer
+  // them until destruction.
+  std::vector<Manifold*> manifolds_to_delete_;
+
+  // For each cost function and loss function in the problem, a count
+  // of the number of residual blocks that refer to them. When the
+  // count goes to zero and the problem owns these objects, they are
+  // destroyed.
+  CostFunctionRefCount cost_function_ref_count_;
+  LossFunctionRefCount loss_function_ref_count_;
 };
 
 }  // namespace internal
 }  // namespace ceres
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_PUBLIC_PROBLEM_IMPL_H_

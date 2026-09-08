@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,82 +30,77 @@
 
 #include "ceres/program.h"
 
+#include <algorithm>
 #include <map>
+#include <memory>
+#include <string>
 #include <vector>
+
 #include "ceres/array_utils.h"
 #include "ceres/casts.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/cost_function.h"
 #include "ceres/evaluator.h"
-#include "ceres/internal/port.h"
-#include "ceres/local_parameterization.h"
+#include "ceres/internal/export.h"
 #include "ceres/loss_function.h"
+#include "ceres/manifold.h"
 #include "ceres/map_util.h"
+#include "ceres/parallel_for.h"
 #include "ceres/parameter_block.h"
 #include "ceres/problem.h"
 #include "ceres/residual_block.h"
 #include "ceres/stl_util.h"
 #include "ceres/triplet_sparse_matrix.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-using std::max;
-using std::set;
-using std::string;
-using std::vector;
-
-Program::Program() {}
-
-Program::Program(const Program& program)
-    : parameter_blocks_(program.parameter_blocks_),
-      residual_blocks_(program.residual_blocks_) {
-}
-
-const vector<ParameterBlock*>& Program::parameter_blocks() const {
+const std::vector<ParameterBlock*>& Program::parameter_blocks() const {
   return parameter_blocks_;
 }
 
-const vector<ResidualBlock*>& Program::residual_blocks() const {
+const std::vector<ResidualBlock*>& Program::residual_blocks() const {
   return residual_blocks_;
 }
 
-vector<ParameterBlock*>* Program::mutable_parameter_blocks() {
+std::vector<ParameterBlock*>* Program::mutable_parameter_blocks() {
   return &parameter_blocks_;
 }
 
-vector<ResidualBlock*>* Program::mutable_residual_blocks() {
+std::vector<ResidualBlock*>* Program::mutable_residual_blocks() {
   return &residual_blocks_;
 }
 
-bool Program::StateVectorToParameterBlocks(const double *state) {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    if (!parameter_blocks_[i]->IsConstant() &&
-        !parameter_blocks_[i]->SetState(state)) {
+EvaluationCallback* Program::mutable_evaluation_callback() {
+  return evaluation_callback_;
+}
+
+bool Program::StateVectorToParameterBlocks(const double* state) {
+  for (auto* parameter_block : parameter_blocks_) {
+    if (!parameter_block->IsConstant() && !parameter_block->SetState(state)) {
       return false;
     }
-    state += parameter_blocks_[i]->Size();
+    state += parameter_block->Size();
   }
   return true;
 }
 
-void Program::ParameterBlocksToStateVector(double *state) const {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    parameter_blocks_[i]->GetState(state);
-    state += parameter_blocks_[i]->Size();
+void Program::ParameterBlocksToStateVector(double* state) const {
+  for (auto* parameter_block : parameter_blocks_) {
+    parameter_block->GetState(state);
+    state += parameter_block->Size();
   }
 }
 
 void Program::CopyParameterBlockStateToUserState() {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    parameter_blocks_[i]->GetState(parameter_blocks_[i]->mutable_user_state());
+  for (auto* parameter_block : parameter_blocks_) {
+    parameter_block->GetState(parameter_block->mutable_user_state());
   }
 }
 
 bool Program::SetParameterBlockStatePtrsToUserStatePtrs() {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    if (!parameter_blocks_[i]->IsConstant() &&
-        !parameter_blocks_[i]->SetState(parameter_blocks_[i]->user_state())) {
+  for (auto* parameter_block : parameter_blocks_) {
+    if (!parameter_block->IsConstant() &&
+        !parameter_block->SetState(parameter_block->user_state())) {
       return false;
     }
   }
@@ -114,23 +109,38 @@ bool Program::SetParameterBlockStatePtrsToUserStatePtrs() {
 
 bool Program::Plus(const double* state,
                    const double* delta,
-                   double* state_plus_delta) const {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    if (!parameter_blocks_[i]->Plus(state, delta, state_plus_delta)) {
-      return false;
-    }
-    state += parameter_blocks_[i]->Size();
-    delta += parameter_blocks_[i]->LocalSize();
-    state_plus_delta += parameter_blocks_[i]->Size();
-  }
-  return true;
+                   double* state_plus_delta,
+                   ContextImpl* context,
+                   int num_threads) const {
+  std::atomic<bool> abort(false);
+  auto* parameter_blocks = parameter_blocks_.data();
+  ParallelFor(
+      context,
+      0,
+      parameter_blocks_.size(),
+      num_threads,
+      [&abort, state, delta, state_plus_delta, parameter_blocks](int block_id) {
+        if (abort) {
+          return;
+        }
+        auto parameter_block = parameter_blocks[block_id];
+
+        auto block_state = state + parameter_block->state_offset();
+        auto block_delta = delta + parameter_block->delta_offset();
+        auto block_state_plus_delta =
+            state_plus_delta + parameter_block->state_offset();
+        if (!parameter_block->Plus(
+                block_state, block_delta, block_state_plus_delta)) {
+          abort = true;
+        }
+      });
+  return abort == false;
 }
 
 void Program::SetParameterOffsetsAndIndex() {
   // Set positions for all parameters appearing as arguments to residuals to one
   // past the end of the parameter block array.
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
-    ResidualBlock* residual_block = residual_blocks_[i];
+  for (auto* residual_block : residual_blocks_) {
     for (int j = 0; j < residual_block->NumParameterBlocks(); ++j) {
       residual_block->parameter_blocks()[j]->set_index(-1);
     }
@@ -143,7 +153,7 @@ void Program::SetParameterOffsetsAndIndex() {
     parameter_blocks_[i]->set_state_offset(state_offset);
     parameter_blocks_[i]->set_delta_offset(delta_offset);
     state_offset += parameter_blocks_[i]->Size();
-    delta_offset += parameter_blocks_[i]->LocalSize();
+    delta_offset += parameter_blocks_[i]->TangentSize();
   }
 }
 
@@ -171,16 +181,15 @@ bool Program::IsValid() const {
     }
 
     state_offset += parameter_blocks_[i]->Size();
-    delta_offset += parameter_blocks_[i]->LocalSize();
+    delta_offset += parameter_blocks_[i]->TangentSize();
   }
 
   return true;
 }
 
-bool Program::ParameterBlocksAreFinite(string* message) const {
-  CHECK_NOTNULL(message);
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    const ParameterBlock* parameter_block = parameter_blocks_[i];
+bool Program::ParameterBlocksAreFinite(std::string* message) const {
+  CHECK(message != nullptr);
+  for (auto* parameter_block : parameter_blocks_) {
     const double* array = parameter_block->user_state();
     const int size = parameter_block->Size();
     const int invalid_index = FindInvalidValue(size, array);
@@ -189,7 +198,9 @@ bool Program::ParameterBlocksAreFinite(string* message) const {
           "ParameterBlock: %p with size %d has at least one invalid value.\n"
           "First invalid value is at index: %d.\n"
           "Parameter block values: ",
-          array, size, invalid_index);
+          array,
+          size,
+          invalid_index);
       AppendArrayToString(size, array, message);
       return false;
     }
@@ -198,8 +209,7 @@ bool Program::ParameterBlocksAreFinite(string* message) const {
 }
 
 bool Program::IsBoundsConstrained() const {
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    const ParameterBlock* parameter_block = parameter_blocks_[i];
+  for (auto* parameter_block : parameter_blocks_) {
     if (parameter_block->IsConstant()) {
       continue;
     }
@@ -216,10 +226,9 @@ bool Program::IsBoundsConstrained() const {
   return false;
 }
 
-bool Program::IsFeasible(string* message) const {
-  CHECK_NOTNULL(message);
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    const ParameterBlock* parameter_block = parameter_blocks_[i];
+bool Program::IsFeasible(std::string* message) const {
+  CHECK(message != nullptr);
+  for (auto* parameter_block : parameter_blocks_) {
     const double* parameters = parameter_block->user_state();
     const int size = parameter_block->Size();
     if (parameter_block->IsConstant()) {
@@ -236,7 +245,12 @@ bool Program::IsFeasible(string* message) const {
               "\nFirst infeasible value is at index: %d."
               "\nLower bound: %e, value: %e, upper bound: %e"
               "\nParameter block values: ",
-              parameters, size, j, lower_bound, parameters[j], upper_bound);
+              parameters,
+              size,
+              j,
+              lower_bound,
+              parameters[j],
+              upper_bound);
           AppendArrayToString(size, parameters, message);
           return false;
         }
@@ -255,7 +269,11 @@ bool Program::IsFeasible(string* message) const {
               "\nFirst infeasible bound is at index: %d."
               "\nLower bound: %e, upper bound: %e"
               "\nParameter block values: ",
-              parameters, size, j, lower_bound, upper_bound);
+              parameters,
+              size,
+              j,
+              lower_bound,
+              upper_bound);
           AppendArrayToString(size, parameters, message);
           return false;
         }
@@ -266,41 +284,42 @@ bool Program::IsFeasible(string* message) const {
   return true;
 }
 
-Program* Program::CreateReducedProgram(
-    vector<double*>* removed_parameter_blocks,
+std::unique_ptr<Program> Program::CreateReducedProgram(
+    std::vector<double*>* removed_parameter_blocks,
     double* fixed_cost,
-    string* error) const {
-  CHECK_NOTNULL(removed_parameter_blocks);
-  CHECK_NOTNULL(fixed_cost);
-  CHECK_NOTNULL(error);
+    std::string* error) const {
+  CHECK(removed_parameter_blocks != nullptr);
+  CHECK(fixed_cost != nullptr);
+  CHECK(error != nullptr);
 
-  scoped_ptr<Program> reduced_program(new Program(*this));
-  if (!reduced_program->RemoveFixedBlocks(removed_parameter_blocks,
-                                          fixed_cost,
-                                          error)) {
-    return NULL;
+  std::unique_ptr<Program> reduced_program = std::make_unique<Program>(*this);
+  if (!reduced_program->RemoveFixedBlocks(
+          removed_parameter_blocks, fixed_cost, error)) {
+    return nullptr;
   }
 
   reduced_program->SetParameterOffsetsAndIndex();
-  return reduced_program.release();
+  return reduced_program;
 }
 
-bool Program::RemoveFixedBlocks(vector<double*>* removed_parameter_blocks,
+bool Program::RemoveFixedBlocks(std::vector<double*>* removed_parameter_blocks,
                                 double* fixed_cost,
-                                string* error) {
-  CHECK_NOTNULL(removed_parameter_blocks);
-  CHECK_NOTNULL(fixed_cost);
-  CHECK_NOTNULL(error);
+                                std::string* error) {
+  CHECK(removed_parameter_blocks != nullptr);
+  CHECK(fixed_cost != nullptr);
+  CHECK(error != nullptr);
 
-  scoped_array<double> residual_block_evaluate_scratch;
-  residual_block_evaluate_scratch.reset(
-      new double[MaxScratchDoublesNeededForEvaluate()]);
+  std::unique_ptr<double[]> residual_block_evaluate_scratch;
+  residual_block_evaluate_scratch =
+      std::make_unique<double[]>(MaxScratchDoublesNeededForEvaluate());
   *fixed_cost = 0.0;
+
+  bool need_to_call_prepare_for_evaluation = evaluation_callback_ != nullptr;
 
   // Mark all the parameters as unused. Abuse the index member of the
   // parameter blocks for the marking.
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    parameter_blocks_[i]->set_index(-1);
+  for (auto* parameter_block : parameter_blocks_) {
+    parameter_block->set_index(-1);
   }
 
   // Filter out residual that have all-constant parameters, and mark
@@ -326,18 +345,45 @@ bool Program::RemoveFixedBlocks(vector<double*>* removed_parameter_blocks,
       continue;
     }
 
+    // This is an exceedingly rare case, where the user has residual
+    // blocks which are effectively constant but they are also
+    // performance sensitive enough to add an EvaluationCallback.
+    //
+    // In this case before we evaluate the cost of the constant
+    // residual blocks, we must call
+    // EvaluationCallback::PrepareForEvaluation(). Because this call
+    // can be costly, we only call this if we actually encounter a
+    // residual block with all constant parameter blocks.
+    //
+    // It is worth nothing that there is a minor inefficiency here,
+    // that the iteration 0 of TrustRegionMinimizer will also cause
+    // PrepareForEvaluation to be called on the same point, but with
+    // evaluate_jacobians = true. We could try and optimize this here,
+    // but given the rarity of this case, the additional complexity
+    // and long range dependency is not worth it.
+    if (need_to_call_prepare_for_evaluation) {
+      constexpr bool kNewPoint = true;
+      constexpr bool kDoNotEvaluateJacobians = false;
+      evaluation_callback_->PrepareForEvaluation(kDoNotEvaluateJacobians,
+                                                 kNewPoint);
+      need_to_call_prepare_for_evaluation = false;
+    }
+
     // The residual is constant and will be removed, so its cost is
     // added to the variable fixed_cost.
     double cost = 0.0;
     if (!residual_block->Evaluate(true,
                                   &cost,
-                                  NULL,
-                                  NULL,
+                                  nullptr,
+                                  nullptr,
                                   residual_block_evaluate_scratch.get())) {
-      *error = StringPrintf("Evaluation of the residual %d failed during "
-                            "removal of fixed residual blocks.", i);
+      *error = StringPrintf(
+          "Evaluation of the residual %d failed during "
+          "removal of fixed residual blocks.",
+          i);
       return false;
     }
+
     *fixed_cost += cost;
   }
   residual_blocks_.resize(num_active_residual_blocks);
@@ -345,8 +391,7 @@ bool Program::RemoveFixedBlocks(vector<double*>* removed_parameter_blocks,
   // Filter out unused or fixed parameter blocks.
   int num_active_parameter_blocks = 0;
   removed_parameter_blocks->clear();
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    ParameterBlock* parameter_block = parameter_blocks_[i];
+  for (auto* parameter_block : parameter_blocks_) {
     if (parameter_block->index() == -1) {
       removed_parameter_blocks->push_back(
           parameter_block->mutable_user_state());
@@ -356,11 +401,9 @@ bool Program::RemoveFixedBlocks(vector<double*>* removed_parameter_blocks,
   }
   parameter_blocks_.resize(num_active_parameter_blocks);
 
-  if (!(((NumResidualBlocks() == 0) &&
-         (NumParameterBlocks() == 0)) ||
-        ((NumResidualBlocks() != 0) &&
-         (NumParameterBlocks() != 0)))) {
-    *error =  "Congratulations, you found a bug in Ceres. Please report it.";
+  if (!(((NumResidualBlocks() == 0) && (NumParameterBlocks() == 0)) ||
+        ((NumResidualBlocks() != 0) && (NumParameterBlocks() != 0)))) {
+    *error = "Congratulations, you found a bug in Ceres. Please report it.";
     return false;
   }
 
@@ -368,20 +411,18 @@ bool Program::RemoveFixedBlocks(vector<double*>* removed_parameter_blocks,
 }
 
 bool Program::IsParameterBlockSetIndependent(
-    const set<double*>& independent_set) const {
+    const std::set<double*>& independent_set) const {
   // Loop over each residual block and ensure that no two parameter
   // blocks in the same residual block are part of
   // parameter_block_ptrs as that would violate the assumption that it
   // is an independent set in the Hessian matrix.
-  for (vector<ResidualBlock*>::const_iterator it = residual_blocks_.begin();
-       it != residual_blocks_.end();
-       ++it) {
-    ParameterBlock* const* parameter_blocks = (*it)->parameter_blocks();
-    const int num_parameter_blocks = (*it)->NumParameterBlocks();
+  for (const ResidualBlock* residual_block : residual_blocks_) {
+    ParameterBlock* const* parameter_blocks =
+        residual_block->parameter_blocks();
+    const int num_parameter_blocks = residual_block->NumParameterBlocks();
     int count = 0;
     for (int i = 0; i < num_parameter_blocks; ++i) {
-      count += independent_set.count(
-          parameter_blocks[i]->mutable_user_state());
+      count += independent_set.count(parameter_blocks[i]->mutable_user_state());
     }
     if (count > 1) {
       return false;
@@ -390,18 +431,20 @@ bool Program::IsParameterBlockSetIndependent(
   return true;
 }
 
-TripletSparseMatrix* Program::CreateJacobianBlockSparsityTranspose() const {
+std::unique_ptr<TripletSparseMatrix>
+Program::CreateJacobianBlockSparsityTranspose(int start_residual_block) const {
   // Matrix to store the block sparsity structure of the Jacobian.
-  TripletSparseMatrix* tsm =
-      new TripletSparseMatrix(NumParameterBlocks(),
-                              NumResidualBlocks(),
-                              10 * NumResidualBlocks());
+  const int num_rows = NumParameterBlocks();
+  const int num_cols = NumResidualBlocks() - start_residual_block;
+
+  std::unique_ptr<TripletSparseMatrix> tsm(
+      new TripletSparseMatrix(num_rows, num_cols, 10 * num_cols));
   int num_nonzeros = 0;
   int* rows = tsm->mutable_rows();
   int* cols = tsm->mutable_cols();
   double* values = tsm->mutable_values();
 
-  for (int c = 0; c < residual_blocks_.size(); ++c) {
+  for (int c = start_residual_block; c < residual_blocks_.size(); ++c) {
     const ResidualBlock* residual_block = residual_blocks_[c];
     const int num_parameter_blocks = residual_block->NumParameterBlocks();
     ParameterBlock* const* parameter_blocks =
@@ -423,7 +466,7 @@ TripletSparseMatrix* Program::CreateJacobianBlockSparsityTranspose() const {
 
       const int r = parameter_blocks[j]->index();
       rows[num_nonzeros] = r;
-      cols[num_nonzeros] = c;
+      cols[num_nonzeros] = c - start_residual_block;
       values[num_nonzeros] = 1.0;
       ++num_nonzeros;
     }
@@ -433,92 +476,89 @@ TripletSparseMatrix* Program::CreateJacobianBlockSparsityTranspose() const {
   return tsm;
 }
 
-int Program::NumResidualBlocks() const {
-  return residual_blocks_.size();
-}
+int Program::NumResidualBlocks() const { return residual_blocks_.size(); }
 
-int Program::NumParameterBlocks() const {
-  return parameter_blocks_.size();
-}
+int Program::NumParameterBlocks() const { return parameter_blocks_.size(); }
 
 int Program::NumResiduals() const {
   int num_residuals = 0;
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
-    num_residuals += residual_blocks_[i]->NumResiduals();
+  for (auto* residual_block : residual_blocks_) {
+    num_residuals += residual_block->NumResiduals();
   }
   return num_residuals;
 }
 
 int Program::NumParameters() const {
   int num_parameters = 0;
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    num_parameters += parameter_blocks_[i]->Size();
+  for (auto* parameter_block : parameter_blocks_) {
+    num_parameters += parameter_block->Size();
   }
   return num_parameters;
 }
 
 int Program::NumEffectiveParameters() const {
   int num_parameters = 0;
-  for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    num_parameters += parameter_blocks_[i]->LocalSize();
+  for (auto* parameter_block : parameter_blocks_) {
+    num_parameters += parameter_block->TangentSize();
   }
   return num_parameters;
 }
 
+// TODO(sameeragarwal): The following methods should just be updated
+// incrementally and the values cached, rather than the linear
+// complexity we have right now on every call.
 int Program::MaxScratchDoublesNeededForEvaluate() const {
   // Compute the scratch space needed for evaluate.
   int max_scratch_bytes_for_evaluate = 0;
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
+  for (auto* residual_block : residual_blocks_) {
     max_scratch_bytes_for_evaluate =
-        max(max_scratch_bytes_for_evaluate,
-            residual_blocks_[i]->NumScratchDoublesForEvaluate());
+        std::max(max_scratch_bytes_for_evaluate,
+                 residual_block->NumScratchDoublesForEvaluate());
   }
   return max_scratch_bytes_for_evaluate;
 }
 
 int Program::MaxDerivativesPerResidualBlock() const {
   int max_derivatives = 0;
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
+  for (auto* residual_block : residual_blocks_) {
     int derivatives = 0;
-    ResidualBlock* residual_block = residual_blocks_[i];
     int num_parameters = residual_block->NumParameterBlocks();
     for (int j = 0; j < num_parameters; ++j) {
       derivatives += residual_block->NumResiduals() *
-                     residual_block->parameter_blocks()[j]->LocalSize();
+                     residual_block->parameter_blocks()[j]->TangentSize();
     }
-    max_derivatives = max(max_derivatives, derivatives);
+    max_derivatives = std::max(max_derivatives, derivatives);
   }
   return max_derivatives;
 }
 
 int Program::MaxParametersPerResidualBlock() const {
   int max_parameters = 0;
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
-    max_parameters = max(max_parameters,
-                         residual_blocks_[i]->NumParameterBlocks());
+  for (auto* residual_block : residual_blocks_) {
+    max_parameters =
+        std::max(max_parameters, residual_block->NumParameterBlocks());
   }
   return max_parameters;
 }
 
 int Program::MaxResidualsPerResidualBlock() const {
   int max_residuals = 0;
-  for (int i = 0; i < residual_blocks_.size(); ++i) {
-    max_residuals = max(max_residuals, residual_blocks_[i]->NumResiduals());
+  for (auto* residual_block : residual_blocks_) {
+    max_residuals = std::max(max_residuals, residual_block->NumResiduals());
   }
   return max_residuals;
 }
 
-string Program::ToString() const {
-  string ret = "Program dump\n";
+std::string Program::ToString() const {
+  std::string ret = "Program dump\n";
   ret += StringPrintf("Number of parameter blocks: %d\n", NumParameterBlocks());
   ret += StringPrintf("Number of parameters: %d\n", NumParameters());
   ret += "Parameters:\n";
   for (int i = 0; i < parameter_blocks_.size(); ++i) {
-    ret += StringPrintf("%d: %s\n",
-                        i, parameter_blocks_[i]->ToString().c_str());
+    ret +=
+        StringPrintf("%d: %s\n", i, parameter_blocks_[i]->ToString().c_str());
   }
   return ret;
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,20 +30,20 @@
 
 #include "ceres/corrector.h"
 
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
+
 #include "ceres/internal/eigen.h"
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 Corrector::Corrector(const double sq_norm, const double rho[3]) {
   CHECK_GE(sq_norm, 0.0);
   sqrt_rho1_ = sqrt(rho[1]);
 
   // If sq_norm = 0.0, the correction becomes trivial, the residual
-  // and the jacobian are scaled by the squareroot of the derivative
+  // and the jacobian are scaled by the square root of the derivative
   // of rho. Handling this case explicitly avoids the divide by zero
   // error that would occur below.
   //
@@ -59,7 +59,7 @@ Corrector::Corrector(const double sq_norm, const double rho[3]) {
   // correction which re-wights the gradient of the function by the
   // square root of the derivative of rho, and the Gauss-Newton
   // Hessian gets both the scaling and the rank-1 curvature
-  // correction. Normaly, alpha is upper bounded by one, but with this
+  // correction. Normally, alpha is upper bounded by one, but with this
   // change, alpha is bounded above by zero.
   //
   // Empirically we have observed that the full Triggs correction and
@@ -87,7 +87,7 @@ Corrector::Corrector(const double sq_norm, const double rho[3]) {
   // We now require that the first derivative of the loss function be
   // positive only if the second derivative is positive. This is
   // because when the second derivative is non-positive, we do not use
-  // the second order correction suggested by BANS and instead use a
+  // the second order correction suggested by BAMS and instead use a
   // simpler first order strategy which does not use a division by the
   // gradient of the loss function.
   CHECK_GT(rho[1], 0.0);
@@ -110,8 +110,8 @@ Corrector::Corrector(const double sq_norm, const double rho[3]) {
 }
 
 void Corrector::CorrectResiduals(const int num_rows, double* residuals) {
-  DCHECK(residuals != NULL);
-  // Equation 11 in BANS.
+  DCHECK(residuals != nullptr);
+  // Equation 11 in BAMS.
   VectorRef(residuals, num_rows) *= residual_scaling_;
 }
 
@@ -119,8 +119,8 @@ void Corrector::CorrectJacobian(const int num_rows,
                                 const int num_cols,
                                 double* residuals,
                                 double* jacobian) {
-  DCHECK(residuals != NULL);
-  DCHECK(jacobian != NULL);
+  DCHECK(residuals != nullptr);
+  DCHECK(jacobian != nullptr);
 
   // The common case (rho[2] <= 0).
   if (alpha_sq_norm_ == 0.0) {
@@ -128,7 +128,7 @@ void Corrector::CorrectJacobian(const int num_rows,
     return;
   }
 
-  // Equation 11 in BANS.
+  // Equation 11 in BAMS.
   //
   //  J = sqrt(rho) * (J - alpha^2 r * r' J)
   //
@@ -147,12 +147,11 @@ void Corrector::CorrectJacobian(const int num_rows,
     }
 
     for (int r = 0; r < num_rows; ++r) {
-      jacobian[r * num_cols + c] = sqrt_rho1_ *
-          (jacobian[r * num_cols + c] -
-           alpha_sq_norm_ * residuals[r] * r_transpose_j);
+      jacobian[r * num_cols + c] =
+          sqrt_rho1_ * (jacobian[r * num_cols + c] -
+                        alpha_sq_norm_ * residuals[r] * r_transpose_j);
     }
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

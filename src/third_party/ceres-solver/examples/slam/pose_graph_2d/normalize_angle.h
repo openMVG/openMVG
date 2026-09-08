@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2016 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,19 +35,17 @@
 
 #include "ceres/ceres.h"
 
-namespace ceres {
-namespace examples {
+namespace ceres::examples {
 
 // Normalizes the angle in radians between [-pi and pi).
 template <typename T>
 inline T NormalizeAngle(const T& angle_radians) {
   // Use ceres::floor because it is specialized for double and Jet types.
-  T two_pi(2.0 * M_PI);
+  T two_pi(2.0 * constants::pi);
   return angle_radians -
-      two_pi * ceres::floor((angle_radians + T(M_PI)) / two_pi);
+         two_pi * ceres::floor((angle_radians + T(constants::pi)) / two_pi);
 }
 
-}  // namespace examples
-}  // namespace ceres
+}  // namespace ceres::examples
 
 #endif  // CERES_EXAMPLES_POSE_GRAPH_2D_NORMALIZE_ANGLE_H_

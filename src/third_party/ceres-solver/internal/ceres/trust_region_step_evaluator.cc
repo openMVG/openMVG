@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2016 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,17 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include <algorithm>
 #include "ceres/trust_region_step_evaluator.h"
+
+#include <algorithm>
+#include <limits>
+
 #include "glog/logging.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 TrustRegionStepEvaluator::TrustRegionStepEvaluator(
-    const double initial_cost,
-    const int max_consecutive_nonmonotonic_steps)
+    const double initial_cost, const int max_consecutive_nonmonotonic_steps)
     : max_consecutive_nonmonotonic_steps_(max_consecutive_nonmonotonic_steps),
       minimum_cost_(initial_cost),
       current_cost_(initial_cost),
@@ -45,12 +46,19 @@ TrustRegionStepEvaluator::TrustRegionStepEvaluator(
       candidate_cost_(initial_cost),
       accumulated_reference_model_cost_change_(0.0),
       accumulated_candidate_model_cost_change_(0.0),
-      num_consecutive_nonmonotonic_steps_(0){
-}
+      num_consecutive_nonmonotonic_steps_(0) {}
 
 double TrustRegionStepEvaluator::StepQuality(
-    const double cost,
-    const double model_cost_change) const {
+    const double cost, const double model_cost_change) const {
+  // If the function evaluation for this step was a failure, in which
+  // case the TrustRegionMinimizer would have set the cost to
+  // std::numeric_limits<double>::max(). In this case, the division by
+  // model_cost_change can result in an overflow. To prevent that from
+  // happening, we will deal with this case explicitly.
+  if (cost >= std::numeric_limits<double>::max()) {
+    return std::numeric_limits<double>::lowest();
+  }
+
   const double relative_decrease = (current_cost_ - cost) / model_cost_change;
   const double historical_relative_decrease =
       (reference_cost_ - cost) /
@@ -58,9 +66,8 @@ double TrustRegionStepEvaluator::StepQuality(
   return std::max(relative_decrease, historical_relative_decrease);
 }
 
-void TrustRegionStepEvaluator::StepAccepted(
-    const double cost,
-    const double model_cost_change) {
+void TrustRegionStepEvaluator::StepAccepted(const double cost,
+                                            const double model_cost_change) {
   // Algorithm 10.1.2 from Trust Region Methods by Conn, Gould &
   // Toint.
   //
@@ -103,5 +110,4 @@ void TrustRegionStepEvaluator::StepAccepted(
   }
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

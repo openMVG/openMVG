@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,15 +30,15 @@
 
 #include "ceres/cubic_interpolation.h"
 
+#include <memory>
+
 #include "ceres/jet.h"
-#include "ceres/internal/scoped_ptr.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-static const double kTolerance = 1e-12;
+static constexpr double kTolerance = 1e-12;
 
 TEST(Grid1D, OneDataDimension) {
   int x[] = {1, 2, 3};
@@ -65,9 +65,11 @@ TEST(Grid1D, OneDataDimensionOutOfBounds) {
 }
 
 TEST(Grid1D, TwoDataDimensionIntegerDataInterleaved) {
+  // clang-format off
   int x[] = {1, 5,
              2, 6,
              3, 7};
+  // clang-format on
 
   Grid1D<int, 2, true> grid(x, 0, 3);
   for (int i = 0; i < 3; ++i) {
@@ -78,10 +80,11 @@ TEST(Grid1D, TwoDataDimensionIntegerDataInterleaved) {
   }
 }
 
-
 TEST(Grid1D, TwoDataDimensionIntegerDataStacked) {
+  // clang-format off
   int x[] = {1, 2, 3,
              5, 6, 7};
+  // clang-format on
 
   Grid1D<int, 2, false> grid(x, 0, 3);
   for (int i = 0; i < 3; ++i) {
@@ -93,8 +96,10 @@ TEST(Grid1D, TwoDataDimensionIntegerDataStacked) {
 }
 
 TEST(Grid2D, OneDataDimensionRowMajor) {
+  // clang-format off
   int x[] = {1, 2, 3,
              2, 3, 4};
+  // clang-format on
   Grid2D<int, 1, true, true> grid(x, 0, 2, 0, 3);
   for (int r = 0; r < 2; ++r) {
     for (int c = 0; c < 3; ++c) {
@@ -106,8 +111,10 @@ TEST(Grid2D, OneDataDimensionRowMajor) {
 }
 
 TEST(Grid2D, OneDataDimensionRowMajorOutOfBounds) {
+  // clang-format off
   int x[] = {1, 2, 3,
              2, 3, 4};
+  // clang-format on
   Grid2D<int, 1, true, true> grid(x, 0, 2, 0, 3);
   double value;
   grid.GetValue(-1, -1, &value);
@@ -141,64 +148,72 @@ TEST(Grid2D, OneDataDimensionRowMajorOutOfBounds) {
 }
 
 TEST(Grid2D, TwoDataDimensionRowMajorInterleaved) {
+  // clang-format off
   int x[] = {1, 4, 2, 8, 3, 12,
              2, 8, 3, 12, 4, 16};
+  // clang-format on
   Grid2D<int, 2, true, true> grid(x, 0, 2, 0, 3);
   for (int r = 0; r < 2; ++r) {
     for (int c = 0; c < 3; ++c) {
       double value[2];
       grid.GetValue(r, c, value);
       EXPECT_EQ(value[0], static_cast<double>(r + c + 1));
-      EXPECT_EQ(value[1], static_cast<double>(4 *(r + c + 1)));
+      EXPECT_EQ(value[1], static_cast<double>(4 * (r + c + 1)));
     }
   }
 }
 
 TEST(Grid2D, TwoDataDimensionRowMajorStacked) {
+  // clang-format off
   int x[] = {1,  2,  3,
              2,  3,  4,
              4,  8, 12,
              8, 12, 16};
+  // clang-format on
   Grid2D<int, 2, true, false> grid(x, 0, 2, 0, 3);
   for (int r = 0; r < 2; ++r) {
     for (int c = 0; c < 3; ++c) {
       double value[2];
       grid.GetValue(r, c, value);
       EXPECT_EQ(value[0], static_cast<double>(r + c + 1));
-      EXPECT_EQ(value[1], static_cast<double>(4 *(r + c + 1)));
+      EXPECT_EQ(value[1], static_cast<double>(4 * (r + c + 1)));
     }
   }
 }
 
 TEST(Grid2D, TwoDataDimensionColMajorInterleaved) {
+  // clang-format off
   int x[] = { 1,  4, 2,  8,
               2,  8, 3, 12,
               3, 12, 4, 16};
+  // clang-format on
   Grid2D<int, 2, false, true> grid(x, 0, 2, 0, 3);
   for (int r = 0; r < 2; ++r) {
     for (int c = 0; c < 3; ++c) {
       double value[2];
       grid.GetValue(r, c, value);
       EXPECT_EQ(value[0], static_cast<double>(r + c + 1));
-      EXPECT_EQ(value[1], static_cast<double>(4 *(r + c + 1)));
+      EXPECT_EQ(value[1], static_cast<double>(4 * (r + c + 1)));
     }
   }
 }
 
 TEST(Grid2D, TwoDataDimensionColMajorStacked) {
+  // clang-format off
   int x[] = {1,   2,
              2,   3,
              3,   4,
              4,   8,
              8,  12,
              12, 16};
+  // clang-format on
   Grid2D<int, 2, false, false> grid(x, 0, 2, 0, 3);
   for (int r = 0; r < 2; ++r) {
     for (int c = 0; c < 3; ++c) {
       double value[2];
       grid.GetValue(r, c, value);
       EXPECT_EQ(value[0], static_cast<double>(r + c + 1));
-      EXPECT_EQ(value[1], static_cast<double>(4 *(r + c + 1)));
+      EXPECT_EQ(value[1], static_cast<double>(4 * (r + c + 1)));
     }
   }
 }
@@ -210,17 +225,17 @@ class CubicInterpolatorTest : public ::testing::Test {
                                       const double b,
                                       const double c,
                                       const double d) {
-    values_.reset(new double[kDataDimension * kNumSamples]);
+    values_ = std::make_unique<double[]>(kDataDimension * kNumSamples);
 
     for (int x = 0; x < kNumSamples; ++x) {
       for (int dim = 0; dim < kDataDimension; ++dim) {
-      values_[x * kDataDimension + dim] =
-          (dim * dim  + 1) * (a  * x * x * x + b * x * x + c * x + d);
+        values_[x * kDataDimension + dim] =
+            (dim * dim + 1) * (a * x * x * x + b * x * x + c * x + d);
       }
     }
 
     Grid1D<double, kDataDimension> grid(values_.get(), 0, kNumSamples);
-    CubicInterpolator<Grid1D<double, kDataDimension> > interpolator(grid);
+    CubicInterpolator<Grid1D<double, kDataDimension>> interpolator(grid);
 
     // Check values in the all the cells but the first and the last
     // ones. In these cells, the interpolated function values should
@@ -236,8 +251,9 @@ class CubicInterpolatorTest : public ::testing::Test {
 
       for (int dim = 0; dim < kDataDimension; ++dim) {
         expected_f[dim] =
-            (dim * dim  + 1) * (a  * x * x * x + b * x * x + c * x + d);
-        expected_dfdx[dim] = (dim * dim + 1) * (3.0 * a * x * x + 2.0 * b * x + c);
+            (dim * dim + 1) * (a * x * x * x + b * x * x + c * x + d);
+        expected_dfdx[dim] =
+            (dim * dim + 1) * (3.0 * a * x * x + 2.0 * b * x + c);
       }
 
       interpolator.Evaluate(x, f, dfdx);
@@ -255,9 +271,9 @@ class CubicInterpolatorTest : public ::testing::Test {
   }
 
  private:
-  static const int kNumSamples = 10;
-  static const int kNumTestSamples = 100;
-  scoped_array<double> values_;
+  static constexpr int kNumSamples = 10;
+  static constexpr int kNumTestSamples = 100;
+  std::unique_ptr<double[]> values_;
 };
 
 TEST_F(CubicInterpolatorTest, ConstantFunction) {
@@ -278,12 +294,11 @@ TEST_F(CubicInterpolatorTest, QuadraticFunction) {
   RunPolynomialInterpolationTest<3>(0.0, 0.4, 1.0, 0.5);
 }
 
-
 TEST(CubicInterpolator, JetEvaluation) {
   const double values[] = {1.0, 2.0, 2.0, 5.0, 3.0, 9.0, 2.0, 7.0};
 
   Grid1D<double, 2, true> grid(values, 0, 4);
-  CubicInterpolator<Grid1D<double, 2, true> > interpolator(grid);
+  CubicInterpolator<Grid1D<double, 2, true>> interpolator(grid);
 
   double f[2], dfdx[2];
   const double x = 2.5;
@@ -313,9 +328,13 @@ TEST(CubicInterpolator, JetEvaluation) {
 
 class BiCubicInterpolatorTest : public ::testing::Test {
  public:
+  // This class needs to have an Eigen aligned operator new as it contains
+  // fixed-size Eigen types.
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   template <int kDataDimension>
   void RunPolynomialInterpolationTest(const Eigen::Matrix3d& coeff) {
-    values_.reset(new double[kNumRows * kNumCols * kDataDimension]);
+    values_ = std::make_unique<double[]>(kNumRows * kNumCols * kDataDimension);
     coeff_ = coeff;
     double* v = values_.get();
     for (int r = 0; r < kNumRows; ++r) {
@@ -326,8 +345,9 @@ class BiCubicInterpolatorTest : public ::testing::Test {
       }
     }
 
-    Grid2D<double, kDataDimension> grid(values_.get(), 0, kNumRows, 0, kNumCols);
-    BiCubicInterpolator<Grid2D<double, kDataDimension> > interpolator(grid);
+    Grid2D<double, kDataDimension> grid(
+        values_.get(), 0, kNumRows, 0, kNumCols);
+    BiCubicInterpolator<Grid2D<double, kDataDimension>> interpolator(grid);
 
     for (int j = 0; j < kNumRowSamples; ++j) {
       const double r = 1.0 + 7.0 / (kNumRowSamples - 1) * j;
@@ -337,8 +357,10 @@ class BiCubicInterpolatorTest : public ::testing::Test {
         interpolator.Evaluate(r, c, f, dfdr, dfdc);
         for (int dim = 0; dim < kDataDimension; ++dim) {
           EXPECT_NEAR(f[dim], (dim * dim + 1) * EvaluateF(r, c), kTolerance);
-          EXPECT_NEAR(dfdr[dim], (dim * dim + 1) * EvaluatedFdr(r, c), kTolerance);
-          EXPECT_NEAR(dfdc[dim], (dim * dim + 1) * EvaluatedFdc(r, c), kTolerance);
+          EXPECT_NEAR(
+              dfdr[dim], (dim * dim + 1) * EvaluatedFdr(r, c), kTolerance);
+          EXPECT_NEAR(
+              dfdc[dim], (dim * dim + 1) * EvaluatedFdc(r, c), kTolerance);
         }
       }
     }
@@ -369,13 +391,12 @@ class BiCubicInterpolatorTest : public ::testing::Test {
     return (coeff_.row(1) + coeff_.col(1).transpose()) * x;
   }
 
-
   Eigen::Matrix3d coeff_;
-  static const int kNumRows = 10;
-  static const int kNumCols = 10;
-  static const int kNumRowSamples = 100;
-  static const int kNumColSamples = 100;
-  scoped_array<double> values_;
+  static constexpr int kNumRows = 10;
+  static constexpr int kNumCols = 10;
+  static constexpr int kNumRowSamples = 100;
+  static constexpr int kNumColSamples = 100;
+  std::unique_ptr<double[]> values_;
 };
 
 TEST_F(BiCubicInterpolatorTest, ZeroFunction) {
@@ -467,11 +488,13 @@ TEST_F(BiCubicInterpolatorTest, Degree22Function) {
 }
 
 TEST(BiCubicInterpolator, JetEvaluation) {
+  // clang-format off
   const double values[] = {1.0, 5.0, 2.0, 10.0, 2.0, 6.0, 3.0, 5.0,
                            1.0, 2.0, 2.0,  2.0, 2.0, 2.0, 3.0, 1.0};
+  // clang-format on
 
   Grid2D<double, 2> grid(values, 0, 2, 0, 4);
-  BiCubicInterpolator<Grid2D<double, 2> > interpolator(grid);
+  BiCubicInterpolator<Grid2D<double, 2>> interpolator(grid);
 
   double f[2], dfdr[2], dfdc[2];
   const double r = 0.5;
@@ -506,5 +529,4 @@ TEST(BiCubicInterpolator, JetEvaluation) {
               kTolerance);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal

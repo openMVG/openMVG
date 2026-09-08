@@ -5,7 +5,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10...4.3)
 
 project(openMVG C CXX)
 
@@ -435,8 +435,7 @@ endif()
 # ==============================================================================
 if (OpenMVG_USE_RERUN)
   include(FetchContent)
-  FetchContent_Declare(rerun_sdk URL
-    https://github.com/rerun-io/rerun/releases/download/prerelease/rerun_cpp_sdk.zip)
+  FetchContent_Declare(rerun_sdk URL https://build.rerun.io/commit/4c8211c/rerun_cpp_sdk.zip)
   FetchContent_MakeAvailable(rerun_sdk)
 endif()
 

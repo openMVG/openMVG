@@ -1,0 +1,135 @@
+/* -*- mode: C++; indent-tabs-mode: nil; -*-
+ *
+ * This file is a part of LEMON, a generic C++ optimization library.
+ *
+ * Copyright (C) 2003-2013
+ * Egervary Jeno Kombinatorikus Optimalizalasi Kutatocsoport
+ * (Egervary Research Group on Combinatorial Optimization, EGRES).
+ *
+ * Permission to use, modify and distribute this software is granted
+ * provided that this copyright notice appears in all copies. For
+ * precise terms see the accompanying LICENSE file.
+ *
+ * This software is provided "AS IS" with no warranty of any kind,
+ * express or implied, and with no claim as to its suitability for any
+ * purpose.
+ *
+ */
+
+namespace lemon {
+/*!
+
+
+
+\page lgf-format LEMON Graph Format (LGF)
+
+The \e LGF is a <em>column oriented</em>
+file format for storing graphs and associated data like
+node and edge maps.
+
+Each line with \c '#' first non-whitespace
+character is considered as a comment line.
+
+Otherwise the file consists of sections starting with
+a header line. The header lines starts with an \c '@' character followed by the
+type of section. The standard section types are \c \@nodes, \c
+\@arcs and \c \@edges
+and \@attributes. Each header line may also have an optional
+\e name, which can be use to distinguish the sections of the same
+type.
+
+The standard sections are column oriented, each line consists of
+<em>token</em>s separated by whitespaces. A token can be \e plain or
+\e quoted. A plain token is just a sequence of non-whitespace characters,
+while a quoted token is a
+character sequence surrounded by double quotes, and it can also
+contain whitespaces and escape sequences.
+
+The \c \@nodes section describes a set of nodes and associated
+maps. The first is a header line, its columns are the names of the
+maps appearing in the following lines.
+One of the maps must be called \c
+"label", which plays special role in the file.
+The following
+non-empty lines until the next section describes nodes of the
+graph. Each line contains the values of the node maps
+associated to the current node.
+
+\code
+ @nodes
+ label  coordinates  size    title
+ 1      (10,20)      10      "First node"
+ 2      (80,80)      8       "Second node"
+ 3      (40,10)      10      "Third node"
+\endcode
+
+The \e LGF files can also contain bipartite graphs, in this case a
+\c \@red_nodes and a \c \@blue_nodes sections describe the node set of the
+graph. If a map is in both of these sections, then it can be used as a
+regular node map.
+
+\code
+ @red_nodes
+ label  only_red_map   name
+ 1      "cherry"       "John"
+ 2      "Santa Claus"  "Jack"
+ 3      "blood"        "Jason"
+ @blue_nodes
+ label  name
+ 4      "Elisabeth"
+ 5      "Eve"
+\endcode
+
+The \c \@arcs section is very similar to the \c \@nodes section,
+it again starts with a header line describing the names of the maps,
+but the \c "label" map is not obligatory here. The following lines
+describe the arcs. The first two tokens of each line are
+the source and the target node of the arc, respectively, then come the map
+values. The source and target tokens must be node labels.
+
+\code
+ @arcs
+         capacity
+ 1   2   16
+ 1   3   12
+ 2   3   18
+\endcode
+
+If there is no map in the \c \@arcs section at all, then it must be
+indicated by a sole '-' sign in the first line.
+
+\code
+ @arcs
+         -
+ 1   2
+ 1   3
+ 2   3
+\endcode
+
+The \c \@edges is just a synonym of \c \@arcs. The \@arcs section can
+also store the edge set of an undirected graph. In such case there is
+a conventional method for store arc maps in the file, if two columns
+have the same caption with \c '+' and \c '-' prefix, then these columns
+can be regarded as the values of an arc map.
+
+The \c \@attributes section contains key-value pairs, each line
+consists of two tokens, an attribute name, and then an attribute
+value. The value of the attribute could be also a label value of a
+node or an edge, or even an edge label prefixed with \c '+' or \c '-',
+which regards to the forward or backward directed arc of the
+corresponding edge.
+
+\code
+ @attributes
+ source 1
+ target 3
+ caption "LEMON test digraph"
+\endcode
+
+The \e LGF can contain extra sections, but there is no restriction on
+the format of such sections.
+
+*/
+}
+
+//  LocalWords:  whitespace whitespaces

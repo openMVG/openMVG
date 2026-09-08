@@ -1,5 +1,5 @@
 # Ceres Solver - A fast non-linear least squares minimizer
-# Copyright 2017 Google Inc. All rights reserved.
+# Copyright 2023 Google Inc. All rights reserved.
 # http://ceres-solver.org/
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 # Set of template specializations to generate
 
 HEADER = """// Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2017 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -93,63 +93,58 @@ HEADER = """// Ceres Solver - A fast non-linear least squares minimizer
 """
 
 DYNAMIC_FILE = """
-
 #include "ceres/schur_eliminator_impl.h"
-#include "ceres/internal/eigen.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 template class SchurEliminator<%s, %s, %s>;
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 """
 
 SPECIALIZATION_FILE = """
 // This include must come before any #ifndef check on Ceres compile options.
-#include "ceres/internal/port.h"
+#include "ceres/internal/config.h"
 
 #ifndef CERES_RESTRICT_SCHUR_SPECIALIZATION
 
 #include "ceres/schur_eliminator_impl.h"
-#include "ceres/internal/eigen.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
 template class SchurEliminator<%s, %s, %s>;
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 
 #endif  // CERES_RESTRICT_SCHUR_SPECIALIZATION
 """
 
 FACTORY_FILE_HEADER = """
+#include <memory>
+
 #include "ceres/linear_solver.h"
 #include "ceres/schur_eliminator.h"
-#include "ceres/internal/eigen.h"
 
-namespace ceres {
-namespace internal {
+namespace ceres::internal {
 
-SchurEliminatorBase*
-SchurEliminatorBase::Create(const LinearSolver::Options& options) {
+SchurEliminatorBase::~SchurEliminatorBase() = default;
+
+std::unique_ptr<SchurEliminatorBase> SchurEliminatorBase::Create(
+    const LinearSolver::Options& options) {
 #ifndef CERES_RESTRICT_SCHUR_SPECIALIZATION
 """
 
-FACTORY = """ return new SchurEliminator<%s, %s, %s>(options);"""
+FACTORY = """  return std::make_unique<SchurEliminator<%s, %s, %s>>(options);"""
 
 FACTORY_FOOTER = """
 #endif
   VLOG(1) << "Template specializations not found for <"
-          << options.row_block_size << ","
-          << options.e_block_size << ","
+          << options.row_block_size << "," << options.e_block_size << ","
           << options.f_block_size << ">";
-  return new SchurEliminator<Eigen::Dynamic, Eigen::Dynamic, Eigen::Dynamic>(options);
+  return std::make_unique<SchurEliminator<Eigen::Dynamic,
+                                          Eigen::Dynamic,
+                                          Eigen::Dynamic>>(options);
 }
 
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
 """

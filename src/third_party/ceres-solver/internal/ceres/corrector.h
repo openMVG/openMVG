@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2023 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,23 +30,25 @@
 //
 // Class definition for the object that is responsible for applying a
 // second order correction to the Gauss-Newton based on the ideas in
-// BANS by Triggs et al.
+// BAMS by Triggs et al.
 
 #ifndef CERES_INTERNAL_CORRECTOR_H_
 #define CERES_INTERNAL_CORRECTOR_H_
 
-namespace ceres {
-namespace internal {
+#include "ceres/internal/disable_warnings.h"
+#include "ceres/internal/export.h"
+
+namespace ceres::internal {
 
 // Corrector is responsible for applying the second order correction
 // to the residual and jacobian of a least squares problem based on a
 // radial robust loss.
 //
 // The key idea here is to look at the expressions for the robustified
-// gauss newton approximation and then take its squareroot to get the
+// gauss newton approximation and then take its square root to get the
 // corresponding corrections to the residual and jacobian.  For the
-// full expressions see Eq. 10 and 11 in BANS by Triggs et al.
-class Corrector {
+// full expressions see Eq. 10 and 11 in BAMS by Triggs et al.
+class CERES_NO_EXPORT Corrector {
  public:
   // The constructor takes the squared norm, the value, the first and
   // second derivatives of the LossFunction. It precalculates some of
@@ -84,7 +86,8 @@ class Corrector {
   double residual_scaling_;
   double alpha_sq_norm_;
 };
-}  // namespace internal
-}  // namespace ceres
+}  // namespace ceres::internal
+
+#include "ceres/internal/reenable_warnings.h"
 
 #endif  // CERES_INTERNAL_CORRECTOR_H_
