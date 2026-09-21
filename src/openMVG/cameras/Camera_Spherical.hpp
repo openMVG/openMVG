@@ -29,13 +29,15 @@ using class_type = Intrinsic_Spherical;
   * @brief Constructor
   * @param w Width of the image plane
   * @param h Height of the image plane
+  * @param ccdw width of the ccd sensor
   */
   Intrinsic_Spherical
   (
     unsigned int w = 0,
-    unsigned int h = 0
+    unsigned int h = 0,
+    double ccdw = 0.0
   )
-  : IntrinsicBase(w, h)
+  : IntrinsicBase(w, h, ccdw)
   {
   }
 

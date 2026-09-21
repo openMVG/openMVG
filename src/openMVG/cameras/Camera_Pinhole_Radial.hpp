@@ -96,9 +96,10 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     */
     Pinhole_Intrinsic_Radial_K1(
       int w = 0, int h = 0,
+      double ccdw = 0.0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+      : Pinhole_Intrinsic( w, h, ccdw, focal, ppx, ppy ),
         params_({k1})
     {
 
@@ -296,6 +297,7 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     * @brief Constructor
     * @param w Width of image
     * @param h Height of image
+    * @param ccdw width of the ccd sensor
     * @param focal Focal (in pixel) of the camera
     * @param ppx Principal point on X-Axis
     * @param ppy Principal point on Y-Axis
@@ -305,9 +307,10 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     */
     Pinhole_Intrinsic_Radial_K3(
       int w = 0, int h = 0,
+      double ccdw = 0.0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+      : Pinhole_Intrinsic( w, h, ccdw, focal, ppx, ppy ),
         params_({k1, k2, k3})
     {
     }
