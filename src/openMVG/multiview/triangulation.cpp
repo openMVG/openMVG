@@ -66,7 +66,9 @@ bool TriangulateDLT
   P0.block<3,1>(0,3) = t0;
   P1.block<3,1>(0,3) = t1;
   TriangulateDLT(P0, x0, P1, x1, X);
-  return (R0*(*X) + t0)(2) > 0.0 && (R1*(*X) + t1)(2) > 0.0;
+  // Spherical camera bearings can point behind the camera's z plane.
+  return x0.dot(R0 * (*X) + t0) > 0.0 &&
+         x1.dot(R1 * (*X) + t1) > 0.0;
 }
 
 // Helper function
