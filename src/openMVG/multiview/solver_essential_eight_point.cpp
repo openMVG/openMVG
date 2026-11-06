@@ -9,6 +9,7 @@
 #include "openMVG/multiview/solver_essential_eight_point.hpp"
 #include "openMVG/numeric/extract_columns.hpp"
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
+#include <cassert>
 
 namespace openMVG {
 

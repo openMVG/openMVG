@@ -12,6 +12,7 @@
 #include "openMVG/multiview/projection.hpp"
 
 #include <array>
+#include <cassert>
 
 namespace openMVG {
 namespace euclidean_resection {

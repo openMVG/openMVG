@@ -26,6 +26,7 @@
 //  by the ACRANSAC algorithm.
 //
 
+#include <cassert>
 #include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"

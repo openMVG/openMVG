@@ -41,7 +41,8 @@ jobs:
         -DOpenMVG_BUILD_SOFTWARES=OFF \
         -DOpenMVG_USE_RERUN=OFF \
         -DSCHUR_SPECIALIZATIONS=OFF \
-        -DTARGET_ARCHITECTURE=core
+        -DTARGET_ARCHITECTURE=core \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.10
       shell: bash
 
     - name: Initialize CodeQL

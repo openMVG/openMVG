@@ -21,8 +21,9 @@
 #include "third_party/stlplus3/filesystemSimplified/file_system.hpp"
 
 #include <array>
-#include <cstdlib>
+#include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 
 using namespace openMVG;

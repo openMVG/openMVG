@@ -9,6 +9,7 @@
 #ifndef OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 #define OPENMVG_MULTIVIEW_TRANSLATION_KNOWNROTATION_HPP
 
+#include <cassert>
 #include <vector>
 
 #include "openMVG/multiview/projection.hpp"

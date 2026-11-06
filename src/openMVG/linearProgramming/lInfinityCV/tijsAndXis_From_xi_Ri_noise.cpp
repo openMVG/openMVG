@@ -8,6 +8,7 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/tijsAndXis_From_xi_Ri_noise.hpp"
 
+#include <cassert>
 #include <limits>
 
 //--

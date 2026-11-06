@@ -9,6 +9,7 @@
 #ifndef OPENMVG_GEOMETRY_PLANE_ESTIMATION_KERNEL_HPP
 #define OPENMVG_GEOMETRY_PLANE_ESTIMATION_KERNEL_HPP
 
+#include <cassert>
 #include <cmath>
 #include <utility>
 

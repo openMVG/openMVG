@@ -12,6 +12,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/poly.h"
 
+#include <cassert>
 #include <cmath>
 
 namespace openMVG {

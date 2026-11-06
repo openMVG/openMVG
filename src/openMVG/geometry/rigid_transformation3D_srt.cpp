@@ -9,6 +9,7 @@
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
 #include "openMVG/system/logger.hpp"
 
+#include <cassert>
 #include <unsupported/Eigen/NonLinearOptimization>
 #include <unsupported/Eigen/NumericalDiff>
 

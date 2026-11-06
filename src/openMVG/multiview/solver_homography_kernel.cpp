@@ -29,6 +29,7 @@
 
 #include "openMVG/multiview/solver_homography_kernel.hpp"
 #include "openMVG/numeric/nullspace.hpp"
+#include <cassert>
 
 namespace openMVG {
 namespace homography {

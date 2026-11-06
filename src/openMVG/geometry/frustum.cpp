@@ -9,6 +9,7 @@
 #include "openMVG/geometry/frustum.hpp"
 #include "openMVG/system/logger.hpp"
 
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 

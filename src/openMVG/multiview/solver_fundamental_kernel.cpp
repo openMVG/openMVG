@@ -30,6 +30,7 @@
 #include "openMVG/multiview/solver_fundamental_kernel.hpp"
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/numeric/poly.h"
+#include <cassert>
 
 namespace openMVG {
 namespace fundamental {

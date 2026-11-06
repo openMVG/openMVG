@@ -30,6 +30,7 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 #define OPENMVG_ROBUST_ESTIMATION_LINEKERNEL_TEST_HPP
 
+#include <cassert>
 #include <vector>
 
 #include "openMVG/numeric/extract_columns.hpp"

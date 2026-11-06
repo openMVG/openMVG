@@ -11,6 +11,7 @@
 #include "openMVG/multiview/projection.hpp"
 
 #include <array>
+#include <cassert>
 
 namespace openMVG
 {
