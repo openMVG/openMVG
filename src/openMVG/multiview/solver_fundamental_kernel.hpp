@@ -30,6 +30,7 @@
 #ifndef OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_SOLVER_FUNDAMENTAL_KERNEL_HPP
 
+#include <cassert>
 #include <vector>
 
 #include "openMVG/multiview/two_view_kernel.hpp"

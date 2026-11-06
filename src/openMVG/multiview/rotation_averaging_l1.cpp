@@ -9,6 +9,7 @@
 #include "openMVG/multiview/rotation_averaging_l1.hpp"
 #include "openMVG/numeric/l1_solver_admm.hpp"
 #include "openMVG/system/logger.hpp"
+#include <cassert>
 
 #ifdef HAVE_BOOST
 #include <boost/accumulators/accumulators.hpp>
@@ -191,7 +192,7 @@ unsigned int FilterRelativeRotations(
     const Matrix3x3& Rj = Rs[relR.j];
     const Matrix3x3& Rij = relR.Rij;
     const Mat3 eRij(Rj.transpose()*Rij*Ri);
-    const openMVG::Vec3 erij;
+    openMVG::Vec3 erij;
     ceres::RotationMatrixToAngleAxis((const double*)eRij.data(), (double*)erij.data());
     errors[r] = (float)erij.norm();
   }
@@ -371,7 +372,7 @@ inline void FillErrorMatrix(
     const Matrix3x3& Rj = Rs[relR.j];
     const Matrix3x3& Rij = relR.Rij;
     const Mat3 eRij(Rj.transpose()*Rij*Ri);
-    const openMVG::Vec3 erij;
+    openMVG::Vec3 erij;
     ceres::RotationMatrixToAngleAxis((const double*)eRij.data(), (double*)erij.data());
     b.block<3,1>(3*r,0) = erij;
   }
@@ -389,7 +390,7 @@ inline void CorrectMatrix(
     Matrix3x3& Ri = Rs[r];
     const uint32_t i = (r<nMainViewID ? r : r-1);
     const openMVG::Vec3 eRid = openMVG::Vec3(x.block<3,1>(3*i,0));
-    const Mat3 eRi;
+    Mat3 eRi;
     ceres::AngleAxisToRotationMatrix((const double*)eRid.data(), (double*)eRi.data());
     Ri = Ri*eRi;
   }

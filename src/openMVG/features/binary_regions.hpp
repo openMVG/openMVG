@@ -9,6 +9,7 @@
 #ifndef OPENMVG_FEATURES_BINARY_REGIONS_HPP
 #define OPENMVG_FEATURES_BINARY_REGIONS_HPP
 
+#include <cassert>
 #include <typeinfo>
 
 #include "openMVG/features/descriptor.hpp"

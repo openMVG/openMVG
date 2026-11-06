@@ -10,6 +10,7 @@
 #include "openMVG/multiview/triangulation_nview.hpp"
 #include "openMVG/numeric/nullspace.hpp"
 
+#include <cassert>
 #include <limits>
 
 namespace openMVG {

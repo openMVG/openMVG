@@ -9,6 +9,7 @@
 
 #include "openMVG/geometry/Similarity3_Kernel.hpp"
 #include "openMVG/geometry/rigid_transformation3D_srt.hpp"
+#include <cassert>
 
 namespace openMVG{
 namespace geometry{

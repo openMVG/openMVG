@@ -30,6 +30,7 @@
 #include "openMVG/numeric/numeric.h"
 #include "openMVG/multiview/projection.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <fstream>
 

@@ -36,7 +36,7 @@ jobs:
           rm -rf /tmp/eigen_build
 
           cd /tmp
-          git clone https://github.com/ceres-solver/ceres-solver.git -b 2.1.0
+          git clone https://github.com/ceres-solver/ceres-solver.git -b 2.2.0
           cd ceres-solver
           mkdir build
           cd build
@@ -61,6 +61,8 @@ jobs:
           -DOpenMVG_BUILD_EXAMPLES=ON \
           -DOpenMVG_BUILD_SOFTWARES=ON \
           -DTARGET_ARCHITECTURE=core \
+          -DCMAKE_POLICY_VERSION_MINIMUM=3.10 \
+          -DOpenMVG_USE_RERUN=OFF \
           -DCOINUTILS_INCLUDE_DIR_HINTS=/usr/include \
           -DCLP_INCLUDE_DIR_HINTS=/usr/include \
           -DOSI_INCLUDE_DIR_HINTS=/usr/include

@@ -11,6 +11,7 @@
 
 #include "openMVG/image/image_container.hpp"
 #include "openMVG/image/pixel_types.hpp"
+#include <cassert>
 
 namespace openMVG
 {

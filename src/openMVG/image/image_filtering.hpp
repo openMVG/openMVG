@@ -25,6 +25,7 @@
 //- Journal : Journal of Visual Communication and Image Representation.
 
 #include "openMVG/image/image_convolution.hpp"
+#include <cassert>
 
 namespace openMVG
 {
