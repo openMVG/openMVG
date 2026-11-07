@@ -20,6 +20,8 @@
 #endif
 
 #include "openMVG/system/logger.hpp"
+#include "third_party/spectra/include/Spectra/MatOp/SparseSymMatProd.h"
+#include "third_party/spectra/include/Spectra/SymEigsSolver.h"
 
 //--
 //-- Implementation related to rotation averaging.
@@ -131,37 +133,68 @@ bool L2RotationAveraging
   }
 
   // nCamera * 3 because each columns have 3 elements.
-  Mat AtA(3*nCamera,3*nCamera);
+  sMat AtAsparse;
   {
     sMat A(nRotationEstimation*3, 3*nCamera);
     A.setFromTriplets(tripletList.begin(), tripletList.end());
     tripletList.clear();
     tripletList.shrink_to_fit();
 
-    const sMat AtAsparse = A.transpose() * A;
-    AtA = Mat(AtAsparse); // convert to dense
+    AtAsparse = A.transpose() * A;
   }
 
-  // Solve Ax=0 => eigen vectors
-  Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
-
-  if (es.info() != Eigen::Success)
+  constexpr int kDenseFallbackSize = 2048;
+  Eigen::MatrixXd eigenvectors;
+  OPENMVG_LOG_INFO << "Rotation averaging (L2) eigen-solver threshold: "
+                   << kDenseFallbackSize
+                   << " (matrix size: " << AtAsparse.rows() << ")";
+  if (AtAsparse.rows() <= kDenseFallbackSize)
   {
-    return false;
-  }
-  // else
-  {
-    // Sort abs(eigenvalues)
+    OPENMVG_LOG_INFO << "Rotation averaging (L2) using dense eigen-solver.";
+    // Solve Ax=0 => eigen vectors (dense, faster for small problems)
+    const Mat AtA = Mat(AtAsparse); // convert to dense
+    Eigen::SelfAdjointEigenSolver<Mat> es(AtA, Eigen::ComputeEigenvectors);
+    if (es.info() != Eigen::Success)
+    {
+      return false;
+    }
     std::vector<std::pair<double, Vec>> eigs(AtA.cols());
     for (Mat::Index i = 0; i < AtA.cols(); ++i)
     {
       eigs[i] = {es.eigenvalues()[i], es.eigenvectors().col(i)};
     }
     std::stable_sort(eigs.begin(), eigs.end(), &compare_first_abs);
-
-    const Vec & NullspaceVector0 = eigs[0].second;
-    const Vec & NullspaceVector1 = eigs[1].second;
-    const Vec & NullspaceVector2 = eigs[2].second;
+    eigenvectors.resize(AtA.rows(), 3);
+    eigenvectors.col(0) = eigs[0].second;
+    eigenvectors.col(1) = eigs[1].second;
+    eigenvectors.col(2) = eigs[2].second;
+  }
+  
+  if (eigenvectors.size() == 0)
+  {
+    OPENMVG_LOG_INFO << "Rotation averaging (L2) using sparse eigen-solver.";
+    // Solve Ax=0 => eigen vectors (sparse, scalable for large problems)
+    using Spectra::SortRule;
+    using Spectra::SparseSymMatProd;
+    using Spectra::SymEigsSolver;
+    SparseSymMatProd<double> op(AtAsparse);
+    const int n = static_cast<int>(AtAsparse.rows());
+    const int k = 3;
+    const int ncv = std::min(n, std::max(2 * k + 1, 20));
+    SymEigsSolver<SparseSymMatProd<double>> eigs(op, k, ncv);
+    eigs.init();
+    eigs.compute(SortRule::SmallestMagn);
+    if (eigs.info() != Spectra::CompInfo::Successful)
+    {
+      return false;
+    }
+    eigenvectors = eigs.eigenvectors();
+  }
+  // else
+  {
+    const Vec & NullspaceVector0 = eigenvectors.col(0);
+    const Vec & NullspaceVector1 = eigenvectors.col(1);
+    const Vec & NullspaceVector2 = eigenvectors.col(2);
 
     //--
     // Search the closest matrix :
