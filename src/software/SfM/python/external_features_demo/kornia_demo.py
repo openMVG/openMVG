@@ -7,7 +7,6 @@ import os
 from pyvips import Image
 import torch
 import torchvision.transforms as transforms
-import threading
 from tqdm import tqdm
 
 # // U T I L S ///////////////////////////////////////////////////////
@@ -27,9 +26,9 @@ def loadFeatures(filename):
   keyp_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.keyp.pt')
   desc_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.desc.pt')
   scor_filename = os.path.join(args.matches, f'{os.path.splitext(filename)[0]}.scor.pt')
-  keypoints = torch.load(os.path.join(args.matches, keyp_filename)).to(device)
-  descriptors = torch.load(os.path.join(args.matches, desc_filename)).to(device)
-  scores = torch.load(os.path.join(args.matches, scor_filename)).to(device)
+  keypoints = torch.load(keyp_filename).to(device)
+  descriptors = torch.load(desc_filename).to(device)
+  scores = torch.load(scor_filename).to(device)
   return keypoints, descriptors, scores
 
 def saveFeaturesOpenMVG(basename, keypoints):
@@ -59,36 +58,29 @@ def featureExtraction():
     img = Image.new_from_file(image_path, access='sequential')
     basename = os.path.splitext(os.path.basename(image_path))[0]
 
-    if img.width % 2 != 0 or img.height % 2 != 0:
-      img = img.crop(0, 0, img.width if img.width % 2 == 0 else img.width - 1, img.height if img.height % 2 == 0 else img.height - 1)
-
     max_res = args.max_resolution
-    img_max, img_ratio = max(img.width, img.height), img.width / img.height
+    img_max = max(img.width, img.height)
 
-    ratio = 0
-    while not ratio:
-      scale = max_res / img_max
-      scaled_width, scaled_height = round(img.width * scale), round(img.height * scale)
-      if img_ratio == scaled_width / scaled_height:
-        ratio = 1
-      else:
-        max_res -= 1
+    scale = min(1.0, max_res / img_max)
+    width, height = img.width, img.height
+    img = img.resize(scale, kernel='linear')
+    scale_xy = [img.width / width, img.height / height]
 
-    img = transforms.ToTensor()(img.resize(scale, kernel='linear').numpy())[None, ...].to(device)
+    img = transforms.ToTensor()(img.numpy())[None, ...].to(device)
 
     features = disk(img, n=args.max_features, window_size=args.window_size, score_threshold=args.score_threshold, pad_if_not_divisible=True)[0].to('cpu')
-    keypoints = torch.div(features.keypoints, scale)
+    keypoints = features.keypoints / features.keypoints.new_tensor(scale_xy)
 
-    threading.Thread(target=lambda: saveFeatures(keypoints, features.descriptors, features.detection_scores, basename)).start()
+    saveFeatures(keypoints, features.descriptors, features.detection_scores, basename)
 
-    threading.Thread(target=lambda: saveFeaturesOpenMVG(basename, keypoints)).start()
-    threading.Thread(target=lambda: saveDescriptorsOpenMVG(basename, features.descriptors)).start()
+    saveFeaturesOpenMVG(basename, keypoints)
+    saveDescriptorsOpenMVG(basename, features.descriptors)
 
 # // M A T C H I N G /////////////////////////////////////////////////
 def featureMatching():
   print('Matching DISK features with LightGlue...')
   putative_matches = []
-  for image1_index, image2_index in tqdm((np.loadtxt(args.pair_list, dtype=np.int32) if args.pair_list != None else np.asarray([*combinations(view_ids, 2)], dtype=np.int32))):
+  for image1_index, image2_index in tqdm((np.loadtxt(args.pair_list, dtype=np.int32, ndmin=2) if args.pair_list != None else np.asarray([*combinations(view_ids, 2)], dtype=np.int32))):
     keyp1, desc1, scor1 = loadFeatures(view_ids[image1_index])
     keyp2, desc2, scor2 = loadFeatures(view_ids[image2_index])
 
@@ -123,6 +115,9 @@ if __name__ == '__main__':
   parser.add_argument('--filter_threshold', type=float, default=0.99, help='LightGlue match threshold')
   args = parser.parse_args()
 
+  if args.max_resolution <= 0:
+    parser.error('--max_resolution must be positive')
+  os.makedirs(args.matches, exist_ok=True)
   view_ids, image_paths = loadJSON()
   if args.output == None:
     args.output = os.path.join(args.matches, 'matches.putative.bin')
