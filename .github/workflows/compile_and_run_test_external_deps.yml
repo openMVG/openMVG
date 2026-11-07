@@ -9,8 +9,8 @@ on:
 
 jobs:
   build-tests:
-    name: ubuntu-latest - external deps
-    runs-on: ubuntu-latest
+    name: ubuntu-24.04 - external deps
+    runs-on: ubuntu-24.04
     env:
       CTEST_OUTPUT_ON_FAILURE: 1
     steps:
