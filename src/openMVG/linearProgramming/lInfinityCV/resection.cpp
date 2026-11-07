@@ -8,6 +8,7 @@
 
 #include "openMVG/linearProgramming/lInfinityCV/resection.hpp"
 
+#include <cassert>
 #include <limits>
 
 //--

@@ -10,6 +10,7 @@
 #define OPENMVG_MATCHING_KVLD_ALGORITHM_H
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include "openMVG/image/image_container.hpp"

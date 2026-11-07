@@ -23,6 +23,7 @@
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/sample.hpp"
 
+#include <cassert>
 #include <limits>
 
 namespace openMVG {

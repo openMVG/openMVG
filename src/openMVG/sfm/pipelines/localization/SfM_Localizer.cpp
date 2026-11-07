@@ -22,6 +22,7 @@
 #include "openMVG/robust_estimation/robust_estimator_ACRansacKernelAdaptator.hpp"
 #include "openMVG/system/logger.hpp"
 
+#include <cassert>
 #include <memory>
 #include <utility>
 

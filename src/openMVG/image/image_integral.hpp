@@ -10,6 +10,7 @@
 #define OPENMVG_IMAGE_IMAGE_INTEGRAL_HPP
 
 #include "openMVG/image/image_container.hpp"
+#include <cassert>
 
 namespace openMVG
 {

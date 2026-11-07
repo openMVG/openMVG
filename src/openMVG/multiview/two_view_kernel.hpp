@@ -30,6 +30,7 @@
 #ifndef OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 #define OPENMVG_MULTIVIEW_TWO_VIEW_KERNEL_HPP
 
+#include <cassert>
 #include <vector>
 
 #include "openMVG/multiview/conditioning.hpp"

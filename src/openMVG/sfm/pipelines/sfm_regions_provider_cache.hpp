@@ -12,6 +12,7 @@
 #include "openMVG/sfm/pipelines/sfm_regions_provider.hpp"
 
 #include <atomic>
+#include <cassert>
 #include <chrono>
 #include <map>
 #include <mutex>

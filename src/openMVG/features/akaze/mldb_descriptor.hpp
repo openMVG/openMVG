@@ -10,6 +10,7 @@
 #define OPENMVG_IMAGE_DESCRIPTION_MLDB_DESCRIPTOR_HPP
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 #include "openMVG/features/descriptor.hpp"

@@ -34,6 +34,7 @@
 #include "third_party/histogram/histogram.hpp"
 #include "third_party/htmlDoc/htmlDoc.hpp"
 
+#include <cassert>
 #include <ceres/types.h>
 
 #include "lemon/kruskal.h"

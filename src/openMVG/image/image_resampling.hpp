@@ -9,6 +9,7 @@
 #ifndef OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
 #define OPENMVG_IMAGE_IMAGE_RESAMPLING_HPP
 
+#include <cassert>
 #include <utility>
 #include <vector>
 #include "openMVG/image/sample.hpp"

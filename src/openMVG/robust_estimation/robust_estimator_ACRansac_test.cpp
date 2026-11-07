@@ -14,6 +14,7 @@
 
 #include "testing/testing.h"
 
+#include <cassert>
 #include <iterator>
 #include <random>
 

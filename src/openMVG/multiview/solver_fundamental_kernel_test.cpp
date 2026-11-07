@@ -34,6 +34,7 @@
 
 #include "testing/testing.h"
 
+#include <cassert>
 #include <numeric>
 
 using namespace openMVG;

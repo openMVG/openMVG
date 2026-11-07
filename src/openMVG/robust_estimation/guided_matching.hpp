@@ -10,6 +10,7 @@
 #define OPENMVG_ROBUST_ESTIMATION_GUIDED_MATCHING_HPP
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <vector>
 

@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "openMVG"
 version = "0.1.0"
 description = "openMVG 'open Multiple View Geometry' library. Basis for 3D computer vision and Structure from Motion."
@@ -8,26 +8,26 @@ platforms = ["linux-64", "linux-aarch64", "osx-arm64", "osx-64", "win-64"]
 repository = "https://github.com/openMVG/openMVG"
 
 [tasks]
-clean = "rm -rf build "
+clean = "rm -rf build"
 print-env = "echo $PATH"
-configure = "cmake -B build -S ./src -DOpenMVG_BUILD_TESTS:BOOL=ON"
-build = { cmd = "cmake --build build -j 4", depends_on = ["configure"] }
-test = { cmd = "cd build; ctest -j", depends_on = ["build"] }
+configure = "cmake -B build -S ./src -DOpenMVG_BUILD_TESTS:BOOL=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.10 -DOpenMVG_USE_RERUN:BOOL=OFF"
+build = { cmd = "cmake --build build -j 4", depends-on = ["configure"] }
+test = { cmd = "cd build; ctest -j", depends-on = ["build"] }
 
 [target.win-64.tasks]
 #
 # Deal with windows specifics (configure and build)
-
-configure = "cmake -B build -S ./src -DCMAKE_BUILD_TYPE=Release -DOpenMVG_BUILD_TESTS:BOOL=ON"
-build = { cmd = "cmake --build build --config Release -- /nologo /verbosity:minimal /maxcpucount", depends_on = ["configure"] }
-test = { cmd = "cd build; ctest -j4 -C Release", depends_on = ["build"] }
-
+#
+configure = "cmake -B build -S ./src -DCMAKE_BUILD_TYPE=Release -DOpenMVG_BUILD_TESTS:BOOL=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.10 -DOpenMVG_USE_RERUN:BOOL=OFF"
+build = { cmd = "cmake --build build --config Release -- /nologo /verbosity:minimal /maxcpucount", depends-on = ["configure"] }
+test = { cmd = "cd build; ctest -j4 -C Release", depends-on = ["build"] }
 
 [dependencies]
 ceres-solver = "2.2.0.*"
-libjpeg-turbo = "3.0.0.*"
-cmake = "3.28.1.*"
-cxx-compiler = "1.7.0.*"
-libpng = "1.6.39.*"
-zlib = "1.2.13.*"
-libtiff = "4.6.0.*"
+libjpeg-turbo = "3.2.0.*"
+cmake = "4.*"
+cxx-compiler = "2.0.0.*"
+libpng = "1.6.59.*"
+zlib = "1.3.2.*"
+libtiff = "4.7.0.*"
+eigen = "3.4.0.*"
