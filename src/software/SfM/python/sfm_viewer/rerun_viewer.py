@@ -41,7 +41,9 @@ def read_and_log_sparse_reconstruction(args) -> None:
     intrinsics = data['intrinsics']
     structure = data['structure']
 
-    extrinsics_ids = [it['key'] for it in extrinsics]
+    poses_by_id = {it['key']: it['value'] for it in extrinsics}
+    intrinsics_by_id = {it['key']: it['value']['ptr_wrapper']['data'] for it in intrinsics}
+    views_by_id = {}
 
     # Collect views
     print("Setup Views")
@@ -49,18 +51,18 @@ def read_and_log_sparse_reconstruction(args) -> None:
         view_data = view['value']['ptr_wrapper']['data']
         filename = view_data['filename']
         id_view = view_data['id_view']
+        views_by_id[id_view] = view_data
         id_intrinsic = view_data['id_intrinsic']
         id_pose = view_data['id_pose']
         entity_name = f"world/camera/\"{filename}\""
 
         # Collect poses
-        if id_pose not in extrinsics_ids:
+        if id_pose not in poses_by_id:
             continue
-        extrinsic = [it for it in extrinsics if it['key'] == id_pose]
-        extrinsic = extrinsic[0]
-        rot = extrinsic['value']['rotation']
+        extrinsic = poses_by_id[id_pose]
+        rot = extrinsic['rotation']
         rot = Rotation.from_matrix(rot).as_matrix()
-        center = np.array(extrinsic['value']['center'])
+        center = np.array(extrinsic['center'])
         t = - rot @ center
         rr.log(
             entity_name,
@@ -75,7 +77,7 @@ def read_and_log_sparse_reconstruction(args) -> None:
 
         # Collect intrinsic data (show every image as if they were a pinhole camera)
         # We ignore camera distortion
-        intrinsic = intrinsics[id_intrinsic]['value']['ptr_wrapper']['data']
+        intrinsic = intrinsics_by_id[id_intrinsic]
         rr.log(
             entity_name,
             rr.Pinhole(
@@ -85,7 +87,7 @@ def read_and_log_sparse_reconstruction(args) -> None:
             )
         )
         if args.show_images and filename in args.show_images:
-            rr.log(entity_name, rr.ImageEncoded(path=root_path + "/" + filename))
+            rr.log(entity_name, rr.ImageEncoded(path=str(Path(root_path) / view_data.get("local_path", "") / filename)))
 
     # Collect 3D points
     print("Setup Structure")
@@ -111,12 +113,11 @@ def read_and_log_sparse_reconstruction(args) -> None:
 
         for id_view in points_per_image.keys():
 
-            # Find the "view" == id_view
-            for view in views:
-                view_data = view['value']['ptr_wrapper']['data']
-                if id_view == view_data['id_view']:
-                    filename = view_data['filename']
-                    id_pose = view_data['id_pose']
+            if id_view not in views_by_id:
+                continue
+            view_data = views_by_id[id_view]
+            filename = view_data['filename']
+            id_pose = view_data['id_pose']
 
             if args.show_keypoints and filename in args.show_keypoints:
                 # Print keypoint corresponding to the 3D points used in the SfM reconstruction
@@ -124,19 +125,12 @@ def read_and_log_sparse_reconstruction(args) -> None:
 
             if args.show_rays and filename in args.show_rays:
                 # Print camera rays
-                if id_pose not in extrinsics_ids:
+                if id_pose not in poses_by_id:
                     continue
-
-                X = XPoints_per_images[id_pose]
-                extrinsic = [it for it in extrinsics if it['key'] == id_pose]
-                if extrinsic:
-                    extrinsic = extrinsic[0]
-                    center = np.array(extrinsic['value']['center'])
-                    centers = np.tile(center, (len(X), 1))
-                    interleaved_points = np.ravel(np.column_stack((centers, X)))
-                    interleaved_points = np.reshape(interleaved_points, [len(X)*2, 3])
-
-                    rr.log(f"world/camera/rays/\"{filename}\"", rr.LineStrips3D(interleaved_points, radii=0.01))
+                points = np.asarray(XPoints_per_images[id_view])
+                center = poses_by_id[id_pose]['center']
+                rays = np.stack((np.broadcast_to(center, points.shape), points), axis=1)
+                rr.log(f'world/camera/rays/"{filename}"', rr.LineStrips3D(rays, radii=0.01))
 
     f.close()
 
