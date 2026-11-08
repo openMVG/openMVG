@@ -132,8 +132,8 @@ struct TracksBuilder
     //   - a track cannot list many times the same image index
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
-      const uint32_t & track_id = uf_tree.Find(k);
       const auto & feat = map_node_to_index[k];
+      const uint32_t & track_id = uf_tree.Find(feat.second);
 
       // Augment the track and mark if invalid (an image can only be listed once)
       if (tracks[track_id].insert(feat.first.first).second == false)
@@ -181,7 +181,7 @@ struct TracksBuilder
     for (uint32_t k = 0; k < map_node_to_index.size(); ++k)
     {
       const auto & feat = map_node_to_index[k];
-      const uint32_t & track_id = uf_tree.m_cc_parent[k];
+      const uint32_t & track_id = uf_tree.m_cc_parent[feat.second];
       if
       (
         // ensure never add rejected elements (track marked as invalid)
