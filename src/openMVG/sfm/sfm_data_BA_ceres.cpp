@@ -442,7 +442,7 @@ bool Bundle_Adjustment_Ceres::Adjust
           << "Cannot use this GCP id: " << gcp_landmark_it.first
           << ". There is not linked image observation.";
       }
-      else
+      else if (options.control_point_opt.bFix_control_points)
       {
         // Set the 3D point as FIXED (it's a valid GCP)
         problem.SetParameterBlockConstant(gcp_landmark_it.second.X.data());
