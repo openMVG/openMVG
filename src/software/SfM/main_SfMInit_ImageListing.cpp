@@ -317,6 +317,8 @@ int main(int argc, char **argv)
       if (focal_pixels != -1 )
         focal = focal_pixels;
 
+    double ccdw = 0.0;
+
     // If not manually provided or wrongly provided
     if (focal == -1)
     {
@@ -346,7 +348,7 @@ int main(int argc, char **argv)
           if ( getInfo( sCamModel, vec_database, datasheet ))
           {
             // The camera model was found in the database so we can compute it's approximated focal length
-            const double ccdw = datasheet.sensorSize_;
+            ccdw = datasheet.sensorSize_;
             focal = std::max ( width, height ) * exifReader.getFocal() / ccdw;
           }
           else
@@ -369,27 +371,27 @@ int main(int argc, char **argv)
       {
         case PINHOLE_CAMERA:
           intrinsic = std::make_shared<Pinhole_Intrinsic>
-            (width, height, focal, ppx, ppy);
+            (width, height, ccdw, focal, ppx, ppy);
         break;
         case PINHOLE_CAMERA_RADIAL1:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K1>
-            (width, height, focal, ppx, ppy, 0.0); // setup no distortion as initial guess
+            (width, height, ccdw, focal, ppx, ppy, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_RADIAL3:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Radial_K3>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
+            (width, height, ccdw, focal, ppx, ppy, 0.0, 0.0, 0.0);  // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_BROWN:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Brown_T2>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+            (width, height, ccdw, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case PINHOLE_CAMERA_FISHEYE:
           intrinsic = std::make_shared<Pinhole_Intrinsic_Fisheye>
-            (width, height, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
+            (width, height, ccdw, focal, ppx, ppy, 0.0, 0.0, 0.0, 0.0); // setup no distortion as initial guess
         break;
         case CAMERA_SPHERICAL:
            intrinsic = std::make_shared<Intrinsic_Spherical>
-             (width, height);
+             (width, height, ccdw);
         break;
         default:
           OPENMVG_LOG_ERROR << "Error: unknown camera model: " << (int) e_User_camera_model;

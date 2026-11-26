@@ -40,15 +40,18 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   unsigned int w_;
   /// Height of image
   unsigned int h_;
+  /// width of the ccd
+  double ccdw_;
 
   /**
   * @brief Constructor
   * @param w Width of the image
   * @param h Height of the image
   */
-  IntrinsicBase( unsigned int w = 0, unsigned int h = 0 )
+  IntrinsicBase( unsigned int w = 0, unsigned int h = 0 , double ccdw = -1.0)
     : w_( w ),
-      h_( h )
+      h_( h ),
+      ccdw_(ccdw)
   {
 
   }
@@ -74,6 +77,15 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   unsigned int h() const
   {
     return h_;
+  }
+
+  /**
+  * @brief Get width of the image ccd sensor
+  * @return ccd width of the image
+  */
+  unsigned int ccdw() const
+  {
+    return ccdw_;
   }
 
   /**

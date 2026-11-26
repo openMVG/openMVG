@@ -39,6 +39,7 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Constructor
     * @param w Width of image
     * @param h Height of image
+    * @param ccdw width of the ccd sensor
     * @param focal Focal distance (in pixel)
     * @param ppx Principal point on X-axis
     * @param ppy Principal point on Y-axis
@@ -50,10 +51,11 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     */
     Pinhole_Intrinsic_Brown_T2(
       int w = 0, int h = 0,
+      double ccdw = 0.0,
       double focal = 0.0, double ppx = 0, double ppy = 0,
       double k1 = 0.0, double k2 = 0.0, double k3 = 0.0,
       double t1 = 0.0, double t2 = 0.0 )
-      : Pinhole_Intrinsic( w, h, focal, ppx, ppy ),
+      : Pinhole_Intrinsic( w, h, ccdw, focal, ppx, ppy ),
         params_({k1, k2, k3, t1, t2})
     {
     }
