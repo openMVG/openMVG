@@ -265,6 +265,18 @@ target_link_libraries(openMVG_main_SplitMatchFileIntoMatchFiles
 set_property(TARGET openMVG_main_SplitMatchFileIntoMatchFiles PROPERTY FOLDER OpenMVG/software)
 install(TARGETS openMVG_main_SplitMatchFileIntoMatchFiles DESTINATION bin/)
 
+# ControlPointsRegistration
+add_executable(openMVG_main_ControlPointsRegistration main_ControlPointsRegistration.cpp)
+target_link_libraries(openMVG_main_ControlPointsRegistration
+  openMVG_system
+  openMVG_features
+  openMVG_sfm
+  ${STLPLUS_LIBRARY}
+)
+
+set_property(TARGET openMVG_main_ControlPointsRegistration PROPERTY FOLDER OpenMVG/software)
+install(TARGETS openMVG_main_ControlPointsRegistration DESTINATION bin/)
+
 # -
 # Use openCV Feature detector to describe the images
 # -
