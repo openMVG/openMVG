@@ -25,7 +25,7 @@ endif()
 target_include_directories(openMVG_features
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
     $<INSTALL_INTERFACE:include/openMVG>
 )

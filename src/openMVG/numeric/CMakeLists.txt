@@ -23,7 +23,7 @@ endif()
 target_include_directories(openMVG_numeric
   PUBLIC
     $<BUILD_INTERFACE:${EIGEN_INCLUDE_DIRS}>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 if (DEFINED OpenMVG_USE_INTERNAL_EIGEN)
