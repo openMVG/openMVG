@@ -118,6 +118,8 @@ To use them simply run:
 
   $ python SfM_GlobalPipeline.py [full path image directory] [resulting directory]
 
+There are optional parameters in the pipeline scripts that will be passed down to the individual executables.  Run the scripts with the ``--help`` option to see the available options and the individual tools for more information on the options they support.
+
 More details about openMVG tools
 ================================
 
