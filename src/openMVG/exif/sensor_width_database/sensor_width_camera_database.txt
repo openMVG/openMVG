@@ -3551,6 +3551,7 @@ Nikon Z 6;35.9
 Nikon Z 7;35.9
 Nikon Z6;35.9
 Nikon Z7;35.9
+NIKON Z 7_2;35.9
 Noa H10;4.69
 Noa H10le;4.69
 Noa H8;4.69
