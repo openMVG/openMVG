@@ -81,7 +81,7 @@ bool Generate_SfM_Report
   IndexT total_observations = 0;
 
   // Covisibility tracking: map of camera pair (c1, c2) with c1 < c2 -> shared landmarks count
-  std::map<std::pair<IndexT, IndexT>, IndexT> covisibility_counts;
+  Hash_Map<Pair, IndexT> covisibility_counts;
 
   // Parallax angles for triangulation
   std::vector<double> max_parallax_angles;
@@ -148,18 +148,16 @@ bool Generate_SfM_Report
     // Parallax angle for this track
     if (ray_dirs.size() >= 2)
     {
-      double max_ang_deg = 0.0;
+      // acos is decreasing, so only the smallest dot product needs conversion.
+      double min_dot = 1.0;
       for (size_t i = 0; i < ray_dirs.size(); ++i)
       {
         for (size_t j = i + 1; j < ray_dirs.size(); ++j)
         {
-          const double dot = std::max(-1.0, std::min(1.0, ray_dirs[i].dot(ray_dirs[j])));
-          const double ang = std::acos(dot) * (180.0 / M_PI);
-          if (ang > max_ang_deg)
-            max_ang_deg = ang;
+          min_dot = std::min(min_dot, ray_dirs[i].dot(ray_dirs[j]));
         }
       }
-      max_parallax_angles.push_back(max_ang_deg);
+      max_parallax_angles.push_back(std::acos(std::max(-1.0, min_dot)) * (180.0 / M_PI));
     }
   }
 
