@@ -51,6 +51,23 @@
 
 namespace stlplus
 {
+  // Keep the native time_t convention, but always allow 64-bit file lengths on
+  // Windows. Plain stat uses a 32-bit st_size even in 64-bit Windows builds.
+#ifdef MSWINDOWS
+  typedef struct _stati64 file_status;
+#else
+  typedef struct stat file_status;
+#endif
+
+  static int read_file_status(const std::string& path, file_status& status)
+  {
+#ifdef MSWINDOWS
+    return _stati64(path.c_str(), &status);
+#else
+    return stat(path.c_str(), &status);
+#endif
+  }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // definitions of separators
@@ -471,8 +488,8 @@ namespace stlplus
     if (!path.empty() && is_separator(path[path.size()-1]))
       path.erase(path.size()-1,1);
     // now test if this thing exists using the built-in stat function
-    struct stat buf;
-    return stat(path.c_str(), &buf) == 0;
+    file_status buf;
+    return read_file_status(path, buf) == 0;
   }
 
   bool is_folder (const std::string& thing)
@@ -482,8 +499,8 @@ namespace stlplus
     if (!path.empty() && is_separator(path[path.size()-1]))
       path.erase(path.size()-1,1);
     // now test if this thing exists using the built-in stat function and if so, is it a folder
-    struct stat buf;
-    if (!(stat(path.c_str(), &buf) == 0))
+    file_status buf;
+    if (!(read_file_status(path, buf) == 0))
       return false;
     // If the object is present, see if it is a directory
     // this is the Posix-approved way of testing
@@ -497,8 +514,8 @@ namespace stlplus
     if (!path.empty() && is_separator(path[path.size()-1]))
       path.erase(path.size()-1,1);
     // now test if this thing exists using the built-in stat function and if so, is it a file
-    struct stat buf;
-    if (!(stat(path.c_str(), &buf) == 0))
+    file_status buf;
+    if (!(read_file_status(path, buf) == 0))
       return false;
     // If the object is present, see if it is a file or file-like object
     // Note that devices are neither folders nor files
@@ -537,8 +554,8 @@ namespace stlplus
 
   size_t file_size (const std::string& filespec)
   {
-    struct stat buf;
-    if (!(stat(filespec.c_str(), &buf) == 0)) return 0;
+    file_status buf;
+    if (!(read_file_status(filespec, buf) == 0)) return 0;
     return buf.st_size;
   }
 
@@ -592,22 +609,22 @@ namespace stlplus
 
   time_t file_created (const std::string& filespec)
   {
-    struct stat buf;
-    if (!(stat(filespec.c_str(), &buf) == 0)) return 0;
+    file_status buf;
+    if (!(read_file_status(filespec, buf) == 0)) return 0;
     return buf.st_ctime;
   }
 
   time_t file_modified (const std::string& filespec)
   {
-    struct stat buf;
-    if (!(stat(filespec.c_str(), &buf) == 0)) return 0;
+    file_status buf;
+    if (!(read_file_status(filespec, buf) == 0)) return 0;
     return buf.st_mtime;
   }
 
   time_t file_accessed (const std::string& filespec)
   {
-    struct stat buf;
-    if (!(stat(filespec.c_str(), &buf) == 0)) return 0;
+    file_status buf;
+    if (!(read_file_status(filespec, buf) == 0)) return 0;
     return buf.st_atime;
   }
 
@@ -1144,3 +1161,4 @@ namespace stlplus
 ////////////////////////////////////////////////////////////////////////////////
 
 } // end namespace stlplus
+

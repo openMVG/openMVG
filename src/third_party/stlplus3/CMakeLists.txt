@@ -37,3 +37,7 @@ install(
   COMPONENT headers
   FILES_MATCHING PATTERN "*.hpp"
 )
+
+# Exercise native filesystem classification, including large Windows files.
+UNIT_TEST(openMVG stlplus_file_system "openMVG_stlplus")
+
