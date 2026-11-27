@@ -149,6 +149,24 @@ TEST(Numeric, MeanAndVarianceAlongRows) {
   EXPECT_NEAR(1.25, variance(1), 1e-8);
 }
 
+TEST(Numeric, VarianceIsIndependentOfOrigin) {
+  for (const double offset : {0.0, 1e8, -1e9}) {
+    Mat points(3, 4);
+    points << 0, 1, 2, 3,
+              3, 1, 0, 2,
+              7, 7, 7, 7;
+    points.array() += offset;
+    Vec mean, variance;
+    MeanAndVarianceAlongRows(points, &mean, &variance);
+    EXPECT_NEAR(offset + 1.5, mean(0), 1e-8);
+    EXPECT_NEAR(offset + 1.5, mean(1), 1e-8);
+    EXPECT_NEAR(offset + 7.0, mean(2), 1e-8);
+    EXPECT_NEAR(1.25, variance(0), 1e-12);
+    EXPECT_NEAR(1.25, variance(1), 1e-12);
+    EXPECT_NEAR(0.0, variance(2), 1e-12);
+  }
+}
+
 TEST(Numeric, minMaxMeanMedian)
 {
   const int vec_size = 12;
