@@ -13,6 +13,7 @@
 
 #include <bitset>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 #ifdef _MSC_VER
@@ -81,9 +82,15 @@ struct Hamming
   inline ResultType popcntLoop(const U * pa, const U * pb, size_t size) const
   {
     ResultType result = 0;
+    const auto * bytes_a = reinterpret_cast<const uint8_t *>(pa);
+    const auto * bytes_b = reinterpret_cast<const uint8_t *>(pb);
     size /= (sizeof(U) / sizeof(uint8_t));
     for (size_t i = 0; i < size; ++i) {
-      result += static_cast<ResultType>(popcnt(pa[i] ^ pb[i]));
+      // Raw descriptors need not have the alignment of the popcount word.
+      U word_a, word_b;
+      std::memcpy(&word_a, bytes_a + i * sizeof(U), sizeof(U));
+      std::memcpy(&word_b, bytes_b + i * sizeof(U), sizeof(U));
+      result += static_cast<ResultType>(popcnt(word_a ^ word_b));
     }
     return result;
   }

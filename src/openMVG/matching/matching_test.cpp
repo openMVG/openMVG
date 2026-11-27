@@ -17,10 +17,55 @@
 
 #include "testing/testing.h"
 
+#include <array>
 #include <iostream>
 
 using namespace openMVG;
 using namespace matching;
+
+TEST(Matching, Hnsw_Hamming_Stored_Descriptors)
+{
+  alignas(8) std::array<uint8_t, 2 * 64> descriptors{};
+  std::fill(descriptors.begin() + 64, descriptors.end(), 255);
+  std::array<uint8_t, 64> query;
+  query.fill(255);
+  query[0] = 254;
+
+  // HNSW copies even aligned input after its link-list header, which need
+  // not leave the stored descriptor aligned to a 64-bit popcount word.
+  HNSWMatcher<uint8_t, Hamming<uint8_t>, HAMMING_HNSW> matcher;
+  EXPECT_TRUE(matcher.Build(descriptors.data(), 2, 64));
+  int index = -1;
+  unsigned int distance = 0;
+  EXPECT_TRUE(matcher.SearchNeighbour(query.data(), &index, &distance));
+  EXPECT_EQ(1, index);
+  EXPECT_EQ(1, distance);
+
+  IndMatches indices;
+  std::vector<unsigned int> distances;
+  EXPECT_TRUE(matcher.SearchNeighbours(query.data(), 1, &indices, &distances, 2));
+  EXPECT_EQ(IndMatch(0, 1), indices[0]);
+  EXPECT_EQ(IndMatch(0, 0), indices[1]);
+  EXPECT_EQ(1, distances[0]);
+  EXPECT_EQ(511, distances[1]);
+}
+
+TEST(Matching, ArrayMatcherBruteForce_Unaligned_Byte_Descriptors)
+{
+  alignas(32) std::array<uint8_t, 2 * 128 + 1> descriptors{};
+  std::fill(descriptors.begin() + 129, descriptors.end(), 255);
+  alignas(32) std::array<uint8_t, 128 + 3> query;
+  query.fill(255);
+  query[3] = 254;
+
+  ArrayMatcherBruteForce<uint8_t> matcher;
+  EXPECT_TRUE(matcher.Build(descriptors.data() + 1, 2, 128));
+  int index = -1;
+  int distance = -1;
+  EXPECT_TRUE(matcher.SearchNeighbour(query.data() + 3, &index, &distance));
+  EXPECT_EQ(1, index);
+  EXPECT_EQ(1, distance);
+}
 
 TEST(Matching, ArrayMatcherBruteForce_Simple_Dim1)
 {

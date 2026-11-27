@@ -14,6 +14,7 @@
 
 #include "testing/testing.h"
 
+#include <array>
 #include <iostream>
 
 using namespace openMVG;
@@ -26,6 +27,62 @@ typename Metric::ResultType DistanceT()
   typename Metric::ElementType array2[] = {7, 6, 5, 4, 3, 2, 1, 0};
   const Metric metric{};
   return metric(array1, array2, 8);
+}
+
+TEST(Metric, HAMMING_UNALIGNED_RAW_MEMORY)
+{
+  alignas(8) std::array<uint8_t, 64 + 7> a, b;
+  for (size_t i = 0; i < a.size(); ++i)
+  {
+    a[i] = static_cast<uint8_t>(37 * i + 19);
+    b[i] = static_cast<uint8_t>(17 * i + 203);
+  }
+
+  const Hamming<uint8_t> metric{};
+  // Exercise the 64-bit, 32-bit and byte paths at every word alignment.
+  for (size_t size : {0, 1, 3, 4, 7, 8, 12, 28, 32, 64})
+  {
+    for (size_t offset_a = 0; offset_a < 8; ++offset_a)
+    {
+      for (size_t offset_b = 0; offset_b < 8; ++offset_b)
+      {
+        unsigned int expected = 0;
+        for (size_t i = 0; i < size; ++i)
+          expected += std::bitset<8>(a[offset_a + i] ^ b[offset_b + i]).count();
+
+        EXPECT_EQ(expected, metric(a.data() + offset_a, b.data() + offset_b, size));
+        EXPECT_EQ(expected, metric(b.data() + offset_b, a.data() + offset_a, size));
+        EXPECT_EQ(0, metric(a.data() + offset_a, a.data() + offset_a, size));
+      }
+    }
+  }
+}
+
+TEST(Metric, L2DIM128_UNALIGNED_RAW_MEMORY)
+{
+  alignas(32) std::array<uint8_t, 128 + 31> a, b;
+  for (size_t i = 0; i < a.size(); ++i)
+  {
+    a[i] = static_cast<uint8_t>(37 * i + 19);
+    b[i] = static_cast<uint8_t>(17 * i + 203);
+  }
+
+  const L2<uint8_t> metric{};
+  for (size_t offset_a = 0; offset_a < 32; ++offset_a)
+  {
+    for (size_t offset_b = 0; offset_b < 32; ++offset_b)
+    {
+      int expected = 0;
+      for (size_t i = 0; i < 128; ++i)
+      {
+        const int difference = int(a[offset_a + i]) - int(b[offset_b + i]);
+        expected += difference * difference;
+      }
+      EXPECT_EQ(expected, metric(a.data() + offset_a, b.data() + offset_b, 128));
+      EXPECT_EQ(expected, metric(b.data() + offset_b, a.data() + offset_a, 128));
+      EXPECT_EQ(0, metric(a.data() + offset_a, a.data() + offset_a, 128));
+    }
+  }
 }
 
 TEST(Metric, L2)

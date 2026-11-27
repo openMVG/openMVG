@@ -41,14 +41,13 @@ inline int L2_AVX2
   // Accumulator
   __m256i acc (_mm256_setzero_si256());
 
-  const ALIGNED32 __m256i* ad = reinterpret_cast<const ALIGNED32 __m256i*>(a);
-  const ALIGNED32 __m256i* bd = reinterpret_cast<const ALIGNED32 __m256i*>(b);
-
   // Compute (A-B) * (A-B) on 32 components per iteration
   for (int i = 0; i < 4; ++i) {
+    const __m256i ad = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(a + 32 * i));
+    const __m256i bd = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(b + 32 * i));
     // In order to avoid overflow, process low and high order value
-    const __m256i min = _mm256_min_epu8(ad[i], bd[i]);
-    const __m256i max = _mm256_max_epu8(ad[i], bd[i]);
+    const __m256i min = _mm256_min_epu8(ad, bd);
+    const __m256i max = _mm256_max_epu8(ad, bd);
     const __m256i d = _mm256_sub_epi8(max, min);
 
     // Squared elements in range [0,15]
