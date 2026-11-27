@@ -33,6 +33,42 @@ void CoeffsForCubicZeros(std::array<double,3> coeff, // a,b,c
   res[2] = -a * b * c;
 }
 
+TEST(Poly, QuarticPolishPreservesRepeatedRoots) {
+  const std::array<std::array<double, 5>, 3> polynomials = {{
+    {{1, -6, 13, -12, 4}},  // (x - 1)^2 (x - 2)^2
+    {{1, -7, 17, -17, 6}},  // (x - 1)^2 (x - 2) (x - 3)
+    {{1, -3, 2, 0, 0}}     // x^2 (x - 1) (x - 2)
+  }};
+  for (const auto & polynomial : polynomials) {
+    std::array<double, 4> roots;
+    solveQuarticPolynomial(polynomial, roots);
+    const auto initial = roots;
+    for (const auto root : initial)
+      EXPECT_TRUE(std::isfinite(root));
+    polishQuarticPolynomialRoots(polynomial, roots);
+    for (size_t i = 0; i < roots.size(); ++i) {
+      EXPECT_TRUE(std::isfinite(roots[i]));
+      EXPECT_NEAR(initial[i], roots[i], 1e-12);
+      const double x = roots[i];
+      const double residual = polynomial[4] + x * (polynomial[3] +
+        x * (polynomial[2] + x * (polynomial[1] + x * polynomial[0])));
+      EXPECT_NEAR(0.0, residual, 1e-12);
+    }
+  }
+}
+
+TEST(Poly, QuarticPolishRefinesSimpleRoots) {
+  const std::array<double, 5> polynomial = {{1, -10, 35, -50, 24}};
+  std::array<double, 4> roots = {{0.99, 2.01, 2.99, 4.01}};
+  const auto initial = roots;
+  polishQuarticPolynomialRoots(polynomial, roots, 0);
+  for (size_t i = 0; i < roots.size(); ++i)
+    EXPECT_EQ(initial[i], roots[i]);
+  polishQuarticPolynomialRoots(polynomial, roots, 4);
+  for (size_t i = 0; i < roots.size(); ++i)
+    EXPECT_NEAR(static_cast<double>(i + 1), roots[i], 1e-12);
+}
+
 TEST(Poly, SolveCubicPolynomial) {
   std::array<double,3> coeff;
   std::array<double,3> poly_coeff;
