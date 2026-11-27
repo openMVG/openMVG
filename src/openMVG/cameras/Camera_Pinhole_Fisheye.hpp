@@ -12,6 +12,7 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_FISHEYE_HPP
 
+#include <algorithm>
 #include <vector>
 
 #include "openMVG/cameras/Camera_Common.hpp"
@@ -116,19 +117,34 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
       const double theta_dist = std::hypot( p(0), p(1) );
       if ( theta_dist > eps )
       {
-        double theta = theta_dist;
-        for ( int j = 0; j < 10; ++j )
+        double lower = 0.0, upper = std::acos(0.0);
+        double theta = std::min(theta_dist, upper);
+        for ( int j = 0; j < 50; ++j )
         {
           const double
             theta2 = theta * theta,
             theta4 = theta2 * theta2,
             theta6 = theta4 * theta2,
             theta8 = theta6 * theta2;
-            theta = theta_dist /
-                    ( 1 + params_[0] * theta2
-                      + params_[1] * theta4
-                      + params_[2] * theta6
-                      + params_[3] * theta8 );
+          const double residual = theta *
+            (1 + params_[0] * theta2 + params_[1] * theta4
+               + params_[2] * theta6 + params_[3] * theta8) - theta_dist;
+          const double derivative =
+            1 + 3 * params_[0] * theta2 + 5 * params_[1] * theta4
+              + 7 * params_[2] * theta6 + 9 * params_[3] * theta8;
+          if (residual == 0.0)
+            break;
+          if (residual > 0.0)
+            upper = theta;
+          else
+            lower = theta;
+          const double next = derivative > 0.0
+            ? theta - residual / derivative : 0.5 * (lower + upper);
+          if (next == theta)
+            break;
+          // Keep Newton steps inside the forward projection's angle domain.
+          theta = std::isfinite(next) && next > lower && next < upper
+            ? next : 0.5 * (lower + upper);
         }
         scale = std::tan( theta ) / theta_dist;
       }
