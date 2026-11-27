@@ -125,11 +125,12 @@ void MeanAndVarianceAlongRows(const Mat &A,
 
   for (Mat::Index i = 0; i < n; ++i) {
     (*mean_pointer)(i) += A.row(i).array().sum();
-    (*variance_pointer)(i) += (A.row(i).array() * A.row(i).array()).array().sum();
   }
   (*mean_pointer) /= m;
   for (Mat::Index i = 0; i < n; ++i) {
-    (*variance_pointer)(i) = (*variance_pointer)(i) / m - Square((*mean_pointer)(i));
+    // Center first to avoid cancellation between two large squared values.
+    (*variance_pointer)(i) =
+      (A.row(i).array() - (*mean_pointer)(i)).square().sum() / m;
   }
 }
 
