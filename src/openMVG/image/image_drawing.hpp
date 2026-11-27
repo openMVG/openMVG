@@ -148,10 +148,13 @@ template <typename Image, typename Color>
 void DrawCircle( int x, int y, int radius, const Color& col, Image *pim )
 {
   Image &im = *pim;
-  if (  im.Contains( y + radius, x + radius )
-        || im.Contains( y + radius, x - radius )
-        || im.Contains( y - radius, x + radius )
-        || im.Contains( y - radius, x - radius ) )
+  // A circle can overlap the image even when all four bounding-box
+  // corners are outside it. Clip individual pixels during rasterization.
+  if ( im.Width() > 0 && im.Height() > 0
+       && static_cast<double>( x ) + radius >= 0
+       && static_cast<double>( x ) - radius < im.Width()
+       && static_cast<double>( y ) + radius >= 0
+       && static_cast<double>( y ) - radius < im.Height() )
   {
     int x1 = 0;
     int y1 = radius;
@@ -352,10 +355,13 @@ template <typename Image, typename Color>
 void FilledCircle( int x, int y, int radius, const Color& col, Image *pim )
 {
   Image &im = *pim;
-  if (  im.Contains( y + radius, x + radius )
-        || im.Contains( y + radius, x - radius )
-        || im.Contains( y - radius, x + radius )
-        || im.Contains( y - radius, x - radius ) )
+  // A circle can overlap the image even when all four bounding-box
+  // corners are outside it. Clip individual pixels during rasterization.
+  if ( im.Width() > 0 && im.Height() > 0
+       && static_cast<double>( x ) + radius >= 0
+       && static_cast<double>( x ) - radius < im.Width()
+       && static_cast<double>( y ) + radius >= 0
+       && static_cast<double>( y ) - radius < im.Height() )
   {
     int x1 = 0;
     int y1 = radius;
@@ -543,3 +549,4 @@ void DrawLineThickness( int xa, int ya, int xb, int yb, const Color& col, int th
 } // namespace openMVG
 
 #endif  // OPENMVG_IMAGE_IMAGE_DRAWING_HPP
+

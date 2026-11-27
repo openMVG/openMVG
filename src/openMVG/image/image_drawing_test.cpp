@@ -224,6 +224,73 @@ TEST(ImageDrawing, DrawLine_PointOutsideTheImage) {
   //WriteImage( image, "toto.png");
 }
 
+namespace {
+
+bool CheckClippedCircles(bool filled) {
+  const int cases[][3] = {
+    {5, 5, 6}, {-4, 5, 6}, {5, -4, 6}, {13, 5, 6}, {5, 13, 6}
+  };
+  for (const auto &circle : cases) {
+    Image<unsigned char> clipped(10, 10, true, 0);
+    Image<unsigned char> full(96, 96, true, 0);
+    if (filled) {
+      FilledCircle(circle[0], circle[1], circle[2], 255, &clipped);
+      FilledCircle(circle[0] + 40, circle[1] + 40, circle[2], 255, &full);
+    } else {
+      DrawCircle(circle[0], circle[1], circle[2], 255, &clipped);
+      DrawCircle(circle[0] + 40, circle[1] + 40, circle[2], 255, &full);
+    }
+    // The large canvas contains the complete circle, so its crop is the
+    // reference for clipping without changing the rasterization algorithm.
+    int visible = 0;
+    bool matches = true;
+    for (int y = 0; y < clipped.Height(); ++y) {
+      for (int x = 0; x < clipped.Width(); ++x) {
+        visible += full(y + 40, x + 40) != 0;
+        matches &= clipped(y, x) == full(y + 40, x + 40);
+      }
+    }
+    if (visible == 0 || !matches) return false;
+  }
+  return true;
+}
+
+}  // namespace
+
+TEST(ImageDrawing, CircleClipping) {
+  CHECK(CheckClippedCircles(false));
+}
+
+TEST(ImageDrawing, FilledCircleClipping) {
+  CHECK(CheckClippedCircles(true));
+
+  Image<unsigned char> covered(10, 10, true, 0);
+  FilledCircle(5, 5, 20, 255, &covered);
+  CHECK((covered.array() == 255).all());
+}
+
+TEST(ImageDrawing, CircleClippingControls) {
+  Image<unsigned char> image(10, 10, true, 0);
+  const int outside[][2] = {{-100, 5}, {100, 5}, {5, -100}, {5, 100}};
+  for (const auto &center : outside) {
+    DrawCircle(center[0], center[1], 3, 255, &image);
+    FilledCircle(center[0], center[1], 3, 255, &image);
+  }
+  CHECK((image.array() == 0).all());
+
+  DrawCircle(4, 3, 0, 255, &image);
+  EXPECT_EQ(255, image(3, 4));
+  image.fill(0);
+  FilledCircle(4, 3, 0, 255, &image);
+  EXPECT_EQ(255, image(3, 4));
+
+  Image<unsigned char> empty;
+  DrawCircle(0, 0, 6, 255, &empty);
+  FilledCircle(0, 0, 6, 255, &empty);
+  EXPECT_EQ(0, empty.size());
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
+
