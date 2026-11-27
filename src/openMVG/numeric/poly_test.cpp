@@ -80,6 +80,35 @@ TEST(Poly, SolveCubicPolynomial) {
   EXPECT_NEAR(coeff[2], found_roots[1], epsilon);
 }
 
+
+TEST(Poly, SolveCubicPolynomialCoefficientArray) {
+  const std::array<std::array<double, 4>, 4> coefficients = {{
+    {{0, -1, 0, 1}},   // x (x - 1) (x + 1)
+    {{0, -2, 0, 2}},   // The same roots for a non-monic cubic.
+    {{0, 0, 0, 1}},    // A triple root at zero.
+    {{-6, 11, -6, 1}}  // Existing nonzero-constant case.
+  }};
+  for (const auto & coeffs : coefficients) {
+    double expected[3], actual[3] = {17, 18, 19};
+    const int count = SolveCubicPolynomial(
+      coeffs[2] / coeffs[3], coeffs[1] / coeffs[3],
+      coeffs[0] / coeffs[3], expected);
+    CHECK_EQUAL(count, SolveCubicPolynomial(coeffs.data(), actual));
+    for (int i = 0; i < count; ++i) {
+      EXPECT_NEAR(expected[i], actual[i], 1e-10);
+      EXPECT_NEAR(0.0, coeffs[0] + actual[i] * (coeffs[1] +
+        actual[i] * (coeffs[2] + actual[i] * coeffs[3])), 1e-10);
+    }
+  }
+
+  const double quadratic[] = {1, -2, 1, 0};
+  double roots[] = {17, 18, 19};
+  CHECK_EQUAL(0, SolveCubicPolynomial(quadratic, roots));
+  EXPECT_NEAR(17.0, roots[0], 0.0);
+  EXPECT_NEAR(18.0, roots[1], 0.0);
+  EXPECT_NEAR(19.0, roots[2], 0.0);
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */

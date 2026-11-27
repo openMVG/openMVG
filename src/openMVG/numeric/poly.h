@@ -85,7 +85,7 @@ int SolveCubicPolynomial
   const Real *coeffs, Real *solutions
 )
 {
-  if ( coeffs[0] == 0.0 )
+  if ( coeffs[3] == 0.0 )
   {
     return 0;
   }
