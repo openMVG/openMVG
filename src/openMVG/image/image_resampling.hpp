@@ -39,7 +39,7 @@ void ImageHalfSample( const Image & src , Image & out )
     for (int j = 0; j < new_width; ++j )
     {
       // Use .5f offset to ensure mid pixel and correct bilinear sampling
-      out( i , j ) =  sampler( src, 2.f * ( i + .5f ), 2.f * ( j + .5f ) );
+      out( i , j ) =  sampler( src, 2.f * i + .5f, 2.f * j + .5f );
     }
   }
 }
