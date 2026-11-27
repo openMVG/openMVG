@@ -15,6 +15,7 @@
 #include "testing/testing.h"
 
 #include <iostream>
+#include <vector>
 
 using namespace openMVG;
 using namespace matching;
@@ -126,6 +127,24 @@ TEST(Metric, HAMMING_BITSET_RAW_MEMORY_32BITS)
       EXPECT_EQ(gtDist[cpt], metricHamming((uint32_t*)&tab[j],(uint32_t*)&tab[i], sizeof(uint32_t)));
       ++cpt;
     }
+  }
+}
+
+TEST(Metric, L2FloatVariableDimensions)
+{
+  const L2<float> metric{};
+  for (const size_t size : {1, 2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 128, 129})
+  {
+    // Sentinel components beyond the requested dimension must not contribute.
+    std::vector<float> a(size + 8, 1000.0f), b(size + 8, -1000.0f);
+    float expected = 0.0f;
+    for (size_t i = 0; i < size; ++i)
+    {
+      a[i] = static_cast<float>(i + 1);
+      b[i] = 0.0f;
+      expected += a[i] * a[i];
+    }
+    EXPECT_NEAR(expected, metric(a.data(), b.data(), size), 1e-4);
   }
 }
 

@@ -103,7 +103,7 @@ struct L2<float>
   inline ResultType operator()(Iterator1 a, Iterator2 b, size_t size) const
   {
     #ifdef OPENMVG_USE_AVX
-    if (size > 4 && size % 8)
+    if (size >= 8 && size % 8 == 0)
     {
       return L2_AVX(a, b, size);
     }
