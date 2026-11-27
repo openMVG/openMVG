@@ -254,7 +254,7 @@ inline void SeparableConvolution2d( const RowMatrixXf& image,
     temp_row.segment( half_sigma_x, image.cols() ) = out->row( row );
     temp_row.tail( half_sigma_x ) =
       out->row( row )
-      .segment( image.cols() - 2 - half_sigma_x, half_sigma_x )
+      .segment( image.cols() - 1 - half_sigma_x, half_sigma_x )
       .reverse();
 
     // Convolve the row. We perform the first step here explicitly so that we
