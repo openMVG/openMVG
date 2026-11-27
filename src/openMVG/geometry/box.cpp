@@ -104,25 +104,30 @@ bool Box::export_Ply
     << "property uchar red" << '\n'
     << "property uchar green" << '\n'
     << "property uchar blue" << '\n'
-    << "element face 6 \n"
+    << "element face 12 \n"
     << "property list uchar int vertex_index" << '\n'
     << "end_header" << '\n';
 
   // Export box points
   {
     for (int i = 0; i < 8; ++i)
-      of << box.points[i].transpose() << " " << color.cast<int>() << '\n';
+      of << box.points[i].transpose() << " " << color.cast<int>().transpose() << '\n';
   }
 
   of
-    // top & bottom planes
-    << "3 0 1 3\n"
-    << "3 4 7 5\n"
-    // remaining planes
-    << "3 0 4 1\n"
-    << "3 0 3 4\n"
-    << "3 3 2 7\n"
-    << "3 1 5 2\n";
+    // Two outward-facing triangles for each of the six box faces.
+    << "3 0 3 1\n"
+    << "3 1 3 2\n"
+    << "3 4 5 7\n"
+    << "3 5 6 7\n"
+    << "3 0 1 4\n"
+    << "3 1 5 4\n"
+    << "3 0 4 3\n"
+    << "3 3 4 7\n"
+    << "3 3 7 2\n"
+    << "3 2 7 6\n"
+    << "3 1 2 5\n"
+    << "3 2 6 5\n";
 
   of.flush();
   const bool bOk = of.good();
@@ -132,3 +137,4 @@ bool Box::export_Ply
 
 } // namespace geometry
 } // namespace openMVG
+
