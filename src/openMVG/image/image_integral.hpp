@@ -80,17 +80,21 @@ typename TIntegralImage::Tpixel BlockSum
 )
 {
   typedef typename TIntegralImage::Tpixel Tpixel;
-  assert(right_corner.x() > left_corner.x());
-  assert(right_corner.y() > left_corner.y());
-  // A ---- B
-  // |      |
-  // C----- D
-  // Sum in the area is equal to: D + A − (C + B).
-  const auto & A = integral_image(left_corner.y() - 1, left_corner.x() - 1);
-  const auto & B = integral_image(left_corner.y() - 1, right_corner.x());
-  const auto & C = integral_image(right_corner.y()   , left_corner.x() - 1);
-  const auto & D = integral_image(right_corner.y()   , right_corner.x());
-  return (D + A - C - B);
+  assert(left_corner.x() >= 0 && left_corner.y() >= 0);
+  assert(right_corner.x() >= left_corner.x());
+  assert(right_corner.y() >= left_corner.y());
+  assert(right_corner.x() < integral_image.Width());
+  assert(right_corner.y() < integral_image.Height());
+  // The integral image has no padded zero row or column.
+  const Tpixel A = left_corner.x() > 0 && left_corner.y() > 0
+    ? integral_image(left_corner.y() - 1, left_corner.x() - 1) : Tpixel(0);
+  const Tpixel B = left_corner.y() > 0
+    ? integral_image(left_corner.y() - 1, right_corner.x()) : Tpixel(0);
+  const Tpixel C = left_corner.x() > 0
+    ? integral_image(right_corner.y(), left_corner.x() - 1) : Tpixel(0);
+  const Tpixel D = integral_image(right_corner.y(), right_corner.x());
+  // Subtract strips before combining them to avoid overflowing D + A.
+  return (D - B) - (C - A);
 }
 
 } // namespace image
