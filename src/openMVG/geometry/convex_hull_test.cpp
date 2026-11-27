@@ -11,6 +11,7 @@
 #include "CppUnitLite/TestHarness.h"
 #include "testing/testing.h"
 
+#include <algorithm>
 #include <limits>
 #include <random>
 
@@ -79,6 +80,36 @@ TEST(ConvexHull, Random_Point_ConvexHull) {
     for (const auto & it_pt : point_cloud)
       EXPECT_TRUE(IsIn(it_pt, convex_hull));
   }
+}
+
+TEST(ConvexHull, AreaIsIndependentOfOrigin) {
+  for (const Vec2 & shift : {Vec2(0, 0), Vec2(1e9, -1e9), Vec2(-1e9, 1e9)}) {
+    Polygon2d polygon = {{0, 0}, {2, 0}, {2, 1}, {0, 1}, {0, 0}};
+    for (auto & point : polygon)
+      point += shift;
+    double area;
+    EXPECT_TRUE(ConvexPolygonArea(polygon, area));
+    EXPECT_EQ(2.0, area);
+    std::reverse(polygon.begin(), polygon.end());
+    EXPECT_TRUE(ConvexPolygonArea(polygon, area));
+    EXPECT_EQ(-2.0, area);
+
+    Polygon2d triangle = {{0, 0}, {1, 0}, {0, 1}, {0, 0}};
+    for (auto & point : triangle)
+      point += shift;
+    EXPECT_TRUE(ConvexPolygonArea(triangle, area));
+    EXPECT_EQ(0.5, area);
+  }
+}
+
+TEST(ConvexHull, AreaValidation) {
+  double area = -1.0;
+  EXPECT_FALSE(ConvexPolygonArea(Polygon2d{}, area));
+  EXPECT_EQ(0.0, area);
+  EXPECT_FALSE(ConvexPolygonArea({{0, 0}, {1, 0}, {0, 1}}, area));
+  EXPECT_EQ(0.0, area);
+  EXPECT_TRUE(ConvexPolygonArea({{0, 0}, {1, 0}, {0, 0}}, area));
+  EXPECT_EQ(0.0, area);
 }
 
 /* ************************************************************************* */

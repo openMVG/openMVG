@@ -61,8 +61,9 @@ bool ConvexPolygonArea
     return false;
   }
 
-  for (int i = 0; i < polygon.size() - 1 && polygon.size() >= 2; ++i)
-    area += polygon[i].x() * polygon[i+1].y() - polygon[i].y() * polygon[i+1].x();
+  // Use relative coordinates to avoid cancelling large origin-dependent products.
+  for (size_t i = 1; i + 1 < polygon.size(); ++i)
+    area += util::CrossProductSign(polygon.front(), polygon[i], polygon[i+1]);
   area /= 2;
 
   return true;
