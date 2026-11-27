@@ -164,7 +164,10 @@ static void polishQuarticPolynomialRoots
         coeffs[3] + root * (2 * coeffs[2] +
                             root * ((4 * coeffs[0] * root + 3 * coeffs[1])));
 
-      root -= error / derivative;
+      // A repeated root can have both zero error and zero derivative.
+      // Keep the current estimate when a Newton step is undefined.
+      if (derivative != 0.0)
+        root -= error / derivative;
     }
   }
 }
