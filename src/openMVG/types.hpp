@@ -20,28 +20,42 @@
 #include <vector>
 
 #include "openMVG/stl/hash.hpp"
-namespace std {
-  template<typename T1, typename T2>
-  struct hash<std::pair<T1, T2>> {
-    std::size_t operator()(std::pair<T1, T2> const &p) const {
-      std::size_t seed1(0);
-      stl::hash_combine(seed1, p.first);
-      stl::hash_combine(seed1, p.second);
-
-      std::size_t seed2(0);
-      stl::hash_combine(seed2, p.second);
-      stl::hash_combine(seed2, p.first);
-
-      return std::min(seed1, seed2);
-    }
-  };
-}
 
 /**
 * @brief Main namespace of openMVG API
 */
 namespace openMVG
 {
+
+namespace detail
+{
+// Preserve the standard hasher for keys that do not need OpenMVG's pair hash.
+template<typename Key>
+struct HashSelector
+{
+  using type = std::hash<Key>;
+};
+
+template<typename T1, typename T2>
+struct HashSelector<std::pair<T1, T2>>
+{
+  struct type
+  {
+    std::size_t operator()(const std::pair<T1, T2> &p) const
+    {
+      std::size_t seed1(0);
+      stl::hash_combine(seed1, p.first, typename HashSelector<T1>::type());
+      stl::hash_combine(seed1, p.second, typename HashSelector<T2>::type());
+
+      std::size_t seed2(0);
+      stl::hash_combine(seed2, p.second, typename HashSelector<T2>::type());
+      stl::hash_combine(seed2, p.first, typename HashSelector<T1>::type());
+
+      return std::min(seed1, seed2);
+    }
+  };
+};
+} // namespace detail
 
 /// Portable type used to store an index
 using IndexT = uint32_t;
@@ -64,7 +78,7 @@ using Pair_Vec = std::vector<Pair>;
 * @tparam V type of the values
 */
 template<typename Key, typename Value>
-using Hash_Map = std::unordered_map<Key, Value>;
+using Hash_Map = std::unordered_map<Key, Value, typename detail::HashSelector<Key>::type>;
 
 } // namespace openMVG
 
