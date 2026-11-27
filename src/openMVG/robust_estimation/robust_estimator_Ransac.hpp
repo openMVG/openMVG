@@ -9,6 +9,7 @@
 #ifndef OPENMVG_ROBUST_ESTIMATION_SIMPLE_RANSAC_HPP
 #define OPENMVG_ROBUST_ESTIMATION_SIMPLE_RANSAC_HPP
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <numeric>
@@ -94,9 +95,10 @@ typename Kernel::Model RANSAC(
           }
         }
         if (best_inlier_ratio) {
-          max_iterations = IterationsRequired(min_samples,
-            outliers_probability,
-            best_inlier_ratio);
+          max_iterations = static_cast<uint32_t>(std::min<std::size_t>(
+            really_max_iterations,
+            IterationsRequired(min_samples, outliers_probability,
+              best_inlier_ratio)));
         }
       }
   }

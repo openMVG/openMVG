@@ -30,7 +30,10 @@
 #ifndef OPENMVG_ROBUST_RANSAC_TOOLS_HPP
 #define OPENMVG_ROBUST_RANSAC_TOOLS_HPP
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <limits>
 
 namespace openMVG {
 namespace robust{
@@ -51,9 +54,16 @@ inline size_t IterationsRequired(
   double outliers_probability,
   double inlier_ratio)
 {
-  return static_cast<std::size_t>(
+  // log1p retains the success probability even when it is too small for
+  // subtraction from 1. Round up to meet the requested confidence.
+  const double iterations = std::ceil(
     std::log(outliers_probability) /
-    std::log(1.0 - std::pow(inlier_ratio, static_cast<int>(min_samples))));
+    std::log1p(-std::pow(inlier_ratio, static_cast<int>(min_samples))));
+  const auto max_iterations = std::numeric_limits<std::size_t>::max();
+  if (!std::isfinite(iterations) ||
+      iterations >= static_cast<double>(max_iterations))
+    return max_iterations;
+  return std::max(std::size_t{1}, static_cast<std::size_t>(iterations));
 }
 
 } // namespace robust
