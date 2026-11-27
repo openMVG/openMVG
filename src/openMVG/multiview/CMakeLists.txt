@@ -69,6 +69,9 @@ set_property(TARGET openMVG_multiview_test_data PROPERTY FOLDER OpenMVG/OpenMVG)
 UNIT_TEST(openMVG triangulation "openMVG_multiview_test_data;openMVG_multiview")
 UNIT_TEST(openMVG triangulation_nview "openMVG_multiview_test_data;openMVG_multiview")
 
+# Point conditioning
+UNIT_TEST(openMVG conditioning "openMVG_multiview")
+
 # Solvers
 UNIT_TEST(openMVG solver_affine "openMVG_multiview")
 UNIT_TEST(openMVG solver_essential "openMVG_multiview_test_data;openMVG_multiview")

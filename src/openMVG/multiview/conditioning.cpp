@@ -42,9 +42,9 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
   // If variance is equal to 0.0 set scaling factor to identity.
   // -> Else it will provide nan value (because division by 0).
   if (variance(0) < 1e-8)
-    xfactor = mean(0) = 1.0;
+    xfactor = 1.0;
   if (variance(1) < 1e-8)
-    yfactor = mean(1) = 1.0;
+    yfactor = 1.0;
 
   (*T) << xfactor, 0,       -xfactor * mean(0),
           0,       yfactor, -yfactor * mean(1),
@@ -53,7 +53,7 @@ void PreconditionerFromPoints(const Mat &points, Mat3 *T) {
 
 void PreconditionerFromPoints(int width, int height, Mat3 *T) {
   // Build the normalization matrix
-  const double dNorm = 1.0 / sqrt( static_cast<double>(width*height) );
+  const double dNorm = 1.0 / sqrt( static_cast<double>(width) * height );
 
   (*T) = Mat3::Identity();
   (*T)(0,0) = (*T)(1,1) = dNorm;
