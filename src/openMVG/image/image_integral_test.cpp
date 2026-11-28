@@ -110,6 +110,35 @@ TEST(integral_image, BlockSum) {
   }
 }
 
+TEST(integral_image, BorderAndSinglePixelRectangles) {
+  Image<int> image(5, 4);
+  for (int y = 0; y < image.Height(); ++y)
+    for (int x = 0; x < image.Width(); ++x)
+      image(y, x) = 10 * y + x + 1;
+  Image<uint32_t> integral;
+  IntegralImage(image, &integral);
+  for (int top = 0; top < image.Height(); ++top)
+    for (int left = 0; left < image.Width(); ++left)
+      for (int bottom = top; bottom < image.Height(); ++bottom)
+        for (int right = left; right < image.Width(); ++right) {
+          int expected = 0;
+          for (int y = top; y <= bottom; ++y)
+            for (int x = left; x <= right; ++x)
+              expected += image(y, x);
+          EXPECT_EQ(expected, BlockSum(Eigen::Vector2i(left, top),
+                                      Eigen::Vector2i(right, bottom), integral));
+        }
+}
+
+TEST(integral_image, AvoidsOverflowWhenStoredSumsFit) {
+  const Image<int> image(5, 5, true, 80000000);
+  Image<int> integral;
+  IntegralImage(image, &integral);
+  EXPECT_EQ(2000000000, integral(4, 4));
+  EXPECT_EQ(320000000, BlockSum(Eigen::Vector2i(3, 3),
+                              Eigen::Vector2i(4, 4), integral));
+}
+
 /* ************************************************************************* */
 int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */
