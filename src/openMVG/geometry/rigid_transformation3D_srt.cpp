@@ -44,6 +44,13 @@ bool FindRTS
   const Eigen::Matrix4d transform = Eigen::umeyama( x1, x2, true );
 
   // Check critical cases
+  // A zero source variance produces NaNs, which evade the determinant and
+  // scale comparisons below and must not become a successful hypothesis.
+  if (!transform.allFinite())
+  {
+    OPENMVG_LOG_ERROR << "Degenerate configuration for a RTS transform estimation.";
+    return false;
+  }
   *R = transform.topLeftCorner<3, 3>();
   if ( R->determinant() < 0 )
   {
