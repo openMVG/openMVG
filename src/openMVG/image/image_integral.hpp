@@ -93,7 +93,8 @@ typename TIntegralImage::Tpixel BlockSum
   const Tpixel C = left_corner.x() > 0
     ? integral_image(right_corner.y(), left_corner.x() - 1) : Tpixel(0);
   const Tpixel D = integral_image(right_corner.y(), right_corner.x());
-  // Subtract strips before combining them to avoid overflowing D + A.
+  // For nonnegative pixels, subtract strips to avoid overflowing D + A.
+  // Signed inputs still require a type wide enough for intermediate sums.
   return (D - B) - (C - A);
 }
 
