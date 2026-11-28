@@ -53,6 +53,10 @@ install(TARGETS openMVG_sfm DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT openMVG-t
 
 UNIT_TEST(openMVG sfm_data_io "openMVG_sfm;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_BA "openMVG_multiview_test_data;openMVG_sfm;${STLPLUS_LIBRARY}")
+UNIT_TEST(openMVG sfm_data_BA_spherical "openMVG_camera;${CERES_LIBRARIES}")
+if (OpenMVG_BUILD_TESTS)
+  target_include_directories(openMVG_test_sfm_data_BA_spherical PRIVATE ${CERES_INCLUDE_DIRS})
+endif()
 UNIT_TEST(openMVG sfm_data_utils "openMVG_sfm;${STLPLUS_LIBRARY}")
 UNIT_TEST(openMVG sfm_data_filters "openMVG_sfm")
 UNIT_TEST(openMVG sfm_data_graph_utils "openMVG_sfm")

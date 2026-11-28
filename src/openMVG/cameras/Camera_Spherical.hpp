@@ -148,6 +148,20 @@ using class_type = Intrinsic_Spherical;
   }
 
   /**
+  * @brief Compute a pixel residual using the shortest horizontal distance.
+  */
+  Vec2 residual(
+    const Vec3 & X,
+    const Vec2 & x,
+    const bool ignore_distortion = false) const override
+  {
+    Vec2 error = x - project(X, ignore_distortion);
+    const double period = std::max(w(), h());
+    error.x() -= period * std::floor(error.x() / period + 0.5);
+    return error;
+  }
+
+  /**
   * @brief Does the camera model handle a distortion field?
   * @retval false
   */

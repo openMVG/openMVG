@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "openMVG/cameras/Camera_Pinhole.hpp"
+#include "openMVG/cameras/Camera_Spherical.hpp"
 #include "openMVG/sfm/sfm_data.hpp"
 #include "openMVG/sfm/sfm_data_filters.hpp"
 
@@ -41,6 +42,23 @@ void init_scene
       sfm_data.intrinsics[0] = std::make_shared<Pinhole_Intrinsic>();
   }
  }
+
+TEST(SFM_DATA_FILTERS, KeepSphericalObservationsAcrossLongitudeSeam)
+{
+  SfM_Data scene;
+  init_scene(scene, 2);
+  const auto camera = std::make_shared<Intrinsic_Spherical>(2000, 1000);
+  scene.intrinsics[0] = camera;
+  scene.structure[0].X = (*camera)(Vec2(1999, 500));
+  scene.structure[0].obs[0] = Observation(Vec2(1, 500), 0);
+  scene.structure[0].obs[1] = Observation(Vec2(1999, 500), 0);
+
+  const IndexT removed = RemoveOutliers_PixelResidualError(scene, 3.0, 2);
+  EXPECT_EQ(0, removed);
+  EXPECT_EQ(1, scene.structure.size());
+  if (!scene.structure.empty())
+    EXPECT_EQ(2, scene.structure.at(0).obs.size());
+}
 
 TEST(SFM_DATA_FILTERS, LargestViewTrackCC)
 {
