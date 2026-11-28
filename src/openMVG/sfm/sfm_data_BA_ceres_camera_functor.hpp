@@ -714,6 +714,10 @@ struct ResidualErrorFunctor_Intrinsic_Spherical
     out_residuals[0] = projected_x - m_pos_2dpoint[0];
     out_residuals[1] = projected_y - m_pos_2dpoint[1];
 
+    // Longitude is periodic. Keep the local pixel residual (and its Jet
+    // derivative) continuous when a projection crosses the panorama seam.
+    out_residuals[0] -= size * ceres::floor(out_residuals[0] / size + T(0.5));
+
     return true;
   }
 

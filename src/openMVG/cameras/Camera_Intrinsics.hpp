@@ -102,7 +102,7 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   * @param x image observation
   * @brief Relative 2d distance between projected and observed points
   */
-  Vec2 residual(
+  virtual Vec2 residual(
     const Vec3 & X,
     const Vec2 & x,
     const bool ignore_distortion = false) const
