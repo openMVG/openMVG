@@ -9,6 +9,8 @@
 #ifndef OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 #define OPENMVG_CAMERAS_CAMERA_PINHOLE_BROWN_HPP
 
+#include <cmath>
+#include <limits>
 #include <vector>
 
 #include "openMVG/cameras/Camera_Common.hpp"
@@ -90,20 +92,55 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     * @brief Remove the distortion to a camera point (that is in normalized camera frame)
     * @param p Point with distortion
     * @return Point without distortion
-    * @note numerical approximation based on
-    * Heikkila J (2000) Geometric Camera Calibration Using Circular Control Points.
-    * IEEE Trans. Pattern Anal. Mach. Intell., 22:1066-1077
+    * @note Bounded Newton iteration with a decreasing reprojection residual.
     */
     Vec2 remove_disto( const Vec2 & p ) const override
     {
-      const double epsilon = 1e-10; //criteria to stop the iteration
+      const double epsilon = 1e-10;
       Vec2 p_u = p;
-
-      Vec2 d = distoFunction(params_, p_u);
-      while ((p_u + d - p).lpNorm<1>() > epsilon) //manhattan distance between the two points
+      Vec2 residual = add_disto(p_u) - p;
+      for (int iteration = 0; iteration < 50; ++iteration)
       {
-        p_u = p - d;
-        d = distoFunction(params_, p_u);
+        if (residual.lpNorm<1>() <= epsilon)
+          break;
+
+        // The subtraction fixed point need not be contractive, even for a
+        // monotonic radial model. Solve the full radial/tangential Jacobian.
+        const double x = p_u.x(), y = p_u.y();
+        const double r2 = p_u.squaredNorm(), r4 = r2 * r2;
+        const double radial = 1 + params_[0] * r2 + params_[1] * r4
+          + params_[2] * r4 * r2;
+        const double derivative = params_[0] + 2 * params_[1] * r2
+          + 3 * params_[2] * r4;
+        const double cross = 2 * x * y * derivative
+          + 2 * params_[4] * y + 2 * params_[3] * x;
+        Eigen::Matrix2d jacobian;
+        jacobian << radial + 2 * x * x * derivative + 6 * params_[4] * x + 2 * params_[3] * y, cross,
+                    cross, radial + 2 * y * y * derivative + 6 * params_[3] * y + 2 * params_[4] * x;
+        if (!jacobian.allFinite() || std::abs(jacobian.determinant()) <=
+          std::numeric_limits<double>::epsilon())
+          break;
+        const Vec2 step = jacobian.inverse() * residual;
+
+        // Keep the best finite estimate if an ill-conditioned model cannot
+        // make progress; neither iteration nor backtracking is unbounded.
+        bool improved = false;
+        double scale = 1.0;
+        for (int backtrack = 0; backtrack < 20; ++backtrack, scale *= 0.5)
+        {
+          const Vec2 candidate = p_u - scale * step;
+          const Vec2 candidate_residual = add_disto(candidate) - p;
+          if (candidate_residual.allFinite() &&
+              candidate_residual.squaredNorm() < residual.squaredNorm())
+          {
+            p_u = candidate;
+            residual = candidate_residual;
+            improved = true;
+            break;
+          }
+        }
+        if (!improved)
+          break;
       }
 
       return p_u;
